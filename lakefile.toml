@@ -1,9 +1,9 @@
-name = "Project"
+name = "QuantumSystem"
 version = "0.1.0"
-defaultTargets = ["Project"]
+defaultTargets = ["QuantumSystem"]
 
 [[lean_lib]]
-name = "Project"
+name = "QuantumSystem"
 
 [[require]]
 name = "mathlib"
