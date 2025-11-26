@@ -16,9 +16,11 @@
 - Use `simp` when referring `try 'simp' instead of 'simpa'`.
 - Fix indentation when referring `expected '{' or indented tactic sequence`.
 - Do not use tabs. Use spaces instead.
-
-## Additional Instructions
-
 - Continue to implement tasks in `PLANS.md` autonomously until the maximum number of requests is reached.
 - Do not use builtin `fetch` tool to read web pages. Alternatively, try to use `read_url_content_as_markdown`.
 - Use `lean-lsp` mcp server tools when searching Mathlib, analyzing codes, etc.
+- Write comments in English.
+
+## Style Guidelines
+
+Try to follow https://leanprover-community.github.io/contribute/style.html except `header-and-imports` closely.
