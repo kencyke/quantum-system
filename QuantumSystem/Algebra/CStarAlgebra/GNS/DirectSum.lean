@@ -198,16 +198,20 @@ noncomputable def directSumAlgHom : A →⋆ₙₐ[ℂ] 𝓑(Hilbert A) where
 This is the key property for the Gelfand-Naimark theorem.
 
 The proof works by showing that if `a ≠ b`, there exists a pure state `ψ` such that
-`ψ(star (a - b) * (a - b)) > 0`, which contradicts `directSumAlgHom a = directSumAlgHom b`
-since this would imply `π_ψ(a - b) = 0` and hence `ψ(star (a - b) * (a - b)) = 0`. -/
+`ψ (star (a - b) * (a - b))` is a strictly positive real number (viewed in `ℂ`), i.e.
+there exists `r : ℝ` with `0 < r` and
+`ψ (star (a - b) * (a - b)) = (r : ℂ)`.
+
+This contradicts `directSumAlgHom a = directSumAlgHom b` since this would imply
+`π_ψ(a - b) = 0`, hence `ψ (star (a - b) * (a - b)) = 0`, and therefore `r = 0`. -/
 theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)) := by
   intro a b hab
   by_contra h_ne
   -- If a ≠ b, then a - b ≠ 0
   have h_diff_ne_zero : a - b ≠ 0 := sub_ne_zero.mpr h_ne
 
-  -- By exists_pureState_pos_of_ne_zero, there exists a pure state detecting a - b
-  obtain ⟨φ, hφ_pure, hφ_pos⟩ := IsPureState.exists_pos_re_of_ne_zero (a - b) h_diff_ne_zero
+  -- There exists a pure state detecting `a - b` with a strictly positive real value on `star (a-b) * (a-b)`.
+  obtain ⟨φ, hφ_pure, r, hrpos, hφ_eq⟩ := IsPureState.exists_pos_re_of_ne_zero (a - b) h_diff_ne_zero
 
   -- Package φ as a PureState
   let ψ : PureState A := ⟨φ, hφ_pure⟩
@@ -226,31 +230,21 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
 
   -- Therefore componentWiseMap (a - b) ψ = 0, i.e., π_ψ(a - b) = 0
   -- We'll show this leads to a contradiction with hφ_pos
-  -- by proving φ(star(a-b) * (a-b)) = 0
+  -- by proving (φ (star(a-b) * (a-b))).re = 0
 
   -- First, we claim that π_ψ(a - b) ξ = 0 where ξ is the cyclic vector
   have h_apply_xi : (PureState.gnsRepresentation ψ).π (a - b) ψ.gnsRepresentation.ξ = 0 := by
-    -- From h_clm_zero, we have directSumCLM (a - b) = 0
-    -- This means for all x : DirectSumHilbert A, (directSumCLM (a - b)) x = 0
-    -- We'll construct x with x ψ = ξ and x ψ' = 0 for ψ' ≠ ψ
-    have h_lin_zero : directSumLinearMap (a - b) = 0 := by
-      have : (directSumCLM (a - b) : Hilbert A →ₗ[ℂ] Hilbert A) = directSumLinearMap (a - b) := rfl
-      rw [h_clm_zero] at this
-      simp only [ContinuousLinearMap.coe_zero] at this
-      exact this.symm
-
-    -- Construct the function that is ξ at ψ and 0 elsewhere
     classical
+    -- Construct a vector `x` supported only at `ψ` with `x ψ = ξ`.
     let f : ∀ ψ' : PureState A, ψ'.gnsRepresentation.H :=
       fun ψ' => if h : ψ' = ψ then h ▸ ψ.gnsRepresentation.ξ else 0
 
-    -- Show this is in ℓ²
     have hf_mem : Memℓp f 2 := by
       rw [memℓp_gen_iff zero_lt_two]
       have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
       simp only [h2]
-      -- Only one term is nonzero: the ψ term
-      have h_eq : (fun ψ' => ‖f ψ'‖ ^ (2 : ℝ)) = fun ψ' => if ψ' = ψ then ‖ψ.gnsRepresentation.ξ‖ ^ 2 else 0 := by
+      have h_eq : (fun ψ' => ‖f ψ'‖ ^ (2 : ℝ)) =
+          fun ψ' => if ψ' = ψ then ‖ψ.gnsRepresentation.ξ‖ ^ 2 else 0 := by
         ext ψ'
         simp only [f]
         by_cases h : ψ' = ψ
@@ -260,10 +254,9 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
           intro h'
           exact absurd h' h
       rw [h_eq]
-      -- This is summable as it has support {ψ}
       apply summable_of_finite_support
-      -- Show that the support is finite (in fact, it's {ψ})
-      have : Function.support (fun ψ' => if ψ' = ψ then ‖ψ.gnsRepresentation.ξ‖ ^ 2 else 0) ⊆ {ψ} := by
+      have :
+          Function.support (fun ψ' => if ψ' = ψ then ‖ψ.gnsRepresentation.ξ‖ ^ 2 else 0) ⊆ {ψ} := by
         intro ψ' hψ'
         simp only [Function.mem_support, ne_eq, ite_eq_right_iff, Set.mem_singleton_iff] at hψ' ⊢
         by_contra h
@@ -271,18 +264,22 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
       exact Set.Finite.subset (Set.finite_singleton ψ) this
 
     let x : Hilbert A := ⟨f, hf_mem⟩
-
-    -- x ψ = ξ
     have hx_ψ : x.val ψ = ψ.gnsRepresentation.ξ := by
       simp only [x, f]
       simp
 
-    -- Apply h_lin_zero
-    have : directSumLinearMap (a - b) x = 0 := by rw [h_lin_zero]; rfl
-    have : (directSumLinearMap (a - b) x).val ψ = 0 := by rw [this]; rfl
-    simp only [directSumLinearMap, LinearMap.coe_mk, AddHom.coe_mk] at this
-    rw [hx_ψ] at this
-    exact this
+    -- Since `directSumCLM (a - b) = 0`, applying it to `x` gives `0`.
+    have h0 : directSumCLM (a - b) x = 0 := by
+      simp [h_clm_zero]
+    have hψ0 : (directSumCLM (a - b) x).val ψ = 0 := by
+      simpa using congrArg (fun y : Hilbert A => y.val ψ) h0
+
+    -- Unfold the definition on the `ψ`-coordinate.
+    have hcomp : componentWiseMap (a - b) ψ (x.val ψ) = 0 := by
+      simpa [directSumCLM, directSumLinearMap] using hψ0
+
+    -- Finally, rewrite `x.val ψ = ξ` and `componentWiseMap` as `π`.
+    simpa [componentWiseMap, hx_ψ] using hcomp
 
   -- Now we can proceed with the GNS condition argument
 
@@ -305,9 +302,19 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
       rfl
     rw [← h_state_eq, h_gns, h_comp]
     simp only [inner_zero_right, Complex.zero_re]
-  -- But this contradicts hφ_pos which says (φ (star (a - b) * (a - b))).re > 0
-  rw [hφ_zero] at hφ_pos
-  norm_num at hφ_pos
+  -- But `φ (star (a - b) * (a - b))` is a strictly positive real number, so its real part cannot be `0`.
+  have hφ_eq_re : (φ (star (a - b) * (a - b))).re = r := by
+    have := congrArg Complex.re hφ_eq
+    simpa using this
+  -- Work in the simp-normal form that expands `star (a - b)`.
+  have hφ_zero' : (φ ((star a - star b) * (a - b))).re = 0 := by
+    simpa [star_sub] using hφ_zero
+  have hφ_eq_re' : (φ ((star a - star b) * (a - b))).re = r := by
+    simpa [star_sub] using hφ_eq_re
+  have : r = 0 := by
+    -- Rewrite the LHS of `hφ_zero'` using `hφ_eq_re'`.
+    simpa [hφ_eq_re'] using hφ_zero'
+  linarith
 
 /-- The direct sum representation preserves norms: `‖directSumAlgHom a‖ = ‖a‖` for all `a : A`.
 This follows from the general fact that injective *-homomorphisms between C*-algebras are isometric. -/

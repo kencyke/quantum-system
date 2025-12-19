@@ -70,9 +70,13 @@ private lemma isPositive_of_norm_eq_one_map_one
 
 
 /-- For any nonzero positive element `b`, there exists a state on the unitization
-that has positive real part when applied to `b`. -/
+whose value on `b` is a strictly positive real number (viewed in `ℂ`).
+
+We state this by exhibiting `r : ℝ` with `0 < r` and `ψ (Unitization.inr b) = (r : ℂ)`.
+This avoids using an order on `ℂ` (which does not exist in Lean). -/
 private lemma exists_unitization_state_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
-    ∃ ψ : Unitization ℂ A →L[ℂ] ℂ, ‖ψ‖ = 1 ∧ ψ 1 = 1 ∧ (ψ (Unitization.inr b)).re > 0 := by
+    ∃ ψ : Unitization ℂ A →L[ℂ] ℂ, ‖ψ‖ = 1 ∧ ψ 1 = 1 ∧
+      ∃ r : ℝ, 0 < r ∧ ψ (Unitization.inr b) = (r : ℂ) := by
   let b' : Unitization ℂ A := Unitization.inr b
   have hb' : 0 ≤ b' := Unitization.inr_nonneg_iff.mpr hb
   have hb'_ne : b' ≠ 0 := Unitization.inr_injective.ne hb_ne
@@ -111,21 +115,20 @@ private lemma exists_unitization_state_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b 
     rw [WeakDual.toStrongDual_apply]
     change φ 1 = 1
     rw [map_one φ]
-  · rw [hψ_ext ⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩]
-    show ((WeakDual.toStrongDual φ.val) ⟨b', _⟩).re > 0
-    rw [WeakDual.toStrongDual_apply]
-    change (φ ⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩).re > 0
-    rw [hφ]
-    simp only [Complex.ofReal_re]
-    exact norm_pos_iff.mpr hb'_ne
+  · refine ⟨‖b'‖, norm_pos_iff.mpr hb'_ne, ?_⟩
+    have hψb' : ψ b' = (‖b'‖ : ℂ) := by
+      rw [hψ_ext ⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩]
+      show (WeakDual.toStrongDual φ.val) ⟨b', _⟩ = (‖b'‖ : ℂ)
+      rw [WeakDual.toStrongDual_apply]
+      simpa using hφ
+    simpa [b'] using hψb'
 
 
-/-- For any nonzero positive element `b`, there exists a quasi-state with positive
-real part when applied to `b`. -/
 private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
-    ∃ φ ∈ QuasiStateSpace A, (φ b).re > 0 := by
+  ∃ φ ∈ QuasiStateSpace A, ∃ r : ℝ, 0 < r ∧ φ b = (r : ℂ) := by
   haveI : Nontrivial A := nontrivial_of_ne b 0 hb_ne
-  obtain ⟨ψ, hψ_norm_eq, hψ_one, hψ_pos_val⟩ := exists_unitization_state_pos_re b hb hb_ne
+  obtain ⟨ψ, hψ_norm_eq, hψ_one, r, hrpos, hψb_eq⟩ :=
+    exists_unitization_state_pos_re b hb hb_ne
   have hψ_pos : IsPositive (Unitization ℂ A) ψ :=
     isPositive_of_norm_eq_one_map_one ψ hψ_norm_eq hψ_one
 
@@ -155,10 +158,14 @@ private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) 
         congr
         exact inrIso.norm_toContinuousLinearMap
       _ = 1 := mul_one _
-  use φ
-  refine ⟨⟨hφ_pos, ?_⟩, hψ_pos_val⟩
-  simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
-  exact hφ_norm
+
+  refine ⟨φ, ?_, ?_⟩
+  · refine ⟨hφ_pos, ?_⟩
+    simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
+    exact hφ_norm
+  · refine ⟨r, hrpos, ?_⟩
+    simpa [φ, inrCLM, inrIso, LinearIsometry.coe_toContinuousLinearMap,
+      LinearIsometry.coe_mk, inrLM, LinearMap.coe_mk, AddHom.coe_mk] using hψb_eq
 
 
 namespace IsPureState
@@ -309,9 +316,14 @@ noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State ℂ
       simp [h_opNorm_eq]
 
 
-/-- For any non-zero element `a`, there exists a pure state `φ` such that `φ(star a * a) > 0`. -/
+/-- For any non-zero element `a`, there exists a pure state `φ` such that
+`φ (star a * a)` is a strictly positive real number (viewed in `ℂ`).
+
+Note: `ℂ` itself is not ordered in Lean, so the correct way to express
+“`φ(star a * a) > 0`” is to exhibit a real `r > 0` with
+`φ (star a * a) = (r : ℂ)`. -/
 lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
-    ∃ φ : WeakDual ℂ A, IsPureState φ ∧ (φ (star a * a)).re > 0 := by
+  ∃ φ : WeakDual ℂ A, IsPureState φ ∧ ∃ r : ℝ, 0 < r ∧ φ (star a * a) = (r : ℂ) := by
   let b := star a * a
   have hb_ne_zero : b ≠ 0 := by
     rw [ne_eq, CStarRing.star_mul_self_eq_zero_iff]
@@ -321,7 +333,7 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
     apply AddSubmonoid.subset_closure
     use a
 
-  obtain ⟨ω, hω_mem, hω_pos⟩ := exists_quasiState_pos_re b hb_pos hb_ne_zero
+  obtain ⟨ω, hω_mem, r, hrpos, hω_eq⟩ := exists_quasiState_pos_re b hb_pos hb_ne_zero
 
   let eval_b : WeakDual ℂ A →L[ℂ] ℂ := {
     toFun := fun φ => φ b
@@ -336,7 +348,11 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
   have hf : ContinuousOn f (QuasiStateSpace A) := Continuous.continuousOn l.continuous |>.mono (Set.subset_univ _)
 
   have h_M_pos : M > 0 := by
-    apply lt_of_lt_of_le hω_pos
+    have hω_re : (ω b).re = r := by
+      have := congrArg Complex.re hω_eq
+      simpa using this
+    apply lt_of_lt_of_le hrpos
+    rw [← hω_re]
     apply le_csSup
     · exact ((QuasiStateSpace.compact A).image_of_continuousOn hf).bddAbove
     · exact Set.mem_image_of_mem f hω_mem
@@ -399,7 +415,8 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
   use ψ
   constructor
   · exact hψ_ext_S
-  · have : l ψ = M := by
+  · -- First get the strict positivity of the real part.
+    have hψ_l_eq_M : l ψ = M := by
       apply le_antisymm
       · apply le_csSup
         · exact ((QuasiStateSpace.compact A).image l.continuous).bddAbove
@@ -410,9 +427,27 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
         · intro r ⟨z, hz, hr⟩
           rw [← hr]
           exact hψ_mem_F.2 z hz
-    change l ψ > 0
-    rw [this]
-    exact h_M_pos
+    have hψ_re_pos : (ψ b).re > 0 := by
+      -- `l ψ` is definitionally `(ψ b).re`.
+      have : l ψ > 0 := by
+        rw [hψ_l_eq_M]
+        exact h_M_pos
+      simp at this
+      exact this
+
+    -- Then use positivity (membership in `QuasiStateSpace`) to see the value is real.
+    have hψ_mem_S : ψ ∈ QuasiStateSpace A := hψ_mem_F.1
+    obtain ⟨r₀, hr₀⟩ := hψ_mem_S.1 a
+    -- `hr₀` is exactly the real-valuedness statement for `ψ (star a * a)`.
+    have hr₀_re : (ψ b).re = (r₀ : ℝ) := by
+      have h : ψ b = (r₀ : ℂ) := by
+        simpa [b] using hr₀
+      have := congrArg Complex.re h
+      simpa using this
+    have hrpos : (0 : ℝ) < (r₀ : ℝ) := by
+      simpa [hr₀_re] using hψ_re_pos
+    refine ⟨(r₀ : ℝ), hrpos, ?_⟩
+    simpa [b] using hr₀
 
 end IsPureState
 
