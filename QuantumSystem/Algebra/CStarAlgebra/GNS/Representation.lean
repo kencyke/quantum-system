@@ -111,15 +111,15 @@ private lemma norm_cyclic (T₁ T₂ : Representation ω) (a : A) :
   exact congr_arg RCLike.re (inner_cyclic T₁ T₂ a a)
 
 /-- The canonical correspondence on cyclic orbit vectors: `π₁(a) ξ₁ ↦ π₂(a) ξ₂`. -/
-private def cyclic_correspondence (_T₁ T₂ : Representation ω) (a : A) : T₂.H :=
+private def cyclicCorrespondence (_T₁ T₂ : Representation ω) (a : A) : T₂.H :=
   T₂.π a T₂.ξ
 
 /-- Well-definedness of the cyclic correspondence: equality in the first triplet forces
 equality in the second (uses preservation of inner products). -/
 private lemma cyclic_correspondence_well_defined (T₁ T₂ : Representation ω) (a b : A)
     (h : T₁.π a T₁.ξ = T₁.π b T₁.ξ) :
-    cyclic_correspondence T₁ T₂ a = cyclic_correspondence T₁ T₂ b := by
-  unfold cyclic_correspondence
+    cyclicCorrespondence T₁ T₂ a = cyclicCorrespondence T₁ T₂ b := by
+  unfold cyclicCorrespondence
   -- Show their difference acts trivially on ξ in T₁
   have h_map_sub : T₁.π (a - b) T₁.ξ = 0 := by
     calc T₁.π (a - b) T₁.ξ
@@ -142,7 +142,7 @@ private lemma cyclic_correspondence_well_defined (T₁ T₂ : Representation ω)
     _ = T₂.π b T₂.ξ := by abel
 
 /-- The cyclic set: `{ π a ξ | a : A }` as a subset of the Hilbert space. -/
-private def cyclic_set (T : Representation ω) : Set T.H :=
+private def cyclicSet (T : Representation ω) : Set T.H :=
   ⋃ (a : A), {T.π a T.ξ}
 
 /-- Helper lemma: for a *-homomorphism `π`, density of the union of singletons
@@ -177,25 +177,25 @@ private lemma dense_iUnion_iff_dense_span {A H : Type*} [NonUnitalCStarAlgebra A
     exact Set.eq_univ_of_univ_subset this
 
 /-- Density of the cyclic set (reformulation of the `cyclic` field). -/
-private lemma dense_cyclic_set (T : Representation ω) : Dense (cyclic_set T) := by
-  unfold cyclic_set
+private lemma dense_cyclicSet (T : Representation ω) : Dense (cyclicSet T) := by
+  unfold cyclicSet
   rw [dense_iUnion_iff_dense_span]
   exact T.cyclic
 
-private lemma mem_cyclic_set (T : Representation ω) (a : A) :
-  T.π a T.ξ ∈ cyclic_set T := by
+private lemma mem_cyclicSet (T : Representation ω) (a : A) :
+  T.π a T.ξ ∈ cyclicSet T := by
   apply Set.mem_iUnion.mpr
   exact ⟨a, rfl⟩
 
 /-- Characterisation of elements of the cyclic set. -/
 private lemma mem_cyclic_set_iff (T : Representation ω) (x : T.H) :
-  x ∈ cyclic_set T ↔ ∃ a : A, x = T.π a T.ξ := by
+  x ∈ cyclicSet T ↔ ∃ a : A, x = T.π a T.ξ := by
   constructor
   · intro hx
     obtain ⟨a, ha⟩ := Set.mem_iUnion.mp hx
     exact ⟨a, (Set.mem_singleton_iff.mp ha)⟩
   · rintro ⟨a, rfl⟩
-    exact mem_cyclic_set T a
+    exact mem_cyclicSet T a
 
 /-- Distance from the cyclic vector is preserved across corresponding orbit vectors. -/
 private lemma dist_cyclic (T₁ T₂ : Representation ω) (a : A) :
@@ -213,18 +213,18 @@ private lemma dist_cyclic (T₁ T₂ : Representation ω) (a : A) :
       _ = conj (ω a) := by rw [T₂.gns_condition a]
   rw [h_inner₁, h_inner₂, h_norm, T₁.unit_norm, T₂.unit_norm]
 
-/-- The set-level map on cyclic orbit vectors: every `x : cyclic_set T₁` is represented by
-some `π₁(a) ξ₁`, and `cyclic_map` sends it to the matching vector `π₂(a) ξ₂`. -/
-private noncomputable def cyclic_map (T₁ T₂ : Representation ω) :
-    (cyclic_set T₁) → T₂.H :=
+/-- The set-level map on cyclic orbit vectors: every `x : cyclicSet T₁` is represented by
+some `π₁(a) ξ₁`, and `cyclicMap` sends it to the matching vector `π₂(a) ξ₂`. -/
+private noncomputable def cyclicMap (T₁ T₂ : Representation ω) :
+  (cyclicSet T₁) → T₂.H :=
   fun x => T₂.π (Classical.choose (Set.mem_iUnion.mp x.property)) T₂.ξ
 
-/-- Independence of representatives: the value of `cyclic_map` only depends on the point
-`x : cyclic_set T₁`, not on the particular `a` used to describe it. -/
-private lemma cyclic_map_well_defined (T₁ T₂ : Representation ω)
-    (x : cyclic_set T₁) (a : A) (ha : x.val = T₁.π a T₁.ξ) :
-    cyclic_map T₁ T₂ x = T₂.π a T₂.ξ := by
-  unfold cyclic_map
+/-- Independence of representatives: the value of `cyclicMap` only depends on the point
+`x : cyclicSet T₁`, not on the particular `a` used to describe it. -/
+private lemma cyclicMap_well_defined (T₁ T₂ : Representation ω)
+    (x : cyclicSet T₁) (a : A) (ha : x.val = T₁.π a T₁.ξ) :
+    cyclicMap T₁ T₂ x = T₂.π a T₂.ξ := by
+  unfold cyclicMap
   let a' := Classical.choose (Set.mem_iUnion.mp x.property)
   have ha' : x.val = T₁.π a' T₁.ξ := by
     have := Classical.choose_spec (Set.mem_iUnion.mp x.property)
@@ -232,52 +232,52 @@ private lemma cyclic_map_well_defined (T₁ T₂ : Representation ω)
     exact this
   have h_eq : T₁.π a T₁.ξ = T₁.π a' T₁.ξ := by rw [← ha, ha']
   have := cyclic_correspondence_well_defined T₁ T₂ a a' h_eq
-  unfold cyclic_correspondence at this
+  unfold cyclicCorrespondence at this
   exact this.symm
 
 /-- The cyclic map preserves inner products. -/
-private lemma cyclic_map_inner (T₁ T₂ : Representation ω)
-    (x y : cyclic_set T₁) :
-    @inner ℂ T₂.H _ (cyclic_map T₁ T₂ x) (cyclic_map T₁ T₂ y) =
+private lemma cyclicMap_inner (T₁ T₂ : Representation ω)
+    (x y : cyclicSet T₁) :
+    @inner ℂ T₂.H _ (cyclicMap T₁ T₂ x) (cyclicMap T₁ T₂ y) =
     @inner ℂ T₁.H _ x.val y.val := by
   obtain ⟨a, ha⟩ := Set.mem_iUnion.mp x.property
   obtain ⟨b, hb⟩ := Set.mem_iUnion.mp y.property
   simp only [Set.mem_singleton_iff] at ha hb
-  rw [cyclic_map_well_defined T₁ T₂ x a ha, cyclic_map_well_defined T₁ T₂ y b hb, ha, hb]
+  rw [cyclicMap_well_defined T₁ T₂ x a ha, cyclicMap_well_defined T₁ T₂ y b hb, ha, hb]
   exact (inner_cyclic T₁ T₂ a b).symm
 
 /-- The cyclic map preserves norms. -/
-private lemma cyclic_map_norm (T₁ T₂ : Representation ω)
-    (x : cyclic_set T₁) :
-    ‖cyclic_map T₁ T₂ x‖ = ‖(x : T₁.H)‖ := by
+private lemma cyclicMap_norm (T₁ T₂ : Representation ω)
+    (x : cyclicSet T₁) :
+    ‖cyclicMap T₁ T₂ x‖ = ‖(x : T₁.H)‖ := by
   rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)]
   simp only [← @inner_self_eq_norm_sq ℂ]
-  have := cyclic_map_inner T₁ T₂ x x
+  have := cyclicMap_inner T₁ T₂ x x
   exact congr_arg RCLike.re this
 
 /-- The cyclic map preserves distances. -/
-private lemma cyclic_map_dist (T₁ T₂ : Representation ω)
-    (x y : cyclic_set T₁) :
-    ‖cyclic_map T₁ T₂ x - cyclic_map T₁ T₂ y‖ = ‖(x : T₁.H) - (y : T₁.H)‖ := by
+private lemma cyclicMap_dist (T₁ T₂ : Representation ω)
+    (x y : cyclicSet T₁) :
+    ‖cyclicMap T₁ T₂ x - cyclicMap T₁ T₂ y‖ = ‖(x : T₁.H) - (y : T₁.H)‖ := by
   rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), @norm_sub_sq ℂ T₂.H, @norm_sub_sq ℂ T₁.H]
-  have h_norm_x := cyclic_map_norm T₁ T₂ x
-  have h_norm_y := cyclic_map_norm T₁ T₂ y
-  have h_inner := cyclic_map_inner T₁ T₂ x y
+  have h_norm_x := cyclicMap_norm T₁ T₂ x
+  have h_norm_y := cyclicMap_norm T₁ T₂ y
+  have h_inner := cyclicMap_inner T₁ T₂ x y
   rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)] at h_norm_x h_norm_y
   simp only [h_norm_x, h_norm_y]
   linarith [congr_arg RCLike.re h_inner]
 
 /-- The map on cyclic subsets is an isometry (with respect to the subtype metric). -/
-private lemma cyclic_map_isometry (T₁ T₂ : Representation ω) :
-    Isometry (cyclic_map T₁ T₂) := by
+private lemma cyclicMap_isometry (T₁ T₂ : Representation ω) :
+    Isometry (cyclicMap T₁ T₂) := by
   intro x y
-  have hx : edist (cyclic_map T₁ T₂ x) (cyclic_map T₁ T₂ y) =
-            ENNReal.ofReal ‖cyclic_map T₁ T₂ x - cyclic_map T₁ T₂ y‖ := by
+  have hx : edist (cyclicMap T₁ T₂ x) (cyclicMap T₁ T₂ y) =
+            ENNReal.ofReal ‖cyclicMap T₁ T₂ x - cyclicMap T₁ T₂ y‖ := by
     rw [edist_dist, dist_eq_norm]
   have hy : edist x y = ENNReal.ofReal (dist (x : T₁.H) (y : T₁.H)) := by
     have : dist x y = dist (x : T₁.H) (y : T₁.H) := rfl
     rw [edist_dist, this]
-  rw [hx, hy, dist_eq_norm, cyclic_map_dist]
+  rw [hx, hy, dist_eq_norm, cyclicMap_dist]
 
 /-- A linear isometry equivalence `U : T₁.H ≃ₗᵢ[ℂ] T₂.H` that maps cyclic vectors appropriately also
 maps the cyclic vector of the first triplet to that of the second. -/
@@ -287,7 +287,7 @@ private lemma linear_isometry_equiv_map_cyclic_vector (T₁ T₂ : Representatio
     U T₁.ξ = T₂.ξ := by
   suffices ‖(U : T₁.H →L[ℂ] T₂.H) T₁.ξ - T₂.ξ‖ = 0 by exact eq_of_sub_eq_zero (norm_eq_zero.mp this)
   refine le_antisymm (le_of_forall_pos_le_add fun ε hε => ?_) (norm_nonneg _)
-  obtain ⟨x₁, hx₁_close, hx₁_mem⟩ := Metric.dense_iff.mp (dense_cyclic_set T₁) T₁.ξ (ε / 2) (by linarith : 0 < ε / 2)
+  obtain ⟨x₁, hx₁_close, hx₁_mem⟩ := Metric.dense_iff.mp (dense_cyclicSet T₁) T₁.ξ (ε / 2) (by linarith : 0 < ε / 2)
   obtain ⟨a, ha⟩ := Set.mem_iUnion.mp hx₁_mem
   simp only [Set.mem_singleton_iff] at ha
   subst ha; rw [Metric.mem_ball, dist_eq_norm] at hx₁_close
@@ -333,8 +333,8 @@ private lemma linear_isometry_equiv_intertwines (T₁ T₂ : Representation ω)
   intro a
   ext x
   simp only [ContinuousLinearMap.coe_comp', Function.comp_apply]
-  have h_dense := dense_cyclic_set T₁
-  unfold cyclic_set at h_dense
+  have h_dense := dense_cyclicSet T₁
+  unfold cyclicSet at h_dense
   have h_on_cyclic : ∀ b : A, (U : T₁.H →L[ℂ] T₂.H) (T₁.π a (T₁.π b T₁.ξ)) = T₂.π a ((U : T₁.H →L[ℂ] T₂.H) (T₁.π b T₁.ξ)) :=
     fun b => linear_isometry_equiv_intertwines_on_cyclic T₁ T₂ U h_cyclic a b
   let f : T₁.H → T₂.H := fun y => (U : T₁.H →L[ℂ] T₂.H) (T₁.π a y)
@@ -348,103 +348,103 @@ private lemma linear_isometry_equiv_intertwines (T₁ T₂ : Representation ω)
   have : f = g := Continuous.ext_on h_dense hf hg h_eq_on_dense
   rw [this]
 
-/-- Extension of the set-level isometry `cyclic_map T₁ T₂` from the dense subset `cyclic_set T₁`
+/-- Extension of the set-level isometry `cyclicMap T₁ T₂` from the dense subset `cyclicSet T₁`
 to all of `T₁.H` via metric-space completion. -/
-private noncomputable def extend_cyclic_map (T₁ T₂ : Representation ω) : T₁.H → T₂.H :=
-  MetricSpaceCompletion.extend_dense (S := cyclic_set T₁)
-    (dense_cyclic_set T₁) (cyclic_map T₁ T₂)
+private noncomputable def extendCyclicMap (T₁ T₂ : Representation ω) : T₁.H → T₂.H :=
+  MetricSpaceCompletion.extendDense (S := cyclicSet T₁)
+    (dense_cyclicSet T₁) (cyclicMap T₁ T₂)
 
-private lemma continuous_extend_cyclic_map (T₁ T₂ : Representation ω) :
-    Continuous (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) := by
-  unfold extend_cyclic_map
+private lemma continuous_extendCyclicMap (T₁ T₂ : Representation ω) :
+    Continuous (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) := by
+  unfold extendCyclicMap
   exact MetricSpaceCompletion.extended_isometry_is_continuous
-    (S := cyclic_set T₁) (dense_cyclic_set T₁) (cyclic_map T₁ T₂) (cyclic_map_isometry T₁ T₂)
+    (S := cyclicSet T₁) (dense_cyclicSet T₁) (cyclicMap T₁ T₂) (cyclicMap_isometry T₁ T₂)
 
-private lemma isometry_extend_cyclic_map (T₁ T₂ : Representation ω) :
-    Isometry (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) := by
-  unfold extend_cyclic_map
+private lemma isometry_extendCyclicMap (T₁ T₂ : Representation ω) :
+    Isometry (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) := by
+  unfold extendCyclicMap
   exact MetricSpaceCompletion.extended_isometry_is_isometry
-    (S := cyclic_set T₁) (dense_cyclic_set T₁) (cyclic_map T₁ T₂) (cyclic_map_isometry T₁ T₂)
+    (S := cyclicSet T₁) (dense_cyclicSet T₁) (cyclicMap T₁ T₂) (cyclicMap_isometry T₁ T₂)
 
-private lemma extend_cyclic_map_eq (T₁ T₂ : Representation ω) (x : cyclic_set T₁) :
-    extend_cyclic_map (T₁ := T₁) (T₂ := T₂) (x : T₁.H) = cyclic_map T₁ T₂ x := by
-  unfold extend_cyclic_map
+private lemma extendCyclicMap_eq (T₁ T₂ : Representation ω) (x : cyclicSet T₁) :
+    extendCyclicMap (T₁ := T₁) (T₂ := T₂) (x : T₁.H) = cyclicMap T₁ T₂ x := by
+  unfold extendCyclicMap
   simpa using
     MetricSpaceCompletion.extended_isometry_is_induced
-      (S := cyclic_set T₁) (dense_cyclic_set T₁)
-      (cyclic_map T₁ T₂) (cyclic_map_isometry T₁ T₂) x
+      (S := cyclicSet T₁) (dense_cyclicSet T₁)
+      (cyclicMap T₁ T₂) (cyclicMap_isometry T₁ T₂) x
 
 private lemma extend_cyclic_map_left_inv (T₁ T₂ : Representation ω) :
-    ∀ x : T₁.H, (extend_cyclic_map (T₁ := T₂) (T₂ := T₁)) ((extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) x) = x := by
+    ∀ x : T₁.H, (extendCyclicMap (T₁ := T₂) (T₂ := T₁)) ((extendCyclicMap (T₁ := T₁) (T₂ := T₂)) x) = x := by
   intro x
-  set U_fun := extend_cyclic_map (T₁ := T₁) (T₂ := T₂)
-  set V_fun := extend_cyclic_map (T₁ := T₂) (T₂ := T₁)
-  have hx' : x ∈ closure (cyclic_set T₁) :=
-    (dense_cyclic_set T₁).closure_eq ▸ (show x ∈ Set.univ from trivial)
+  set U_fun := extendCyclicMap (T₁ := T₁) (T₂ := T₂)
+  set V_fun := extendCyclicMap (T₁ := T₂) (T₂ := T₁)
+  have hx' : x ∈ closure (cyclicSet T₁) :=
+    (dense_cyclicSet T₁).closure_eq ▸ (show x ∈ Set.univ from trivial)
   refine (isClosed_eq
-    ((continuous_extend_cyclic_map (T₁ := T₂) (T₂ := T₁)).comp
-      (continuous_extend_cyclic_map (T₁ := T₁) (T₂ := T₂)))
+    ((continuous_extendCyclicMap (T₁ := T₂) (T₂ := T₁)).comp
+      (continuous_extendCyclicMap (T₁ := T₁) (T₂ := T₂)))
     continuous_id).closure_subset_iff.mpr ?_ hx'
   intro z hz
   obtain ⟨a, rfl⟩ := (mem_cyclic_set_iff T₁ z).mp hz
-  have hx₁ : T₁.π a T₁.ξ ∈ cyclic_set T₁ := mem_cyclic_set (T := T₁) a
-  have hx₂ : T₂.π a T₂.ξ ∈ cyclic_set T₂ := mem_cyclic_set (T := T₂) a
+  have hx₁ : T₁.π a T₁.ξ ∈ cyclicSet T₁ := mem_cyclicSet (T := T₁) a
+  have hx₂ : T₂.π a T₂.ξ ∈ cyclicSet T₂ := mem_cyclicSet (T := T₂) a
   have hU : U_fun (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
-    simpa [U_fun] using (extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨T₁.π a T₁.ξ, hx₁⟩).trans
-      (cyclic_map_well_defined T₁ T₂ ⟨T₁.π a T₁.ξ, hx₁⟩ a rfl)
+    simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨T₁.π a T₁.ξ, hx₁⟩).trans
+      (cyclicMap_well_defined T₁ T₂ ⟨T₁.π a T₁.ξ, hx₁⟩ a rfl)
   have hV : V_fun (T₂.π a T₂.ξ) = T₁.π a T₁.ξ := by
-    simpa [V_fun] using (extend_cyclic_map_eq (T₁ := T₂) (T₂ := T₁) ⟨T₂.π a T₂.ξ, hx₂⟩).trans
-      (cyclic_map_well_defined T₂ T₁ ⟨T₂.π a T₂.ξ, hx₂⟩ a rfl)
+    simpa [V_fun] using (extendCyclicMap_eq (T₁ := T₂) (T₂ := T₁) ⟨T₂.π a T₂.ξ, hx₂⟩).trans
+      (cyclicMap_well_defined T₂ T₁ ⟨T₂.π a T₂.ξ, hx₂⟩ a rfl)
   calc
     V_fun (U_fun (T₁.π a T₁.ξ))
         = V_fun (T₂.π a T₂.ξ) := by simp [hU]
       _ = T₁.π a T₁.ξ := hV
 
 private lemma extend_cyclic_map_right_inv (T₁ T₂ : Representation ω) :
-    ∀ y : T₂.H, (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) ((extend_cyclic_map (T₁ := T₂) (T₂ := T₁)) y) = y := by
+    ∀ y : T₂.H, (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) ((extendCyclicMap (T₁ := T₂) (T₂ := T₁)) y) = y := by
   intro y
-  set U_fun := extend_cyclic_map (T₁ := T₁) (T₂ := T₂)
-  set V_fun := extend_cyclic_map (T₁ := T₂) (T₂ := T₁)
-  have hy' : y ∈ closure (cyclic_set T₂) :=
-    (dense_cyclic_set T₂).closure_eq ▸ (show y ∈ Set.univ from trivial)
+  set U_fun := extendCyclicMap (T₁ := T₁) (T₂ := T₂)
+  set V_fun := extendCyclicMap (T₁ := T₂) (T₂ := T₁)
+  have hy' : y ∈ closure (cyclicSet T₂) :=
+    (dense_cyclicSet T₂).closure_eq ▸ (show y ∈ Set.univ from trivial)
   refine (isClosed_eq
-    ((continuous_extend_cyclic_map (T₁ := T₁) (T₂ := T₂)).comp
-      (continuous_extend_cyclic_map (T₁ := T₂) (T₂ := T₁)))
+    ((continuous_extendCyclicMap (T₁ := T₁) (T₂ := T₂)).comp
+      (continuous_extendCyclicMap (T₁ := T₂) (T₂ := T₁)))
     continuous_id).closure_subset_iff.mpr ?_ hy'
   intro z hz
   obtain ⟨a, rfl⟩ := (mem_cyclic_set_iff T₂ z).mp hz
-  have hx₁ : T₁.π a T₁.ξ ∈ cyclic_set T₁ := mem_cyclic_set (T := T₁) a
-  have hx₂ : T₂.π a T₂.ξ ∈ cyclic_set T₂ := mem_cyclic_set (T := T₂) a
+  have hx₁ : T₁.π a T₁.ξ ∈ cyclicSet T₁ := mem_cyclicSet (T := T₁) a
+  have hx₂ : T₂.π a T₂.ξ ∈ cyclicSet T₂ := mem_cyclicSet (T := T₂) a
   have hV : V_fun (T₂.π a T₂.ξ) = T₁.π a T₁.ξ := by
-    simpa [V_fun] using (extend_cyclic_map_eq (T₁ := T₂) (T₂ := T₁) ⟨T₂.π a T₂.ξ, hx₂⟩).trans
-      (cyclic_map_well_defined T₂ T₁ ⟨T₂.π a T₂.ξ, hx₂⟩ a rfl)
+    simpa [V_fun] using (extendCyclicMap_eq (T₁ := T₂) (T₂ := T₁) ⟨T₂.π a T₂.ξ, hx₂⟩).trans
+      (cyclicMap_well_defined T₂ T₁ ⟨T₂.π a T₂.ξ, hx₂⟩ a rfl)
   have hU : U_fun (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
-    simpa [U_fun] using (extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨T₁.π a T₁.ξ, hx₁⟩).trans
-      (cyclic_map_well_defined T₁ T₂ ⟨T₁.π a T₁.ξ, hx₁⟩ a rfl)
+    simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨T₁.π a T₁.ξ, hx₁⟩).trans
+      (cyclicMap_well_defined T₁ T₂ ⟨T₁.π a T₁.ξ, hx₁⟩ a rfl)
   calc
     U_fun (V_fun (T₂.π a T₂.ξ))
         = U_fun (T₁.π a T₁.ξ) := by simp [hV]
       _ = T₂.π a T₂.ξ := hU
 
 private lemma extend_cyclic_map_add (T₁ T₂ : Representation ω) :
-    ∀ x y : T₁.H, (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) (x + y) =
-      (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) x + (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) y := by
-  set U_fun := extend_cyclic_map (T₁ := T₁) (T₂ := T₂)
-  refine Continuous.add_dense_subset_to_everywhere (dense_cyclic_set T₁) U_fun
-    (continuous_extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) ?_
+    ∀ x y : T₁.H, (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) (x + y) =
+      (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) x + (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) y := by
+  set U_fun := extendCyclicMap (T₁ := T₁) (T₂ := T₂)
+  refine Continuous.add_dense_subset_to_everywhere (dense_cyclicSet T₁) U_fun
+    (continuous_extendCyclicMap (T₁ := T₁) (T₂ := T₂)) ?_
   intro x hx y hy
   obtain ⟨a, rfl⟩ := (mem_cyclic_set_iff T₁ x).mp hx
   obtain ⟨b, rfl⟩ := (mem_cyclic_set_iff T₁ y).mp hy
-  have hx₁ : T₁.π (a + b) T₁.ξ ∈ cyclic_set T₁ := mem_cyclic_set (T := T₁) (a + b)
+  have hx₁ : T₁.π (a + b) T₁.ξ ∈ cyclicSet T₁ := mem_cyclicSet (T := T₁) (a + b)
   have hUab : U_fun (T₁.π (a + b) T₁.ξ) = T₂.π (a + b) T₂.ξ := by
-    simpa [U_fun] using (extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨_, hx₁⟩).trans
-      (cyclic_map_well_defined T₁ T₂ ⟨_, hx₁⟩ (a + b) rfl)
+    simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, hx₁⟩).trans
+      (cyclicMap_well_defined T₁ T₂ ⟨_, hx₁⟩ (a + b) rfl)
   have hUa : U_fun (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
-    simpa [U_fun] using (extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclic_set (T := T₁) a⟩).trans
-      (cyclic_map_well_defined T₁ T₂ ⟨_, mem_cyclic_set (T := T₁) a⟩ a rfl)
+    simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclicSet (T := T₁) a⟩).trans
+      (cyclicMap_well_defined T₁ T₂ ⟨_, mem_cyclicSet (T := T₁) a⟩ a rfl)
   have hUb : U_fun (T₁.π b T₁.ξ) = T₂.π b T₂.ξ := by
-    simpa [U_fun] using (extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclic_set (T := T₁) b⟩).trans
-      (cyclic_map_well_defined T₁ T₂ ⟨_, mem_cyclic_set (T := T₁) b⟩ b rfl)
+    simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclicSet (T := T₁) b⟩).trans
+      (cyclicMap_well_defined T₁ T₂ ⟨_, mem_cyclicSet (T := T₁) b⟩ b rfl)
   calc U_fun (T₁.π a T₁.ξ + T₁.π b T₁.ξ)
       = U_fun ((T₁.π a + T₁.π b) T₁.ξ) := by rw [ContinuousLinearMap.add_apply]
     _ = U_fun (T₁.π (a + b) T₁.ξ) := by rw [show T₁.π (a + b) = T₁.π a + T₁.π b from T₁.π.map_add' a b]
@@ -454,20 +454,20 @@ private lemma extend_cyclic_map_add (T₁ T₂ : Representation ω) :
     _ = U_fun (T₁.π a T₁.ξ) + U_fun (T₁.π b T₁.ξ) := by rw [← hUa, ← hUb]
 
 private lemma extend_cyclic_map_smul (T₁ T₂ : Representation ω) :
-    ∀ (c : ℂ) (x : T₁.H), (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) (c • x) =
-      c • (extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) x := by
-  set U_fun := extend_cyclic_map (T₁ := T₁) (T₂ := T₂)
-  refine Continuous.smul_dense_subset_to_everywhere (dense_cyclic_set T₁) U_fun
-    (continuous_extend_cyclic_map (T₁ := T₁) (T₂ := T₂)) ?_
+    ∀ (c : ℂ) (x : T₁.H), (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) (c • x) =
+      c • (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) x := by
+  set U_fun := extendCyclicMap (T₁ := T₁) (T₂ := T₂)
+  refine Continuous.smul_dense_subset_to_everywhere (dense_cyclicSet T₁) U_fun
+    (continuous_extendCyclicMap (T₁ := T₁) (T₂ := T₂)) ?_
   intro c x hx
   obtain ⟨a, rfl⟩ := (mem_cyclic_set_iff T₁ x).mp hx
-  have hx₁ : T₁.π (c • a) T₁.ξ ∈ cyclic_set T₁ := mem_cyclic_set (T := T₁) (c • a)
+  have hx₁ : T₁.π (c • a) T₁.ξ ∈ cyclicSet T₁ := mem_cyclicSet (T := T₁) (c • a)
   have hU1 : U_fun (T₁.π (c • a) T₁.ξ) = T₂.π (c • a) T₂.ξ := by
-    simpa [U_fun] using (extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨_, hx₁⟩).trans
-      (cyclic_map_well_defined T₁ T₂ ⟨_, hx₁⟩ (c • a) rfl)
+    simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, hx₁⟩).trans
+      (cyclicMap_well_defined T₁ T₂ ⟨_, hx₁⟩ (c • a) rfl)
   have hUa : U_fun (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
-    simpa [U_fun] using (extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclic_set (T := T₁) a⟩).trans
-      (cyclic_map_well_defined T₁ T₂ ⟨_, mem_cyclic_set (T := T₁) a⟩ a rfl)
+    simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclicSet (T := T₁) a⟩).trans
+      (cyclicMap_well_defined T₁ T₂ ⟨_, mem_cyclicSet (T := T₁) a⟩ a rfl)
   show U_fun (c • T₁.π a T₁.ξ) = c • U_fun (T₁.π a T₁.ξ)
   calc U_fun (c • T₁.π a T₁.ξ)
       = U_fun ((c • T₁.π a) T₁.ξ) := rfl
@@ -479,9 +479,9 @@ private lemma extend_cyclic_map_smul (T₁ T₂ : Representation ω) :
 
 /-- The linear isometry equivalence `U : T₁.H ≃ₗᵢ[ℂ] T₂.H` obtained by extending the map
 `π₁(a) ξ₁ ↦ π₂(a) ξ₂` from the dense cyclic subset to the whole Hilbert space. -/
-private noncomputable def cyclic_isometry (T₁ T₂ : Representation ω) : T₁.H ≃ₗᵢ[ℂ] T₂.H := by
-  let U_fun := extend_cyclic_map (T₁ := T₁) (T₂ := T₂)
-  let V_fun := extend_cyclic_map (T₁ := T₂) (T₂ := T₁)
+private noncomputable def cyclicIsometry (T₁ T₂ : Representation ω) : T₁.H ≃ₗᵢ[ℂ] T₂.H := by
+  let U_fun := extendCyclicMap (T₁ := T₁) (T₂ := T₂)
+  let V_fun := extendCyclicMap (T₁ := T₂) (T₂ := T₁)
   have h_UV := extend_cyclic_map_left_inv T₁ T₂
   have h_VU := extend_cyclic_map_right_inv T₁ T₂
   have h_add := extend_cyclic_map_add T₁ T₂
@@ -496,23 +496,25 @@ private noncomputable def cyclic_isometry (T₁ T₂ : Representation ω) : T₁
           = U_fun (0 • (0 : T₁.H)) := by simp
         _ = 0 • U_fun (0 : T₁.H) := h_smul 0 0
         _ = 0 := by simp
-    have := (isometry_extend_cyclic_map (T₁ := T₁) (T₂ := T₂)).dist_eq x 0
+    have := (isometry_extendCyclicMap (T₁ := T₁) (T₂ := T₂)).dist_eq x 0
     simpa [U_fun, dist_eq_norm, h_zero] using this
   exact U_equiv.isometryOfInner fun x y ↦
     ({ toLinearMap := U_equiv.toLinearMap, norm_map' := h_norm_map } :
         T₁.H →ₗᵢ[ℂ] T₂.H).inner_map_map x y
 
 /-- On cyclic orbit vectors, `cyclic_isometry` agrees with the expected correspondence. -/
-private lemma cyclic_isometry_apply (T₁ T₂ : Representation ω) (a : A) :
-  (cyclic_isometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
-  -- The underlying linear map of `cyclic_isometry` is constructed from `extend_cyclic_map`.
-  have hx : T₁.π a T₁.ξ ∈ cyclic_set T₁ := mem_cyclic_set (T := T₁) a
-  conv_lhs => arg 1; rw [show (cyclic_isometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) =
-    (cyclic_isometry T₁ T₂).toLinearIsometry.toContinuousLinearMap from rfl]
-  -- The toFun of the `LinearIsometryEquiv` is `extend_cyclic_map`.
-  show extend_cyclic_map (T₁ := T₁) (T₂ := T₂) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ
-  rw [extend_cyclic_map_eq (T₁ := T₁) (T₂ := T₂) ⟨T₁.π a T₁.ξ, hx⟩]
-  exact cyclic_map_well_defined T₁ T₂ ⟨T₁.π a T₁.ξ, hx⟩ a rfl
+private lemma cyclicIsometry_apply (T₁ T₂ : Representation ω) (a : A) :
+  (cyclicIsometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
+  -- The underlying linear map of `cyclicIsometry` is constructed from `extendCyclicMap`.
+  have hx : T₁.π a T₁.ξ ∈ cyclicSet T₁ := mem_cyclicSet (T := T₁) a
+  conv_lhs =>
+    arg 1
+    rw [show (cyclicIsometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) =
+      (cyclicIsometry T₁ T₂).toLinearIsometry.toContinuousLinearMap from rfl]
+  -- The toFun of the `LinearIsometryEquiv` is `extendCyclicMap`.
+  show extendCyclicMap (T₁ := T₁) (T₂ := T₂) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ
+  rw [extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨T₁.π a T₁.ξ, hx⟩]
+  exact cyclicMap_well_defined T₁ T₂ ⟨T₁.π a T₁.ξ, hx⟩ a rfl
 
 /-- GNS representations of a fixed state are unique up to unitary equivalence.
 
@@ -523,9 +525,9 @@ unitarily equivalent to the canonical construction, and any two triplets are uni
 theorem unique_up_to_unitary_equivalence :
     ∀ T₁ T₂ : Representation ω, Nonempty (T₁ ≃ᵁ T₂) := by
   intro T₁ T₂
-  let Uiso := cyclic_isometry T₁ T₂
+  let Uiso := cyclicIsometry T₁ T₂
   have hU_cyclic_iso : ∀ a : A, (Uiso : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ :=
-  fun a => cyclic_isometry_apply T₁ T₂ a
+  fun a => cyclicIsometry_apply T₁ T₂ a
   refine ⟨
     { unitary_map := asUnitary Uiso
       map_cyclic_vector := linear_isometry_equiv_map_cyclic_vector T₁ T₂ Uiso hU_cyclic_iso

@@ -103,7 +103,7 @@ lemma cyclicVector_decomp_of_isClosed (T : GNS.Representation ω) (W : Submodule
       (Submodule.sub_starProjection_mem_orthogonal (K := W) (v := T.ξ))
 
 
-noncomputable def pi_apply (T : GNS.Representation ω) (v : T.H) : A →L[ℂ] T.H :=
+noncomputable def piApply (T : GNS.Representation ω) (v : T.H) : A →L[ℂ] T.H :=
   (LinearMap.mkContinuous
     { toFun := fun a => (T.π a) v
       map_add' := by
@@ -126,11 +126,11 @@ noncomputable def pi_apply (T : GNS.Representation ω) (v : T.H) : A →L[ℂ] T
       exact (h₁.trans h₃).trans_eq (by ac_rfl)))
 
 @[simp]
-lemma pi_apply_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
-    (T.pi_apply v) a = (T.π a) v := rfl
+lemma piApply_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
+  (T.piApply v) a = (T.π a) v := rfl
 
 noncomputable def vectorFunctional (T : GNS.Representation ω) (v : T.H) : WeakDual ℂ A :=
-  (innerSL ℂ v).comp (T.pi_apply v)
+  (innerSL ℂ v).comp (T.piApply v)
 
 @[simp]
 lemma vectorFunctional_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
@@ -369,9 +369,9 @@ lemma trichotomy_from_purity {ψ : PureState A}
   have h_eq : φ = χ := by rw [h_eq2, ← h_eq1]
   -- Contradiction via density
   have h_dense : Dense (Set.range (fun a => (T.π a) T.ξ)) := by
-    change Dense (Set.range (T.pi_apply T.ξ))
+    change Dense (Set.range (T.piApply T.ξ))
     rw [← LinearMap.coe_range]
-    rw [← Submodule.span_eq (LinearMap.range (T.pi_apply T.ξ))]
+    rw [← Submodule.span_eq (LinearMap.range (T.piApply T.ξ))]
     exact T.cyclic
   have hv₁_mem_closure : v₁ ∈ closure (Set.range (fun a => (T.π a) T.ξ)) := by
     rw [h_dense.closure_eq]

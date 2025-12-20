@@ -142,11 +142,11 @@ lemma conj_sym : ω (star y * x) = conj (ω (star x * y)) := by
   exact Complex.ext diff_re_zero im_eq
 
 /-- Extract the nonnegative real value from `ω(star a * a)`. -/
-noncomputable def positive_real (a : A) : ℝ≥0 :=
+noncomputable def positiveReal (a : A) : ℝ≥0 :=
   Classical.choose (ω.positive a)
 
 /-- The value of `ω(star x * x)` equals the extracted nonnegative real. -/
-lemma positive_real_spec : ω (star x * x) = RCLike.ofReal (positive_real ω x : ℝ) :=
+lemma positiveReal_spec : ω (star x * x) = RCLike.ofReal (positiveReal ω x : ℝ) :=
   Classical.choose_spec (ω.positive x)
 
 /-- A conjugate linear combination simplifies to twice the real part. -/
@@ -167,11 +167,11 @@ lemma conj_linear_combination_real:
 open ComplexOrder in
 lemma cauchy_schwarz_ineq : ‖ω (star y * x)‖^2 ≤ (ω (star x * x)) * (ω (star y * y)) := by
   have quad_nonneg : ∀ t : ℝ,
-      0 ≤ (positive_real ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positive_real ω y) := by
+      0 ≤ (positiveReal ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positiveReal ω y) := by
     intro t
     obtain ⟨γ, hγ_norm, hγ_phase⟩ := Complex.phase_alignment (ω (star y * x))
     let s : A := ((t : ℂ) * γ) • x + y
-    have hexp2 : (ω (star s * s)).re = (positive_real ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positive_real ω y) := by
+    have hexp2 : (ω (star s * s)).re = (positiveReal ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positiveReal ω y) := by
       have hquad := quadratic_expansion (ω := ω) (x := x) (y := y) (z := ((t : ℂ) * γ))
       have h1 : (‖(t : ℂ) * γ‖^2 : ℂ) = (t^2 : ℂ) := by
         rw [Complex.norm_mul, hγ_norm, mul_one, Complex.norm_real, pow_two, pow_two]
@@ -186,21 +186,21 @@ lemma cauchy_schwarz_ineq : ‖ω (star y * x)‖^2 ≤ (ω (star x * x)) * (ω 
         unfold s
         rw [hquad, h1, ← h2]
         ring_nf
-      simp only [congrArg Complex.re hequiv, positive_real_spec (ω := ω) x, positive_real_spec (ω := ω) y,
+      simp only [congrArg Complex.re hequiv, positiveReal_spec (ω := ω) x, positiveReal_spec (ω := ω) y,
                  Complex.add_re, Complex.mul_re,
                  pow_two, Complex.re_ofNat]
       simp
       ring_nf
-    rw [← hexp2, positive_real_spec (ω := ω) s]
+    rw [← hexp2, positiveReal_spec (ω := ω) s]
     simp
-  have : (2 * ‖ω (star y * x)‖) ^ 2 ≤ 4 * (positive_real ω x) * (positive_real ω y) := by
+  have : (2 * ‖ω (star y * x)‖) ^ 2 ≤ 4 * (positiveReal ω x) * (positiveReal ω y) := by
     have := discrim_le_zero quad_nonneg
     rw [discrim] at this
     linarith
-  have : ‖ω (star y * x)‖ ^ 2 ≤ (positive_real ω x) * (positive_real ω y) := by
+  have : ‖ω (star y * x)‖ ^ 2 ≤ (positiveReal ω x) * (positiveReal ω y) := by
     have : (2 * ‖ω (star y * x)‖) ^ 2 = 4 * ‖ω (star y * x)‖ ^ 2 := by ring
     linarith
-  rw [positive_real_spec (ω := ω) x, positive_real_spec (ω := ω) y, ← RCLike.ofReal_mul]
+  rw [positiveReal_spec (ω := ω) x, positiveReal_spec (ω := ω) y, ← RCLike.ofReal_mul]
   norm_cast
 
 /-- If `ω(star x * x) = 0`, then `ω(star a * x) = 0` for any `a`. -/
