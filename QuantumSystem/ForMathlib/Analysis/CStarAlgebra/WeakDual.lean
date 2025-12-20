@@ -24,9 +24,8 @@ namespace IsPositive
 lemma zero : IsPositive A 0 := by
   intro a
   use 0
-  show (0 : A →L[ℂ] ℂ) (star a * a) = _
-  simp only [ContinuousLinearMap.zero_apply]
-  rfl
+  change (0 : A →L[ℂ] ℂ) (star a * a) = _
+  simp
 
 lemma add {φ ψ : WeakDual ℂ A} (hφ : IsPositive A φ) (hψ : IsPositive A ψ) :
     IsPositive A (φ + ψ) := by
@@ -34,7 +33,7 @@ lemma add {φ ψ : WeakDual ℂ A} (hφ : IsPositive A φ) (hψ : IsPositive A �
   obtain ⟨r, hr⟩ := hφ a
   obtain ⟨s, hs⟩ := hψ a
   use r + s
-  show (φ + ψ : A →L[ℂ] ℂ) (star a * a) = _
+  change (φ + ψ : A →L[ℂ] ℂ) (star a * a) = _
   erw [ContinuousLinearMap.add_apply]
   rw [hr, hs]
   simp only [RCLike.ofReal_add, NNReal.coe_add]
@@ -44,7 +43,7 @@ lemma smul {φ : WeakDual ℂ A} (hφ : IsPositive A φ) {c : ℝ≥0} :
   intro a
   obtain ⟨r, hr⟩ := hφ a
   use c * r
-  show (c • φ : A →L[ℂ] ℂ) (star a * a) = _
+  change (c • φ : A →L[ℂ] ℂ) (star a * a) = _
   erw [ContinuousLinearMap.smul_apply]
   rw [hr]
   simp only [RCLike.ofReal_mul, NNReal.coe_mul]

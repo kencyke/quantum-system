@@ -63,11 +63,11 @@ end SMulSection
 
 section LinearSection
 
-variable [AddCommGroup α] [ContinuousAdd α] [SMul ℂ α][ContinuousSMul ℂ α]
+variable [AddCommGroup α] [ContinuousAdd α] [SMul ℂ α] [ContinuousSMul ℂ α]
 variable [AddCommGroup β] [ContinuousAdd β] [SMul ℂ β] [ContinuousSMul ℂ β]
 
 /-- A continuous function linear on a dense subset is linear everywhere. -/
-lemma linear_dense_subset_to_everywhere  (hs : Dense S) (f : α → β) (hf : Continuous f)
+lemma linear_dense_subset_to_everywhere (hs : Dense S) (f : α → β) (hf : Continuous f)
     (h_add : ∀ x ∈ S, ∀ y ∈ S, f (x + y) = f x + f y)
     (h_smul : ∀ c : ℂ, ∀ x ∈ S, f (c • x) = c • f x) :
     (∀ x y : α, f (x + y) = f x + f y) ∧ (∀ c : ℂ, ∀ x : α, f (c • x) = c • f x) :=

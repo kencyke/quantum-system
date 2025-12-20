@@ -4,6 +4,8 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum
 
 @[expose] public section
 
+universe u
+
 
 /--
 The **Gelfand-Naimark Theorem** (non-unital version):
@@ -24,9 +26,7 @@ theorem gelfand_naimark_theorem :
   let H := GNS.DirectSum.Hilbert A
   -- The representation is the direct sum of all GNS representations
   let φ := GNS.DirectSum.directSumAlgHom (A := A)
-
   refine ⟨H, inferInstance, φ, ?_⟩
-
   -- To show φ is an isometry, it suffices to show it preserves norms
   -- (since it's already additive as a *-homomorphism)
   apply AddMonoidHomClass.isometry_of_norm

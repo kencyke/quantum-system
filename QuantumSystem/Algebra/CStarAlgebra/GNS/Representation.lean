@@ -472,7 +472,7 @@ private lemma extend_cyclic_map_smul (T₁ T₂ : Representation ω) :
   have hUa : U_fun (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
     simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclicSet (T := T₁) a⟩).trans
       (cyclicMap_well_defined T₁ T₂ ⟨_, mem_cyclicSet (T := T₁) a⟩ a rfl)
-  show U_fun (c • T₁.π a T₁.ξ) = c • U_fun (T₁.π a T₁.ξ)
+  change U_fun (c • T₁.π a T₁.ξ) = c • U_fun (T₁.π a T₁.ξ)
   calc U_fun (c • T₁.π a T₁.ξ)
       = U_fun ((c • T₁.π a) T₁.ξ) := rfl
     _ = U_fun ((T₁.π (c • a)) T₁.ξ) := by rw [show T₁.π (c • a) = c • T₁.π a from T₁.π.map_smul' c a]
@@ -516,7 +516,7 @@ private lemma cyclicIsometry_apply (T₁ T₂ : Representation ω) (a : A) :
     rw [show (cyclicIsometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) =
       (cyclicIsometry T₁ T₂).toLinearIsometry.toContinuousLinearMap from rfl]
   -- The toFun of the `LinearIsometryEquiv` is `extendCyclicMap`.
-  show extendCyclicMap (T₁ := T₁) (T₂ := T₂) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ
+  change extendCyclicMap (T₁ := T₁) (T₂ := T₂) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ
   rw [extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨T₁.π a T₁.ξ, hx⟩]
   exact cyclicMap_well_defined T₁ T₂ ⟨T₁.π a T₁.ξ, hx⟩ a rfl
 

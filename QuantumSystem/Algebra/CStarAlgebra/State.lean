@@ -154,7 +154,7 @@ lemma positiveReal_spec : ω (star x * x) = RCLike.ofReal (positiveReal ω x : �
   Classical.choose_spec (ω.positive x)
 
 /-- A conjugate linear combination simplifies to twice the real part. -/
-lemma conj_linear_combination_real:
+lemma conj_linear_combination_real :
     (conj z) * ω (star x * y) + z * ω (star y * x)
       = Complex.ofReal (2 * (z * ω (star y * x)).re) := by
   set β := ω (star x * y)

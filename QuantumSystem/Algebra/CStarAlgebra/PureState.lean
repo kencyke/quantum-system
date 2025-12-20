@@ -115,14 +115,14 @@ private lemma exists_unitization_state_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b 
   · rw [hψ_norm]
     exact UnitalCStarAlgebra.norm_character_eq_one φ
   · rw [hψ_ext ⟨1, (StarAlgebra.elemental ℂ b').one_mem⟩]
-    show (WeakDual.toStrongDual φ.val) ⟨1, _⟩ = 1
+    change (WeakDual.toStrongDual φ.val) ⟨1, _⟩ = 1
     rw [WeakDual.toStrongDual_apply]
     change φ 1 = 1
     rw [map_one φ]
   · refine ⟨‖b'‖, norm_pos_iff.mpr hb'_ne, ?_⟩
     have hψb' : ψ b' = (‖b'‖ : ℂ) := by
       rw [hψ_ext ⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩]
-      show (WeakDual.toStrongDual φ.val) ⟨b', _⟩ = (‖b'‖ : ℂ)
+      change (WeakDual.toStrongDual φ.val) ⟨b', _⟩ = (‖b'‖ : ℂ)
       rw [WeakDual.toStrongDual_apply]
       simpa using hφ
     simpa [b'] using hψb'
@@ -135,7 +135,6 @@ private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) 
     exists_unitization_state_pos_re b hb hb_ne
   have hψ_pos : IsPositive (Unitization ℂ A) ψ :=
     isPositive_of_norm_eq_one_map_one ψ hψ_norm_eq hψ_one
-
   let inrLM : A →ₗ[ℂ] Unitization ℂ A :=
     { toFun := Unitization.inr
       map_add' := map_add (Unitization.inrNonUnitalStarAlgHom ℂ A)
@@ -144,7 +143,6 @@ private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) 
     { toLinearMap := inrLM
       norm_map' := Unitization.norm_inr }
   let inrCLM := inrIso.toContinuousLinearMap
-
   let φ := ψ.comp inrCLM
   have hφ_pos : IsPositive A φ := fun a => by
     obtain ⟨r, hr⟩ := hψ_pos (Unitization.inr a)
@@ -162,7 +160,6 @@ private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) 
         congr
         exact inrIso.norm_toContinuousLinearMap
       _ = 1 := mul_one _
-
   refine ⟨φ, ?_, ?_⟩
   · refine ⟨hφ_pos, ?_⟩
     simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
@@ -190,14 +187,11 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
     apply h_ne_zero
     apply WeakDual.toStrongDual.injective
     simp [h0])
-
   let r := ‖WeakDual.toStrongDual φ‖
   let ψ := (r⁻¹ : ℂ) • φ
-
   have hψ_norm : ‖WeakDual.toStrongDual ψ‖ = 1 := by
     rw [map_smul, norm_smul, norm_inv, Complex.norm_real, Real.norm_of_nonneg (le_of_lt h_norm_pos)]
     field_simp [r, h_norm_pos.ne']
-
   have hψ_pos : IsPositive A ψ := by
     intro a
     obtain ⟨s, hs⟩ := h_pos a
@@ -206,14 +200,20 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
     use ⟨s', hs'⟩
     rw [ContinuousLinearMap.smul_apply]
     simp only [hs, smul_eq_mul]
-    simp [s']
-    rw [mul_comm]
-
+    dsimp [s']
+    -- rewrite the RHS (a real product) as a product in ℂ
+    have hmul : (↑((↑s : ℝ) * r⁻¹) : ℂ) = (↑(↑s : ℝ) : ℂ) * (↑(r⁻¹) : ℂ) :=
+      (RCLike.ofReal_mul (K := ℂ) (↑s : ℝ) (r⁻¹))
+    -- rewrite the LHS inverse of a real scalar
+    have hinv : (↑r : ℂ)⁻¹ = (↑(r⁻¹) : ℂ) :=
+      (RCLike.ofReal_inv (K := ℂ) r).symm
+    -- `↑↑s` is the same as coercing `(↑s : ℝ)` into `ℂ`
+    rw [hmul, hinv]
+    exact mul_comm _ _
   have hψ_mem : ψ ∈ QuasiStateSpace A := by
     refine ⟨hψ_pos, ?_⟩
     simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
     rw [hψ_norm]
-
   have h_eq : φ = (1 - r) • (0 : WeakDual ℂ A) + (r : ℂ) • ψ := by
     simp only [smul_zero, zero_add, ψ]
     rw [← smul_assoc]
@@ -223,7 +223,6 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
     have : (r : ℂ) * (r⁻¹ : ℂ) = 1 := mul_inv_cancel₀ hr_ne
     rw [smul_eq_mul]
     rw [this, one_smul]
-
   have h_not_ext : φ ∉ Set.extremePoints ℝ (QuasiStateSpace A) := by
     intro h_ext'
     have h_open_segment : φ ∈ openSegment ℝ (0 : WeakDual ℂ A) ψ := by
@@ -234,23 +233,19 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
       · linarith
       · rw [h_eq]
         simp
-
     have h_zero_mem : 0 ∈ QuasiStateSpace A := by
       refine ⟨IsPositive.zero A, ?_⟩
       simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
       rw [map_zero, norm_zero]
       exact zero_le_one
-
     have h_endpoints : 0 ∈ QuasiStateSpace A ∧ ψ ∈ QuasiStateSpace A := ⟨h_zero_mem, hψ_mem⟩
     have h_distinct : 0 ≠ ψ := by
       intro h0
       have : ‖WeakDual.toStrongDual ψ‖ = 0 := by rw [← h0]; simp
       linarith
-
     have h_seg := h_ext'.2 h_endpoints.1 h_endpoints.2 h_open_segment
     rcases h_seg with rfl | rfl
     exact h_ne_zero rfl
-
   exact h_not_ext h_ext
 
 /-- Convert a pure state (defined as an extreme point) to a `State` structure. -/
@@ -336,9 +331,7 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
     apply StarOrderedRing.nonneg_iff.mpr
     apply AddSubmonoid.subset_closure
     use a
-
   obtain ⟨ω, hω_mem, r, hrpos, hω_eq⟩ := exists_quasiState_pos_re b hb_pos hb_ne_zero
-
   let eval_b : WeakDual ℂ A →L[ℂ] ℂ := {
     toFun := fun φ => φ b
     map_add' := fun φ ψ => rfl
@@ -348,9 +341,7 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
   let l : WeakDual ℂ A →L[ℝ] ℝ := Complex.reCLM.comp (eval_b.restrictScalars ℝ)
   let f : WeakDual ℂ A → ℝ := l
   let M := sSup (f '' QuasiStateSpace A)
-
   have hf : ContinuousOn f (QuasiStateSpace A) := Continuous.continuousOn l.continuous |>.mono (Set.subset_univ _)
-
   have h_M_pos : M > 0 := by
     have hω_re : (ω b).re = r := by
       have := congrArg Complex.re hω_eq
@@ -360,10 +351,8 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
     apply le_csSup
     · exact ((QuasiStateSpace.compact A).image_of_continuousOn hf).bddAbove
     · exact Set.mem_image_of_mem f hω_mem
-
   -- Find a maximizer of f on the QuasiStateSpace
   obtain ⟨φ, hφ_mem, hφ_max⟩ := IsCompact.exists_isMaxOn (QuasiStateSpace.compact A) ⟨ω, hω_mem⟩ hf
-
   have hφ_val : f φ = M := by
     apply le_antisymm
     · apply le_csSup
@@ -375,20 +364,17 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
       · intro r ⟨ψ, hψ_mem, hr⟩
         rw [← hr]
         exact hφ_max hψ_mem
-
   -- φ achieves the maximum M > 0
   have hφ_pos : (φ b).re > 0 := by
     calc (φ b).re = f φ := rfl
       _ = M := hφ_val
       _ > 0 := h_M_pos
-
   have hφ_ne_zero : φ ≠ 0 := by
     intro h
     have : (φ b).re = 0 := by
       rw [h]
       rfl
     linarith [hφ_pos]
-
   -- To show φ is a pure state (extreme point), we use convexity argument
   let S := QuasiStateSpace A
   let l' := l -- alias to avoid confusion if needed, but we use l
@@ -436,9 +422,13 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
       have : l ψ > 0 := by
         rw [hψ_l_eq_M]
         exact h_M_pos
-      simp at this
+      -- Avoid `simp at` (flagged by linter.flexible)
+      have : (ψ b).re > 0 := by
+        -- unfold the linear functional `l` on this specific argument
+        have h' := this
+        dsimp [l, eval_b, ContinuousLinearMap.comp_apply, Complex.reCLM] at h'
+        exact h'
       exact this
-
     -- Then use positivity (membership in `QuasiStateSpace`) to see the value is real.
     have hψ_mem_S : ψ ∈ QuasiStateSpace A := hψ_mem_F.1
     obtain ⟨r₀, hr₀⟩ := hψ_mem_S.1 a

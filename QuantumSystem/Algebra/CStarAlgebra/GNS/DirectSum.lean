@@ -60,7 +60,7 @@ lemma componentWiseMap_memℓp (a : A) (x : Hilbert A) :
   simp only [h2] at hx ⊢
   refine Summable.of_nonneg_of_le (fun ψ => by positivity) (fun ψ => ?_) (Summable.mul_left (‖a‖ ^ 2) hx)
   have h := componentWiseMap_norm_le a ψ (x.val ψ)
-  show ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) ≤ ‖a‖ ^ 2 * ‖x.val ψ‖ ^ 2
+  change ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) ≤ ‖a‖ ^ 2 * ‖x.val ψ‖ ^ 2
   trans (‖a‖ * ‖x.val ψ‖) ^ (2 : ℝ)
   · gcongr
   · rw [Real.mul_rpow (norm_nonneg _) (norm_nonneg _)]
@@ -72,22 +72,18 @@ lemma componentWiseMap_norm_bound (a : A) (x : Hilbert A) :
     ‖(⟨fun ψ => componentWiseMap a ψ (x.val ψ), componentWiseMap_memℓp a x⟩ : Hilbert A)‖ ≤ ‖a‖ * ‖x‖ := by
   have h2pos : (0 : ℝ) < (2 : ℝ≥0∞).toReal := by norm_num
   have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
-
   rw [lp.norm_eq_tsum_rpow h2pos, lp.norm_eq_tsum_rpow h2pos]
   simp only [h2]
-
   have hsum1 : Summable fun ψ => ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) := by
     have := componentWiseMap_memℓp a x
     rw [memℓp_gen_iff zero_lt_two] at this
     simp only [h2] at this
     exact this
-
   have hsum2 : Summable fun ψ => ‖x.val ψ‖ ^ (2 : ℝ) := by
     have : Memℓp x.val 2 := x.property
     rw [memℓp_gen_iff zero_lt_two] at this
     simp only [h2] at this
     exact this
-
   have sum_ineq : ∑' ψ, ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) ≤ ‖a‖ ^ 2 * ∑' ψ, ‖x.val ψ‖ ^ (2 : ℝ) := by
     rw [← tsum_mul_left]
     apply tsum_le_of_sum_le' (by positivity)
@@ -102,7 +98,6 @@ lemma componentWiseMap_norm_bound (a : A) (x : Hilbert A) :
             norm_cast
         _ ≤ ∑' ψ, ‖a‖ ^ 2 * ‖x.val ψ‖ ^ (2 : ℝ) := by
           refine sum_le_hasSum _ (fun ψ _ => by positivity) (Summable.hasSum (Summable.mul_left _ hsum2))
-
   trans ((‖a‖ ^ 2 * ∑' ψ, ‖x.val ψ‖ ^ (2 : ℝ)) ^ ((1 : ℝ) / 2))
   · gcongr
   rw [Real.mul_rpow (sq_nonneg _) (tsum_nonneg fun ψ => by positivity)]
@@ -213,25 +208,20 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
   by_contra h_ne
   -- If a ≠ b, then a - b ≠ 0
   have h_diff_ne_zero : a - b ≠ 0 := sub_ne_zero.mpr h_ne
-
   -- There exists a pure state detecting `a - b` with a strictly positive real value on `star (a-b) * (a-b)`.
   obtain ⟨φ, hφ_pure, r, hrpos, hφ_eq⟩ := IsPureState.exists_pos_re_of_ne_zero (a - b) h_diff_ne_zero
-
   -- Package φ as a PureState
   let ψ : PureState A := ⟨φ, hφ_pure⟩
-
   -- From hab : directSumAlgHom a = directSumAlgHom b
   -- we get: directSumAlgHom (a - b) = 0
   have h_diff_zero : directSumAlgHom (a - b) = 0 := by
     rw [map_sub, hab, sub_self]
-
   -- This means directSumCLM (a - b) = 0
   have h_clm_zero : directSumCLM (a - b) = 0 := by
     -- directSumAlgHom's coercion is directSumCLM
     change directSumCLM (a - b) = 0
     have : directSumAlgHom (a - b) = 0 := h_diff_zero
     exact congr_arg (fun f => (f : 𝓑(Hilbert A))) this
-
   -- Therefore componentWiseMap (a - b) ψ = 0, i.e., π_ψ(a - b) = 0
   -- We'll show this leads to a contradiction with hφ_pos
   -- by proving (φ (star(a-b) * (a-b))).re = 0
@@ -242,7 +232,6 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
     -- Construct a vector `x` supported only at `ψ` with `x ψ = ξ`.
     let f : ∀ ψ' : PureState A, ψ'.gnsRepresentation.H :=
       fun ψ' => if h : ψ' = ψ then h ▸ ψ.gnsRepresentation.ξ else 0
-
     have hf_mem : Memℓp f 2 := by
       rw [memℓp_gen_iff zero_lt_two]
       have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
@@ -254,9 +243,7 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
         by_cases h : ψ' = ψ
         · subst h
           simp
-        · simp [dif_neg h]
-          intro h'
-          exact absurd h' h
+        · simp only [dif_neg h, if_neg h]; simp
       rw [h_eq]
       apply summable_of_finite_support
       have :
@@ -266,36 +253,29 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
         by_contra h
         simp [h] at hψ'
       exact Set.Finite.subset (Set.finite_singleton ψ) this
-
     let x : Hilbert A := ⟨f, hf_mem⟩
     have hx_ψ : x.val ψ = ψ.gnsRepresentation.ξ := by
       simp only [x, f]
       simp
-
     -- Since `directSumCLM (a - b) = 0`, applying it to `x` gives `0`.
     have h0 : directSumCLM (a - b) x = 0 := by
       simp [h_clm_zero]
     have hψ0 : (directSumCLM (a - b) x).val ψ = 0 := by
       simpa using congrArg (fun y : Hilbert A => y.val ψ) h0
-
     -- Unfold the definition on the `ψ`-coordinate.
     have hcomp : componentWiseMap (a - b) ψ (x.val ψ) = 0 := by
       simpa [directSumCLM, directSumLinearMap] using hψ0
-
     -- Finally, rewrite `x.val ψ = ξ` and `componentWiseMap` as `π`.
     simpa [componentWiseMap, hx_ψ] using hcomp
-
   -- Now we can proceed with the GNS condition argument
 
   -- By the GNS condition: ψ(c) = ⟨ξ, π(c)ξ⟩ for all c ∈ A
   have h_gns := (PureState.gnsRepresentation ψ).gns_condition (star (a - b) * (a - b))
-
   -- Use that π(star(a-b) * (a-b)) = π(star(a-b)) ∘ π(a-b)
   have h_comp : (ψ.gnsRepresentation.π (star (a - b) * (a - b))) ψ.gnsRepresentation.ξ =
       (ψ.gnsRepresentation.π (star (a - b))) ((ψ.gnsRepresentation.π (a - b)) ψ.gnsRepresentation.ξ) := by
     rw [map_mul]
     rfl
-
   rw [h_apply_xi, map_zero] at h_comp
   -- So the RHS of GNS condition becomes ⟨ξ, 0⟩ = 0
 

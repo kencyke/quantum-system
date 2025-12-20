@@ -143,7 +143,7 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [NormedSpace 𝕜 A]
 This avoids depending on internal ContinuousLinearMap definitions. -/
 noncomputable def toContinuousLinearMap (ω : State 𝕜 A) : A →L[𝕜] 𝕜 :=
   ω.toLinearMap.mkContinuous 1 (fun a => by
-    simp [toLinearMap_apply]
+    simp only [toLinearMap_apply, one_mul]
     exact norm_le_norm ω a)
 
 @[simp]

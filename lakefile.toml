@@ -4,7 +4,12 @@ defaultTargets = ["QuantumSystem"]
 
 [[lean_lib]]
 name = "QuantumSystem"
-leanOptions = { warningAsError = true }
+leanOptions.warningAsError = true
+leanOptions.pp.unicode.fun = true
+leanOptions.autoImplicit = false
+leanOptions.relaxedAutoImplicit = false
+leanOptions.linter.mathlibStandardSet = true
+leanOptions.linter.style.longLine = false
 
 [[require]]
 name = "mathlib"

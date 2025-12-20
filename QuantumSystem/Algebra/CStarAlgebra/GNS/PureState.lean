@@ -96,13 +96,11 @@ lemma cyclicVector_decomp_of_isClosed (T : GNS.Representation ω) (W : Submodule
   haveI : W.HasOrthogonalProjection := by
     -- Uses `HasOrthogonalProjection.ofCompleteSpace`.
     infer_instance
-
   refine ⟨W.starProjection T.ξ, T.ξ - W.starProjection T.ξ, ?_, ?_, ?_, ?_⟩
   · exact Submodule.starProjection_apply_mem (U := W) (x := T.ξ)
   · exact Submodule.sub_starProjection_mem_orthogonal (K := W) (v := T.ξ)
   · simp [add_sub_cancel]
-  ·
-    exact Submodule.inner_right_of_mem_orthogonal
+  · exact Submodule.inner_right_of_mem_orthogonal
       (Submodule.starProjection_apply_mem (U := W) (x := T.ξ))
       (Submodule.sub_starProjection_mem_orthogonal (K := W) (v := T.ξ))
 
@@ -322,8 +320,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
     have h1_sub_t_ne : 1 - t ≠ 0 := (sub_pos.mpr h_lt_one).ne'
     have h1_sub_t_ne_c : (1 - (t : ℂ)) ≠ 0 := by
       have : ((1 - t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr h1_sub_t_ne
-      simp [Complex.ofReal_one, Complex.ofReal_sub] at this
-      exact this
+      simpa only [Complex.ofReal_one, Complex.ofReal_sub] using this
     have ht_smul : (t : ℝ) • φ = (t : ℂ) • φ :=
       RCLike.real_smul_eq_coe_smul (K := ℂ) (E := WeakDual ℂ A) t φ
     have h1_smul : (1 - t : ℝ) • χ = (1 - (t : ℂ)) • χ := by
@@ -332,7 +329,6 @@ lemma trichotomy_from_purity {ψ : PureState A}
         RCLike.real_smul_eq_coe_smul (K := ℂ) (E := WeakDual ℂ A) (1 - t) χ
       -- Then rewrite ↑(1 - t) as (1 - ↑t)
       rw [step1, Complex.ofReal_sub, Complex.ofReal_one]
-
     have h_sum_c : ψ.val = (t : ℂ) • φ + (1 - (t : ℂ)) • χ := by
       apply ContinuousLinearMap.ext
       intro a
@@ -350,10 +346,8 @@ lemma trichotomy_from_purity {ψ : PureState A}
         rw [mul_inv_cancel₀ ht_ne_c, mul_inv_cancel₀ h1_sub_t_ne_c]
         rw [one_smul, one_smul]
       exact hrhs.symm
-
     have rhs_eq : (t : ℂ) • φ + (1 - (t : ℂ)) • χ = (t : ℝ) • φ + (1 - t) • χ := by
       rw [← ht_smul, ← h1_smul]
-
     exact h_sum_c.trans rhs_eq
   -- ψ is an extreme point
   exfalso
@@ -365,7 +359,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
     use t
     constructor
     · exact h_t_in_Ioo
-    · simp [h_sum, sub_eq_add_neg]
+    · simp only [h_sum, sub_eq_add_neg]
       rw [add_comm]
   have h_ext_iff := mem_extremePoints.mp h_ext
   obtain ⟨h_eq1, h_eq2⟩ := h_ext_iff.2 χ hχ_mem φ hφ_mem h_in_seg

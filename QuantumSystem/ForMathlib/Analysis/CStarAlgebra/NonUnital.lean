@@ -14,7 +14,7 @@ instance cstarPartialOrder : PartialOrder A := CStarAlgebra.spectralOrder A
 
 instance cstarOrderedRing : StarOrderedRing A := CStarAlgebra.spectralOrderedRing A
 
-lemma positive_conjugate_le_norm_smul (a b : A):
+lemma positive_conjugate_le_norm_smul (a b : A) :
     star b * star a * a * b ≤ ‖a‖ ^ 2 • (star b * b) := by
   simpa [mul_assoc, CStarRing.norm_star_mul_self, pow_two] using
     (CStarAlgebra.star_left_conjugate_le_norm_smul (A := A) (a := b) (b := star a * a))
@@ -38,12 +38,14 @@ lemma exists_approxUnit_mul_close (x : A) {ε : ℝ} (hε : 0 < ε) : ∃ e : A,
   rcases ha with ⟨ha_nonneg, ha_norm⟩
   -- Extract an element of the basis set with the desired properties.
   have h_nonempty : ({y : A | a ≤ y} ∩ Metric.closedBall (0 : A) 1).Nonempty := by
-    use a
+    refine ⟨a, ?_⟩
     constructor
-    · exact le_refl a
-    · simp [Metric.mem_closedBall]
-      exact ha_norm.le
-  obtain ⟨e, he_ge, he_norm⟩ := h_nonempty
+    · exact (show a ≤ a from le_rfl)
+    · refine (Metric.mem_closedBall).2 ?_
+      have : ‖a‖ ≤ (1 : ℝ) := ha_norm.le
+      simpa [dist_eq_norm] using this
+  obtain ⟨e, he⟩ := h_nonempty
+  rcases he with ⟨he_ge, he_norm⟩
   have h_close : ‖e * x - x‖ < ε := by
     have h_mem : e ∈ {y : A | a ≤ y} ∩ Metric.closedBall (0 : A) 1 := ⟨he_ge, he_norm⟩
     have : e * x ∈ Metric.ball x ε := h_ball e h_mem

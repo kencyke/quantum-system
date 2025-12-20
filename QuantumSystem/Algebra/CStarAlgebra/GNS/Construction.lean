@@ -45,7 +45,7 @@ def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
   Quotient.liftOn₂' xq yq (fun x y => ω (star x * y))
     (fun x₁ y₁ x₂ y₂ (hx : CStarAlgebraIdeal.leftRel Nω x₁ x₂) (hy : CStarAlgebraIdeal.leftRel Nω y₁ y₂) => by
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hx hy
-      show ω (star x₁ * y₁) = ω (star x₂ * y₂)
+      change ω (star x₁ * y₁) = ω (star x₂ * y₂)
       have hx' : ω (star (x₂ - x₁) * (x₂ - x₁)) = 0 := by simp only [sub_eq_neg_add]; exact hx
       have hy' : ω (star (y₂ - y₁) * (y₂ - y₁)) = 0 := by simp only [sub_eq_neg_add]; exact hy
       calc ω (star x₁ * y₁)
@@ -67,19 +67,21 @@ instance instInnerProductSpaceCore : InnerProductSpace.Core ℂ (A ⧸ Nω) wher
     exact r.property
   add_left := fun x y z => Quotient.inductionOn₃' x y z fun a b c => by
     unfold innerQuotient
-    show Quotient.liftOn₂' (Quotient.mk'' (a + b)) (Quotient.mk'' c) _ _ = _
+    change Quotient.liftOn₂' (Quotient.mk'' (a + b)) (Quotient.mk'' c) _ _ = _
     simp only [Quotient.liftOn₂'_mk'']
     rw [star_add, add_mul]
     exact ω.map_add (star a * c) (star b * c)
   smul_left := fun x y c => Quotient.inductionOn₂' x y fun a b => by
     unfold innerQuotient
-    show Quotient.liftOn₂' (Quotient.mk'' (c • a)) (Quotient.mk'' b) _ _ = _
+    change Quotient.liftOn₂' (Quotient.mk'' (c • a)) (Quotient.mk'' b) _ _ = _
     simp only [Quotient.liftOn₂'_mk'']
     rw [star_smul, smul_mul_assoc]
     exact ω.map_smul (conj c) (star a * b)
   definite := fun x hx => Quotient.inductionOn' x (fun a ha => by
-    simp [innerQuotient] at ha
-    exact Quotient.sound' (by simpa [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] using ha)) hx
+    have ha' : ω (star a * a) = 0 := by
+      simpa [innerQuotient] using ha
+    exact Quotient.sound' (by
+      simpa [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] using ha')) hx
 
 -- Pattern adapted from Mathlib 4.25+ Matrix.PosDef
 -- First define NormedAddCommGroup from the Core (not an instance yet)
@@ -102,7 +104,7 @@ noncomputable instance instInnerProductSpaceQuot : InnerProductSpace ℂ (A ⧸ 
 private lemma norm_sq_eq_inner (x : A) :
     @norm (A ⧸ Nω) (instNormedAddCommGroupQuot ω).toNorm (Quotient.mk'' x) ^ 2 = (ω (star x * x)).re := by
   rw [@norm_sq_eq_re_inner ℂ (A ⧸ Nω) _ _]
-  show ((@inner ℂ (A ⧸ Nω) _ (Quotient.mk'' x) (Quotient.mk'' x))).re = (ω (star x * x)).re
+  change ((@inner ℂ (A ⧸ Nω) _ (Quotient.mk'' x) (Quotient.mk'' x))).re = (ω (star x * x)).re
   change (innerQuotient ω (Quotient.mk'' x) (Quotient.mk'' x)).re = (ω (star x * x)).re
   unfold innerQuotient
   simp only [Quotient.liftOn₂'_mk'']
@@ -130,7 +132,7 @@ def πω' (a : A) (bq : A ⧸ Nω) : A ⧸ Nω :=
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hb
       apply Quotient.sound'
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply]
-      show -(a * b₁) + a * b₂ ∈ (Nω).toAddSubgroup
+      change -(a * b₁) + a * b₂ ∈ (Nω).toAddSubgroup
       rw [show -(a * b₁) + a * b₂ = a * (-b₁ + b₂) by simp only [mul_neg, mul_add]]
       exact (Nω).mul_mem' a hb)
 
@@ -151,7 +153,7 @@ lemma πω'_norm_sq_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ^ 2 ≤ ‖a
   -- Use inner_self = ‖·‖ * ‖·‖ in a pre-Hilbert setting (core inner product structure)
   rw [← inner_self_eq_norm_mul_norm (𝕜 := ℂ) (E := A ⧸ Nω) (Quotient.mk'' (a * b'))]
   rw [← inner_self_eq_norm_mul_norm (𝕜 := ℂ) (E := A ⧸ Nω) (Quotient.mk'' b')]
-  show (innerQuotient ω (Quotient.mk'' (a * b')) (Quotient.mk'' (a * b'))).re ≤
+  change (innerQuotient ω (Quotient.mk'' (a * b')) (Quotient.mk'' (a * b'))).re ≤
     ‖a‖ * ‖a‖ * (innerQuotient ω (Quotient.mk'' b') (Quotient.mk'' b')).re
   unfold innerQuotient; simp only [Quotient.liftOn₂'_mk'']
   -- Algebraic rearrangement: bring star inside and reassociate to isolate star a * a
@@ -181,7 +183,7 @@ lemma πω'_inner (a : A) (b c : A ⧸ Nω) :
   refine Quotient.inductionOn₂' b c fun b' c' => ?_
   unfold πω'
   simp only [Quotient.liftOn'_mk'']
-  show innerQuotient ω (Quotient.mk'' (a * b')) (Quotient.mk'' c') = innerQuotient ω (Quotient.mk'' b') (Quotient.mk'' (star a * c'))
+  change innerQuotient ω (Quotient.mk'' (a * b')) (Quotient.mk'' c') = innerQuotient ω (Quotient.mk'' b') (Quotient.mk'' (star a * c'))
   unfold innerQuotient
   simp only [Quotient.liftOn₂'_mk'', star_mul, mul_assoc]
 
@@ -255,26 +257,29 @@ lemma πω_mul (a b : A) : πω ω (a * b) = πω ω a ∘L πω ω b := by
 /-- *-preservation: `(πω(a)).adjoint = πω (star a)`. -/
 lemma πω_star (a : A) : (πω ω a).adjoint = πω ω (star a) := by
   ext x
-  refine DenseRange.induction_on (p := fun x => (πω ω a).adjoint x = πω ω (star a) x)
+  refine DenseRange.induction_on
+    (p := fun x => (πω ω a).adjoint x = πω ω (star a) x)
     (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) x
     (isClosed_eq ((πω ω a).adjoint).continuous (πω ω (star a)).continuous)
-    (fun c => ?_)
-  -- Reduce to checking equality of inner products with arbitrary y (Riesz representation)
-  have : ∀ y, @inner ℂ (Hω) _ ((πω ω a).adjoint (↑c)) y = @inner ℂ (Hω) _ (πω ω (star a) (↑c)) y := by
-    intro y
-    refine DenseRange.induction_on
-      (p := fun y => @inner ℂ (Hω) _ ((πω ω a).adjoint (↑c)) y = @inner ℂ (Hω) _ (πω ω (star a) (↑c)) y)
-      (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) y
-      (isClosed_eq (Continuous.inner continuous_const continuous_id)
-                    (Continuous.inner continuous_const continuous_id))
-      (fun d => ?_)
-    -- Now both vectors are in the dense subspace; rewrite via the quotient-level identity
-    show @inner ℂ (Hω) _ ((πω ω a).adjoint (↑c)) (↑d) = @inner ℂ (Hω) _ (πω ω (star a) (↑c)) (↑d)
-    rw [ContinuousLinearMap.adjoint_inner_left]
-    simp only [πω_apply_coe]
-    rw [UniformSpace.Completion.inner_coe, UniformSpace.Completion.inner_coe]
-    rw [πω'_inner, star_star]
-  exact ext_inner_right ℂ this
+    (fun c => by
+      -- Reduce to checking equality of inner products with arbitrary y (Riesz representation)
+      have : ∀ y,
+          @inner ℂ Hω _ ((πω ω a).adjoint (↑c)) y = @inner ℂ Hω _ (πω ω (star a) (↑c)) y := by
+        intro y
+        refine DenseRange.induction_on
+          (p := fun y =>
+            @inner ℂ Hω _ ((πω ω a).adjoint (↑c)) y = @inner ℂ Hω _ (πω ω (star a) (↑c)) y)
+          (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) y
+          (isClosed_eq (Continuous.inner continuous_const continuous_id)
+            (Continuous.inner continuous_const continuous_id))
+          (fun d => by
+            -- Now both vectors are in the dense subspace; rewrite via the quotient-level identity
+            change @inner ℂ Hω _ ((πω ω a).adjoint (↑c)) (↑d) = @inner ℂ Hω _ (πω ω (star a) (↑c)) (↑d)
+            rw [ContinuousLinearMap.adjoint_inner_left]
+            simp only [πω_apply_coe]
+            rw [UniformSpace.Completion.inner_coe, UniformSpace.Completion.inner_coe]
+            rw [πω'_inner, star_star])
+      exact ext_inner_right ℂ this)
 
 /-- Additivity: `πω(a + b) = πω(a) + πω(b)`. -/
 lemma πω_add (a b : A) : πω ω (a + b) = πω ω a + πω ω b := by
