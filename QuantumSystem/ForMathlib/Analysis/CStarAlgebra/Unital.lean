@@ -1,6 +1,10 @@
-import Mathlib.Analysis.CStarAlgebra.Spectrum
-import Mathlib.Analysis.Normed.Module.WeakDual
-import Mathlib.Data.Real.StarOrdered
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Spectrum
+public import Mathlib.Analysis.Normed.Module.WeakDual
+public import Mathlib.Data.Real.StarOrdered
+
+@[expose] public section
 
 namespace UnitalCStarAlgebra
 

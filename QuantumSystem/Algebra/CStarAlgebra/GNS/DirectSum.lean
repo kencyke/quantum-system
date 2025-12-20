@@ -1,6 +1,10 @@
-import Mathlib.Analysis.CStarAlgebra.Hom
-import Mathlib.Analysis.InnerProductSpace.l2Space
-import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Hom
+public import Mathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
+
+@[expose] public section
 
 namespace GNS
 

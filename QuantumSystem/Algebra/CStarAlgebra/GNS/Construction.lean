@@ -1,8 +1,12 @@
-import Mathlib.Analysis.InnerProductSpace.Completion
-import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
-import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Ideal
-import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
+module
 
+public import Mathlib.Analysis.InnerProductSpace.Completion
+public import Mathlib.Analysis.Normed.Operator.Extend
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Ideal
+public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
+
+@[expose] public section
 
 namespace GNS
 
@@ -13,7 +17,7 @@ open ComplexConjugate NNReal Topology Filter
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 variable (ω : State ℂ A)
 
-private def Nω : CStarAlgebraIdeal A where
+def Nω : CStarAlgebraIdeal A where
   carrier := { x : A | ω (star x * x) = 0 }
   zero_mem' := by
     change ω (star (0 : A) * (0 : A)) = 0
@@ -37,7 +41,7 @@ local notation "Nω" => (Nω ω)
 `⟪[x], [y]⟫ = ω (star x * y)`.  Well-defined because the kernel ideal `Nω` is the null space
 with respect to the positive sesquilinear form coming from the state `ω` (ultimately a
 consequence of the Cauchy–Schwarz inequality for states). -/
-private def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
+def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
   Quotient.liftOn₂' xq yq (fun x y => ω (star x * y))
     (fun x₁ y₁ x₂ y₂ (hx : CStarAlgebraIdeal.leftRel Nω x₁ x₂) (hy : CStarAlgebraIdeal.leftRel Nω y₁ y₂) => by
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hx hy
@@ -120,7 +124,7 @@ noncomputable instance instHilbertSpaceCompletion : ComplexHilbertSpace Hω :=
 /-- Left multiplication action on the quotient: `πω'(a)[b] = [a b]`.
 It is bounded (`‖πω'(a)[b]‖ ≤ ‖a‖ · ‖[b]‖`), multiplicative, and *-compatible, and thus
 extends (after completion) to the bounded operator representation `πω : A → 𝓑(Hω)`. -/
-private def πω' (a : A) (bq : A ⧸ Nω) : A ⧸ Nω :=
+def πω' (a : A) (bq : A ⧸ Nω) : A ⧸ Nω :=
   Quotient.liftOn' bq (fun b => Quotient.mk'' (a * b))
     (fun b₁ b₂ (hb : CStarAlgebraIdeal.leftRel Nω b₁ b₂) => by
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hb
@@ -131,16 +135,16 @@ private def πω' (a : A) (bq : A ⧸ Nω) : A ⧸ Nω :=
       exact (Nω).mul_mem' a hb)
 
 /-- Action of `πω'` on a representative. -/
-private lemma πω'_mk (a b : A) : πω' ω a (Quotient.mk'' b) = Quotient.mk'' (a * b) := rfl
+lemma πω'_mk (a b : A) : πω' ω a (Quotient.mk'' b) = Quotient.mk'' (a * b) := rfl
 
 /-- `πω'(0)` is the zero map. -/
-private lemma πω'_zero (x : A ⧸ Nω) : πω' ω (0 : A) x = 0 := by
+lemma πω'_zero (x : A ⧸ Nω) : πω' ω (0 : A) x = 0 := by
   refine Quotient.inductionOn' x fun b => ?_
   rw [πω'_mk, zero_mul]
   rfl
 
 /-- Quadratic norm inequality on the pre-Hilbert quotient: `‖πω'(a)[b]‖^2 ≤ ‖a‖^2 ‖[b]‖^2`. -/
-private lemma πω'_norm_sq_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ^ 2 ≤ ‖a‖ ^ 2 * ‖b‖ ^ 2 := by
+lemma πω'_norm_sq_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ^ 2 ≤ ‖a‖ ^ 2 * ‖b‖ ^ 2 := by
   refine Quotient.inductionOn' b fun b' => ?_
   -- Unfold the definition on a representative and rewrite the norm squared via inner product
   simp_rw [πω', Quotient.liftOn'_mk'', sq]
@@ -168,11 +172,11 @@ private lemma πω'_norm_sq_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ^ 2 
   linarith
 
 /-- Multiplicativity: πω'(ab) = πω'(a) ∘ πω'(b). -/
-private lemma πω'_mul (a b : A) (c : A ⧸ Nω) : πω' ω (a * b) c = πω' ω a (πω' ω b c) :=
+lemma πω'_mul (a b : A) (c : A ⧸ Nω) : πω' ω (a * b) c = πω' ω a (πω' ω b c) :=
   Quotient.inductionOn' c fun c' => by unfold πω'; simp [mul_assoc]
 
 /-- Adjoint property of the algebraic action: `⟪πω'(a) b, c⟫ = ⟪b, πω'(a*) c⟫`. -/
-private lemma πω'_inner (a : A) (b c : A ⧸ Nω) :
+lemma πω'_inner (a : A) (b c : A ⧸ Nω) :
     @inner ℂ (A ⧸ Nω) _ (πω' ω a b) c = @inner ℂ (A ⧸ Nω) _ b (πω' ω (star a) c) := by
   refine Quotient.inductionOn₂' b c fun b' c' => ?_
   unfold πω'
@@ -182,7 +186,7 @@ private lemma πω'_inner (a : A) (b c : A ⧸ Nω) :
   simp only [Quotient.liftOn₂'_mk'', star_mul, mul_assoc]
 
 /-- Additivity: πω'(a)(b + c) = πω'(a)b + πω'(a)c. -/
-private lemma πω'_add (a : A) (b c : A ⧸ Nω) : πω' ω a (b + c) = πω' ω a b + πω' ω a c := by
+lemma πω'_add (a : A) (b c : A ⧸ Nω) : πω' ω a (b + c) = πω' ω a b + πω' ω a c := by
   refine Quotient.inductionOn₂' b c fun b' c' => ?_
   change πω' ω a (Quotient.mk'' (b' + c')) = πω' ω a (Quotient.mk'' b') + πω' ω a (Quotient.mk'' c')
   unfold πω'
@@ -191,7 +195,7 @@ private lemma πω'_add (a : A) (b c : A ⧸ Nω) : πω' ω a (b + c) = πω' �
   exact mul_add a b' c'
 
 /-- Scalar multiplication: πω'(a)(z • b) = z • πω'(a)b. -/
-private lemma πω'_smul (a : A) (z : ℂ) (b : A ⧸ Nω) : πω' ω a (z • b) = z • πω' ω a b := by
+lemma πω'_smul (a : A) (z : ℂ) (b : A ⧸ Nω) : πω' ω a (z • b) = z • πω' ω a b := by
   refine Quotient.inductionOn' b fun b' => ?_
   change πω' ω a (Quotient.mk'' (z • b')) = z • πω' ω a (Quotient.mk'' b')
   unfold πω'
@@ -200,18 +204,18 @@ private lemma πω'_smul (a : A) (z : ℂ) (b : A ⧸ Nω) : πω' ω a (z • b
   exact mul_smul_comm z a b'
 
 /-- Linear norm bound: `‖πω'(a) b‖ ≤ ‖a‖ · ‖b‖`, deduced from the quadratic bound. -/
-private lemma πω'_norm_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ≤ ‖a‖ * ‖b‖ := by
+lemma πω'_norm_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ≤ ‖a‖ * ‖b‖ := by
   have h_sq := πω'_norm_sq_le ω a b
   rw [show ‖a‖ ^ 2 * ‖b‖ ^ 2 = (‖a‖ * ‖b‖) ^ 2 by ring] at h_sq
   simpa [Real.sqrt_sq (norm_nonneg _), mul_nonneg (norm_nonneg a) (norm_nonneg b)] using
     Real.sqrt_le_sqrt h_sq
 
 /-- Lipschitz continuity of `b ↦ πω'(a)b` with optimal constant `‖a‖`. -/
-private lemma πω'_lipschitz (a : A) : ∃ C : ℝ≥0, ∀ b : A ⧸ Nω, ‖πω' ω a b‖ ≤ C * ‖b‖ :=
+lemma πω'_lipschitz (a : A) : ∃ C : ℝ≥0, ∀ b : A ⧸ Nω, ‖πω' ω a b‖ ≤ C * ‖b‖ :=
   ⟨⟨‖a‖, norm_nonneg a⟩, fun b => by simpa using πω'_norm_le (ω := ω) a b⟩
 
 /-- Continuous linear map version of the pre-representation: `πω'(a) : A ⧸ Nω →L[ℂ] A ⧸ Nω`. -/
-private noncomputable def πω'CLM (a : A) : (A ⧸ Nω) →L[ℂ] (A ⧸ Nω) :=
+noncomputable def πω'CLM (a : A) : (A ⧸ Nω) →L[ℂ] (A ⧸ Nω) :=
   LinearMap.mkContinuous
     { toFun := πω' ω a
       map_add' := πω'_add ω a
@@ -228,7 +232,7 @@ noncomputable def πω (a : A) : 𝓑(Hω) :=
     (UniformSpace.Completion.toComplL (𝕜 := ℂ) (E := A ⧸ Nω))
 
 /-- Agreement on the dense subspace: `πω(a) (↑x) = ↑(πω'(a) x)` for `x : A ⧸ Nω`. -/
-private lemma πω_apply_coe (a : A) (x : A ⧸ Nω) :
+lemma πω_apply_coe (a : A) (x : A ⧸ Nω) :
     πω ω a (↑x : Hω) = (↑(πω' ω a x) : Hω) := by
   unfold πω
   erw [ContinuousLinearMap.extend_eq
@@ -237,7 +241,7 @@ private lemma πω_apply_coe (a : A) (x : A ⧸ Nω) :
   rfl
 
 /-- Extensionality principle for operators on the completion: if they agree on the dense subspace, they are equal. -/
-private lemma ext_on_completion (f g : 𝓑(Hω)) (h : ∀ x : A ⧸ Nω, f (↑x : Hω) = g (↑x : Hω)) : f = g := by
+lemma ext_on_completion (f g : 𝓑(Hω)) (h : ∀ x : A ⧸ Nω, f (↑x : Hω) = g (↑x : Hω)) : f = g := by
   ext x
   refine DenseRange.induction_on (p := fun y => f y = g y) UniformSpace.Completion.denseRange_coe x
     (isClosed_eq f.continuous g.continuous) fun y => by simpa using h y
@@ -249,7 +253,7 @@ lemma πω_mul (a b : A) : πω ω (a * b) = πω ω a ∘L πω ω b := by
   simp [ContinuousLinearMap.comp_apply, πω_apply_coe, πω'_mul]
 
 /-- *-preservation: `(πω(a)).adjoint = πω (star a)`. -/
-private lemma πω_star (a : A) : (πω ω a).adjoint = πω ω (star a) := by
+lemma πω_star (a : A) : (πω ω a).adjoint = πω ω (star a) := by
   ext x
   refine DenseRange.induction_on (p := fun x => (πω ω a).adjoint x = πω ω (star a) x)
     (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) x
@@ -273,7 +277,7 @@ private lemma πω_star (a : A) : (πω ω a).adjoint = πω ω (star a) := by
   exact ext_inner_right ℂ this
 
 /-- Additivity: `πω(a + b) = πω(a) + πω(b)`. -/
-private lemma πω_add (a b : A) : πω ω (a + b) = πω ω a + πω ω b := by
+lemma πω_add (a b : A) : πω ω (a + b) = πω ω a + πω ω b := by
   refine ext_on_completion (ω := ω) (πω ω (a + b)) (πω ω a + πω ω b) ?_
   intro x
   have : πω' ω (a + b) x = πω' ω a x + πω' ω b x :=
@@ -281,7 +285,7 @@ private lemma πω_add (a b : A) : πω ω (a + b) = πω ω a + πω ω b := by
   simp [ContinuousLinearMap.add_apply, πω_apply_coe, this, UniformSpace.Completion.coe_add]
 
 /-- Compatibility with scalar multiplication: `πω(z • a) = z • πω(a)`. -/
-private lemma πω_smul (z : ℂ) (a : A) : πω ω (z • a) = z • πω ω a := by
+lemma πω_smul (z : ℂ) (a : A) : πω ω (z • a) = z • πω ω a := by
   refine ext_on_completion (ω := ω) (πω ω (z • a)) (z • πω ω a) ?_
   intro x
   have : πω' ω (z • a) x = z • πω' ω a x :=
@@ -296,7 +300,7 @@ lemma πω_sub (a b : A) : πω ω (a - b) = πω ω a - πω ω b := by
   simpa [sub_eq_add_neg, h_neg] using h_add
 
 /-- Zero element maps to zero operator: `πω(0) = 0`. -/
-private lemma πω_zero : πω ω (0 : A) = 0 :=
+lemma πω_zero : πω ω (0 : A) = 0 :=
   ext_on_completion (ω := ω) (πω ω 0) 0 fun x => by simp [πω_apply_coe, πω'_zero, UniformSpace.Completion.coe_zero]
 
 /-- The bundled non‑unital *-homomorphism `πω : A →⋆ₙₐ[ℂ] 𝓑(Hω)`. -/
@@ -313,7 +317,7 @@ noncomputable def πωStarHom : A →⋆ₙₐ[ℂ] 𝓑(Hω) where
     exact (πω_star ω a).symm
 
 /-- Operator norm contraction: `‖πω(a)‖ ≤ ‖a‖`. -/
-private lemma πω_opNorm_le (a : A) : ‖πω ω a‖ ≤ ‖a‖ := by
+lemma πω_opNorm_le (a : A) : ‖πω ω a‖ ≤ ‖a‖ := by
   apply ContinuousLinearMap.opNorm_le_bound
   · exact norm_nonneg a
   · intro x
@@ -328,7 +332,7 @@ private lemma πω_opNorm_le (a : A) : ‖πω ω a‖ ≤ ‖a‖ := by
 
 /-- The induced linear functional on the quotient: `ω̃([x]) = ω x`, well-defined because
 `ω` vanishes on the ideal `Nω`. -/
-private noncomputable def stateOnQuotFun (xq : A ⧸ Nω) : ℂ :=
+noncomputable def stateOnQuotFun (xq : A ⧸ Nω) : ℂ :=
   Quotient.liftOn' xq (fun x => ω x)
     (fun x₁ x₂ hx => by
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hx
@@ -337,17 +341,17 @@ private noncomputable def stateOnQuotFun (xq : A ⧸ Nω) : ℂ :=
       rw [← sub_eq_zero, ← map_sub, ← neg_sub x₂ x₁, map_neg, this, neg_zero])
 
 /-- Additivity of the induced functional: `ω̃(x + y) = ω̃ x + ω̃ y`. -/
-private lemma stateOnQuotFun_add (x y : A ⧸ Nω) :
+lemma stateOnQuotFun_add (x y : A ⧸ Nω) :
     stateOnQuotFun ω (x + y) = stateOnQuotFun ω x + stateOnQuotFun ω y :=
   Quotient.inductionOn₂' x y fun a b => ω.map_add a b
 
 /-- Scalar compatibility: `ω̃(c • x) = c • ω̃ x`. -/
-private lemma stateOnQuotFun_smul (c : ℂ) (x : A ⧸ Nω) :
+lemma stateOnQuotFun_smul (c : ℂ) (x : A ⧸ Nω) :
     stateOnQuotFun ω (c • x) = c • stateOnQuotFun ω x :=
   Quotient.inductionOn' x fun a => ω.map_smul c a
 
 /-- Bound on the quotient functional: `‖ω̃ x‖ ≤ ‖x‖`. -/
-private lemma stateOnQuotFun_bound (x : A ⧸ Nω) : ‖stateOnQuotFun ω x‖ ≤ 1 * ‖x‖ := by
+lemma stateOnQuotFun_bound (x : A ⧸ Nω) : ‖stateOnQuotFun ω x‖ ≤ 1 * ‖x‖ := by
   refine Quotient.inductionOn' x fun a => ?_
   -- Use the quotient NormedAddCommGroup instance introduced above
   -- Provide the NormedAddCommGroup instance explicitly for local typeclass resolution
@@ -391,7 +395,7 @@ private lemma stateOnQuotFun_bound (x : A ⧸ Nω) : ‖stateOnQuotFun ω x‖ �
     _ = ‖(Quotient.mk'' a : A ⧸ Nω)‖ := Real.sqrt_sq (norm_nonneg _)
 
 /-- The bounded functional `ω̃ : A ⧸ Nω →L[ℂ] ℂ` with operator norm ≤ 1. -/
-private noncomputable def stateOnQuot : (A ⧸ Nω) →L[ℂ] ℂ :=
+noncomputable def stateOnQuot : (A ⧸ Nω) →L[ℂ] ℂ :=
   LinearMap.mkContinuous
     { toFun := stateOnQuotFun ω
       map_add' := stateOnQuotFun_add ω
@@ -401,7 +405,7 @@ private noncomputable def stateOnQuot : (A ⧸ Nω) →L[ℂ] ℂ :=
 
 
 /-- The continuous extension of `ω̃` to the Hilbert space completion `Hω`. -/
-private noncomputable def stateOnHilbert : Hω →L[ℂ] ℂ :=
+noncomputable def stateOnHilbert : Hω →L[ℂ] ℂ :=
   ContinuousLinearMap.extend
     (stateOnQuot ω)
     (UniformSpace.Completion.toComplL (𝕜 := ℂ) (E := A ⧸ Nω))
@@ -412,11 +416,11 @@ noncomputable def ξω : Hω :=
   (@InnerProductSpace.toDual ℂ Hω _ _ _ _).symm (stateOnHilbert ω)
 
 /-- Agreement on representatives: `stateOnQuot [x] = ω x`. -/
-private lemma stateOnQuot_mk (x : A) : stateOnQuot ω (Quotient.mk'' x) = ω x := rfl
+lemma stateOnQuot_mk (x : A) : stateOnQuot ω (Quotient.mk'' x) = ω x := rfl
 
 /-- Extension compatibility: on representatives `x`, we have
 `stateOnHilbert (↑x) = stateOnQuot x`. -/
-private lemma stateOnHilbert_coe (x : A ⧸ Nω) :
+lemma stateOnHilbert_coe (x : A ⧸ Nω) :
     stateOnHilbert ω (↑x : Hω) = stateOnQuot ω x := by
   unfold stateOnHilbert
   erw [ContinuousLinearMap.extend_eq
@@ -429,21 +433,21 @@ lemma inner_ξω_eq (x : Hω) : @inner ℂ Hω _ (ξω ω) x = stateOnHilbert ω
   rw [@InnerProductSpace.toDual_symm_apply ℂ Hω _ _ _ _]
 
 /-- Recovery of the original state on the quotient: `ω x = ⟪ξω, [x]⟫`. -/
-private lemma state_recovery_quot (x : A) :
+lemma state_recovery_quot (x : A) :
     ω x = @inner ℂ Hω _ (ξω ω) (↑(Quotient.mk'' x : A ⧸ Nω) : Hω) := by
   rw [inner_ξω_eq]
   rw [stateOnHilbert_coe]
   rfl
 
 /-- Representation action on a quotient representative: `πω(a) [b] = [a b]`. -/
-private lemma πω_apply_quotient_coe (a b : A) :
+lemma πω_apply_quotient_coe (a b : A) :
     πω ω a (↑(Quotient.mk'' b : A ⧸ Nω) : Hω) = (↑(Quotient.mk'' (a * b) : A ⧸ Nω) : Hω) := by
   rw [πω_apply_coe]
   rfl
 
 /-- Fundamental identity: `πω(b) ξω = [b]`.  Proven by comparing inner products with an
 arbitrary dense set of vectors. -/
-private lemma πω_cyclic_identity (b : A) :
+lemma πω_cyclic_identity (b : A) :
     πω ω b (ξω ω) = (↑(Quotient.mk'' b : A ⧸ Nω) : Hω) := by
   apply ext_inner_right ℂ
   intro x
@@ -469,7 +473,7 @@ private lemma πω_cyclic_identity (b : A) :
       simp [UniformSpace.Completion.inner_coe]
 
 /-- The quotient image of any element lies in the closure of the cyclic orbit. -/
-private lemma quotient_in_cyclic_closure (b : A) :
+lemma quotient_in_cyclic_closure (b : A) :
     (↑(Quotient.mk'' b : A ⧸ Nω) : Hω) ∈ closure (⋃ (a : A), {πω ω a (ξω ω)}) := by
   rw [← πω_cyclic_identity]
   exact subset_closure (Set.mem_iUnion.mpr ⟨b, rfl⟩)

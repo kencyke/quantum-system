@@ -1,7 +1,11 @@
-import Mathlib.Data.Complex.Basic
-import Mathlib.LinearAlgebra.Span.Defs
-import Mathlib.Topology.Algebra.ConstMulAction
-import Mathlib.Topology.Algebra.Monoid.Defs
+module
+
+public import Mathlib.Data.Complex.Basic
+public import Mathlib.LinearAlgebra.Span.Defs
+public import Mathlib.Topology.Algebra.ConstMulAction
+public import Mathlib.Topology.Algebra.Monoid.Defs
+
+@[expose] public section
 
 namespace Submodule
 

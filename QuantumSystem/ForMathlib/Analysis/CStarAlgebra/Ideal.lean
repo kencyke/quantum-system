@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.Classes
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Classes
+
+@[expose] public section
 
 
 /-- A left ideal in a non-unital C*-algebra: a subgroup closed under left multiplication

@@ -1,5 +1,9 @@
-import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
-import QuantumSystem.Algebra.CStarAlgebra.PureState
+module
+
+public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
+public import QuantumSystem.Algebra.CStarAlgebra.PureState
+
+@[expose] public section
 
 
 namespace PureState
@@ -61,7 +65,7 @@ lemma isInvariant_orthogonal (T : GNS.Representation ω) (W : Submodule ℂ T.H)
       -- `⟪(A†) w, x⟫ = ⟪w, A x⟫`
       simpa using (ContinuousLinearMap.adjoint_inner_left (A := (T.π a)) (x := x) (y := w)).symm
     _ = ⟪(T.π (star a)) w, x⟫ := by
-      simp [pi_adjoint (T := T) (a := a)]
+      rw [pi_adjoint (T := T) (a := a)]
     _ = 0 := hx0
 
 lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω) (W : Submodule ℂ T.H)
@@ -153,7 +157,7 @@ lemma vectorFunctional_isPositive (T : GNS.Representation ω) (v : T.H) :
       _ = ⟪v, (T.π (star a)) ((T.π a) v)⟫ := by
         rfl
       _ = ⟪v, ((T.π a)†) ((T.π a) v)⟫ := by
-        simp [pi_adjoint (T := T) (a := a)]
+        rw [← pi_adjoint (T := T) (a := a)]
       _ = ⟪(T.π a) v, (T.π a) v⟫ := by
         -- `⟪v, A† (A v)⟫ = ⟪A v, A v⟫`.
         exact

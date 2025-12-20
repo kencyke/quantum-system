@@ -1,4 +1,8 @@
-import QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum
+module
+
+public import QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum
+
+@[expose] public section
 
 
 /--

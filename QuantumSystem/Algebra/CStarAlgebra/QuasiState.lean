@@ -1,5 +1,9 @@
-import Mathlib.Analysis.Normed.Module.WeakDual
-import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.WeakDual
+module
+
+public import Mathlib.Analysis.Normed.Module.WeakDual
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.WeakDual
+
+@[expose] public section
 
 
 section QuasiStateSpace

@@ -1,8 +1,12 @@
-import Mathlib.Analysis.Convex.KreinMilman
-import Mathlib.Analysis.LocallyConvex.WeakDual
-import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
-import QuantumSystem.Algebra.CStarAlgebra.State
-import QuantumSystem.Algebra.CStarAlgebra.QuasiState
+module
+
+public import Mathlib.Analysis.Convex.KreinMilman
+public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
+public import QuantumSystem.Algebra.CStarAlgebra.State
+public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
+
+@[expose] public section
 
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
@@ -16,7 +20,7 @@ def IsPureState (φ : WeakDual ℂ A) : Prop :=
 
 
 /-- A linear functional with norm 1 that maps 1 to 1 is necessarily positive. -/
-private lemma isPositive_of_norm_eq_one_map_one
+lemma isPositive_of_norm_eq_one_map_one
     (φ : WeakDual ℂ B) (h_norm : ‖WeakDual.toStrongDual φ‖ = 1) (h_one : φ 1 = 1) : IsPositive B φ := by
   intro a
   -- 1. φ is real on self-adjoint elements.

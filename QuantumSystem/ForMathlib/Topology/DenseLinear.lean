@@ -1,4 +1,8 @@
-import Mathlib.Analysis.Complex.Norm
+module
+
+public import Mathlib.Analysis.Complex.Norm
+
+@[expose] public section
 
 namespace Continuous
 

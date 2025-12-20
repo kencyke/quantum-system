@@ -1,7 +1,11 @@
-import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
-import QuantumSystem.ForMathlib.Topology.DenseLinear
-import QuantumSystem.ForMathlib.Topology.MetricSpace.Completion
-import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
+module
+
+public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
+public import QuantumSystem.ForMathlib.Topology.DenseLinear
+public import QuantumSystem.ForMathlib.Topology.MetricSpace.Completion
+public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
+
+@[expose] public section
 
 namespace GNS
 

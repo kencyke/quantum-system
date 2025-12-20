@@ -1,4 +1,8 @@
-import Mathlib.Topology.Instances.ENNReal.Lemmas
+module
+
+public import Mathlib.Topology.Instances.ENNReal.Lemmas
+
+@[expose] public section
 
 namespace MetricSpaceCompletion
 

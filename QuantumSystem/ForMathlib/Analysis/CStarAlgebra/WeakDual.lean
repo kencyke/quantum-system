@@ -1,7 +1,11 @@
-import Mathlib.Analysis.CStarAlgebra.Classes
-import Mathlib.Analysis.Normed.Order.Lattice
-import Mathlib.GroupTheory.MonoidLocalization.Basic
-import Mathlib.Topology.Algebra.Module.WeakDual
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.Normed.Order.Lattice
+public import Mathlib.GroupTheory.MonoidLocalization.Basic
+public import Mathlib.Topology.Algebra.Module.WeakDual
+
+@[expose] public section
 
 
 section IsPositive

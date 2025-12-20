@@ -1,4 +1,8 @@
-import QuantumSystem.Algebra.CStarAlgebra.State
+module
+
+public import QuantumSystem.Algebra.CStarAlgebra.State
+
+@[expose] public section
 
 section StateContinuous
 

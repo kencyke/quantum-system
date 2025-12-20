@@ -1,6 +1,10 @@
-import Mathlib.Analysis.CStarAlgebra.Classes
-import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.NonUnital
-import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+module
+
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.NonUnital
+public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+
+@[expose] public section
 
 section State
 

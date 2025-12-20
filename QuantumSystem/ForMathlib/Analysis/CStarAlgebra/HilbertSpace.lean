@@ -1,4 +1,8 @@
-import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+module
+
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+
+@[expose] public section
 
 /-- A complex Hilbert space: a complete normed space with a complex inner product. -/
 class ComplexHilbertSpace (H : Type*) extends NormedAddCommGroup H, InnerProductSpace ℂ H, CompleteSpace H
