@@ -4,8 +4,19 @@ defaultTargets = ["QuantumSystem"]
 
 [[lean_lib]]
 name = "QuantumSystem"
+leanOptions.warningAsError = true
+leanOptions.pp.unicode.fun = true
+leanOptions.autoImplicit = false
+leanOptions.relaxedAutoImplicit = false
+leanOptions.linter.mathlibStandardSet = true
+leanOptions.linter.style.longLine = false
 
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.25.1"
+rev = "v4.27.0-rc1"
+
+[[lean_exe]]
+name = "mk_all"
+srcDir = "scripts"
+root = "mk_all"

@@ -7,14 +7,6 @@
 			"args": [
 				"lean-lsp-mcp"
 			]
-		},
-		"readability": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@mizchi/readability",
-				"--mcp"
-			]
 		}
 	}
 }
