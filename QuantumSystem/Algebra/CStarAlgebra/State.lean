@@ -363,7 +363,7 @@ lemma kernel_vanish_on_elem (hx : ω (star x * x) = 0) : ω x = 0 := by
   -- This is a contradiction
   linarith
 
-/-- Bound on `‖ω(e * a)‖²` for approximate unit elements. -/
+/-- Bound on `‖ω(e * a)‖²` for self-adjoint contractions `e` (i.e. `star e = e` and `‖e‖ ≤ 1`). -/
 lemma approx_unit_cauchy_schwarz_bound (a e : A) (he_star : star e = e) (he_norm : ‖e‖ ≤ 1) :
     ‖ω (e * a)‖ ^ 2 ≤ (ω (star a * a)).re := by
   -- Apply Cauchy-Schwarz inequality

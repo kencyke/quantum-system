@@ -10,7 +10,8 @@ open NNReal
 
 variable (A : Type*) [NonUnitalCStarAlgebra A]
 
-/-- A linear functional is positive if it maps positive elements to non-negative real numbers. -/
+/-- A linear functional is positive if it sends every element of the form `star a * a`
+to a nonnegative real number (viewed in `ℂ`). -/
 def IsPositive (φ : WeakDual ℂ A) : Prop :=
   ∀ a : A, ∃ r : ℝ≥0, φ (star a * a) = RCLike.ofReal (r : ℝ)
 

@@ -16,8 +16,12 @@ lemma positive_conjugate_le_norm_smul (a b : A):
     (CStarAlgebra.star_left_conjugate_le_norm_smul (A := A) (a := b) (b := star a * a))
 
 
-/-- For any element in a non-unital C*-algebra with an approximate unit and any ε > 0,
-there exists an approximate unit element `e` such that `‖e * x - x‖ < ε` and `‖e‖ ≤ 1`. -/
+/-- For any `x` in a non-unital C*-algebra and any `ε > 0`, there exists an element `e`
+with `‖e * x - x‖ < ε` and `‖e‖ ≤ 1`.
+
+This is obtained by applying the standard convergence property of the (canonical) approximate unit.
+The conclusion does **not** record that `e` belongs to a specific index/type of approximate-unit
+net; it only asserts existence of some `e : A` with the stated properties. -/
 lemma exists_approxUnit_mul_close (x : A) {ε : ℝ} (hε : 0 < ε) : ∃ e : A, ‖e * x - x‖ < ε ∧ ‖e‖ ≤ 1 := by
   -- Use the increasing approximate unit tending to the identity on the right.
   have h_approx := CStarAlgebra.increasingApproximateUnit (A := A)
