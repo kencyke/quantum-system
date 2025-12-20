@@ -10,3 +10,8 @@ leanOptions = { warningAsError = true }
 name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.27.0-rc1"
+
+[[lean_exe]]
+name = "mk_all"
+srcDir = "scripts"
+root = "mk_all"
