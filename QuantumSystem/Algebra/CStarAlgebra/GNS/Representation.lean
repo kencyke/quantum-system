@@ -3,25 +3,6 @@ import QuantumSystem.ForMathlib.Topology.DenseLinear
 import QuantumSystem.ForMathlib.Topology.MetricSpace.Completion
 import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
 
-/-!
-# GNS Representation
-
-This file packages the output of the GNS construction into a structure
-`GNS.Representation ω` consisting of a Hilbert space `H`, a non‑unital *‑representation
-`π : A →⋆ₙₐ[ℂ] 𝓑(H)`, and a cyclic unit vector `ξ` realising the state
-`ω a = ⟪ξ, π a ξ⟫`.  We also develop the infrastructure for comparing two such
-triplets via unitary equivalence:
-
-* Definition of the structure `GNS.Representation` together with the packed unitary equivalences `UnitaryEquiv`.
-* Auxiliary lemmas computing inner products and norms on cyclic orbit vectors.
-* Construction of the set-level isometry `cyclic_map` between cyclic subsets and its `extend_cyclic_map` extension.
-* Upgrade of this extension to a linear isometry equivalence `cyclic_isometry`, yielding uniqueness theorems.
-* Definition of the canonical GNS triplet built from the quotient/completion construction in `GNS.Construction`.
-
-These results are the backbone for the uniqueness (up to unitary equivalence) of the
-GNS representation associated to a given state.
--/
-
 namespace GNS
 
 /-- A (non‑unital) GNS triplet `(π, H, ξ)` for a state `ω : A → ℂ` on a (possibly non‑unital)

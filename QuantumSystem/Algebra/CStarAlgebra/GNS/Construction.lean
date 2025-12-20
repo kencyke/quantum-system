@@ -8,7 +8,7 @@ namespace GNS
 
 namespace Construction
 
-open ComplexConjugate NNReal Topology
+open ComplexConjugate NNReal Topology Filter
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 variable (ω : State ℂ A)
@@ -399,9 +399,6 @@ private noncomputable def stateOnQuot : (A ⧸ Nω) →L[ℂ] ℂ :=
     1
     (fun x => by simpa using stateOnQuotFun_bound ω x)
 
-    open Filter Topology
-
-    local notation "lₐ" => CStarAlgebra.approximateUnit A
 
 /-- The continuous extension of `ω̃` to the Hilbert space completion `Hω`. -/
 private noncomputable def stateOnHilbert : Hω →L[ℂ] ℂ :=
@@ -573,13 +570,6 @@ lemma πω_vector_norm_le (a : A) : ‖πω ω a (ξω ω)‖ ≤ ‖a‖ := by
   have h_le' : ‖πω ω a (ξω ω)‖ ≤ ‖πω ω a‖ := by simpa [h_norm] using h_le
   exact h_le'.trans (πω_opNorm_le (ω := ω) a)
 
-/-! ### Approximate unit convergence (small-step build-up)
-
-We now prepare lemmas showing the canonical approximate unit acts as the identity on the
-GNS representation.  We proceed incrementally to keep proof obligations manageable.
--/
-
-open Filter
 
 /-- Approximate-unit elements act as contractions under the GNS representation. -/
 lemma eventually_opNorm_le_one :
@@ -669,7 +659,7 @@ lemma tendsto_on_cyclic_span {x : Hω}
       funext e; simp [map_smul]
     simpa [h_eq] using h_comp
 
-/- Approximate units act as the identity on all of `Hω`. -/
+/-- Approximate units act as the identity on all of `Hω`. -/
 lemma tendsto_on_vector (x : Hω) :
     Tendsto (fun e : A => πω ω e x) (CStarAlgebra.approximateUnit A) (nhds x) := by
   classical
