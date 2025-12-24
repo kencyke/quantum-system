@@ -7,10 +7,8 @@ A Lean 4 formalization project focusing on quantum systems from an operator-alge
 * `QuantumSystem/Algebra/CStarAlgebra/`: Lemmas and definitions for States and the GNS construction.
 * `QuantumSystem/ForMathlib/`: Modules that must not import modules outside of Mathlib.
 
-## Building
+## Contributing
 
-To build the project, run:
+As of December 24, 2025, this repository is not accepting issues, pull requests, or other contributions. 
 
-```bash
-lake build
-```
+Please fork the repository if you would like to customize it.
