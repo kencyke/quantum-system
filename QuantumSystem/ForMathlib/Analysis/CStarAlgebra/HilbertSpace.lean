@@ -4,8 +4,11 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 
 @[expose] public section
 
+/-- A complex *pre*-Hilbert space: a normed space with a complex inner product. -/
+class ComplexPreHilbertSpace (H : Type*) extends NormedAddCommGroup H, InnerProductSpace ℂ H
+
 /-- A complex Hilbert space: a complete normed space with a complex inner product. -/
-class ComplexHilbertSpace (H : Type*) extends NormedAddCommGroup H, InnerProductSpace ℂ H, CompleteSpace H
+class ComplexHilbertSpace (H : Type*) extends ComplexPreHilbertSpace H, CompleteSpace H
 
 namespace ComplexHilbertSpace
 
@@ -19,6 +22,11 @@ abbrev BoundedLinearOperator := H →L[ℂ] H
 notation:50 "𝓑(" H ")" => BoundedLinearOperator H
 
 noncomputable instance : NonUnitalCStarAlgebra (𝓑(H)) := inferInstance
+
+/-- Any complex Hilbert space is, in particular, a complex pre-Hilbert space. -/
+noncomputable instance instPreComplexHilbertSpace [ComplexHilbertSpace H] : ComplexPreHilbertSpace H where
+  toNormedAddCommGroup := (inferInstance : NormedAddCommGroup H)
+  toInnerProductSpace := (inferInstance : InnerProductSpace ℂ H)
 
 end ComplexHilbertSpace
 
