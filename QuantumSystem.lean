@@ -18,6 +18,7 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.NormalState
+public import QuantumSystem.Algebra.VonNeumannAlgebra.SegalEntropy
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Separating
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TomitaOperator
 public import QuantumSystem.Analysis.CFC.Compact
@@ -25,6 +26,10 @@ public import QuantumSystem.Analysis.CFC.PolarDecomposition
 public import QuantumSystem.Analysis.CFC.TraceClass.Basic
 public import QuantumSystem.Analysis.CFC.TraceClass.Def
 public import QuantumSystem.Analysis.CFC.TraceClass.Dual
+public import QuantumSystem.Analysis.CFC.TraceClass.Log
+public import QuantumSystem.Analysis.Entropy.RelativeEntropy
+public import QuantumSystem.Analysis.Entropy.TraceClassRelativeEntropy
+public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
@@ -32,8 +37,7 @@ public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Channel
-public import QuantumSystem.Analysis.Entropy.RelativeEntropy
-public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
+public import QuantumSystem.Channel.TraceClass
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace

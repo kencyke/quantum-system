@@ -299,8 +299,8 @@ theorem tsum_inner_conjugate_le_of_nonneg {Q : H →L[ℂ] H} (hQ_pos : 0 ≤ Q)
       _ = ‖B‖^2 * ∑' j, (⟪b j, Q (b j)⟫_ℂ).re := by rw [tsum_congr h_P_sq_trace']
 
 /-- For trace-class T, the absolute value |T| is also trace-class. -/
-lemma isTraceClass_absoluteValue_of_isTraceClass {T : H →L[ℂ] H} (hT : IsTraceClass T)
-    (_ι : Type u) (_b : HilbertBasis _ι ℂ H) : IsTraceClass (absoluteValue T) := by
+lemma isTraceClass_absoluteValue_of_isTraceClass {T : H →L[ℂ] H} (hT : IsTraceClass T) :
+    IsTraceClass (absoluteValue T) := by
   let Q := absoluteValue T
   have hQ_pos : 0 ≤ Q := absoluteValue_nonneg T
   rw [isTraceClass_of_nonneg hQ_pos]
@@ -357,7 +357,7 @@ private lemma holder_bound_calc {T : H →L[ℂ] H} (hT : IsTraceClass T) (A : H
     let P := CFC.sqrt Q
     let B := A * V
     have hQ_pos : 0 ≤ Q := absoluteValue_nonneg T
-    have hQ_tc : IsTraceClass Q := isTraceClass_absoluteValue_of_isTraceClass hT ι b
+    have hQ_tc : IsTraceClass Q := isTraceClass_absoluteValue_of_isTraceClass hT
     have h_eq_P : ∀ j, ‖P (b j)‖^2 = (⟪b j, Q (b j)⟫_ℂ).re := fun j => norm_sq_sqrt_eq_inner hQ_pos (b j)
     have h_summable_P_sq : Summable (fun j => ‖P (b j)‖^2) := by
       have h1 : (fun j => ‖P (b j)‖^2) = (fun j => (⟪b j, Q (b j)⟫_ℂ).re) := funext h_eq_P
@@ -423,7 +423,7 @@ theorem summable_abs_re_inner_mul_traceClass {T : H →L[ℂ] H} (hT : IsTraceCl
   let P := CFC.sqrt Q
   let B := A * V
   have hQ_pos : 0 ≤ Q := absoluteValue_nonneg T
-  have hQ_tc : IsTraceClass Q := isTraceClass_absoluteValue_of_isTraceClass hT ι b
+  have hQ_tc : IsTraceClass Q := isTraceClass_absoluteValue_of_isTraceClass hT
   have h_inner_eq : ∀ i, ⟪b i, (A * T) (b i)⟫_ℂ = ⟪P ((A * V).adjoint (b i)), P (b i)⟫_ℂ :=
     fun i => inner_AT_eq_inner_sqrt h_polar (b i)
   have h_CS_bound : ∀ i, |(⟪b i, (A * T) (b i)⟫_ℂ).re| ≤ ‖P (B.adjoint (b i))‖ * ‖P (b i)‖ := by
@@ -550,6 +550,10 @@ lemma zero_toFun : (0 : TraceClass H).toFun = 0 := rfl
 
 @[simp]
 lemma smul_toFun (c : ℂ) (T : TraceClass H) : (c • T).toFun = c • T.toFun := rfl
+
+/-- `TraceClass.IsNonneg ρ` asserts that the underlying operator is non-negative. -/
+class TraceClass.IsNonneg (ρ : TraceClass H) : Prop where
+  nonneg : 0 ≤ (ρ : H →L[ℂ] H)
 
 end TraceClass
 

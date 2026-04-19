@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
+public import QuantumSystem.Analysis.CFC.TraceClass.Basic
 
 @[expose] public section
 
@@ -151,6 +152,21 @@ lemma extension_isNormal (ω : NormalState S) :
 
 lemma extension_extends (ω : NormalState S) (x : S) : ω.extension (x : H →L[ℂ] H) = ω x :=
   (ω.normal.choose_spec.2 x).symm
+
+/-- A normal state whose extension agrees with the trace on all trace-class operators.
+In the Type II₁ factor setting, the tracial state `τ` satisfies this. -/
+class IsTraceExtension (ω : NormalState S) : Prop where
+  extension_eq_trace : ∀ (T : ContinuousLinearMap.TraceClass H),
+    ω.extension (T : H →L[ℂ] H) = ContinuousLinearMap.TraceClass.trace T
+
+/-- Two `IsTraceExtension` states agree on trace-class operators. -/
+lemma IsTraceExtension.extensions_agree
+    {S₁ S₂ : VonNeumannAlgebra H}
+    {ω₁ : NormalState S₁} {ω₂ : NormalState S₂}
+    [ω₁.IsTraceExtension] [ω₂.IsTraceExtension]
+    (T : ContinuousLinearMap.TraceClass H) :
+    ω₁.extension (T : H →L[ℂ] H) = ω₂.extension (T : H →L[ℂ] H) := by
+  rw [IsTraceExtension.extension_eq_trace, IsTraceExtension.extension_eq_trace]
 
 end NormalState
 

@@ -110,6 +110,7 @@ This fundamental duality is key to the Tomita-Takesaki theory.
 section CyclicSeparatingDuality
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable (M : VonNeumannAlgebra H) (ξ : H)
 
 /-- If ξ is separating for M, then M'ξ is dense in H.
 
@@ -117,7 +118,7 @@ This is the "separating implies cyclic for commutant" direction of the duality.
 Proof: If M'ξ were not dense, let K be its closure. K is M'-invariant, so the
 orthogonal projection P onto K is in M'' = M. Since 1 ∈ M', we have ξ ∈ K,
 so (1-P)ξ = 0. But 1-P ≠ 0 (since K ⊊ H), contradicting ξ being separating for M. -/
-theorem IsSeparatingVector.isCyclic_commutant (M : VonNeumannAlgebra H) (ξ : H)
+theorem IsSeparatingVector.isCyclic_commutant
     (hξ : IsSeparatingVector M ξ) : IsCyclicVector M.commutant ξ := by
   rw [IsCyclicVector]
   by_contra h_not_dense
@@ -247,7 +248,7 @@ theorem IsSeparatingVector.isCyclic_commutant (M : VonNeumannAlgebra H) (ξ : H)
 This is the "cyclic for commutant implies separating" direction.
 Proof: Suppose x ∈ M and xξ = 0. For any a' ∈ M', xa'ξ = a'xξ = a'0 = 0.
 Since M'ξ is dense and x is continuous, x = 0 on a dense set, hence x = 0. -/
-theorem IsCyclicVector.isSeparating_of_commutant (M : VonNeumannAlgebra H) (ξ : H)
+theorem IsCyclicVector.isSeparating_of_commutant
     (hξ : IsCyclicVector M.commutant ξ) : IsSeparatingVector M ξ := by
   intro x hx
   -- x ∈ M, x ξ = 0
@@ -295,7 +296,7 @@ theorem IsCyclicVector.isSeparating_of_commutant (M : VonNeumannAlgebra H) (ξ :
   exact this _
 
 /-- Characterization: ξ is separating for M iff ξ is cyclic for M'. -/
-theorem isSeparatingVector_iff_isCyclic_commutant (M : VonNeumannAlgebra H) (ξ : H) :
+theorem isSeparatingVector_iff_isCyclic_commutant :
     IsSeparatingVector M ξ ↔ IsCyclicVector M.commutant ξ :=
   ⟨IsSeparatingVector.isCyclic_commutant M ξ, IsCyclicVector.isSeparating_of_commutant M ξ⟩
 
@@ -310,6 +311,7 @@ This state is faithful on a von Neumann algebra M iff ξ is separating for M.
 section VectorState
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable (M : VonNeumannAlgebra H) (ξ : H)
 
 open scoped InnerProductSpace
 
@@ -317,7 +319,7 @@ open scoped InnerProductSpace
 
 If ξ is separating for M and ωξ(x*x) = 0 for x ∈ M, then ⟨ξ, x*xξ⟩ = ‖xξ‖² = 0,
 so xξ = 0, and by separating property, x = 0. -/
-theorem IsSeparatingVector.faithful_vectorState (M : VonNeumannAlgebra H) (ξ : H)
+theorem IsSeparatingVector.faithful_vectorState
     (hξ : IsSeparatingVector M ξ) :
     ∀ x : M, ⟪ξ, ((star x * x : M) : H →L[ℂ] H) ξ⟫_ℂ = 0 → x = 0 := by
   intro x h0
@@ -340,7 +342,7 @@ theorem IsSeparatingVector.faithful_vectorState (M : VonNeumannAlgebra H) (ξ : 
   exact hξ x hxξ
 
 /-- Conversely, if the vector state is faithful on M, then ξ is separating for M. -/
-theorem isSeparatingVector_of_faithful_vectorState (M : VonNeumannAlgebra H) (ξ : H)
+theorem isSeparatingVector_of_faithful_vectorState
     (h : ∀ x : M, ⟪ξ, ((star x * x : M) : H →L[ℂ] H) ξ⟫_ℂ = 0 → x = 0) :
     IsSeparatingVector M ξ := by
   intro x hxξ
@@ -354,7 +356,7 @@ theorem isSeparatingVector_of_faithful_vectorState (M : VonNeumannAlgebra H) (ξ
   exact h x h0
 
 /-- Characterization: ξ is separating for M iff the vector state ωξ is faithful on M. -/
-theorem isSeparatingVector_iff_faithful_vectorState (M : VonNeumannAlgebra H) (ξ : H) :
+theorem isSeparatingVector_iff_faithful_vectorState :
     IsSeparatingVector M ξ ↔ ∀ x : M, ⟪ξ, ((star x * x : M) : H →L[ℂ] H) ξ⟫_ℂ = 0 → x = 0 :=
   ⟨IsSeparatingVector.faithful_vectorState M ξ, isSeparatingVector_of_faithful_vectorState M ξ⟩
 

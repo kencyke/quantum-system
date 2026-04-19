@@ -711,7 +711,7 @@ private lemma trace_rpow_mul_double_sum (ρ σ : DensityMatrix n) (s : ℝ) :
 omit [DecidableEq n] in
 /-- HasDerivAt for the double sum ∑_{i,j} w_{ij} λᵢˢ μⱼ¹⁻ˢ at s=1. -/
 private lemma hasDerivAt_double_rpow_sum
-    (w : n → n → ℝ) (_hw : ∀ i j, 0 ≤ w i j)
+    (w : n → n → ℝ)
     (ev1 ev2 : n → ℝ) (hev1 : ∀ i, 0 ≤ ev1 i) (hev2 : ∀ j, 0 ≤ ev2 j)
     (hsupp : ∀ j i, ev2 j = 0 → w i j * ev1 i = 0) :
     HasDerivAt (fun s : ℝ => ∑ i : n, ∑ j : n, w i j * ev1 i ^ s * ev2 j ^ (1 - s))
@@ -787,7 +787,7 @@ private lemma hasDerivAt_trace_rpow_mul (ρ σ : DensityMatrix n) (h : suppSubse
     funext (trace_rpow_mul_double_sum ρ σ)
   rw [hconv]
   have hderiv := hasDerivAt_double_rpow_sum
-    (fun i j => Complex.normSq (W j i)) (fun i j => Complex.normSq_nonneg _)
+    (fun i j => Complex.normSq (W j i))
     ev_ρ ev_σ ρ.eigenvalues_nonneg σ.eigenvalues_nonneg
     (fun j i hμ => by
       have := suppSubset_normSq_ev_zero ρ σ h j hμ i

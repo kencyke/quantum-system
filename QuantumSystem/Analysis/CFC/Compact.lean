@@ -205,7 +205,7 @@ omit [CompleteSpace H] in
 /-- A key lemma: for a positive compact operator A with eigenbasis b and eigenvalues σ,
     A can be written as a sum of rank-one operators. -/
 lemma positive_compact_eq_tsum_rankOne
-    {ι : Type*} (A : H →L[ℂ] H) (_hA_pos : 0 ≤ A) (_hA_comp : IsCompactOperator A)
+    {ι : Type*} (A : H →L[ℂ] H)
     (b : HilbertBasis ι ℂ H) (σ : ι → ℝ) (hσ_eig : ∀ i, A (b i) = σ i • b i) :
     ∀ x, A x = ∑' i, (σ i : ℂ) • ⟪b i, x⟫_ℂ • b i := by
   intro x

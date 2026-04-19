@@ -192,6 +192,20 @@ lemma trace_eq_traceNorm_of_nonneg (T : TraceClass H) (hT : 0 ≤ T.toFun) :
   let b := Classical.choose (Classical.choose_spec (exists_hilbertBasis ℂ H))
   rw [Complex.re_tsum (trace_summable_of_nonneg hT T.isTraceClass _ b)]
 
+/-- The real part of the trace of a positive trace-class operator is non-negative:
+`0 ≤ Re(Tr(T))` when `T ≥ 0`.
+
+This is the trace-level Klein inequality building block: since a positive operator
+has `Tr(T) = ‖T‖₁ ≥ 0` (trace equals trace norm for positive operators),
+the real part is non-negative. -/
+lemma trace_re_nonneg_of_nonneg (T : TraceClass H) (hT : 0 ≤ T.toFun) :
+    0 ≤ (trace T).re := by
+  have h_eq : trace T = traceOfPositive hT T.isTraceClass := by
+    unfold trace traceOfPositive
+    exact trace_sum_eq_of_nonneg hT T.isTraceClass _ _ _ _
+  rw [h_eq]
+  linarith [trace_eq_traceNorm_of_nonneg T hT, traceNorm_nonneg T]
+
 /-- If `T` is trace-class and `A` is bounded, then `A * T` is trace-class.
 
 The proof uses polar decomposition `T = V|T|` and shows that the trace of `|AT|`
@@ -1073,7 +1087,7 @@ lemma traceNorm_eq_eigenvalue_sum (T : TraceClass H) :
   -- The trace of a positive operator is basis-independent
   have h_eq : ∑' i, (⟪b' i, A (b' i)⟫_ℂ).re = ∑' i, (⟪b i, A (b i)⟫_ℂ).re := by
     -- Use Complex.re_tsum and trace_sum_eq_of_nonneg
-    have hTc_A : IsTraceClass A := isTraceClass_absoluteValue_of_isTraceClass T.isTraceClass ι b
+    have hTc_A : IsTraceClass A := isTraceClass_absoluteValue_of_isTraceClass T.isTraceClass
     have h_eq_c := trace_sum_eq_of_nonneg hA_pos hTc_A ι' b' ι b
     have h_sum1 : Summable (fun i => ⟪b' i, A (b' i)⟫_ℂ) := by
       have h_re := hTc_A ι' b'
@@ -1825,6 +1839,23 @@ lemma trace_mul_rankOne (A : H →L[ℂ] H) (x y : H) :
     ext1; exact h1
   rw [h2, trace_rankOne]
 
+/-- Trace of (rankOne x y) composed with A on the right.
+
+The computation: (|x⟩⟨y|) * A = |x⟩⟨A†y| (since inner y (Az) = inner (A†y) z),
+so trace((|x⟩⟨y|) * A) = inner (A†y) x = inner y (Ax). -/
+lemma trace_rankOne_mul (x y : H) (A : H →L[ℂ] H) :
+    trace ⟨rankOne x y * A, isTraceClass_mul_right (isTraceClass_rankOne x y) A⟩ = ⟪y, A x⟫_ℂ := by
+  have h1 : rankOne x y * A = rankOne x (A.adjoint y) := by
+    ext z
+    simp only [mul_apply, rankOne_apply]
+    congr 1
+    exact (ContinuousLinearMap.adjoint_inner_left A z y).symm
+  have h2 : (⟨rankOne x y * A, isTraceClass_mul_right (isTraceClass_rankOne x y) A⟩ :
+      TraceClass H) =
+      ⟨rankOne x (A.adjoint y), isTraceClass_rankOne x (A.adjoint y)⟩ := by
+    ext1; exact h1
+  rw [h2, trace_rankOne, ContinuousLinearMap.adjoint_inner_left]
+
 end RankOne
 
 section Basic
@@ -2265,7 +2296,7 @@ lemma dense_span_rankOne :
   have hT_eq_tsum : ∀ x, T.toFun x = ∑' i, (v i).toFun x := by
     intro x
     -- Use the helper lemma for |T| x = A x
-    have hA_eq := positive_compact_eq_tsum_rankOne A (absoluteValue_nonneg T.toFun) hA_comp b σ hσ_eig x
+    have hA_eq := positive_compact_eq_tsum_rankOne A b σ hσ_eig x
     -- Need summability of (σ i : ℂ) • ⟪b i, x⟫_ℂ • b i
     have hrepr : ∀ i, b.repr x i = ⟪b i, x⟫_ℂ := fun i => HilbertBasis.repr_apply_apply b x i
     have hbase : Summable (fun i => ⟪b i, x⟫_ℂ • b i) := by
@@ -2450,6 +2481,104 @@ lemma rankOneLeft_apply (y x : H) :
   simp only [rankOneLeft, LinearMap.mkContinuous_apply, LinearMap.coe_mk, AddHom.coe_mk]
 
 end RankOne
+
+section TraceCyclicity
+
+open scoped InnerProduct
+
+/-- The trace of T† equals the complex conjugate of the trace of T. -/
+lemma trace_adjoint_eq_conj (T : TraceClass H) :
+    trace ⟨T.toFun.adjoint, adjoint_isTraceClass T.isTraceClass⟩ =
+      starRingEnd ℂ (trace T) := by
+  simp only [trace, starRingEnd_apply]
+  rw [tsum_star]
+  congr 1; ext i
+  let b := Classical.choose (Classical.choose_spec (exists_hilbertBasis ℂ H))
+  -- Goal: ⟨b i, T†(b i)⟩ = star ⟨b i, T(b i)⟩
+  -- ⟨b i, T†(b i)⟩ = starRingEnd ℂ ⟨T†(b i), b i⟩ = starRingEnd ℂ ⟨b i, T(b i)⟩
+  have h1 : @inner ℂ H _ (b i) (T.toFun.adjoint (b i)) =
+      starRingEnd ℂ (@inner ℂ H _ (T.toFun.adjoint (b i)) (b i)) :=
+    (inner_conj_symm _ _).symm
+  have h2 : @inner ℂ H _ (T.toFun.adjoint (b i)) (b i) =
+      @inner ℂ H _ (b i) (T.toFun (b i)) :=
+    ContinuousLinearMap.adjoint_inner_left T.toFun (b i) (b i)
+  rw [h1, h2]; rfl
+
+/-- Key identity: `trace(T * A) = conj(trace(A† * T†))`. -/
+lemma trace_mulRight_eq_conj_trace_mulLeft_adjoint
+    (T : TraceClass H) (A : H →L[ℂ] H) :
+    trace (mulRight T A) =
+      starRingEnd ℂ (trace (mulLeft A.adjoint
+        ⟨T.toFun.adjoint, adjoint_isTraceClass T.isTraceClass⟩)) := by
+  simp only [trace, mulRight, mulLeft, starRingEnd_apply]
+  rw [tsum_star]
+  congr 1; ext i
+  let b := Classical.choose (Classical.choose_spec (exists_hilbertBasis ℂ H))
+  simp only [ContinuousLinearMap.mul_apply]
+  -- Goal: ⟨b i, T(A(b i))⟩ = star ⟨b i, A†(T†(b i))⟩
+  -- Use: ⟨u, v⟩ = star ⟨v, u⟩ (inner_conj_symm)
+  -- and: ⟨A†y, x⟩ = ⟨y, Ax⟩ (adjoint_inner_left)
+  have h1 : @inner ℂ H _ (b i) (T.toFun (A (b i))) =
+      @inner ℂ H _ (T.toFun.adjoint (b i)) (A (b i)) :=
+    (ContinuousLinearMap.adjoint_inner_left T.toFun (A (b i)) (b i)).symm
+  have h2 : @inner ℂ H _ (T.toFun.adjoint (b i)) (A (b i)) =
+      @inner ℂ H _ (A.adjoint (T.toFun.adjoint (b i))) (b i) :=
+    (ContinuousLinearMap.adjoint_inner_left A (b i) (T.toFun.adjoint (b i))).symm
+  have h3 : @inner ℂ H _ (A.adjoint (T.toFun.adjoint (b i))) (b i) =
+      star (@inner ℂ H _ (b i) (A.adjoint (T.toFun.adjoint (b i)))) := by
+    change _ = starRingEnd ℂ _
+    exact (inner_conj_symm _ _).symm
+  rw [h1, h2, h3]
+
+/-- The trace norm of the adjoint equals the trace norm. -/
+lemma traceNorm_adjoint (T : TraceClass H) :
+    traceNorm ⟨T.toFun.adjoint, adjoint_isTraceClass T.isTraceClass⟩ =
+      traceNorm T := by
+  unfold traceNorm
+  let b := Classical.choose (Classical.choose_spec (exists_hilbertBasis ℂ H))
+  have h_nonneg_adj : ∀ i, 0 ≤ (⟪b i, absoluteValue T.toFun.adjoint (b i)⟫_ℂ).re :=
+    traceNormSummand_nonneg T.toFun.adjoint b
+  have h_nonneg_T : ∀ i, 0 ≤ (⟪b i, absoluteValue T.toFun (b i)⟫_ℂ).re :=
+    traceNormSummand_nonneg T.toFun b
+  have h_summable_adj := adjoint_isTraceClass T.isTraceClass _ b
+  have h_summable_T := T.isTraceClass _ b
+  have h_ennreal_eq : (∑' i, ENNReal.ofReal (⟪b i, absoluteValue T.toFun.adjoint (b i)⟫_ℂ).re) =
+      (∑' i, ENNReal.ofReal (⟪b i, absoluteValue T.toFun (b i)⟫_ℂ).re) := by
+    exact (tsum_inner_absoluteValue_eq_adjoint_ennreal (T := T.toFun) b).symm
+  have h_ne_top_adj : (∑' i, ENNReal.ofReal (⟪b i, absoluteValue T.toFun.adjoint (b i)⟫_ℂ).re) ≠ ⊤ := by
+    rw [← ENNReal.ofReal_tsum_of_nonneg h_nonneg_adj h_summable_adj]
+    exact ENNReal.ofReal_ne_top
+  have h_ne_top_T : (∑' i, ENNReal.ofReal (⟪b i, absoluteValue T.toFun (b i)⟫_ℂ).re) ≠ ⊤ := by
+    rw [← ENNReal.ofReal_tsum_of_nonneg h_nonneg_T h_summable_T]
+    exact ENNReal.ofReal_ne_top
+  have h_toReal_adj :
+      (∑' i, ENNReal.ofReal (⟪b i, absoluteValue T.toFun.adjoint (b i)⟫_ℂ).re).toReal =
+      ∑' i, (⟪b i, absoluteValue T.toFun.adjoint (b i)⟫_ℂ).re := by
+    rw [ENNReal.tsum_toReal_eq (fun _ => ENNReal.ofReal_ne_top)]
+    exact tsum_congr (fun i => ENNReal.toReal_ofReal (h_nonneg_adj i))
+  have h_toReal_T :
+      (∑' i, ENNReal.ofReal (⟪b i, absoluteValue T.toFun (b i)⟫_ℂ).re).toReal =
+      ∑' i, (⟪b i, absoluteValue T.toFun (b i)⟫_ℂ).re := by
+    rw [ENNReal.tsum_toReal_eq (fun _ => ENNReal.ofReal_ne_top)]
+    exact tsum_congr (fun i => ENNReal.toReal_ofReal (h_nonneg_T i))
+  rw [← h_toReal_adj, ← h_toReal_T, h_ennreal_eq]
+
+/-- Trace norm bound for right multiplication: `‖Tr(TA)‖ ≤ ‖A‖ · ‖T‖₁`. -/
+lemma abs_trace_mulRight_le (T : TraceClass H) (A : H →L[ℂ] H) :
+    ‖trace (mulRight T A)‖ ≤ ‖A‖ * traceNorm T := by
+  rw [trace_mulRight_eq_conj_trace_mulLeft_adjoint]
+  rw [Complex.norm_conj]
+  calc ‖trace (mulLeft A.adjoint
+        ⟨T.toFun.adjoint, adjoint_isTraceClass T.isTraceClass⟩)‖
+      ≤ ‖A.adjoint‖ * traceNorm ⟨T.toFun.adjoint,
+          adjoint_isTraceClass T.isTraceClass⟩ := abs_trace_mul_le _ _
+    _ = ‖A‖ * traceNorm ⟨T.toFun.adjoint,
+          adjoint_isTraceClass T.isTraceClass⟩ := by
+        rw [ContinuousLinearMap.adjoint.norm_map]
+    _ = ‖A‖ * traceNorm T := by
+        rw [traceNorm_adjoint]
+
+end TraceCyclicity
 
 end TraceClass
 
