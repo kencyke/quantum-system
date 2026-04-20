@@ -1,3 +1,5 @@
 /.lake
 node_modules/
 lefthook-local.yml
+
+references/
