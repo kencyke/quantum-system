@@ -1,0 +1,23 @@
+{
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "lean-lsp"
+  ],
+  "enabledPlugins": {
+    "lean4@lean4-skills": true,
+    "skill-creator@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'script=\"${CLAUDE_PROJECT_DIR}/.claude/skills/pdf-to-knowledge/hooks/on_index_change.py\"; [ -f \"$script\" ] && exec python3 \"$script\" || exit 0'"
+          }
+        ]
+      }
+    ]
+  }
+}
