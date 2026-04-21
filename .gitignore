@@ -3,3 +3,5 @@ node_modules/
 lefthook-local.yml
 
 references/
+skill-creator-tests/
+**/__pycache__/
