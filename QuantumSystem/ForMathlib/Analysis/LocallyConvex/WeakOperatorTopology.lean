@@ -80,7 +80,7 @@ lemma continuous_leftMulWOT (a : B) : Continuous (leftMulWOT (H := H) a) := by
   -- `y (a (T x))` is the WOT-basic functional corresponding to `y ∘ a`.
   simpa [leftMulWOT_apply] using
     (ContinuousLinearMapWOT.continuous_dual_apply (σ := RingHom.id ℂ) (E := H) (F := H)
-      (x := x) (y := y.comp a))
+      (x := x) (y := y ∘L a))
 
 /-- Right multiplication by a fixed operator is WOT-continuous. -/
 lemma continuous_rightMulWOT (a : B) : Continuous (rightMulWOT (H := H) a) := by
@@ -205,7 +205,7 @@ noncomputable def restrictPiCLM {ι : Type*} (I : Finset ι) : (ι → ℂ) →L
 
 /-- The finite-coordinate evaluation map `BWOT → (I → ℂ)` coming from `inducingFn`. -/
 noncomputable def inducingFnRestrictCLM (I : Finset (H × H⋆)) : BWOT →L[ℂ] (↥I → ℂ) :=
-  (restrictPiCLM (ι := (H × H⋆)) I).comp (inducingFnCLM (H := H))
+  restrictPiCLM (ι := (H × H⋆)) I ∘L inducingFnCLM (H := H)
 
 /-- A basic separation lemma: for a WOT-closed submodule `A` and `T ∉ A`,
 there exists a WOT-continuous linear functional factoring through finitely many
@@ -216,7 +216,7 @@ This is a “finite-coordinate” version of Hahn–Banach separation tailored t
 lemma exists_wotCLM_sep_of_isClosed_submodule {A : Submodule ℂ BWOT}
     (hA : IsClosed (A : Set BWOT)) {T : BWOT} (hT : T ∉ (A : Set BWOT)) :
     ∃ I : Finset (H × H⋆), ∃ g : (↥I → ℂ) →L[ℂ] ℂ,
-      let f : BWOT →L[ℂ] ℂ := g.comp (inducingFnRestrictCLM (H := H) I)
+      let f : BWOT →L[ℂ] ℂ := g ∘L inducingFnRestrictCLM (H := H) I
       (∀ S : BWOT, S ∈ (A : Set BWOT) → f S = 0) ∧ f T ≠ 0 := by
   classical
   have hopen : IsOpen ((A : Set BWOT)ᶜ) := hA.isOpen_compl
@@ -276,7 +276,7 @@ lemma exists_wotCLM_sep_of_isClosed_submodule {A : Submodule ℂ BWOT}
     simpa [gCLM, inducingFnRestrictCLM, Φ] using this
   · intro hf0
     have : g (Φ T) = 0 := by
-      have : (gCLM.comp (inducingFnRestrictCLM (H := H) I)) T = 0 := hf0
+      have : (gCLM ∘L inducingFnRestrictCLM (H := H) I) T = 0 := hf0
       simpa [gCLM, inducingFnRestrictCLM, Φ] using this
     exact hgT this
 
@@ -300,7 +300,7 @@ lemma exists_wotCLM_sep_of_isClosed_submodule_sum {A : Submodule ℂ BWOT}
     ∃ I : Finset (H × H⋆),
       ∃ coeff : (↥I → ℂ),
         let f : BWOT →L[ℂ] ℂ :=
-          ∑ i : ↥I, (coeff i) • ((ContinuousLinearMap.proj i).comp (inducingFnRestrictCLM (H := H) I))
+          ∑ i : ↥I, (coeff i) • (ContinuousLinearMap.proj i ∘L inducingFnRestrictCLM (H := H) I)
         (∀ S : BWOT, S ∈ (A : Set BWOT) → f S = 0) ∧ f T ≠ 0 := by
   classical
   rcases exists_wotCLM_sep_of_isClosed_submodule (H := H) (A := A) hA (T := T) hT with
@@ -319,7 +319,7 @@ lemma exists_wotCLM_sep_of_isClosed_submodule_sum {A : Submodule ℂ BWOT}
     simpa [hg_sum, mul_comm, mul_left_comm, mul_assoc] using this
   have hneq : (∑ i : ↥I, (inducingFnRestrictCLM (H := H) I T i) • coeff i) ≠ 0 := by
     intro h0
-    have : (g.comp (inducingFnRestrictCLM (H := H) I)) T = 0 := by
+    have : (g ∘L inducingFnRestrictCLM (H := H) I) T = 0 := by
       simpa [hg_sum] using h0
     exact hg.2 this
   refine And.intro ?_ ?_
