@@ -1,8 +1,7 @@
 module
 
-public import QuantumSystem.Algebra.VonNeumannAlgebra.NormalState
-public import QuantumSystem.Algebra.VonNeumannAlgebra.NormalStarAlgHom
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Basic
+public import QuantumSystem.Algebra.VonNeumannAlgebra.NormalState
 
 /-!
 # Araki relative entropy (Donald–Petz variational form)
@@ -42,9 +41,7 @@ namespace VonNeumannAlgebra
 open NormedSpace
 open scoped CStarAlgebra
 
-universe u
-
-variable {H : Type u} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 variable [WStarAlgebra (H →L[ℂ] H)]
 
 /-- **Variational Araki relative entropy** `S(ω ∥ φ)` for two normal states on a
