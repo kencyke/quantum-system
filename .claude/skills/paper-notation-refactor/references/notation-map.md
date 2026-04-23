@@ -234,11 +234,11 @@ paper slug (`araki-1976`).
 | -------------------------- | ------------------ | ---------------------------------------------------------------------------- |
 | quantum relative entropy   | `D(ρ ‖ σ)`         | `scoped notation "D(" ρ:max " ‖ " σ:max ")" => quantumRelativeEntropy ρ σ`   |
 | von Neumann entropy        | `S(ρ)`             | `scoped notation "S(" ρ:max ")" => vonNeumannEntropy ρ`                      |
-| GNS representation         | `π_ω`              | `syntax "π_" term:max : term` + `macro_rules | ``(π_$ω) => ``(gnsRepresentation $ω)` |
-| GNS cyclic vector          | `Ω_ω`              | same pattern with `"Ω_"`                                                     |
-| modular operator           | `Δ_ω`              | same pattern with `"Δ_"`                                                     |
-| modular conjugation        | `J_ω`              | same pattern with `"J_"`                                                     |
-| KMS state at `β`           | `ω_β`              | `syntax term:max "_β" : term` — NB: subscript `β` is fragile; some papers write `\omega^{(\beta)}` instead |
+| GNS representation         | `π[ω]` (paper: `π_ω`) | `scoped syntax:max "π[" term "]" : term` + `macro_rules | ``(π[ $ω ]) => ``(gnsRepresentation $ω)` — see "Lexer gotcha" below for why the literal `π_ω` form fails |
+| GNS cyclic vector          | `Ω[ω]` (paper: `Ω_ω`) | same bracket pattern with `"Ω["`                                        |
+| modular operator           | `Δ[ω]` (paper: `Δ_ω`) | same bracket pattern with `"Δ["`                                        |
+| modular conjugation        | `J[ω]` (paper: `J_ω`) | same bracket pattern with `"J["`                                        |
+| KMS state at `β`           | `ω[β]` (paper: `ω_β`) | `scoped syntax:max "ω[" term "]" : term` — NB: the literal subscript `ω_β` is a single identifier at the lexer level; some papers write `\omega^{(\beta)}` instead |
 | partial trace over B       | `Tr_B`             | `syntax "Tr_" term:max : term` + `macro_rules`                               |
 | partial transpose          | `ρ^{T_B}`          | `syntax term:max "^{T_" term:max "}" : term` + `macro_rules`                 |
 | density-matrix fidelity    | `F(ρ, σ)`          | `scoped notation "F(" ρ:max ", " σ:max ")" => fidelity ρ σ`                  |
@@ -317,13 +317,15 @@ parse errors and unexpander bugs in one check.
 | binary infix with one operator token        | `infixl:<prec>` / `infixr:<prec>`  |
 | prefix with one token                       | `prefix:<prec>`                    |
 | postfix with one token                      | `postfix:<prec>`                   |
-| literal keyword + variables, no mixing      | `notation "…" => …`                |
-| multiple keyword tokens interleaved with args, subscripts, or non-ASCII brackets | `syntax` + `macro_rules` |
+| fixed keyword or bracketed form with parser-stable separators | `scoped notation "…" => …` |
+| identifier-like subscripts, lexer-sensitive forms, or anything needing a custom unexpander | `syntax` + `macro_rules` |
 
-Never use plain `notation` for mixfix patterns like `D(_ ‖ _)`,
-`⟨_ | _⟩_ω`, `π_ω`, `Ω_ω`, or anything with a subscript attached to a
-symbol — `syntax` + `macro_rules` is the only form that handles
-precedence + whitespace + Unicode reliably.
+Do not use unscoped/plain `notation` for project-level paper forms.
+Bracketed forms such as `D(ρ ‖ σ)`, `S(ρ)`, and `F(ρ, σ)` may use
+`scoped notation` so long as operator-adjacent placeholders are marked
+`:max` and the resulting form passes `#guard_msgs`. Subscripted or
+lexer-sensitive forms such as `π_ω`, `Ω_ω`, `Tr_B`, `⟨_ | _⟩_ω`, or any
+form that still fails round-trip should use `syntax` + `macro_rules`.
 
 ### Precedence conventions (Mathlib)
 
@@ -337,37 +339,45 @@ precedence + whitespace + Unicode reliably.
 | 75    | function application, unary prefixes        |
 | max   | bracket-like constructs (`⟨_, _⟩`, `‖_‖`)   |
 
-### Companion `Coe` instance checklist
+### Companion coercion / callable-instance checklist
 
-Before adding `instance : Coe X Y := ⟨f⟩` alongside new notation, confirm:
+Before adding `instance : Coe X Y := ⟨f⟩`, `instance : CoeFun X ...`, or a
+minimal `FunLike` companion alongside new notation, confirm:
 
-1. **Canonical.** `f : X → Y` is the one-and-only canonical embedding.
+1. **Canonical.** The embedding or application semantics is unique.
    Two competing candidates (e.g. density matrix → operator vs density
-   matrix → trace-class operator) means no coercion — keep the explicit
-   `.toAlg` call.
+   matrix → trace-class operator, or two different action maps) means no
+   coercion / callable instance — keep the explicit `.toAlg`, `.endo`,
+   or named projection.
 2. **Total.** No side-conditions (`h : X.Positive`). If you need a
-   hypothesis, make a separate named conversion, not a `Coe`.
-3. **Monomorphic.** No typeclass arguments on `f` that could pick the
-   wrong instance.
-4. **Non-conflicting.** `lean_loogle Coe X Y` returns nothing; grep the
-   target file for existing `toAlg` / `toOp` / etc. that would become
-   redundant.
-5. **`CoeHead` vs `CoeTC` vs `Coe`.** Default to plain `Coe`. Upgrade to
-   `CoeHead` if the coercion must fire only at the head of an
-   elaboration chain (e.g. to stop transitivity loops). `CoeTC` only
-   when you explicitly want transitive closure.
+   hypothesis, make a separate named conversion, not a `Coe` /
+   `CoeFun`.
+3. **Monomorphic.** No typeclass arguments on the projection or action
+   map that could pick the wrong instance.
+4. **Non-conflicting.** `lean_loogle` for the relevant shape (`Coe X Y`,
+   `CoeFun X`, `FunLike X`) returns nothing relevant; grep the target
+   file for existing `toAlg` / `toOp` / `.endo` / similar projections
+   that would become redundant or ambiguous.
+5. **Choose the smallest tool.** Default to plain `Coe` for carrier
+   projections, `CoeFun` when the paper reads the object as a function,
+   and `FunLike` only when downstream API or extensional lemmas actually
+   need it. Escape hatches: use `CoeHead` if the coercion must fire only
+   at the head of an elaboration chain (e.g. to break transitivity
+   loops), and `CoeTC` only when you explicitly want transitive closure.
+6. **Round-trip preserved.** The added instance must improve the visible
+   paper form and still pass the `#guard_msgs` round-trip check.
 
 If any check fails, **do not add the instance**. Keep the long form and
 flag it in `report.md`.
 
 ### Colocation rule
 
-Place the `scoped notation` block (and its companion `instance : Coe …`)
-**immediately after the definition it refers to**, inside the same
-namespace. This keeps the declaration, its notation, and its coercion
-discoverable from a single file read. Do not scatter them across a
-`Notation.lean` sidecar unless the file is already overflowing the
-500-line soft limit.
+Place the `scoped notation` block (and its companion coercion / callable
+instance) **immediately after the definition it refers to**, inside the
+same namespace. This keeps the declaration, its notation, and its
+supporting coercion or callability discoverable from a single file
+read. Do not scatter them across a `Notation.lean` sidecar unless the
+file is already overflowing the 500-line soft limit.
 
 ### Paper-reference policy
 

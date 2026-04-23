@@ -15,10 +15,11 @@ instead of `Finset.sum Finset.univ fun i => f i`.
 - The user says "paper style", "textbook style", "publication style",
   "make this look like the paper", "rewrite notation", "add notation for
   X".
-- The user points at a `.lean` file and asks to "clean up" or "make it
-  nicer" and that file has long-form `inner _ _`, `norm _`, `Finset.sum
-  Finset.univ _`, or domain-specific long-form calls that have a
-  textbook rendering.
+- The user points at a `.lean` file and asks to "clean up the notation",
+   "make it read more like the paper", or otherwise improve
+   mathematical surface syntax, and that file has long-form `inner _ _`,
+   `norm _`, `Finset.sum Finset.univ _`, or domain-specific long-form
+   calls that have a textbook rendering.
 - The user wants to introduce a new symbol (`D(ρ ‖ σ)`, `π_ω`, `Ω_ω`,
   `Δ_ω`, `Tr_B`) for an existing Lean definition.
 
@@ -29,10 +30,10 @@ instead of `Finset.sum Finset.univ fun i => f i`.
   `lean4:golf`.
 - The user wants to remove unused hypotheses or weaken typeclass
   assumptions. Use `derivable-hypothesis-remover` (sibling skill).
-- The user wants to introduce a new mathematical *definition*. This
-  skill only adds `notation`, `scoped notation`, `syntax` + `macro_rules`,
-  and narrowly-scoped `Coe` instances — never fresh `def`s, `theorem`s,
-  or `structure`s.
+- The user wants to introduce a new mathematical *definition*. This skill
+   only adds `notation`, `scoped notation`, `syntax` + `macro_rules`, and
+   narrowly-scoped coercion or callable support (`Coe`, `CoeFun`, minimal
+   `FunLike`) — never fresh `def`s, `theorem`s, or `structure`s.
 
 ## Modes of operation
 
@@ -115,9 +116,13 @@ Workflow:
 5. **Design matching Lean notation.** Same rules as before:
    - Colocate with the definition; use a namespace that matches the
      concept.
-   - Default to `scoped notation` inside that namespace so importers
-     opt in via `open scoped …`. Use global `notation` only when the
-     symbol is universally unambiguous (rare in physics).
+   - Default to `scoped notation` inside that namespace so importers opt
+     in via `open scoped …`. Use global `notation` only when the symbol
+     is universally unambiguous (rare in physics).
+   - Prefer `scoped notation` for parser-stable bracketed forms such as
+     `D(ρ ‖ σ)`, `S(ρ)`, or `F(ρ, σ)`. These usually round-trip cleanly
+     once every placeholder that sits next to an operator-like separator
+     is marked `:max`.
    - **Set placeholder precedence to `:max`** whenever a separator
      token inside the notation is also a Lean operator (`‖`, `|`, `⟨`,
      `⟩`, `*`, `^`, …). Without `:max` the term parser keeps reading
@@ -132,10 +137,11 @@ Workflow:
      `unexpected token ')'; expected '‖', '‖₊' or '‖ₑ'` because `‖ σ ")"`
      is parsed as the inside of `‖·‖`.
 
-   - **Multi-token mixfix** (e.g. `D(_ ‖ _)`, `⟪_ | _⟫_ω`, `π_ω`,
-     `Tr_B`) that plain `scoped notation` can't handle cleanly goes
-     through `syntax` + `macro_rules`. Remember to also provide an
-     `app_unexpander` so the pretty-printer can round-trip:
+   - **Lexer-sensitive or unexpander-sensitive forms** (e.g.
+     `⟪_ | _⟫_ω`, `π_ω`, `Ω_ω`, `Tr_B`, or any bracketed form that still
+     fails `#guard_msgs`) go through `syntax` + `macro_rules`.
+     Remember to also provide an `app_unexpander` so the pretty-printer
+     can round-trip:
 
      ```lean
      syntax:100 "D(" term:max " ‖ " term:max ")" : term
@@ -167,20 +173,35 @@ Workflow:
    specific section, page, or heading anchor. This is what lets a
    future reader trace the symbol back to the paper.
 
-8. **Add a companion `Coe` if paper notation hides a type gap.** Papers
-   often elide the distinction between a bundled subtype (e.g.
-   `DensityMatrix A`) and its underlying carrier (`A`). If the notation
-   only type-checks after such a coercion, add:
+8. **Add companion coercion or callable support if paper notation hides
+   a type gap.** Papers often elide either the distinction between a
+   bundled subtype (e.g. `DensityMatrix A`) and its underlying carrier
+   (`A`), or the distinction between a bundled endomorphism / sector and
+   the function it applies. Choose the smallest mechanism that restores
+   the paper surface:
 
    ```lean
    instance : Coe (DensityMatrix A) A := ⟨DensityMatrix.toAlg⟩
    ```
 
-   Gate on: (a) the target type has a unique canonical embedding,
-   (b) no existing `Coe`-style instance already covers it (check via
-   `lean_loogle` for `Coe X Y`), (c) the coercion is monomorphic (no
-   implicit typeclass arguments that could conflict). If any gate
-   fails, keep the long-form call and flag it in `report.md`.
+   If the paper notation treats the object as a callable map, prefer a
+   `CoeFun` instance and add `FunLike` only when downstream API really
+   needs extensional lemmas or an existing typeclass hierarchy expects
+   it (illustrative sketch — `ChargedSector` here stands for whatever
+   bundled endomorphism type the target file actually defines):
+
+   ```lean
+   instance : CoeFun (ChargedSector A Λ) (fun _ => A → A) :=
+     ⟨fun ρ => ρ.endo⟩
+   ```
+
+   Gate on: (a) the target type has a unique canonical embedding or
+   application semantics, (b) no existing `Coe` / `CoeFun` / `FunLike`
+   instance already covers it (check via `lean_loogle`), (c) the
+   coercion is monomorphic (no implicit typeclass arguments that could
+   conflict), and (d) the resulting surface form still round-trips under
+   `#guard_msgs`. If any gate fails, keep the explicit projection and
+   flag it in `report.md`.
 
 ### Worked Mode-B example — quantum relative entropy from `references/araki-1976/`
 
@@ -258,10 +279,12 @@ mixfix, exponents, subscripts), use the `syntax` + `macro_rules` +
       `references/` and ask). Open it under `references/<slug>/`.
    3. Extract the canonical symbol verbatim from `INDEX.md` / `content.md`
       / `sections/*.md` (grep + nearest LaTeX formula).
-   4. Translate LaTeX to Unicode and apply the precedence / `syntax` /
-      `macro_rules` rules per Mode B step 5.
-   5. Propose the notation + companion `Coe` if needed; cite the
-      paper path in the notation's docstring.
+   4. Translate LaTeX to Unicode and apply the precedence /
+      `scoped notation` / `syntax` / `macro_rules` rules per Mode B
+      step 5.
+   5. Propose the notation + companion `Coe` / `CoeFun` / minimal
+      `FunLike` support if needed; cite the paper path in the notation's
+      docstring.
 4. **Apply changes one declaration at a time.** After each change call
    `lean_diagnostic_messages` on the file. If red, revert just that
    change and continue with the next candidate.
@@ -277,8 +300,8 @@ mixfix, exponents, subscripts), use the `syntax` + `macro_rules` +
    source text contains the new tokens.
 8. **Emit `report.md`** in the workspace directory listing:
    - Mode A rewrites applied (file:line, before → after).
-   - Mode B notation + coercions added (declaration, chosen symbol,
-     paper reference).
+   - Mode B notation + coercion / callable support added (declaration,
+     chosen symbol, paper reference).
    - Candidates deliberately skipped, with the reason (scope conflict,
      coercion gate failed, precedence too fragile, user declined).
 
