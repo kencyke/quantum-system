@@ -14,7 +14,8 @@
 		},
 		"ghcr.io/devcontainers/features/node:1": {
 			"version": "22"
-		}
+		},
+		"ghcr.io/thamaji/devcontainer-features/gitleaks:latest": {}
 	},
 	"onCreateCommand": "rm -rf .lake/ && lake exe cache get && npm ci",
 	"mounts": [
