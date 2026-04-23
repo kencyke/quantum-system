@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "defaultMode": "auto",
+    "allow": [
+      "WebFetch(domain:github.com)"
+    ]
+  },
+  "language": "japanese"
+}
