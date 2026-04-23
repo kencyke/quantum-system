@@ -5,6 +5,7 @@ public import Mathlib.Analysis.Normed.Operator.Extend
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Ideal
 public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
+public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 
 @[expose] public section
 
@@ -764,6 +765,84 @@ lemma approxUnit_eval_tendsto_one :
   convert h_comp using 2
   rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ), h_norm]
   norm_num
+
+/-- If ω is faithful, then the GNS kernel Nω is trivial. -/
+lemma IsFaithful.kernel_eq_bot (hω : ω.IsFaithful) : (Nω).carrier = {0} := by
+  ext a
+  simp only [Set.mem_singleton_iff]
+  constructor
+  · intro ha
+    exact hω a ha
+  · intro ha
+    simp [ha]
+
+/-- The GNS cyclic vector ξω is nonzero (has norm 1).
+
+Note: This is a basic property of the GNS construction, not the main theorem about
+faithful states and separating vectors. -/
+lemma ξω_ne_zero : ξω ω ≠ 0 := by
+  have h := ξω_norm (ω := ω)
+  intro h0
+  rw [h0, norm_zero] at h
+  exact one_ne_zero h.symm
+
+/-- If ω is faithful, then πω(a) ξω = 0 implies a = 0 (and hence πω(a) = 0).
+
+This is the key separating property: the cyclic vector ξω separates elements of A
+via the GNS representation when ω is faithful. -/
+lemma IsFaithful.ξω_separating (hω : ω.IsFaithful) (a : A) (h : πω ω a (ξω ω) = 0) : a = 0 := by
+  rw [πω_cyclic_identity] at h
+  -- h : ↑(Quotient.mk'' a : A ⧸ Nω ω) = 0 in Hω
+  have h_inj := UniformSpace.Completion.coe_injective (α := A ⧸ Nω)
+  have h0 : (↑(Quotient.mk'' 0 : A ⧸ Nω) : Hω) = 0 :=
+    UniformSpace.Completion.coe_zero (α := A ⧸ Nω)
+  have h_quot_zero : (Quotient.mk'' a : A ⧸ Nω) = Quotient.mk'' 0 := h_inj (h.trans h0.symm)
+  -- From quotient being zero, a ∈ Nω
+  have h_eq := Quotient.exact' h_quot_zero
+  rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at h_eq
+  have h_neg_in : -a ∈ (Nω).toAddSubgroup := by simpa using h_eq
+  have h_neg_neg : - -a ∈ (Nω).carrier := (Nω).neg_mem' h_neg_in
+  have h_in_kernel : a ∈ (Nω).carrier := by simp only [neg_neg] at h_neg_neg; exact h_neg_neg
+  -- Apply faithfulness: Nω = {0}
+  rw [IsFaithful.kernel_eq_bot (ω := ω) hω, Set.mem_singleton_iff] at h_in_kernel
+  exact h_in_kernel
+
+/-- The fundamental equivalence: ω is faithful if and only if the map a ↦ πω(a) ξω
+is injective from A to Hω.
+
+This connects faithfulness (an algebraic property of the state) with the separating
+property (a geometric property of the cyclic vector). -/
+theorem isFaithful_iff_separating :
+    ω.IsFaithful ↔ Function.Injective (fun a : A => πω ω a (ξω ω)) := by
+  constructor
+  · intro hω a b hab
+    have h : πω ω (a - b) (ξω ω) = 0 := by
+      simp only [πω_sub, ContinuousLinearMap.sub_apply, hab, sub_self]
+    exact sub_eq_zero.mp (IsFaithful.ξω_separating (ω := ω) hω (a - b) h)
+  · intro h_inj a ha
+    -- ha : ω(a*a) = 0, i.e., a ∈ Nω
+    -- Need to show a = 0
+    have h_cyclic : πω ω a (ξω ω) = 0 := by
+      rw [πω_cyclic_identity]
+      have h_quot : (Quotient.mk'' a : A ⧸ Nω) = Quotient.mk'' 0 := by
+        apply Quotient.sound'
+        rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply]
+        simpa using (Nω).neg_mem' ha
+      rw [h_quot]
+      exact UniformSpace.Completion.coe_zero (α := A ⧸ Nω)
+    have h0 : πω ω 0 (ξω ω) = 0 := by rw [πω_zero]; simp
+    exact h_inj (h_cyclic.trans h0.symm)
+
+/-- The GNS representation πω is injective when ω is faithful.
+
+This is a corollary of the fundamental equivalence `isFaithful_iff_separating`:
+the cyclic vector ξω separates elements via the representation, which implies
+that the representation itself is injective. -/
+lemma IsFaithful.injective_πω (hω : ω.IsFaithful) : Function.Injective (πω ω) := by
+  intro a b hab
+  have h_sep := (isFaithful_iff_separating (ω := ω)).mp hω
+  apply h_sep
+  simp only [hab]
 
 end Construction
 
