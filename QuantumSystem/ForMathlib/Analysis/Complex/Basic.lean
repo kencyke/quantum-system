@@ -2,11 +2,43 @@ module
 
 public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.Analysis.Complex.Exponential
+public import Mathlib.Analysis.Complex.Order
 public import Mathlib.Analysis.SpecialFunctions.Complex.Arg
 
 @[expose] public section
 
 open ComplexConjugate
+
+/-! ### Non-negativity in `ComplexOrder` for real-valued complex numbers
+
+Convenience reformulations of `Complex.zero_le_real` for use sites that pass a
+real witness; primarily consumed by spectral / density-matrix calculations
+where one needs `(0 : ℂ) ≤ (ε : ℂ)` with `ε : ℝ`. -/
+
+namespace Complex
+
+open scoped ComplexOrder
+
+/-- Real `ε` lifted to complex with the natural ordering: `0 ≤ ε` in ℝ implies `0 ≤ ε` in ℂ. -/
+lemma zero_le_ofReal {ε : ℝ} (hε : 0 ≤ ε) : (0 : ℂ) ≤ (ε : ℂ) :=
+  Complex.zero_le_real.mpr hε
+
+/-- Real `1 - ε` lifted to complex is non-negative when `ε ≤ 1`. -/
+lemma zero_le_one_sub_ofReal {ε : ℝ} (hε' : ε ≤ 1) : (0 : ℂ) ≤ (1 - (ε : ℂ)) := by
+  rw [show (1 - (ε : ℂ)) = ((1 - ε : ℝ) : ℂ) from by push_cast; ring]
+  exact Complex.zero_le_real.mpr (by linarith)
+
+/-- The reciprocal of a natural number lifted to `ℂ` is non-negative. -/
+lemma zero_le_natCast_inv (n : ℕ) : (0 : ℂ) ≤ ((n : ℂ)⁻¹) := by
+  refine ⟨?_, ?_⟩
+  · simp only [Complex.zero_re, Complex.inv_re, Complex.natCast_re, Complex.normSq_natCast]
+    by_cases hn : n = 0
+    · simp [hn]
+    · have hn' : (0 : ℝ) < n := by exact_mod_cast Nat.pos_of_ne_zero hn
+      positivity
+  · simp [Complex.inv_im, Complex.natCast_im]
+
+end Complex
 
 /-- Every complex number can be multiplied by a unit complex number to obtain its norm. -/
 lemma Complex.phase_alignment (c : ℂ) : ∃ γ : ℂ, ‖γ‖ = 1 ∧ γ * c = ‖c‖ := by
