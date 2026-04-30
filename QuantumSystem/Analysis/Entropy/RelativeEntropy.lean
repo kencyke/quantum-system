@@ -1,10 +1,10 @@
 module
 
-public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
-public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Channel
+public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
+public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 
 /-!
 # Entropy Inequalities for Quantum Channels
@@ -31,7 +31,8 @@ density matrices ρ, σ:
 1. Use Stinespring dilation: Φ(ρ) = Tr_E(U(ρ ⊗ |0⟩⟨0|)U†)
 2. Relative entropy is additive: S(ρ ⊗ |0⟩⟨0| ‖ σ ⊗ |0⟩⟨0|) = S(ρ ‖ σ)
 3. Relative entropy is unitarily invariant
-4. Partial trace only decreases relative entropy (strong subadditivity)
+4. Partial trace only decreases relative entropy
+   (monotonicity under partial trace; equivalent to strong subadditivity)
 
 ### Petz Recovery Map
 Equality in monotonicity holds iff there exists a recovery channel R such that
@@ -70,9 +71,9 @@ This is the physically correct definition, following Umegaki (1962):
 
 - The return type is `EReal` to accommodate the +∞ case.
 - The matrix logarithms `log ρ` and `log σ` are computed via the spectral theorem.
+  This is the operator-algebraic definition used throughout the codebase.
   When `σ` has zero eigenvalues, `Real.log 0 = 0` (Mathlib junk value) is used;
   those directions contribute 0 to `Tr (ρ log σ)` because supp(ρ) ⊆ supp(σ).
-- When ρ and σ commute (shared eigenbasis), this reduces to Σᵢ λᵢ(log λᵢ - log μᵢ).
 -/
 noncomputable def relativeEntropy (ρ σ : DensityMatrix n) : EReal :=
   letI := Classical.propDecidable (suppSubset ρ.toMatrix σ.toMatrix)
@@ -1653,5 +1654,64 @@ theorem relativeEntropy_jointly_convex
       EReal.sub_self (EReal.coe_ne_top 1) (EReal.coe_ne_bot 1)
     simp only [EReal.coe_one, one_mul, h1sub1, EReal.zero_mul, add_zero]
     exact le_refl _
+
+/-! ### Isomorphism invariance
+
+For a `*-`algebra equivalence `φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ` that preserves trace,
+quantum relative entropy is invariant: `D(ρ.map φ ‖ σ.map φ) = D(ρ ‖ σ)`. In quantum
+information literature this is the **isometric invariance of relative entropy**, a
+special case of Lindblad–Uhlmann monotonicity restricted to invertible CPTP maps. The
+reindex specialisation uses `Matrix.reindexStarAlgEquiv e`, which preserves trace
+automatically (`Matrix.trace_reindexStarAlgEquiv`). -/
+
+variable {m : Type*} [Fintype m] [DecidableEq m]
+
+/-- **Quantum relative entropy is invariant under trace-preserving `*-`algebra
+equivalence** (PosDef case). -/
+theorem relativeEntropy_map_starAlgEquiv_posDef
+    (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef)
+    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ)
+    (hφ : ∀ A, (φ A).trace = A.trace) :
+    D(ρ.map φ hφ ∥ σ.map φ hφ) = D(ρ ∥ σ) := by
+  have hρ_map : (ρ.map φ hφ).toMatrix.PosDef := hρ.map_starAlgEquiv φ
+  have hσ_map : (σ.map φ hφ).toMatrix.PosDef := hσ.map_starAlgEquiv φ
+  unfold relativeEntropy
+  have h_supp_map : suppSubset (ρ.map φ hφ).toMatrix (σ.map φ hφ).toMatrix := by
+    intro v hv
+    have hinj : Function.Injective (σ.map φ hφ).toMatrix.mulVec :=
+      Matrix.mulVec_injective_iff_isUnit.mpr hσ_map.isUnit
+    have h0 : (σ.map φ hφ).toMatrix.mulVec 0 = 0 := by simp
+    have hv_zero : v = 0 := hinj (hv.trans h0.symm)
+    rw [hv_zero]; simp
+  have h_supp : suppSubset ρ.toMatrix σ.toMatrix := by
+    intro v hv
+    have hinj : Function.Injective σ.toMatrix.mulVec :=
+      Matrix.mulVec_injective_iff_isUnit.mpr hσ.isUnit
+    have h0 : σ.toMatrix.mulVec 0 = 0 := by simp
+    have hv_zero : v = 0 := hinj (hv.trans h0.symm)
+    rw [hv_zero]; simp
+  simp only [h_supp_map, h_supp, if_true]
+  congr 1
+  change (Tr ((ρ.map φ hφ).toMatrix *
+      (matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian -
+        matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian))).re =
+    (Tr (ρ.toMatrix *
+      (matrixLog ρ.toMatrix ρ.isHermitian -
+        matrixLog σ.toMatrix σ.isHermitian))).re
+  have h_log_ρ : matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian =
+      φ (matrixLog ρ.toMatrix ρ.isHermitian) := by
+    change matrixLog (φ ρ.toMatrix) _ = _
+    exact matrixLog_map_starAlgEquiv hρ φ
+  have h_log_σ : matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian =
+      φ (matrixLog σ.toMatrix σ.isHermitian) := by
+    change matrixLog (φ σ.toMatrix) _ = _
+    exact matrixLog_map_starAlgEquiv hσ φ
+  rw [h_log_ρ, h_log_σ, DensityMatrix.map_toMatrix, ← map_sub, ← map_mul, hφ]
+
+/-- Specialisation of `relativeEntropy_map_starAlgEquiv_posDef` to reindexing. -/
+theorem relativeEntropy_mapEquiv_posDef
+    (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef) (e : n ≃ m) :
+    D(ρ.mapEquiv e ∥ σ.mapEquiv e) = D(ρ ∥ σ) :=
+  relativeEntropy_map_starAlgEquiv_posDef ρ σ hρ hσ _ _
 
 end Matrix
