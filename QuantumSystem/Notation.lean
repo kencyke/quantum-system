@@ -1,7 +1,7 @@
 module
 
+public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.LinearAlgebra.Matrix.Trace
-public import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 
 @[expose] public section
 
@@ -13,10 +13,16 @@ Notations and abbreviations for quantum information theory.
 | Symbol | Expansion | How to activate | Defined in |
 |---|---|---|---|
 | `Tr A` | `Matrix.trace A` | always available (prefix notation) | this file |
-| `log ρ` | `DensityMatrix.log ρ` | `open scoped QuantumInfo` | `DensityMatrix.lean` |
-| `S(ρ)` | `Matrix.vonNeumannEntropy ρ` | `open scoped QuantumInfo` | `VonNeumannEntropy.lean` |
-| `D(ρ ∥ σ)` | `Matrix.relativeEntropy ρ σ` | `open scoped QuantumInfo` | `Entropy.lean` |
-| `⟪X, Y⟫_HS` | `Matrix.hsInnerProduct X Y` | `open scoped QuantumInfo` | `LiebConcavity.lean` |
+| `log ρ` | `DensityMatrix.log ρ` | `open scoped Matrix.QuantumInfo` | `State.lean` |
+| `S(ρ)` | `Matrix.vonNeumannEntropy ρ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/VonNeumannEntropy.lean` |
+| `D(ρ ∥ σ)` | `Matrix.relativeEntropy ρ σ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/RelativeEntropy.lean` |
+| `⟪X, Y⟫_HS` | `Matrix.hsInnerProduct X Y` | `open scoped Matrix.QuantumInfo` | `Analysis/Matrix/LiebConcavity.lean` |
+| `ρ ↾ Λ` | `DensityMatrix.restrict (by …) ρ` | `open scoped LocalNet.QuantumInfo` | `Algebra/LocalNet.lean` |
+
+`ρ ↾ Λ` is the AQFT-style **restriction of a density matrix to a sub-region** —
+equivalently, the partial trace over the complementary region.
+The subset proof `Λ ⊆ Λ_total` is auto-resolved by `Finset.subset_univ _`, `Finset.Subset.refl _`, or `decide`.
+For complex hypotheses, write `DensityMatrix.restrict h ρ` directly.
 
 ## `Tr` syntax
 
