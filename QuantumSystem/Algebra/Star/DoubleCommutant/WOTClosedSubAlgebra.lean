@@ -19,7 +19,7 @@ is equivalent to being closed in the weak operator topology (WOT).
 
 The "hard half" is the direction
 
-*WOT-closed `*-`subalgebra* $\Rightarrow$ *equals its double commutant*.
+*WOT-closed `*-`subalgebra* ⇒ *equals its double commutant*.
 
 We state and prove this as an equality of sets of operators
 `Set.centralizer (Set.centralizer (A : Set B)) = (A : Set B)`.
