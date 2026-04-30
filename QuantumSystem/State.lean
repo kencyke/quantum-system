@@ -1,6 +1,8 @@
 module
 
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
+public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.Notation
 
 /-!
@@ -28,16 +30,8 @@ The relative entropy is:
   S(ρ || σ) = Tr(ρ (log ρ - log σ))
 
 where log ρ and log σ are matrix logarithms computed via the continuous functional
-calculus (CFC), applied to each matrix's own spectral decomposition. This definition
-is correct for **non-commuting** ρ and σ. When ρ and σ commute (share eigenbasis),
-it reduces to:
-  S(ρ || σ) = Σᵢ λᵢ (log λᵢ - log μᵢ)
-where λᵢ, μᵢ are eigenvalues in the shared basis.
-
-**Note**: Defining S(ρ‖σ) via independently sorted eigenvalue sequences
-Σᵢ λᵢ(log λᵢ - log μᵢ) is **incorrect** for non-commuting density matrices,
-because independently sorting eigenvalues destroys the operator-algebraic structure.
-The correct definition must use matrix logarithms.
+calculus (CFC), applied to each matrix's own spectral decomposition. This is the
+operator-algebraically correct definition, including the non-commuting case.
 
 ## References
 
@@ -46,8 +40,7 @@ The correct definition must use matrix logarithms.
 
 @[expose] public section
 
-namespace Matrix
-
+open Matrix
 open scoped ComplexOrder MatrixOrder
 
 /-- A density matrix is a positive semi-definite matrix with trace 1.
@@ -150,10 +143,194 @@ noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1) :
     ↑(mix ρ₁ ρ₂ p hp hp1) = p • (↑ρ₁ : Matrix n n ℂ) + (1 - p) • ↑ρ₂ := rfl
 
+/-- Transport a density matrix along a trace-preserving `*-`algebra equivalence.
+
+This is the abstract notion of "unitary equivalence" of density matrices in the
+quantum-information sense. -/
+noncomputable def map {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ)
+    (hφ : ∀ A, (φ A).trace = A.trace) : DensityMatrix m where
+  toMatrix := φ ρ.toMatrix
+  posSemidef := ρ.posSemidef.map_starAlgEquiv φ
+  trace_eq_one := by rw [hφ]; exact ρ.trace_eq_one
+
+@[simp] lemma map_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ)
+    (hφ : ∀ A, (φ A).trace = A.trace) :
+    (ρ.map φ hφ).toMatrix = φ ρ.toMatrix := rfl
+
+/-- `DensityMatrix` reindex via an index equivalence — built on `DensityMatrix.map`. -/
+noncomputable def mapEquiv {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (e : m ≃ n) : DensityMatrix m :=
+  ρ.map (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
+    (Matrix.trace_reindexStarAlgEquiv e.symm)
+
+@[simp] lemma mapEquiv_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (e : m ≃ n) :
+    (ρ.mapEquiv e).toMatrix = ρ.toMatrix.submatrix e e := by
+  unfold mapEquiv
+  rfl
+
+/-! ### Maximally mixed state
+
+The uniform state `π = I/d` is the unique state whose entropy attains the
+maximum `log d`. -/
+
+section MaximallyMixed
+
+variable [Nonempty n]
+
+omit [DecidableEq n] in
+/-- `(Fintype.card n : ℂ)⁻¹` has positive real part. -/
+private lemma card_inv_re_pos : (0 : ℝ) < ((Fintype.card n : ℂ)⁻¹).re := by
+  simp only [Complex.inv_re, Complex.natCast_re, Complex.normSq_natCast]
+  have hd : (0 : ℝ) < Fintype.card n := by exact_mod_cast Fintype.card_pos (α := n)
+  positivity
+
+omit [DecidableEq n] [Nonempty n] in
+/-- `(Fintype.card n : ℂ)⁻¹` as a complex number equals its real part (it's real-valued). -/
+private lemma card_inv_eq_re_ofReal :
+    ((Fintype.card n : ℂ)⁻¹) = (((Fintype.card n : ℂ)⁻¹).re : ℂ) := by
+  apply Complex.ext
+  · rfl
+  · simp only [Complex.ofReal_im, Complex.inv_im, Complex.natCast_im, neg_zero, zero_div]
+
+/-- The **maximally-mixed (uniform) state** on a finite-dimensional system:
+`π = I / d` where `d = Fintype.card n`. -/
+noncomputable def maximallyMixed : DensityMatrix n where
+  toMatrix := ((Fintype.card n : ℂ)⁻¹) • (1 : Matrix n n ℂ)
+  posSemidef := PosSemidef.smul Matrix.PosSemidef.one (Complex.zero_le_natCast_inv _)
+  trace_eq_one := by
+    rw [Matrix.trace_smul, Matrix.trace_one]
+    have hd : (Fintype.card n : ℂ) ≠ 0 := by
+      exact_mod_cast (Fintype.card_pos (α := n)).ne'
+    rw [smul_eq_mul, inv_mul_cancel₀ hd]
+
+@[simp] lemma maximallyMixed_toMatrix :
+    (maximallyMixed (n := n)).toMatrix = ((Fintype.card n : ℂ)⁻¹) • (1 : Matrix n n ℂ) := rfl
+
+/-- The maximally-mixed state is positive definite. -/
+theorem maximallyMixed_posDef : (maximallyMixed (n := n)).toMatrix.PosDef := by
+  rw [maximallyMixed_toMatrix]
+  have hzero : (0 : Matrix n n ℂ).PosSemidef := Matrix.PosSemidef.zero
+  have hreg := PosSemidef.add_smul_one_posDef hzero (card_inv_re_pos (n := n))
+  rw [zero_add] at hreg
+  rwa [card_inv_eq_re_ofReal]
+
+/-! ### Regularization
+
+The convex mixture `(1 - ε) ρ + ε π` is the standard regularization. For `ε > 0`,
+the result is positive definite (since `π` is). -/
+
+/-- **Regularization of a density matrix**: `ρ_ε := (1-ε) ρ + ε π`,
+where `π = I/d` is the maximally-mixed state. For `ε ∈ [0, 1]` this is a valid
+density matrix; for `ε > 0` it is PosDef. -/
+noncomputable def regularize (ρ : DensityMatrix n) {ε : ℝ}
+    (hε : 0 ≤ ε) (hε' : ε ≤ 1) : DensityMatrix n where
+  toMatrix := (1 - (ε : ℂ)) • ρ.toMatrix + (ε : ℂ) • (maximallyMixed (n := n)).toMatrix
+  posSemidef :=
+    PosSemidef.add
+      (PosSemidef.smul ρ.posSemidef (Complex.zero_le_one_sub_ofReal hε'))
+      (PosSemidef.smul maximallyMixed_posDef.posSemidef (Complex.zero_le_ofReal hε))
+  trace_eq_one := by
+    rw [Matrix.trace_add, Matrix.trace_smul, Matrix.trace_smul, ρ.trace_eq_one,
+      maximallyMixed.trace_eq_one]
+    rw [smul_eq_mul, smul_eq_mul, mul_one, mul_one]
+    ring
+
+@[simp] lemma regularize_toMatrix (ρ : DensityMatrix n) {ε : ℝ}
+    (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
+    (regularize ρ hε hε').toMatrix =
+      (1 - (ε : ℂ)) • ρ.toMatrix + (ε : ℂ) • (maximallyMixed (n := n)).toMatrix := rfl
+
+/-- **The regularization is positive definite** for any `ε > 0`. -/
+theorem regularize_posDef (ρ : DensityMatrix n) {ε : ℝ}
+    (hε : 0 < ε) (hε' : ε ≤ 1) :
+    (regularize ρ hε.le hε').toMatrix.PosDef := by
+  rw [regularize_toMatrix]
+  have h_psd : ((1 - (ε : ℂ)) • ρ.toMatrix).PosSemidef :=
+    PosSemidef.smul ρ.posSemidef (Complex.zero_le_one_sub_ofReal hε')
+  have h_unfold : (ε : ℂ) • (maximallyMixed (n := n)).toMatrix =
+      ((ε / Fintype.card n : ℝ) : ℂ) • (1 : Matrix n n ℂ) := by
+    rw [maximallyMixed_toMatrix, smul_smul]
+    push_cast
+    rw [div_eq_mul_inv]
+  rw [h_unfold]
+  exact PosSemidef.add_smul_one_posDef h_psd
+    (by have hd_pos : (0 : ℝ) < Fintype.card n := by
+          exact_mod_cast Fintype.card_pos (α := n)
+        positivity)
+
+/-- The regularization is also Hermitian. -/
+lemma regularize_isHermitian (ρ : DensityMatrix n) {ε : ℝ}
+    (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
+    (regularize ρ hε hε').toMatrix.IsHermitian :=
+  (regularize ρ hε hε').posSemidef.1
+
+/-- At `ε = 0`, the regularization equals the original. -/
+@[simp] lemma regularize_zero (ρ : DensityMatrix n) :
+    regularize ρ (le_refl 0) zero_le_one = ρ := by
+  apply DensityMatrix.ext
+  rw [regularize_toMatrix]
+  simp
+
+/-- At `ε = 1`, the regularization equals the maximally-mixed state. -/
+@[simp] lemma regularize_one (ρ : DensityMatrix n) :
+    regularize ρ zero_le_one (le_refl 1) = maximallyMixed := by
+  apply DensityMatrix.ext
+  rw [regularize_toMatrix]
+  simp
+
+/-! ### Spectral identity for `regularize`
+
+The regularization expressed as `cfc` applied to ρ:
+`regularize ρ ε.toMatrix = cfc (fun x => (1-ε) * x + ε/d) ρ.toMatrix`. -/
+
+/-- The regularization expressed as `cfc` applied to ρ. -/
+theorem regularize_eq_cfc (ρ : DensityMatrix n) {ε : ℝ}
+    (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
+    (regularize ρ hε hε').toMatrix =
+      cfc (fun x : ℝ => (1 - ε) * x + ε / Fintype.card n) ρ.toMatrix := by
+  have hρ_sa : IsSelfAdjoint ρ.toMatrix := ρ.isHermitian
+  rw [cfc_add (R := ℝ) (fun x => (1 - ε) * x) (fun _ => ε / (Fintype.card n : ℝ))
+      (a := ρ.toMatrix) (by fun_prop) (by fun_prop),
+      cfc_const_mul (R := ℝ) (1 - ε) (fun x : ℝ => x) ρ.toMatrix (by fun_prop),
+      cfc_id' (R := ℝ) ρ.toMatrix,
+      cfc_const (R := ℝ) (ε / (Fintype.card n : ℝ)) ρ.toMatrix,
+      Algebra.algebraMap_eq_smul_one]
+  rw [regularize_toMatrix, maximallyMixed_toMatrix, smul_smul]
+  have h1 : (1 - (ε : ℂ)) • ρ.toMatrix = (1 - ε : ℝ) • ρ.toMatrix := by
+    rw [show (1 - (ε : ℂ)) = ((1 - ε : ℝ) : ℂ) from by push_cast; ring]
+    exact algebraMap_smul ℂ (1 - ε : ℝ) ρ.toMatrix
+  have h2 : ((ε : ℂ) * (Fintype.card n : ℂ)⁻¹) • (1 : Matrix n n ℂ) =
+            (ε / (Fintype.card n : ℝ) : ℝ) • (1 : Matrix n n ℂ) := by
+    rw [show ((ε : ℂ) * (Fintype.card n : ℂ)⁻¹) = ((ε / (Fintype.card n : ℝ) : ℝ) : ℂ) from by
+        push_cast; rw [div_eq_mul_inv]]
+    exact algebraMap_smul ℂ (ε / Fintype.card n : ℝ) 1
+  rw [h1, h2]
+
+/-! ### Reindex compatibility
+
+The regularization commutes with `mapEquiv`. -/
+
+/-- For an `Equiv e : n ≃ m`, the regularization commutes with `mapEquiv`. -/
+theorem regularize_mapEquiv {m : Type*} [Fintype m] [DecidableEq m] [Nonempty m]
+    (ρ : DensityMatrix m) (e : n ≃ m) {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
+    regularize (mapEquiv ρ e) hε hε' = mapEquiv (regularize ρ hε hε') e := by
+  apply DensityMatrix.ext
+  rw [mapEquiv_toMatrix, regularize_toMatrix, regularize_toMatrix,
+      mapEquiv_toMatrix, maximallyMixed_toMatrix, maximallyMixed_toMatrix]
+  ext i j
+  simp only [Matrix.add_apply, Matrix.smul_apply, Matrix.submatrix_apply, Matrix.one_apply,
+    Function.Injective.eq_iff e.injective]
+  have h_card : (Fintype.card n : ℂ) = (Fintype.card m : ℂ) := by
+    exact_mod_cast Fintype.card_congr e
+  rw [h_card]
+
+end MaximallyMixed
+
 end DensityMatrix
 
-namespace QuantumInfo
+namespace Matrix.QuantumInfo
 scoped prefix:max "log " => DensityMatrix.log
-end QuantumInfo
-
-end Matrix
+end Matrix.QuantumInfo
