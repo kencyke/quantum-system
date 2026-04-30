@@ -9,7 +9,7 @@ RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhisto
     && echo "$SNIPPET" >> "/home/$USERNAME/.bashrc"
 
 RUN apt-get update && \
-    apt install -y ripgrep
+    apt install -y ripgrep libgl1 libglib2.0-0
 
 USER vscode
 WORKDIR /home/vscode
