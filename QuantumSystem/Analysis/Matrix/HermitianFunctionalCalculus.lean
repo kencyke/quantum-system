@@ -5,6 +5,7 @@ public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.LinearAlgebra.Lagrange
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 
 /-!
 # Matrix Functional Calculus and Foundational Inequalities
@@ -463,6 +464,17 @@ noncomputable def matrixLog {m : Type*} [Fintype m] [DecidableEq m]
     (A : Matrix m m ℂ) (hA : A.IsHermitian) : Matrix m m ℂ :=
   matrixFunction (fun x => Real.log x) A hA
 
+/-- `matrixLog` expands into the spectral decomposition attached to the chosen
+Hermitian proof. -/
+lemma matrixLog_spectral_eq {m : Type*} [Fintype m] [DecidableEq m]
+    {A : Matrix m m ℂ} (hA : A.IsHermitian) :
+    matrixLog A hA =
+      (hA.eigenvectorUnitary : Matrix m m ℂ) *
+        diagonal (fun i => ((Real.log (hA.eigenvalues i) : ℝ) : ℂ)) *
+        (hA.eigenvectorUnitary : Matrix m m ℂ)ᴴ := by
+  unfold matrixLog matrixFunction
+  rfl
+
 /-- Trace of matrix exponential equals sum of exp of eigenvalues. -/
 lemma matrixExp_trace {m : Type*} [Fintype m] [DecidableEq m]
     (A : Matrix m m ℂ) (hA : A.IsHermitian) :
@@ -486,6 +498,47 @@ lemma matrixLog_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
   have hDiag := IsHermitian.diagonal_real (fun i => Real.log (hA.eigenvalues i))
   rw [IsHermitian] at hDiag
   rw [hDiag, Matrix.mul_assoc]
+
+/-- The matrix logarithm commutes with any `*-`algebra equivalence between complex matrix
+algebras on PosDef matrices. Continuity is automatic in finite dimensions. -/
+theorem matrixLog_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
+    [Fintype n] [DecidableEq n] {M : Matrix m m ℂ} (hM : M.PosDef)
+    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
+    matrixLog (φ M) ((hM.posSemidef.map_starAlgEquiv φ).isHermitian) =
+      φ (matrixLog M hM.1) := by
+  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  letI : CStarAlgebra (Matrix m m ℂ) := by
+    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
+  letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
+  letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  letI : CStarAlgebra (Matrix n n ℂ) := by
+    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
+  unfold matrixLog
+  rw [matrixFunction_eq_cfc, matrixFunction_eq_cfc]
+  -- View `φ` as an ℝ-`StarAlgHom` to apply `StarAlgHomClass.map_cfc`.
+  let ψ : Matrix m m ℂ →⋆ₐ[ℝ] Matrix n n ℂ :=
+    { toAlgHom := (φ.toAlgEquiv.restrictScalars ℝ).toAlgHom
+      map_star' := fun X => map_star φ X }
+  have h_ψ_apply : ∀ X, ψ X = φ X := fun _ => rfl
+  have hψ_cont : Continuous ψ :=
+    ψ.toAlgHom.toLinearMap.continuous_of_finiteDimensional
+  have hM_sa : IsSelfAdjoint M := hM.1
+  have hψM_sa : IsSelfAdjoint (ψ M) := by
+    rw [IsSelfAdjoint, ← map_star ψ]
+    exact congr_arg ψ hM_sa.star_eq
+  have h_cont : ContinuousOn Real.log (spectrum ℝ M) := by
+    refine Real.continuousOn_log.mono ?_
+    intro x hx
+    rw [hM.1.spectrum_real_eq_range_eigenvalues] at hx
+    rcases hx with ⟨i, rfl⟩
+    exact ne_of_gt (hM.eigenvalues_pos i)
+  have h_map := StarAlgHomClass.map_cfc (R := ℝ) (S := ℝ) ψ Real.log M
+    h_cont hψ_cont hM_sa hψM_sa
+  rw [h_ψ_apply, h_ψ_apply] at h_map
+  exact h_map.symm
 
 /-- Matrix inverse square root via functional calculus for PD matrices. -/
 noncomputable def matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]
@@ -802,6 +855,8 @@ classical result in matrix analysis. The standard proof uses the block diagonal
 technique: embed the 2-term HPJ problem into a larger space using block matrices.
 
 Reference: Hansen-Pedersen (2003), "Jensen's Operator Inequality" -/
+
+section JensenConvexity
 
 -- Helper: V†M^k V = (V†MV)^k when PM = MP and V†V = I
 -- where P = VV†.
@@ -1206,7 +1261,11 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
   -- Conclusion: M^s = M^s * V * V† = V * A^s * V†
   rw [hMsP_eq, show P = V * Vᴴ from hP_def, ← Matrix.mul_assoc, hMsV]
 
+end JensenConvexity
+
 /-! ### Spectral Decomposition Identities -/
+
+section SpectralIdentities
 
 variable {n : Type*} [Fintype n] [DecidableEq n]
 
@@ -1265,5 +1324,7 @@ lemma fromBlocks_diag_rpow {n₁ n₂ : Type*}
   rw [hcfc,
       ← CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA),
       ← CFC.rpow_eq_cfc_real (a := D) (ha := by rw [Matrix.le_iff, sub_zero]; exact hD)]
+
+end SpectralIdentities
 
 end Matrix
