@@ -14,7 +14,7 @@ leanOptions.linter.style.longLine = false
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.27.0-rc1"
+rev = "v4.30.0-rc2"
 
 [[lean_exe]]
 name = "mk_all"
