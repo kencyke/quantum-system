@@ -23,11 +23,12 @@ namespace Matrix
 open scoped ComplexOrder
 
 /-- A strictly positive convex combination of positive definite matrices is positive definite. -/
-lemma PosDef.convex_comb {m : Type*} [Fintype m]
+lemma PosDef.convex_comb {m : Type*} [Finite m]
     {A B : Matrix m m ℂ} (hA : A.PosDef) (hB : B.PosDef)
     {t : ℝ} (ht0 : 0 < t) (ht1 : 0 < 1 - t) :
     (t • A + (1 - t) • B).PosDef := by
   classical
+  letI := Fintype.ofFinite m
   refine Matrix.PosDef.of_dotProduct_mulVec_pos ?_ ?_
   · exact (hA.1.smul_real t).add (hB.1.smul_real (1 - t))
   · intro x hx
@@ -40,21 +41,26 @@ lemma PosDef.convex_comb {m : Type*} [Fintype m]
     have hC_re :
         (star x ⬝ᵥ ((t • A + (1 - t) • B) *ᵥ x)).re =
           t * (star x ⬝ᵥ (A *ᵥ x)).re + (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re := by
-      simp [add_mulVec, smul_mulVec, dotProduct_add, dotProduct_smul,
-        Complex.add_re, Complex.real_smul]
+      have htA : (t • A) *ᵥ x = t • (A *ᵥ x) := smul_mulVec _ _ _
+      have htB : ((1 - t) • B) *ᵥ x = (1 - t) • (B *ᵥ x) := smul_mulVec _ _ _
+      have hsmA : star x ⬝ᵥ (t • (A *ᵥ x)) = t • (star x ⬝ᵥ (A *ᵥ x)) :=
+        dotProduct_smul (R := ℝ) t (star x) (A *ᵥ x)
+      have hsmB : star x ⬝ᵥ ((1 - t) • (B *ᵥ x)) = (1 - t) • (star x ⬝ᵥ (B *ᵥ x)) :=
+        dotProduct_smul (R := ℝ) (1 - t) (star x) (B *ᵥ x)
+      rw [add_mulVec, dotProduct_add, htA, htB, hsmA, hsmB, Complex.add_re,
+        Complex.smul_re, Complex.smul_re]
+      simp [smul_eq_mul]
     refine (RCLike.pos_iff).2 ?_
     constructor
-    · have hA' : 0 < t * (star x ⬝ᵥ (A *ᵥ x)).re := by
-        exact mul_pos ht0 hA_re
-      have hB' : 0 < (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re := by
-        exact mul_pos ht1 hB_re
+    · have hA' : 0 < t * (star x ⬝ᵥ (A *ᵥ x)).re := mul_pos ht0 hA_re
+      have hB' : 0 < (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re := mul_pos ht1 hB_re
       have hsum : 0 < t * (star x ⬝ᵥ (A *ᵥ x)).re + (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re :=
         add_pos hA' hB'
       simpa [hC_re] using hsum
     · exact hC_im
 
 /-- Convex combination of PD matrices with nonnegative weights is PD. -/
-lemma PosDef.convex_comb_nonneg {m : Type*} [Fintype m]
+lemma PosDef.convex_comb_nonneg {m : Type*} [Finite m]
     {A B : Matrix m m ℂ} (hA : A.PosDef) (hB : B.PosDef)
     {w₁ w₂ : ℝ} (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) (hw : w₁ + w₂ = 1) :
     (w₁ • A + w₂ • B).PosDef := by
@@ -62,12 +68,14 @@ lemma PosDef.convex_comb_nonneg {m : Type*} [Fintype m]
   · have h₂ : w₂ = 1 := by linarith [hw, h₁]
     subst h₁
     subst h₂
-    simpa using hB
+    convert hB using 1
+    module
   by_cases h₂ : w₂ = 0
   · have h₁' : w₁ = 1 := by linarith [hw, h₂]
     subst h₂
     subst h₁'
-    simpa using hA
+    convert hA using 1
+    module
   have hw₁pos : 0 < w₁ := lt_of_le_of_ne hw₁ (Ne.symm h₁)
   have hw₂pos : 0 < w₂ := lt_of_le_of_ne hw₂ (Ne.symm h₂)
   have hw₂' : w₂ = 1 - w₁ := by linarith [hw]

@@ -45,7 +45,7 @@ lemma loewnerLE_trans {m : Type*} [Fintype m] [DecidableEq m]
   exact hbc.add hab
 
 /-- Compression preserves the Löwner order: M ≤ N ⇒ V†MV ≤ V†NV. -/
-lemma compression_le {n m : Type*} [Fintype n] [Fintype m]
+lemma compression_le {n m : Type*} [Fintype n] [Finite m]
     {M N : Matrix n n ℂ} (h : M ≤ N) (V : Matrix n m ℂ) :
     Vᴴ * M * V ≤ Vᴴ * N * V := by
   rw [Matrix.le_iff] at h ⊢

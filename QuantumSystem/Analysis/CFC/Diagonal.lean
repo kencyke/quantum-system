@@ -49,6 +49,16 @@ lemma cfc_log_diagonal_pos
   letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
+  -- Provide CFC instances on `ℂ` and the Pi type `(m → ℂ)`.
+  letI : ContinuousFunctionalCalculus ℂ ℂ IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℝ ℂ IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
+  letI : CStarAlgebra (m → ℂ) := inferInstance
+  letI : ContinuousFunctionalCalculus ℂ (m → ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℝ (m → ℂ) IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
   -- Pi self-adjoint
   let dc : m → ℂ := fun i => (d i : ℂ)
   have hdc_sa : IsSelfAdjoint dc := by
@@ -59,8 +69,10 @@ lemma cfc_log_diagonal_pos
       map_star' := fun v => by
         change diagonal (star v) = (diagonal v)ᴴ
         rw [diagonal_conjTranspose] }
-  have hφ_cont : Continuous φ :=
-    φ.toAlgHom.toLinearMap.continuous_of_finiteDimensional
+  have hφ_cont : Continuous φ := by
+    have : (φ : (m → ℂ) → Matrix m m ℂ) = fun v => diagonal v := rfl
+    rw [show ⇑φ = fun v => diagonal v from this]
+    exact Continuous.matrix_diagonal continuous_id
   have hφ_dc : φ dc = diagonal dc := rfl
   have hφdc_sa : IsSelfAdjoint (φ dc) := by
     rw [IsSelfAdjoint, ← map_star φ]; exact congr_arg φ hdc_sa.star_eq
@@ -112,6 +124,10 @@ lemma cfc_log_unitary_conj_diagonal
   letI : NormedAlgebra ℂ (Matrix k k ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix k k ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := k) (A := ℂ)
+  letI : ContinuousFunctionalCalculus ℂ (Matrix k k ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℝ (Matrix k k ℂ) IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
   have h_diag_sa : IsSelfAdjoint (diagonal (fun i => ((d i : ℝ) : ℂ))) := by
     rw [IsSelfAdjoint, star_eq_conjTranspose, diagonal_conjTranspose]
     congr 1
@@ -138,9 +154,13 @@ lemma cfc_log_unitary_conj_diagonal
         (diagonal (fun i => ((d i : ℝ) : ℂ)))) := by
     rw [IsSelfAdjoint, ← map_star (Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W)]
     exact congr_arg (Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W) h_diag_sa.star_eq
-  have h_cont_conj : Continuous (Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W) :=
-    LinearMap.continuous_of_finiteDimensional
-      (Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W).toAlgEquiv.toLinearMap
+  have h_cont_conj : Continuous (Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W) := by
+    have happly : ∀ x, Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W x =
+        (W : Matrix k k ℂ) * x * (W : Matrix k k ℂ)ᴴ := by
+      intro x; simp [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose]
+    rw [show (Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W : Matrix k k ℂ → Matrix k k ℂ) =
+        fun x => (W : Matrix k k ℂ) * x * (W : Matrix k k ℂ)ᴴ from funext happly]
+    exact (continuous_const.mul continuous_id).mul continuous_const
   have h_map := StarAlgHomClass.map_cfc (R := ℝ) (S := ℝ)
     (Unitary.conjStarAlgAut ℝ (Matrix k k ℂ) W) Real.log
     (diagonal (fun i => ((d i : ℝ) : ℂ))) h_cont h_cont_conj h_diag_sa h_diag_conj_sa

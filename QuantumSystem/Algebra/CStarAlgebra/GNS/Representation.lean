@@ -49,7 +49,7 @@ variable {ω : State ℂ A}
 /-- A submodule `W` of the Hilbert space of a GNS representation is invariant if it is
 stable under the action of `π(a)` for every `a : A`. -/
 def IsInvariant (T : Representation ω) (W : Submodule ℂ T.H) : Prop :=
-  ∀ a : A, W.map (T.π a) ≤ W
+  ∀ a : A, W.map (T.π a).toLinearMap ≤ W
 
 /-- A GNS representation is (topologically) irreducible if the only **closed** invariant
 submodules are `⊥` and `⊤`. -/
@@ -60,11 +60,13 @@ def IsIrreducible (T : Representation ω) : Prop :=
     (W = ⊥ ∨ W = ⊤)
 
 @[simp] lemma isInvariant_bot (T : Representation ω) : T.IsInvariant (⊥ : Submodule ℂ T.H) := by
+  unfold IsInvariant
   intro a w hw
   rcases (show w = 0 from by simpa using hw) with rfl
   simp
 
 @[simp] lemma isInvariant_top (T : Representation ω) : T.IsInvariant (⊤ : Submodule ℂ T.H) := by
+  unfold IsInvariant
   intro a w hw
   simp
 
@@ -115,7 +117,7 @@ private lemma norm_cyclic (T₁ T₂ : Representation ω) (a : A) :
   exact congr_arg RCLike.re (inner_cyclic T₁ T₂ a a)
 
 /-- The canonical correspondence on cyclic orbit vectors: `π₁(a) ξ₁ ↦ π₂(a) ξ₂`. -/
-private def cyclicCorrespondence (_T₁ T₂ : Representation ω) (a : A) : T₂.H :=
+private noncomputable def cyclicCorrespondence (_T₁ T₂ : Representation ω) (a : A) : T₂.H :=
   T₂.π a T₂.ξ
 
 /-- Well-definedness of the cyclic correspondence: equality in the first triplet forces

@@ -5,3 +5,6 @@ lefthook-local.yml
 references/
 skill-creator-tests/
 **/__pycache__/
+
+# Ignore until https://github.com/microsoft/vscode-remote-release/issues/11616 is fixed.
+devcontainer-lock.json

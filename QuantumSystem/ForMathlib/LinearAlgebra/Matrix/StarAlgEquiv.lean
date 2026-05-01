@@ -1,6 +1,10 @@
 module
 
+public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
+public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 public import Mathlib.Analysis.Matrix.Order
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
 /-!
 # `StarAlgEquiv` instances for matrix algebras
@@ -115,19 +119,24 @@ theorem IsHermitian.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.IsHermitian)
 omit [DecidableEq m] [DecidableEq n] in
 /-- `*-`algebra equivalences preserve positive-semidefiniteness on matrix algebras over `ℂ`.
 
-The proof goes via the existence of a positive-semidefinite square root: for PSD `M` we
-have `M = (sqrt M)ᴴ * sqrt M`, applying `φ` gives `φ M = (φ (sqrt M))ᴴ * φ (sqrt M)`,
-which is PSD by `posSemidef_conjTranspose_mul_self`. -/
+The proof goes via the eigenvalue characterisation of `PosSemidef`: any `*`-algebra equivalence
+preserves the spectrum, and on Hermitian matrices the eigenvalues are exactly the real spectrum,
+so non-negativity is preserved. -/
 theorem PosSemidef.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.PosSemidef)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
     (φ M).PosSemidef := by
   classical
-  have hM_nonneg : (0 : Matrix m m ℂ) ≤ M := hM.nonneg
-  have hsqrt_sa : IsSelfAdjoint (CFC.sqrt M) := IsSelfAdjoint.of_nonneg (CFC.sqrt_nonneg M)
-  have hM_eq : M = star (CFC.sqrt M) * CFC.sqrt M := by
-    rw [hsqrt_sa.star_eq, CFC.sqrt_mul_sqrt_self M hM_nonneg]
-  rw [hM_eq, map_mul, map_star, star_eq_conjTranspose]
-  exact posSemidef_conjTranspose_mul_self _
+  -- Image is hermitian.
+  have hφM_herm : (φ M).IsHermitian := IsHermitian.map_starAlgEquiv hM.isHermitian φ
+  -- Reduce to spectrum-non-negativity using `posSemidef_iff_isHermitian_and_spectrum_nonneg`.
+  rw [posSemidef_iff_isHermitian_and_spectrum_nonneg]
+  refine ⟨hφM_herm, ?_⟩
+  rw [posSemidef_iff_isHermitian_and_spectrum_nonneg] at hM
+  -- `*-`-algebra equivalences preserve the spectrum.
+  have hspec : spectrum ℂ (φ M) = spectrum ℂ M :=
+    AlgEquiv.spectrum_eq φ.toAlgEquiv M
+  rw [hspec]
+  exact hM.2
 
 omit [DecidableEq m] [DecidableEq n] in
 /-- `*-`algebra equivalences preserve positive-definiteness: PSD + invertibility, both of
@@ -145,21 +154,25 @@ theorem PosDef.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.PosDef)
 `PosDef.map_starAlgEquiv`, useful when an index-set bijection `e : n ≃ m`
 is naturally available (e.g. from `LocalNet` region equivalences). -/
 
-omit [DecidableEq m] [DecidableEq n] in
+omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 /-- `Matrix.PosSemidef` is preserved by reindexing the index set via a bijection.
     Specialisation of `PosSemidef.map_starAlgEquiv` to `reindexStarAlgEquiv`. -/
-theorem PosSemidef.mapEquiv {M : Matrix m m ℂ} (hM : M.PosSemidef) (e : n ≃ m) :
+theorem PosSemidef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosSemidef) (e : n ≃ m) :
     (M.submatrix e e).PosSemidef := by
   classical
+  letI := Fintype.ofFinite m
+  letI : Fintype n := Fintype.ofEquiv m e.symm
   exact Matrix.PosSemidef.map_starAlgEquiv hM
     (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
 
-omit [DecidableEq m] [DecidableEq n] in
+omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 /-- `Matrix.PosDef` is preserved by reindexing the index set via a bijection.
     Specialisation of `PosDef.map_starAlgEquiv` to `reindexStarAlgEquiv`. -/
-theorem PosDef.mapEquiv {M : Matrix m m ℂ} (hM : M.PosDef) (e : n ≃ m) :
+theorem PosDef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosDef) (e : n ≃ m) :
     (M.submatrix e e).PosDef := by
   classical
+  letI := Fintype.ofFinite m
+  letI : Fintype n := Fintype.ofEquiv m e.symm
   exact Matrix.PosDef.map_starAlgEquiv hM
     (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
 

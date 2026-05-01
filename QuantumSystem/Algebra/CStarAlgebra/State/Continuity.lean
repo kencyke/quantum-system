@@ -125,7 +125,7 @@ lemma norm_le_norm (ω : ContinuousState 𝕜 A) (a : A) : ‖ω a‖ ≤ ‖a�
     _ = ‖a‖ := one_mul _
 
 /-- The canonical map from a continuous state to the weak dual. -/
-def toWeakDual (ω : ContinuousState 𝕜 A) : WeakDual 𝕜 A :=
+noncomputable def toWeakDual (ω : ContinuousState 𝕜 A) : WeakDual 𝕜 A :=
   StrongDual.toWeakDual ω.toContinuousLinearMap
 
 end ContinuousState
@@ -158,7 +158,7 @@ lemma toContinuousLinearMap_norm (ω : State 𝕜 A) : ‖ω.toContinuousLinearM
     rw [← h_norm, norm_def ω]
     apply csSup_le
     · by_contra h_empty
-      push_neg at h_empty
+      push Not at h_empty
       have : sSup {r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖ω a‖ / ‖a‖} = 0 := by
         rw [Real.sSup_def]
         simp [h_empty]

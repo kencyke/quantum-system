@@ -881,10 +881,17 @@ private lemma rpow_submatrix_fin_one
     (A.submatrix (Prod.mk 0) (Prod.mk 0)) ^ p := by
   classical
   -- Set up normed algebra and C*-algebra instances
+  letI : SeminormedAddCommGroup (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) :=
+    Matrix.linftyOpSeminormedAddCommGroup
+  letI : NormedSpace ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedSpace
+  letI : IsBoundedSMul ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpIsBoundedSMul
   letI : NormedRing (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := Fin 1 × m) (A := ℂ)
+  letI : SeminormedAddCommGroup (Matrix m m ℂ) := Matrix.linftyOpSeminormedAddCommGroup
+  letI : NormedSpace ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedSpace
+  letI : IsBoundedSMul ℝ (Matrix m m ℂ) := Matrix.linftyOpIsBoundedSMul
   letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix m m ℂ) := by
@@ -914,8 +921,11 @@ private lemma rpow_submatrix_fin_one
   have hψA_le : 0 ≤ ψ A := by
     rw [hψ_apply]; simpa [Matrix.le_iff] using hA.submatrix (Prod.mk (0 : Fin 1))
   -- Continuity of ψ (finite-dimensional)
-  have hψ_cont : Continuous ψ :=
-    ψ.toAlgEquiv.toLinearMap.continuous_of_finiteDimensional
+  haveI : FiniteDimensional ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) :=
+    Module.Finite.matrix
+  let f : Matrix (Fin 1 × m) (Fin 1 × m) ℂ →ₗ[ℝ] Matrix m m ℂ := ψ.toAlgEquiv.toLinearMap
+  have hf_cont : Continuous f := f.continuous_of_finiteDimensional
+  have hψ_cont : Continuous ψ := hf_cont
   -- Convert LHS rpow to CFC
   rw [CFC.rpow_eq_cfc_real (a := A) (ha := hA_le)]
   -- Rewrite: (cfc f A).sub = ψ (cfc f A)
@@ -1035,11 +1045,11 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
       have hPω_psd : Pω.PosSemidef := by
         apply posSemidef_sum
         intro k _
-        exact (hA_psd k).smul (hw_nn k)
+        exact (hA_psd k).real_smul (hw_nn k)
       have hPτ_psd : Pτ.PosSemidef := by
         apply posSemidef_sum
         intro k _
-        exact (hB_psd k).smul (hw_nn k)
+        exact (hB_psd k).real_smul (hw_nn k)
       -- Restriction to blocks 1..r+1
       let embed : Fin (r + 1) × m → Fin (r + 2) × m := fun ⟨i, a⟩ => (i.succ, a)
       let Qω := Pω.submatrix embed embed
@@ -1064,12 +1074,24 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
       let τ₀₀ := τ.submatrix (Prod.mk (0 : Fin (r + 2))) (Prod.mk 0)
       -- Reindex via ψ to show P(ω) = fromBlocks ω₀₀ 0 0 Qω
       classical
+      letI : SeminormedAddCommGroup (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+        Matrix.linftyOpSeminormedAddCommGroup
+      letI : NormedSpace ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+        Matrix.linftyOpNormedSpace
+      letI : IsBoundedSMul ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+        Matrix.linftyOpIsBoundedSMul
       letI : NormedRing (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Matrix.linftyOpNormedRing
       letI : NormedAlgebra ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Matrix.linftyOpNormedAlgebra
       letI : CStarAlgebra (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) := by
         simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := Fin (r + 2) × m) (A := ℂ)
+      letI : SeminormedAddCommGroup (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
+        Matrix.linftyOpSeminormedAddCommGroup
+      letI : NormedSpace ℝ (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
+        Matrix.linftyOpNormedSpace
+      letI : IsBoundedSMul ℝ (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
+        Matrix.linftyOpIsBoundedSMul
       letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
       letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
       letI : CStarAlgebra (Matrix m m ℂ) := by
@@ -1126,6 +1148,12 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
         simp only [hψ_eq, Matrix.trace, Matrix.diag, Matrix.submatrix_apply]
         exact Fintype.sum_equiv e.symm _ _ (fun i => rfl)
       -- ψ preserves rpow (via CFC)
+      haveI : FiniteDimensional ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+        Module.Finite.matrix
+      let ψf : Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ →ₗ[ℝ]
+          Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ := ψ.toAlgEquiv.toLinearMap
+      have hψ_cont : Continuous ψ := (ψf.continuous_of_finiteDimensional :
+          Continuous (ψf : Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ → _))
       have hψ_rpow : ∀ (M : Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ),
           M.PosSemidef → ∀ p : ℝ, 0 < p → ψ (M ^ p) = (ψ M) ^ p := by
         intro M hM p hp
@@ -1139,7 +1167,7 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
         rw [CFC.rpow_eq_cfc_real (ha := hM_le), CFC.rpow_eq_cfc_real (ha := hψM_le)]
         rw [StarAlgHomClass.map_cfc (R := ℝ) (S := ℝ) ψ _ M
           ((Real.continuous_rpow_const (by linarith)).continuousOn)
-          (ψ.toAlgEquiv.toLinearMap.continuous_of_finiteDimensional)
+          hψ_cont
           hM_sa hψM_sa]
       -- Trace splits into block 0 + remaining blocks
       have htrace_split :
@@ -1420,13 +1448,19 @@ private lemma suppSubset_mix
     (p : ℝ) (hp : 0 ≤ p) (hp1 : 0 ≤ 1 - p) :
     suppSubset (p • A₁ + (1 - p) • A₂) (p • B₁ + (1 - p) • B₂) := by
   intro v hv
-  simp only [Matrix.add_mulVec, Matrix.smul_mulVec] at hv
+  rw [Matrix.add_mulVec, show (p • B₁) *ᵥ v = p • B₁ *ᵥ v from Matrix.smul_mulVec _ _ _,
+      show ((1 - p) • B₂) *ᵥ v = (1 - p) • B₂ *ᵥ v from Matrix.smul_mulVec _ _ _] at hv
   have h₁ : 0 ≤ (star v ⬝ᵥ B₁.mulVec v).re := hB₁.re_dotProduct_nonneg v
   have h₂ : 0 ≤ (star v ⬝ᵥ B₂.mulVec v).re := hB₂.re_dotProduct_nonneg v
   have hinner_sum : p * (star v ⬝ᵥ B₁.mulVec v).re + (1 - p) * (star v ⬝ᵥ B₂.mulVec v).re = 0 := by
+    have hsmul₁ : star v ⬝ᵥ p • B₁.mulVec v = p • (star v ⬝ᵥ B₁.mulVec v) :=
+      dotProduct_smul p (star v) (B₁.mulVec v)
+    have hsmul₂ : star v ⬝ᵥ (1 - p) • B₂.mulVec v = (1 - p) • (star v ⬝ᵥ B₂.mulVec v) :=
+      dotProduct_smul (1 - p) (star v) (B₂.mulVec v)
     have h : p * (star v ⬝ᵥ B₁.mulVec v).re + (1 - p) * (star v ⬝ᵥ B₂.mulVec v).re =
              (star v ⬝ᵥ (p • B₁.mulVec v + (1 - p) • B₂.mulVec v)).re := by
-      simp [dotProduct_add, dotProduct_smul]
+      rw [dotProduct_add, hsmul₁, hsmul₂]
+      simp [Complex.real_smul, Complex.add_re, Complex.mul_re]
     rw [h, hv]; simp
   have hpB₁ : p * (star v ⬝ᵥ B₁.mulVec v).re = 0 := by
     nlinarith [mul_nonneg hp h₁, mul_nonneg hp1 h₂]
@@ -1434,13 +1468,15 @@ private lemma suppSubset_mix
     nlinarith [mul_nonneg hp h₁, mul_nonneg hp1 h₂]
   have hpA₁ : p • A₁.mulVec v = 0 := by
     rcases mul_eq_zero.mp hpB₁ with hp0 | h₁0
-    · simp [hp0]
-    · simp [hsup₁ v (mulVec_eq_zero_of_re_inner_zero hB₁ v h₁0)]
+    · subst hp0; exact zero_smul ℝ _
+    · rw [hsup₁ v (mulVec_eq_zero_of_re_inner_zero hB₁ v h₁0)]; exact smul_zero _
   have h1pA₂ : (1 - p) • A₂.mulVec v = 0 := by
     rcases mul_eq_zero.mp h1pB₂ with hp10 | h₂0
-    · simp [hp10]
-    · simp [hsup₂ v (mulVec_eq_zero_of_re_inner_zero hB₂ v h₂0)]
-  simp [Matrix.add_mulVec, Matrix.smul_mulVec, hpA₁, h1pA₂]
+    · rw [hp10]; exact zero_smul ℝ _
+    · rw [hsup₂ v (mulVec_eq_zero_of_re_inner_zero hB₂ v h₂0)]; exact smul_zero _
+  rw [Matrix.add_mulVec, show (p • A₁) *ᵥ v = p • A₁ *ᵥ v from Matrix.smul_mulVec _ _ _,
+      show ((1 - p) • A₂) *ᵥ v = (1 - p) • A₂ *ᵥ v from Matrix.smul_mulVec _ _ _,
+      hpA₁, h1pA₂, add_zero]
 
 omit [DecidableEq n] [DecidableEq m] in
 /-- Support subset is preserved by a single Kraus conjugation K ρ K†.
@@ -1549,8 +1585,10 @@ theorem relativeEntropy_jointly_convex
   -- Handle boundary cases p = 0 and p = 1
   rcases hp.eq_or_lt' with rfl | hp0
   · -- p = 0: mixture = ρ₂, σ₂; RHS = 0 + D₂ = D₂
-    have hρ_eq : ρ_mix = ρ₂ := DensityMatrix.ext (by simp [ρ_mix, DensityMatrix.mix])
-    have hσ_eq : σ_mix = σ₂ := DensityMatrix.ext (by simp [σ_mix, DensityMatrix.mix])
+    have hρ_eq : ρ_mix = ρ₂ := DensityMatrix.ext (by
+      simp only [ρ_mix, DensityMatrix.mix, sub_zero]; module)
+    have hσ_eq : σ_mix = σ₂ := DensityMatrix.ext (by
+      simp only [σ_mix, DensityMatrix.mix, sub_zero]; module)
     rw [hρ_eq, hσ_eq]; simp [relativeEntropy]
   rcases hp1.lt_or_eq with hp1' | rfl
   · -- 0 < p < 1: handle the three sub-cases
@@ -1647,8 +1685,10 @@ theorem relativeEntropy_jointly_convex
             (EReal.mul_nonneg (by norm_cast) (relativeEntropy_nonneg ρ₁ σ₁))))]
       exact le_top
   · -- p = 1: mixture = ρ₁, σ₁; RHS = D₁ + 0 = D₁
-    have hρ_eq : ρ_mix = ρ₁ := DensityMatrix.ext (by simp [ρ_mix, DensityMatrix.mix])
-    have hσ_eq : σ_mix = σ₁ := DensityMatrix.ext (by simp [σ_mix, DensityMatrix.mix])
+    have hρ_eq : ρ_mix = ρ₁ := DensityMatrix.ext (by
+      simp only [ρ_mix, DensityMatrix.mix, sub_self]; module)
+    have hσ_eq : σ_mix = σ₁ := DensityMatrix.ext (by
+      simp only [σ_mix, DensityMatrix.mix, sub_self]; module)
     rw [hρ_eq, hσ_eq]
     have h1sub1 : (1 : EReal) - 1 = 0 :=
       EReal.sub_self (EReal.coe_ne_top 1) (EReal.coe_ne_bot 1)

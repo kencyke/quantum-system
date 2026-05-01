@@ -1,9 +1,12 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Pi
 public import Mathlib.Analysis.Matrix.Order
 public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import Mathlib.Data.Matrix.ColumnRowPartitioned
+public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 
 /-!
 # Block-Matrix Lemmas
@@ -35,6 +38,8 @@ This file collects block-matrix identities used in the HPJ and related inequalit
   semidefinite.
 - `Matrix.PosSemidef.one_sub_fromRows`: if AᴴA + BᴴB ≤ I, then I − VᴴV is PSD for
   V = [A; B].
+- `Matrix.PosSemidef.real_smul`: scaling a PSD matrix by a nonnegative real scalar gives a PSD
+  matrix.
 - `Matrix.PosSemidef.smul_nonpos`: scaling a PSD matrix by a nonpositive real scalar gives a
   matrix ≤ 0.
 - `Matrix.PosSemidef.add_smul_one_posDef`: A + rI is positive definite for A ≥ 0, r > 0.
@@ -73,7 +78,7 @@ lemma fromBlocks_mulVec_inr {m n : Type*} [Fintype m] [Fintype n]
 `(fromRows A B)ᴴ * fromBlocks T₁ 0 0 T₂ * fromRows A B = Aᴴ * T₁ * A + Bᴴ * T₂ * B`.
 This is useful for reducing block-matrix inequalities to separate inequalities for each block. -/
 lemma fromRows_compress_blockDiag
-    {m₁ m₂ n : Type*} [Fintype m₁] [Fintype m₂] [Fintype n]
+    {m₁ m₂ n : Type*} [Fintype m₁] [Fintype m₂]
     (A : Matrix m₁ n ℂ) (B : Matrix m₂ n ℂ)
     (T₁ : Matrix m₁ m₁ ℂ) (T₂ : Matrix m₂ m₂ ℂ) :
     (Matrix.fromRows A B)ᴴ * (Matrix.fromBlocks T₁ 0 0 T₂) * Matrix.fromRows A B =
@@ -143,6 +148,9 @@ lemma rpow_unitary_conj {n : Type*} [Fintype n] [DecidableEq n]
   letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
   letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  letI : NormedSpace ℝ (Matrix n n ℂ) := NormedAlgebra.toNormedSpace _
+  letI : IsBoundedSMul ℝ (Matrix n n ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
+  letI : ContinuousSMul ℝ (Matrix n n ℂ) := IsBoundedSMul.continuousSMul
   letI : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
   -- Convert to unitary element
@@ -159,9 +167,14 @@ lemma rpow_unitary_conj {n : Type*} [Fintype n] [DecidableEq n]
   rw [CFC.rpow_eq_cfc_real (a := φ M) (ha := by rw [hφ_apply]; exact hM')]
   have hcont : ContinuousOn (· ^ p) (spectrum ℝ M) :=
     (Real.continuous_rpow_const hp).continuousOn
-  -- Continuity of φ follows from finite-dimensionality
-  have hφ_cont : Continuous φ :=
-    φ.toAlgEquiv.toLinearMap.continuous_of_finiteDimensional
+  -- Continuity of φ follows from finite-dimensionality.  Build the FiniteDimensional
+  -- instance locally inside the `have`-block so the instance database stays focused.
+  -- φ is x ↦ U * x * Uᴴ, which is continuous as a composition of multiplications.
+  have hφ_cont : Continuous φ := by
+    have hfun : (φ : Matrix n n ℂ → Matrix n n ℂ) = fun x => U * x * Uᴴ :=
+      funext hφ_apply
+    rw [show ⇑φ = fun x => U * x * Uᴴ from hfun]
+    exact (continuous_const.mul continuous_id).mul continuous_const
   -- IsSelfAdjoint φ M follows from M being self-adjoint and φ preserving star
   have hM_sa : IsSelfAdjoint M := by
     have : M.PosSemidef := by simpa [Matrix.le_iff] using hM
@@ -191,8 +204,33 @@ lemma diagonal_rpow {n : Type*} [Fintype n] [DecidableEq n]
   letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
   letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  letI : NormedSpace ℝ (Matrix n n ℂ) := NormedAlgebra.toNormedSpace _
+  letI : IsBoundedSMul ℝ (Matrix n n ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
+  letI : ContinuousSMul ℝ (Matrix n n ℂ) := IsBoundedSMul.continuousSMul
+  haveI : Module.Free ℝ ℂ := Module.Free.of_divisionRing _ _
+  haveI : Module.Finite ℝ ℂ := inferInstance
+  haveI : Module.Finite ℝ (Matrix n n ℂ) := Module.Finite.matrix
   letI : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
+  letI : NormedSpace ℝ (n → ℂ) := inferInstance
+  letI : IsBoundedSMul ℝ (n → ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
+  letI : ContinuousSMul ℝ (n → ℂ) := IsBoundedSMul.continuousSMul
+  haveI : Module.Free ℝ ℂ := Module.Free.of_divisionRing _ _
+  haveI : Module.Finite ℝ ℂ := inferInstance
+  haveI : Module.Finite ℝ (n → ℂ) := Module.Finite.pi
+  -- Provide CFC instances for the Pi C*-algebra `n → ℂ` and the fiber `ℂ`.  These are not
+  -- registered globally in Mathlib (`IsStarNormal.instContinuousFunctionalCalculus` is a
+  -- `theorem` with `attribute [local instance]` only), but follow once the appropriate
+  -- normed/CStar structure is in scope.
+  letI : ContinuousFunctionalCalculus ℂ ℂ IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℝ ℂ IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
+  letI : CStarAlgebra (n → ℂ) := inferInstance
+  letI : ContinuousFunctionalCalculus ℂ (n → ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℝ (n → ℂ) IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
   let dc : n → ℂ := fun i => (d i : ℂ)
   have hD_psd : (diagonal dc).PosSemidef := by
     rw [posSemidef_diagonal_iff]
@@ -206,8 +244,10 @@ lemma diagonal_rpow {n : Type*} [Fintype n] [DecidableEq n]
       map_star' := fun v => by
         change diagonal (star v) = (diagonal v)ᴴ
         rw [diagonal_conjTranspose] }
-  have hφ_cont : Continuous φ :=
-    φ.toAlgHom.toLinearMap.continuous_of_finiteDimensional
+  have hφ_cont : Continuous φ := by
+    have : (φ : (n → ℂ) → Matrix n n ℂ) = fun v => diagonal v := rfl
+    rw [show ⇑φ = fun v => diagonal v from this]
+    exact Continuous.matrix_diagonal continuous_id
   -- `dc` is self-adjoint: all entries are real, hence equal to their conjugate.
   have hdc_sa : IsSelfAdjoint dc := by
     rw [IsSelfAdjoint, Pi.star_def]; ext i; simp [dc, Complex.conj_ofReal]
@@ -311,14 +351,15 @@ lemma inv_transpose_rpow_mul_transpose_eq {m : Type*} [Fintype m] [DecidableEq m
   congr 1
   have hB_nonneg : (0 : Matrix m m ℂ) ≤ B := by
     simpa [Matrix.le_iff] using hB.posSemidef
+  have hB_sp : IsStrictlyPositive B := hB.isStrictlyPositive
   have hBinv_cfc : B⁻¹ = B ^ (-1 : ℝ) := by
     have h1 : B ^ (-1 : ℝ) * B = 1 := by
-      have := CFC.rpow_neg_mul_rpow (1 : ℝ) hB_unit hB_nonneg
+      have := CFC.rpow_neg_mul_rpow (a := B) (1 : ℝ) hB_sp
       rwa [CFC.rpow_one B hB_nonneg] at this
     have h2 : B⁻¹ * B = 1 := Matrix.nonsing_inv_mul B hB_det
     exact hB_unit.mul_right_cancel (h2.trans h1.symm)
   have hBinv_rpow : (B⁻¹) ^ p = B ^ (-p) := by
-    rw [hBinv_cfc, CFC.rpow_rpow B (-1 : ℝ) p hB_unit (by norm_num)]
+    rw [hBinv_cfc, CFC.rpow_rpow B (-1 : ℝ) p (by norm_num) hB_sp]
     congr 1
     ring
   rw [hBinv_rpow]
@@ -330,9 +371,10 @@ lemma inv_transpose_rpow_mul_transpose_eq {m : Type*} [Fintype m] [DecidableEq m
 /-! ### Positive Definite and Positive Semidefinite Matrices -/
 
 /-- The identity matrix is positive definite. -/
-lemma posDef_one {m : Type*} [Fintype m] [DecidableEq m] :
+lemma posDef_one {m : Type*} [Finite m] [DecidableEq m] :
     (1 : Matrix m m ℂ).PosDef := by
   classical
+  letI := Fintype.ofFinite m
   refine Matrix.PosDef.of_dotProduct_mulVec_pos ?_ ?_
   · simp [IsHermitian]
   · intro x hx
@@ -340,7 +382,7 @@ lemma posDef_one {m : Type*} [Fintype m] [DecidableEq m] :
     simpa using hpos
 
 /-- The identity matrix is positive semidefinite. -/
-lemma posSemidef_one {m : Type*} [Fintype m] [DecidableEq m] :
+lemma posSemidef_one {m : Type*} [Finite m] [DecidableEq m] :
     (1 : Matrix m m ℂ).PosSemidef :=
   posDef_one.posSemidef
 
@@ -357,7 +399,7 @@ lemma fromBlocks_inv_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- The product `(fromRows A B)ᴴ * (fromRows A B)` equals `Aᴴ * A + Bᴴ * B`. -/
 lemma fromRows_conjTranspose_mul_self
-    {m₁ m₂ n : Type*} [Fintype m₁] [Fintype m₂] [Fintype n]
+    {m₁ m₂ n : Type*} [Fintype m₁] [Fintype m₂]
     (A : Matrix m₁ n ℂ) (B : Matrix m₂ n ℂ) :
     (Matrix.fromRows A B)ᴴ * Matrix.fromRows A B = Aᴴ * A + Bᴴ * B := by
   classical
@@ -367,7 +409,7 @@ lemma fromRows_conjTranspose_mul_self
 namespace PosSemidef
 
 /-- Diagonal matrix with nonnegative real entries is positive semidefinite. -/
-lemma diagonal_ofReal {m : Type*} [Fintype m] [DecidableEq m]
+lemma diagonal_ofReal {m : Type*} [DecidableEq m]
     {f : m → ℝ} (hf : ∀ i, 0 ≤ f i) :
     (diagonal (fun i => (f i : ℂ))).PosSemidef := by
   rw [posSemidef_diagonal_iff]
@@ -383,33 +425,50 @@ lemma one_sub_fromRows {m : Type*} [Fintype m] [DecidableEq m]
     simpa [fromRows_conjTranspose_mul_self] using hAB
   simpa [Matrix.le_iff] using hV
 
+/-- Scaling a PSD matrix by a nonnegative real scalar yields a PSD matrix. The real-scalar
+form is convenient because `PosSMulMono ℝ ℂ` is unavailable; we route the action through
+the complex coercion. -/
+lemma real_smul {m : Type*} [Finite m]
+    {c : ℝ} (hc : 0 ≤ c) {M : Matrix m m ℂ} (hM : M.PosSemidef) :
+    (c • M : Matrix m m ℂ).PosSemidef := by
+  letI := Fintype.ofFinite m
+  have hnonneg_C : (0 : ℂ) ≤ ((c : ℝ) : ℂ) := Complex.zero_le_real.mpr hc
+  have hsmul : (((c : ℝ) : ℂ) • M).PosSemidef := hM.smul hnonneg_C
+  have hreal : ((c : ℝ) : ℂ) • M = (c : ℝ) • M := by
+    ext i j
+    change ((c : ℝ) : ℂ) * M i j = (c : ℝ) • M i j
+    simp [Complex.real_smul]
+  rwa [hreal] at hsmul
+
 /-- Scaling a PSD matrix by a nonpositive real scalar gives a matrix `≤ 0`. -/
-lemma smul_nonpos {m : Type*} [Fintype m]
+lemma smul_nonpos {m : Type*} [Finite m]
     {c : ℝ} (hc : c ≤ 0) {M : Matrix m m ℂ} (hM : M.PosSemidef) :
     c • M ≤ (0 : Matrix m m ℂ) := by
-  have hnonneg : 0 ≤ -c := by linarith
-  have hsmul : ((-c) • M).PosSemidef := hM.smul hnonneg
+  letI := Fintype.ofFinite m
+  -- Work via the ℂ-action: `((-c : ℝ) : ℂ) • M` is PSD when `0 ≤ ((-c : ℝ) : ℂ)`.
+  have hnonneg_C : (0 : ℂ) ≤ ((-c : ℝ) : ℂ) :=
+    Complex.zero_le_real.mpr (by linarith)
+  have hsmul : (((-c : ℝ) : ℂ) • M).PosSemidef := hM.smul hnonneg_C
+  -- ℂ-cast scalar action equals ℝ-action: pointwise on each entry.
+  have hreal : ((-c : ℝ) : ℂ) • M = (-c : ℝ) • M := by
+    ext i j
+    change ((-c : ℝ) : ℂ) * M i j = (-c : ℝ) • M i j
+    simp [Complex.real_smul]
   rw [Matrix.le_iff]
-  simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc] using hsmul
+  rw [hreal] at hsmul
+  rw [show ((-c : ℝ) • M : Matrix m m ℂ) = -(c • M) from neg_smul c M] at hsmul
+  simpa [sub_eq_add_neg] using hsmul
 
 /-- Adding a positive scalar multiple of the identity to a PSD matrix gives a PD matrix. -/
-lemma add_smul_one_posDef {m : Type*} [Fintype m] [DecidableEq m]
+lemma add_smul_one_posDef {m : Type*} [Finite m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) {r : ℝ} (hr : 0 < r) :
     (A + (r : ℂ) • (1 : Matrix m m ℂ)).PosDef := by
   classical
+  letI := Fintype.ofFinite m
   have h1 : ((r : ℂ) • (1 : Matrix m m ℂ)).IsHermitian := by
-    change ((r : ℂ) • (1 : Matrix m m ℂ))ᴴ = (r : ℂ) • (1 : Matrix m m ℂ)
-    ext i j
-    by_cases h : i = j
-    · subst h
-      simp
-    · have h1 : (1 : Matrix m m ℂ) i j = 0 := by
-        simp [h]
-      have hji : ¬ j = i := by
-        simpa [eq_comm] using h
-      have h2 : (1 : Matrix m m ℂ) j i = 0 := by
-        simp [hji]
-      simp [Matrix.conjTranspose_apply, h1, h2]
+    rw [Matrix.IsHermitian, Matrix.conjTranspose_smul, Complex.star_def,
+      Complex.conj_ofReal]
+    rw [Matrix.IsHermitian.eq (Matrix.isHermitian_one : (1 : Matrix m m ℂ).IsHermitian)]
   refine Matrix.PosDef.of_dotProduct_mulVec_pos ?_ ?_
   · exact hA.1.add h1
   · intro x hx
@@ -420,8 +479,8 @@ lemma add_smul_one_posDef {m : Type*} [Fintype m] [DecidableEq m]
     have hsum_re :
         (star x ⬝ᵥ ((A + (r : ℂ) • (1 : Matrix m m ℂ)) *ᵥ x)).re =
           (star x ⬝ᵥ (A *ᵥ x)).re + r * (star x ⬝ᵥ x).re := by
-      simp [add_mulVec, smul_mulVec, dotProduct_add, dotProduct_smul,
-        Complex.add_re, Complex.real_smul]
+      simp only [add_mulVec, smul_mulVec, dotProduct_add, dotProduct_smul,
+        Complex.add_re, Matrix.one_mulVec, smul_eq_mul, Complex.re_ofReal_mul]
     have hsum_im :
         (star x ⬝ᵥ ((A + (r : ℂ) • (1 : Matrix m m ℂ)) *ᵥ x)).im = 0 := by
       set M := A + (r : ℂ) • (1 : Matrix m m ℂ)
@@ -454,10 +513,12 @@ end PosSemidef
 
 /-- Block diagonal `fromBlocks A 0 0 D` is PSD when both `A` and `D` are PSD. -/
 lemma fromBlocks_diag_posSemidef {n₁ n₂ : Type*}
-    [Fintype n₁] [Fintype n₂]
+    [Finite n₁] [Finite n₂]
     {A : Matrix n₁ n₁ ℂ} (hA : A.PosSemidef)
     {D : Matrix n₂ n₂ ℂ} (hD : D.PosSemidef) :
     (Matrix.fromBlocks A 0 0 D).PosSemidef := by
+  letI := Fintype.ofFinite n₁
+  letI := Fintype.ofFinite n₂
   refine PosSemidef.of_dotProduct_mulVec_nonneg
     (Matrix.IsHermitian.fromBlocks hA.1 (by simp) hD.1) ?_
   intro v

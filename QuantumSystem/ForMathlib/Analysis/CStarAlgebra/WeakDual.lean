@@ -3,7 +3,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.Normed.Order.Lattice
 public import Mathlib.GroupTheory.MonoidLocalization.Basic
-public import Mathlib.Topology.Algebra.Module.WeakDual
+public import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 
 @[expose] public section
 
@@ -32,22 +32,24 @@ lemma add {φ ψ : WeakDual ℂ A} (hφ : IsPositive A φ) (hψ : IsPositive A �
   intro a
   obtain ⟨r, hr⟩ := hφ a
   obtain ⟨s, hs⟩ := hψ a
-  use r + s
-  change (φ + ψ : A →L[ℂ] ℂ) (star a * a) = _
-  erw [ContinuousLinearMap.add_apply]
-  rw [hr, hs]
-  simp only [RCLike.ofReal_add, NNReal.coe_add]
+  refine ⟨r + s, ?_⟩
+  have hsum : (φ + ψ) (star a * a) = φ (star a * a) + ψ (star a * a) := rfl
+  rw [hsum, hr, hs]
+  push_cast
+  rfl
 
 lemma smul {φ : WeakDual ℂ A} (hφ : IsPositive A φ) {c : ℝ≥0} :
     IsPositive A (c • φ) := by
   intro a
   obtain ⟨r, hr⟩ := hφ a
-  use c * r
-  change (c • φ : A →L[ℂ] ℂ) (star a * a) = _
-  erw [ContinuousLinearMap.smul_apply]
-  rw [hr]
-  simp only [RCLike.ofReal_mul, NNReal.coe_mul]
-  rw [Algebra.smul_def]
+  refine ⟨c * r, ?_⟩
+  -- `c • φ` for `c : ℝ≥0` acts on the underlying CLM via the `ℝ`-cast (NNReal.smul_def).
+  have hsmul : (c • φ) (star a * a) = ((c : ℝ) : ℂ) * φ (star a * a) := by
+    have : (c • φ) (star a * a) = ((c : ℝ) : ℂ) • φ (star a * a) := by
+      rw [NNReal.smul_def]; rfl
+    rw [this, smul_eq_mul]
+  rw [hsmul, hr]
+  push_cast
   rfl
 
 lemma isClosed : IsClosed { φ : WeakDual ℂ A | IsPositive A φ } := by

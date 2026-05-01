@@ -66,6 +66,14 @@ lemma absoluteValue_of_nonneg {T : H →L[ℂ] H} (hT : 0 ≤ T) : absoluteValue
 
 lemma absoluteValue_smul (c : ℂ) (T : H →L[ℂ] H) :
     absoluteValue (c • T) = ‖c‖ • absoluteValue T := by
+  letI : IsScalarTower ℝ ℂ H := ⟨fun r z x => by
+    rw [show (r • z : ℂ) = (r : ℂ) * z from rfl, mul_smul]
+    rfl⟩
+  letI : IsScalarTower ℝ ℂ (H →L[ℂ] H) := ⟨fun r z S => by
+    apply ContinuousLinearMap.ext
+    intro x
+    change (r • z) • S x = r • z • S x
+    exact smul_assoc r z (S x)⟩
   rw [absoluteValue_eq_cfc_abs, absoluteValue_eq_cfc_abs]
   exact CFC.abs_smul c T
 

@@ -19,8 +19,8 @@ def leftRel (I : CStarAlgebraIdeal A) : Setoid A :=
   QuotientAddGroup.leftRel I.toAddSubgroup
 
 /-- The quotient of a C*-algebra by an ideal. -/
-instance instHasQuotient : HasQuotient A (CStarAlgebraIdeal A) where
-  quotient' I := Quotient (leftRel I)
+instance instHasQuotient : HasQuotient A (CStarAlgebraIdeal A) :=
+  ⟨fun I => Quotient (leftRel I)⟩
 
 instance : SetLike (CStarAlgebraIdeal A) A where
   coe I := I.carrier
