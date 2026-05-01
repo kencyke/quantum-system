@@ -43,7 +43,7 @@ and related operator-convexity results.
 namespace Matrix
 
 open Real NNReal MeasureTheory Set
-open scoped MatrixOrder ComplexOrder
+open scoped MatrixOrder ComplexOrder NNReal
 
 /-- A real function f is Löwner monotone on positive semidefinite matrices if
 A ≤ B (in the Löwner order) implies f(A) ≤ f(B). -/
@@ -105,10 +105,12 @@ def IsJensenConcave (f : ℝ → ℝ) : Prop :=
     fC ≤ Aᴴ * fT₁ * A + Bᴴ * fT₂ * B
 
 /-- Block diagonal matrix is positive semidefinite if blocks are positive semidefinite. -/
-private lemma fromBlocks_posSemidef_diag {m n : Type*} [Fintype m] [Fintype n]
+private lemma fromBlocks_posSemidef_diag {m n : Type*} [Finite m] [Finite n]
   {A : Matrix m m ℂ} {D : Matrix n n ℂ}
     (hA : A.PosSemidef) (hD : D.PosSemidef) :
     (Matrix.fromBlocks A 0 0 D).PosSemidef := by
+  letI := Fintype.ofFinite m
+  letI := Fintype.ofFinite n
   classical
   refine PosSemidef.of_dotProduct_mulVec_nonneg ?_ ?_
   · -- Hermitian
@@ -305,28 +307,31 @@ lemma lownerConvex_compression_le.{v} {n : Type v} {m : Type v} [Fintype n] [Fin
     have hM_comm : M * (W * Wᴴ) = (W * Wᴴ) * M := by
       rw [← hP_def]
       suffices h : M * P = P * M from h
-      rw [hM_def]
-      rw [Matrix.add_mul, Matrix.mul_add, Matrix.smul_mul, Matrix.smul_mul,
-          Matrix.mul_smul, Matrix.mul_smul,
+      rw [hM_def, Matrix.add_mul, Matrix.mul_add, smul_mul_assoc, smul_mul_assoc,
+          mul_smul_comm, mul_smul_comm,
           show S * T' * S * P = S * T' * (S * P) from by
             simp only [Matrix.mul_assoc], hSP,
           show P * (S * T' * S) = (P * S) * T' * S from by
-            simp only [Matrix.mul_assoc], hPS,
-          ← smul_add, ← smul_add]
-      congr 1
+            simp only [Matrix.mul_assoc], hPS]
       have hST'P : S * T' * P = P * T' * P + P * T' * P - T' * P := by
         rw [hS_def, h2P, sub_mul, one_mul, add_mul, sub_mul, add_mul]
       have hPT'S : P * T' * S = P * T' * P + P * T' * P - P * T' := by
         rw [hS_def, h2P, mul_sub, mul_one, mul_add]
-      rw [hST'P, hPT'S]; abel
+      rw [hST'P, hPT'S]
+      module
     have hWMW : Wᴴ * M * W = Wᴴ * T' * W := by
-      rw [hM_def,
-          Matrix.mul_add, Matrix.add_mul, Matrix.mul_smul, Matrix.smul_mul,
-          Matrix.mul_smul, Matrix.smul_mul,
+      rw [hM_def, Matrix.mul_add, Matrix.add_mul,
+          show Wᴴ * (1/2 : ℝ) • T' = (1/2 : ℝ) • (Wᴴ * T') from Matrix.mul_smul _ _ _,
+          show Wᴴ * (1/2 : ℝ) • (S * T' * S) = (1/2 : ℝ) • (Wᴴ * (S * T' * S))
+            from Matrix.mul_smul _ _ _,
+          show (1/2 : ℝ) • (Wᴴ * T') * W = (1/2 : ℝ) • (Wᴴ * T' * W)
+            from Matrix.smul_mul _ _ _,
+          show (1/2 : ℝ) • (Wᴴ * (S * T' * S)) * W = (1/2 : ℝ) • (Wᴴ * (S * T' * S) * W)
+            from Matrix.smul_mul _ _ _,
           show Wᴴ * (S * T' * S) * W = (Wᴴ * S) * T' * (S * W) from by
             simp only [Matrix.mul_assoc],
-          hWhS, hSW, ← smul_add, ← two_smul ℝ (Wᴴ * T' * W), smul_smul,
-          show (1 / 2 : ℝ) * 2 = 1 from by norm_num, one_smul]
+          hWhS, hSW]
+      module
     have hWMW_herm : (Wᴴ * M * W).IsHermitian :=
       isHermitian_conjTranspose_mul_mul (B := W) (A := M) hM_herm'
     have h_comp := matrixFunction_compression_of_commuting W M hM_herm' hWW hM_comm f hWMW_herm
@@ -338,16 +343,21 @@ lemma lownerConvex_compression_le.{v} {n : Type v} {m : Type v} [Fintype n] [Fin
         ≤ Wᴴ * ((1 / 2 : ℝ) • cfc f T' + (1 - 1 / 2 : ℝ) • cfc f (S * T' * S)) * W :=
           h_compress
       _ = Wᴴ * cfc f T' * W := by
-          rw [h_half, ← hcfc_conj,
-              Matrix.mul_add, Matrix.add_mul, Matrix.mul_smul, Matrix.smul_mul,
-              Matrix.mul_smul, Matrix.smul_mul,
+          rw [h_half, ← hcfc_conj, Matrix.mul_add, Matrix.add_mul,
+              show Wᴴ * (1/2 : ℝ) • cfc f T' = (1/2 : ℝ) • (Wᴴ * cfc f T')
+                from Matrix.mul_smul _ _ _,
+              show Wᴴ * (1/2 : ℝ) • (S * cfc f T' * S) =
+                  (1/2 : ℝ) • (Wᴴ * (S * cfc f T' * S))
+                from Matrix.mul_smul _ _ _,
+              show (1/2 : ℝ) • (Wᴴ * cfc f T') * W = (1/2 : ℝ) • (Wᴴ * cfc f T' * W)
+                from Matrix.smul_mul _ _ _,
+              show (1/2 : ℝ) • (Wᴴ * (S * cfc f T' * S)) * W =
+                  (1/2 : ℝ) • (Wᴴ * (S * cfc f T' * S) * W)
+                from Matrix.smul_mul _ _ _,
               show Wᴴ * (S * cfc f T' * S) * W = (Wᴴ * S) * cfc f T' * (S * W) from by
                 simp only [Matrix.mul_assoc],
-              hWhS, hSW, ← smul_add,
-              show Wᴴ * cfc f T' * W + Wᴴ * cfc f T' * W = (2 : ℝ) • (Wᴴ * cfc f T' * W) from
-                (two_smul ℝ _).symm,
-              smul_smul, show (1 / 2 : ℝ) * 2 = 1 from by norm_num,
-              one_smul]
+              hWhS, hSW]
+          module
   rw [hWTW] at h_jensen
   rw [hWfTW'] at h_jensen
   calc cfc f (Vᴴ * T * V)
@@ -480,10 +490,14 @@ private lemma inv_lowner_convex_le {m : Type*} [Fintype m] [DecidableEq m]
   classical
   by_cases ht_zero : t = 0
   · subst ht_zero
-    simp
+    have h1 : ((0 : ℝ) • A + ((1 : ℝ) - 0) • B : Matrix m m ℂ) = B := by module
+    have h2 : ((0 : ℝ) • A⁻¹ + ((1 : ℝ) - 0) • B⁻¹ : Matrix m m ℂ) = B⁻¹ := by module
+    exact le_of_eq ((congrArg (·⁻¹) h1).trans h2.symm)
   by_cases ht_one : t = 1
   · subst ht_one
-    simp
+    have h1 : ((1 : ℝ) • A + ((1 : ℝ) - 1) • B : Matrix m m ℂ) = A := by module
+    have h2 : ((1 : ℝ) • A⁻¹ + ((1 : ℝ) - 1) • B⁻¹ : Matrix m m ℂ) = A⁻¹ := by module
+    exact le_of_eq ((congrArg (·⁻¹) h1).trans h2.symm)
   have ht_pos : 0 < t := lt_of_le_of_ne ht0 (Ne.symm ht_zero)
   have h1t_pos : 0 < 1 - t := by
     have ht1' : t < 1 := lt_of_le_of_ne ht1 ht_one
@@ -495,8 +509,17 @@ private lemma inv_lowner_convex_le {m : Type*} [Fintype m] [DecidableEq m]
   have hB_blk : (Matrix.fromBlocks B 1 1 B⁻¹).PosSemidef := fromBlocks_inv_posSemidef hB
   have hsum :
       (t • Matrix.fromBlocks A 1 1 A⁻¹ + (1 - t) • Matrix.fromBlocks B 1 1 B⁻¹).PosSemidef := by
-    exact (Matrix.PosSemidef.add (Matrix.PosSemidef.smul hA_blk ht0)
-      (Matrix.PosSemidef.smul hB_blk (by linarith)))
+    have hA_smul :
+        t • Matrix.fromBlocks A 1 1 A⁻¹ = ((t : ℂ)) • Matrix.fromBlocks A 1 1 A⁻¹ := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    have hB_smul :
+        (1 - t) • Matrix.fromBlocks B 1 1 B⁻¹ =
+          ((1 - t : ℝ) : ℂ) • Matrix.fromBlocks B 1 1 B⁻¹ := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    rw [hA_smul, hB_smul]
+    refine (Matrix.PosSemidef.smul hA_blk ?_).add (Matrix.PosSemidef.smul hB_blk ?_)
+    · exact_mod_cast ht0
+    · exact_mod_cast (by linarith : (0 : ℝ) ≤ 1 - t)
   have hblocks_eq :
       t • Matrix.fromBlocks A 1 1 A⁻¹ + (1 - t) • Matrix.fromBlocks B 1 1 B⁻¹ =
         Matrix.fromBlocks C 1 1 (t • A⁻¹ + (1 - t) • B⁻¹) := by
@@ -558,7 +581,12 @@ private lemma resolvent_lowner_concave_le {m : Type*} [Fintype m] [DecidableEq m
   have hconv_psd : (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹).PosSemidef := by
     simpa [Matrix.le_iff] using hconv
   have hconv_psd' : (r • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹)).PosSemidef := by
-    exact hconv_psd.smul (by linarith : 0 ≤ r)
+    have hr_smul :
+        r • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹) =
+          ((r : ℂ)) • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹) := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    rw [hr_smul]
+    exact hconv_psd.smul (by exact_mod_cast (show (0 : ℝ) ≤ r by linarith))
   rw [Matrix.le_iff]
   -- Reduce to the PSD of the inverse convexity difference.
   have hcalc :
@@ -566,6 +594,18 @@ private lemma resolvent_lowner_concave_le {m : Type*} [Fintype m] [DecidableEq m
         r • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹) := by
     module
   simpa [hcalc, A', B', C', C] using hconv_psd'
+
+section RpowOperatorConcaveAux
+
+-- Activate the linfty operator norm tower on `Matrix _ _ ℂ` for the proof of
+-- `rpow_operator_concave_le` below.  These instances are defined as `local
+-- instance` in Mathlib and need to be re-activated with `attribute [local
+-- instance]` here so that `Integrable.smul`, `integral_smul`, `integral_mono_ae`
+-- etc. can synthesise the required typeclass tower.
+attribute [local instance] Matrix.linftyOpNormedRing
+  Matrix.linftyOpNormedAlgebra Matrix.linftyOpIsBoundedSMul
+  Matrix.linftyOpNormSMulClass Matrix.linftyOpNormedAddCommGroup
+  Matrix.linftyOpNonUnitalNormedRing
 
 /-- Core operator concavity lemma for matrices.
 Uses the integral representation of xˢ and resolvent operator concavity.
@@ -580,7 +620,7 @@ for any PSD matrices A, B and t ∈ [0,1].
 2. Identify the integrand with the resolvent form `1 - u * (x + u)⁻¹` using CFC.
 3. Apply the resolvent operator concavity inequality pointwise in u.
 4. Integrate and rewrite with `matrixFunction_rpow_eq` to conclude the inequality. -/
-private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m] [Fintype (m × m)]
+private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m]
     {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1)
     (A B : Matrix m m ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
     (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1)
@@ -592,26 +632,72 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m] [
   by_cases hs_eq : s = 1
   · subst hs_eq
     simp [Real.rpow_one, matrixFunction_id]
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CompleteSpace (Matrix m m ℂ) := by infer_instance
+  -- The `attribute [local instance]` directives at the top of this
+  -- `RpowOperatorConcaveAux` section activate the linfty operator-norm tower
+  -- on `Matrix _ _ ℂ`.  We additionally need to pin a few non-instance
+  -- theorems and routes that Mathlib v4.30 does not pick up automatically.
   letI : NonUnitalCStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using
       (CStarMatrix.instNonUnitalCStarAlgebra (n := m) (A := ℂ))
-  letI : NonUnitalContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint := by
-    infer_instance
+  letI nucfc : NonUnitalContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint := by
+    letI : CStarAlgebra (Matrix m m ℂ) := by
+      simpa [CStarMatrix] using (CStarMatrix.instCStarAlgebra (n := m) (A := ℂ))
+    letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
+      IsStarNormal.instContinuousFunctionalCalculus
+    letI : ContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint :=
+      IsSelfAdjoint.instContinuousFunctionalCalculus
+    exact ContinuousFunctionalCalculus.toNonUnital
+  letI scc : SMulCommClass ℝ (Matrix m m ℂ) (Matrix m m ℂ) :=
+    Matrix.Semiring.smulCommClass
+  letI ist : IsScalarTower ℝ (Matrix m m ℂ) (Matrix m m ℂ) := inferInstance
+  letI sor : StarOrderedRing (Matrix m m ℂ) := Matrix.instStarOrderedRing
+  letI nsc : NonnegSpectrumClass ℝ (Matrix m m ℂ) := Matrix.instNonnegSpectrumClass
+  -- `integral_mono_ae` requires `ClosedIciTopology` on the target.  The Löwner
+  -- order on `Matrix m m ℂ` makes `Set.Ici a` closed because `PosSemidef` is a
+  -- closed condition: it is the intersection of `IsHermitian` (closed under
+  -- `star`) and `∀ y, 0 ≤ star y ⬝ᵥ M.mulVec y` (each is a closed condition
+  -- since the dot-product map is continuous).
+  letI cit : ClosedIciTopology (Matrix m m ℂ) := by
+    refine ⟨fun a => ?_⟩
+    have hSet : Set.Ici a = {M : Matrix m m ℂ | (M - a).PosSemidef} := by
+      ext M; exact Matrix.le_iff
+    rw [hSet]
+    have hcont : Continuous fun M : Matrix m m ℂ => M - a := by fun_prop
+    suffices hPSD : IsClosed {M : Matrix m m ℂ | M.PosSemidef} from
+      hPSD.preimage hcont
+    have heq : {M : Matrix m m ℂ | M.PosSemidef} =
+        {M | M.IsHermitian} ∩ ⋂ y : m → ℂ, {M | 0 ≤ star y ⬝ᵥ M.mulVec y} := by
+      ext M
+      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iInter]
+      exact Matrix.posSemidef_iff_dotProduct_mulVec
+    rw [heq]
+    refine IsClosed.inter ?_ ?_
+    · -- {M | M.IsHermitian} = {M | M.conjTranspose = M}
+      exact isClosed_eq (by fun_prop) continuous_id
+    · refine isClosed_iInter (fun y => ?_)
+      exact isClosed_le continuous_const (by fun_prop)
   have hs_lt : s < 1 := lt_of_le_of_ne hs1 hs_eq
   let q : ℝ≥0 := ⟨s, le_of_lt hs0⟩
   have hq : (q : ℝ) ∈ Set.Ioo (0 : ℝ) 1 := ⟨hs0, hs_lt⟩
   obtain ⟨μ, hμ⟩ :=
-    CFC.exists_measure_nnrpow_eq_integral_cfcₙ_rpowIntegrand₀₁
-      (A := Matrix m m ℂ) hq
+    @CFC.exists_measure_nnrpow_eq_integral_cfcₙ_rpowIntegrand₀₁ (Matrix m m ℂ)
+      inferInstance inferInstance inferInstance scc ist inferInstance sor
+      nsc nucfc inferInstance q hq
   set C : Matrix m m ℂ := t • A + (1 - t) • B
   have hA0 : (0 : Matrix m m ℂ) ≤ A := by
     simpa [Matrix.le_iff] using hA
   have hB0 : (0 : Matrix m m ℂ) ≤ B := by
     simpa [Matrix.le_iff] using hB
-  have hCpsd : C.PosSemidef := (hA.smul ht0).add (hB.smul (by linarith))
+  have hCpsd : C.PosSemidef := by
+    have hA_smul : t • A = ((t : ℂ)) • A := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    have hB_smul : (1 - t) • B = ((1 - t : ℝ) : ℂ) • B := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    refine (Matrix.PosSemidef.add ?_ ?_)
+    · rw [show t • A = ((t : ℂ)) • A from hA_smul]
+      exact hA.smul (by exact_mod_cast ht0)
+    · rw [show (1 - t) • B = ((1 - t : ℝ) : ℂ) • B from hB_smul]
+      exact hB.smul (by exact_mod_cast (show (0 : ℝ) ≤ 1 - t by linarith))
   have hC0 : (0 : Matrix m m ℂ) ≤ C := by
     simpa [Matrix.le_iff, C] using hCpsd
   have hA_int : IntegrableOn (fun u => cfcₙ (rpowIntegrand₀₁ q u) A) (Ioi 0) μ :=
@@ -769,6 +855,9 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m] [
               ((1 : Matrix m m ℂ) - (u : ℂ) • (C + (u : ℂ) • 1)⁻¹) := by
       have hnonneg : 0 ≤ u ^ (s - 1) := by
         exact Real.rpow_nonneg (le_of_lt hu') _
+      have hnonneg_C : (0 : ℂ) ≤ ((u ^ (s - 1) : ℝ) : ℂ) := by
+        rw [show (0 : ℂ) = ((0 : ℝ) : ℂ) from rfl, Complex.real_le_real]
+        exact hnonneg
       rw [Matrix.le_iff] at hres_le ⊢
       have hpsd :
           (((u ^ (s - 1) : ℝ) : ℂ) •
@@ -776,7 +865,7 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m] [
             ((u ^ (s - 1) : ℝ) : ℂ) •
               (t • ((1 : Matrix m m ℂ) - (u : ℂ) • (A + (u : ℂ) • 1)⁻¹) +
                 (1 - t) • ((1 : Matrix m m ℂ) - (u : ℂ) • (B + (u : ℂ) • 1)⁻¹))).PosSemidef := by
-        simpa [smul_sub] using hres_le.smul hnonneg
+        simpa [smul_sub] using hres_le.smul hnonneg_C
       simpa [smul_sub] using hpsd
     -- Replace with the matrixFunction form.
     have hscale' :
@@ -788,17 +877,34 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m] [
       have hscale' := hscale
       rw [hA_res.symm, hB_res.symm, hC_res.symm] at hscale'
       exact hscale'
-    simpa [hA_eq, hB_eq, hC_eq, hA_int', hB_int', hC_int', smul_add, smul_smul,
-      mul_comm, mul_left_comm, mul_assoc] using hscale'
+    have hscale'' :
+        t • ((u ^ (s - 1) : ℝ) : ℂ) •
+            matrixFunction (fun x => ((1 - u * (x + u)⁻¹ : ℝ) : ℂ)) A hA.1 +
+        (1 - t) • ((u ^ (s - 1) : ℝ) : ℂ) •
+            matrixFunction (fun x => ((1 - u * (x + u)⁻¹ : ℝ) : ℂ)) B hB.1 ≤
+        ((u ^ (s - 1) : ℝ) : ℂ) •
+            matrixFunction (fun x => ((1 - u * (x + u)⁻¹ : ℝ) : ℂ)) C hCpsd.1 := by
+      rw [smul_comm t ((u ^ (s - 1) : ℝ) : ℂ),
+          smul_comm (1 - t) ((u ^ (s - 1) : ℝ) : ℂ), ← smul_add]
+      exact hscale'
+    simpa [hA_eq, hB_eq, hC_eq, hA_int', hB_int', hC_int'] using hscale''
   have hle_integral :
       t • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ) +
         (1 - t) • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ)
         ≤ ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := by
+    have hAi : Integrable (fun u => cfcₙ (rpowIntegrand₀₁ q u) A) (μ.restrict (Ioi 0)) :=
+      hA_int.integrable
+    have hBi : Integrable (fun u => cfcₙ (rpowIntegrand₀₁ q u) B) (μ.restrict (Ioi 0)) :=
+      hB_int.integrable
+    have hA_smul : Integrable (fun u => t • cfcₙ (rpowIntegrand₀₁ q u) A)
+        (μ.restrict (Ioi 0)) := hAi.smul (𝕜 := ℝ) t
+    have hB_smul : Integrable (fun u => (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B)
+        (μ.restrict (Ioi 0)) := hBi.smul (𝕜 := ℝ) (1 - t)
     have hleft_int :
         Integrable (fun u =>
           t • cfcₙ (rpowIntegrand₀₁ q u) A +
-            (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B) (μ.restrict (Ioi 0)) := by
-      exact (hA_int.smul t).add (hB_int.smul (1 - t))
+            (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B) (μ.restrict (Ioi 0)) :=
+      hA_smul.add hB_smul
     have hright_int :
         Integrable (fun u => cfcₙ (rpowIntegrand₀₁ q u) C) (μ.restrict (Ioi 0)) :=
       hC_int
@@ -818,28 +924,35 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m] [
             · exact hB_int.smul (1 - t)
         _ = t • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ) +
             (1 - t) • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ) := by
-            simp [integral_smul]
+            congr 1
+            · exact hAi.integral_smul (R := ℝ) t
+            · exact hBi.integral_smul (R := ℝ) (1 - t)
     have hmono' :
         t • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ) +
           (1 - t) • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ) ≤
           ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := by
       simpa [hleft_eq] using hmono
     exact hmono'
+  have hq_pos : 0 < (q : ℝ) := by exact_mod_cast hs0
+  have hqs : (q : ℝ) = s := rfl
   have hA_eq_int :
       A ^ s = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ := by
-    have hq_pos : 0 < (q : ℝ) := by exact_mod_cast hs0
-    simpa [CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := A) (x := q) hq_pos] using
-      (hμ A hA0).2
+    have h1 : A ^ q = A ^ (q : ℝ) :=
+      CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := A) (x := q) hq_pos
+    have h2 : A ^ q = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ := (hμ A hA0).2
+    rw [← hqs, ← h1]; exact h2
   have hB_eq_int :
       B ^ s = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ := by
-    have hq_pos : 0 < (q : ℝ) := by exact_mod_cast hs0
-    simpa [CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := B) (x := q) hq_pos] using
-      (hμ B hB0).2
+    have h1 : B ^ q = B ^ (q : ℝ) :=
+      CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := B) (x := q) hq_pos
+    have h2 : B ^ q = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ := (hμ B hB0).2
+    rw [← hqs, ← h1]; exact h2
   have hC_eq_int :
       C ^ s = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := by
-    have hq_pos : 0 < (q : ℝ) := by exact_mod_cast hs0
-    simpa [CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := C) (x := q) hq_pos] using
-      (hμ C hC0).2
+    have h1 : C ^ q = C ^ (q : ℝ) :=
+      CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := C) (x := q) hq_pos
+    have h2 : C ^ q = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := (hμ C hC0).2
+    rw [← hqs, ← h1]; exact h2
   have hC_eq_mf :
       matrixFunction (fun x => ((x ^ s : ℝ) : ℂ)) C hC = C ^ s := by
     have hC' :
@@ -862,6 +975,8 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m] [
   have hfinal : t • A ^ s + (1 - t) • B ^ s ≤ C ^ s := by
     simpa [hA_eq_int, hB_eq_int, hC_eq_int] using hle_integral
   simpa [hA_eq_mf, hB_eq_mf, hC_eq_mf, C] using hfinal
+
+end RpowOperatorConcaveAux
 
 /-- Helper: The difference in quadratic forms for operator concavity. -/
 private lemma rpow_concavity_quadform_nonneg {m : Type*} [Fintype m] [DecidableEq m]

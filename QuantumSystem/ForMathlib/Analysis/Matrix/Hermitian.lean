@@ -48,13 +48,13 @@ lemma IsHermitian.quadForm_im_eq_zero {m : Type*} [Fintype m]
   linarith
 
 /-- Sum of Hermitian matrices is Hermitian. -/
-lemma IsHermitian.add_isHermitian {m : Type*} [Fintype m]
+lemma IsHermitian.add_isHermitian {m : Type*}
     {A B : Matrix m m ℂ} (hA : A.IsHermitian) (hB : B.IsHermitian) :
     (A + B).IsHermitian :=
   hA.add hB
 
 /-- Real scalar multiple of a Hermitian matrix is Hermitian. -/
-lemma IsHermitian.smul_real {m : Type*} [Fintype m]
+lemma IsHermitian.smul_real {m : Type*}
     {A : Matrix m m ℂ} (hA : A.IsHermitian) (r : ℝ) :
     (r • A).IsHermitian := by
   unfold IsHermitian at *
@@ -62,13 +62,13 @@ lemma IsHermitian.smul_real {m : Type*} [Fintype m]
   simp only [RCLike.star_def, RCLike.conj_to_real]
 
 /-- Convex combination of Hermitian matrices is Hermitian. -/
-lemma IsHermitian.convex_combination {m : Type*} [Fintype m]
+lemma IsHermitian.convex_combination {m : Type*}
     {A B : Matrix m m ℂ} (hA : A.IsHermitian) (hB : B.IsHermitian) (t : ℝ) :
     (t • A + (1 - t) • B).IsHermitian :=
   (hA.smul_real t).add (hB.smul_real (1 - t))
 
 /-- Diagonal matrix with real entries is Hermitian. -/
-lemma IsHermitian.diagonal_real {m : Type*} [Fintype m] [DecidableEq m]
+lemma IsHermitian.diagonal_real {m : Type*} [DecidableEq m]
     (f : m → ℝ) : (diagonal (fun i => (f i : ℂ))).IsHermitian := by
   rw [IsHermitian, diagonal_conjTranspose]
   ext i j
@@ -78,7 +78,7 @@ lemma IsHermitian.diagonal_real {m : Type*} [Fintype m] [DecidableEq m]
   · rfl
 
 /-- Complex scalar multiple of a Hermitian matrix is Hermitian when the scalar is real. -/
-lemma IsHermitian.smul_complex_real {m : Type*} [Fintype m]
+lemma IsHermitian.smul_complex_real {m : Type*}
     {A : Matrix m m ℂ} (hA : A.IsHermitian) (r : ℝ) :
     ((r : ℂ) • A).IsHermitian := by
   unfold IsHermitian at *

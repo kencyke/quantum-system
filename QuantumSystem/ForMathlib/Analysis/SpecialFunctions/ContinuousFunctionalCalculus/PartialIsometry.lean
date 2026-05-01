@@ -174,7 +174,7 @@ lemma IsPartialIsometry.norm_of_mem_initialSpace {U : H →L[ℂ] H}
     have hP_symm : (P : H →ₗ[ℂ] H).IsSymmetric :=
       (ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric).1 h_sa
     have h_orth : (LinearMap.range P.toLinearMap)ᗮ = LinearMap.ker P.toLinearMap :=
-      (ContinuousLinearMap.IsIdempotentElem.isSymmetric_iff_orthogonal_range hP_idem).1 hP_symm
+      (LinearMap.IsIdempotentElem.isSymmetric_iff_orthogonal_range hP_idem.toLinearMap).1 hP_symm
     have h_range_closed : IsClosed (LinearMap.range P.toLinearMap : Set H) :=
       (IsIdempotentElem.isClosed_range (p := P) hP_idem)
     -- Hence (ker P)ᗮ = range P
@@ -242,7 +242,7 @@ lemma IsPartialIsometry.adjoint_mul_self_apply_of_mem_ker_orthogonal {U : H →L
   have hP_symm : (P : H →ₗ[ℂ] H).IsSymmetric :=
     ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.1 h_sa
   have h_orth : (LinearMap.range P.toLinearMap)ᗮ = LinearMap.ker P.toLinearMap :=
-    (ContinuousLinearMap.IsIdempotentElem.isSymmetric_iff_orthogonal_range hP_idem).1 hP_symm
+    (LinearMap.IsIdempotentElem.isSymmetric_iff_orthogonal_range hP_idem.toLinearMap).1 hP_symm
   have h_range_closed : IsClosed (LinearMap.range P.toLinearMap : Set H) :=
     IsIdempotentElem.isClosed_range hP_idem
   have h_eq_range : (LinearMap.ker P.toLinearMap)ᗮ = LinearMap.range P.toLinearMap := by

@@ -36,7 +36,7 @@ lemma IsFaithful.pos_of_nonzero {ω : State ℂ A} (hω : ω.IsFaithful) {a : A}
   rw [hr']
   simp only [Complex.ofReal_re]
   by_contra h_not_pos
-  push_neg at h_not_pos
+  push Not at h_not_pos
   have hr_nonneg : (0 : ℝ) ≤ r := r.property
   have hr_zero : (r : ℝ) = 0 := le_antisymm h_not_pos hr_nonneg
   have h0 : ω (star a * a) = 0 := by rw [hr', hr_zero]; simp

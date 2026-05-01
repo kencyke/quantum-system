@@ -245,7 +245,7 @@ theorem directSumAlgHom_injective : Function.Injective (directSumAlgHom (A := A)
           simp
         · simp only [dif_neg h, if_neg h]; simp
       rw [h_eq]
-      apply summable_of_finite_support
+      apply summable_of_hasFiniteSupport
       have :
           Function.support (fun ψ' => if ψ' = ψ then ‖ψ.gnsRepresentation.ξ‖ ^ 2 else 0) ⊆ {ψ} := by
         intro ψ' hψ'

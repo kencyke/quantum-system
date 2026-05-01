@@ -341,7 +341,7 @@ lemma real_eval_le_of_le {a b : A} (hab : a ≤ b) : (ω a).re ≤ (ω b).re := 
 lemma kernel_vanish_on_elem (hx : ω (star x * x) = 0) : ω x = 0 := by
   -- Prove by showing ‖ω(x)‖ < ε for all ε > 0
   by_contra h_ne
-  push_neg at h_ne
+  push Not at h_ne
   -- If ω(x) ≠ 0, then ‖ω(x)‖ > 0
   have h_pos : 0 < ‖ω x‖ := norm_pos_iff.mpr h_ne
   -- Set ε = ‖ω(x)‖ / 2 > 0

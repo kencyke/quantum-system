@@ -18,7 +18,7 @@ open ComplexConjugate NNReal Topology Filter
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 variable (ω : State ℂ A)
 
-def Nω : CStarAlgebraIdeal A where
+@[reducible] def Nω : CStarAlgebraIdeal A where
   carrier := { x : A | ω (star x * x) = 0 }
   zero_mem' := by
     change ω (star (0 : A) * (0 : A)) = 0
@@ -42,7 +42,7 @@ local notation "Nω" => (Nω ω)
 `⟪[x], [y]⟫ = ω (star x * y)`.  Well-defined because the kernel ideal `Nω` is the null space
 with respect to the positive sesquilinear form coming from the state `ω` (ultimately a
 consequence of the Cauchy–Schwarz inequality for states). -/
-def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
+noncomputable def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
   Quotient.liftOn₂' xq yq (fun x y => ω (star x * y))
     (fun x₁ y₁ x₂ y₂ (hx : CStarAlgebraIdeal.leftRel Nω x₁ x₂) (hy : CStarAlgebraIdeal.leftRel Nω y₁ y₂) => by
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hx hy
@@ -54,7 +54,7 @@ def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
         _ = ω (star x₂ * y₂) := (State.equiv_right (ω := ω) (x := x₂) (y₁ := y₂) (y₂ := y₁) hy').symm)
 
 /-- The inner product space core structure on the quotient. -/
-instance instInnerProductSpaceCore : InnerProductSpace.Core ℂ (A ⧸ Nω) where
+noncomputable abbrev innerProductSpaceCoreQuot : InnerProductSpace.Core ℂ (A ⧸ Nω) where
   inner := innerQuotient ω
   conj_inner_symm := fun x y => Quotient.inductionOn₂' x y fun a b => by
     simp only [innerQuotient, Quotient.liftOn₂'_mk'']
@@ -81,34 +81,39 @@ instance instInnerProductSpaceCore : InnerProductSpace.Core ℂ (A ⧸ Nω) wher
   definite := fun x hx => Quotient.inductionOn' x (fun a ha => by
     have ha' : ω (star a * a) = 0 := by
       simpa [innerQuotient] using ha
-    exact Quotient.sound' (by
-      simpa [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] using ha')) hx
+    apply Quotient.sound'
+    rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply]
+    simpa using ha') hx
 
--- Pattern adapted from Mathlib 4.25+ Matrix.PosDef
--- First define NormedAddCommGroup from the Core (not an instance yet)
-noncomputable def normedAddCommGroupQuot : NormedAddCommGroup (A ⧸ Nω) :=
-  @InnerProductSpace.Core.toNormedAddCommGroup ℂ _ _ _ _ (instInnerProductSpaceCore (ω := ω))
-
--- Then define InnerProductSpace using ofCore with explicit SeminormedAddCommGroup
-noncomputable def innerProductSpaceQuot : @InnerProductSpace ℂ (A ⧸ Nω) _ (normedAddCommGroupQuot (ω := ω)).toSeminormedAddCommGroup :=
-  letI : InnerProductSpace.Core ℂ (A ⧸ Nω) := instInnerProductSpaceCore (ω := ω)
-  @InnerProductSpace.ofCore ℂ _ _ (normedAddCommGroupQuot (ω := ω)).toAddCommGroup _ inferInstance
-
--- Now make them instances
+-- Pattern from Mathlib's GelfandNaimarkSegal: separate Core abbrev and IPS instances.
 noncomputable instance instNormedAddCommGroupQuot : NormedAddCommGroup (A ⧸ Nω) :=
-  normedAddCommGroupQuot (ω := ω)
+  @InnerProductSpace.Core.toNormedAddCommGroup ℂ (A ⧸ Nω) _ _ _ (innerProductSpaceCoreQuot ω)
+
+/-- The pre-inner product structure derived from the InnerProductSpace.Core. -/
+noncomputable instance instPreInnerProductSpaceCoreQuot : PreInnerProductSpace.Core ℂ (A ⧸ Nω) where
+  inner := innerQuotient ω
+  conj_inner_symm := (innerProductSpaceCoreQuot ω).conj_inner_symm
+  re_inner_nonneg := (innerProductSpaceCoreQuot ω).re_inner_nonneg
+  add_left := (innerProductSpaceCoreQuot ω).add_left
+  smul_left := (innerProductSpaceCoreQuot ω).smul_left
 
 noncomputable instance instInnerProductSpaceQuot : InnerProductSpace ℂ (A ⧸ Nω) :=
-  innerProductSpaceQuot (ω := ω)
+  InnerProductSpace.ofCore (instPreInnerProductSpaceCoreQuot ω)
+
+/-- Inner product on the quotient is the `innerQuotient` function. This holds because the
+`InnerProductSpace` instance on the quotient is built reducibly from the corresponding
+`InnerProductSpace.Core`. -/
+private lemma inner_quotient_eq (x y : A ⧸ Nω) :
+    @inner ℂ (A ⧸ Nω) _ x y = innerQuotient ω x y := rfl
 
 /-- The squared norm of the class `[x]` equals the real part `Re (ω (star x * x))`. -/
 private lemma norm_sq_eq_inner (x : A) :
     @norm (A ⧸ Nω) (instNormedAddCommGroupQuot ω).toNorm (Quotient.mk'' x) ^ 2 = (ω (star x * x)).re := by
   rw [@norm_sq_eq_re_inner ℂ (A ⧸ Nω) _ _]
-  change ((@inner ℂ (A ⧸ Nω) _ (Quotient.mk'' x) (Quotient.mk'' x))).re = (ω (star x * x)).re
-  change (innerQuotient ω (Quotient.mk'' x) (Quotient.mk'' x)).re = (ω (star x * x)).re
+  rw [inner_quotient_eq]
   unfold innerQuotient
   simp only [Quotient.liftOn₂'_mk'']
+  rfl
 
 /-- Inner products with elements of the kernel ideal vanish: if `s ∈ Nω` then
 `ω (star x * s) = 0`. -/
@@ -154,8 +159,7 @@ lemma πω'_norm_sq_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ^ 2 ≤ ‖a
   -- Use inner_self = ‖·‖ * ‖·‖ in a pre-Hilbert setting (core inner product structure)
   rw [← inner_self_eq_norm_mul_norm (𝕜 := ℂ) (E := A ⧸ Nω) (Quotient.mk'' (a * b'))]
   rw [← inner_self_eq_norm_mul_norm (𝕜 := ℂ) (E := A ⧸ Nω) (Quotient.mk'' b')]
-  change (innerQuotient ω (Quotient.mk'' (a * b')) (Quotient.mk'' (a * b'))).re ≤
-    ‖a‖ * ‖a‖ * (innerQuotient ω (Quotient.mk'' b') (Quotient.mk'' b')).re
+  rw [inner_quotient_eq, inner_quotient_eq]
   unfold innerQuotient; simp only [Quotient.liftOn₂'_mk'']
   -- Algebraic rearrangement: bring star inside and reassociate to isolate star a * a
   rw [show star (a * b') * (a * b') = star b' * star a * a * b' by rw [star_mul, mul_assoc, mul_assoc, mul_assoc]]
@@ -172,6 +176,7 @@ lemma πω'_norm_sq_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ^ 2 ≤ ‖a
   have : ‖a‖ * ‖a‖ * (ω (star b' * b')).re = ‖a‖ * (‖a‖ * (ω (star b' * b')).re) := mul_assoc _ _ _
   have hr_nonneg : (0 : ℝ) ≤ r := r.property
   -- Finish with linear arithmetic: nonneg remainder r gives desired ≤
+  change (ω (star b' * star a * a * b')).re ≤ ‖a‖ * ‖a‖ * (ω (star b' * b')).re
   linarith
 
 /-- Multiplicativity: πω'(ab) = πω'(a) ∘ πω'(b). -/
@@ -184,7 +189,7 @@ lemma πω'_inner (a : A) (b c : A ⧸ Nω) :
   refine Quotient.inductionOn₂' b c fun b' c' => ?_
   unfold πω'
   simp only [Quotient.liftOn'_mk'']
-  change innerQuotient ω (Quotient.mk'' (a * b')) (Quotient.mk'' c') = innerQuotient ω (Quotient.mk'' b') (Quotient.mk'' (star a * c'))
+  rw [inner_quotient_eq, inner_quotient_eq]
   unfold innerQuotient
   simp only [Quotient.liftOn₂'_mk'', star_mul, mul_assoc]
 
@@ -380,7 +385,7 @@ lemma stateOnQuotFun_bound (x : A ⧸ Nω) : ‖stateOnQuotFun ω x‖ ≤ 1 * �
   -- Derive global bound by contradiction if limit were strictly larger
   have : ‖ω a‖ ^ 2 ≤ (ω (star a * a)).re := by
     haveI : (CStarAlgebra.approximateUnit A).NeBot := h_approx.toIsApproximateUnit.neBot
-    by_contra hlt; push_neg at hlt
+    by_contra hlt; push Not at hlt
     set δ : ℝ := (‖ω a‖ ^ 2 - (ω (star a * a)).re) / 2
     have hδ_pos : 0 < δ := half_pos (sub_pos.mpr hlt)
     have h_close := (Metric.tendsto_nhds.mp h_tendsto) δ hδ_pos
@@ -528,11 +533,11 @@ lemma ξω_norm : ‖ξω ω‖ = 1 := by
     suffices 1 ≤ ‖stateOnQuot ω‖ from this.trans h2
     have h_norm : ‖ω‖ = 1 := ω.norm_eq_one
     rw [← h_norm]
-    by_contra h_not; push_neg at h_not
+    by_contra h_not; push Not at h_not
     -- Expand definition of norm via supremum over ratios ‖ω a‖/‖a‖
     rw [State.norm_def] at h_not
     obtain ⟨_, ⟨a, ha, rfl⟩, h_r_large⟩ : ∃ r ∈ {s : ℝ | ∃ a : A, a ≠ 0 ∧ s = ‖ω a‖ / ‖a‖}, ‖stateOnQuot ω‖ < r := by
-      by_contra h_no; push_neg at h_no
+      by_contra h_no; push Not at h_no
       have : sSup {s : ℝ | ∃ a : A, a ≠ 0 ∧ s = ‖ω a‖ / ‖a‖} ≤ ‖stateOnQuot ω‖ := by
         refine csSup_le ?_ h_no
         by_contra h_empty

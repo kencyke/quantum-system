@@ -32,7 +32,7 @@ theorem entropyFun_nonneg {x : ℝ} (hx : 0 ≤ x) (hx1 : x ≤ 1) : 0 ≤ entro
   unfold entropyFun
   split_ifs with hle
   · exact le_refl 0
-  · push_neg at hle
+  · push Not at hle
     have hlog : Real.log x ≤ 0 := Real.log_nonpos hx hx1
     nlinarith [hle, hlog]
 
@@ -207,7 +207,8 @@ lemma trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosS
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
     (s : ℝ) (hs0 : 0 < s) (hs1 : s ≤ 1) :
     p * (Tr (A ^ s)).re + (1 - p) * (Tr (B ^ s)).re ≤ (Tr ((p • A + (1 - p) • B) ^ s)).re := by
-  have hpsd_mix : (p • A + (1 - p) • B).PosSemidef := (hA.smul hp).add (hB.smul (by linarith))
+  have hpsd_mix : (p • A + (1 - p) • B).PosSemidef :=
+    (hA.real_smul hp).add (hB.real_smul (by linarith))
   have hlowner := rpow_isLownerConcave hs0 hs1 n A B hA hB p hp hp1 hpsd_mix.1
   simp only [] at hlowner
   have hfunc_eq : (fun x : ℝ => ((-x ^ s : ℝ) : ℂ)) = (fun x : ℝ => -(((x ^ s : ℝ) : ℂ))) := by
@@ -218,13 +219,17 @@ lemma trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosS
       matrixFunction_rpow_eq hA, matrixFunction_rpow_eq hB, matrixFunction_rpow_eq hpsd_mix] at hlowner
   have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s := by
     have heq : p • -A ^ s + (1 - p) • -B ^ s = -(p • A ^ s + (1 - p) • B ^ s) := by
-      simp [smul_neg]
-      abel
+      have h1 : p • -A ^ s = -(p • A ^ s) := smul_neg p (A ^ s)
+      have h2 : (1 - p) • -B ^ s = -((1 - p) • B ^ s) := smul_neg (1 - p) (B ^ s)
+      rw [h1, h2, ← neg_add]
     rw [heq] at hlowner
     rwa [neg_le_neg_iff] at hlowner
   rw [Matrix.le_iff] at hlowner'
   have htrace := (Complex.nonneg_iff.mp hlowner'.trace_nonneg).1
-  rw [Matrix.trace_sub, Matrix.trace_add, Matrix.trace_smul, Matrix.trace_smul] at htrace
+  have htr1 : Tr (p • A ^ s) = (p : ℝ) • Tr (A ^ s) := Matrix.trace_smul (p : ℝ) (A ^ s)
+  have htr2 : Tr ((1 - p) • B ^ s) = (1 - p : ℝ) • Tr (B ^ s) :=
+    Matrix.trace_smul (1 - p : ℝ) (B ^ s)
+  rw [Matrix.trace_sub, Matrix.trace_add, htr1, htr2] at htrace
   simp only [Complex.sub_re, Complex.add_re, Complex.real_smul, Complex.mul_re,
              Complex.ofReal_re, Complex.ofReal_im] at htrace
   linarith
@@ -305,7 +310,7 @@ theorem vonNeumannEntropy_concave (ρ₁ ρ₂ : DensityMatrix n) (p : ℝ) (hp 
     unfold entropyFun
     split_ifs with h
     · simp [le_antisymm h (ρ_mix.eigenvalues_nonneg i)]
-    · push_neg at h
+    · push Not at h
       ring
   have h₁_eq : ∑ i, ρ₁.isHermitian.eigenvalues i * Real.log (ρ₁.isHermitian.eigenvalues i) =
       -vonNeumannEntropy ρ₁ := by
@@ -315,7 +320,7 @@ theorem vonNeumannEntropy_concave (ρ₁ ρ₂ : DensityMatrix n) (p : ℝ) (hp 
     unfold entropyFun
     split_ifs with h
     · simp [le_antisymm h (ρ₁.eigenvalues_nonneg i)]
-    · push_neg at h
+    · push Not at h
       ring
   have h₂_eq : ∑ i, ρ₂.isHermitian.eigenvalues i * Real.log (ρ₂.isHermitian.eigenvalues i) =
       -vonNeumannEntropy ρ₂ := by
@@ -325,7 +330,7 @@ theorem vonNeumannEntropy_concave (ρ₁ ρ₂ : DensityMatrix n) (p : ℝ) (hp 
     unfold entropyFun
     split_ifs with h
     · simp [le_antisymm h (ρ₂.eigenvalues_nonneg i)]
-    · push_neg at h
+    · push Not at h
       ring
   rw [hmix_eq, h₁_eq, h₂_eq] at hderiv_g_nonpos
   linarith

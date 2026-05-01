@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Pi
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.LinearAlgebra.Lagrange
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
@@ -208,10 +209,15 @@ lemma matrixFunction_add_const {m : Type*} [Fintype m] [DecidableEq m]
       diagonal (fun i => ((hA.eigenvalues i + t : ℝ) : ℂ)) =
         diagonal (fun i => (hA.eigenvalues i : ℂ)) + (t : ℂ) • 1 := by
     ext i j
+    change (diagonal (fun i => ((hA.eigenvalues i + t : ℝ) : ℂ))) i j =
+        (diagonal (fun i => (hA.eigenvalues i : ℂ))) i j + ((t : ℂ) • (1 : Matrix m m ℂ)) i j
     by_cases h : i = j
     · subst h
-      simp
-    · simp [h]
+      rw [Matrix.diagonal_apply_eq, Matrix.diagonal_apply_eq, Matrix.smul_apply,
+        Matrix.one_apply_eq, smul_eq_mul, mul_one]
+      push_cast; ring
+    · rw [Matrix.diagonal_apply_ne _ h, Matrix.diagonal_apply_ne _ h, Matrix.smul_apply,
+        Matrix.one_apply_ne h, smul_zero, add_zero]
   rw [hdiag]
   simp only [Matrix.mul_add, Matrix.add_mul]
   have hU : U * Uᴴ = 1 := by
@@ -523,8 +529,20 @@ theorem matrixLog_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
     { toAlgHom := (φ.toAlgEquiv.restrictScalars ℝ).toAlgHom
       map_star' := fun X => map_star φ X }
   have h_ψ_apply : ∀ X, ψ X = φ X := fun _ => rfl
-  have hψ_cont : Continuous ψ :=
-    ψ.toAlgHom.toLinearMap.continuous_of_finiteDimensional
+  have hψ_cont : Continuous ψ := by
+    -- ψ x = φ x, so it suffices to show φ is continuous.
+    -- Continuity follows entrywise: each entry `(φ A) i j` is a ℂ-linear functional in `A`,
+    -- and ℂ-linear maps on a finite-dimensional ℂ-space are automatically continuous.
+    have hcont_φ : Continuous (φ : Matrix m m ℂ → Matrix n n ℂ) := by
+      refine continuous_matrix fun i j => ?_
+      -- The entry map is ℂ-linear; package it as a `LinearMap`.
+      let g : Matrix m m ℂ →ₗ[ℂ] ℂ :=
+        { toFun := fun A => (φ A) i j
+          map_add' := fun A B => by simp
+          map_smul' := fun c A => by simp }
+      change Continuous fun A => g A
+      exact g.continuous_of_finiteDimensional
+    exact hcont_φ
   have hM_sa : IsSelfAdjoint M := hM.1
   have hψM_sa : IsSelfAdjoint (ψ M) := by
     rw [IsSelfAdjoint, ← map_star ψ]
@@ -761,8 +779,13 @@ lemma cfc_unitary_conjugation' {m : Type*} [Fintype m] [DecidableEq m]
     cfc f ((U : Matrix m m ℂ) * M * star (U : Matrix m m ℂ)) := by
   change (Unitary.conjStarAlgAut ℝ _ U) (cfc f M) =
     cfc f ((Unitary.conjStarAlgAut ℝ _ U) M)
-  have hcont : Continuous (Unitary.conjStarAlgAut ℝ (Matrix m m ℂ) U) :=
-    (Unitary.conjStarAlgAut ℝ (Matrix m m ℂ) U).toAlgEquiv.toLinearMap.continuous_of_finiteDimensional
+  have hcont : Continuous (Unitary.conjStarAlgAut ℝ (Matrix m m ℂ) U) := by
+    have happly : ∀ x, Unitary.conjStarAlgAut ℝ (Matrix m m ℂ) U x =
+        (U : Matrix m m ℂ) * x * (U : Matrix m m ℂ)ᴴ := by
+      intro x; simp [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose]
+    rw [show (Unitary.conjStarAlgAut ℝ (Matrix m m ℂ) U : Matrix m m ℂ → Matrix m m ℂ) =
+        fun x => (U : Matrix m m ℂ) * x * (U : Matrix m m ℂ)ᴴ from funext happly]
+    exact (continuous_const.mul continuous_id).mul continuous_const
   exact StarAlgHomClass.map_cfc (Unitary.conjStarAlgAut ℝ _ U) f M hf hcont hM
 
 /-- Block diagonal embedding as a star algebra homomorphism.
@@ -792,6 +815,13 @@ lemma cfc_fromBlocks_diag {m : Type*} [Fintype m] [DecidableEq m]
   letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
+  letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : CStarAlgebra (Matrix m m ℂ × Matrix m m ℂ) := inferInstance
+  letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ × Matrix m m ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℝ (Matrix m m ℂ × Matrix m m ℂ) IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
   have hcont : Continuous (blockDiagEmbed m) := by
     change Continuous fun p : Matrix m m ℂ × Matrix m m ℂ => fromBlocks p.1 0 0 p.2
     fun_prop
@@ -836,6 +866,15 @@ lemma cfc_fromBlocks_diag' {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
   letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
+  letI : ContinuousFunctionalCalculus ℂ (Matrix n n ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : CStarAlgebra (Matrix n n ℂ × Matrix m m ℂ) := inferInstance
+  letI : ContinuousFunctionalCalculus ℂ (Matrix n n ℂ × Matrix m m ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  letI : ContinuousFunctionalCalculus ℝ (Matrix n n ℂ × Matrix m m ℂ) IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
   have hcont : Continuous (blockDiagEmbed' n m) := by
     change Continuous fun p : Matrix n n ℂ × Matrix m m ℂ => fromBlocks p.1 0 0 p.2
     fun_prop
@@ -949,7 +988,7 @@ lemma eigenvalues_compression_subset {n m : Type*}
     intro lam hlam
     by_contra h_not_spec
     rw [spectrum.mem_iff] at h_not_spec hlam
-    push_neg at h_not_spec
+    push Not at h_not_spec
     -- h_not_spec : IsUnit (algebraMap ℂ (Matrix n n ℂ) lam - M)
     -- The compression V†(λI - M)V = (λI - V†MV) and inverse transfers
     -- This is standard linear algebra: V†AV invertible iff A restricted to range(V) is invertible

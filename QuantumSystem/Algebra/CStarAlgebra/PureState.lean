@@ -8,11 +8,68 @@ public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
 
 @[expose] public section
 
+-- The following typeclass instances are no longer auto-derivable in v4.30
+-- (the priority-90 `Complex.Module` instances depend on `Module R ℝ`, which
+-- doesn't fire when the surrounding code expects e.g. `SMulCommClass ℂ ℝ ℂ`
+-- through `ContinuousLinearMap.isScalarTower`'s side conditions in module mode).
+-- We provide explicit replacements via anonymous constructors.
+
+private instance smulCommClass_complex_real : SMulCommClass ℂ ℝ ℂ :=
+  ⟨fun a b c => by rw [Complex.real_smul, smul_eq_mul, Complex.real_smul]; ring⟩
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 variable {B : Type*} [CStarAlgebra B] [Nontrivial B]
 
-instance : LocallyConvexSpace ℝ (WeakDual ℂ A) := WeakBilin.locallyConvexSpace
+/-- Manual `IsScalarTower ℝ ℂ (A →L[ℂ] ℂ)`.  Avoids `ContinuousLinearMap.isScalarTower`,
+whose side conditions are not synthesizable in module mode. -/
+private instance instCLMScalarTower : IsScalarTower ℝ ℂ (A →L[ℂ] ℂ) where
+  smul_assoc r c f := by
+    apply ContinuousLinearMap.ext
+    intro x
+    change (r • c) • f x = r • c • f x
+    exact smul_assoc r c (f x)
+
+/-- The same instance transported to `WeakDual ℂ A`. -/
+private instance instWeakDualScalarTower : IsScalarTower ℝ ℂ (WeakDual ℂ A) where
+  smul_assoc r c f := by
+    apply ContinuousLinearMap.ext
+    intro x
+    change (r • c) • f x = r • c • f x
+    exact smul_assoc r c (f x)
+
+/-- `IsScalarTower ℝ ℂ B` for a unital C*-algebra `B`. -/
+private instance instCStarBScalarTower : IsScalarTower ℝ ℂ B where
+  smul_assoc r c b := by
+    rw [show (r • c : ℂ) = (r : ℂ) * c from rfl, mul_smul]
+    rfl
+
+/-- `IsScalarTower ℝ ℂ (Unitization ℂ A)`. -/
+private instance instUnitScalarTower : IsScalarTower ℝ ℂ (Unitization ℂ A) where
+  smul_assoc r c x := by
+    rw [show (r • c : ℂ) = (r : ℂ) * c from rfl, mul_smul]
+    rfl
+
+instance : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
+  @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
+
+/-- `ContinuousSMul ℝ (WeakDual ℂ A)` via the existing `WeakDual.instContinuousSMul`,
+provided manually because the implicit `SMulCommClass ℂ ℝ ℂ` is otherwise hidden. -/
+private instance instContinuousSMulRealWeakDual : ContinuousSMul ℝ (WeakDual ℂ A) :=
+  @WeakDual.instContinuousSMul ℂ A _ _ _ _ _ _ _ ℝ _ _ smulCommClass_complex_real _ _
+
+/-- `LinearMap.CompatibleSMul` for `restrictScalars` from ℂ to ℝ on `WeakDual ℂ A → ℂ`.
+Provided explicitly because the auto-derivation via `IsScalarTower.compatibleSMul`
+fails to fire when the side `IsScalarTower ℝ ℂ (WeakDual ℂ A)` instance is private. -/
+private instance instCompatibleSMulWeakDual :
+    LinearMap.CompatibleSMul (WeakDual ℂ A) ℂ ℝ ℂ where
+  map_smul := fun f c x => by
+    have h1 : (c : ℝ) • x = (c : ℂ) • x := by
+      apply ContinuousLinearMap.ext; intro y
+      change c • x y = (c : ℂ) • x y
+      rw [Complex.real_smul, smul_eq_mul]
+    have h2 : (c : ℝ) • f x = (c : ℂ) • f x := by rw [Complex.real_smul]; rfl
+    change f ((c : ℝ) • x) = (c : ℝ) • f x
+    rw [h1, LinearMap.map_smul, h2]
 
 /-- A pure state is an extreme point of the quasi-state space, excluding zero. -/
 def IsPureState (φ : WeakDual ℂ A) : Prop :=
@@ -151,7 +208,7 @@ private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) 
       LinearIsometry.coe_mk, inrLM, LinearMap.coe_mk, AddHom.coe_mk]
     change ψ (Unitization.inr (star a * a)) = _
     rw [Unitization.inr_mul, Unitization.inr_star]
-    rw [← hr]
+    exact hr
   have hφ_norm : ‖φ‖ ≤ 1 := by
     calc ‖φ‖ ≤ ‖ψ‖ * ‖inrCLM‖ :=
           ContinuousLinearMap.opNorm_comp_le _ _
@@ -198,7 +255,7 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
     let s' : ℝ := (s : ℝ) * r⁻¹
     have hs' : 0 ≤ s' := mul_nonneg s.2 (inv_nonneg.mpr (le_of_lt h_norm_pos))
     use ⟨s', hs'⟩
-    rw [ContinuousLinearMap.smul_apply]
+    change (r⁻¹ : ℂ) • φ (star a * a) = ↑↑(⟨s', hs'⟩ : NNReal)
     simp only [hs, smul_eq_mul]
     dsimp [s']
     -- rewrite the RHS (a real product) as a product in ℂ
@@ -232,7 +289,7 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
       · linarith
       · linarith
       · rw [h_eq]
-        simp
+        rfl
     have h_zero_mem : 0 ∈ QuasiStateSpace A := by
       refine ⟨IsPositive.zero A, ?_⟩
       simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
@@ -274,7 +331,7 @@ noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State ℂ
       -- φ ≠ 0 means there exists a ≠ 0 such that φ a ≠ 0
       have h_exists : ∃ a : A, a ≠ 0 := by
         by_contra h_all_zero
-        push_neg at h_all_zero
+        push Not at h_all_zero
         have : (0 : WeakDual ℂ A) = φ := by
           apply WeakDual.toStrongDual.injective
           ext a
@@ -332,13 +389,23 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
     apply AddSubmonoid.subset_closure
     use a
   obtain ⟨ω, hω_mem, r, hrpos, hω_eq⟩ := exists_quasiState_pos_re b hb_pos hb_ne_zero
-  let eval_b : WeakDual ℂ A →L[ℂ] ℂ := {
-    toFun := fun φ => φ b
-    map_add' := fun φ ψ => rfl
-    map_smul' := fun c φ => rfl
-    cont := WeakDual.eval_continuous b
+  let l : WeakDual ℂ A →L[ℝ] ℝ := {
+    toFun := fun φ => (φ b).re
+    map_add' := fun φ ψ => by
+      change (φ b + ψ b).re = (φ b).re + (ψ b).re
+      exact Complex.add_re _ _
+    map_smul' := fun c φ => by
+      change ((c • φ : WeakDual ℂ A) b).re = c • (φ b).re
+      have hcsmul : (c • φ : WeakDual ℂ A) b = (c : ℂ) * φ b := by
+        change ((c : ℝ) • φ : WeakDual ℂ A) b = (c : ℂ) * φ b
+        change (c : ℝ) • φ b = (c : ℂ) * φ b
+        rw [Complex.real_smul]
+      rw [hcsmul]
+      change ((c : ℂ) * φ b).re = c * (φ b).re
+      rw [Complex.mul_re]
+      simp
+    cont := Complex.continuous_re.comp (WeakDual.eval_continuous b)
   }
-  let l : WeakDual ℂ A →L[ℝ] ℝ := Complex.reCLM.comp (eval_b.restrictScalars ℝ)
   let f : WeakDual ℂ A → ℝ := l
   let M := sSup (f '' QuasiStateSpace A)
   have hf : ContinuousOn f (QuasiStateSpace A) := Continuous.continuousOn l.continuous |>.mono (Set.subset_univ _)
@@ -382,6 +449,8 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
   let F := {x ∈ S | ∀ z ∈ S, l z ≤ l x}
   have hF_nonempty : F.Nonempty := ⟨φ, hφ_mem, fun z hz => hφ_max hz⟩
   have hF_compact : IsCompact F := h_exposed.isCompact (QuasiStateSpace.compact A)
+  haveI : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
+    @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
   obtain ⟨ψ, hψ_mem_F, hψ_ext⟩ := hF_compact.extremePoints_nonempty hF_nonempty
   have hψ_ext_S : IsPureState ψ := by
     constructor
@@ -426,7 +495,7 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
       have : (ψ b).re > 0 := by
         -- unfold the linear functional `l` on this specific argument
         have h' := this
-        dsimp [l, eval_b, ContinuousLinearMap.comp_apply, Complex.reCLM] at h'
+        dsimp [l, ContinuousLinearMap.comp_apply, Complex.reCLM] at h'
         exact h'
       exact this
     -- Then use positivity (membership in `QuasiStateSpace`) to see the value is real.

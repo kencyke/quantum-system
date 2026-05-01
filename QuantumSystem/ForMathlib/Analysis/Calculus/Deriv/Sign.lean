@@ -21,7 +21,7 @@ lemma deriv_nonpos_of_forall_lt_min (g : ℝ → ℝ) (d : ℝ) (x₀ ε : ℝ) 
     (hd : HasDerivAt g d x₀) (hmin : ∀ y ∈ Set.Ioo (x₀ - ε) x₀, g x₀ ≤ g y) : d ≤ 0 := by
   rw [hasDerivAt_iff_tendsto_slope] at hd
   haveI : (nhdsWithin x₀ (Set.Iio x₀)).NeBot :=
-    nhdsWithin_Iio_self_neBot' ⟨x₀ - 1, by simp [Set.mem_Iio]⟩
+    nhdsLT_neBot_of_exists_lt ⟨x₀ - 1, by linarith⟩
   have hiio_sub : Set.Iio x₀ ⊆ {x₀}ᶜ := fun y hy => by
     simp [(Set.mem_Iio.mp hy).ne]
   have hslope2 := hd.mono_left (nhdsWithin_mono x₀ hiio_sub)

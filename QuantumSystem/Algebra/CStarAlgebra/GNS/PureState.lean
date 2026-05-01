@@ -54,7 +54,7 @@ lemma isInvariant_orthogonal (T : GNS.Representation ω) (W : Submodule ℂ T.H)
   refine (W.mem_orthogonal ((T.π a) x)).2 ?_
   intro w hw
   have hw_map : (T.π (star a)) w ∈ W.map (T.π (star a)) :=
-    ⟨w, hw, rfl⟩
+    ⟨w, hw, by rfl⟩
   have hw' : (T.π (star a)) w ∈ W := (hWinv (star a)) hw_map
   have hx0 : ⟪(T.π (star a)) w, x⟫ = 0 := by
     -- `x ∈ Wᗮ` means it is orthogonal to every element of `W`.
@@ -167,7 +167,7 @@ lemma vectorFunctional_isPositive (T : GNS.Representation ω) (v : T.H) :
         rw [RCLike.ofReal_eq_complex_ofReal]
         exact (Complex.ofReal_pow ‖(T.π a) v‖ 2).symm
   -- Convert the RHS into the form expected by `IsPositive` (with an `ℝ≥0` witness).
-  simp [h]
+  rw [h]; rfl
 
 lemma opNorm_vectorFunctional_le (T : GNS.Representation ω) (v : T.H) :
     ‖WeakDual.toStrongDual (T.vectorFunctional v)‖ ≤ ‖v‖ ^ 2 := by
@@ -259,7 +259,7 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
   · -- Positivity
     have hpos := vectorFunctional_isPositive T v
     let c : ℝ≥0 := ⟨(‖v‖ ^ 2)⁻¹, inv_nonneg.mpr (sq_nonneg _)⟩
-    have : (‖v‖ ^ 2 : ℂ)⁻¹ = (c : ℂ) := by simp [c, Complex.ofReal_inv]
+    have : (‖v‖ ^ 2 : ℂ)⁻¹ = (c : ℂ) := by simp [c]; norm_cast
     rw [this]
     change _ ∈ {φ | IsPositive A φ}
     have h_smul : (c : ℂ) • T.vectorFunctional v = c • T.vectorFunctional v := by
@@ -284,7 +284,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
   let T := PureState.gnsRepresentation ψ
   by_contra h_contra
-  push_neg at h_contra
+  push Not at h_contra
   have h_in_Icc := norm_sq_in_Icc T v₁ v₂ hξ horth
   have h_pos : 0 < ‖v₁‖ ^ 2 := lt_of_le_of_ne h_in_Icc.1 h_contra.1.symm
   have h_lt_one : ‖v₁‖ ^ 2 < 1 := lt_of_le_of_ne h_in_Icc.2 h_contra.2
@@ -321,12 +321,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
     have h1_sub_t_ne_c : (1 - (t : ℂ)) ≠ 0 := by
       have : ((1 - t : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr h1_sub_t_ne
       simpa only [Complex.ofReal_one, Complex.ofReal_sub] using this
-    have ht_smul : (t : ℝ) • φ = (t : ℂ) • φ :=
-      RCLike.real_smul_eq_coe_smul (K := ℂ) (E := WeakDual ℂ A) t φ
+    have ht_smul : (t : ℝ) • φ = (t : ℂ) • φ := by
+      apply ContinuousLinearMap.ext; intro a; rfl
     have h1_smul : (1 - t : ℝ) • χ = (1 - (t : ℂ)) • χ := by
-      -- First use RCLike lemma to get (1 - t) • χ = ↑(1 - t) • χ
-      have step1 : (1 - t : ℝ) • χ = ((1 - t : ℝ) : ℂ) • χ :=
-        RCLike.real_smul_eq_coe_smul (K := ℂ) (E := WeakDual ℂ A) (1 - t) χ
+      -- First show (1 - t) • χ = ↑(1 - t) • χ
+      have step1 : (1 - t : ℝ) • χ = ((1 - t : ℝ) : ℂ) • χ := by
+        apply ContinuousLinearMap.ext; intro a; rfl
       -- Then rewrite ↑(1 - t) as (1 - ↑t)
       rw [step1, Complex.ofReal_sub, Complex.ofReal_one]
     have h_sum_c : ψ.val = (t : ℂ) • φ + (1 - (t : ℂ)) • χ := by
@@ -339,9 +339,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
       have hrhs :
           ((t : ℂ) • φ + (1 - (t : ℂ)) • χ) a =
             (T.vectorFunctional v₁) a + (T.vectorFunctional v₂) a := by
-        rw [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, ContinuousLinearMap.smul_apply]
+        change (t : ℂ) • φ a + (1 - (t : ℂ)) • χ a = _
         dsimp only [φ, χ]
-        rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.smul_apply]
+        rw [show ((t : ℂ)⁻¹ • T.vectorFunctional v₁) a
+              = (t : ℂ)⁻¹ • (T.vectorFunctional v₁) a from rfl,
+          show ((1 - (t : ℂ))⁻¹ • T.vectorFunctional v₂) a
+              = (1 - (t : ℂ))⁻¹ • (T.vectorFunctional v₂) a from rfl]
         rw [smul_smul, smul_smul]
         rw [mul_inv_cancel₀ ht_ne_c, mul_inv_cancel₀ h1_sub_t_ne_c]
         rw [one_smul, one_smul]
@@ -367,10 +370,23 @@ lemma trichotomy_from_purity {ψ : PureState A}
   have h_eq : φ = χ := by rw [h_eq2, ← h_eq1]
   -- Contradiction via density
   have h_dense : Dense (Set.range (fun a => (T.π a) T.ξ)) := by
-    change Dense (Set.range (T.piApply T.ξ))
-    rw [← LinearMap.coe_range]
-    rw [← Submodule.span_eq (LinearMap.range (T.piApply T.ξ))]
-    exact T.cyclic
+    have h_cyc := T.cyclic
+    -- View `Set.range (fun a => π a ξ)` via `T.piApply T.ξ` as a `LinearMap.range`,
+    -- then identify it with the cyclic span used by `T.cyclic`.
+    have h1 : (Set.range (fun a => (T.π a) T.ξ))
+        = ((LinearMap.range (T.piApply T.ξ).toLinearMap) : Set T.H) := by
+      rw [LinearMap.coe_range]; rfl
+    have h2 : ((LinearMap.range (T.piApply T.ξ).toLinearMap) : Set T.H)
+        = (Submodule.span ℂ (Set.range (fun a => (T.π a) T.ξ)) : Set T.H) := by
+      rw [h1]
+      congr 1
+      exact (Submodule.span_eq _).symm
+    rw [h1, h2]
+    -- Now reduce `Submodule.span ℂ (Set.range _)` to the set-builder form used by `T.cyclic`.
+    have h3 : (Set.range (fun a => (T.π a) T.ξ)) = {T.π a T.ξ | a : A} := by
+      ext y; simp
+    rw [h3]
+    exact h_cyc
   have hv₁_mem_closure : v₁ ∈ closure (Set.range (fun a => (T.π a) T.ξ)) := by
     rw [h_dense.closure_eq]
     exact Set.mem_univ v₁
@@ -420,7 +436,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
   -- Contradiction
   have h_phi : ‖φ a - 1‖ < 1/2 := by
     dsimp only [φ]
-    rw [ContinuousLinearMap.smul_apply]
+    change ‖(t : ℂ)⁻¹ • (T.vectorFunctional v₁) a - 1‖ < 1/2
     have : (t : ℂ)⁻¹ • T.vectorFunctional v₁ a - 1 = (t : ℂ)⁻¹ * ⟪v₁, (T.π a) v₁ - v₁⟫ := by
       have ht_ne_c : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr h_pos.ne'
       rw [vectorFunctional_apply]
@@ -461,7 +477,8 @@ lemma trichotomy_from_purity {ψ : PureState A}
           _ = 1 / 2 := by simp
   have h_chi : ‖χ a‖ < 1/2 := by
     dsimp only [χ]
-    rw [ContinuousLinearMap.smul_apply, vectorFunctional_apply, smul_eq_mul]
+    change ‖(1 - (t : ℂ))⁻¹ • (T.vectorFunctional v₂) a‖ < 1/2
+    rw [vectorFunctional_apply, smul_eq_mul]
     rw [norm_mul, ← Complex.ofReal_one, ← Complex.ofReal_sub, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_of_pos (by linarith : 0 < 1 - t)]
     calc (1 - t)⁻¹ * ‖⟪v₂, (T.π a) v₂⟫‖
       _ ≤ (1 - t)⁻¹ * (‖v₂‖ * ‖(T.π a) v₂‖) := by

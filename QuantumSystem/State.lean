@@ -130,11 +130,24 @@ noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1) : DensityMatrix n where
   toMatrix := p • ↑ρ₁ + (1 - p) • ↑ρ₂
   posSemidef := by
-    apply Matrix.PosSemidef.add
-    · exact ρ₁.posSemidef.smul (by exact_mod_cast hp)
-    · exact ρ₂.posSemidef.smul (by exact_mod_cast (sub_nonneg.mpr hp1))
+    have hρ₁_smul :
+        p • (ρ₁.toMatrix : Matrix n n ℂ) = ((p : ℂ)) • (ρ₁.toMatrix : Matrix n n ℂ) := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    have hρ₂_smul :
+        (1 - p) • (ρ₂.toMatrix : Matrix n n ℂ) =
+          ((1 - p : ℝ) : ℂ) • (ρ₂.toMatrix : Matrix n n ℂ) := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    rw [hρ₁_smul, hρ₂_smul]
+    refine (Matrix.PosSemidef.smul ρ₁.posSemidef ?_).add
+      (Matrix.PosSemidef.smul ρ₂.posSemidef ?_)
+    · exact_mod_cast hp
+    · exact_mod_cast (sub_nonneg.mpr hp1)
   trace_eq_one := by
-    rw [Matrix.trace_add, Matrix.trace_smul, Matrix.trace_smul,
+    rw [Matrix.trace_add,
+        show (p • (ρ₁.toMatrix : Matrix n n ℂ)).trace = p • ρ₁.toMatrix.trace
+          from Matrix.trace_smul p ρ₁.toMatrix,
+        show ((1 - p) • (ρ₂.toMatrix : Matrix n n ℂ)).trace = (1 - p) • ρ₂.toMatrix.trace
+          from Matrix.trace_smul (1 - p) ρ₂.toMatrix,
         ρ₁.trace_eq_one, ρ₂.trace_eq_one, Algebra.smul_def, Algebra.smul_def, mul_one, mul_one]
     push_cast
     ring
@@ -300,13 +313,12 @@ theorem regularize_eq_cfc (ρ : DensityMatrix n) {ε : ℝ}
       Algebra.algebraMap_eq_smul_one]
   rw [regularize_toMatrix, maximallyMixed_toMatrix, smul_smul]
   have h1 : (1 - (ε : ℂ)) • ρ.toMatrix = (1 - ε : ℝ) • ρ.toMatrix := by
-    rw [show (1 - (ε : ℂ)) = ((1 - ε : ℝ) : ℂ) from by push_cast; ring]
-    exact algebraMap_smul ℂ (1 - ε : ℝ) ρ.toMatrix
+    ext i j
+    simp [Matrix.smul_apply, Complex.real_smul]
   have h2 : ((ε : ℂ) * (Fintype.card n : ℂ)⁻¹) • (1 : Matrix n n ℂ) =
             (ε / (Fintype.card n : ℝ) : ℝ) • (1 : Matrix n n ℂ) := by
-    rw [show ((ε : ℂ) * (Fintype.card n : ℂ)⁻¹) = ((ε / (Fintype.card n : ℝ) : ℝ) : ℂ) from by
-        push_cast; rw [div_eq_mul_inv]]
-    exact algebraMap_smul ℂ (ε / Fintype.card n : ℝ) 1
+    ext i j
+    simp [Matrix.smul_apply, Complex.real_smul, div_eq_mul_inv]
   rw [h1, h2]
 
 /-! ### Reindex compatibility

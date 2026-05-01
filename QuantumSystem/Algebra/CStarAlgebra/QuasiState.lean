@@ -24,20 +24,21 @@ lemma convex : Convex ℝ (QuasiStateSpace A) := by
     apply IsPositive.add
     · convert IsPositive.smul A hx (c := ⟨a, ha⟩)
     · convert IsPositive.smul A hy (c := ⟨b, hb⟩)
-  · -- Unit ball is convex
-    let f : WeakDual ℂ A →ₗ[ℂ] StrongDual ℂ A :=
+  · -- Unit ball is convex.  Use the real-linear identity from `WeakDual ℂ A` to
+    -- `StrongDual ℂ A` to transport the convexity of the closed ball.
+    let f : WeakDual ℂ A →ₗ[ℝ] StrongDual ℂ A :=
       { toFun := fun x => x
         map_add' := fun _ _ => rfl
         map_smul' := fun _ _ => rfl }
-    have : (WeakDual.toStrongDual ⁻¹' Metric.closedBall (0 : StrongDual ℂ A) 1) =
+    have heq : (WeakDual.toStrongDual ⁻¹' Metric.closedBall (0 : StrongDual ℂ A) 1) =
            f ⁻¹' Metric.closedBall (0 : StrongDual ℂ A) 1 := rfl
-    rw [this]
-    apply Convex.linear_preimage (convex_closedBall (0 : StrongDual ℂ A) 1) (f.restrictScalars ℝ)
+    rw [heq]
+    exact (convex_closedBall (0 : StrongDual ℂ A) 1).linear_preimage f
 
 lemma compact : IsCompact (QuasiStateSpace A) := by
   rw [QuasiStateSpace, Set.inter_comm]
   apply IsCompact.inter_right
-  · exact WeakDual.isCompact_closedBall ℂ (0 : StrongDual ℂ A) 1
+  · exact WeakDual.isCompact_closedBall (0 : StrongDual ℂ A) 1
   · exact IsPositive.isClosed A
 
 lemma non_empty : (0 : WeakDual ℂ A) ∈ QuasiStateSpace A := by

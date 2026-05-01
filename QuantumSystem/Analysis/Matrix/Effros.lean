@@ -442,12 +442,18 @@ noncomputable def leftMulStarAlgHom {m : Type*} [Fintype m] [DecidableEq m] :
 lemma leftMulStarAlgHom_continuous {m : Type*} [Fintype m] [DecidableEq m] :
     Continuous (leftMulStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] Matrix (m × m) (m × m) ℂ) := by
   -- leftMulMatrix is a linear map between finite-dimensional normed spaces, hence continuous
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedRing (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  change Continuous (leftMulStarAlgHom.toAlgHom.toLinearMap : Matrix m m ℂ →ₗ[ℝ] Matrix (m × m) (m × m) ℂ)
-  exact leftMulStarAlgHom.toAlgHom.toLinearMap.continuous_of_finiteDimensional
+  letI : SeminormedAddCommGroup (Matrix m m ℂ) := Matrix.linftyOpSeminormedAddCommGroup
+  letI : NormedSpace ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedSpace
+  letI : IsBoundedSMul ℝ (Matrix m m ℂ) := Matrix.linftyOpIsBoundedSMul
+  letI : SeminormedAddCommGroup (Matrix (m × m) (m × m) ℂ) :=
+    Matrix.linftyOpSeminormedAddCommGroup
+  letI : NormedSpace ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedSpace
+  letI : IsBoundedSMul ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpIsBoundedSMul
+  haveI : FiniteDimensional ℝ (Matrix m m ℂ) := inferInstance
+  let f : Matrix m m ℂ →ₗ[ℝ] Matrix (m × m) (m × m) ℂ :=
+    (leftMulStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] _).toAlgHom.toLinearMap
+  change Continuous (f : Matrix m m ℂ → _)
+  exact f.continuous_of_finiteDimensional
 
 /-- CFC commutes with leftMulMatrix: for self-adjoint A and continuous f,
     leftMulMatrix (cfc f A) = cfc f (leftMulMatrix A). -/
@@ -523,11 +529,18 @@ noncomputable def rightMulConjTransposeStarAlgHom {m : Type*} [Fintype m] [Decid
 lemma rightMulConjTransposeStarAlgHom_continuous {m : Type*} [Fintype m] [DecidableEq m] :
     Continuous (rightMulConjTransposeStarAlgHom :
         Matrix m m ℂ →⋆ₐ[ℝ] Matrix (m × m) (m × m) ℂ) := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedRing (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  exact rightMulConjTransposeStarAlgHom.toAlgHom.toLinearMap.continuous_of_finiteDimensional
+  letI : SeminormedAddCommGroup (Matrix m m ℂ) := Matrix.linftyOpSeminormedAddCommGroup
+  letI : NormedSpace ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedSpace
+  letI : IsBoundedSMul ℝ (Matrix m m ℂ) := Matrix.linftyOpIsBoundedSMul
+  letI : SeminormedAddCommGroup (Matrix (m × m) (m × m) ℂ) :=
+    Matrix.linftyOpSeminormedAddCommGroup
+  letI : NormedSpace ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedSpace
+  letI : IsBoundedSMul ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpIsBoundedSMul
+  haveI : FiniteDimensional ℝ (Matrix m m ℂ) := inferInstance
+  let f : Matrix m m ℂ →ₗ[ℝ] Matrix (m × m) (m × m) ℂ :=
+    (rightMulConjTransposeStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] _).toAlgHom.toLinearMap
+  change Continuous (f : Matrix m m ℂ → _)
+  exact f.continuous_of_finiteDimensional
 
 /-- CFC commutes with rightMulMatrix for self-adjoint (Hermitian) matrices.
 Uses the `rightMulConjTransposeStarAlgHom` to transport CFC via `StarAlgHom.map_cfc`.
@@ -710,7 +723,7 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
     {w₁ w₂ : ℝ} (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) (hw : w₁ + w₂ = 1) :
     matrixPerspective f (w₁ • L₁ + w₂ • L₂) (w₁ • R₁ + w₂ • R₂)
-        ((hL₁.smul hw₁).add (hL₂.smul hw₂))
+        ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂))
         (PosDef.convex_comb_nonneg hR₁ hR₂ hw₁ hw₂ hw) ≤
       w₁ • matrixPerspective f L₁ R₁ hL₁ hR₁ +
         w₂ • matrixPerspective f L₂ R₂ hL₂ hR₂ := by
@@ -737,9 +750,11 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
   have hR₂half_herm : R₂half.IsHermitian := matrixSqrt_isHermitian hR₂.posSemidef
   have hRhalf_herm : Rhalf.IsHermitian := matrixSqrt_isHermitian hR.posSemidef
   have hA₁_adj : A₁ᴴ = (Real.sqrt w₁ : ℂ) • (Rinv * R₁half) := by
-    simp [A₁, hRinv_herm.eq, hR₁half_herm.eq, Matrix.conjTranspose_mul]
+    simp only [A₁, Matrix.conjTranspose_smul, Matrix.conjTranspose_mul,
+      hRinv_herm.eq, hR₁half_herm.eq, Complex.star_def, Complex.conj_ofReal]
   have hA₂_adj : A₂ᴴ = (Real.sqrt w₂ : ℂ) • (Rinv * R₂half) := by
-    simp [A₂, hRinv_herm.eq, hR₂half_herm.eq, Matrix.conjTranspose_mul]
+    simp only [A₂, Matrix.conjTranspose_smul, Matrix.conjTranspose_mul,
+      hRinv_herm.eq, hR₂half_herm.eq, Complex.star_def, Complex.conj_ofReal]
   have hsqrt₁_real : Real.sqrt w₁ * Real.sqrt w₁ = w₁ := Real.mul_self_sqrt hw₁
   have hsqrt₂_real : Real.sqrt w₂ * Real.sqrt w₂ = w₂ := Real.mul_self_sqrt hw₂
   have hsqrt₁ : (Real.sqrt w₁ : ℂ) * (Real.sqrt w₁ : ℂ) = (w₁ : ℂ) := by
@@ -761,7 +776,7 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
       _ = Rinv * ((w₁ : ℂ) • R₁ + (w₂ : ℂ) • R₂) * Rinv := by
         simp [mul_add, add_mul, mul_assoc]
       _ = Rinv * R * Rinv := by
-        simp [R]
+        congr 2
   have hAB : A₁ᴴ * A₁ + A₂ᴴ * A₂ ≤ (1 : Matrix m m ℂ) := by
     have hRinv_mul : Rinv * R * Rinv = (1 : Matrix m m ℂ) := by
       simpa [Rinv, R] using matrixInvSqrt_mul_self hR
@@ -810,7 +825,8 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
       _ = Rinv * ((w₁ : ℂ) • L₁ + (w₂ : ℂ) • L₂) * Rinv := by
         simp [mul_add, add_mul, mul_assoc]
       _ = Rinvᴴ * L * Rinv := by
-        simp [L, hRinv_herm.eq]
+        rw [hRinv_herm.eq]
+        congr 2
   -- Cancellation lemmas for Rhalf and Rinv
   have hRhalf_Rinv : Rhalf * Rinv = 1 := by
     simpa [Rhalf, Rinv] using matrixSqrt_mul_matrixInvSqrt hR
@@ -830,11 +846,11 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
       (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) hC =
       matrixFunction (fun x => (f x : ℂ)) (Rinvᴴ * L * Rinv)
         (isHermitian_conjTranspose_mul_mul (B := Rinv) (A := L)
-          ((hL₁.smul hw₁).add (hL₂.smul hw₂)).1) :=
+          ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂)).1) :=
     matrixFunction_congr (fun x => (f x : ℂ)) hC _ hinner
   -- Final step: apply sandwich equation and conclude
   have hfinal :
-      matrixPerspective f L R ((hL₁.smul hw₁).add (hL₂.smul hw₂)) hR ≤
+      matrixPerspective f L R ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂)) hR ≤
         w₁ • matrixPerspective f L₁ R₁ hL₁ hR₁ +
           w₂ • matrixPerspective f L₂ R₂ hL₂ hR₂ := by
     rw [Matrix.le_iff]
@@ -853,7 +869,7 @@ lemma signMatrix_mem_unitary {m : Type*} [Fintype m] [DecidableEq m] :
     fromBlocks_multiply, fromBlocks_one])
 
 /-- The sign matrix is self-adjoint: Σ* = Σ. -/
-lemma signMatrix_star_eq {m : Type*} [Fintype m] [DecidableEq m] :
+lemma signMatrix_star_eq {m : Type*} [DecidableEq m] :
     star (fromBlocks (1 : Matrix m m ℂ) 0 0 (-1 : Matrix m m ℂ)) =
     fromBlocks (1 : Matrix m m ℂ) 0 0 (-1 : Matrix m m ℂ) := by
   simp [star_eq_conjTranspose, fromBlocks_conjTranspose]
@@ -921,7 +937,8 @@ lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
       rw [← CFC.rpow_add hRunit (x := (-1 / 2 : ℝ)) (y := (-1 / 2 : ℝ))]
       norm_num
       -- goal: R ^ (-1 : ℝ) * R = 1
-      have := CFC.rpow_neg_mul_rpow (1 : ℝ) hRunit hR0
+      have hRpos : IsStrictlyPositive R := IsUnit.isStrictlyPositive hRunit hR0
+      have := CFC.rpow_neg_mul_rpow (1 : ℝ) hRpos
       rwa [CFC.rpow_one R hR0] at this
     have hdet : IsUnit R.det :=
       (Matrix.isUnit_iff_isUnit_det R).mp hRunit

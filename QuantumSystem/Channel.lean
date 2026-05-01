@@ -191,6 +191,9 @@ lemma stinespringIsometry_conjTranspose_mul {r : ℕ} [DecidableEq n]
     Matrix.of_apply, Matrix.one_apply, Fintype.sum_prod_type]
   have heq : ∀ i, ∑ j : m, star (K i j a) * K i j b = ((K i)ᴴ * K i) a b := fun i => by
     simp only [Matrix.mul_apply, Matrix.conjTranspose_apply]
-  simp only [heq, ← Finset.sum_apply, hK, Matrix.one_apply]
+  simp only [heq, ← Finset.sum_apply]
+  calc (∑ c, (K c)ᴴ * K c) a b
+      = (1 : Matrix n n ℂ) a b := by rw [hK]
+    _ = if a = b then 1 else 0 := Matrix.one_apply
 
 end Matrix
