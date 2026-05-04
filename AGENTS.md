@@ -1,33 +1,62 @@
 # AGENTS.md
 
-## Purpose
-
-Lean 4 formalization of quantum systems from an operator-algebraic perspective.
-All proofs must be axiom-free: no `sorry` / `admit` / custom `axiom` declarations,
-and no mathematical assumptions hidden in structure fields.
-
 ## Project Layout
 
-- `QuantumSystem/Algebra/CStarAlgebra/` — states, GNS, Gelfand–Naimark. May import Mathlib and siblings.
 - `QuantumSystem/ForMathlib/` — only Mathlib imports allowed; candidates for upstreaming.
 - `QuantumSystem.lean` — aggregate root that re-exports every module.
 - `scripts/mk_all.lean` — regenerates the aggregate.
-- `lakefile.toml`, `lean-toolchain`, `lake-manifest.json` — **do not edit**.
+- `lakefile.toml`, `lean-toolchain`, `lake-manifest.json` — pinned toolchain and manifest.
 
-## Workflow
+## Working Principles
 
+**Think before coding.**
 - Read the target file and its importers before editing.
-- Prefer `lean-lsp` MCP tools over shelling out: `lean_goal`, `lean_local_search`, `lean_leansearch`, `lean_loogle`.
-- When stuck on a goal: capture it with `lean_goal`, search closing lemmas with `lean_state_search` / `lean_hammer_premise`, then verify with `lean_multi_attempt` before editing.
-- If Lean reports `expected '{' or indented tactic sequence`, fix indentation first — almost always a whitespace issue, not a tactic bug.
+- State your assumptions about the goal, the existing lemmas, and the proof
+  skeleton before typing tactics. Capture the goal with `lean_goal` rather
+  than guessing the shape from the file context.
+- Prefer `lean-lsp` MCP tools over shelling out: `lean_goal`,
+  `lean_local_search`, `lean_leansearch`, `lean_loogle`. If you do not know
+  whether a lemma exists, say so and search; do not invent plausible-looking
+  names.
+- When stuck on a goal, search closing lemmas with `lean_state_search` /
+  `lean_hammer_premise`, then verify with `lean_multi_attempt` before
+  editing.
+- If Lean reports `expected '{' or indented tactic sequence`, fix indentation
+  first — almost always a whitespace issue, not a tactic bug.
+  **Why:** tactics that compile by accident can mask unsoundness; this
+  project mandates a fully axiom-free codebase.
 
-## Verification (Definition of Done)
+**Simplicity first.**
+- Formalize only what the current task requires. No speculative
+  generalizations, no helper lemmas "for later", no premature abstraction
+  across `CStarAlgebra` / `StarAlgebra` / `NormedAlgebra`.
+- Prefer the most direct proof that closes the goal over the cleverest one.
+  If `simp` / `linarith` / `aesop` suffices, do not unfold by hand.
+  **Why:** every extra declaration is surface area to maintain and to keep
+  axiom-free; speculative API decays faster than it earns interest.
 
-- A change is done only when `lake build` completes with no new errors or warnings on the edited modules.
-  **Why:** type-checking an isolated file is not enough; downstream modules can still break.
-- After adding imports, run `lean_build` via MCP to restart the LSP; otherwise `lean_diagnostic_messages` suffices.
-- If a new top-level module is introduced, regenerate `QuantumSystem.lean` via `scripts/mk_all.lean`.
+**Surgical changes.**
+- Edit only files demanded by the task. Resist opportunistic renames,
+  whitespace fixes, or namespace reshuffles in unrelated proofs.
+- Do not rewrite existing proofs that already compile. If a proof is ugly
+  but correct, leave it; flag it in review rather than touching it.
+  **Why:** Mathlib-style review is line-noise sensitive, and unrelated edits
+  break `git blame` and inflate merge conflicts.
+
+**Goal-driven verification (Definition of Done).**
+- A change is done only when `lake build` completes with no new errors or
+  warnings on the edited modules and their downstream importers.
+- After adding imports, run `lean_build` via MCP to restart the LSP;
+  otherwise `lean_diagnostic_messages` suffices.
+- If a new top-level module is introduced, regenerate `QuantumSystem.lean`
+  via `scripts/mk_all.lean`.
+- When a tactic fails to close a goal, do not stack `try` / `<;>` to silence
+  the error — re-inspect the goal with `lean_goal` and address the actual
+  mismatch.
 - Never report a task as successful until the above checks pass.
+  **Why:** "looks right" is not a soundness gate; the kernel is, and
+  downstream modules can still break even when the edited file type-checks
+  in isolation.
 
 ## Editing Hygiene
 
