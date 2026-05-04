@@ -5,9 +5,9 @@ description: Recursively expand `references/` to cover the prerequisites of a fo
 
 # gap-filler
 
-Turn a formalization goal into a bounded recursive ingestion plan, then
-execute it. Orchestrates the existing `pdf-to-knowledge` and
-`web-to-knowledge` skills.
+Turn a formalization goal into a bounded recursive ingestion plan and,
+with user approval, execute it. Orchestrates the existing
+`pdf-to-knowledge` and `web-to-knowledge` skills.
 
 ## When to invoke
 
@@ -55,8 +55,22 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
    python3 .claude/skills/gap-filler/scripts/detect_gaps.py \
        references/ --target-slug <target-slug> --output references/gaps.json
    ```
+
+   When the project has a `goals.yaml` (a fixed list of formalization
+   targets — see "Side channels" below), pass
+   `--goals goals.yaml --lean-root <Lean tree>` so the report adds
+   per-goal status verified against the actual Lean declarations, plus
+   `goal_coverage_score = verified_declarations / total_declarations`.
+   The plain `coverage_score` keeps its meaning ("ingestion-wide
+   knowledge coverage"); use whichever the user asked for. Both can
+   appear in the same report.
    The report lists every Key concepts bullet's status across all
    ingested slugs:
+   - `formalized` — at least one source annotated
+     `→ formalized: QuantumSystem.X.y` (a local proof in this repo) and
+     `verify_mathlib_refs.py` did not flag it. Strongest tier; outranks
+     `resolved` because a local proof is harder evidence than a mathlib
+     match.
    - `resolved` — at least one source annotated `→ mathlib: ...` and
      `verify_mathlib_refs.py` did not flag it as `[UNVERIFIED]`.
    - `suspect` — a source annotated `→ mathlib: ...` but
@@ -76,7 +90,18 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
    - `ambiguous` — no annotation (rarely happens if previous
      ingestions followed the SKILL.md contract).
    - `other_knowledge` — concepts coming from non-target slugs (may
-     still be useful prerequisites).
+     still be useful prerequisites). Its `status` field uses the
+     strongest available source-tier vocabulary (`formalized`,
+     `resolved`, `suspect`, `gap`, or `ambiguous`), including `suspect`
+     when the only known annotation is an `[UNVERIFIED]` false positive.
+
+   When `--goals` is enabled, the goal block introduces two more status
+   vocabularies:
+   - goal-concept `status` may also be `unknown` — the concept was
+     pinned to specific `sources[*].slug` entries, but none of those
+     slugs currently document it.
+   - goal `goal_status` is one of `satisfied`, `partially_satisfied`,
+     `missing`, or `unverified`.
 
    Concept-name matching is normalised aggressively: `Connes cocycle`,
    `Connes.cocycle`, `ConnesCocycle`, and `connes-cocycle` all merge.
@@ -84,11 +109,12 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
    then lowercased and punctuation-stripped.
 
    The report also exposes `coverage_score`, a single 0..1 number
-   equal to `(resolved × 1.0 + partial × 0.5) / target_total`. Use
-   this as the headline progress metric when reporting to the user —
-   it captures "real mathlib coverage plus local-reference coverage"
-   in one figure, so an ingestion that adds 3 Wikipedia pages moves
-   the number even when `resolved` stays flat.
+   equal to
+   `(formalized × 1.0 + resolved × 1.0 + partial × 0.5) / target_total`.
+   Use this as the headline progress metric when reporting to the user —
+   it captures "local proof + mathlib coverage + local-reference
+   coverage" in one figure, so an ingestion that adds 3 Wikipedia pages
+   moves the number even when `formalized` and `resolved` stay flat.
 
 3. **Rank the target's bibliography by centrality.**
    ```bash
@@ -102,23 +128,11 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
 
    For each **uninvested entry without arxiv / DOI** — the common case
    for operator algebra, older physics and pre-2000 math — the script
-   also emits `suggested_search_queries`. The order depends on the
-   entry's publication year:
-
-   - ``year >= 1995``: university-domain PDF rotation first
-     (`caltech.edu`, `mit.edu`, `math.berkeley.edu`, `cam.ac.uk`,
-     `ihes.fr`, `kurims.kyoto-u.ac.jp`, ...), then `lecture-notes`,
-     then `nlab` / `wikipedia`. Matches the iter-2 win of Jones's
-     2009 Berkeley lecture notes.
-   - ``year < 1995``: `lecture-notes` leads, followed by NUMDAM /
-     Project Euclid / open-access-pdf fallbacks, with university
-     domains demoted to the tail. The iter-2 eval found that 3
-     university domains × 2 legacy entries (PP86, Kos86a) drew zero
-     useful hits while `"lecture notes" filetype:pdf` surfaced
-     NUMDAM's OA host of PP86 and Carlen's AZ-school notes for
-     Kos86a.
-
-   See step 4 for how to consume the queries.
+   also emits `suggested_search_queries`. The ordering switches on
+   publication year (`year >= 1995` favours university-domain PDFs;
+   `year < 1995` favours `lecture-notes` + NUMDAM / Project Euclid).
+    See [./references/workflow.md](./references/workflow.md) for the
+    calibration story and a concrete sample of the emitted queries.
 
 4. **Synthesise a plan.** Read both JSON files and compose a **short
    ingestion plan**:
@@ -127,19 +141,16 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
 
       1. **arxiv / DOI in the bibliography** — top of the ranked list
          with a discoverable URL → `pdf-to-knowledge`.
-      2. **University lecture-notes PDF** — when the bibliography entry
-         has no arxiv ID but the topic is covered in standard graduate
-         curricula (subfactor theory, modular theory, KMS states,
-         entropy inequalities). Use the `suggested_search_queries`
-         emitted by `rank_bibliography.py`: feed them to `WebSearch`,
-         pick the most reputable PDF hit (faculty page > course page
-         > personal blog), hand the URL to `pdf-to-knowledge`.
-         **Why this usually beats Wikipedia**: lecture notes are
-         written by a single modern author with a coherent narrative,
-         whereas Wikipedia articles on advanced operator-algebraic
-         topics are often stubs or written by different editors with
-         mismatched notation. Do not skip this step for math-heavy
-         gaps.
+      2. **University lecture-notes PDF** — when the entry has no arxiv
+         ID but the topic is covered in standard graduate curricula
+         (subfactor theory, modular theory, KMS states, entropy
+         inequalities). Feed the `suggested_search_queries` to
+         `WebSearch`, pick the most reputable PDF hit (faculty page >
+         course page > personal blog), hand it to `pdf-to-knowledge`.
+         For math-heavy gaps lecture notes usually beat Wikipedia
+         (single author, coherent notation); see
+         [./references/workflow.md](./references/workflow.md) for the
+         comparison.
       3. **Wikipedia / nLab** — good for broadly-known math
          (`Von_Neumann_entropy`, `Tomita–Takesaki_theory`) and as a
          zero-effort fallback when the lecture-notes search returns
@@ -158,6 +169,12 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
 5. **Execute (with user OK).** For each approved entry in the plan:
    - If the source is an arxiv ID: invoke `pdf-to-knowledge` with
      `https://arxiv.org/pdf/<id>`.
+   - If the source is a DOI with a direct open PDF URL, or an open-access
+     publisher PDF URL discovered from that DOI: invoke `pdf-to-knowledge`
+     with the PDF URL. If only a DOI landing page is available, ask before
+     using a weaker HTML fallback.
+   - If the source is a discovered university / course / faculty PDF URL:
+     invoke `pdf-to-knowledge` with that PDF URL.
    - If the source is a Wikipedia / nLab URL: invoke
      `web-to-knowledge` with that URL.
    - After **each** ingestion, re-run
@@ -169,6 +186,85 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
    how many remain, which ones might require a different source type.
    Do not loop automatically — hand control back to the user and wait
    for them to approve another round.
+
+## Side channels
+
+Three optional outputs that complement `gaps.json`. Every one has a
+worked example in [./references/workflow.md](./references/workflow.md);
+the summary below gives just the contract.
+
+- **`references/gaps-history.jsonl`** — append-only JSONL, one record per
+  `detect_gaps.py` run with `timestamp / coverage_score /
+  goal_coverage_score / counts / issues_open`. Use it to attribute
+  progress to specific ingestions. `--no-history` suppresses;
+  `--history-log <path>` redirects.
+
+- **`references/issues/*.yaml`** — file-system tracker for items the
+  pipeline could not auto-resolve (`[UNVERIFIED]` mathlib refs, skipped
+  notation candidates, open questions). `verify_mathlib_refs.py
+  mark-unverified` opens these automatically (idempotent on
+  `kind + slug + concept + candidate`); manual ones go through
+  `scripts/issues.py {add,list,close}`. `detect_gaps.py` reports
+  `issues.open` in its summary.
+
+- **`goals.yaml`** (project root, checked into git) — pins the
+  formalization targets so the headline metric tracks "what we promised
+  to prove", not "what we happened to ingest". Pass
+  `--goals goals.yaml --lean-root <Lean tree>` to `detect_gaps.py`.
+
+  **Truth source = `declarations`.** Each goal lists fully-qualified
+  Lean declaration names (`Matrix.vonNeumannEntropy_nonneg`,
+  `gelfand_naimark_theorem`, …). The script walks `<lean-root>/**/*.lean`,
+  builds the set of every `theorem`/`def`/`structure`/`class`/
+  `instance`/`inductive`/`abbrev`/`axiom` (tracking `namespace`/`end`
+  stacks), and compares. Verified ⇒ goal counted toward
+  `goal_coverage_score`. Without `--lean-root`, declarations are
+  reported as `unverified` (no guess).
+
+  Malformed goal entries are a hard error, not a soft fallback: missing
+  `id` / `description`, non-list `declarations` / `concepts`, or a
+  structured `sources:` entry without a `slug` makes `detect_gaps.py`
+  exit 2 with an `[error] invalid goals file: ...` message.
+
+  **`concepts` is informational** — prerequisite knowledge hints used
+  by `gap-filler`'s plan output, not by the satisfaction judgement. A
+  concept may be a bare string (any INDEX.md mentioning it counts) or
+  a structured entry pinning the prerequisite to specific slugs and
+  optional anchors:
+
+  ```yaml
+  goals:
+    - id: gns-construction
+      description: "Cyclic representation π_ω …"
+      declarations:
+        - GNS.Representation
+        - GNS.Construction.isFaithful_iff_separating
+      concepts:
+        - GNS representation                          # bare string
+        - name: Tomita-Takesaki modular operator      # structured
+          sources:
+            - { slug: arxiv-2507.00900, anchor: { theorem: "2.3" } }
+            - { slug: "92737", anchor: { definition: "modular operator" } }
+
+    - id: ssa-abstract-local-net
+      description: "TODO."
+      declarations: []                                # → counts as 1 missing
+      concepts:
+        - name: localNet
+          sources:
+            - { slug: "92737" }
+  ```
+
+  `anchor` is a single-key map keyed by the locator kind
+  (`chapter` / `section` / `subsection` / `theorem` / `definition` /
+  `lemma` / `proposition` / `corollary` / `equation` / `page` /
+  `example`). It is human-readable navigation; the matcher only uses
+  `slug` for filtering.
+
+  **Coverage formula.** `goal_coverage_score =
+  verified_declarations / total_declarations`, where a goal with
+  `declarations: []` contributes 1 to the denominator (an unfulfilled
+  TODO slot, so the score does not silently inflate).
 
 ## Why this design
 
@@ -194,7 +290,7 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
   their own dependencies in place. This skill does not re-implement
   their work.
 - **`uv`** on PATH (same reason as the sibling skills).
-- No other Python deps — the two scripts here use stdlib only.
+- No other Python deps — the scripts here use stdlib only.
 
 ## Failure modes to watch for
 
@@ -212,6 +308,6 @@ commit if you want audit history, or to `.gitignore` for ephemeral runs.
   goal string with no matching slug, instruct them to run
   `pdf-to-knowledge` on a primary source first, then come back here.
 
-See `references/workflow.md` for a worked example on the Araki
-relative-entropy paper, including the expected `gaps.json` output and a
-sample 3-step ingestion plan.
+See [./references/workflow.md](./references/workflow.md) for a worked
+example on the Araki relative-entropy paper, including the expected
+`gaps.json` output and a sample 3-step ingestion plan.

@@ -1,0 +1,120 @@
+# Formalization targets for QuantumSystem.
+#
+# `declarations` is the **truth source**: each goal is satisfied iff every
+# fully-qualified Lean name in `declarations` exists in the project's Lean
+# tree. Run with:
+#
+#     python3 .claude/skills/gap-filler/scripts/detect_gaps.py \
+#         references/ --goals goals.yaml --lean-root QuantumSystem \
+#         --output references/gaps.json
+#
+# `concepts` is **informational**: it lists the prerequisite knowledge a
+# goal depends on. `gap-filler` uses these hints to plan ingestions but
+# they do not affect goal satisfaction. Each concept may be a bare string
+# (any references/<slug>/INDEX.md mentioning it counts) or a structured
+# entry that pins it to specific slugs and/or section anchors.
+
+goals:
+  - id: gelfand-naimark-theorem
+    description: >-
+      Every (possibly non-unital) C*-algebra embeds isometrically as a
+      *-subalgebra of B(H), realized as a direct sum of GNS reps.
+    declarations:
+      - gelfand_naimark_theorem
+      - GNS.DirectSum.directSumAlgHom_injective
+      - GNS.DirectSum.directSumAlgHom_isometry
+    concepts:
+      - name: GNS representation
+        sources:
+          - { slug: "92737", anchor: { definition: GNSRepresentation } }
+
+  - id: gns-construction
+    description: >-
+      Cyclic representation (π_ω, H_ω, Ω_ω) with
+      ω(a) = ⟨Ω_ω, π_ω(a) Ω_ω⟩ for any state ω on a C*-algebra.
+    declarations:
+      - GNS.Representation
+      - GNS.Representation.unique_up_to_unitary_equivalence
+      - GNS.Construction.isFaithful_iff_separating
+    concepts:
+      - name: GNS representation
+        sources:
+          - { slug: "92737", anchor: { definition: GNSRepresentation } }
+
+  - id: von-neumann-bicommutant
+    description: >-
+      Hard half of the bicommutant theorem: every WOT-closed (or
+      SOT-closed) unital *-subalgebra A of B(H) equals its double
+      commutant A″.
+    declarations:
+      - WOTClosedSubalgebra.doubleCommutant_eq_of_isWOTClosed
+      - SOTClosedSubalgebra.doubleCommutant_eq_of_isSOTClosed
+      - SOTClosedSubalgebra.isWOTClosed_of_isSOTClosed_starSubalgebra
+
+  - id: von-neumann-entropy
+    description: >-
+      S(ρ) = −Tr(ρ log ρ) on finite-dimensional density matrices, plus
+      non-negativity, the dimension bound S(ρ) ≤ log(dim), and concavity
+      in ρ.
+    declarations:
+      - Matrix.vonNeumannEntropy
+      - Matrix.vonNeumannEntropy_nonneg
+      - Matrix.vonNeumannEntropy_le_log_dim
+      - Matrix.vonNeumannEntropy_concave
+
+  - id: umegaki-relative-entropy
+    description: >-
+      Umegaki relative entropy D(ρ‖σ) = Tr ρ (log ρ − log σ) on EReal
+      so non-overlapping support is admitted as +∞.
+    declarations:
+      - Matrix.relativeEntropy
+      - Matrix.relativeEntropy_nonneg
+      - Matrix.relativeEntropy_eq_zero_iff
+
+  - id: strong-subadditivity-region-explicit
+    description: >-
+      S(ρ_AB) + S(ρ_BC) ≥ S(ρ_ABC) + S(ρ_B) for tripartite finite
+      tensor products. Currently region-explicit on a fixed `LocalNet`
+      with concrete Finset regions.
+    declarations:
+      - DensityMatrix.vonNeumannEntropy_SSA
+    concepts:
+      - name: localNet
+        sources:
+          - { slug: "92737", anchor: { definition: localNet } }
+      - Lieb concavity
+
+  - id: lieb-concavity
+    description: >-
+      Joint concavity of (A, B) ↦ Tr(A^p K† B^(1−p) K) on positive
+      semidefinite matrices for 0 ≤ p ≤ 1 (Effros' matrix-convex
+      argument).
+    declarations:
+      - Matrix.lieb_joint_concavity_semidef
+      - Matrix.lieb_joint_concavity_rect_semidef
+
+  # Open TODO surfaced in the README itself.
+  - id: strong-subadditivity-abstract-local-net
+    description: >-
+      TODO. Abstract SSA over a generic local net of algebras (currently
+      only the region-explicit form is formalized).
+    declarations: []
+    concepts:
+      - name: localNet
+        sources:
+          - { slug: "92737", anchor: { definition: localNet } }
+      - name: quasiLocalAlgebra
+        sources:
+          - { slug: "92737", anchor: { definition: quasiLocalAlgebra } }
+      - name: local algebra A(O)
+        sources:
+          - { slug: arxiv-2507.00900, anchor: { section: "1.2" } }
+      - name: Tomita-Takesaki modular operator
+        sources:
+          - { slug: arxiv-2507.00900, anchor: { section: "2.1" } }
+      - name: KMS condition
+        sources:
+          - { slug: arxiv-2507.00900, anchor: { section: "2.1" } }
+      - name: Araki-Uhlmann relative entropy
+        sources:
+          - { slug: arxiv-2507.00900, anchor: { section: "2.4" } }
