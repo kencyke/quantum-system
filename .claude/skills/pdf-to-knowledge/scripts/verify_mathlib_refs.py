@@ -3,26 +3,30 @@
 # requires-python = ">=3.10"
 # dependencies = []
 # ///
-r"""Audit ``→ mathlib: ...`` annotations in ``references/*/INDEX.md`` files.
+r"""Audit ``→ mathlib: ...`` and ``→ formalized: ...`` annotations.
 
 This script does not itself call the Lean toolchain — the actual existence
 check is performed by the caller (Claude) via the
 ``mcp__lean-lsp__lean_verify`` MCP tool, one symbol at a time. The script
 is the mechanical half:
 
-- ``extract``   Walk the references root, pull every ``→ mathlib: ...``
-                annotation into a JSON worklist. The caller feeds each
-                candidate symbol to ``lean_verify`` and records failures
-                in a ``failed.json``.
+- ``extract``   Walk the references root, pull every ``→ mathlib: ...`` and
+                ``→ formalized: ...`` annotation into a JSON worklist
+                (each item carries a ``kind`` field discriminating the
+                two). The caller feeds each candidate symbol to
+                ``lean_verify`` and records failures in a ``failed.json``.
 - ``mark-unverified``   Given the caller's ``failed.json``, rewrite each
                 offending INDEX.md bullet so the annotation becomes
-                ``→ mathlib: \`<path>\` [UNVERIFIED]`` — a marker that
+                ``→ mathlib: \`<path>\` [UNVERIFIED]`` (or
+                ``→ formalized: \`<path>\` [UNVERIFIED]``) — a marker that
                 ``gap-filler``'s ``detect_gaps.py`` reads as ``suspect``
                 status.
 
 Rationale: we do not want to trust Claude's judgement on whether a Lean
 declaration exists. The T1-A remediation is to externalise verification
-to the Lean MCP and mark anything that can not be proven to exist.
+to the Lean MCP and mark anything that can not be proven to exist. The
+same loop applies to ``→ formalized:`` — local declarations rot when
+files are renamed, so verifying them on every ingestion catches drift.
 
 Usage:
     python3 verify_mathlib_refs.py extract <references-root> [--output worklist.json]
@@ -47,14 +51,29 @@ import argparse
 import datetime as _dt
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
+
+
+# Path to the sibling skill's ``issues.py`` (gap-filler owns the tracker
+# format; this script is its biggest auto-producer). The lookup is
+# best-effort: if the file is missing we silently skip issue creation so
+# the verification cycle still works on a partial install.
+_ISSUES_SCRIPT = (
+    Path(__file__).resolve().parents[2] / "gap-filler" / "scripts" / "issues.py"
+)
 
 
 KEY_CONCEPTS_HEADER = re.compile(r"^##\s+Key concepts\s*$", re.IGNORECASE)
 NEXT_H2 = re.compile(r"^##\s+")
 BULLET = re.compile(r"^\s*-\s+(.*)$")
-ANNOT_SPLIT = re.compile(r"(\s*→\s*mathlib\s*:\s*)", re.IGNORECASE)
+# Splits a bullet body around a ``→ mathlib:`` or ``→ formalized:`` marker.
+# Group 2 captures which kind matched so each worklist item carries a
+# ``kind`` field (``mathlib`` vs ``formalized``).
+ANNOT_SPLIT = re.compile(
+    r"(\s*→\s*(mathlib|formalized)\s*:\s*)", re.IGNORECASE
+)
 TICKED = re.compile(r"`([^`]+)`")
 UNVERIFIED_MARKER = "[UNVERIFIED]"
 VERIFIED_FIELD = "mathlib_verified"
@@ -151,13 +170,16 @@ def extract(root: Path) -> dict:
             if not body or body.startswith("<!--"):
                 continue
             parts = ANNOT_SPLIT.split(body, maxsplit=1)
-            if len(parts) < 3:
+            # ANNOT_SPLIT has two capture groups: ``(full_marker, kind)`` —
+            # so ``re.split`` returns ``[before, full_marker, kind, after]``.
+            if len(parts) < 4:
                 continue
-            annotation = parts[1] + parts[2]
+            full_marker, kind, after = parts[1], parts[2].lower(), parts[3]
+            annotation = full_marker + after
             if UNVERIFIED_MARKER in annotation:
                 continue  # already flagged; leave alone
             concept = _extract_concept_name(body)
-            candidates = _collect_candidates(parts[2], concept)
+            candidates = _collect_candidates(after, concept)
             if not candidates:
                 continue
             items.append(
@@ -165,6 +187,7 @@ def extract(root: Path) -> dict:
                     "slug": slug,
                     "index_path": str(index_path),
                     "line": idx,
+                    "kind": kind,
                     "concept": concept,
                     "raw_annotation": annotation.strip(),
                     "candidates": candidates,
@@ -228,17 +251,51 @@ def _read_frontmatter_field(index_path: Path, field: str) -> str | None:
     return None
 
 
-def _mark_one(index_path: Path, line_no: int, reason: str, *, dry_run: bool) -> bool:
+def _bullet_metadata(line: str) -> dict:
+    """Extract the kind / concept / candidate visible on a Key concepts bullet."""
+    info = {"kind": "mathlib", "concept": "", "candidate": ""}
+    m_kind = re.search(
+        r"→\s*(formalized|mathlib)\s*:\s*(.*)$", line, re.IGNORECASE
+    )
+    if m_kind:
+        info["kind"] = m_kind.group(1).lower()
+        # First backticked or qualified token after the marker is the
+        # candidate the verifier rejected.
+        tail = m_kind.group(2)
+        m_tick = re.search(r"`([^`]+)`", tail)
+        if m_tick:
+            info["candidate"] = m_tick.group(1).strip()
+        else:
+            m_bare = re.search(r"[A-Za-z_][\w.]+", tail)
+            if m_bare:
+                info["candidate"] = m_bare.group(0).strip()
+    m_concept = re.search(r"`([^`]+)`", line)
+    if m_concept:
+        info["concept"] = m_concept.group(1).strip()
+    return info
+
+
+def _mark_one(
+    index_path: Path, line_no: int, reason: str, *, dry_run: bool
+) -> dict | None:
+    """Patch the bullet at *line_no* with ``[UNVERIFIED]``.
+
+    Returns ``None`` if no patch was applied (out-of-range or already
+    flagged). Otherwise returns a record carrying the bullet's
+    ``kind`` / ``concept`` / ``candidate`` metadata so the caller can
+    open a matching tracker issue.
+    """
     text = index_path.read_text(encoding="utf-8", errors="replace")
     lines = text.splitlines(keepends=True)
     if line_no < 1 or line_no > len(lines):
         print(f"[warn] out-of-range line {line_no} in {index_path}", file=sys.stderr)
-        return False
+        return None
     original = lines[line_no - 1]
     if UNVERIFIED_MARKER in original:
-        return False  # nothing to do
+        return None  # nothing to do
     had_trailing_nl = original.endswith("\n")
     stripped = original.rstrip("\n")
+    metadata = _bullet_metadata(stripped)
     # Append the marker at the very end of the bullet; reason optional.
     if reason:
         patched = f"{stripped} {UNVERIFIED_MARKER} ({reason})"
@@ -247,30 +304,117 @@ def _mark_one(index_path: Path, line_no: int, reason: str, *, dry_run: bool) -> 
     lines[line_no - 1] = patched + ("\n" if had_trailing_nl else "")
     if dry_run:
         print(f"[dry-run] {index_path}:{line_no}: {stripped!r} -> {patched!r}")
-        return True
+        return metadata
     index_path.write_text("".join(lines), encoding="utf-8")
-    return True
+    return metadata
 
 
-def mark_unverified(root: Path, failures: list[dict], *, dry_run: bool) -> dict:
+def _open_issue_for_failure(
+    references_root: Path,
+    *,
+    slug: str,
+    metadata: dict,
+    reason: str,
+) -> dict | None:
+    """Best-effort issue creation via the sibling ``issues.py`` CLI.
+
+    Returns the parsed JSON output of ``issues.py add`` on success, or
+    ``None`` when the script is unavailable (partial install) or the
+    invocation fails.
+    """
+    if not _ISSUES_SCRIPT.is_file():
+        return None
+    kind = "unverified-formalized-ref" if metadata.get("kind") == "formalized" else "unverified-mathlib-ref"
+    cmd = [
+        sys.executable,
+        str(_ISSUES_SCRIPT),
+        "add",
+        str(references_root),
+        "--kind",
+        kind,
+        "--opened-by",
+        "verify_mathlib_refs.mark_unverified",
+    ]
+    if slug:
+        cmd += ["--slug", slug]
+    if metadata.get("concept"):
+        cmd += ["--concept", metadata["concept"]]
+    if metadata.get("candidate"):
+        cmd += ["--candidate", metadata["candidate"]]
+    if reason:
+        cmd += ["--reason", reason]
+    cmd += [
+        "--suggested-action",
+        "Re-search a candidate or open gap-filler to ingest a better source.",
+    ]
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=True, timeout=15
+        )
+    except (subprocess.SubprocessError, OSError) as exc:
+        print(f"[warn] issues.py add failed for {slug}: {exc}", file=sys.stderr)
+        return None
+    out = result.stdout.strip()
+    try:
+        return json.loads(out) if out else None
+    except json.JSONDecodeError:
+        return None
+
+
+def mark_unverified(
+    root: Path, failures: list[dict], *, dry_run: bool, create_issues: bool = True
+) -> dict:
     marked = 0
     skipped = 0
     per_slug: dict[str, list[int]] = {}
-    for failure in failures:
-        slug = failure.get("slug")
-        line_no = failure.get("line")
-        reason = (failure.get("reason") or "").strip()
-        if not slug or not line_no:
+    issues_opened: list[dict] = []
+    for idx, failure in enumerate(failures, start=1):
+        if not isinstance(failure, dict):
+            print(f"[warn] failure #{idx} is not an object", file=sys.stderr)
             skipped += 1
             continue
+        slug_raw = failure.get("slug")
+        if not isinstance(slug_raw, str) or not slug_raw.strip():
+            print(f"[warn] failure #{idx} has no usable slug", file=sys.stderr)
+            skipped += 1
+            continue
+        slug = slug_raw.strip()
+        line_raw = failure.get("line")
+        try:
+            if isinstance(line_raw, bool):
+                raise ValueError
+            line_no = int(line_raw)
+        except (TypeError, ValueError):
+            print(
+                f"[warn] failure #{idx} has invalid line {line_raw!r}",
+                file=sys.stderr,
+            )
+            skipped += 1
+            continue
+        if line_no < 1:
+            print(
+                f"[warn] failure #{idx} has out-of-range line {line_no}",
+                file=sys.stderr,
+            )
+            skipped += 1
+            continue
+        reason_raw = failure.get("reason")
+        reason = reason_raw.strip() if isinstance(reason_raw, str) else ""
         index_path = root / slug / "INDEX.md"
         if not index_path.is_file():
             print(f"[warn] missing INDEX.md for slug {slug!r}", file=sys.stderr)
             skipped += 1
             continue
-        if _mark_one(index_path, int(line_no), reason, dry_run=dry_run):
+        metadata = _mark_one(index_path, line_no, reason, dry_run=dry_run)
+        if metadata is not None:
             marked += 1
-            per_slug.setdefault(slug, []).append(int(line_no))
+            per_slug.setdefault(slug, []).append(line_no)
+            if create_issues and not dry_run:
+                opened = _open_issue_for_failure(
+                    root, slug=slug, metadata=metadata, reason=reason
+                )
+                if opened:
+                    issues_opened.append({"slug": slug, **opened})
         else:
             skipped += 1
     # After patching (real mode), stamp every INDEX.md with a fresh
@@ -288,6 +432,7 @@ def mark_unverified(root: Path, failures: list[dict], *, dry_run: bool) -> dict:
         "per_slug": per_slug,
         "dry_run": dry_run,
         "stamped_slugs": stamped,
+        "issues_opened": issues_opened,
     }
 
 
@@ -356,6 +501,16 @@ def main() -> int:
     p_mark.add_argument("references_root")
     p_mark.add_argument("--from", dest="failures_path", required=True)
     p_mark.add_argument("--dry-run", action="store_true")
+    p_mark.add_argument(
+        "--no-issues",
+        action="store_true",
+        help=(
+            "Suppress automatic issue creation under <root>/issues/. By "
+            "default each newly stamped [UNVERIFIED] bullet opens an "
+            "idempotent tracker entry so the false positive is not "
+            "forgotten across sessions."
+        ),
+    )
 
     p_check = sub.add_parser(
         "check-done",
@@ -393,7 +548,12 @@ def main() -> int:
         if not isinstance(failures, list):
             print("[error] failures JSON must be a list of objects", file=sys.stderr)
             return 2
-        summary = mark_unverified(root, failures, dry_run=args.dry_run)
+        summary = mark_unverified(
+            root,
+            failures,
+            dry_run=args.dry_run,
+            create_issues=not args.no_issues,
+        )
         print(json.dumps(summary, indent=2, ensure_ascii=False))
         return 0
 

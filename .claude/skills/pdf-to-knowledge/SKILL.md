@@ -105,11 +105,21 @@ about the layout or you need to tweak it).
       index off this leading identifier, and bullets without one collapse
       into a `Unnamed concepts` bucket.
 
-      Required shape:
+      Required shape (three tiers, choose the strongest that applies):
       ```markdown
+      - `<concept name>` — <one-line description>  → formalized: QuantumSystem.X.y
       - `<concept name>` — <one-line description>  → mathlib: Mathlib.X.y
       - `<concept name>` — <one-line description>  → needs formalization
       ```
+
+      Use `→ formalized: <Lean.path>` only when the concept is already
+      proven in this repository (`QuantumSystem.*` or another local
+      module). It outranks `→ mathlib:` because a local proof is
+      stronger evidence than a mathlib match — `gap-filler`
+      consequently treats these as the highest tier (`formalized` >
+      `resolved` > `partial` > `gap`). The tier is verified by the
+      same `verify_mathlib_refs.py` loop as `mathlib`, so a stale
+      identifier picks up `[UNVERIFIED]` automatically.
 
       Contents of the bullets:
       - For **code-adjacent papers**: function/type names, CLI flags,

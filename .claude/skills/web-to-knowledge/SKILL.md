@@ -96,12 +96,17 @@ Full format spec: `references/output-format.md`.
       ```
       or a single paragraph. Skip if the page has no meaningful outbound links.
 
-   d. **Mathlib cross-reference** — same technique as `pdf-to-knowledge`
-      step 4d. For each Key concepts bullet, run
-      `lean_local_search <term>` plus `lean_local_search <author-name>` for
-      names that appear prominently in the page. Annotate matches with
-      `→ mathlib: Mathlib.X.y`, misses with `→ needs formalization`. Skip
-      entirely if the Lean MCP toolchain is unavailable.
+   d. **Mathlib / local cross-reference** — same technique as
+      `pdf-to-knowledge` step 4d. For each Key concepts bullet, pick the
+      strongest tier that applies:
+
+      - `→ formalized: QuantumSystem.X.y` if the concept is already proven
+        locally in this repository (verified via `lean_verify`).
+      - `→ mathlib: Mathlib.X.y` if a `lean_local_search <term>` or
+        `lean_local_search <author-name>` hit verifies cleanly.
+      - `→ needs formalization` if both searches miss.
+
+      Skip entirely if the Lean MCP toolchain is unavailable.
 
       **Every annotation must pass through the step-6 verification
       loop** — do not trust `lean_local_search` hits at face value.
