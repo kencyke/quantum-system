@@ -2,7 +2,7 @@
 node_modules/
 lefthook-local.yml
 
-references/
+/references/
 skill-creator-tests/
 **/__pycache__/
 
