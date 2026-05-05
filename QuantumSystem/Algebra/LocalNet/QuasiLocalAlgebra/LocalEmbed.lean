@@ -509,4 +509,59 @@ theorem localEmbed_mul (Λ : Finset L)
   rw [wRestrict_localEmbed]
   rfl
 
+/-- `M ↦ localEmbed Λ M` is additive in `M`. -/
+theorem localEmbed_add (Λ : Finset L)
+    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    localEmbed Λ (M + N) = localEmbed Λ M + localEmbed Λ N := by
+  ext w g
+  rw [localEmbed_apply_apply]
+  change localEmbedCoeff Λ (M + N) w g
+    = (((localEmbed Λ M + localEmbed Λ N) w : globalHilbert L)
+        : globalIdx L → ℂ) g
+  rw [ContinuousLinearMap.add_apply]
+  unfold localEmbedCoeff
+  rw [ContinuousLinearMap.add_apply]
+  rfl
+
+/-- `M ↦ localEmbed Λ M` is `ℂ`-linear in `M`. -/
+theorem localEmbed_smul (Λ : Finset L) (c : ℂ)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    localEmbed Λ (c • M) = c • localEmbed Λ M := by
+  ext w g
+  rw [localEmbed_apply_apply]
+  change localEmbedCoeff Λ (c • M) w g
+    = (((c • localEmbed Λ M) w : globalHilbert L) : globalIdx L → ℂ) g
+  rw [ContinuousLinearMap.smul_apply]
+  unfold localEmbedCoeff
+  rw [ContinuousLinearMap.smul_apply]
+  rfl
+
+/-- `M ↦ localEmbed Λ M` sends zero to zero. -/
+theorem localEmbed_zero (Λ : Finset L) :
+    localEmbed Λ (0 : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) = 0 := by
+  ext w g
+  rw [localEmbed_apply_apply]
+  unfold localEmbedCoeff
+  rw [ContinuousLinearMap.zero_apply]
+  rfl
+
+/-- `M ↦ localEmbed Λ M` as a unital ℂ-algebra homomorphism. -/
+noncomputable def localEmbedAlg (Λ : Finset L) :
+    (regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) →ₐ[ℂ]
+    (globalHilbert L →L[ℂ] globalHilbert L) where
+  toFun := localEmbed Λ
+  map_one' := localEmbed_one Λ
+  map_mul' := localEmbed_mul Λ
+  map_zero' := localEmbed_zero Λ
+  map_add' := localEmbed_add Λ
+  commutes' c := by
+    change localEmbed Λ (c • ContinuousLinearMap.id ℂ _) = _
+    rw [localEmbed_smul, localEmbed_one]
+    rfl
+
+@[simp]
+theorem localEmbedAlg_apply (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    localEmbedAlg Λ M = localEmbed Λ M := rfl
+
 end LocalNetLike
