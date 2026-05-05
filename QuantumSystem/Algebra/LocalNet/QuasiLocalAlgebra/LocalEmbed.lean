@@ -161,14 +161,49 @@ theorem globalSwapEquiv_apply (Λ : Finset L)
 
 /-! ### Pointwise action of `M ⊗ 1` on global tuples -/
 
-/-- The pointwise coefficients of `(M ⊗ 1_{Λᶜ}) w`: at the global tuple `g`,
-`localEmbedCoeff Λ M w g = ∑_{f : regionIdx Λ} M_{g|Λ, f} · w(globalSwap Λ f g)`,
-where `M_{a, b} = (M (EuclideanSpace.single b 1)) a` is the matrix element. -/
+/-- The "Λ-restriction of `w` around `g`" is the vector in
+`regionHilbert Λ` whose `f`-th component is `w(globalSwap Λ f g)`.
+It packages the data along which `M ⊗ 1_{Λᶜ}` acts as `M`. -/
+noncomputable def wRestrict (Λ : Finset L) (w : globalHilbert L)
+    (g : globalIdx L) : regionHilbert (L := L) Λ :=
+  WithLp.toLp 2 (fun f : regionIdx (L := L) Λ =>
+    (w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ f g))
+
+@[simp]
+theorem wRestrict_apply (Λ : Finset L) (w : globalHilbert L) (g : globalIdx L)
+    (f : regionIdx (L := L) Λ) :
+    wRestrict Λ w g f =
+      (w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ f g) := rfl
+
+/-- L²-norm of `wRestrict Λ w g`: it is the partial-row sum of `‖w‖²`. -/
+theorem norm_sq_wRestrict (Λ : Finset L) (w : globalHilbert L) (g : globalIdx L) :
+    ‖wRestrict Λ w g‖ ^ 2 = ∑ f : regionIdx (L := L) Λ,
+      ‖(w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ f g)‖ ^ 2 :=
+  EuclideanSpace.norm_sq_eq _
+
+/-- Pointwise coefficient of `(M ⊗ 1_{Λᶜ}) w` at the global tuple `g`:
+the value of `M (wRestrict Λ w g)` at the index `regionRestrict Λ g`. -/
 noncomputable def localEmbedCoeff (Λ : Finset L)
     (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
     (w : globalHilbert L) (g : globalIdx L) : ℂ :=
-  ∑ f : regionIdx (L := L) Λ,
-    (M (EuclideanSpace.single f (1 : ℂ))) (regionRestrict Λ g) *
-      (w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ f g)
+  (M (wRestrict Λ w g)) (regionRestrict Λ g)
+
+/-- Per-tuple bound: `‖localEmbedCoeff Λ M w g‖² ≤ ‖M‖² · ‖wRestrict Λ w g‖²`. -/
+theorem norm_sq_localEmbedCoeff_le (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (w : globalHilbert L) (g : globalIdx L) :
+    ‖localEmbedCoeff Λ M w g‖ ^ 2 ≤ ‖M‖ ^ 2 * ‖wRestrict Λ w g‖ ^ 2 := by
+  set v := M (wRestrict Λ w g) with hv
+  have hcomp : ‖v (regionRestrict Λ g)‖ ^ 2 ≤ ‖v‖ ^ 2 := by
+    rw [EuclideanSpace.norm_sq_eq]
+    exact Finset.single_le_sum (f := fun i => ‖v i‖ ^ 2)
+      (fun _ _ => sq_nonneg _) (Finset.mem_univ _)
+  have hop : ‖v‖ ≤ ‖M‖ * ‖wRestrict Λ w g‖ := by
+    rw [hv]; exact M.le_opNorm _
+  have hop_sq : ‖v‖ ^ 2 ≤ ‖M‖ ^ 2 * ‖wRestrict Λ w g‖ ^ 2 := by
+    have hsq : ‖v‖ ^ 2 ≤ (‖M‖ * ‖wRestrict Λ w g‖) ^ 2 :=
+      pow_le_pow_left₀ (norm_nonneg _) hop 2
+    simpa [mul_pow] using hsq
+  exact le_trans hcomp hop_sq
 
 end LocalNetLike
