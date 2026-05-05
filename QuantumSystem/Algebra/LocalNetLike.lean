@@ -62,3 +62,33 @@ class LocalNetLike (L : Type*) [DecidableEq L] where
       (hd : Disjoint Λ₁ Λ₂) (a : localAlgebra Λ₁) (b : localAlgebra Λ₂) :
     Commute (isotony h₁ a) (isotony h₂ b)
 
+namespace LocalNetLike
+
+variable {L : Type*} [DecidableEq L] [LocalNetLike L]
+
+instance instFintypeLocalIdx (s : L) :
+    Fintype (LocalNetLike.localIdx (L := L) s) :=
+  LocalNetLike.localFintype s
+
+instance instDecidableEqLocalIdx (s : L) :
+    DecidableEq (LocalNetLike.localIdx (L := L) s) :=
+  LocalNetLike.localDecEq s
+
+instance instSemiringLocalAlgebra (Λ : Finset L) :
+    Semiring (LocalNetLike.localAlgebra (L := L) Λ) :=
+  LocalNetLike.localAlgebraSemiring Λ
+
+instance instAlgebraLocalAlgebra (Λ : Finset L) :
+    Algebra ℂ (LocalNetLike.localAlgebra (L := L) Λ) :=
+  LocalNetLike.localAlgebraAlgebra Λ
+
+instance instStarRingLocalAlgebra (Λ : Finset L) :
+    StarRing (LocalNetLike.localAlgebra (L := L) Λ) :=
+  LocalNetLike.localAlgebraStarRing Λ
+
+instance instStarModuleLocalAlgebra (Λ : Finset L) :
+    StarModule ℂ (LocalNetLike.localAlgebra (L := L) Λ) :=
+  LocalNetLike.localAlgebraStarModule Λ
+
+end LocalNetLike
+
