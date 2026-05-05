@@ -19,6 +19,7 @@ public import QuantumSystem.Algebra.LocalNet.InvariantState
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Embedding
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.LocalEmbed
 public import QuantumSystem.Algebra.LocalNetLike
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
