@@ -303,4 +303,124 @@ theorem summable_norm_sq_localEmbedCoeff (Λ : Finset L)
   intro g
   exact norm_sq_localEmbedCoeff_le Λ M w g
 
+/-- The `localEmbedCoeff` data lives in `ℓ²(globalIdx L, ℂ)`. -/
+theorem localEmbedCoeff_memℓp (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (w : globalHilbert L) :
+    Memℓp (localEmbedCoeff Λ M w) 2 := by
+  have htwo : (0 : ℝ) < (2 : ENNReal).toReal := by
+    rw [ENNReal.toReal_ofNat]; norm_num
+  rw [memℓp_gen_iff htwo]
+  simpa [ENNReal.toReal_ofNat] using summable_norm_sq_localEmbedCoeff Λ M w
+
+/-! ### Linearity of `wRestrict` and `localEmbedCoeff` in `w` -/
+
+theorem wRestrict_add (Λ : Finset L) (w w' : globalHilbert L) (g : globalIdx L) :
+    wRestrict Λ (w + w') g = wRestrict Λ w g + wRestrict Λ w' g := by
+  ext f
+  simp only [wRestrict_apply]
+  exact congrFun (lp.coeFn_add w w') _
+
+theorem wRestrict_smul (Λ : Finset L) (c : ℂ) (w : globalHilbert L) (g : globalIdx L) :
+    wRestrict Λ (c • w) g = c • wRestrict Λ w g := by
+  ext f
+  simp only [wRestrict_apply]
+  exact congrFun (lp.coeFn_smul c w) _
+
+theorem localEmbedCoeff_add (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (w w' : globalHilbert L) (g : globalIdx L) :
+    localEmbedCoeff Λ M (w + w') g
+      = localEmbedCoeff Λ M w g + localEmbedCoeff Λ M w' g := by
+  unfold localEmbedCoeff
+  rw [wRestrict_add, M.map_add]
+  rfl
+
+theorem localEmbedCoeff_smul (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (c : ℂ) (w : globalHilbert L) (g : globalIdx L) :
+    localEmbedCoeff Λ M (c • w) g = c • localEmbedCoeff Λ M w g := by
+  unfold localEmbedCoeff
+  rw [wRestrict_smul, M.map_smul]
+  rfl
+
+/-! ### `localEmbed Λ M` as a continuous linear map -/
+
+/-- Coarse uniform bound `Σ' g, ‖wRestrict_g‖² ≤ card · ‖w‖²` (in `tsum` form). -/
+private theorem tsum_norm_sq_wRestrict_le (Λ : Finset L) (w : globalHilbert L) :
+    ∑' g : globalIdx L, ‖wRestrict Λ w g‖ ^ 2
+      ≤ (Fintype.card (regionIdx (L := L) Λ) : ℝ) *
+          ∑' h : globalIdx L, ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 :=
+  Real.tsum_le_of_sum_le (fun _ => sq_nonneg _) (finsetSum_wRestrict_norm_sq_le Λ w)
+
+/-- The continuous linear map `localEmbed Λ M : globalHilbert L →L[ℂ] globalHilbert L`
+realising `M ⊗ 1_{Λᶜ}` on the basis-indexed model.  The boundedness constant
+`√(card (regionIdx Λ)) · ‖M‖` is loose; the tight `‖M‖` follows from a more
+refined orthogonal-decomposition argument and is left for a follow-up. -/
+noncomputable def localEmbed (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    globalHilbert L →L[ℂ] globalHilbert L :=
+  LinearMap.mkContinuous
+    { toFun := fun w => ⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩
+      map_add' := fun w w' => by
+        apply Subtype.ext
+        funext g
+        exact localEmbedCoeff_add Λ M w w' g
+      map_smul' := fun c w => by
+        apply Subtype.ext
+        funext g
+        exact localEmbedCoeff_smul Λ M c w g }
+    (Real.sqrt (Fintype.card (regionIdx (L := L) Λ)) * ‖M‖)
+    (fun w => by
+      have htwo : (0 : ℝ) < (2 : ENNReal).toReal := by
+        rw [ENNReal.toReal_ofNat]; norm_num
+      -- Strategy: bound ‖·‖² and take square roots.
+      have h_lhs_sq : ‖(⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩
+            : globalHilbert L)‖ ^ 2
+          = ∑' g : globalIdx L, ‖localEmbedCoeff Λ M w g‖ ^ 2 := by
+        have := lp.norm_rpow_eq_tsum (E := fun _ : globalIdx L => ℂ) (p := 2) htwo
+          ⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩
+        simpa [ENNReal.toReal_ofNat] using this
+      have h_w_sq : ‖w‖ ^ 2
+          = ∑' h : globalIdx L, ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 := by
+        have := lp.norm_rpow_eq_tsum (E := fun _ : globalIdx L => ℂ) (p := 2) htwo w
+        simpa [ENNReal.toReal_ofNat] using this
+      have h_bound_sq :
+          ‖(⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩
+              : globalHilbert L)‖ ^ 2
+            ≤ (Fintype.card (regionIdx (L := L) Λ) : ℝ) * (‖M‖ ^ 2 * ‖w‖ ^ 2) := by
+        rw [h_lhs_sq]
+        calc ∑' g, ‖localEmbedCoeff Λ M w g‖ ^ 2
+            ≤ ∑' g, ‖M‖ ^ 2 * ‖wRestrict Λ w g‖ ^ 2 :=
+              Summable.tsum_le_tsum (fun g => norm_sq_localEmbedCoeff_le Λ M w g)
+                (summable_norm_sq_localEmbedCoeff Λ M w)
+                ((summable_norm_sq_wRestrict Λ w).mul_left _)
+          _ = ‖M‖ ^ 2 * ∑' g, ‖wRestrict Λ w g‖ ^ 2 :=
+              tsum_mul_left
+          _ ≤ ‖M‖ ^ 2 *
+                ((Fintype.card (regionIdx (L := L) Λ) : ℝ) *
+                  ∑' h, ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2) := by
+              gcongr
+              exact tsum_norm_sq_wRestrict_le Λ w
+          _ = (Fintype.card (regionIdx (L := L) Λ) : ℝ) * (‖M‖ ^ 2 * ‖w‖ ^ 2) := by
+              rw [← h_w_sq]; ring
+      -- From the squared bound, extract the linear bound.
+      have hC_nn : 0 ≤ Real.sqrt (Fintype.card (regionIdx (L := L) Λ)) * ‖M‖ :=
+        mul_nonneg (Real.sqrt_nonneg _) (norm_nonneg _)
+      have hCw_nn : 0 ≤ Real.sqrt (Fintype.card (regionIdx (L := L) Λ)) * ‖M‖ * ‖w‖ :=
+        mul_nonneg hC_nn (norm_nonneg _)
+      have hbound_sq_form :
+          (Real.sqrt (Fintype.card (regionIdx (L := L) Λ)) * ‖M‖ * ‖w‖) ^ 2
+            = (Fintype.card (regionIdx (L := L) Λ) : ℝ) * (‖M‖ ^ 2 * ‖w‖ ^ 2) := by
+        rw [mul_pow, mul_pow, Real.sq_sqrt (Nat.cast_nonneg _)]
+        ring
+      have h_lhs_nn : 0 ≤ ‖(⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩
+              : globalHilbert L)‖ := norm_nonneg _
+      have h_sq : ‖(⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩
+              : globalHilbert L)‖ ^ 2
+          ≤ (Real.sqrt (Fintype.card (regionIdx (L := L) Λ)) * ‖M‖ * ‖w‖) ^ 2 := by
+        rw [hbound_sq_form]; exact h_bound_sq
+      have := abs_le_of_sq_le_sq' h_sq hCw_nn
+      simpa [abs_of_nonneg h_lhs_nn] using this.2)
+
 end LocalNetLike
