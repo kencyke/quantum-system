@@ -564,24 +564,275 @@ theorem localEmbedAlg_apply (Λ : Finset L)
     (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
     localEmbedAlg Λ M = localEmbed Λ M := rfl
 
-/-! ### The local subalgebra `𝔄(Λ) ↪ B(globalHilbert L)` -/
+/-! ### Matrix-element formulas used to characterise `localEmbed Λ` -/
+
+/-- Finite-sum form of `localEmbedCoeff Λ M v g`: it is the inner product of
+the `Λ`-restriction of `v` around `g` with the `(regionRestrict Λ g)`-th column
+of `M`. -/
+private theorem localEmbedCoeff_eq_sum (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (v : globalHilbert L) (g : globalIdx L) :
+    localEmbedCoeff Λ M v g
+      = ∑ f : regionIdx (L := L) Λ,
+          ((M (EuclideanSpace.single f (1 : ℂ)) : regionIdx (L := L) Λ → ℂ)
+              (regionRestrict Λ g))
+            * ((v : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ)
+                (globalSwap Λ f g) := by
+  unfold localEmbedCoeff
+  -- Decompose `wRestrict Λ v g` along the standard basis of the region Hilbert space.
+  have hbasis : (wRestrict Λ v g)
+      = ∑ f : regionIdx (L := L) Λ,
+          ((wRestrict Λ v g : regionIdx (L := L) Λ → ℂ) f)
+            • EuclideanSpace.single f (1 : ℂ) := by
+    have := (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).sum_repr
+      (wRestrict Λ v g)
+    simpa [EuclideanSpace.basisFun_apply,
+      EuclideanSpace.basisFun_repr] using this.symm
+  rw [hbasis, map_sum]
+  simp only [map_smul]
+  rw [WithLp.ofLp_sum]
+  change (∑ f : regionIdx (L := L) Λ,
+        (((wRestrict Λ v g : regionIdx (L := L) Λ → ℂ) f) •
+          (M (EuclideanSpace.single f (1 : ℂ))) : regionHilbert (L := L) Λ).ofLp)
+        (regionRestrict Λ g) = _
+  rw [Finset.sum_apply]
+  refine Finset.sum_congr rfl fun f _ => ?_
+  rw [WithLp.ofLp_smul, Pi.smul_apply, wRestrict_apply, smul_eq_mul, mul_comm]
+
+/-- Finite-sum form of `localEmbedCoeff Λ (star M) v g` via the adjoint
+identity `(M.adjoint y)_a = ⟨M e_a, y⟩` on the finite-dimensional region
+Hilbert space.  This rewrites the action of `localEmbed Λ (star M)` in
+terms of conjugates of `M`'s matrix elements. -/
+private theorem localEmbedCoeff_star_eq_sum (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (v : globalHilbert L) (g : globalIdx L) :
+    localEmbedCoeff Λ (star M) v g
+      = ∑ f : regionIdx (L := L) Λ,
+          star ((M (EuclideanSpace.single (regionRestrict Λ g) (1 : ℂ))
+              : regionIdx (L := L) Λ → ℂ) f)
+            * ((v : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ)
+                (globalSwap Λ f g) := by
+  unfold localEmbedCoeff
+  have hcoord : ((((star M) (wRestrict Λ v g) : regionHilbert (L := L) Λ)
+            : regionIdx (L := L) Λ → ℂ) (regionRestrict Λ g))
+        = inner ℂ (EuclideanSpace.single (regionRestrict Λ g) (1 : ℂ))
+            ((star M) (wRestrict Λ v g)) := by
+    rw [EuclideanSpace.inner_single_left]; simp
+  rw [hcoord]
+  change inner ℂ _ ((ContinuousLinearMap.adjoint M) (wRestrict Λ v g)) = _
+  rw [ContinuousLinearMap.adjoint_inner_right, PiLp.inner_apply]
+  refine Finset.sum_congr rfl fun f _ => ?_
+  rw [wRestrict_apply, RCLike.inner_apply, starRingEnd_apply, mul_comm]
+
+/-! ### The basis-vector identity for `map_star` -/
+
+/-- The condition "`g` and `h` agree on `Λᶜ`" is symmetric in the swap form. -/
+private theorem globalSwap_agreeOn_symm (Λ : Finset L) (g h : globalIdx L) :
+    globalSwap Λ (regionRestrict Λ h) g = h
+      ↔ globalSwap Λ (regionRestrict Λ g) h = g := by
+  constructor <;> (intro h₁; apply Subtype.ext; funext s; by_cases hs : s ∈ Λ)
+  · simp [globalSwap_val_apply_of_mem _ _ _ hs, regionRestrict]
+  · simp [globalSwap_val_apply_of_not_mem _ _ _ hs]
+    have := congrArg (fun (x : globalIdx L) => x.val s) h₁
+    simpa [globalSwap_val_apply_of_not_mem _ _ _ hs] using this.symm
+  · simp [globalSwap_val_apply_of_mem _ _ _ hs, regionRestrict]
+  · simp [globalSwap_val_apply_of_not_mem _ _ _ hs]
+    have := congrArg (fun (x : globalIdx L) => x.val s) h₁
+    simpa [globalSwap_val_apply_of_not_mem _ _ _ hs] using this.symm
+
+/-- On a basis vector `lp.single 2 h 1`, the matrix-element identity for the
+adjoint reads
+`localEmbedCoeff Λ (star M) e_h g = star (localEmbedCoeff Λ M e_g h)`. -/
+private theorem localEmbedCoeff_star_lpSingle (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (g h : globalIdx L) :
+    localEmbedCoeff Λ (star M) (lp.single 2 h (1 : ℂ)) g
+      = star (localEmbedCoeff Λ M (lp.single 2 g (1 : ℂ)) h) := by
+  rw [localEmbedCoeff_star_eq_sum, localEmbedCoeff_eq_sum]
+  -- Substitute lp.single values.
+  have hLHS : ∀ f : regionIdx (L := L) Λ,
+      ((lp.single 2 h (1 : ℂ) : lp (fun _ : globalIdx L => ℂ) 2)
+          : globalIdx L → ℂ) (globalSwap Λ f g)
+        = if globalSwap Λ f g = h then 1 else 0 := by
+    intro f
+    rw [lp.single_apply]
+    exact Pi.single_apply _ _ _
+  have hRHS : ∀ f : regionIdx (L := L) Λ,
+      ((lp.single 2 g (1 : ℂ) : lp (fun _ : globalIdx L => ℂ) 2)
+          : globalIdx L → ℂ) (globalSwap Λ f h)
+        = if globalSwap Λ f h = g then 1 else 0 := by
+    intro f
+    rw [lp.single_apply]
+    exact Pi.single_apply _ _ _
+  simp_rw [hLHS, hRHS]
+  by_cases hagree : globalSwap Λ (regionRestrict Λ h) g = h
+  · -- Agree case: collapse both sides via Finset.sum_eq_single.
+    have hLHS_collapse :
+        ∑ f : regionIdx (L := L) Λ,
+            star ((M (EuclideanSpace.single (regionRestrict Λ g) (1 : ℂ))
+                : regionIdx (L := L) Λ → ℂ) f)
+              * (if globalSwap Λ f g = h then (1 : ℂ) else 0)
+          = star ((M (EuclideanSpace.single (regionRestrict Λ g) (1 : ℂ))
+                : regionIdx (L := L) Λ → ℂ) (regionRestrict Λ h)) := by
+      rw [Finset.sum_eq_single (regionRestrict Λ h)]
+      · simp [hagree]
+      · intro f _ hne
+        have hgs : globalSwap Λ f g ≠ h := by
+          intro hgs
+          apply hne
+          have := congrArg (regionRestrict Λ) hgs
+          simpa using this
+        simp [hgs]
+      · intro hni
+        exact absurd (Finset.mem_univ _) hni
+    have hagree' : globalSwap Λ (regionRestrict Λ g) h = g :=
+      (globalSwap_agreeOn_symm Λ g h).mp hagree
+    have hRHS_collapse :
+        ∑ f : regionIdx (L := L) Λ,
+            ((M (EuclideanSpace.single f (1 : ℂ)) : regionIdx (L := L) Λ → ℂ)
+                (regionRestrict Λ h))
+              * (if globalSwap Λ f h = g then (1 : ℂ) else 0)
+          = ((M (EuclideanSpace.single (regionRestrict Λ g) (1 : ℂ))
+                : regionIdx (L := L) Λ → ℂ) (regionRestrict Λ h)) := by
+      rw [Finset.sum_eq_single (regionRestrict Λ g)]
+      · simp [hagree']
+      · intro f _ hne
+        have hgs : globalSwap Λ f h ≠ g := by
+          intro hgs
+          apply hne
+          have := congrArg (regionRestrict Λ) hgs
+          simpa using this
+        simp [hgs]
+      · intro hni
+        exact absurd (Finset.mem_univ _) hni
+    rw [hLHS_collapse, hRHS_collapse]
+  · -- Disagree case: both sides are 0.
+    have hagree' : ¬ globalSwap Λ (regionRestrict Λ g) h = g := by
+      intro hagree'; exact hagree ((globalSwap_agreeOn_symm Λ g h).mpr hagree')
+    have hLHS_zero :
+        ∑ f : regionIdx (L := L) Λ,
+            star ((M (EuclideanSpace.single (regionRestrict Λ g) (1 : ℂ))
+                : regionIdx (L := L) Λ → ℂ) f)
+              * (if globalSwap Λ f g = h then (1 : ℂ) else 0) = 0 := by
+      apply Finset.sum_eq_zero
+      intro f _
+      have hgs : globalSwap Λ f g ≠ h := by
+        intro hgs
+        apply hagree
+        have := congrArg (regionRestrict Λ) hgs
+        rw [regionRestrict_globalSwap] at this
+        rw [← this]; exact hgs
+      simp [hgs]
+    have hRHS_zero :
+        ∑ f : regionIdx (L := L) Λ,
+            ((M (EuclideanSpace.single f (1 : ℂ)) : regionIdx (L := L) Λ → ℂ)
+                (regionRestrict Λ h))
+              * (if globalSwap Λ f h = g then (1 : ℂ) else 0) = 0 := by
+      apply Finset.sum_eq_zero
+      intro f _
+      have hgs : globalSwap Λ f h ≠ g := by
+        intro hgs
+        apply hagree'
+        have := congrArg (regionRestrict Λ) hgs
+        rw [regionRestrict_globalSwap] at this
+        rw [← this]; exact hgs
+      simp [hgs]
+    rw [hLHS_zero, hRHS_zero]
+    simp
+
+/-! ### Star-preservation of `localEmbed` -/
+
+/-- `localEmbed Λ` preserves the involution: `localEmbed Λ (star M) = star (localEmbed Λ M)`. -/
+theorem localEmbed_star (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    localEmbed Λ (star M) = star (localEmbed Λ M) := by
+  -- Build the canonical Hilbert basis of globalHilbert L (one basis vector per global tuple).
+  let b : HilbertBasis (globalIdx L) ℂ (globalHilbert L) :=
+    HilbertBasis.ofRepr (LinearIsometryEquiv.refl ℂ (globalHilbert L))
+  have hb_apply : ∀ h : globalIdx L, b h = lp.single 2 h (1 : ℂ) := fun h => by
+    change (LinearIsometryEquiv.refl ℂ (globalHilbert L)).symm
+      (lp.single 2 h (1 : ℂ)) = _
+    rfl
+  -- It suffices to show equality on basis vectors.
+  apply ContinuousLinearMap.ext_on
+    ((Submodule.dense_iff_topologicalClosure_eq_top).mpr b.dense_span)
+  intro v hv
+  obtain ⟨h, rfl⟩ := hv
+  rw [hb_apply]
+  -- Goal: localEmbed Λ (star M) (lp.single 2 h 1) = star (localEmbed Λ M) (lp.single 2 h 1)
+  apply Subtype.ext
+  funext g
+  -- Coordinate equality: ↑(localEmbed Λ (star M) (lp.single 2 h 1)) g
+  --                    = ↑(star (localEmbed Λ M) (lp.single 2 h 1)) g
+  -- LHS = localEmbedCoeff Λ (star M) (lp.single 2 h 1) g
+  -- RHS = ↑(adjoint (localEmbed Λ M) (lp.single 2 h 1)) g
+  --     = star ((localEmbed Λ M (lp.single 2 g 1)).val h)  [via inner products]
+  --     = star (localEmbedCoeff Λ M (lp.single 2 g 1) h)
+  have hLHS :
+      ((localEmbed Λ (star M) (lp.single 2 h (1 : ℂ)) : globalHilbert L)
+            : globalIdx L → ℂ) g
+        = localEmbedCoeff Λ (star M) (lp.single 2 h (1 : ℂ)) g :=
+    localEmbed_apply_apply Λ (star M) _ g
+  have hRHS :
+      ((star (localEmbed Λ M) (lp.single 2 h (1 : ℂ)) : globalHilbert L)
+            : globalIdx L → ℂ) g
+        = star (localEmbedCoeff Λ M (lp.single 2 g (1 : ℂ)) h) := by
+    change ((ContinuousLinearMap.adjoint (localEmbed Λ M) (lp.single 2 h (1 : ℂ))
+              : globalHilbert L) : globalIdx L → ℂ) g = _
+    -- (adjoint A v)(g) = ⟨lp.single 2 g 1, adjoint A v⟩ = ⟨A (lp.single 2 g 1), v⟩
+    -- For A = localEmbed Λ M and v = lp.single 2 h 1:
+    -- ⟨localEmbed Λ M (lp.single 2 g 1), lp.single 2 h 1⟩
+    --   = star((localEmbed Λ M (lp.single 2 g 1)).val h)  (lp.inner_single_right)
+    have hcoord : (((ContinuousLinearMap.adjoint (localEmbed Λ M)
+              (lp.single 2 h (1 : ℂ)) : globalHilbert L)
+            : globalIdx L → ℂ) g)
+        = inner ℂ
+            (lp.single 2 g (1 : ℂ) : lp (fun _ : globalIdx L => ℂ) 2)
+            ((ContinuousLinearMap.adjoint (localEmbed Λ M))
+              (lp.single 2 h (1 : ℂ))) := by
+      rw [lp.inner_single_left]
+      simp
+    rw [hcoord, ContinuousLinearMap.adjoint_inner_right]
+    -- Goal: ⟨localEmbed Λ M (lp.single 2 g 1), lp.single 2 h 1⟩ = star (...)
+    rw [lp.inner_single_right]
+    simp
+  rw [hLHS, hRHS]
+  exact localEmbedCoeff_star_lpSingle Λ M g h
+
+/-! ### The local subalgebra `𝔄(Λ) ↪ B(globalHilbert L)` (StarSubalgebra) -/
+
+/-- `M ↦ localEmbed Λ M` as a unital `*`-algebra homomorphism. -/
+noncomputable def localEmbedHom (Λ : Finset L) :
+    (regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) →⋆ₐ[ℂ]
+    (globalHilbert L →L[ℂ] globalHilbert L) where
+  toFun := localEmbed Λ
+  map_one' := localEmbed_one Λ
+  map_mul' := localEmbed_mul Λ
+  map_zero' := localEmbed_zero Λ
+  map_add' := localEmbed_add Λ
+  commutes' c := by
+    change localEmbed Λ (c • ContinuousLinearMap.id ℂ _) = _
+    rw [localEmbed_smul, localEmbed_one]
+    rfl
+  map_star' := localEmbed_star Λ
+
+@[simp]
+theorem localEmbedHom_apply (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    localEmbedHom Λ M = localEmbed Λ M := rfl
 
 /-- The local subalgebra at `Λ`: the image of `M ↦ localEmbed Λ M` viewed as a
-unital `ℂ`-subalgebra of `globalHilbert L →L[ℂ] globalHilbert L`.
-
-The full Naaijkens picture upgrades this to a `StarSubalgebra ℂ ...`; the
-star-closure of the image follows from the still-pending
-`localEmbed_star : localEmbed Λ (star M) = star (localEmbed Λ M)`,
-which is added in a follow-up sub-step. -/
+unital `*`-subalgebra of `globalHilbert L →L[ℂ] globalHilbert L`. -/
 noncomputable def localSubalgebra (Λ : Finset L) :
-    Subalgebra ℂ (globalHilbert L →L[ℂ] globalHilbert L) :=
-  (localEmbedAlg Λ).range
+    StarSubalgebra ℂ (globalHilbert L →L[ℂ] globalHilbert L) :=
+  (localEmbedHom Λ).range
 
 theorem mem_localSubalgebra (Λ : Finset L)
     (T : globalHilbert L →L[ℂ] globalHilbert L) :
     T ∈ localSubalgebra Λ
       ↔ ∃ M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ,
-          localEmbed Λ M = T :=
-  AlgHom.mem_range _
+          localEmbed Λ M = T := by
+  change T ∈ ((localEmbedHom Λ).toAlgHom.range : Subalgebra ℂ _) ↔ _
+  exact AlgHom.mem_range _
 
 end LocalNetLike
