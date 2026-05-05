@@ -564,4 +564,24 @@ theorem localEmbedAlg_apply (Λ : Finset L)
     (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
     localEmbedAlg Λ M = localEmbed Λ M := rfl
 
+/-! ### The local subalgebra `𝔄(Λ) ↪ B(globalHilbert L)` -/
+
+/-- The local subalgebra at `Λ`: the image of `M ↦ localEmbed Λ M` viewed as a
+unital `ℂ`-subalgebra of `globalHilbert L →L[ℂ] globalHilbert L`.
+
+The full Naaijkens picture upgrades this to a `StarSubalgebra ℂ ...`; the
+star-closure of the image follows from the still-pending
+`localEmbed_star : localEmbed Λ (star M) = star (localEmbed Λ M)`,
+which is added in a follow-up sub-step. -/
+noncomputable def localSubalgebra (Λ : Finset L) :
+    Subalgebra ℂ (globalHilbert L →L[ℂ] globalHilbert L) :=
+  (localEmbedAlg Λ).range
+
+theorem mem_localSubalgebra (Λ : Finset L)
+    (T : globalHilbert L →L[ℂ] globalHilbert L) :
+    T ∈ localSubalgebra Λ
+      ↔ ∃ M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ,
+          localEmbed Λ M = T :=
+  AlgHom.mem_range _
+
 end LocalNetLike
