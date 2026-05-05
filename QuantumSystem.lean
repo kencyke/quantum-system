@@ -11,6 +11,14 @@ public import QuantumSystem.Algebra.CStarAlgebra.State
 public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet
+public import QuantumSystem.Algebra.LocalNet.AsLocalNetLike
+public import QuantumSystem.Algebra.LocalNet.Covariance
+public import QuantumSystem.Algebra.LocalNet.Functoriality
+public import QuantumSystem.Algebra.LocalNet.GroupAction
+public import QuantumSystem.Algebra.LocalNet.InvariantState
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
+public import QuantumSystem.Algebra.LocalNetLike
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Analysis.CFC.Diagonal
