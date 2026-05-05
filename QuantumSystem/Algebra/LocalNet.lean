@@ -60,14 +60,16 @@ The partial-trace / restriction operations (`Matrix.restrict`, `Matrix.restrictK
 
 @[expose] public section
 
-/-- Data for a finite-dimensional **local net of matrix algebras** on a finite lattice.
+/-- Data for a **local net of matrix algebras** on a (possibly infinite) lattice of sites.
     Each site `s : sites` carries a finite index type `localIdx s` whose cardinality is the
-    local Hilbert-space dimension. The local algebra at a region `Λ ⊆ sites` is then the
-    matrix algebra on the dependent product `Π s ∈ Λ, localIdx s`. -/
+    local Hilbert-space dimension. The local algebra at a finite region `Λ ⊆ sites` is then
+    the matrix algebra on the dependent product `Π s ∈ Λ, localIdx s`.
+
+    The site set itself is not required to be `Fintype`: lemmas that genuinely need
+    `Finset.univ : Finset sites` take `[Fintype sites]` as an explicit instance argument. -/
 structure LocalNet where
-  /-- Lattice of sites — `Fintype` for the finite-dim project scope. -/
+  /-- Lattice of sites — `DecidableEq` only, possibly infinite. -/
   sites : Type*
-  [sitesFintype : Fintype sites]
   [sitesDecEq : DecidableEq sites]
   /-- Local Hilbert-space index type at each site. -/
   localIdx : sites → Type*
@@ -76,7 +78,7 @@ structure LocalNet where
 
 namespace LocalNet
 
-attribute [instance] sitesFintype sitesDecEq localFintype localDecEq
+attribute [instance] sitesDecEq localFintype localDecEq
 
 variable (L : LocalNet)
 
@@ -144,6 +146,20 @@ variable {L} in
       = b ⟨s.val, Finset.mem_sdiff.mpr ⟨s.property, hs⟩⟩ := by
   simp only [combineIdx, Equiv.coe_fn_mk]
   rw [dif_neg hs]
+
+variable {L} in
+/-- Pointwise evaluation of the `Λ`-component of `(combineIdx h).symm`. -/
+@[simp] lemma combineIdx_symm_apply_fst
+    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
+    (f : L.regionIdx Λ_total) (a : ↥Λ) :
+    ((L.combineIdx h).symm f).1 a = f ⟨a.val, h a.property⟩ := rfl
+
+variable {L} in
+/-- Pointwise evaluation of the `Λ_total \ Λ`-component of `(combineIdx h).symm`. -/
+@[simp] lemma combineIdx_symm_apply_snd
+    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
+    (f : L.regionIdx Λ_total) (a : ↥(Λ_total \ Λ)) :
+    ((L.combineIdx h).symm f).2 a = f ⟨a.val, (Finset.mem_sdiff.mp a.property).1⟩ := rfl
 
 /-- Cardinality factorisation for region indices induced by `combineIdx`. -/
 theorem card_regionIdx_total {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) :
@@ -409,8 +425,10 @@ def regionIdxInsertEquiv {s : L.sites} {Λ : Finset L.sites} (hs : s ∉ Λ) :
     (Equiv.prodCongr (L.singletonRegionIdxEquiv s) (L.regionIdxCongr h_compl_eq))
 
 /-- The universal region: `regionIdx Finset.univ ≃ Π s : sites, localIdx s`.
-    Collapses the `Finset.univ`-subtype back to the underlying type. -/
-def regionIdxUnivEquiv : L.regionIdx (Finset.univ : Finset L.sites) ≃
+    Collapses the `Finset.univ`-subtype back to the underlying type.
+    Requires `[Fintype L.sites]` for `Finset.univ` to be available. -/
+def regionIdxUnivEquiv [Fintype L.sites] :
+    L.regionIdx (Finset.univ : Finset L.sites) ≃
     ∀ s : L.sites, L.localIdx s where
   toFun f s := f ⟨s, Finset.mem_univ s⟩
   invFun g := fun ⟨s, _⟩ => g s
@@ -714,5 +732,241 @@ lemma singleton_b_subset_triple (a b c : L.sites) :
     ({b} : Finset L.sites) ⊆ ({a, b, c} : Finset L.sites) :=
   Finset.singleton_subset_iff.mpr
     (Finset.mem_insert_of_mem (Finset.mem_insert_self b _))
+
+/-! ### Locality (Einstein causality)
+
+For finite-dimensional `LocalNet`, the isotony embedding is **automatically local**:
+the images of disjoint regions commute. This realises Verch 2025 §1.2 axiom (ii) /
+Naaijkens 2012 §1.3 line 213 in the finite-lattice slice. The locality predicate is
+exposed both as a `Prop` (`IsLocal`) and as a `theorem` (`isLocal`) so that future
+abstract Haag–Kastler structures can consume it as an axiom field. -/
+
+/-- **Locality (Haag–Kastler axiom (ii)).** Two disjoint subregions of a common
+    enclosing region give commuting images under the isotony embedding. -/
+def IsLocal (L : LocalNet) : Prop :=
+  ∀ {Λ₁ Λ₂ Λ_total : Finset L.sites}
+    (h₁ : Λ₁ ⊆ Λ_total) (h₂ : Λ₂ ⊆ Λ_total),
+    Disjoint Λ₁ Λ₂ →
+    ∀ (a : L.localAlgebra Λ₁) (b : L.localAlgebra Λ₂),
+      Commute (L.includeAlgebra h₁ a) (L.includeAlgebra h₂ b)
+
+/-- Closed form for `includeAlgebra h X` when both arguments are expressed via
+    the `combineIdx h` decomposition. Lifts `includeAlgebraFun_apply_combineIdx`
+    through the `StarAlgHom` coercion. -/
+lemma includeAlgebra_apply_combineIdx
+    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) (X : L.localAlgebra Λ)
+    (a a' : L.regionIdx Λ) (b b' : L.regionIdx (Λ_total \ Λ)) :
+    L.includeAlgebra h X (L.combineIdx h (a, b)) (L.combineIdx h (a', b')) =
+      if b = b' then X a a' else 0 :=
+  L.includeAlgebraFun_apply_combineIdx h X a a' b b'
+
+/-- The Λ₂-restriction of `combineIdx h₁ (α, γ)` depends only on `γ` (not `α`),
+    via the inclusion `Λ₂ ⊆ Λ_total \ Λ₁` from disjointness. Concretely,
+    for `x : ↥Λ₂`, the value is `γ` evaluated at `x` (with appropriate
+    inclusion proof). -/
+private lemma combineIdx_restrict_compl
+    {Λ₁ Λ₂ Λ_total : Finset L.sites}
+    (h₁ : Λ₁ ⊆ Λ_total) (h₂ : Λ₂ ⊆ Λ_total)
+    (hΛ₂_compl : Λ₂ ⊆ Λ_total \ Λ₁)
+    (α : L.regionIdx Λ₁) (γ : L.regionIdx (Λ_total \ Λ₁))
+    (x : ↥Λ₂) :
+    (L.combineIdx h₁ (α, γ)) ⟨x.val, h₂ x.property⟩ =
+      γ ⟨x.val, hΛ₂_compl x.property⟩ := by
+  have hxn : x.val ∉ Λ₁ := (Finset.mem_sdiff.mp (hΛ₂_compl x.property)).2
+  rw [combineIdx_apply_not_mem h₁ α γ ⟨x.val, h₂ x.property⟩ hxn]
+
+/-- **Cross-decomposition**: when `Λ₁` and `Λ₂` are disjoint inside `Λ_total`,
+    the entry of `includeAlgebra h₂ b` at points expressed via `combineIdx h₁`
+    factors as: `α`-equality on the first factor times the `includeAlgebra` of
+    `b` taken inside the smaller ambient region `Λ_total \ Λ₁` (where `Λ₂` lives
+    as a subset by disjointness). Realises the kronecker decomposition
+    `includeAlgebra h₂ b = 1_{Λ₁} ⊗ includeAlgebra (Λ₂ ⊆ Λ_total\Λ₁) b` in the
+    `combineIdx h₁` picture. -/
+private lemma includeAlgebra_h₂_combineIdx_h₁
+    {Λ₁ Λ₂ Λ_total : Finset L.sites}
+    (h₁ : Λ₁ ⊆ Λ_total) (h₂ : Λ₂ ⊆ Λ_total)
+    (hΛ₂_compl : Λ₂ ⊆ Λ_total \ Λ₁)
+    (b : L.localAlgebra Λ₂)
+    (α α' : L.regionIdx Λ₁) (γ γ' : L.regionIdx (Λ_total \ Λ₁)) :
+    L.includeAlgebra h₂ b (L.combineIdx h₁ (α, γ)) (L.combineIdx h₁ (α', γ')) =
+      if α = α' then L.includeAlgebra hΛ₂_compl b γ γ' else 0 := by
+  rw [includeAlgebra_apply, includeAlgebra_apply]
+  -- Auxiliary: Λ₁ ⊆ Λ_total \ Λ₂ from disjoint
+  have hΛ₁_compl : Λ₁ ⊆ Λ_total \ Λ₂ := fun y hy =>
+    Finset.mem_sdiff.mpr ⟨h₁ hy, fun hyΛ₂ => by
+      have : y ∈ Λ₁ := hy
+      have : y ∉ Λ₁ := (Finset.mem_sdiff.mp (hΛ₂_compl hyΛ₂)).2
+      exact absurd hy this⟩
+  -- Case on α = α'
+  by_cases hα : α = α'
+  · subst hα
+    rw [if_pos rfl]
+    -- Both LHS and RHS are conditionals on `γ-rest` agreement.
+    -- Show conditions are equivalent.
+    by_cases hγ_rest : ((L.combineIdx hΛ₂_compl).symm γ).2 =
+                        ((L.combineIdx hΛ₂_compl).symm γ').2
+    · rw [if_pos hγ_rest]
+      -- LHS condition: agree on Λ_total\Λ₂. Reduces to "γ-rest" since α-part is identical.
+      have h_h₂_cond : ((L.combineIdx h₂).symm (L.combineIdx h₁ (α, γ))).2 =
+                        ((L.combineIdx h₂).symm (L.combineIdx h₁ (α, γ'))).2 := by
+        funext y
+        change (L.combineIdx h₁ (α, γ)) ⟨y.val, (Finset.mem_sdiff.mp y.property).1⟩
+            = (L.combineIdx h₁ (α, γ')) ⟨y.val, (Finset.mem_sdiff.mp y.property).1⟩
+        by_cases hyΛ₁ : y.val ∈ Λ₁
+        · rw [combineIdx_apply_mem h₁ α γ _ hyΛ₁,
+              combineIdx_apply_mem h₁ α γ' _ hyΛ₁]
+        · rw [combineIdx_apply_not_mem h₁ α γ _ hyΛ₁,
+              combineIdx_apply_not_mem h₁ α γ' _ hyΛ₁]
+          have hy_in_rest : y.val ∈ (Λ_total \ Λ₁) \ Λ₂ :=
+            Finset.mem_sdiff.mpr
+              ⟨Finset.mem_sdiff.mpr ⟨(Finset.mem_sdiff.mp y.property).1, hyΛ₁⟩,
+               (Finset.mem_sdiff.mp y.property).2⟩
+          exact congrArg (fun f => f ⟨y.val, hy_in_rest⟩) hγ_rest
+      rw [if_pos h_h₂_cond]
+      -- Match values: b on Λ₂-restrictions
+      congr 1
+      · funext x
+        exact L.combineIdx_restrict_compl h₁ h₂ hΛ₂_compl α γ x
+      · funext x
+        exact L.combineIdx_restrict_compl h₁ h₂ hΛ₂_compl α γ' x
+    · rw [if_neg hγ_rest]
+      -- γ-rest fails ⟹ LHS condition fails too.
+      rw [if_neg]
+      intro h_eq
+      apply hγ_rest
+      funext z
+      -- z : ↥((Λ_total\Λ₁)\Λ₂)
+      -- Goal: ((combineIdx hΛ₂_compl).symm γ).2 z = ((combineIdx hΛ₂_compl).symm γ').2 z
+      -- LHS = γ ⟨z.val, (Finset.mem_sdiff.mp z.property).1⟩
+      -- RHS = γ' ⟨z.val, ...⟩
+      change γ ⟨z.val, (Finset.mem_sdiff.mp z.property).1⟩
+          = γ' ⟨z.val, (Finset.mem_sdiff.mp z.property).1⟩
+      have hzΛ_total : z.val ∈ Λ_total := by
+        have : z.val ∈ Λ_total \ Λ₁ := (Finset.mem_sdiff.mp z.property).1
+        exact (Finset.mem_sdiff.mp this).1
+      have hzn_Λ₂ : z.val ∉ Λ₂ := (Finset.mem_sdiff.mp z.property).2
+      have hzn_Λ₁ : z.val ∉ Λ₁ :=
+        (Finset.mem_sdiff.mp ((Finset.mem_sdiff.mp z.property).1)).2
+      have hz_in_compl_Λ₂ : z.val ∈ Λ_total \ Λ₂ :=
+        Finset.mem_sdiff.mpr ⟨hzΛ_total, hzn_Λ₂⟩
+      have := congrArg (fun f => f ⟨z.val, hz_in_compl_Λ₂⟩) h_eq
+      simp only at this
+      -- Both sides equal (combineIdx h₁ (α, γ/γ')) at the corresponding point.
+      have lhs_val : (L.combineIdx h₁ (α, γ)) ⟨z.val, hzΛ_total⟩
+          = γ ⟨z.val, (Finset.mem_sdiff.mp z.property).1⟩ := by
+        rw [combineIdx_apply_not_mem h₁ α γ ⟨z.val, hzΛ_total⟩ hzn_Λ₁]
+      have rhs_val : (L.combineIdx h₁ (α, γ')) ⟨z.val, hzΛ_total⟩
+          = γ' ⟨z.val, (Finset.mem_sdiff.mp z.property).1⟩ := by
+        rw [combineIdx_apply_not_mem h₁ α γ' ⟨z.val, hzΛ_total⟩ hzn_Λ₁]
+      change (L.combineIdx h₁ (α, γ)) _ = (L.combineIdx h₁ (α, γ')) _ at this
+      rw [lhs_val, rhs_val] at this
+      exact this
+  · rw [if_neg hα]
+    -- α ≠ α' ⟹ LHS condition fails.
+    rw [if_neg]
+    intro h_eq
+    apply hα
+    funext x
+    have hx_compl_Λ₂ : x.val ∈ Λ_total \ Λ₂ := hΛ₁_compl x.property
+    have hcong := congrArg (fun f => f ⟨x.val, hx_compl_Λ₂⟩) h_eq
+    have lhs_val : (L.combineIdx h₁ (α, γ)) ⟨x.val, h₁ x.property⟩
+        = α ⟨x.val, x.property⟩ := by
+      rw [combineIdx_apply_mem h₁ α γ ⟨x.val, h₁ x.property⟩ x.property]
+    have rhs_val : (L.combineIdx h₁ (α', γ')) ⟨x.val, h₁ x.property⟩
+        = α' ⟨x.val, x.property⟩ := by
+      rw [combineIdx_apply_mem h₁ α' γ' ⟨x.val, h₁ x.property⟩ x.property]
+    change (L.combineIdx h₁ (α, γ)) _ = (L.combineIdx h₁ (α', γ')) _ at hcong
+    rw [lhs_val, rhs_val] at hcong
+    exact hcong
+
+/-- **Locality holds for any `LocalNet`**. This is the finite-dimensional
+    realisation of the Haag–Kastler locality axiom: disjoint subregions give
+    commuting isotony images. The proof reindexes the sum over the larger region
+    via `combineIdx h₁`, factors the products into `α`-collapse on `X` and
+    `α`-collapse on `Y` via `includeAlgebra_h₂_combineIdx_h₁`, and concludes by
+    multiplicative commutativity in `ℂ`. -/
+theorem isLocal (L : LocalNet) : L.IsLocal := by
+  intro Λ₁ Λ₂ Λ_total h₁ h₂ hd a b
+  have hΛ₂_compl : Λ₂ ⊆ Λ_total \ Λ₁ := fun x hx =>
+    Finset.mem_sdiff.mpr ⟨h₂ hx, fun hxΛ₁ => Finset.disjoint_left.mp hd hxΛ₁ hx⟩
+  change (L.includeAlgebra h₁ a) * (L.includeAlgebra h₂ b)
+      = (L.includeAlgebra h₂ b) * (L.includeAlgebra h₁ a)
+  ext s s'
+  obtain ⟨sα, sγ, hs⟩ : ∃ α γ, L.combineIdx h₁ (α, γ) = s :=
+    ⟨_, _, (L.combineIdx h₁).apply_symm_apply s⟩
+  obtain ⟨s'α, s'γ, hs'⟩ : ∃ α γ, L.combineIdx h₁ (α, γ) = s' :=
+    ⟨_, _, (L.combineIdx h₁).apply_symm_apply s'⟩
+  subst hs
+  subst hs'
+  rw [Matrix.mul_apply, Matrix.mul_apply,
+      show (∑ t, (L.includeAlgebra h₁ a) (L.combineIdx h₁ (sα, sγ)) t
+                * (L.includeAlgebra h₂ b) t (L.combineIdx h₁ (s'α, s'γ)) : ℂ)
+        = ∑ p : L.regionIdx Λ₁ × L.regionIdx (Λ_total \ Λ₁),
+            (L.includeAlgebra h₁ a) (L.combineIdx h₁ (sα, sγ)) (L.combineIdx h₁ p)
+            * (L.includeAlgebra h₂ b) (L.combineIdx h₁ p) (L.combineIdx h₁ (s'α, s'γ))
+      from ((L.combineIdx h₁).sum_comp _).symm,
+      show (∑ t, (L.includeAlgebra h₂ b) (L.combineIdx h₁ (sα, sγ)) t
+                * (L.includeAlgebra h₁ a) t (L.combineIdx h₁ (s'α, s'γ)) : ℂ)
+        = ∑ p : L.regionIdx Λ₁ × L.regionIdx (Λ_total \ Λ₁),
+            (L.includeAlgebra h₂ b) (L.combineIdx h₁ (sα, sγ)) (L.combineIdx h₁ p)
+            * (L.includeAlgebra h₁ a) (L.combineIdx h₁ p) (L.combineIdx h₁ (s'α, s'γ))
+      from ((L.combineIdx h₁).sum_comp _).symm,
+      Fintype.sum_prod_type, Fintype.sum_prod_type]
+  -- Now goals have ∑ α, ∑ γ, ... with explicit (α, γ) in combineIdx applications.
+  -- Apply Y cross-decomposition; X uses includeAlgebraFun_apply_combineIdx
+  -- (since `includeAlgebra h₁ a = includeAlgebraFun h₁ a` definitionally).
+  simp_rw [L.includeAlgebra_h₂_combineIdx_h₁ h₁ h₂ hΛ₂_compl b,
+           L.includeAlgebra_apply_combineIdx h₁ a]
+  -- Both sides: outer sum over α, inner over γ. Inner γ-sum collapses via X-condition;
+  -- outer α-sum collapses via Y-condition.
+  -- LHS: ∑ α, ∑ γ, (if sγ = γ then a sα α else 0) * (if α = s'α then M_b sγ s'γ else 0)
+  --   inner sum collapses to γ = sγ:
+  --     = ∑ α, a sα α * (if α = s'α then M_b sγ s'γ else 0)
+  --   outer sum collapses to α = s'α:
+  --     = a sα s'α * M_b sγ s'γ
+  -- RHS: ∑ α, ∑ γ, (if α = sα then M_b sγ s'γ else 0) * (if γ = s'γ then a α s'α else 0)
+  --   inner sum collapses to γ = s'γ:
+  --     = ∑ α, (if α = sα then M_b sγ s'γ else 0) * a α s'α
+  --   outer sum collapses to α = sα:
+  --     = M_b sγ s'γ * a sα s'α
+  -- Match via mul_comm.
+  have lhs_eval :
+      ∀ (α : L.regionIdx Λ₁),
+        (∑ γ : L.regionIdx (Λ_total \ Λ₁),
+            (if sγ = γ then a sα α else 0)
+            * (if α = s'α then L.includeAlgebra hΛ₂_compl b γ s'γ else 0))
+        = a sα α * (if α = s'α then L.includeAlgebra hΛ₂_compl b sγ s'γ else 0) := by
+    intro α
+    rw [Finset.sum_eq_single sγ]
+    · rw [if_pos rfl]
+    · intros γ _ hγ
+      rw [if_neg fun h => hγ h.symm, zero_mul]
+    · intro h
+      exact absurd (Finset.mem_univ sγ) h
+  have rhs_eval :
+      ∀ (α : L.regionIdx Λ₁),
+        (∑ γ : L.regionIdx (Λ_total \ Λ₁),
+            (if sα = α then L.includeAlgebra hΛ₂_compl b sγ γ else 0)
+            * (if γ = s'γ then a α s'α else 0))
+        = (if sα = α then L.includeAlgebra hΛ₂_compl b sγ s'γ else 0) * a α s'α := by
+    intro α
+    rw [Finset.sum_eq_single s'γ]
+    · rw [if_pos rfl]
+    · intros γ _ hγ
+      rw [if_neg hγ, mul_zero]
+    · intro h
+      exact absurd (Finset.mem_univ s'γ) h
+  simp_rw [lhs_eval, rhs_eval]
+  -- LHS: ∑ α, a sα α * (if α = s'α then ... else 0). Collapse on α = s'α.
+  rw [Finset.sum_eq_single s'α (fun α _ hα => by rw [if_neg hα, mul_zero])
+        (fun h => absurd (Finset.mem_univ s'α) h),
+      if_pos rfl]
+  -- RHS: ∑ α, (if sα = α then ... else 0) * a α s'α. Collapse on α = sα.
+  rw [Finset.sum_eq_single sα
+        (fun α _ hα => by rw [if_neg fun h => hα h.symm, zero_mul])
+        (fun h => absurd (Finset.mem_univ sα) h),
+      if_pos rfl]
+  -- Match via ℂ-commutativity.
+  ring
 
 end LocalNet
