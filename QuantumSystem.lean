@@ -16,6 +16,7 @@ public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Functoriality
 public import QuantumSystem.Algebra.LocalNet.GroupAction
 public import QuantumSystem.Algebra.LocalNet.InvariantState
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Embedding
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
 public import QuantumSystem.Algebra.LocalNetLike
