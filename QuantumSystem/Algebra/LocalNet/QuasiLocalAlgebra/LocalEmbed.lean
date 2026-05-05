@@ -569,7 +569,7 @@ theorem localEmbedAlg_apply (Λ : Finset L)
 /-- Finite-sum form of `localEmbedCoeff Λ M v g`: it is the inner product of
 the `Λ`-restriction of `v` around `g` with the `(regionRestrict Λ g)`-th column
 of `M`. -/
-private theorem localEmbedCoeff_eq_sum (Λ : Finset L)
+theorem localEmbedCoeff_eq_sum (Λ : Finset L)
     (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
     (v : globalHilbert L) (g : globalIdx L) :
     localEmbedCoeff Λ M v g
