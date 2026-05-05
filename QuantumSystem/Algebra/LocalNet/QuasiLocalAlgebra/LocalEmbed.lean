@@ -206,4 +206,101 @@ theorem norm_sq_localEmbedCoeff_le (Λ : Finset L)
     simpa [mul_pow] using hsq
   exact le_trans hcomp hop_sq
 
+/-! ### Summability of `wRestrict`-norms across global tuples -/
+
+/-- The squared-`lp` norm of `w` is summable along `globalIdx L`.
+This is just `Memℓp.gen_iff` rewritten in `‖·‖²` form. -/
+private theorem summable_w_norm_sq (w : globalHilbert L) :
+    Summable fun h : globalIdx L =>
+      ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 := by
+  have hmem : Memℓp ((w : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ) 2 :=
+    lp.memℓp w
+  have htwo : (0 : ℝ) < (2 : ENNReal).toReal := by
+    rw [ENNReal.toReal_ofNat]; norm_num
+  rw [memℓp_gen_iff htwo] at hmem
+  simpa [ENNReal.toReal_ofNat] using hmem
+
+/-- Partial-sum bound: every Finset sum of `‖w h‖²` over `globalIdx L` is at
+most `‖w‖²_lp`. -/
+private theorem finsetSum_w_norm_sq_le (w : globalHilbert L) (s : Finset (globalIdx L)) :
+    ∑ h ∈ s, ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2
+      ≤ ∑' h : globalIdx L, ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 :=
+  (summable_w_norm_sq w).sum_le_tsum s (fun _ _ => sq_nonneg _)
+
+/-- The total partial-sum bound for `‖wRestrict‖² = Σ_f ‖w(globalSwap Λ f g)‖²`. -/
+private theorem finsetSum_wRestrict_norm_sq_le (Λ : Finset L) (w : globalHilbert L)
+    (u : Finset (globalIdx L)) :
+    ∑ g ∈ u, ‖wRestrict Λ w g‖ ^ 2
+      ≤ (Fintype.card (regionIdx (L := L) Λ) : ℝ) *
+          ∑' h : globalIdx L, ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 := by
+  -- Expand wRestrict to a finite f-sum.
+  have hexp : ∀ g, ‖wRestrict Λ w g‖ ^ 2 =
+      ∑ f : regionIdx (L := L) Λ,
+        ‖(w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ f g)‖ ^ 2 :=
+    norm_sq_wRestrict Λ w
+  calc ∑ g ∈ u, ‖wRestrict Λ w g‖ ^ 2
+      = ∑ g ∈ u, ∑ f : regionIdx (L := L) Λ,
+          ‖(w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ f g)‖ ^ 2 := by
+        exact Finset.sum_congr rfl fun g _ => hexp g
+    _ = ∑ p ∈ u ×ˢ (Finset.univ : Finset (regionIdx (L := L) Λ)),
+          ‖(w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ p.2 p.1)‖ ^ 2 := by
+        rw [Finset.sum_product]
+    _ = ∑ p ∈ (u ×ˢ (Finset.univ : Finset (regionIdx (L := L) Λ))).image
+              (globalSwapEquiv Λ),
+          ‖(w : lp (fun _ : globalIdx L => ℂ) 2) p.1‖ ^ 2 := by
+        rw [Finset.sum_image (fun a _ b _ hab => (globalSwapEquiv Λ).injective hab)]
+        refine Finset.sum_congr rfl ?_
+        intro p _
+        simp [globalSwapEquiv_apply]
+    _ ≤ ∑ p ∈ ((u ×ˢ (Finset.univ : Finset (regionIdx (L := L) Λ))).image
+              (globalSwapEquiv Λ)).image Prod.fst ×ˢ
+              (Finset.univ : Finset (regionIdx (L := L) Λ)),
+          ‖(w : lp (fun _ : globalIdx L => ℂ) 2) p.1‖ ^ 2 := by
+        refine Finset.sum_le_sum_of_subset_of_nonneg ?_ (fun _ _ _ => sq_nonneg _)
+        intro p hp
+        rw [Finset.mem_product]
+        refine ⟨?_, Finset.mem_univ _⟩
+        rw [Finset.mem_image]
+        exact ⟨p, hp, rfl⟩
+    _ = ∑ h ∈ ((u ×ˢ (Finset.univ : Finset (regionIdx (L := L) Λ))).image
+              (globalSwapEquiv Λ)).image Prod.fst,
+          ∑ _ : regionIdx (L := L) Λ,
+            ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 := by
+        rw [Finset.sum_product]
+    _ = ∑ h ∈ ((u ×ˢ (Finset.univ : Finset (regionIdx (L := L) Λ))).image
+              (globalSwapEquiv Λ)).image Prod.fst,
+          (Fintype.card (regionIdx (L := L) Λ) : ℝ) *
+            ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 := by
+        refine Finset.sum_congr rfl ?_
+        intro h _
+        rw [Finset.sum_const, Finset.card_univ]
+        simp [mul_comm]
+    _ = (Fintype.card (regionIdx (L := L) Λ) : ℝ) *
+          ∑ h ∈ ((u ×ˢ (Finset.univ : Finset (regionIdx (L := L) Λ))).image
+              (globalSwapEquiv Λ)).image Prod.fst,
+            ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 := by
+        rw [Finset.mul_sum]
+    _ ≤ (Fintype.card (regionIdx (L := L) Λ) : ℝ) *
+          ∑' h : globalIdx L, ‖(w : lp (fun _ : globalIdx L => ℂ) 2) h‖ ^ 2 := by
+        apply mul_le_mul_of_nonneg_left
+        · exact finsetSum_w_norm_sq_le w _
+        · exact Nat.cast_nonneg _
+
+/-- Summability of `‖wRestrict Λ w g‖²` along `globalIdx L`. -/
+theorem summable_norm_sq_wRestrict (Λ : Finset L) (w : globalHilbert L) :
+    Summable fun g : globalIdx L => ‖wRestrict Λ w g‖ ^ 2 :=
+  summable_of_sum_le (fun _ => sq_nonneg _) (finsetSum_wRestrict_norm_sq_le Λ w)
+
+/-- Summability of `‖localEmbedCoeff Λ M w g‖²` along `globalIdx L`.
+This places `localEmbedCoeff Λ M w` in `lp 2` and is the entry point to
+upgrading the action `M ⊗ 1` to a continuous linear map. -/
+theorem summable_norm_sq_localEmbedCoeff (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (w : globalHilbert L) :
+    Summable fun g : globalIdx L => ‖localEmbedCoeff Λ M w g‖ ^ 2 := by
+  refine Summable.of_nonneg_of_le (fun _ => sq_nonneg _) ?_
+    ((summable_norm_sq_wRestrict Λ w).mul_left (‖M‖ ^ 2))
+  intro g
+  exact norm_sq_localEmbedCoeff_le Λ M w g
+
 end LocalNetLike
