@@ -423,4 +423,90 @@ noncomputable def localEmbed (Λ : Finset L)
       have := abs_le_of_sq_le_sq' h_sq hCw_nn
       simpa [abs_of_nonneg h_lhs_nn] using this.2)
 
+@[simp]
+theorem localEmbed_apply_coe (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (w : globalHilbert L) :
+    ((localEmbed Λ M w : globalHilbert L)
+        : lp (fun _ : globalIdx L => ℂ) 2)
+      = ⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩ := rfl
+
+@[simp]
+theorem localEmbed_apply_apply (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (w : globalHilbert L) (g : globalIdx L) :
+    ((localEmbed Λ M w : globalHilbert L) : globalIdx L → ℂ) g
+      = localEmbedCoeff Λ M w g := rfl
+
+/-! ### Algebraic structure of `M ↦ localEmbed Λ M` -/
+
+/-- For any `f : regionIdx Λ` and `g : globalIdx L`,
+`globalSwap Λ f' (globalSwap Λ f g) = globalSwap Λ f' g`: a second swap of
+the Λ-part overrides the first one. -/
+theorem globalSwap_globalSwap (Λ : Finset L) (f f' : regionIdx (L := L) Λ)
+    (g : globalIdx L) :
+    globalSwap Λ f' (globalSwap Λ f g) = globalSwap Λ f' g := by
+  apply Subtype.ext
+  funext s
+  by_cases hs : s ∈ Λ
+  · simp [globalSwap_val_apply_of_mem _ _ _ hs]
+  · simp [globalSwap_val_apply_of_not_mem _ _ _ hs]
+
+/-- `wRestrict` is invariant under swapping the global tuple along `Λ`. -/
+theorem wRestrict_globalSwap (Λ : Finset L) (w : globalHilbert L)
+    (f : regionIdx (L := L) Λ) (g : globalIdx L) :
+    wRestrict Λ w (globalSwap Λ f g) = wRestrict Λ w g := by
+  ext f'
+  simp only [wRestrict_apply, globalSwap_globalSwap]
+
+/-- Composing `localEmbed Λ N` with the `wRestrict` operation realises
+applying `N` first to the local data: `wRestrict Λ (localEmbed Λ N w) g = N (wRestrict Λ w g)`. -/
+theorem wRestrict_localEmbed (Λ : Finset L)
+    (N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (w : globalHilbert L) (g : globalIdx L) :
+    wRestrict Λ (localEmbed Λ N w) g = N (wRestrict Λ w g) := by
+  ext f
+  simp only [wRestrict_apply, localEmbed_apply_apply, localEmbedCoeff]
+  rw [wRestrict_globalSwap, regionRestrict_globalSwap]
+
+/-- Swapping back the Λ-part with the original `g`'s Λ-part recovers `g`. -/
+theorem globalSwap_regionRestrict_self (Λ : Finset L) (g : globalIdx L) :
+    globalSwap Λ (regionRestrict Λ g) g = g := by
+  apply Subtype.ext
+  funext s
+  by_cases hs : s ∈ Λ
+  · simp [globalSwap_val_apply_of_mem _ _ _ hs, regionRestrict]
+  · simp [globalSwap_val_apply_of_not_mem _ _ _ hs]
+
+/-- The component of `wRestrict Λ w g` at `regionRestrict Λ g` equals `w g`. -/
+theorem wRestrict_apply_regionRestrict (Λ : Finset L) (w : globalHilbert L)
+    (g : globalIdx L) :
+    (wRestrict Λ w g : regionIdx (L := L) Λ → ℂ) (regionRestrict Λ g)
+      = ((w : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ) g := by
+  rw [wRestrict_apply, globalSwap_regionRestrict_self]
+
+/-- `localEmbed Λ` sends the identity to the identity. -/
+theorem localEmbed_one (Λ : Finset L) :
+    localEmbed Λ (ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ))
+      = ContinuousLinearMap.id ℂ (globalHilbert L) := by
+  ext w g
+  rw [localEmbed_apply_apply]
+  unfold localEmbedCoeff
+  simp only [ContinuousLinearMap.id_apply]
+  exact wRestrict_apply_regionRestrict Λ w g
+
+/-- `localEmbed Λ` is multiplicative: `localEmbed Λ (M ∘ N) = localEmbed Λ M ∘ localEmbed Λ N`. -/
+theorem localEmbed_mul (Λ : Finset L)
+    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    localEmbed Λ (M.comp N) = (localEmbed Λ M).comp (localEmbed Λ N) := by
+  ext w g
+  rw [localEmbed_apply_apply]
+  change localEmbedCoeff Λ (M.comp N) w g
+    = ((((localEmbed Λ M).comp (localEmbed Λ N)) w : globalHilbert L)
+        : globalIdx L → ℂ) g
+  rw [ContinuousLinearMap.comp_apply, localEmbed_apply_apply]
+  unfold localEmbedCoeff
+  rw [wRestrict_localEmbed]
+  rfl
+
 end LocalNetLike
