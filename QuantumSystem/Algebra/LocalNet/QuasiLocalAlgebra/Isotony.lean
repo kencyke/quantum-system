@@ -240,4 +240,55 @@ theorem localSubalgebra_le_of_subset {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
   obtain ⟨M, hM⟩ := (mem_localSubalgebra Λ T).mp hT
   exact (mem_localSubalgebra Λ' T).mpr ⟨regionLift h M, by rw [localEmbed_regionLift_eq, hM]⟩
 
+/-- The local subalgebra on the left component is contained in the local
+subalgebra of the union. -/
+theorem localSubalgebra_le_union_left (Λ₁ Λ₂ : Finset L) :
+    localSubalgebra Λ₁ ≤ localSubalgebra (Λ₁ ∪ Λ₂) :=
+  localSubalgebra_le_of_subset (Finset.subset_union_left)
+
+/-- The local subalgebra on the right component is contained in the local
+subalgebra of the union. -/
+theorem localSubalgebra_le_union_right (Λ₁ Λ₂ : Finset L) :
+    localSubalgebra Λ₂ ≤ localSubalgebra (Λ₁ ∪ Λ₂) :=
+  localSubalgebra_le_of_subset (Finset.subset_union_right)
+
+/-! ### Compatibility between abstract `isotony` and `localRep`
+
+The mixin below records the missing bridge between two pictures of the
+finite-region embedding `Λ ↪ Λ'`:
+
+* on the abstract algebra side, `LocalNetLike.isotony h` sends
+  `a ∈ 𝔄(Λ)` to an element of `𝔄(Λ')`;
+* on the represented side, `regionLift h` sends an operator on
+  `regionHilbert Λ` to an operator on `regionHilbert Λ'`.
+
+A `HasLocalRepresentation` already exists, so each side admits a `localRep`.
+Asking that `localRep` intertwines the two embeddings is precisely the data
+needed to transport every Haag–Kastler statement formulated on
+`localSubalgebra Λ` to an analogous statement on the abstract
+`localAlgebra Λ`. -/
+
+/-- Optional refinement: the local representation `localRep` intertwines the
+abstract isotony embedding with the operator-level lift `regionLift`. -/
+class HasIsotonyCompatibleLocalRep
+    (L : Type*) [DecidableEq L] [LocalNetLike L]
+    [LocalNetLike.HasLocalRepresentation L] : Prop where
+  localRep_isotony {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
+      (a : LocalNetLike.localAlgebra (L := L) Λ) :
+    LocalNetLike.HasLocalRepresentation.localRep Λ' (LocalNetLike.isotony h a)
+      = regionLift h (LocalNetLike.HasLocalRepresentation.localRep Λ a)
+
+variable [LocalNetLike.HasLocalRepresentation L]
+
+/-- The composite embedding `𝔄(Λ) → B(globalHilbert L)` factors through every
+larger region: applying `localAlgebraEmbed` after `isotony` recovers the
+direct embedding of the smaller region. -/
+theorem localAlgebraEmbed_isotony [HasIsotonyCompatibleLocalRep L]
+    {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
+    (a : LocalNetLike.localAlgebra (L := L) Λ) :
+    localAlgebraEmbed Λ' (LocalNetLike.isotony h a) = localAlgebraEmbed Λ a := by
+  rw [localAlgebraEmbed_apply, localAlgebraEmbed_apply,
+    HasIsotonyCompatibleLocalRep.localRep_isotony h a,
+    localEmbed_regionLift_eq]
+
 end LocalNetLike

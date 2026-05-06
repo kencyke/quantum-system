@@ -6,10 +6,10 @@ public import QuantumSystem.Algebra.LocalNet.GroupAction
 # `G`-invariant density matrices on a `LocalNet`
 
 Defines the `G`-invariance predicate for density matrices on a region `Λ` (when
-`g · Λ = Λ`) and a vacuum-style specialisation for the global region
+`g · Λ = Λ`) and a vacuum-style specialisation for the global finite region
 `Finset.univ`. The maximally-mixed state `π = I / d` is shown to be
-`G`-invariant for any group action — a sample inhabitant verifying that the
-invariance predicate is non-empty (Verch 2025 §1.2 axiom (iv) precondition).
+`G`-invariant for any group action — a sample inhabitant verifying that this
+finite-dimensional invariance predicate is non-empty.
 
 ## Main definitions
 
@@ -20,7 +20,8 @@ invariance predicate is non-empty (Verch 2025 §1.2 axiom (iv) precondition).
 
 ## References
 
-* Verch 2025 (`https://arxiv.org/abs/2507.00900`) §1.2 axiom (iv)
+* Verch 2025 (`https://arxiv.org/abs/2507.00900`) §1.2 for invariant states
+  and their implementing vectors.
 -/
 
 @[expose] public section

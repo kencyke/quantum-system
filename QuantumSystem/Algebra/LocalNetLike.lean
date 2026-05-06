@@ -3,18 +3,22 @@ module
 public import QuantumSystem.Algebra.LocalNet
 
 /-!
-# `LocalNetLike`: a typeclass abstraction of Haag–Kastler local net data
+# `LocalNetLike`: a typeclass abstraction of finite-region local net data
 
-This file introduces a `LocalNetLike` typeclass that captures the structural data of a
-Haag–Kastler local net independently of the concrete carrier of sites.  Both the existing
-finite-dimensional `LocalNet` (sites are `Fintype`) and the future `QuasiLocalNet`
-(infinite lattices) will be instances.  The motivation is to formulate locality, covariance,
-and invariant-state predicates once over the abstract carrier rather than threading
-type-specific bridge lemmas through downstream proofs.
+This file introduces a `LocalNetLike` typeclass for the finite-region, lattice-style
+part of a local net.  The region family is `Finset L`, so the intended concrete
+models are finite-dimensional `LocalNet`s and infinite-lattice quantum spin systems
+whose local regions are finite subsets.  Continuous-spacetime AQFT, where regions
+are double cones or other open sets and causality is spacelike separation, is kept
+in a separate interface.
+
+The motivation is to formulate isotony and disjoint-region locality once over an
+abstract site carrier rather than threading type-specific bridge lemmas through
+downstream lattice/spin-system proofs.
 
 ## Design
 
-The class bundles the following pieces (Verch 2025 §1.2 axioms (i) and (ii)):
+The class bundles the following pieces for finite lattice regions:
 
 * per-site Hilbert-space index types,
 * a region-indexed family of `*`-algebras over `ℂ` (presented as separate
@@ -31,12 +35,12 @@ class can be instantiated by carriers without a chosen group action.
 
 @[expose] public section
 
-/-- **Local net of `*`-algebras** as a typeclass over a site type `L`.
+/-- **Finite-region local net of `*`-algebras** as a typeclass over a site type `L`.
 
     The carrier `L` itself is required only to have decidable equality on sites; in
     particular it need not be a `Fintype`.  The local algebra family is presented
     abstractly as `Finset L → Type*` so that both concrete matrix realisations
-    (`LocalNet`) and inductive-limit-style carriers (`QuasiLocalAlgebra`) fit. -/
+    (`LocalNet`) and lattice quasi-local constructions can share notation. -/
 class LocalNetLike (L : Type*) [DecidableEq L] where
   /-- Local Hilbert-space index type at each site. -/
   localIdx : L → Type*
@@ -48,7 +52,7 @@ class LocalNetLike (L : Type*) [DecidableEq L] where
   [localAlgebraAlgebra : ∀ Λ, Algebra ℂ (localAlgebra Λ)]
   [localAlgebraStarRing : ∀ Λ, StarRing (localAlgebra Λ)]
   [localAlgebraStarModule : ∀ Λ, StarModule ℂ (localAlgebra Λ)]
-  /-- **Isotony embedding** `𝔄(Λ) ↪ 𝔄(Λ')` (Verch 2025 §1.2 axiom (i)). -/
+  /-- **Isotony embedding** `𝔄(Λ) ↪ 𝔄(Λ')` for finite regions. -/
   isotony {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
     localAlgebra Λ →⋆ₐ[ℂ] localAlgebra Λ'
   /-- Functoriality (identity): the isotony embedding along `Subset.refl` is the
@@ -56,8 +60,8 @@ class LocalNetLike (L : Type*) [DecidableEq L] where
       is provided separately by the optional mixin `LocalNetLike.IsFunctorial`. -/
   isotony_refl (Λ : Finset L) :
     isotony (Finset.Subset.refl Λ) = StarAlgHom.id ℂ (localAlgebra Λ)
-  /-- **Locality** (Verch 2025 §1.2 axiom (ii) / Haag–Kastler): the images of two
-      disjoint subregions commute inside the larger algebra. -/
+    /-- **Disjoint-region locality** for the lattice/spin setting: the images of two
+      disjoint finite subregions commute inside the larger algebra. -/
   isLocal {Λ₁ Λ₂ Λ_total : Finset L} (h₁ : Λ₁ ⊆ Λ_total) (h₂ : Λ₂ ⊆ Λ_total)
       (hd : Disjoint Λ₁ Λ₂) (a : localAlgebra Λ₁) (b : localAlgebra Λ₂) :
     Commute (isotony h₁ a) (isotony h₂ b)
@@ -90,5 +94,25 @@ instance instStarModuleLocalAlgebra (Λ : Finset L) :
     StarModule ℂ (LocalNetLike.localAlgebra (L := L) Λ) :=
   LocalNetLike.localAlgebraStarModule Λ
 
-end LocalNetLike
+/-! ### Optional exactness properties for finite-region nets -/
 
+/-- Optional property: every finite-region isotony map is injective.
+
+This is kept as a mixin because the base `LocalNetLike` class is also used for
+lightweight kinematic data.  Concrete spin-system instances should provide this
+when the local fibres are nonempty. -/
+class IsotonyInjective (L : Type*) [DecidableEq L] [LocalNetLike L] : Prop where
+  isotony_injective {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
+    Function.Injective (LocalNetLike.isotony (L := L) h)
+
+/-- Optional property: finite-region isotony is functorial under inclusion.
+
+The base class already contains the identity law.  This mixin records the
+composition law needed to regard the finite-region net as an honest functor from
+the inclusion preorder to `*`-algebras. -/
+class IsFunctorial (L : Type*) [DecidableEq L] [LocalNetLike L] : Prop where
+  isotony_comp {Λ₁ Λ₂ Λ₃ : Finset L} (h₁₂ : Λ₁ ⊆ Λ₂) (h₂₃ : Λ₂ ⊆ Λ₃) :
+    LocalNetLike.isotony (L := L) (h₁₂.trans h₂₃) =
+      (LocalNetLike.isotony (L := L) h₂₃).comp (LocalNetLike.isotony (L := L) h₁₂)
+
+end LocalNetLike

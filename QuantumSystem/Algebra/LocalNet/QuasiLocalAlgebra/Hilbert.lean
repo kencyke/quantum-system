@@ -76,3 +76,38 @@ abbrev regionHilbert (Λ : Finset L) : Type _ :=
   EuclideanSpace ℂ (regionIdx (L := L) Λ)
 
 end LocalNetLike
+
+/-- Optional mixin: realise the abstract local algebra `LocalNetLike.localAlgebra Λ`
+as an honest `*`-algebra of operators on `regionHilbert Λ`.  This is the bridge
+that ties the kinematic abstraction `LocalNetLike` to the basis-indexed
+operator-algebra construction underlying the Haag–Kastler quasi-local algebra.
+
+Concrete instances should provide `localRep Λ` whenever the abstract algebra
+is intended to be identified with a sub-algebra of the matrix algebra on
+`regionHilbert Λ`. -/
+class LocalNetLike.HasLocalRepresentation
+    (L : Type*) [DecidableEq L] [LocalNetLike L] where
+  /-- A bundled `*`-algebra hom from the abstract local algebra to the
+  operator algebra on `regionHilbert Λ`. -/
+  localRep (Λ : Finset L) :
+    LocalNetLike.localAlgebra (L := L) Λ →⋆ₐ[ℂ]
+      (LocalNetLike.regionHilbert (L := L) Λ
+        →L[ℂ] LocalNetLike.regionHilbert (L := L) Λ)
+
+/-- Optional refinement: `HasLocalRepresentation` is *faithful*, i.e. the
+representation `localRep Λ` is injective.  Whenever this holds, the abstract
+local algebra is identified up to isomorphism with a sub-`*`-algebra of the
+finite-dimensional C⋆-algebra `regionHilbert Λ →L[ℂ] regionHilbert Λ`, hence
+inherits a canonical (finite-dim) C⋆-structure via that embedding.
+
+This is the abstract-level analogue of the existing `LocalNetLike.IsotonyInjective`
+mixin and is the cleanest way to record that the kinematic data is non-degenerate
+without wedging a full `CStarAlgebra` instance directly onto the abstract
+`localAlgebra` field, which would conflict with the basic `Semiring/Algebra`
+instances bundled into `LocalNetLike`. -/
+class LocalNetLike.HasFaithfulLocalRepresentation
+    (L : Type*) [DecidableEq L] [LocalNetLike L]
+    [LocalNetLike.HasLocalRepresentation L] : Prop where
+  localRep_injective (Λ : Finset L) :
+    Function.Injective
+      (LocalNetLike.HasLocalRepresentation.localRep (L := L) Λ)

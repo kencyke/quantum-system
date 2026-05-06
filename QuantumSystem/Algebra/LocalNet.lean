@@ -3,12 +3,16 @@ module
 public import QuantumSystem.Channel
 
 /-!
-# Local Net of Matrix Algebras (finite-dim)
+# Local net of matrix algebras for finite lattice regions
 
-This file defines the data of a **local net of matrix algebras** on a finite lattice.
-An AQFT system assigns to each spacetime / lattice region `Λ` an
-algebra `𝔄(Λ)` of observables, with **isotony** (`Λ₁ ⊆ Λ₂ ⟹ 𝔄(Λ₁) ⊆ 𝔄(Λ₂)`), **locality**
-(disjoint regions commute), and—in the spacetime version—**covariance**.
+This file defines the data of a **local net of matrix algebras** over finite
+lattice regions.  It is the finite-dimensional, quantum-spin-system analogue of
+the local-net part of the Haag–Kastler framework.  Continuous-spacetime AQFT
+uses a different region geometry and is handled separately.
+
+A lattice local net assigns to each finite region `Λ` an algebra `𝔄(Λ)` of
+observables, with **isotony** (`Λ₁ ⊆ Λ₂ ⟹ 𝔄(Λ₁) ⊆ 𝔄(Λ₂)`) and **locality**
+(disjoint regions commute).  Covariance is added in the group-action modules.
 
 For finite-dimensional quantum spin systems, the construction specialises to:
 
@@ -352,6 +356,81 @@ theorem includeAlgebra_injective {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_t
     rw [includeAlgebraFun_apply_combineIdx, if_pos rfl]
   rw [key] at heq
   simpa using heq
+
+/-- **Functoriality (composition):** the isotony embedding respects composition of
+inclusions.  This is the `*`-algebra version of the fact that tensoring with the
+identity on `Λ₃ \ Λ₁` factors as tensoring with the identity on `Λ₂ \ Λ₁` followed
+by tensoring with the identity on `Λ₃ \ Λ₂`. -/
+theorem includeAlgebra_comp {Λ₁ Λ₂ Λ₃ : Finset L.sites}
+    (h₁₂ : Λ₁ ⊆ Λ₂) (h₂₃ : Λ₂ ⊆ Λ₃) :
+    L.includeAlgebra (h₁₂.trans h₂₃)
+      = (L.includeAlgebra h₂₃).comp (L.includeAlgebra h₁₂) := by
+  ext X s s'
+  rw [StarAlgHom.coe_comp, Function.comp_apply,
+    includeAlgebra_apply, includeAlgebra_apply, includeAlgebra_apply]
+  -- Equivalence of the conditional guards.  The LHS condition says `s` and `s'`
+  -- agree on every site of `Λ₃ \ Λ₁`; the RHS conjunction says they agree on
+  -- `Λ₃ \ Λ₂` and on `Λ₂ \ Λ₁`, which together cover `Λ₃ \ Λ₁`.
+  have hcond_iff :
+      ((L.combineIdx (h₁₂.trans h₂₃)).symm s).2 =
+          ((L.combineIdx (h₁₂.trans h₂₃)).symm s').2
+        ↔ ((L.combineIdx h₂₃).symm s).2 = ((L.combineIdx h₂₃).symm s').2 ∧
+          ((L.combineIdx h₁₂).symm ((L.combineIdx h₂₃).symm s).1).2 =
+            ((L.combineIdx h₁₂).symm ((L.combineIdx h₂₃).symm s').1).2 := by
+    refine ⟨fun h => ⟨?_, ?_⟩, ?_⟩
+    · -- (→) outer condition: s|Λ₃\Λ₂ = s'|Λ₃\Λ₂.
+      funext d
+      have hd_props := Finset.mem_sdiff.mp d.property
+      have hd : d.val ∈ Λ₃ \ Λ₁ :=
+        Finset.mem_sdiff.mpr ⟨hd_props.1, fun hin => hd_props.2 (h₁₂ hin)⟩
+      have key := congrFun h ⟨d.val, hd⟩
+      simp only [combineIdx_symm_apply_snd] at key ⊢
+      exact key
+    · -- (→) inner condition: (s|Λ₂)|Λ₂\Λ₁ = (s'|Λ₂)|Λ₂\Λ₁.
+      funext e
+      have he_props := Finset.mem_sdiff.mp e.property
+      have he : e.val ∈ Λ₃ \ Λ₁ :=
+        Finset.mem_sdiff.mpr ⟨h₂₃ he_props.1, he_props.2⟩
+      have key := congrFun h ⟨e.val, he⟩
+      simp only [combineIdx_symm_apply_snd, combineIdx_symm_apply_fst] at key ⊢
+      exact key
+    · -- (←) given the outer + inner conditions, derive the LHS condition.
+      rintro ⟨hQ, hR⟩
+      funext c
+      have hc_in_Λ₃ : c.val ∈ Λ₃ := (Finset.mem_sdiff.mp c.property).1
+      have hc_notin_Λ₁ : c.val ∉ Λ₁ := (Finset.mem_sdiff.mp c.property).2
+      by_cases hc_Λ₂ : c.val ∈ Λ₂
+      · have he : c.val ∈ Λ₂ \ Λ₁ :=
+          Finset.mem_sdiff.mpr ⟨hc_Λ₂, hc_notin_Λ₁⟩
+        have key := congrFun hR ⟨c.val, he⟩
+        simp only [combineIdx_symm_apply_snd, combineIdx_symm_apply_fst] at key ⊢
+        exact key
+      · have hd : c.val ∈ Λ₃ \ Λ₂ :=
+          Finset.mem_sdiff.mpr ⟨hc_in_Λ₃, hc_Λ₂⟩
+        have key := congrFun hQ ⟨c.val, hd⟩
+        simp only [combineIdx_symm_apply_snd] at key ⊢
+        exact key
+  -- The X-arguments coincide by the same restriction-to-Λ₁ identity.
+  have hX_arg :
+      ∀ t : L.regionIdx Λ₃,
+        ((L.combineIdx (h₁₂.trans h₂₃)).symm t).1 =
+          ((L.combineIdx h₁₂).symm ((L.combineIdx h₂₃).symm t).1).1 := by
+    intro t
+    funext a
+    simp only [combineIdx_symm_apply_fst]
+  -- Case analysis on the two RHS conditions.
+  by_cases h_outer :
+      ((L.combineIdx h₂₃).symm s).2 = ((L.combineIdx h₂₃).symm s').2
+  · rw [if_pos h_outer]
+    by_cases h_inner :
+        ((L.combineIdx h₁₂).symm ((L.combineIdx h₂₃).symm s).1).2 =
+          ((L.combineIdx h₁₂).symm ((L.combineIdx h₂₃).symm s').1).2
+    · rw [if_pos h_inner, if_pos (hcond_iff.mpr ⟨h_outer, h_inner⟩),
+        hX_arg s, hX_arg s']
+    · rw [if_neg h_inner,
+        if_neg (fun h => h_inner (hcond_iff.mp h).2)]
+  · rw [if_neg h_outer,
+      if_neg (fun h => h_outer (hcond_iff.mp h).1)]
 
 /-! ### Region equivalences
 

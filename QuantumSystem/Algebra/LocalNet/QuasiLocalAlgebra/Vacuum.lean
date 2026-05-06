@@ -1,11 +1,12 @@
 module
 
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
+public import Mathlib.Analysis.InnerProductSpace.LinearMap
 
 /-!
-# Vacuum vector and `G`-invariance Prop (Phase 5'd)
+# Vacuum vector and `G`-invariance
 
-We define the canonical **vacuum vector** of the lattice system as the
+We define the canonical **reference/vacuum vector** of the lattice system as the
 basis vector `lp.single 2 (referenceTuple L) 1` in `globalHilbert L`,
 where `referenceTuple L : globalIdx L` is the global tuple that takes the
 value `referenceBasis L s` at every site.  This is the Naaijkens-Bratteli
@@ -16,28 +17,30 @@ The combinatorial *invariance* condition for a `G`-action is that the
 action fixes the reference tuple, i.e. `globalIdxAction g (referenceTuple L)
 = referenceTuple L` — this is the natural strengthening of
 `siteIdxEquiv_referenceBasis` from sites to global tuples.  The full
-operator-algebra statement (`ω(α_g T) = ω(T)` for the vacuum state
-associated with the vacuum vector) is the natural follow-up after the
-unitary representation is in place.
+operator-algebra statement (`ω(α_g T) = ω(T)` for the vector functional
+associated with the reference vector) is a separate state layer.  It should
+not be confused with the relativistic positive-energy vacuum condition.
 
 ## Main definitions / theorems
 
 * `LocalNetLike.referenceTuple L` — the constant `referenceBasis`-tuple in
   `globalIdx L`.
-* `LocalNetLike.vacuumState L` — the vacuum vector
+* `LocalNetLike.vacuumVector L` — the reference/vacuum vector
   `lp.single 2 (referenceTuple L) 1` in `globalHilbert L`.
+* `LocalNetLike.vacuumState L` — compatibility alias for `vacuumVector L`.
+* `LocalNetLike.vacuumVectorFunctional L` — the vector functional
+  `T ↦ ⟪vacuumVector L, T (vacuumVector L)⟫_ℂ` on represented operators.
 * `LocalNetLike.HasGroupAction.globalIdxAction_referenceTuple` — every
   `G`-action fixes `referenceTuple L`.
-* `LocalNetLike.IsVacuumInvariant act` — Prop saying every `G`-translate
-  of `vacuumState L` equals `vacuumState L`; automatic from
-  `globalIdxAction_referenceTuple` once the unitary representation
-  is in place.
+* `LocalNetLike.HasGroupAction.unitaryAction_vacuumVector` — every `G`-translate
+  of `vacuumVector L` equals `vacuumVector L`.
 
 ## References
 
 * Naaijkens 2012 §3.5.
 * Bratteli–Robinson Vol. 2 §2.7.2.
-* Verch 2025 (https://arxiv.org/abs/2507.00900) §1.2 axiom (iv).
+* Verch 2025 (https://arxiv.org/abs/2507.00900) §1.2 for the distinction between
+  invariant implementing vectors and relativistic vacuum states.
 -/
 
 @[expose] public section
@@ -57,10 +60,22 @@ noncomputable def referenceTuple : globalIdx L :=
 theorem referenceTuple_val (s : L) :
     (referenceTuple L).val s = referenceBasis L s := rfl
 
-/-- The **vacuum vector** of the lattice system: the basis vector of
+/-- The **reference/vacuum vector** of the lattice system: the basis vector of
 `globalHilbert L` at `referenceTuple L`. -/
-noncomputable def vacuumState : globalHilbert L :=
+noncomputable def vacuumVector : globalHilbert L :=
   lp.single 2 (referenceTuple L) (1 : ℂ)
+
+/-- Compatibility alias for earlier code.  The object is a vector in
+`globalHilbert L`; it is not a bundled C⋆-algebra state. -/
+noncomputable abbrev vacuumState : globalHilbert L :=
+  vacuumVector L
+
+/-- The vector functional associated with the reference/vacuum vector on the
+represented operator algebra `B(globalHilbert L)`.  Bundling this as a C⋆-state
+on `quasiLocal L` is a separate state-layer construction. -/
+noncomputable def vacuumVectorFunctional
+    (T : globalHilbert L →L[ℂ] globalHilbert L) : ℂ :=
+  inner ℂ (vacuumVector L) (T (vacuumVector L))
 
 namespace HasGroupAction
 
@@ -90,22 +105,21 @@ theorem globalIdxAction_referenceTuple (act : HasGroupAction L G) (g : G) :
 
 end HasGroupAction
 
-/-- **`G`-invariance of the vacuum vector** (Verch 2025 §1.2 axiom (iv) /
-Naaijkens 2012 §1.3): the unitary representation `unitaryAction g` fixes
-the vacuum vector. -/
-theorem HasGroupAction.unitaryAction_vacuumState
+/-- **`G`-invariance of the reference/vacuum vector**: the unitary representation
+`unitaryAction g` fixes `vacuumVector L`. -/
+theorem HasGroupAction.unitaryAction_vacuumVector
     {G : Type*} [Group G] (act : HasGroupAction L G) (g : G) :
-    act.unitaryAction g (vacuumState L) = vacuumState L := by
+    act.unitaryAction g (vacuumVector L) = vacuumVector L := by
   apply Subtype.ext
   funext a
   rw [HasGroupAction.unitaryAction_apply_val]
-  -- (vacuumState L).val (g.symm a) = (vacuumState L).val a
+  -- (vacuumVector L).val (g.symm a) = (vacuumVector L).val a
   -- Both equal `if · = referenceTuple L then 1 else 0`; equivalence follows from
   -- `globalIdxAction g (referenceTuple L) = referenceTuple L`.
-  change (vacuumState L : lp (fun _ : globalIdx L => ℂ) 2)
+  change (vacuumVector L : lp (fun _ : globalIdx L => ℂ) 2)
         ((act.globalIdxAction g).symm a)
-      = (vacuumState L : lp (fun _ : globalIdx L => ℂ) 2) a
-  unfold vacuumState
+      = (vacuumVector L : lp (fun _ : globalIdx L => ℂ) 2) a
+  unfold vacuumVector
   rw [lp.single_apply, lp.single_apply, Pi.single_apply, Pi.single_apply]
   -- if (g.symm a = referenceTuple L) then 1 else 0
   -- = if (a = referenceTuple L) then 1 else 0
@@ -130,5 +144,109 @@ theorem HasGroupAction.unitaryAction_vacuumState
   by_cases hcase : a = referenceTuple L
   · rw [if_pos (hiff.mpr hcase), if_pos hcase]
   · rw [if_neg (fun h => hcase (hiff.mp h)), if_neg hcase]
+
+/-- Compatibility spelling for earlier code: `vacuumState L` is an alias for
+`vacuumVector L`. -/
+theorem HasGroupAction.unitaryAction_vacuumState
+    {G : Type*} [Group G] (act : HasGroupAction L G) (g : G) :
+    act.unitaryAction g (vacuumState L) = vacuumState L :=
+  HasGroupAction.unitaryAction_vacuumVector L act g
+
+/-! ### Bundled vacuum-state functional and `G`-invariance -/
+
+/-- The **vacuum-state functional** on the represented operator algebra
+`B(globalHilbert L)`, bundled as a continuous linear map.  At a bounded
+operator `T` it returns `⟪Ω, T Ω⟫`, where `Ω = vacuumVector L`. -/
+noncomputable def vacuumFunctional :
+    (globalHilbert L →L[ℂ] globalHilbert L) →L[ℂ] ℂ :=
+  (innerSL ℂ (vacuumVector L)).comp
+    (ContinuousLinearMap.apply ℂ (globalHilbert L) (vacuumVector L))
+
+@[simp]
+theorem vacuumFunctional_apply
+    (T : globalHilbert L →L[ℂ] globalHilbert L) :
+    vacuumFunctional L T = inner ℂ (vacuumVector L) (T (vacuumVector L)) := rfl
+
+/-- The bundled functional agrees with the un-bundled `vacuumVectorFunctional`
+expression. -/
+theorem vacuumFunctional_eq_vacuumVectorFunctional
+    (T : globalHilbert L →L[ℂ] globalHilbert L) :
+    vacuumFunctional L T = vacuumVectorFunctional L T := rfl
+
+/-- Normalization: `ω(1) = ⟪Ω, Ω⟫ = 1`, since `Ω = lp.single 2 _ 1` has unit norm. -/
+@[simp]
+theorem vacuumFunctional_one : vacuumFunctional L 1 = 1 := by
+  rw [vacuumFunctional_apply, ContinuousLinearMap.one_apply]
+  -- ⟪Ω, Ω⟫ where Ω = lp.single 2 (referenceTuple L) 1.
+  unfold vacuumVector
+  rw [lp.inner_single_left]
+  -- inner ℂ (1 : ℂ) (lp.single 2 (referenceTuple L) 1).val (referenceTuple L) = 1.
+  rw [lp.single_apply]
+  simp
+
+/-- The inverse unitary also fixes the vacuum vector. -/
+theorem HasGroupAction.unitaryAction_symm_vacuumVector
+    {G : Type*} [Group G] (act : HasGroupAction L G) (g : G) :
+    (act.unitaryAction g).symm (vacuumVector L) = vacuumVector L := by
+  have h := HasGroupAction.unitaryAction_vacuumVector L act g
+  have := congrArg (act.unitaryAction g).symm h
+  rw [LinearIsometryEquiv.symm_apply_apply] at this
+  exact this.symm
+
+/-- **`G`-invariance of the vacuum functional at the `B(H)` level**:
+`ω(α_g T) = ω(T)` for every bounded operator `T` and every group element `g`. -/
+theorem HasGroupAction.vacuumFunctional_algebraAut
+    {G : Type*} [Group G] (act : HasGroupAction L G) (g : G)
+    (T : globalHilbert L →L[ℂ] globalHilbert L) :
+    vacuumFunctional L (act.algebraAut g T) = vacuumFunctional L T := by
+  rw [vacuumFunctional_apply, vacuumFunctional_apply, act.algebraAut_apply]
+  -- LHS: ⟪Ω, U (T (U.symm Ω))⟫.
+  simp only [ContinuousLinearMap.comp_apply,
+    LinearIsometryEquiv.coe_toContinuousLinearEquiv,
+    ContinuousLinearEquiv.coe_coe]
+  rw [HasGroupAction.unitaryAction_symm_vacuumVector L act g]
+  -- Goal: ⟪Ω, U (T Ω)⟫ = ⟪Ω, T Ω⟫.  Use `inner_map_map` on the RHS.
+  calc inner ℂ (vacuumVector L)
+            ((act.unitaryAction g) (T (vacuumVector L)))
+      = inner ℂ ((act.unitaryAction g) (vacuumVector L))
+              ((act.unitaryAction g) (T (vacuumVector L))) := by
+            rw [HasGroupAction.unitaryAction_vacuumVector L act g]
+    _ = inner ℂ (vacuumVector L) (T (vacuumVector L)) :=
+            (act.unitaryAction g).inner_map_map _ _
+
+/-! ### Vacuum state on the bundled quasi-local algebra -/
+
+/-- The **vacuum state** on the quasi-local algebra `quasiLocal L`,
+bundled as a continuous linear functional `↥(quasiLocal L) →L[ℂ] ℂ`.  This is
+the C\*-state realisation of the reference-vector functional. -/
+noncomputable def vacuumStateOnQuasiLocal :
+    ↥(quasiLocal L) →L[ℂ] ℂ :=
+  (vacuumFunctional L).comp (quasiLocal L).toSubalgebra.toSubmodule.subtypeL
+
+@[simp]
+theorem vacuumStateOnQuasiLocal_apply (T : ↥(quasiLocal L)) :
+    vacuumStateOnQuasiLocal L T
+      = inner ℂ (vacuumVector L)
+          ((T : globalHilbert L →L[ℂ] globalHilbert L) (vacuumVector L)) := rfl
+
+@[simp]
+theorem vacuumStateOnQuasiLocal_one :
+    vacuumStateOnQuasiLocal L (1 : ↥(quasiLocal L)) = 1 := by
+  -- `(1 : ↥(quasiLocal L))` projects to `(1 : B(H))` under the inclusion.
+  change vacuumFunctional L (1 : globalHilbert L →L[ℂ] globalHilbert L) = 1
+  exact vacuumFunctional_one L
+
+/-- **`G`-invariance of the vacuum state** on the quasi-local algebra:
+`ω(α_g T) = ω(T)` for every `T ∈ quasiLocal L` and every group element `g`. -/
+theorem HasGroupAction.vacuumStateOnQuasiLocal_quasiLocalEnd
+    {G : Type*} [Group G] (act : HasGroupAction L G) (g : G)
+    (T : ↥(quasiLocal L)) :
+    vacuumStateOnQuasiLocal L (act.quasiLocalEnd g T)
+      = vacuumStateOnQuasiLocal L T := by
+  change vacuumFunctional L
+      (act.algebraAut g (T : globalHilbert L →L[ℂ] globalHilbert L))
+      = vacuumFunctional L (T : globalHilbert L →L[ℂ] globalHilbert L)
+  exact HasGroupAction.vacuumFunctional_algebraAut L act g
+    (T : globalHilbert L →L[ℂ] globalHilbert L)
 
 end LocalNetLike

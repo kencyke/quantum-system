@@ -5,8 +5,8 @@ public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Embedding
 /-!
 # Local algebra embedding into `B(globalHilbert L)` (Phase 5'b)
 
-For each finite region `Λ : Finset L` we build the canonical *unital*
-`*`-algebra embedding
+For each finite region `Λ : Finset L` we build the canonical injective unital
+`*`-algebra homomorphism
 
 `localEmbed Λ : (regionHilbert Λ →L[ℂ] regionHilbert Λ) →⋆ₐ[ℂ]
                   (globalHilbert L →L[ℂ] globalHilbert L)`
@@ -24,9 +24,9 @@ and `(f, g|Λᶜ) : globalIdx L` is the global tuple obtained by replacing
 the Λ component of `g` with `f`.
 
 This file installs the structural helpers that make the formula above
-well-defined.  The continuous-linear-map upgrade, the `StarAlgHom`
-structure, and the resulting `localSubalgebra Λ : StarSubalgebra ℂ _`
-are added in subsequent commits.
+well-defined, upgrades the construction to a `StarAlgHom`, proves its
+injectivity, and defines the resulting represented local subalgebra
+`localSubalgebra Λ : StarSubalgebra ℂ _`.
 
 ## Main definitions
 
@@ -821,6 +821,74 @@ theorem localEmbedHom_apply (Λ : Finset L)
     (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
     localEmbedHom Λ M = localEmbed Λ M := rfl
 
+@[simp]
+theorem regionRestrict_extendRegionTuple (Λ : Finset L)
+    (a : regionIdx (L := L) Λ) :
+    regionRestrict Λ (extendRegionTuple Λ a) = a := by
+  funext s
+  simp [regionRestrict]
+
+/-- Swapping the `Λ`-component of an extended region tuple gives the extension of
+the swapped-in region tuple. -/
+theorem globalSwap_extendRegionTuple (Λ : Finset L)
+    (a b : regionIdx (L := L) Λ) :
+    globalSwap Λ b (extendRegionTuple Λ a) = extendRegionTuple Λ b := by
+  apply Subtype.ext
+  funext s
+  by_cases hs : s ∈ Λ
+  · simp [globalSwap_val_apply_of_mem, extendRegionTuple_val_apply_of_mem, hs]
+  · simp [globalSwap_val_apply_of_not_mem, extendRegionTuple_val_apply_of_not_mem, hs]
+
+@[simp]
+theorem wRestrict_lpSingle_extendRegionTuple (Λ : Finset L)
+    (a b : regionIdx (L := L) Λ) :
+    wRestrict Λ (lp.single 2 (extendRegionTuple Λ b) (1 : ℂ) : globalHilbert L)
+      (extendRegionTuple Λ a) = EuclideanSpace.single b (1 : ℂ) := by
+  ext f
+  rw [wRestrict_apply]
+  rw [globalSwap_extendRegionTuple]
+  by_cases hfb : f = b
+  · subst hfb
+    simp [lp.single_apply]
+  · have hne : extendRegionTuple Λ f ≠ extendRegionTuple Λ b := by
+      intro h
+      exact hfb ((extendRegionTuple_injective Λ) h)
+    simp [lp.single_apply, hne, hfb]
+
+/-- The represented local algebra map is injective: a local operator is uniquely
+recovered from its action on the embedded region basis vectors. -/
+theorem localEmbedHom_injective (Λ : Finset L) :
+    Function.Injective (localEmbedHom (L := L) Λ) := by
+  rw [injective_iff_map_eq_zero]
+  intro M hM
+  have hbasis_zero : ∀ b : regionIdx (L := L) Λ,
+      M (EuclideanSpace.single b (1 : ℂ)) = 0 := by
+    intro b
+    ext a
+    have hzero := congrArg
+      (fun T : globalHilbert L →L[ℂ] globalHilbert L =>
+        ((T (lp.single 2 (extendRegionTuple Λ b) (1 : ℂ) : globalHilbert L)
+            : globalHilbert L) : globalIdx L → ℂ) (extendRegionTuple Λ a)) hM
+    rw [localEmbedHom_apply] at hzero
+    change ((localEmbed Λ M
+        (lp.single 2 (extendRegionTuple Λ b) (1 : ℂ) : globalHilbert L)
+          : globalHilbert L) : globalIdx L → ℂ) (extendRegionTuple Λ a) = 0 at hzero
+    rw [localEmbed_apply_apply] at hzero
+    unfold localEmbedCoeff at hzero
+    rw [wRestrict_lpSingle_extendRegionTuple, regionRestrict_extendRegionTuple] at hzero
+    simpa using hzero
+  apply ContinuousLinearMap.ext
+  intro v
+  have hv : v = ∑ b : regionIdx (L := L) Λ,
+      (v : regionIdx (L := L) Λ → ℂ) b • EuclideanSpace.single b (1 : ℂ) := by
+    have := (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).sum_repr v
+    simpa [EuclideanSpace.basisFun_apply, EuclideanSpace.basisFun_repr] using this.symm
+  rw [hv, map_sum]
+  apply Finset.sum_eq_zero
+  intro b _
+  rw [map_smul, hbasis_zero b]
+  simp
+
 /-- The local subalgebra at `Λ`: the image of `M ↦ localEmbed Λ M` viewed as a
 unital `*`-subalgebra of `globalHilbert L →L[ℂ] globalHilbert L`. -/
 noncomputable def localSubalgebra (Λ : Finset L) :
@@ -834,5 +902,43 @@ theorem mem_localSubalgebra (Λ : Finset L)
           localEmbed Λ M = T := by
   change T ∈ ((localEmbedHom Λ).toAlgHom.range : Subalgebra ℂ _) ↔ _
   exact AlgHom.mem_range _
+
+/-! ### Bridge between the abstract local algebra and the represented quasi-local
+
+When the optional `HasLocalRepresentation` mixin is provided, the abstract
+algebra `LocalNetLike.localAlgebra Λ` admits a canonical `*`-algebra hom into
+`B(globalHilbert L)` whose range lies inside `localSubalgebra Λ`.  This is the
+one piece needed to view the abstract `LocalNetLike` net as a concrete
+sub-`*`-algebra of `B(globalHilbert L)`. -/
+
+variable [HasLocalRepresentation L]
+
+/-- The composite `*`-algebra hom realising the abstract local algebra inside
+`B(globalHilbert L)`. -/
+noncomputable def localAlgebraEmbed (Λ : Finset L) :
+    LocalNetLike.localAlgebra (L := L) Λ →⋆ₐ[ℂ]
+      (globalHilbert L →L[ℂ] globalHilbert L) :=
+  (localEmbedHom Λ).comp (HasLocalRepresentation.localRep Λ)
+
+theorem localAlgebraEmbed_apply (Λ : Finset L)
+    (a : LocalNetLike.localAlgebra (L := L) Λ) :
+    localAlgebraEmbed Λ a
+      = localEmbed Λ (HasLocalRepresentation.localRep Λ a) := rfl
+
+/-- The range of `localAlgebraEmbed` lives inside `localSubalgebra Λ`,
+realising the abstract net `Λ ↦ localAlgebra Λ` as a sub-`*`-algebra of the
+quasi-local algebra. -/
+theorem localAlgebraEmbed_range_le_localSubalgebra (Λ : Finset L) :
+    (localAlgebraEmbed Λ).range ≤ localSubalgebra Λ := by
+  intro T hT
+  obtain ⟨a, hT⟩ := hT
+  refine ⟨HasLocalRepresentation.localRep Λ a, ?_⟩
+  simpa [localAlgebraEmbed_apply] using hT
+
+/-- Membership form of `localAlgebraEmbed_range_le_localSubalgebra`. -/
+theorem localAlgebraEmbed_mem_localSubalgebra (Λ : Finset L)
+    (a : LocalNetLike.localAlgebra (L := L) Λ) :
+    localAlgebraEmbed Λ a ∈ localSubalgebra Λ :=
+  localAlgebraEmbed_range_le_localSubalgebra Λ ⟨a, rfl⟩
 
 end LocalNetLike
