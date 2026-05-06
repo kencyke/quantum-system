@@ -19,6 +19,7 @@ public import QuantumSystem.Algebra.LocalNet.InvariantState
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Embedding
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.HaagKastler
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Isotony
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.LocalEmbed
