@@ -70,7 +70,32 @@ Haag–Kastler net (general framework)
                           (data + isotony only; locality / covariance / vacuum NYI)
 ```
 
+## Status: Phase 5 implementation of the Naaijkens 2012 instance
+
+`QuantumSystem/Algebra/LocalNet/QuasiLocalAlgebra/*` adds a basis-indexed
+realisation of the **infinite-lattice Haag–Kastler net**, sitting on top of
+the new `LocalNetLike` typeclass.  The four axioms are verified:
+
+| Axiom (Verch 2025 §1.2 / Naaijkens 2012 §1.3) | Theorem | File |
+| --- | --- | --- |
+| (i) Isotony | `LocalNetLike.HaagKastler.isotony` | `Isotony.lean` |
+| (ii) Locality | `LocalNetLike.HaagKastler.locality` | `Locality.lean` |
+| (iii) Covariance | `LocalNetLike.HaagKastler.covariance` | `Covariance.lean` |
+| (iv) Vacuum invariance | `LocalNetLike.HaagKastler.vacuum_invariance` | `Vacuum.lean` |
+
+The quasi-local algebra `LocalNetLike.quasiLocal L : StarSubalgebra ℂ B(H)`
+is the norm closure of `⨆ Λ : Finset L, localSubalgebra Λ` and carries an
+automatic `CStarAlgebra` instance (`instCStarAlgebra_quasiLocal`), realising
+the UHF / quasi-local construction at the operator-algebra level.  The
+underlying global Hilbert space `globalHilbert L := ↥(lp _ 2)` is the
+incomplete tensor product around the basis-indexed reference vector
+`vacuumState L := lp.single 2 (referenceTuple L) 1`.
+
+The four axioms together with `instCStarAlgebra_quasiLocal` are gathered in
+`HaagKastler.lean` for downstream use.
+
 ## References
 
 - https://repository.ubn.ru.nl/handle/2066/92737
 - https://github.com/xiyin137/OSreconstruction
+- https://arxiv.org/abs/2507.00900
