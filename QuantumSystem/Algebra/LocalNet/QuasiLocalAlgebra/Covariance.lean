@@ -583,6 +583,74 @@ theorem algebraAut_localSubalgebra_le (act : HasGroupAction L G) (g : G)
     ⟨act.regionTransportAlg g Λ M, ?_⟩
   rw [← hM, act.algebraAut_localEmbed]
 
+/-! ### Lift to the quasi-local algebra
+
+The covariance theorems above act on individual local subalgebras
+`localSubalgebra Λ`.  We now lift them through the supremum
+`quasiLocalSubalg L = ⨆ Λ, localSubalgebra Λ` and through its
+norm closure `quasiLocal L`. -/
+
+/-- Covariance at the strict union level: `algebraAut g` maps
+`quasiLocalSubalg L` into itself.  This is the algebraic preparation for
+the lift to the full quasi-local algebra (see `algebraAut_quasiLocal_le`). -/
+theorem algebraAut_quasiLocalSubalg_le (act : HasGroupAction L G) (g : G) :
+    ∀ T ∈ quasiLocalSubalg L,
+      act.algebraAut g T ∈ quasiLocalSubalg L := by
+  -- It suffices to show `quasiLocalSubalg L ≤ comap (algebraAut g) (quasiLocalSubalg L)`.
+  intro T hT
+  suffices h : quasiLocalSubalg L
+      ≤ (quasiLocalSubalg L).comap
+          ((act.algebraAut g : _ →⋆ₐ[ℂ] _)) by
+    exact h hT
+  -- Decompose `⨆ ≤ X` via `iSup_le` and use the Galois connection
+  -- `map_le_iff_le_comap` to reduce to `algebraAut_localSubalgebra_le`.
+  refine iSup_le ?_
+  intro Λ
+  rw [← StarSubalgebra.map_le_iff_le_comap]
+  intro T' hT'
+  obtain ⟨T, hT, rfl⟩ := hT'
+  exact localSubalgebra_le_quasiLocalSubalg L (act.regionImage g Λ)
+    (algebraAut_localSubalgebra_le act g Λ T hT)
+
+/-- The operator-algebra automorphism `algebraAut g` is continuous in the
+operator-norm topology: it factors through the continuous algebra equivalence
+`(unitaryAction g).toContinuousLinearEquiv.conjContinuousAlgEquiv`. -/
+theorem continuous_algebraAut (act : HasGroupAction L G) (g : G) :
+    Continuous (act.algebraAut g) := by
+  -- algebraAut g = StarAlgEquiv.ofAlgEquiv (conjContinuousAlgEquiv (unitaryAction g)).
+  -- Both are the same function, and conjContinuousAlgEquiv is continuous.
+  change Continuous
+    fun T : globalHilbert L →L[ℂ] globalHilbert L =>
+      (act.unitaryAction g).toContinuousLinearEquiv.conjContinuousAlgEquiv T
+  exact (act.unitaryAction g).toContinuousLinearEquiv.conjContinuousAlgEquiv.continuous_toFun
+
+/-- **Covariance** at the quasi-local level (Verch 2025 §1.2 axiom (iii) /
+Naaijkens 2012 §1.3): the operator-level action `algebraAut g` maps the full
+quasi-local algebra `quasiLocal L` into itself.
+
+The proof combines the algebraic lift `algebraAut_quasiLocalSubalg_le` with
+continuity of `algebraAut g`: the comap of `quasiLocal L` under `algebraAut g`
+contains `quasiLocalSubalg L` and is closed, hence contains the topological
+closure `quasiLocal L`. -/
+theorem algebraAut_quasiLocal_le (act : HasGroupAction L G) (g : G) :
+    ∀ T ∈ quasiLocal L,
+      act.algebraAut g T ∈ quasiLocal L := by
+  intro T hT
+  suffices h : quasiLocal L
+      ≤ (quasiLocal L).comap ((act.algebraAut g : _ →⋆ₐ[ℂ] _)) by
+    exact h hT
+  -- Apply `topologicalClosure_minimal`.  We need (a) `qsa ≤ comap` and
+  -- (b) the comap is closed.
+  refine StarSubalgebra.topologicalClosure_minimal ?_ ?_
+  · -- (a): for `T ∈ qsa`, `algebraAut g T ∈ qsa ⊆ quasiLocal L`.
+    intro T' hT'
+    change act.algebraAut g T' ∈ quasiLocal L
+    exact quasiLocalSubalg_le_quasiLocal L
+      (algebraAut_quasiLocalSubalg_le act g T' hT')
+  · -- (b): preimage of a closed set under a continuous map is closed.
+    rw [StarSubalgebra.coe_comap]
+    exact (isClosed_quasiLocal L).preimage (continuous_algebraAut act g)
+
 end HasGroupAction
 
 end LocalNetLike
