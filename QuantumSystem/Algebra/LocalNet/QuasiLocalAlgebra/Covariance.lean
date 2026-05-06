@@ -77,20 +77,6 @@ variable {G : Type*} [Group G]
 def regionImage (act : HasGroupAction L G) (g : G) (Λ : Finset L) : Finset L :=
   Λ.image (act.siteAction g)
 
-@[simp]
-theorem regionImage_one (act : HasGroupAction L G) (Λ : Finset L) :
-    act.regionImage 1 Λ = Λ := by
-  unfold regionImage
-  rw [act.siteAction.map_one]
-  exact Λ.image_id
-
-/-- `regionImage` is multiplicative: `(gh) · Λ = g · (h · Λ)`. -/
-theorem regionImage_mul (act : HasGroupAction L G) (g h : G) (Λ : Finset L) :
-    act.regionImage (g * h) Λ = act.regionImage g (act.regionImage h Λ) := by
-  unfold regionImage
-  rw [act.siteAction.map_mul, Finset.image_image]
-  rfl
-
 /-- The function-level permutation of `(s : L) → localIdx s` induced by the
 action.  This is the un-restricted action on dependent function spaces;
 the restriction to the finite-variation subtype `globalIdx L` (using
@@ -107,15 +93,6 @@ theorem piAction_apply_apply
     piAction act g f (act.siteAction g s) = act.siteIdxEquiv g s (f s) :=
   Equiv.piCongr_apply_apply (act.siteAction g)
     (fun s => act.siteIdxEquiv g s) f s
-
-/-- Optional coherence laws for the dependent index action.
-
-The basic `HasGroupAction` structure is intentionally minimal.  This mixin records
-the extra laws needed when one wants the induced global unitary and algebra
-automorphism families to be treated as a genuine group action. -/
-class IsCoherent (act : HasGroupAction L G) : Prop where
-  piAction_one : piAction act (1 : G) = Equiv.refl _
-  piAction_mul : ∀ g h : G, piAction act (g * h) = (piAction act h).trans (piAction act g)
 
 /-- The `g`-translate sends finite-variation tuples to finite-variation
 tuples: a `Γ`-witness for `f` translates to a `Γ.image (siteAction g)`-witness
@@ -178,27 +155,6 @@ noncomputable def globalIdxAction (act : HasGroupAction L G) (g : G) :
 @[simp]
 theorem globalIdxAction_val (act : HasGroupAction L G) (g : G) (f : globalIdx L) :
     (globalIdxAction act g f).val = piAction act g f.val := rfl
-
-/-- Under coherent dependent index actions, the induced action on finite-variation
-global tuples sends the unit group element to the identity permutation. -/
-theorem globalIdxAction_one (act : HasGroupAction L G) [IsCoherent act] :
-    globalIdxAction act (1 : G) = Equiv.refl (globalIdx L) := by
-  ext f
-  apply Subtype.ext
-  change piAction act (1 : G) f.val = f.val
-  rw [IsCoherent.piAction_one]
-  rfl
-
-/-- Under coherent dependent index actions, the induced action on finite-variation
-global tuples is multiplicative.  The order matches the convention
-`(g * h) · x = g · (h · x)`. -/
-theorem globalIdxAction_mul (act : HasGroupAction L G) [IsCoherent act] (g h : G) :
-    globalIdxAction act (g * h) = (globalIdxAction act h).trans (globalIdxAction act g) := by
-  ext f
-  apply Subtype.ext
-  change piAction act (g * h) f.val = piAction act g (piAction act h f.val)
-  simpa [Equiv.trans_apply] using
-    congrFun (congrArg Equiv.toFun (IsCoherent.piAction_mul (act := act) g h)) f.val
 
 /-! ### Unitary representation on `globalHilbert L` -/
 
@@ -294,31 +250,6 @@ theorem unitaryAction_apply_val (act : HasGroupAction L G) (g : G)
     ((unitaryAction act g f : globalHilbert L) : globalIdx L → ℂ) a
       = (f : globalIdx L → ℂ) ((globalIdxAction act g).symm a) := rfl
 
-/-- Under coherent dependent index actions, the unitary attached to the unit group
-element is the identity unitary. -/
-theorem unitaryAction_one (act : HasGroupAction L G) [IsCoherent act] :
-    unitaryAction act (1 : G) = LinearIsometryEquiv.refl ℂ (globalHilbert L) := by
-  ext f a
-  rw [unitaryAction_apply_val]
-  change (f : globalIdx L → ℂ) ((globalIdxAction act (1 : G)).symm a)
-      = (f : globalIdx L → ℂ) a
-  rw [globalIdxAction_one act]
-  rfl
-
-/-- Under coherent dependent index actions, the induced unitaries are
-multiplicative.  Because `unitaryAction g` acts by pullback along
-`globalIdxAction g`, the order is contravariant at the level of `trans`. -/
-theorem unitaryAction_mul (act : HasGroupAction L G) [IsCoherent act] (g h : G) :
-    unitaryAction act (g * h) = (unitaryAction act h).trans (unitaryAction act g) := by
-  ext f a
-  rw [unitaryAction_apply_val]
-  change (f : globalIdx L → ℂ) ((globalIdxAction act (g * h)).symm a)
-      = (((unitaryAction act g) ((unitaryAction act h) f) : globalHilbert L)
-          : globalIdx L → ℂ) a
-  rw [unitaryAction_apply_val, unitaryAction_apply_val]
-  rw [globalIdxAction_mul act g h]
-  rfl
-
 /-! ### Algebra automorphism via conjugation by the unitary representation -/
 
 /-- The `*`-algebra automorphism of `B(globalHilbert L)` induced by conjugation
@@ -336,22 +267,6 @@ theorem algebraAut_apply (act : HasGroupAction L G) (g : G)
       = (act.unitaryAction g).toContinuousLinearEquiv.toContinuousLinearMap.comp
           (T.comp (act.unitaryAction g).symm.toContinuousLinearEquiv.toContinuousLinearMap) :=
   LinearIsometryEquiv.conjStarAlgEquiv_apply _ _
-
-/-- Under coherent dependent index actions, conjugation by the unit group element is
-the identity `*`-algebra automorphism. -/
-theorem algebraAut_one (act : HasGroupAction L G) [IsCoherent act] :
-    algebraAut act (1 : G) = StarAlgEquiv.refl := by
-  unfold algebraAut
-  rw [unitaryAction_one act]
-  exact LinearIsometryEquiv.conjStarAlgEquiv_refl
-
-/-- Under coherent dependent index actions, the operator-algebra automorphisms are
-multiplicative. -/
-theorem algebraAut_mul (act : HasGroupAction L G) [IsCoherent act] (g h : G) :
-    algebraAut act (g * h) = (algebraAut act h).trans (algebraAut act g) := by
-  unfold algebraAut
-  rw [unitaryAction_mul act g h]
-  exact LinearIsometryEquiv.conjStarAlgEquiv_trans _ _
 
 /-! ### Region-level transport: lifting `g` to `regionHilbert` -/
 
@@ -754,56 +669,6 @@ noncomputable def quasiLocalEnd (act : HasGroupAction L G) (g : G) :
 @[simp]
 theorem quasiLocalEnd_apply (act : HasGroupAction L G) (g : G) (T : quasiLocal L) :
     (act.quasiLocalEnd g T : globalHilbert L →L[ℂ] globalHilbert L) =
-      act.algebraAut g (T : globalHilbert L →L[ℂ] globalHilbert L) :=
-  rfl
-
-/-- Under coherent dependent index actions, the induced endomorphism of the
-quasi-local algebra at the unit group element is the identity. -/
-theorem quasiLocalEnd_one (act : HasGroupAction L G) [IsCoherent act] :
-    quasiLocalEnd act (1 : G) = StarAlgHom.id ℂ (quasiLocal L) := by
-  ext T x a
-  simp [quasiLocalEnd_apply, algebraAut_one act]
-
-/-- Under coherent dependent index actions, the induced endomorphisms of the
-quasi-local algebra are multiplicative. -/
-theorem quasiLocalEnd_mul (act : HasGroupAction L G) [IsCoherent act] (g h : G) :
-    quasiLocalEnd act (g * h) = (quasiLocalEnd act g).comp (quasiLocalEnd act h) := by
-  ext T x a
-  simp [quasiLocalEnd_apply, algebraAut_mul act g h]
-
-/-- Under coherent dependent index actions, the induced action on the quasi-local
-algebra is a `*`-algebra automorphism.  This upgrades the covariance
-endomorphism `quasiLocalEnd` by using the inverse group element. -/
-noncomputable def quasiLocalAut (act : HasGroupAction L G) [IsCoherent act] (g : G) :
-    quasiLocal L ≃⋆ₐ[ℂ] quasiLocal L :=
-  StarAlgEquiv.ofAlgEquiv
-    (AlgEquiv.ofBijective (quasiLocalEnd act g).toAlgHom <| by
-      constructor
-      · intro T U hTU
-        have h := congrArg (fun X => quasiLocalEnd act g⁻¹ X) hTU
-        have hcomp : (quasiLocalEnd act g⁻¹).comp (quasiLocalEnd act g)
-            = StarAlgHom.id ℂ (quasiLocal L) := by
-          rw [← quasiLocalEnd_mul act g⁻¹ g]
-          simp [quasiLocalEnd_one act]
-        change ((quasiLocalEnd act g⁻¹).comp (quasiLocalEnd act g)) T =
-            ((quasiLocalEnd act g⁻¹).comp (quasiLocalEnd act g)) U at h
-        rw [hcomp] at h
-        exact h
-      · intro T
-        refine ⟨quasiLocalEnd act g⁻¹ T, ?_⟩
-        have hcomp : (quasiLocalEnd act g).comp (quasiLocalEnd act g⁻¹)
-            = StarAlgHom.id ℂ (quasiLocal L) := by
-          rw [← quasiLocalEnd_mul act g g⁻¹]
-          simp [quasiLocalEnd_one act]
-        change ((quasiLocalEnd act g).comp (quasiLocalEnd act g⁻¹)) T = T
-        rw [hcomp]
-        rfl)
-    (fun T => map_star (quasiLocalEnd act g) T)
-
-@[simp]
-theorem quasiLocalAut_apply (act : HasGroupAction L G) [IsCoherent act]
-    (g : G) (T : quasiLocal L) :
-    (act.quasiLocalAut g T : globalHilbert L →L[ℂ] globalHilbert L) =
       act.algebraAut g (T : globalHilbert L →L[ℂ] globalHilbert L) :=
   rfl
 

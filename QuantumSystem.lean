@@ -12,10 +12,6 @@ public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet
 public import QuantumSystem.Algebra.LocalNet.AsLocalNetLike
-public import QuantumSystem.Algebra.LocalNet.Covariance
-public import QuantumSystem.Algebra.LocalNet.Functoriality
-public import QuantumSystem.Algebra.LocalNet.GroupAction
-public import QuantumSystem.Algebra.LocalNet.InvariantState
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Embedding
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Examples.QubitChain

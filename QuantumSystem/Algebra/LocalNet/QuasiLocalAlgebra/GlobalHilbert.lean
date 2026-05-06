@@ -4,7 +4,7 @@ public import Mathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.Algebra.LocalNetLike
 
 /-!
-# Infinite-site Hilbert space (Phase 5'a step 3)
+# Infinite-site Hilbert space
 
 Following Naaijkens 2012 §3.5 / Bratteli–Robinson Vol. 2 §2.7.2, the
 infinite-site Hilbert space of a quantum lattice system is built from a

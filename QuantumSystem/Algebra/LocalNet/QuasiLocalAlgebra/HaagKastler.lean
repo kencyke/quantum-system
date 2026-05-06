@@ -54,10 +54,7 @@ representation and the abstract isotony.
 
 `HaagKastlerNet L` collects all those optional refinements into a single
 public entry point so that Haag–Kastler statements can be quoted at the
-abstract `LocalNetLike.localAlgebra` level without re-listing the mixins.
-The covariant version `HaagKastlerCovariantNet` additionally records the
-coherence law turning a `HasGroupAction` into a genuine group action on
-the dependent-index permutations. -/
+abstract `LocalNetLike.localAlgebra` level without re-listing the mixins. -/
 
 /-- **Public bundle for static Haag–Kastler data.**  Combines the four
 optional mixins (`IsFunctorial`, `IsotonyInjective`, `HasFaithfulLocalRepresentation`,
@@ -86,31 +83,6 @@ instance HaagKastlerNet.instNonemptyLocalIdx
     [LocalNetLike.HasLocalRepresentation L] [HaagKastlerNet L] (s : L) :
     Nonempty (LocalNetLike.localIdx (L := L) s) :=
   HaagKastlerNet.nonempty_localIdx s
-
-/-- **Public bundle for covariant Haag–Kastler data.**  Pairs a
-`HaagKastlerNet L` with a `G`-action `act` on `L` whose dependent-index
-permutation lift `piAction` is coherent (sends the unit element to the
-identity and the product to the composition).  Coherence is the
-condition under which `algebraAut` and the unitary representation
-become genuine group actions. -/
-class HaagKastlerCovariantNet
-    (L : Type*) [DecidableEq L] [LocalNetLike L]
-    [LocalNetLike.HasLocalRepresentation L] [HaagKastlerNet L]
-    (G : Type*) [Group G]
-    (act : LocalNetLike.HasGroupAction L G) : Prop where
-  /-- The dependent-index permutation lift respects the group structure. -/
-  isCoherent : LocalNetLike.HasGroupAction.IsCoherent act
-
-/-- The coherence record packed inside `HaagKastlerCovariantNet` is exposed
-as a typeclass instance, so theorems requiring `[IsCoherent act]` resolve
-automatically once `[HaagKastlerCovariantNet L G act]` is available. -/
-instance HaagKastlerCovariantNet.instIsCoherent
-    {L : Type*} [DecidableEq L] [LocalNetLike L]
-    [LocalNetLike.HasLocalRepresentation L] [HaagKastlerNet L]
-    {G : Type*} [Group G] {act : LocalNetLike.HasGroupAction L G}
-    [HaagKastlerCovariantNet L G act] :
-    LocalNetLike.HasGroupAction.IsCoherent act :=
-  HaagKastlerCovariantNet.isCoherent
 
 variable (L : Type*) [DecidableEq L] [LocalNetLike L]
     [hL : ∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)]
@@ -164,13 +136,6 @@ theorem vacuum_vector_invariance {G : Type*} [Group G]
     act.unitaryAction g Ω(L) = Ω(L) :=
   HasGroupAction.unitaryAction_vacuumVector L act g
 
-/-- Compatibility spelling for older files: this is invariance of the canonical
-reference vector, not a bundled C⋆-algebra state or a positive-energy condition. -/
-theorem vacuum_invariance {G : Type*} [Group G]
-    (act : HasGroupAction L G) (g : G) :
-    act.unitaryAction g Ω(L) = Ω(L) :=
-  HasGroupAction.unitaryAction_vacuumState L act g
-
 /-- **`G`-invariance of the vacuum state on the quasi-local algebra**.  This is
 the proper C⋆-state form `ω(α_g T) = ω(T)` of vacuum invariance, complementing
 the unitary-implementation statement `vacuum_vector_invariance`. -/
@@ -178,74 +143,6 @@ theorem vacuum_state_invariance {G : Type*} [Group G]
     (act : HasGroupAction L G) (g : G) (T : ↥(quasiLocal L)) :
     ω(L) (act.quasiLocalEnd g T) = ω(L) T :=
   HasGroupAction.vacuumStateOnQuasiLocal_quasiLocalEnd L act g T
-
-/-! ### Abstract-algebra-level Haag–Kastler statements
-
-The theorems above describe the represented quasi-local net.  Under
-`[HaagKastlerNet L]`, the same content can be relayed at the abstract
-`LocalNetLike.localAlgebra` level: every abstract local element is
-realised inside `quasiLocal L` via `localAlgebraEmbed`, and the bundle
-guarantees compatibility with isotony, locality and covariance. -/
-
-variable {L}
-
-/-- **Abstract isotony**: under `HaagKastlerNet L`, the global embedding
-of an abstract local element factors through any larger region. -/
-theorem abstract_isotony
-    [LocalNetLike.HasLocalRepresentation L] [LocalNetLike.HaagKastlerNet L]
-    {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (a : LocalNetLike.localAlgebra (L := L) Λ) :
-    localAlgebraEmbed Λ' (LocalNetLike.isotony h a) = localAlgebraEmbed Λ a :=
-  localAlgebraEmbed_isotony h a
-
-/-- **Abstract locality**: under `HaagKastlerNet L`, abstract local
-elements on disjoint regions commute after global embedding. -/
-theorem abstract_locality
-    [LocalNetLike.HasLocalRepresentation L] [LocalNetLike.HaagKastlerNet L]
-    {Λ₁ Λ₂ : Finset L} (hd : Disjoint Λ₁ Λ₂)
-    (a : LocalNetLike.localAlgebra (L := L) Λ₁)
-    (b : LocalNetLike.localAlgebra (L := L) Λ₂) :
-    Commute (localAlgebraEmbed Λ₁ a) (localAlgebraEmbed Λ₂ b) :=
-  localSubalgebra_commute_of_disjoint hd
-    (localAlgebraEmbed_mem_localSubalgebra Λ₁ a)
-    (localAlgebraEmbed_mem_localSubalgebra Λ₂ b)
-
-/-- **Abstract membership in the quasi-local algebra**: every abstract
-local element lands inside the quasi-local algebra after embedding. -/
-theorem abstract_mem_quasiLocal
-    [LocalNetLike.HasLocalRepresentation L] [LocalNetLike.HaagKastlerNet L]
-    {Λ : Finset L} (a : LocalNetLike.localAlgebra (L := L) Λ) :
-    localAlgebraEmbed Λ a ∈ quasiLocal L :=
-  localSubalgebra_le_quasiLocal L Λ (localAlgebraEmbed_mem_localSubalgebra Λ a)
-
-variable (L)
-
-/-- **Abstract covariance**: under `HaagKastlerNet L` paired with a
-coherent `HaagKastlerCovariantNet`, the represented operator-algebra
-automorphism `algebraAut g` sends the global embedding of every abstract
-local element at `Λ` into the represented local algebra of the translated
-region `g · Λ`. -/
-theorem abstract_covariance_local
-    [LocalNetLike.HasLocalRepresentation L] [LocalNetLike.HaagKastlerNet L]
-    {G : Type*} [Group G] (act : HasGroupAction L G)
-    [LocalNetLike.HaagKastlerCovariantNet L G act] {Λ : Finset L}
-    (a : LocalNetLike.localAlgebra (L := L) Λ) (g : G) :
-    act.algebraAut g (localAlgebraEmbed Λ a) ∈ 𝔄(act.regionImage g Λ) :=
-  HasGroupAction.algebraAut_localSubalgebra_le act g Λ _
-    (localAlgebraEmbed_mem_localSubalgebra Λ a)
-
-/-- **Abstract covariance into the quasi-local algebra**: the local covariance
-statement `abstract_covariance_local` followed by the inclusion
-`localSubalgebra (g · Λ) ≤ quasiLocal L`.  This convenient weaker spelling is
-useful when working only in the completed quasi-local algebra. -/
-theorem abstract_covariance
-    [LocalNetLike.HasLocalRepresentation L] [LocalNetLike.HaagKastlerNet L]
-    {G : Type*} [Group G] (act : HasGroupAction L G)
-    [LocalNetLike.HaagKastlerCovariantNet L G act] {Λ : Finset L}
-    (a : LocalNetLike.localAlgebra (L := L) Λ) (g : G) :
-    act.algebraAut g (localAlgebraEmbed Λ a) ∈ quasiLocal L :=
-  localSubalgebra_le_quasiLocal L (act.regionImage g Λ)
-    (abstract_covariance_local (L := L) act a g)
 
 end HaagKastler
 

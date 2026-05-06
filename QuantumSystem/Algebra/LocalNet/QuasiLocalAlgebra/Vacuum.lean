@@ -26,9 +26,6 @@ not be confused with the relativistic positive-energy vacuum condition.
   `globalIdx L`.
 * `LocalNetLike.vacuumVector L` — the reference/vacuum vector
   `lp.single 2 (referenceTuple L) 1` in `globalHilbert L`.
-* `LocalNetLike.vacuumState L` — compatibility alias for `vacuumVector L`.
-* `LocalNetLike.vacuumVectorFunctional L` — the vector functional
-  `T ↦ ⟪vacuumVector L, T (vacuumVector L)⟫_ℂ` on represented operators.
 * `LocalNetLike.HasGroupAction.globalIdxAction_referenceTuple` — every
   `G`-action fixes `referenceTuple L`.
 * `LocalNetLike.HasGroupAction.unitaryAction_vacuumVector` — every `G`-translate
@@ -55,10 +52,6 @@ element of `globalIdx L` whose all coordinates agree with the reference. -/
 noncomputable def referenceTuple : globalIdx L :=
   ⟨fun s => referenceBasis L s, ⟨∅, fun _ _ => rfl⟩⟩
 
-@[simp]
-theorem referenceTuple_val (s : L) :
-    (referenceTuple L).val s = referenceBasis L s := rfl
-
 /-- The **reference/vacuum vector** of the lattice system: the basis vector of
 `globalHilbert L` at `referenceTuple L`. -/
 noncomputable def vacuumVector : globalHilbert L :=
@@ -70,18 +63,6 @@ it.  See Naaijkens 2012 §3.5 / Bratteli–Robinson Vol. 2 §2.7.2 for the
 rendering this notation matches; the `(L)` argument is a project-level
 parameterisation of the paper's bare `Ω`. -/
 scoped notation:max "Ω(" L ")" => LocalNetLike.vacuumVector L
-
-/-- Compatibility alias for earlier code.  The object is a vector in
-`globalHilbert L`; it is not a bundled C⋆-algebra state. -/
-noncomputable abbrev vacuumState : globalHilbert L :=
-  vacuumVector L
-
-/-- The vector functional associated with the reference/vacuum vector on the
-represented operator algebra `B(globalHilbert L)`.  Bundling this as a C⋆-state
-on `quasiLocal L` is a separate state-layer construction. -/
-noncomputable def vacuumVectorFunctional
-    (T : globalHilbert L →L[ℂ] globalHilbert L) : ℂ :=
-  inner ℂ (vacuumVector L) (T (vacuumVector L))
 
 namespace HasGroupAction
 
@@ -151,13 +132,6 @@ theorem HasGroupAction.unitaryAction_vacuumVector
   · rw [if_pos (hiff.mpr hcase), if_pos hcase]
   · rw [if_neg (fun h => hcase (hiff.mp h)), if_neg hcase]
 
-/-- Compatibility spelling for earlier code: `vacuumState L` is an alias for
-`vacuumVector L`. -/
-theorem HasGroupAction.unitaryAction_vacuumState
-    {G : Type*} [Group G] (act : HasGroupAction L G) (g : G) :
-    act.unitaryAction g (vacuumState L) = vacuumState L :=
-  HasGroupAction.unitaryAction_vacuumVector L act g
-
 /-! ### Bundled vacuum-state functional and `G`-invariance -/
 
 /-- The **vacuum-state functional** on the represented operator algebra
@@ -172,23 +146,6 @@ noncomputable def vacuumFunctional :
 theorem vacuumFunctional_apply
     (T : globalHilbert L →L[ℂ] globalHilbert L) :
     vacuumFunctional L T = inner ℂ (vacuumVector L) (T (vacuumVector L)) := rfl
-
-/-- The bundled functional agrees with the un-bundled `vacuumVectorFunctional`
-expression. -/
-theorem vacuumFunctional_eq_vacuumVectorFunctional
-    (T : globalHilbert L →L[ℂ] globalHilbert L) :
-    vacuumFunctional L T = vacuumVectorFunctional L T := rfl
-
-/-- Normalization: `ω(1) = ⟪Ω, Ω⟫ = 1`, since `Ω = lp.single 2 _ 1` has unit norm. -/
-@[simp]
-theorem vacuumFunctional_one : vacuumFunctional L 1 = 1 := by
-  rw [vacuumFunctional_apply, ContinuousLinearMap.one_apply]
-  -- ⟪Ω, Ω⟫ where Ω = lp.single 2 (referenceTuple L) 1.
-  unfold vacuumVector
-  rw [lp.inner_single_left]
-  -- inner ℂ (1 : ℂ) (lp.single 2 (referenceTuple L) 1).val (referenceTuple L) = 1.
-  rw [lp.single_apply]
-  simp
 
 /-- The inverse unitary also fixes the vacuum vector. -/
 theorem HasGroupAction.unitaryAction_symm_vacuumVector
@@ -234,19 +191,6 @@ noncomputable def vacuumStateOnQuasiLocal :
 use it.  See Naaijkens 2012 §3.5 for the C⋆-state convention; the `(L)`
 argument is a project-level parameterisation of the paper's bare `ω`. -/
 scoped notation:max "ω(" L ")" => LocalNetLike.vacuumStateOnQuasiLocal L
-
-@[simp]
-theorem vacuumStateOnQuasiLocal_apply (T : ↥(quasiLocal L)) :
-    vacuumStateOnQuasiLocal L T
-      = inner ℂ (vacuumVector L)
-          ((T : globalHilbert L →L[ℂ] globalHilbert L) (vacuumVector L)) := rfl
-
-@[simp]
-theorem vacuumStateOnQuasiLocal_one :
-    vacuumStateOnQuasiLocal L (1 : ↥(quasiLocal L)) = 1 := by
-  -- `(1 : ↥(quasiLocal L))` projects to `(1 : B(H))` under the inclusion.
-  change vacuumFunctional L (1 : globalHilbert L →L[ℂ] globalHilbert L) = 1
-  exact vacuumFunctional_one L
 
 /-- **`G`-invariance of the vacuum state** on the quasi-local algebra:
 `ω(α_g T) = ω(T)` for every `T ∈ quasiLocal L` and every group element `g`. -/

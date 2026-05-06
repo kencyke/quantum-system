@@ -5,28 +5,18 @@ public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
 
 /-!
-# Region embeddings into the global Hilbert space (Phase 5'a step 4)
+# Region tuple extensions for the global Hilbert space (Phase 5'a step 4)
 
-For each finite region `Λ : Finset L` we construct the canonical isometric
-embedding
-
-`regionEmbed Λ : regionHilbert Λ →ₗᵢ[ℂ] globalHilbert L`
-
-following Naaijkens 2012 §3.5 / Bratteli–Robinson Vol. 2 §2.7.2.
-The construction extends each region tuple `f : (s : Λ) → localIdx s` to a
-global tuple by filling outside-`Λ` coordinates with the chosen reference
-basis index, then maps the corresponding `EuclideanSpace`-basis vector of
-`regionHilbert Λ` to the `lp.single` vector of `globalHilbert L`.  The
-extended tuples are pairwise distinct, so the image vectors form an
-orthonormal family in `globalHilbert L`, which yields a linear isometry via
-`LinearMap.isometryOfOrthonormal`.
+Following Naaijkens 2012 §3.5 / Bratteli–Robinson Vol. 2 §2.7.2, we extend
+each region tuple `f : (s : Λ) → localIdx s` to a global tuple by filling
+outside-`Λ` coordinates with the chosen reference basis index.  The
+resulting `extendRegionTuple` and its companion lemmas are consumed by
+`LocalEmbed.lean` to characterise the matrix elements of `localEmbed Λ`.
 
 ## Main definitions
 
 * `LocalNetLike.extendRegionTuple Λ f` — extension of a region tuple to a
   global tuple by filling outside-`Λ` coordinates with `referenceBasis L`.
-* `LocalNetLike.regionEmbed Λ` — the isometric embedding
-  `regionHilbert Λ →ₗᵢ[ℂ] globalHilbert L`.
 
 ## References
 
@@ -46,7 +36,7 @@ variable {L : Type*} [DecidableEq L] [LocalNetLike L]
 
 /-- Equality on `globalIdx L` is classically decidable; we register this as a
 noncomputable instance so that `lp.single 2 (· : globalIdx L) 1` is well-typed
-in the embedding below. -/
+downstream. -/
 noncomputable instance instDecidableEqGlobalIdx : DecidableEq (globalIdx L) :=
   Classical.decEq _
 
@@ -77,58 +67,5 @@ theorem extendRegionTuple_injective (Λ : Finset L) :
     congrArg Subtype.val h
   have := congrFun hval s
   simpa [extendRegionTuple_val_apply_of_mem, hs] using this
-
-/-- Image of a region tuple under the embedding: `lp.single 2 (extendRegionTuple Λ f) 1`,
-viewed as an element of `globalHilbert L`. -/
-noncomputable def regionEmbedTarget (Λ : Finset L) (f : regionIdx (L := L) Λ) :
-    globalHilbert L :=
-  lp.single 2 (extendRegionTuple Λ f) (1 : ℂ)
-
-/-- The image vectors `regionEmbedTarget Λ f` form an orthonormal family in
-`globalHilbert L`. -/
-theorem orthonormal_regionEmbedTarget (Λ : Finset L) :
-    Orthonormal ℂ (regionEmbedTarget (L := L) Λ) := by
-  rw [orthonormal_iff_ite]
-  intro f g
-  simp only [regionEmbedTarget]
-  rw [lp.inner_single_left, lp.single_apply, Pi.single_apply]
-  by_cases hfg : f = g
-  · subst hfg; simp
-  · have hne : extendRegionTuple Λ f ≠ extendRegionTuple Λ g :=
-      fun h => hfg (extendRegionTuple_injective Λ h)
-    rw [if_neg hne, if_neg hfg]
-    simp
-
-/-- Auxiliary linear map underlying `regionEmbed`: defined on the standard
-basis of `regionHilbert Λ` by sending each basis vector to the corresponding
-`lp.single` vector in `globalHilbert L`. -/
-noncomputable def regionEmbedAux (Λ : Finset L) :
-    ℋ(Λ) →ₗ[ℂ] globalHilbert L :=
-  (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).toBasis.constr ℂ
-    (regionEmbedTarget Λ)
-
-theorem regionEmbedAux_basis (Λ : Finset L) (f : regionIdx (L := L) Λ) :
-    regionEmbedAux Λ ((EuclideanSpace.basisFun (regionIdx Λ) ℂ).toBasis f)
-      = regionEmbedTarget Λ f :=
-  (EuclideanSpace.basisFun (regionIdx Λ) ℂ).toBasis.constr_basis ℂ
-    (regionEmbedTarget Λ) f
-
-/-- The isometric embedding `regionHilbert Λ →ₗᵢ[ℂ] globalHilbert L`. -/
-noncomputable def regionEmbed (Λ : Finset L) :
-    ℋ(Λ) →ₗᵢ[ℂ] globalHilbert L :=
-  LinearMap.isometryOfOrthonormal (regionEmbedAux Λ)
-    (v := (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).toBasis)
-    (by
-      rw [(EuclideanSpace.basisFun (regionIdx Λ) ℂ).coe_toBasis]
-      exact (EuclideanSpace.basisFun (regionIdx Λ) ℂ).orthonormal)
-    (by
-      have hcomp :
-          (regionEmbedAux Λ : regionHilbert Λ → globalHilbert L)
-              ∘ ((EuclideanSpace.basisFun (regionIdx Λ) ℂ).toBasis : _ → _)
-            = regionEmbedTarget Λ := by
-        funext f
-        exact regionEmbedAux_basis Λ f
-      rw [hcomp]
-      exact orthonormal_regionEmbedTarget Λ)
 
 end LocalNetLike

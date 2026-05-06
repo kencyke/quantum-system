@@ -95,38 +95,6 @@ theorem regionRestrict_globalSwap (Λ : Finset L) (f : regionIdx (L := L) Λ)
   funext ⟨s, hs⟩
   simp [regionRestrict, globalSwap_val_apply_of_mem _ _ _ hs]
 
-/-- Outside `Λ`, `globalSwap Λ f g` and `g` carry the same coordinates. -/
-theorem globalSwap_eq_of_not_mem (Λ : Finset L) (f : regionIdx (L := L) Λ)
-    (g : globalIdx L) {s : L} (hs : s ∉ Λ) :
-    (globalSwap Λ f g).val s = g.val s :=
-  globalSwap_val_apply_of_not_mem Λ f g hs
-
-/-- `globalSwap Λ f g = globalSwap Λ f' g'` exactly when the Λ parts agree
-(`f = f'`) and the Λᶜ parts of the underlying global tuples agree. -/
-theorem globalSwap_injective_left (Λ : Finset L) (g : globalIdx L) :
-    Function.Injective (fun f : regionIdx (L := L) Λ => globalSwap Λ f g) := by
-  intro f f' h
-  funext ⟨s, hs⟩
-  have hval : (globalSwap Λ f g).val = (globalSwap Λ f' g).val :=
-    congrArg Subtype.val h
-  have := congrFun hval s
-  simpa [globalSwap_val_apply_of_mem, hs] using this
-
-/-- The extension `extendRegionTuple Λ f` is exactly `globalSwap Λ f` applied
-to the canonical "vacuum" global tuple obtained by extending a region tuple
-of the empty region (i.e. the constant `referenceBasis`-tuple). -/
-theorem extendRegionTuple_eq_globalSwap_referenceTuple (Λ : Finset L)
-    (f : regionIdx (L := L) Λ) :
-    extendRegionTuple Λ f =
-      globalSwap Λ f ⟨fun s => referenceBasis L s, ⟨∅, fun _ _ => rfl⟩⟩ := by
-  apply Subtype.ext
-  funext s
-  by_cases hs : s ∈ Λ
-  · simp [extendRegionTuple_val_apply_of_mem _ _ hs,
-      globalSwap_val_apply_of_mem _ _ _ hs]
-  · simp [extendRegionTuple_val_apply_of_not_mem _ _ hs,
-      globalSwap_val_apply_of_not_mem _ _ _ hs]
-
 /-- Restoring `g` from `(globalSwap Λ f g, regionRestrict Λ g)`: replacing
 the Λ part of `globalSwap Λ f g` with `regionRestrict Λ g` gives back `g`. -/
 @[simp]
@@ -426,14 +394,6 @@ noncomputable def localEmbed (Λ : Finset L)
       simpa [abs_of_nonneg h_lhs_nn] using this.2)
 
 @[simp]
-theorem localEmbed_apply_coe (Λ : Finset L)
-    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
-    (w : globalHilbert L) :
-    ((localEmbed Λ M w : globalHilbert L)
-        : lp (fun _ : globalIdx L => ℂ) 2)
-      = ⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩ := rfl
-
-@[simp]
 theorem localEmbed_apply_apply (Λ : Finset L)
     (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) (g : globalIdx L) :
@@ -546,25 +506,6 @@ theorem localEmbed_zero (Λ : Finset L) :
   unfold localEmbedCoeff
   rw [ContinuousLinearMap.zero_apply]
   rfl
-
-/-- `M ↦ localEmbed Λ M` as a unital ℂ-algebra homomorphism. -/
-noncomputable def localEmbedAlg (Λ : Finset L) :
-    (ℋ(Λ) →L[ℂ] ℋ(Λ)) →ₐ[ℂ]
-    (globalHilbert L →L[ℂ] globalHilbert L) where
-  toFun := localEmbed Λ
-  map_one' := localEmbed_one Λ
-  map_mul' := localEmbed_mul Λ
-  map_zero' := localEmbed_zero Λ
-  map_add' := localEmbed_add Λ
-  commutes' c := by
-    change localEmbed Λ (c • ContinuousLinearMap.id ℂ _) = _
-    rw [localEmbed_smul, localEmbed_one]
-    rfl
-
-@[simp]
-theorem localEmbedAlg_apply (Λ : Finset L)
-    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
-    localEmbedAlg Λ M = localEmbed Λ M := rfl
 
 /-! ### Matrix-element formulas used to characterise `localEmbed Λ` -/
 

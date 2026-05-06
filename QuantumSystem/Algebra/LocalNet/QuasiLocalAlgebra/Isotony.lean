@@ -74,14 +74,6 @@ theorem regionLiftSwap_apply_of_not_mem {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     regionLiftSwap h b a' s = a' s :=
   dif_neg hs
 
-omit hL in
-@[simp]
-theorem regionLiftRestrict_regionLiftSwap {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (b : regionIdx (L := L) Λ) (a' : regionIdx (L := L) Λ') :
-    regionLiftRestrict h (regionLiftSwap h b a') = b := by
-  funext ⟨s, hs⟩
-  simp [regionLiftRestrict, regionLiftSwap_apply_of_mem h b a' ⟨s, h hs⟩ hs]
-
 /-- Compatibility: a `Λ'`-swap on `g : globalIdx L` whose `Λ'`-part has been
 itself swapped on `Λ` collapses to a single `Λ`-swap. -/
 theorem globalSwap_regionLiftSwap_regionRestrict {Λ Λ' : Finset L}
@@ -242,18 +234,6 @@ theorem localSubalgebra_le_of_subset {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
   obtain ⟨M, hM⟩ := (mem_localSubalgebra Λ T).mp hT
   exact (mem_localSubalgebra Λ' T).mpr ⟨regionLift h M, by rw [localEmbed_regionLift_eq, hM]⟩
 
-/-- The local subalgebra on the left component is contained in the local
-subalgebra of the union. -/
-theorem localSubalgebra_le_union_left (Λ₁ Λ₂ : Finset L) :
-    localSubalgebra Λ₁ ≤ localSubalgebra (Λ₁ ∪ Λ₂) :=
-  localSubalgebra_le_of_subset (Finset.subset_union_left)
-
-/-- The local subalgebra on the right component is contained in the local
-subalgebra of the union. -/
-theorem localSubalgebra_le_union_right (Λ₁ Λ₂ : Finset L) :
-    localSubalgebra Λ₂ ≤ localSubalgebra (Λ₁ ∪ Λ₂) :=
-  localSubalgebra_le_of_subset (Finset.subset_union_right)
-
 /-! ### Compatibility between abstract `isotony` and `localRep`
 
 The mixin below records the missing bridge between two pictures of the
@@ -279,18 +259,5 @@ class HasIsotonyCompatibleLocalRep
       (a : LocalNetLike.localAlgebra (L := L) Λ) :
     LocalNetLike.HasLocalRepresentation.localRep Λ' (LocalNetLike.isotony h a)
       = regionLift h (LocalNetLike.HasLocalRepresentation.localRep Λ a)
-
-variable [LocalNetLike.HasLocalRepresentation L]
-
-/-- The composite embedding `𝔄(Λ) → B(globalHilbert L)` factors through every
-larger region: applying `localAlgebraEmbed` after `isotony` recovers the
-direct embedding of the smaller region. -/
-theorem localAlgebraEmbed_isotony [HasIsotonyCompatibleLocalRep L]
-    {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (a : LocalNetLike.localAlgebra (L := L) Λ) :
-    localAlgebraEmbed Λ' (LocalNetLike.isotony h a) = localAlgebraEmbed Λ a := by
-  rw [localAlgebraEmbed_apply, localAlgebraEmbed_apply,
-    HasIsotonyCompatibleLocalRep.localRep_isotony h a,
-    localEmbed_regionLift_eq]
 
 end LocalNetLike
