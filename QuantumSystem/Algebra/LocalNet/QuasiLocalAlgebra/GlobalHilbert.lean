@@ -1,7 +1,7 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
-public import Mathlib.Analysis.InnerProductSpace.l2Space
+public import Mathlib.Analysis.Normed.Lp.lpSpace
+public import QuantumSystem.Algebra.LocalNetLike
 
 /-!
 # Infinite-site Hilbert space (Phase 5'a step 3)

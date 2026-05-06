@@ -181,4 +181,3 @@ def toHasGroupAction (actU : L.HasGroupActionUniform T G) :
 end HasGroupActionUniform
 
 end LocalNet
-

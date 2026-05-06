@@ -1,7 +1,6 @@
 module
 
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.LocalEmbed
-public import Mathlib.Topology.Algebra.StarSubalgebra
 
 /-!
 # Quasi-local algebra (Phase 5'c)

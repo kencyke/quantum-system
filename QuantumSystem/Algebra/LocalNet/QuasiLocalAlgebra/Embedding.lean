@@ -1,6 +1,8 @@
 module
 
+public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
 
 /-!
 # Region embeddings into the global Hilbert space (Phase 5'a step 4)

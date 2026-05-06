@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Channel
+public import QuantumSystem.State
 
 /-!
 # Local net of matrix algebras for finite lattice regions
@@ -27,12 +27,13 @@ This file provides:
 1. the structure carrying the lattice + per-site Hilbert-space data, the derived region index
    types, and the index-combiner equivalence relating `regionIdx Λ_total` to the product
    `regionIdx Λ × regionIdx (Λ_total \ Λ)`;
-2. the **restriction** (Schrödinger-picture partial trace): given regions `Λ ⊆ Λ_total`,
-   the restriction of a state on `𝔄(Λ_total)` to `𝔄(Λ)`. In density-matrix language this is
-   exactly the partial trace over the complementary region `Λ_total \ Λ`.
-   The restriction is the Schrödinger-picture dual of the algebra
-   inclusion `𝔄(Λ) ↪ 𝔄(Λ_total)`. There is no positional ("left/right") concept — the
-   operation is parameterised by the region itself.
+2. the **isotony embedding** `𝔄(Λ) ↪ 𝔄(Λ_total)` realised as `A ↦ A ⊗ I_{Λ_total \ Λ}`,
+   bundled as a unital `*`-algebra homomorphism, together with its injectivity (under the
+   standard non-degeneracy assumption on the complementary region) and functoriality along
+   `Subset.refl` / `Subset.trans`;
+3. the **locality predicate** `IsLocal` and the constructive proof `isLocal` showing that
+   every `LocalNet` satisfies it: disjoint sub-regions of a common ambient region have
+   commuting images under the isotony embedding.
 
 ## Main definitions
 
@@ -42,15 +43,8 @@ This file provides:
 * `LocalNet.densityMatrix` — density matrices at a region
 * `LocalNet.combineIdx` — `regionIdx Λ × regionIdx (Λ_total \ Λ) ≃ regionIdx Λ_total`
 * `LocalNet.includeAlgebra` — isotony embedding `𝔄(Λ) ↪ 𝔄(Λ_total)`
-* `LocalNet.regionIdxInsertEquiv` — recursive split: `regionIdx (insert s Λ) ≃ localIdx s × regionIdx Λ`
-* `LocalNet.regionIdxPairEquiv` / `regionIdxTripleEquiv` / `regionIdxTripleEquiv'` —
-  factorisation of `n`-element regions into per-site product types
-* `LocalNet.regionIdxComplLeftSite` / `regionIdxComplRightSite` —
-  `regionIdx ({a, b} \ {a}) ≃ localIdx b` and its right-site dual
-
-The generic primitives above subsume any partite count; the bipartite / tripartite
-factorisation specialisations are exposed below as `regionIdxPairEquiv`,
-`regionIdxTripleEquiv`, and `regionIdxTripleEquiv'`.
+* `LocalNet.regionIdxCongr` — transport `regionIdx` along a Finset equality
+* `LocalNet.IsLocal` / `LocalNet.isLocal` — locality predicate and its constructive proof
 
 The partial-trace / restriction operations (`Matrix.restrict`, `Matrix.restrictKraus`,
 `Matrix.QuantumChannel.restrict`, `DensityMatrix.restrict`, and the paper notation
@@ -432,11 +426,11 @@ theorem includeAlgebra_comp {Λ₁ Λ₂ Λ₃ : Finset L.sites}
   · rw [if_neg h_outer,
       if_neg (fun h => h_outer (hcond_iff.mp h).1)]
 
-/-! ### Region equivalences
+/-! ### Transport along Finset equality
 
-Generic equivalences over arbitrary `Fintype` site sets — used both directly (for any
-finite site set) and as building blocks for the bipartite (`regionIdxPairEquiv`) and
-tripartite (`regionIdxTripleEquiv`, `regionIdxTripleEquiv'`) factorisations below. -/
+`regionIdxCongr` carries `regionIdx Λ` to `regionIdx Λ'` whenever `Λ = Λ'`,
+giving a small reindexing utility consumed by the downstream covariance
+lemmas. -/
 
 variable (L : LocalNet)
 
@@ -451,366 +445,6 @@ def regionIdxCongr {Λ Λ' : Finset L.sites} (h : Λ = Λ') :
     (L.regionIdxCongr h x) ⟨s, hs'⟩ = x ⟨s, hs⟩ := by
   subst h
   rfl
-
-/-- Singleton region: `regionIdx {s} ≃ localIdx s`. -/
-def singletonRegionIdxEquiv (s : L.sites) :
-    L.regionIdx ({s} : Finset L.sites) ≃ L.localIdx s where
-  toFun f := f ⟨s, Finset.mem_singleton.mpr rfl⟩
-  invFun x := fun ⟨v, hv⟩ =>
-    (Finset.mem_singleton.mp hv).symm ▸ x
-  left_inv f := by
-    funext ⟨v, hv⟩
-    have hvs : v = s := Finset.mem_singleton.mp hv
-    subst hvs
-    rfl
-  right_inv x := rfl
-
-@[simp] private lemma singletonRegionIdxEquiv_apply (s : L.sites)
-    (f : L.regionIdx ({s} : Finset L.sites)) :
-    L.singletonRegionIdxEquiv s f = f ⟨s, Finset.mem_singleton.mpr rfl⟩ := rfl
-
-/-! ### Generic n-partite primitives
-
-Building blocks for any finite site set: `regionIdx ∅ ≃ PUnit`, an `insert`-based
-recursive split, and the universal product form `regionIdx Finset.univ ≃ Π s, localIdx s`.
-Two- and three-element factor equivs are derived from the recursive split — adding more
-partite counts (4, 5, ...) is now a one-liner with no new boilerplate. -/
-
-/-- The empty region: `regionIdx ∅ ≃ PUnit`. The dependent product over the empty
-    subtype has a unique element. -/
-def regionIdxEmptyEquiv : L.regionIdx (∅ : Finset L.sites) ≃ PUnit where
-  toFun _ := PUnit.unit
-  invFun _ := fun s => absurd s.property (Finset.notMem_empty _)
-  left_inv f := by
-    funext s
-    exact absurd s.property (Finset.notMem_empty _)
-  right_inv _ := rfl
-
-/-- **Recursive split (region composition rule)**: for `s ∉ Λ`,
-    `regionIdx (insert s Λ) ≃ localIdx s × regionIdx Λ`.
-
-    This is the core composition primitive — repeated application gives factorisation
-    of any finitely-enumerated region into per-site factors. Built from `combineIdx`
-    applied to the singleton `{s} ⊆ insert s Λ`, with the complementary region
-    `insert s Λ \ {s}` reducing to `Λ`. -/
-def regionIdxInsertEquiv {s : L.sites} {Λ : Finset L.sites} (hs : s ∉ Λ) :
-    L.regionIdx (insert s Λ) ≃ L.localIdx s × L.regionIdx Λ :=
-  have h_sub : ({s} : Finset L.sites) ⊆ insert s Λ :=
-    Finset.singleton_subset_iff.mpr (Finset.mem_insert_self s Λ)
-  have h_compl_eq : insert s Λ \ {s} = Λ := by
-    rw [Finset.insert_sdiff_of_mem _ (Finset.mem_singleton_self s),
-        Finset.sdiff_eq_self_iff_disjoint.mpr (Finset.disjoint_singleton_right.mpr hs)]
-  (L.combineIdx h_sub).symm.trans
-    (Equiv.prodCongr (L.singletonRegionIdxEquiv s) (L.regionIdxCongr h_compl_eq))
-
-/-- The universal region: `regionIdx Finset.univ ≃ Π s : sites, localIdx s`.
-    Collapses the `Finset.univ`-subtype back to the underlying type.
-    Requires `[Fintype L.sites]` for `Finset.univ` to be available. -/
-def regionIdxUnivEquiv [Fintype L.sites] :
-    L.regionIdx (Finset.univ : Finset L.sites) ≃
-    ∀ s : L.sites, L.localIdx s where
-  toFun f s := f ⟨s, Finset.mem_univ s⟩
-  invFun g := fun ⟨s, _⟩ => g s
-  left_inv f := by funext ⟨s, _⟩; rfl
-  right_inv _ := rfl
-
-/-- **2-element factorisation**: `regionIdx {a, b} ≃ localIdx a × localIdx b` when
-    `a ≠ b`. Direct definition with concrete `toFun` so both projections evaluate by `rfl`. -/
-def regionIdxPairEquiv {a b : L.sites} (hab : a ≠ b) :
-    L.regionIdx ({a, b} : Finset L.sites) ≃ L.localIdx a × L.localIdx b where
-  toFun f :=
-    (f ⟨a, Finset.mem_insert_self a {b}⟩,
-     f ⟨b, Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)⟩)
-  invFun ab := fun ⟨s, hs⟩ =>
-    if h : s = a then h ▸ ab.1
-    else
-      have hsb : s = b := by
-        rcases Finset.mem_insert.mp hs with h' | h'
-        · exact absurd h' h
-        · exact Finset.mem_singleton.mp h'
-      hsb ▸ ab.2
-  left_inv f := by
-    funext ⟨s, hs⟩
-    by_cases hsa : s = a
-    · subst hsa
-      simp
-    · have hsb : s = b := by
-        rcases Finset.mem_insert.mp hs with h' | h'
-        · exact absurd h' hsa
-        · exact Finset.mem_singleton.mp h'
-      subst hsb
-      simp [hsa]
-  right_inv ab := by
-    have hba : b ≠ a := fun h_eq => hab h_eq.symm
-    ext1
-    · simp
-    · simp [hba]
-
-/-- Closed-form unfolding of `regionIdxPairEquiv` as a pair. -/
-@[simp] lemma regionIdxPairEquiv_apply {a b : L.sites} (hab : a ≠ b)
-    (f : L.regionIdx ({a, b} : Finset L.sites)) :
-    L.regionIdxPairEquiv hab f =
-      (f ⟨a, Finset.mem_insert_self a {b}⟩,
-       f ⟨b, Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)⟩) := rfl
-
-/-- Closed-form first projection of `regionIdxPairEquiv` — picks out the value at site `a`. -/
-@[simp] private lemma regionIdxPairEquiv_apply_fst {a b : L.sites} (hab : a ≠ b)
-    (f : L.regionIdx ({a, b} : Finset L.sites)) :
-    (L.regionIdxPairEquiv hab f).1 = f ⟨a, Finset.mem_insert_self a {b}⟩ := rfl
-
-/-- Closed-form second projection of `regionIdxPairEquiv` — picks out the value at site `b`. -/
-@[simp] private lemma regionIdxPairEquiv_apply_snd {a b : L.sites} (hab : a ≠ b)
-    (f : L.regionIdx ({a, b} : Finset L.sites)) :
-    (L.regionIdxPairEquiv hab f).2 =
-      f ⟨b, Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)⟩ := rfl
-
-/-- **3-element factorisation (right-associated)**:
-    `regionIdx {a, b, c} ≃ localIdx a × localIdx b × localIdx c` when the sites are
-    pairwise distinct. Direct definition with concrete `toFun` so all three projections
-    evaluate by `rfl`. -/
-def regionIdxTripleEquiv {a b c : L.sites} (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c) :
-    L.regionIdx ({a, b, c} : Finset L.sites) ≃
-      L.localIdx a × L.localIdx b × L.localIdx c where
-  toFun f :=
-    (f ⟨a, Finset.mem_insert_self a {b, c}⟩,
-     f ⟨b, Finset.mem_insert_of_mem (Finset.mem_insert_self b {c})⟩,
-     f ⟨c, Finset.mem_insert_of_mem
-            (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl))⟩)
-  invFun abc := fun ⟨s, hs⟩ =>
-    if h : s = a then h ▸ abc.1
-    else if h' : s = b then h' ▸ abc.2.1
-    else
-      have hsc : s = c := by
-        rcases Finset.mem_insert.mp hs with hh | hh
-        · exact absurd hh h
-        · rcases Finset.mem_insert.mp hh with hh | hh
-          · exact absurd hh h'
-          · exact Finset.mem_singleton.mp hh
-      hsc ▸ abc.2.2
-  left_inv f := by
-    funext ⟨s, hs⟩
-    by_cases hsa : s = a
-    · subst hsa; simp
-    by_cases hsb : s = b
-    · subst hsb; simp [hsa]
-    have hsc : s = c := by
-      rcases Finset.mem_insert.mp hs with hh | hh
-      · exact absurd hh hsa
-      · rcases Finset.mem_insert.mp hh with hh | hh
-        · exact absurd hh hsb
-        · exact Finset.mem_singleton.mp hh
-    subst hsc; simp [hsa, hsb]
-  right_inv abc := by
-    have hba : b ≠ a := fun h => hab h.symm
-    have hca : c ≠ a := fun h => hac h.symm
-    have hcb : c ≠ b := fun h => hbc h.symm
-    ext1
-    · simp
-    · ext1
-      · simp [hba]
-      · simp [hca, hcb]
-
-/-- Closed-form first projection of `regionIdxTripleEquiv` — value at site `a`. -/
-@[simp] private lemma regionIdxTripleEquiv_apply_fst {a b c : L.sites}
-    (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
-    (f : L.regionIdx ({a, b, c} : Finset L.sites)) :
-    (L.regionIdxTripleEquiv hab hbc hac f).1 = f ⟨a, Finset.mem_insert_self a {b, c}⟩ := rfl
-
-/-- Second projection of `regionIdxTripleEquiv` — value at site `b`. -/
-@[simp] private lemma regionIdxTripleEquiv_apply_snd_fst {a b c : L.sites}
-    (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
-    (f : L.regionIdx ({a, b, c} : Finset L.sites)) :
-    (L.regionIdxTripleEquiv hab hbc hac f).2.1 =
-      f ⟨b, Finset.mem_insert_of_mem (Finset.mem_insert_self b {c})⟩ := rfl
-
-/-- Third projection of `regionIdxTripleEquiv` — value at site `c`. -/
-@[simp] private lemma regionIdxTripleEquiv_apply_snd_snd {a b c : L.sites}
-    (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
-    (f : L.regionIdx ({a, b, c} : Finset L.sites)) :
-    (L.regionIdxTripleEquiv hab hbc hac f).2.2 =
-      f ⟨c, Finset.mem_insert_of_mem
-            (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl))⟩ := rfl
-
-/-- **3-element factorisation (left-associated)**: the alternate
-    `regionIdx {a, b, c} ≃ (localIdx a × localIdx b) × localIdx c` view, used when the
-    bipartite split sees the pair `(a, b)` together against `c`. -/
-def regionIdxTripleEquiv' {a b c : L.sites} (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c) :
-    L.regionIdx ({a, b, c} : Finset L.sites) ≃
-      (L.localIdx a × L.localIdx b) × L.localIdx c :=
-  (L.regionIdxTripleEquiv hab hbc hac).trans (Equiv.prodAssoc _ _ _).symm
-
-/-- **Pair-complement on the left site**: for the two-element region `{a, b}` with
-    `a ≠ b`, the index type of the complement of `{a}` reduces to `localIdx b`.
-    Direct realisation of "evaluate at the unique remaining site `b`". -/
-def regionIdxComplLeftSite {a b : L.sites} (hab : a ≠ b) :
-    L.regionIdx (({a, b} : Finset L.sites) \ {a}) ≃ L.localIdx b where
-  toFun f := f ⟨b, Finset.mem_sdiff.mpr
-    ⟨Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl),
-     Finset.notMem_singleton.mpr (fun h => hab h.symm)⟩⟩
-  invFun y := fun ⟨s, hs⟩ =>
-    have hsb : s = b := by
-      simp only [Finset.mem_sdiff, Finset.mem_insert, Finset.mem_singleton] at hs
-      rcases hs.1 with h | h
-      · exact absurd h hs.2
-      · exact h
-    hsb ▸ y
-  left_inv f := by
-    funext ⟨s, hs⟩
-    have hsb : s = b := by
-      simp only [Finset.mem_sdiff, Finset.mem_insert, Finset.mem_singleton] at hs
-      rcases hs.1 with h | h
-      · exact absurd h hs.2
-      · exact h
-    subst hsb
-    rfl
-  right_inv y := rfl
-
-/-- **Pair-complement on the right site**: dual of `regionIdxComplLeftSite` — the
-    complement of `{b}` in `{a, b}` reduces to `localIdx a`. -/
-def regionIdxComplRightSite {a b : L.sites} (hab : a ≠ b) :
-    L.regionIdx (({a, b} : Finset L.sites) \ {b}) ≃ L.localIdx a where
-  toFun f := f ⟨a, Finset.mem_sdiff.mpr
-    ⟨Finset.mem_insert_self a {b}, Finset.notMem_singleton.mpr hab⟩⟩
-  invFun y := fun ⟨s, hs⟩ =>
-    have hsa : s = a := by
-      simp only [Finset.mem_sdiff, Finset.mem_insert, Finset.mem_singleton] at hs
-      rcases hs.1 with h | h
-      · exact h
-      · exact absurd h hs.2
-    hsa ▸ y
-  left_inv f := by
-    funext ⟨s, hs⟩
-    have hsa : s = a := by
-      simp only [Finset.mem_sdiff, Finset.mem_insert, Finset.mem_singleton] at hs
-      rcases hs.1 with h | h
-      · exact h
-      · exact absurd h hs.2
-    subst hsa
-    rfl
-  right_inv y := rfl
-
-/-- **Triple-complement, first site**: for pairwise-distinct `a, b, c : L.sites`,
-    `regionIdx ({a, b, c} \ {a}) ≃ localIdx b × localIdx c`. Direct construction
-    (no `regionIdxCongr` transport) so pointwise evaluation reduces by computation,
-    enabling the marginal-compatibility helpers used by SSA-style proofs. -/
-noncomputable def regionIdxComplFirst {a b c : L.sites}
-    (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c) :
-    L.regionIdx (({a, b, c} : Finset L.sites) \ ({a} : Finset _)) ≃
-      L.localIdx b × L.localIdx c where
-  toFun f :=
-    (f ⟨b, Finset.mem_sdiff.mpr ⟨
-            Finset.mem_insert_of_mem (Finset.mem_insert_self _ _),
-            Finset.notMem_singleton.mpr hab.symm⟩⟩,
-     f ⟨c, Finset.mem_sdiff.mpr ⟨
-            Finset.mem_insert_of_mem (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)),
-            Finset.notMem_singleton.mpr hac.symm⟩⟩)
-  invFun xbc := fun ⟨v, hv⟩ =>
-    if h : v = b then h ▸ xbc.1
-    else
-      have hvc : v = c := by
-        rw [Finset.mem_sdiff] at hv
-        rcases Finset.mem_insert.mp hv.1 with rfl | h2
-        · exact absurd (Finset.mem_singleton_self _) hv.2
-        · rcases Finset.mem_insert.mp h2 with rfl | h3
-          · exact absurd rfl h
-          · exact Finset.mem_singleton.mp h3
-      hvc ▸ xbc.2
-  left_inv f := by
-    funext ⟨v, hv⟩
-    rw [Finset.mem_sdiff] at hv
-    by_cases hvb : v = b
-    · subst hvb; simp
-    · have hvc : v = c := by
-        rcases Finset.mem_insert.mp hv.1 with rfl | h2
-        · exact absurd (Finset.mem_singleton_self _) hv.2
-        · rcases Finset.mem_insert.mp h2 with rfl | h3
-          · exact absurd rfl hvb
-          · exact Finset.mem_singleton.mp h3
-      subst hvc; simp [hvb]
-  right_inv := by
-    rintro ⟨xb, xc⟩
-    have hcb : c ≠ b := hbc.symm
-    ext1 <;> simp [hcb]
-
-/-- **Triple-complement, first two sites**: for pairwise-distinct
-    `a, b, c : L.sites`, `regionIdx ({a, b, c} \ {a, b}) ≃ localIdx c`. Direct
-    construction (no `regionIdxCongr` transport) so pointwise evaluation reduces
-    by computation. -/
-noncomputable def regionIdxComplPairFirstTwo {a b c : L.sites}
-    (hac : a ≠ c) (hbc : b ≠ c) :
-    L.regionIdx (({a, b, c} : Finset L.sites) \ ({a, b} : Finset _)) ≃ L.localIdx c where
-  toFun f := f ⟨c, Finset.mem_sdiff.mpr ⟨
-    Finset.mem_insert_of_mem (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)),
-    by simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
-       exact ⟨hac.symm, hbc.symm⟩⟩⟩
-  invFun xc := fun ⟨v, hv⟩ =>
-    have hvc : v = c := by
-      rw [Finset.mem_sdiff] at hv
-      rcases Finset.mem_insert.mp hv.1 with rfl | h2
-      · exact absurd (Finset.mem_insert_self _ _) hv.2
-      · rcases Finset.mem_insert.mp h2 with rfl | h3
-        · exact absurd
-            (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)) hv.2
-        · exact Finset.mem_singleton.mp h3
-    hvc ▸ xc
-  left_inv f := by
-    funext ⟨v, hv⟩
-    rw [Finset.mem_sdiff] at hv
-    have hvc : v = c := by
-      rcases Finset.mem_insert.mp hv.1 with rfl | h2
-      · exact absurd (Finset.mem_insert_self _ _) hv.2
-      · rcases Finset.mem_insert.mp h2 with rfl | h3
-        · exact absurd
-            (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)) hv.2
-        · exact Finset.mem_singleton.mp h3
-    subst hvc; rfl
-  right_inv := by intro xc; rfl
-
-/-- **Triple-complement, last two sites**: for pairwise-distinct
-    `a, b, c : L.sites`, `regionIdx ({a, b, c} \ {b, c}) ≃ localIdx a`. Direct
-    construction (no `regionIdxCongr` transport) so pointwise evaluation reduces
-    by computation. -/
-noncomputable def regionIdxComplPairLastTwo {a b c : L.sites}
-    (hab : a ≠ b) (hac : a ≠ c) :
-    L.regionIdx (({a, b, c} : Finset L.sites) \ ({b, c} : Finset _)) ≃ L.localIdx a where
-  toFun f := f ⟨a, Finset.mem_sdiff.mpr ⟨
-    Finset.mem_insert_self _ _,
-    by simp only [Finset.mem_insert, Finset.mem_singleton, not_or]
-       exact ⟨hab, hac⟩⟩⟩
-  invFun xa := fun ⟨v, hv⟩ =>
-    have hva : v = a := by
-      rw [Finset.mem_sdiff] at hv
-      rcases Finset.mem_insert.mp hv.1 with rfl | h2
-      · rfl
-      · rcases Finset.mem_insert.mp h2 with rfl | h3
-        · exact absurd (Finset.mem_insert_self _ _) hv.2
-        · have hvc : v = c := Finset.mem_singleton.mp h3
-          subst hvc
-          exact absurd
-            (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)) hv.2
-    hva ▸ xa
-  left_inv f := by
-    funext ⟨v, hv⟩
-    rw [Finset.mem_sdiff] at hv
-    have hva : v = a := by
-      rcases Finset.mem_insert.mp hv.1 with rfl | h2
-      · rfl
-      · rcases Finset.mem_insert.mp h2 with rfl | h3
-        · exact absurd (Finset.mem_insert_self _ _) hv.2
-        · have hvc : v = c := Finset.mem_singleton.mp h3
-          subst hvc
-          exact absurd
-            (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)) hv.2
-    subst hva; rfl
-  right_inv := by intro xa; rfl
-
-/-- `{b} ⊆ {a, b, c}` for any sites `a, b, c`. Pure Finset membership; the
-    arguments `a` and `c` are kept positional so call sites can pass them
-    explicitly when convenient. -/
-lemma singleton_b_subset_triple (a b c : L.sites) :
-    ({b} : Finset L.sites) ⊆ ({a, b, c} : Finset L.sites) :=
-  Finset.singleton_subset_iff.mpr
-    (Finset.mem_insert_of_mem (Finset.mem_insert_self b _))
 
 /-! ### Locality (Einstein causality)
 

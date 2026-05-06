@@ -1,10 +1,9 @@
 module
 
 public import QuantumSystem.Algebra.LocalNetLike
-public import Mathlib.Analysis.InnerProductSpace.PiL2
 
 /-!
-# Hilbert spaces over a `LocalNetLike` (Phase 5'a steps 1–2)
+# Hilbert spaces over a `LocalNetLike`
 
 Naaijkens 2012 §1.3 and §3.5 build the quasi-local algebra of an infinite
 quantum lattice system as the norm closure of the union of subalgebras

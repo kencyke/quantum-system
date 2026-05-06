@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.LocalNet
+public import QuantumSystem.Channel
 
 /-!
 # Partial trace as restriction (matrix-level)

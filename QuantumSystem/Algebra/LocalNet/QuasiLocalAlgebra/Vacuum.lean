@@ -1,7 +1,6 @@
 module
 
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
-public import Mathlib.Analysis.InnerProductSpace.LinearMap
 
 /-!
 # Vacuum vector and `G`-invariance

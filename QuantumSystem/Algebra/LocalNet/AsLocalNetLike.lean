@@ -1,8 +1,7 @@
 module
 
-public import QuantumSystem.Algebra.LocalNetLike
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Isotony
 public import Mathlib.Analysis.CStarAlgebra.Matrix
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Isotony
 
 /-!
 # `LocalNet` as a `LocalNetLike` instance

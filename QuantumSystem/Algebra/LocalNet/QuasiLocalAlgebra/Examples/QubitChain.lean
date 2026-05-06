@@ -1,9 +1,7 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.HaagKastler
 public import QuantumSystem.Algebra.LocalNet.AsLocalNetLike
-public import Mathlib.Algebra.Group.Action.End
-public import Mathlib.Algebra.Group.Action.TypeTags
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.HaagKastler
 
 /-!
 # Spin-1/2 chain on `ℤ`: a concrete lattice Haag–Kastler example
