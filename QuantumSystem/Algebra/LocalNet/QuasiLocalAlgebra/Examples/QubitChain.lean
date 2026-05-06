@@ -41,6 +41,8 @@ of independent regions.  It is not a continuous-spacetime double-cone model.
 
 @[expose] public section
 
+open scoped LocalNetLike
+
 /-- **Spin-1/2 chain on `ℤ`**: sites are `ℤ` and the local Hilbert-space index
 at every site is `Fin 2` (a single qubit).  Declared as `def` (not `abbrev`)
 so that `qubitChain.sites` stays as a non-reducible projection, allowing
@@ -183,15 +185,13 @@ instance : LocalNetLike.HaagKastlerCovariantNet qubitChain.sites
 qubit-chain setting. -/
 
 example {Λ Λ' : Finset qubitChain.sites} (h : Λ ⊆ Λ') :
-    LocalNetLike.localSubalgebra (L := qubitChain.sites) Λ
-      ≤ LocalNetLike.localSubalgebra Λ' :=
+    𝔄(Λ) ≤ 𝔄(Λ') :=
   LocalNetLike.HaagKastler.isotony h
 
 example {Λ₁ Λ₂ : Finset qubitChain.sites} (hd : Disjoint Λ₁ Λ₂)
     {T₁ T₂ : LocalNetLike.globalHilbert qubitChain.sites
               →L[ℂ] LocalNetLike.globalHilbert qubitChain.sites}
-    (h₁ : T₁ ∈ LocalNetLike.localSubalgebra (L := qubitChain.sites) Λ₁)
-    (h₂ : T₂ ∈ LocalNetLike.localSubalgebra (L := qubitChain.sites) Λ₂) :
+    (h₁ : T₁ ∈ 𝔄(Λ₁)) (h₂ : T₂ ∈ 𝔄(Λ₂)) :
     Commute T₁ T₂ :=
   LocalNetLike.HaagKastler.locality hd h₁ h₂
 
@@ -202,29 +202,25 @@ example (g : Multiplicative ℤ) :
   LocalNetLike.HaagKastler.covariance _ qubitChainTranslationAction g
 
 example (g : Multiplicative ℤ) :
-    qubitChainTranslationAction.unitaryAction g
-        (LocalNetLike.vacuumVector qubitChain.sites)
-      = LocalNetLike.vacuumVector qubitChain.sites :=
+    qubitChainTranslationAction.unitaryAction g Ω(qubitChain.sites)
+      = Ω(qubitChain.sites) :=
   LocalNetLike.HaagKastler.vacuum_vector_invariance _ qubitChainTranslationAction g
 
 example (g : Multiplicative ℤ)
     (T : ↥(LocalNetLike.quasiLocal qubitChain.sites)) :
-    LocalNetLike.vacuumStateOnQuasiLocal qubitChain.sites
-        (qubitChainTranslationAction.quasiLocalEnd g T)
-      = LocalNetLike.vacuumStateOnQuasiLocal qubitChain.sites T :=
+    ω(qubitChain.sites) (qubitChainTranslationAction.quasiLocalEnd g T)
+      = ω(qubitChain.sites) T :=
   LocalNetLike.HaagKastler.vacuum_state_invariance _ qubitChainTranslationAction g T
 
 example (Λ : Finset qubitChain.sites)
     (a : LocalNetLike.localAlgebra (L := qubitChain.sites) Λ) :
-    LocalNetLike.localAlgebraEmbed Λ a
-      ∈ LocalNetLike.localSubalgebra (L := qubitChain.sites) Λ :=
+    LocalNetLike.localAlgebraEmbed Λ a ∈ 𝔄(Λ) :=
   LocalNetLike.localAlgebraEmbed_mem_localSubalgebra Λ a
 
 example (g : Multiplicative ℤ) (Λ : Finset qubitChain.sites)
     (a : LocalNetLike.localAlgebra (L := qubitChain.sites) Λ) :
     qubitChainTranslationAction.algebraAut g (LocalNetLike.localAlgebraEmbed Λ a)
-      ∈ LocalNetLike.localSubalgebra (L := qubitChain.sites)
-          (qubitChainTranslationAction.regionImage g Λ) :=
+      ∈ 𝔄(qubitChainTranslationAction.regionImage g Λ) :=
   LocalNetLike.HasGroupAction.algebraAut_localSubalgebra_le qubitChainTranslationAction g Λ _
     (LocalNetLike.localAlgebraEmbed_mem_localSubalgebra Λ a)
 

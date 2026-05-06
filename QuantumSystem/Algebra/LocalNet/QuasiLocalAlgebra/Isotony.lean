@@ -36,6 +36,8 @@ basis-indexed realisation of `M ⊗ 1_{Λ'\Λ}`.
 
 @[expose] public section
 
+open scoped LocalNetLike
+
 namespace LocalNetLike
 
 variable {L : Type*} [DecidableEq L] [LocalNetLike L]
@@ -107,15 +109,15 @@ theorem globalSwap_regionLiftSwap_regionRestrict {Λ Λ' : Finset L}
 the vector in `regionHilbert Λ` whose `b`-th coordinate is the value of
 `v'` at the tuple obtained by replacing `a'`'s Λ-part with `b`. -/
 noncomputable def vRestrict {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (v' : regionHilbert (L := L) Λ') (a' : regionIdx (L := L) Λ') :
-    regionHilbert (L := L) Λ :=
+    (v' : ℋ(Λ')) (a' : regionIdx (L := L) Λ') :
+    ℋ(Λ) :=
   WithLp.toLp 2 (fun b : regionIdx (L := L) Λ =>
     (v' : regionIdx (L := L) Λ' → ℂ) (regionLiftSwap h b a'))
 
 omit hL in
 @[simp]
 theorem vRestrict_apply {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (v' : regionHilbert (L := L) Λ') (a' : regionIdx (L := L) Λ')
+    (v' : ℋ(Λ')) (a' : regionIdx (L := L) Λ')
     (b : regionIdx (L := L) Λ) :
     (vRestrict h v' a' : regionIdx (L := L) Λ → ℂ) b
       = (v' : regionIdx (L := L) Λ' → ℂ) (regionLiftSwap h b a') := rfl
@@ -124,15 +126,15 @@ theorem vRestrict_apply {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 `regionIdx Λ'`-tuple `a'`, evaluate `M` on the local restriction
 `vRestrict h v' a'` and read off the entry at `regionLiftRestrict h a'`. -/
 noncomputable def regionLiftCoeff {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
-    (v' : regionHilbert (L := L) Λ') (a' : regionIdx (L := L) Λ') : ℂ :=
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
+    (v' : ℋ(Λ')) (a' : regionIdx (L := L) Λ') : ℂ :=
   (M (vRestrict h v' a') : regionIdx (L := L) Λ → ℂ) (regionLiftRestrict h a')
 
 omit hL in
 /-- `regionLiftCoeff h M` is additive in the `H_{Λ'}` argument. -/
 private theorem regionLiftCoeff_add {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
-    (v₁ v₂ : regionHilbert (L := L) Λ') (a' : regionIdx (L := L) Λ') :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
+    (v₁ v₂ : ℋ(Λ')) (a' : regionIdx (L := L) Λ') :
     regionLiftCoeff h M (v₁ + v₂) a'
       = regionLiftCoeff h M v₁ a' + regionLiftCoeff h M v₂ a' := by
   unfold regionLiftCoeff
@@ -146,8 +148,8 @@ private theorem regionLiftCoeff_add {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 omit hL in
 /-- `regionLiftCoeff h M` is `ℂ`-linear in the `H_{Λ'}` argument. -/
 private theorem regionLiftCoeff_smul {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
-    (c : ℂ) (v : regionHilbert (L := L) Λ') (a' : regionIdx (L := L) Λ') :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
+    (c : ℂ) (v : ℋ(Λ')) (a' : regionIdx (L := L) Λ') :
     regionLiftCoeff h M (c • v) a' = c • regionLiftCoeff h M v a' := by
   unfold regionLiftCoeff
   have hsmul : vRestrict h (c • v) a' = c • vRestrict h v a' := by
@@ -160,8 +162,8 @@ private theorem regionLiftCoeff_smul {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 /-- Underlying linear map of `regionLift h M`: it sends `v' : H_{Λ'}` to the
 vector whose `a'`-th coordinate is `regionLiftCoeff h M v' a'`. -/
 noncomputable def regionLiftLM {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
-    regionHilbert (L := L) Λ' →ₗ[ℂ] regionHilbert (L := L) Λ' where
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
+    ℋ(Λ') →ₗ[ℂ] ℋ(Λ') where
   toFun v' := WithLp.toLp 2 (fun a' : regionIdx (L := L) Λ' =>
     regionLiftCoeff h M v' a')
   map_add' v₁ v₂ := by
@@ -180,15 +182,15 @@ noncomputable def regionLiftLM {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 /-- The lift `regionLift h M : H_{Λ'} →L[ℂ] H_{Λ'}` of an operator on the
 smaller region.  Realises `M ⊗ 1_{Λ'\Λ}` in the basis-indexed model. -/
 noncomputable def regionLift {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
-    regionHilbert (L := L) Λ' →L[ℂ] regionHilbert (L := L) Λ' :=
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
+    ℋ(Λ') →L[ℂ] ℋ(Λ') :=
   LinearMap.toContinuousLinearMap (regionLiftLM h M)
 
 omit hL in
 @[simp]
 theorem regionLift_apply_apply {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
-    (v' : regionHilbert (L := L) Λ') (a' : regionIdx (L := L) Λ') :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
+    (v' : ℋ(Λ')) (a' : regionIdx (L := L) Λ') :
     (regionLift h M v' : regionIdx (L := L) Λ' → ℂ) a'
       = regionLiftCoeff h M v' a' := rfl
 
@@ -216,14 +218,14 @@ theorem regionLiftRestrict_regionRestrict {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 `localEmbed Λ'` gives the same operator on `globalHilbert L` as embedding
 `M` directly via `localEmbed Λ`. -/
 theorem localEmbed_regionLift_eq {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     localEmbed Λ' (regionLift h M) = localEmbed Λ M := by
   ext w g
   rw [localEmbed_apply_apply, localEmbed_apply_apply]
   unfold localEmbedCoeff
-  change ((regionLift h M (wRestrict Λ' w g) : regionHilbert (L := L) Λ')
+  change ((regionLift h M (wRestrict Λ' w g) : ℋ(Λ'))
           : regionIdx (L := L) Λ' → ℂ) (regionRestrict Λ' g)
-      = ((M (wRestrict Λ w g) : regionHilbert (L := L) Λ)
+      = ((M (wRestrict Λ w g) : ℋ(Λ))
           : regionIdx (L := L) Λ → ℂ) (regionRestrict Λ g)
   rw [regionLift_apply_apply]
   unfold regionLiftCoeff

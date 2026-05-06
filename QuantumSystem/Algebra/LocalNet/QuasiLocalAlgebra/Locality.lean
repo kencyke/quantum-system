@@ -38,6 +38,8 @@ This lifts to `localSubalgebra_commute_of_disjoint`: every operator in
 
 @[expose] public section
 
+open scoped LocalNetLike
+
 namespace LocalNetLike
 
 variable {L : Type*} [DecidableEq L] [LocalNetLike L]
@@ -81,8 +83,8 @@ infinite-site Hilbert space.  This is the core formal statement of locality
 (Verch 2025 §1.2 axiom ii). -/
 theorem localEmbed_commute_of_disjoint
     {Λ₁ Λ₂ : Finset L} (hd : Disjoint Λ₁ Λ₂)
-    (M₁ : regionHilbert (L := L) Λ₁ →L[ℂ] regionHilbert (L := L) Λ₁)
-    (M₂ : regionHilbert (L := L) Λ₂ →L[ℂ] regionHilbert (L := L) Λ₂) :
+    (M₁ : ℋ(Λ₁) →L[ℂ] ℋ(Λ₁))
+    (M₂ : ℋ(Λ₂) →L[ℂ] ℋ(Λ₂)) :
     Commute (localEmbed Λ₁ M₁) (localEmbed Λ₂ M₂) := by
   -- Show `localEmbed Λ₁ M₁ * localEmbed Λ₂ M₂ = localEmbed Λ₂ M₂ * localEmbed Λ₁ M₁`.
   change localEmbed Λ₁ M₁ * localEmbed Λ₂ M₂

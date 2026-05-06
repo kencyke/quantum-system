@@ -65,6 +65,13 @@ theorem referenceTuple_val (s : L) :
 noncomputable def vacuumVector : globalHilbert L :=
   lp.single 2 (referenceTuple L) (1 : ℂ)
 
+/-- Paper notation `Ω(L)` for the reference/vacuum vector at the lattice
+system `L`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike` to use
+it.  See Naaijkens 2012 §3.5 / Bratteli–Robinson Vol. 2 §2.7.2 for the
+rendering this notation matches; the `(L)` argument is a project-level
+parameterisation of the paper's bare `Ω`. -/
+scoped notation:max "Ω(" L ")" => LocalNetLike.vacuumVector L
+
 /-- Compatibility alias for earlier code.  The object is a vector in
 `globalHilbert L`; it is not a bundled C⋆-algebra state. -/
 noncomputable abbrev vacuumState : globalHilbert L :=
@@ -222,6 +229,12 @@ the C\*-state realisation of the reference-vector functional. -/
 noncomputable def vacuumStateOnQuasiLocal :
     ↥(quasiLocal L) →L[ℂ] ℂ :=
   (vacuumFunctional L).comp (quasiLocal L).toSubalgebra.toSubmodule.subtypeL
+
+/-- Paper notation `ω(L)` for the vacuum state on the quasi-local algebra
+`quasiLocal L`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike` to
+use it.  See Naaijkens 2012 §3.5 for the C⋆-state convention; the `(L)`
+argument is a project-level parameterisation of the paper's bare `ω`. -/
+scoped notation:max "ω(" L ")" => LocalNetLike.vacuumStateOnQuasiLocal L
 
 @[simp]
 theorem vacuumStateOnQuasiLocal_apply (T : ↥(quasiLocal L)) :

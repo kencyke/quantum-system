@@ -35,6 +35,8 @@ orthonormal family in `globalHilbert L`, which yields a linear isometry via
 
 @[expose] public section
 
+open scoped LocalNetLike
+
 namespace LocalNetLike
 
 variable {L : Type*} [DecidableEq L] [LocalNetLike L]
@@ -99,7 +101,7 @@ theorem orthonormal_regionEmbedTarget (Λ : Finset L) :
 basis of `regionHilbert Λ` by sending each basis vector to the corresponding
 `lp.single` vector in `globalHilbert L`. -/
 noncomputable def regionEmbedAux (Λ : Finset L) :
-    regionHilbert (L := L) Λ →ₗ[ℂ] globalHilbert L :=
+    ℋ(Λ) →ₗ[ℂ] globalHilbert L :=
   (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).toBasis.constr ℂ
     (regionEmbedTarget Λ)
 
@@ -111,7 +113,7 @@ theorem regionEmbedAux_basis (Λ : Finset L) (f : regionIdx (L := L) Λ) :
 
 /-- The isometric embedding `regionHilbert Λ →ₗᵢ[ℂ] globalHilbert L`. -/
 noncomputable def regionEmbed (Λ : Finset L) :
-    regionHilbert (L := L) Λ →ₗᵢ[ℂ] globalHilbert L :=
+    ℋ(Λ) →ₗᵢ[ℂ] globalHilbert L :=
   LinearMap.isometryOfOrthonormal (regionEmbedAux Λ)
     (v := (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).toBasis)
     (by

@@ -39,6 +39,8 @@ data plus the region-image API which they consume.
 
 @[expose] public section
 
+open scoped LocalNetLike
+
 namespace LocalNetLike
 
 variable (L : Type*) [DecidableEq L] [LocalNetLike L]
@@ -377,7 +379,7 @@ group action.  Built from the orthonormal basis of `EuclideanSpace ℂ` on each
 side via `OrthonormalBasis.equiv` and the index bijection `regionIdxAction`. -/
 noncomputable def regionTransport (act : HasGroupAction L G) (g : G)
     (Λ : Finset L) :
-    regionHilbert (L := L) Λ ≃ₗᵢ[ℂ] regionHilbert (L := L) (act.regionImage g Λ) :=
+    ℋ(Λ) ≃ₗᵢ[ℂ] ℋ(act.regionImage g Λ) :=
   (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).equiv
     (EuclideanSpace.basisFun (regionIdx (L := L) (act.regionImage g Λ)) ℂ)
     (act.regionIdxAction g Λ)
@@ -386,10 +388,10 @@ noncomputable def regionTransport (act : HasGroupAction L G) (g : G)
 induced by `regionTransport`, used to express the covariance theorem. -/
 noncomputable def regionTransportAlg (act : HasGroupAction L G) (g : G)
     (Λ : Finset L) :
-    (regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (ℋ(Λ) →L[ℂ] ℋ(Λ))
       ≃⋆ₐ[ℂ]
-      (regionHilbert (L := L) (act.regionImage g Λ)
-        →L[ℂ] regionHilbert (L := L) (act.regionImage g Λ)) :=
+      (ℋ(act.regionImage g Λ)
+        →L[ℂ] ℋ(act.regionImage g Λ)) :=
   (act.regionTransport g Λ).conjStarAlgEquiv
 
 /-! ### Combinatorial identities used in the covariance theorem -/
@@ -399,10 +401,10 @@ to a vector in `H_{g·Λ}` whose `a'`-coordinate is the `(regionIdxAction g Λ).
 coordinate of `v`. -/
 theorem regionTransport_apply_val
     (act : HasGroupAction L G) (g : G) (Λ : Finset L)
-    (v : regionHilbert (L := L) Λ)
+    (v : ℋ(Λ))
     (a' : regionIdx (L := L) (act.regionImage g Λ)) :
     ((act.regionTransport g Λ v
-        : regionHilbert (L := L) (act.regionImage g Λ))
+        : ℋ(act.regionImage g Λ))
         : regionIdx (L := L) (act.regionImage g Λ) → ℂ) a'
       = (v : regionIdx (L := L) Λ → ℂ)
           ((act.regionIdxAction g Λ).symm a') := by
@@ -582,7 +584,7 @@ with the region-level transport `regionTransportAlg g Λ`:
 `algebraAut g (localEmbed Λ M) = localEmbed (g · Λ) (regionTransportAlg g Λ M)`. -/
 theorem algebraAut_localEmbed (act : HasGroupAction L G) (g : G)
     (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     act.algebraAut g (localEmbed Λ M)
       = localEmbed (act.regionImage g Λ) (act.regionTransportAlg g Λ M) := by
   apply ContinuousLinearMap.ext
@@ -595,7 +597,7 @@ theorem algebraAut_localEmbed (act : HasGroupAction L G) (g : G)
             : globalIdx L → ℂ) g_idx
         = (((M (wRestrict Λ ((act.unitaryAction g).symm w)
                   ((act.globalIdxAction g).symm g_idx))
-                : regionHilbert (L := L) Λ) : regionIdx (L := L) Λ → ℂ)
+                : ℋ(Λ)) : regionIdx (L := L) Λ → ℂ)
                 (regionRestrict Λ ((act.globalIdxAction g).symm g_idx))) := by
     -- algebraAut g T = unitaryAction g ∘L T ∘L (unitaryAction g).symm.
     rw [act.algebraAut_apply]
@@ -614,7 +616,7 @@ theorem algebraAut_localEmbed (act : HasGroupAction L G) (g : G)
             : globalHilbert L) : globalIdx L → ℂ) g_idx
         = (((M ((act.regionTransport g Λ).symm
                   (wRestrict (act.regionImage g Λ) w g_idx))
-                : regionHilbert (L := L) Λ) : regionIdx (L := L) Λ → ℂ)
+                : ℋ(Λ)) : regionIdx (L := L) Λ → ℂ)
                 (regionRestrict Λ ((act.globalIdxAction g).symm g_idx))) := by
     rw [localEmbed_apply_apply]
     unfold localEmbedCoeff
@@ -626,7 +628,7 @@ theorem algebraAut_localEmbed (act : HasGroupAction L G) (g : G)
     --   [via regionIdxAction_symm_regionRestrict]
     change (((act.regionTransportAlg g Λ M)
               (wRestrict (act.regionImage g Λ) w g_idx)
-                : regionHilbert (L := L) (act.regionImage g Λ))
+                : ℋ(act.regionImage g Λ))
               : regionIdx (L := L) (act.regionImage g Λ) → ℂ)
                 (regionRestrict (act.regionImage g Λ) g_idx) = _
     rw [show (act.regionTransportAlg g Λ M)

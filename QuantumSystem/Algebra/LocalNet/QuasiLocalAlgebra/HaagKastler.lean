@@ -39,6 +39,8 @@ Hilbert space.
 
 @[expose] public section
 
+open scoped LocalNetLike
+
 namespace LocalNetLike
 
 /-! ### Public Haag–Kastler bundles
@@ -133,14 +135,14 @@ variable {L}
 /-- **Isotony.**  If `Λ ⊆ Λ'`, then the local subalgebra at `Λ`
 is contained in the local subalgebra at `Λ'`. -/
 theorem isotony {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
-    localSubalgebra Λ ≤ localSubalgebra Λ' :=
+    𝔄(Λ) ≤ 𝔄(Λ') :=
   localSubalgebra_le_of_subset h
 
-/-- **Locality for disjoint finite lattice regions.**  Operators in `localSubalgebra Λ₁` commute with
-operators in `localSubalgebra Λ₂` whenever `Λ₁` and `Λ₂` are disjoint. -/
+/-- **Locality for disjoint finite lattice regions.**  Operators in `𝔄(Λ₁)` commute with
+operators in `𝔄(Λ₂)` whenever `Λ₁` and `Λ₂` are disjoint. -/
 theorem locality {Λ₁ Λ₂ : Finset L} (hd : Disjoint Λ₁ Λ₂)
     {T₁ T₂ : globalHilbert L →L[ℂ] globalHilbert L}
-    (h₁ : T₁ ∈ localSubalgebra Λ₁) (h₂ : T₂ ∈ localSubalgebra Λ₂) :
+    (h₁ : T₁ ∈ 𝔄(Λ₁)) (h₂ : T₂ ∈ 𝔄(Λ₂)) :
     Commute T₁ T₂ :=
   localSubalgebra_commute_of_disjoint hd h₁ h₂
 
@@ -159,14 +161,14 @@ theorem covariance {G : Type*} [Group G] (act : HasGroupAction L G) (g : G) :
 `unitaryAction g` fixes the canonical reference vector `vacuumVector L`. -/
 theorem vacuum_vector_invariance {G : Type*} [Group G]
     (act : HasGroupAction L G) (g : G) :
-    act.unitaryAction g (vacuumVector L) = vacuumVector L :=
+    act.unitaryAction g Ω(L) = Ω(L) :=
   HasGroupAction.unitaryAction_vacuumVector L act g
 
 /-- Compatibility spelling for older files: this is invariance of the canonical
 reference vector, not a bundled C⋆-algebra state or a positive-energy condition. -/
 theorem vacuum_invariance {G : Type*} [Group G]
     (act : HasGroupAction L G) (g : G) :
-    act.unitaryAction g (vacuumState L) = vacuumState L :=
+    act.unitaryAction g Ω(L) = Ω(L) :=
   HasGroupAction.unitaryAction_vacuumState L act g
 
 /-- **`G`-invariance of the vacuum state on the quasi-local algebra**.  This is
@@ -174,8 +176,7 @@ the proper C⋆-state form `ω(α_g T) = ω(T)` of vacuum invariance, complement
 the unitary-implementation statement `vacuum_vector_invariance`. -/
 theorem vacuum_state_invariance {G : Type*} [Group G]
     (act : HasGroupAction L G) (g : G) (T : ↥(quasiLocal L)) :
-    vacuumStateOnQuasiLocal L (act.quasiLocalEnd g T)
-      = vacuumStateOnQuasiLocal L T :=
+    ω(L) (act.quasiLocalEnd g T) = ω(L) T :=
   HasGroupAction.vacuumStateOnQuasiLocal_quasiLocalEnd L act g T
 
 /-! ### Abstract-algebra-level Haag–Kastler statements
@@ -229,7 +230,7 @@ theorem abstract_covariance_local
     {G : Type*} [Group G] (act : HasGroupAction L G)
     [LocalNetLike.HaagKastlerCovariantNet L G act] {Λ : Finset L}
     (a : LocalNetLike.localAlgebra (L := L) Λ) (g : G) :
-    act.algebraAut g (localAlgebraEmbed Λ a) ∈ localSubalgebra (act.regionImage g Λ) :=
+    act.algebraAut g (localAlgebraEmbed Λ a) ∈ 𝔄(act.regionImage g Λ) :=
   HasGroupAction.algebraAut_localSubalgebra_le act g Λ _
     (localAlgebraEmbed_mem_localSubalgebra Λ a)
 

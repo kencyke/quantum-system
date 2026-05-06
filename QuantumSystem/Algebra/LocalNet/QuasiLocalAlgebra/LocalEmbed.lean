@@ -44,6 +44,8 @@ injectivity, and defines the resulting represented local subalgebra
 
 @[expose] public section
 
+open scoped LocalNetLike
+
 namespace LocalNetLike
 
 variable {L : Type*} [DecidableEq L] [LocalNetLike L]
@@ -165,7 +167,7 @@ theorem globalSwapEquiv_apply (Λ : Finset L)
 `regionHilbert Λ` whose `f`-th component is `w(globalSwap Λ f g)`.
 It packages the data along which `M ⊗ 1_{Λᶜ}` acts as `M`. -/
 noncomputable def wRestrict (Λ : Finset L) (w : globalHilbert L)
-    (g : globalIdx L) : regionHilbert (L := L) Λ :=
+    (g : globalIdx L) : ℋ(Λ) :=
   WithLp.toLp 2 (fun f : regionIdx (L := L) Λ =>
     (w : lp (fun _ : globalIdx L => ℂ) 2) (globalSwap Λ f g))
 
@@ -184,13 +186,13 @@ theorem norm_sq_wRestrict (Λ : Finset L) (w : globalHilbert L) (g : globalIdx L
 /-- Pointwise coefficient of `(M ⊗ 1_{Λᶜ}) w` at the global tuple `g`:
 the value of `M (wRestrict Λ w g)` at the index `regionRestrict Λ g`. -/
 noncomputable def localEmbedCoeff (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) (g : globalIdx L) : ℂ :=
   (M (wRestrict Λ w g)) (regionRestrict Λ g)
 
 /-- Per-tuple bound: `‖localEmbedCoeff Λ M w g‖² ≤ ‖M‖² · ‖wRestrict Λ w g‖²`. -/
 theorem norm_sq_localEmbedCoeff_le (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) (g : globalIdx L) :
     ‖localEmbedCoeff Λ M w g‖ ^ 2 ≤ ‖M‖ ^ 2 * ‖wRestrict Λ w g‖ ^ 2 := by
   set v := M (wRestrict Λ w g) with hv
@@ -295,7 +297,7 @@ theorem summable_norm_sq_wRestrict (Λ : Finset L) (w : globalHilbert L) :
 This places `localEmbedCoeff Λ M w` in `lp 2` and is the entry point to
 upgrading the action `M ⊗ 1` to a continuous linear map. -/
 theorem summable_norm_sq_localEmbedCoeff (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) :
     Summable fun g : globalIdx L => ‖localEmbedCoeff Λ M w g‖ ^ 2 := by
   refine Summable.of_nonneg_of_le (fun _ => sq_nonneg _) ?_
@@ -305,7 +307,7 @@ theorem summable_norm_sq_localEmbedCoeff (Λ : Finset L)
 
 /-- The `localEmbedCoeff` data lives in `ℓ²(globalIdx L, ℂ)`. -/
 theorem localEmbedCoeff_memℓp (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) :
     Memℓp (localEmbedCoeff Λ M w) 2 := by
   have htwo : (0 : ℝ) < (2 : ENNReal).toReal := by
@@ -328,7 +330,7 @@ theorem wRestrict_smul (Λ : Finset L) (c : ℂ) (w : globalHilbert L) (g : glob
   exact congrFun (lp.coeFn_smul c w) _
 
 theorem localEmbedCoeff_add (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w w' : globalHilbert L) (g : globalIdx L) :
     localEmbedCoeff Λ M (w + w') g
       = localEmbedCoeff Λ M w g + localEmbedCoeff Λ M w' g := by
@@ -337,7 +339,7 @@ theorem localEmbedCoeff_add (Λ : Finset L)
   rfl
 
 theorem localEmbedCoeff_smul (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (c : ℂ) (w : globalHilbert L) (g : globalIdx L) :
     localEmbedCoeff Λ M (c • w) g = c • localEmbedCoeff Λ M w g := by
   unfold localEmbedCoeff
@@ -358,7 +360,7 @@ realising `M ⊗ 1_{Λᶜ}` on the basis-indexed model.  The boundedness constan
 `√(card (regionIdx Λ)) · ‖M‖` is loose; the tight `‖M‖` follows from a more
 refined orthogonal-decomposition argument and is left for a follow-up. -/
 noncomputable def localEmbed (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     globalHilbert L →L[ℂ] globalHilbert L :=
   LinearMap.mkContinuous
     { toFun := fun w => ⟨localEmbedCoeff Λ M w, localEmbedCoeff_memℓp Λ M w⟩
@@ -425,7 +427,7 @@ noncomputable def localEmbed (Λ : Finset L)
 
 @[simp]
 theorem localEmbed_apply_coe (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) :
     ((localEmbed Λ M w : globalHilbert L)
         : lp (fun _ : globalIdx L => ℂ) 2)
@@ -433,7 +435,7 @@ theorem localEmbed_apply_coe (Λ : Finset L)
 
 @[simp]
 theorem localEmbed_apply_apply (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) (g : globalIdx L) :
     ((localEmbed Λ M w : globalHilbert L) : globalIdx L → ℂ) g
       = localEmbedCoeff Λ M w g := rfl
@@ -462,7 +464,7 @@ theorem wRestrict_globalSwap (Λ : Finset L) (w : globalHilbert L)
 /-- Composing `localEmbed Λ N` with the `wRestrict` operation realises
 applying `N` first to the local data: `wRestrict Λ (localEmbed Λ N w) g = N (wRestrict Λ w g)`. -/
 theorem wRestrict_localEmbed (Λ : Finset L)
-    (N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (N : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (w : globalHilbert L) (g : globalIdx L) :
     wRestrict Λ (localEmbed Λ N w) g = N (wRestrict Λ w g) := by
   ext f
@@ -487,7 +489,7 @@ theorem wRestrict_apply_regionRestrict (Λ : Finset L) (w : globalHilbert L)
 
 /-- `localEmbed Λ` sends the identity to the identity. -/
 theorem localEmbed_one (Λ : Finset L) :
-    localEmbed Λ (ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ))
+    localEmbed Λ (ContinuousLinearMap.id ℂ (ℋ(Λ)))
       = ContinuousLinearMap.id ℂ (globalHilbert L) := by
   ext w g
   rw [localEmbed_apply_apply]
@@ -497,7 +499,7 @@ theorem localEmbed_one (Λ : Finset L) :
 
 /-- `localEmbed Λ` is multiplicative: `localEmbed Λ (M ∘ N) = localEmbed Λ M ∘ localEmbed Λ N`. -/
 theorem localEmbed_mul (Λ : Finset L)
-    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M N : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     localEmbed Λ (M.comp N) = (localEmbed Λ M).comp (localEmbed Λ N) := by
   ext w g
   rw [localEmbed_apply_apply]
@@ -511,7 +513,7 @@ theorem localEmbed_mul (Λ : Finset L)
 
 /-- `M ↦ localEmbed Λ M` is additive in `M`. -/
 theorem localEmbed_add (Λ : Finset L)
-    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M N : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     localEmbed Λ (M + N) = localEmbed Λ M + localEmbed Λ N := by
   ext w g
   rw [localEmbed_apply_apply]
@@ -525,7 +527,7 @@ theorem localEmbed_add (Λ : Finset L)
 
 /-- `M ↦ localEmbed Λ M` is `ℂ`-linear in `M`. -/
 theorem localEmbed_smul (Λ : Finset L) (c : ℂ)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     localEmbed Λ (c • M) = c • localEmbed Λ M := by
   ext w g
   rw [localEmbed_apply_apply]
@@ -538,7 +540,7 @@ theorem localEmbed_smul (Λ : Finset L) (c : ℂ)
 
 /-- `M ↦ localEmbed Λ M` sends zero to zero. -/
 theorem localEmbed_zero (Λ : Finset L) :
-    localEmbed Λ (0 : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) = 0 := by
+    localEmbed Λ (0 : ℋ(Λ) →L[ℂ] ℋ(Λ)) = 0 := by
   ext w g
   rw [localEmbed_apply_apply]
   unfold localEmbedCoeff
@@ -547,7 +549,7 @@ theorem localEmbed_zero (Λ : Finset L) :
 
 /-- `M ↦ localEmbed Λ M` as a unital ℂ-algebra homomorphism. -/
 noncomputable def localEmbedAlg (Λ : Finset L) :
-    (regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) →ₐ[ℂ]
+    (ℋ(Λ) →L[ℂ] ℋ(Λ)) →ₐ[ℂ]
     (globalHilbert L →L[ℂ] globalHilbert L) where
   toFun := localEmbed Λ
   map_one' := localEmbed_one Λ
@@ -561,7 +563,7 @@ noncomputable def localEmbedAlg (Λ : Finset L) :
 
 @[simp]
 theorem localEmbedAlg_apply (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     localEmbedAlg Λ M = localEmbed Λ M := rfl
 
 /-! ### Matrix-element formulas used to characterise `localEmbed Λ` -/
@@ -570,7 +572,7 @@ theorem localEmbedAlg_apply (Λ : Finset L)
 the `Λ`-restriction of `v` around `g` with the `(regionRestrict Λ g)`-th column
 of `M`. -/
 theorem localEmbedCoeff_eq_sum (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (v : globalHilbert L) (g : globalIdx L) :
     localEmbedCoeff Λ M v g
       = ∑ f : regionIdx (L := L) Λ,
@@ -593,7 +595,7 @@ theorem localEmbedCoeff_eq_sum (Λ : Finset L)
   rw [WithLp.ofLp_sum]
   change (∑ f : regionIdx (L := L) Λ,
         (((wRestrict Λ v g : regionIdx (L := L) Λ → ℂ) f) •
-          (M (EuclideanSpace.single f (1 : ℂ))) : regionHilbert (L := L) Λ).ofLp)
+          (M (EuclideanSpace.single f (1 : ℂ))) : ℋ(Λ)).ofLp)
         (regionRestrict Λ g) = _
   rw [Finset.sum_apply]
   refine Finset.sum_congr rfl fun f _ => ?_
@@ -604,7 +606,7 @@ identity `(M.adjoint y)_a = ⟨M e_a, y⟩` on the finite-dimensional region
 Hilbert space.  This rewrites the action of `localEmbed Λ (star M)` in
 terms of conjugates of `M`'s matrix elements. -/
 private theorem localEmbedCoeff_star_eq_sum (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (v : globalHilbert L) (g : globalIdx L) :
     localEmbedCoeff Λ (star M) v g
       = ∑ f : regionIdx (L := L) Λ,
@@ -613,7 +615,7 @@ private theorem localEmbedCoeff_star_eq_sum (Λ : Finset L)
             * ((v : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ)
                 (globalSwap Λ f g) := by
   unfold localEmbedCoeff
-  have hcoord : ((((star M) (wRestrict Λ v g) : regionHilbert (L := L) Λ)
+  have hcoord : ((((star M) (wRestrict Λ v g) : ℋ(Λ))
             : regionIdx (L := L) Λ → ℂ) (regionRestrict Λ g))
         = inner ℂ (EuclideanSpace.single (regionRestrict Λ g) (1 : ℂ))
             ((star M) (wRestrict Λ v g)) := by
@@ -644,7 +646,7 @@ private theorem globalSwap_agreeOn_symm (Λ : Finset L) (g h : globalIdx L) :
 adjoint reads
 `localEmbedCoeff Λ (star M) e_h g = star (localEmbedCoeff Λ M e_g h)`. -/
 private theorem localEmbedCoeff_star_lpSingle (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
     (g h : globalIdx L) :
     localEmbedCoeff Λ (star M) (lp.single 2 h (1 : ℂ)) g
       = star (localEmbedCoeff Λ M (lp.single 2 g (1 : ℂ)) h) := by
@@ -744,7 +746,7 @@ private theorem localEmbedCoeff_star_lpSingle (Λ : Finset L)
 
 /-- `localEmbed Λ` preserves the involution: `localEmbed Λ (star M) = star (localEmbed Λ M)`. -/
 theorem localEmbed_star (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     localEmbed Λ (star M) = star (localEmbed Λ M) := by
   -- Build the canonical Hilbert basis of globalHilbert L (one basis vector per global tuple).
   let b : HilbertBasis (globalIdx L) ℂ (globalHilbert L) :=
@@ -803,7 +805,7 @@ theorem localEmbed_star (Λ : Finset L)
 
 /-- `M ↦ localEmbed Λ M` as a unital `*`-algebra homomorphism. -/
 noncomputable def localEmbedHom (Λ : Finset L) :
-    (regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) →⋆ₐ[ℂ]
+    (ℋ(Λ) →L[ℂ] ℋ(Λ)) →⋆ₐ[ℂ]
     (globalHilbert L →L[ℂ] globalHilbert L) where
   toFun := localEmbed Λ
   map_one' := localEmbed_one Λ
@@ -818,7 +820,7 @@ noncomputable def localEmbedHom (Λ : Finset L) :
 
 @[simp]
 theorem localEmbedHom_apply (Λ : Finset L)
-    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
     localEmbedHom Λ M = localEmbed Λ M := rfl
 
 @[simp]
@@ -895,10 +897,17 @@ noncomputable def localSubalgebra (Λ : Finset L) :
     StarSubalgebra ℂ (globalHilbert L →L[ℂ] globalHilbert L) :=
   (localEmbedHom Λ).range
 
+/-- Paper notation `𝔄(Λ)` for the local subalgebra at the finite lattice
+region `Λ`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike` to
+use it.  See Naaijkens 2012 §1.3 (`references/92737/INDEX.md`,
+key concept `A(Λ) — paper notation for the local algebra on region Λ`)
+for the rendering this notation matches. -/
+scoped notation:max "𝔄(" Λ ")" => LocalNetLike.localSubalgebra Λ
+
 theorem mem_localSubalgebra (Λ : Finset L)
     (T : globalHilbert L →L[ℂ] globalHilbert L) :
     T ∈ localSubalgebra Λ
-      ↔ ∃ M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ,
+      ↔ ∃ M : ℋ(Λ) →L[ℂ] ℋ(Λ),
           localEmbed Λ M = T := by
   change T ∈ ((localEmbedHom Λ).toAlgHom.range : Subalgebra ℂ _) ↔ _
   exact AlgHom.mem_range _

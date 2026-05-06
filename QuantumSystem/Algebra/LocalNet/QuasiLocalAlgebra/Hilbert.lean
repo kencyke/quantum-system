@@ -75,7 +75,17 @@ advantage of inheriting `NormedAddCommGroup`, `InnerProductSpace ℂ`,
 abbrev regionHilbert (Λ : Finset L) : Type _ :=
   EuclideanSpace ℂ (regionIdx (L := L) Λ)
 
+/-- Paper notation `ℋ(Λ)` for the finite-region Hilbert space at the
+lattice region `Λ`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike`
+to use it.  See Naaijkens 2012 §3.5
+(`references/92737/sections/03-operator-algebras.md`) for the rendering
+this notation matches; it is the parser-stable bracket form of the paper
+subscript `ℋ_Λ`. -/
+scoped notation:max "ℋ(" Λ ")" => LocalNetLike.regionHilbert Λ
+
 end LocalNetLike
+
+open scoped LocalNetLike
 
 /-- Optional mixin: realise the abstract local algebra `LocalNetLike.localAlgebra Λ`
 as an honest `*`-algebra of operators on `regionHilbert Λ`.  This is the bridge
@@ -90,9 +100,7 @@ class LocalNetLike.HasLocalRepresentation
   /-- A bundled `*`-algebra hom from the abstract local algebra to the
   operator algebra on `regionHilbert Λ`. -/
   localRep (Λ : Finset L) :
-    LocalNetLike.localAlgebra (L := L) Λ →⋆ₐ[ℂ]
-      (LocalNetLike.regionHilbert (L := L) Λ
-        →L[ℂ] LocalNetLike.regionHilbert (L := L) Λ)
+    LocalNetLike.localAlgebra (L := L) Λ →⋆ₐ[ℂ] (ℋ(Λ) →L[ℂ] ℋ(Λ))
 
 /-- Optional refinement: `HasLocalRepresentation` is *faithful*, i.e. the
 representation `localRep Λ` is injective.  Whenever this holds, the abstract
