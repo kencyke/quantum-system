@@ -164,6 +164,122 @@ noncomputable def globalIdxAction (act : HasGroupAction L G) (g : G) :
     rw [hf_eq]
     exact piAction_symm_finite_variation act g hΓ' s hs)
 
+@[simp]
+theorem globalIdxAction_val (act : HasGroupAction L G) (g : G) (f : globalIdx L) :
+    (globalIdxAction act g f).val = piAction act g f.val := rfl
+
+/-! ### Unitary representation on `globalHilbert L` -/
+
+/-- Membership in `lp (... ℂ) 2` is preserved by reindexing along an `Equiv`
+on the index. -/
+theorem lp_memℓp_reindex (e : globalIdx L ≃ globalIdx L)
+    {f : globalIdx L → ℂ} (hf : Memℓp f 2) :
+    Memℓp (fun a => f (e.symm a)) 2 := by
+  have htwo : (0 : ℝ) < (2 : ENNReal).toReal := by
+    rw [ENNReal.toReal_ofNat]; norm_num
+  rw [memℓp_gen_iff htwo] at hf ⊢
+  exact (e.symm.summable_iff
+    (f := fun b => ‖f b‖ ^ ((2 : ENNReal).toReal))).mpr hf
+
+/-- The unitary representation on `globalHilbert L` induced by the site
+action: a basis-permutation isometry sending `lp.single 2 j 1` to
+`lp.single 2 (globalIdxAction g j) 1`. -/
+noncomputable def unitaryAction (act : HasGroupAction L G) (g : G) :
+    globalHilbert L ≃ₗᵢ[ℂ] globalHilbert L where
+  toFun f :=
+    ⟨fun a => (f : globalIdx L → ℂ) ((globalIdxAction act g).symm a),
+      lp_memℓp_reindex (globalIdxAction act g) (lp.memℓp f)⟩
+  invFun f :=
+    ⟨fun a => (f : globalIdx L → ℂ) (globalIdxAction act g a),
+      by
+        have hf : Memℓp (fun a => (f : globalIdx L → ℂ)
+              ((globalIdxAction act g).symm.symm a)) 2 :=
+          lp_memℓp_reindex (globalIdxAction act g).symm (lp.memℓp f)
+        simp only [Equiv.symm_symm] at hf
+        exact hf⟩
+  left_inv f := by
+    apply Subtype.ext
+    funext a
+    change (f : globalIdx L → ℂ)
+        ((globalIdxAction act g).symm (globalIdxAction act g a)) = _
+    rw [Equiv.symm_apply_apply]
+  right_inv f := by
+    apply Subtype.ext
+    funext a
+    change (f : globalIdx L → ℂ)
+        (globalIdxAction act g ((globalIdxAction act g).symm a)) = _
+    rw [Equiv.apply_symm_apply]
+  map_add' f₁ f₂ := by
+    apply Subtype.ext
+    funext a
+    change ((f₁ + f₂ : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ)
+            ((globalIdxAction act g).symm a)
+        = (f₁ : globalIdx L → ℂ) ((globalIdxAction act g).symm a)
+          + (f₂ : globalIdx L → ℂ) ((globalIdxAction act g).symm a)
+    exact congrFun (lp.coeFn_add f₁ f₂) _
+  map_smul' c f := by
+    apply Subtype.ext
+    funext a
+    change ((c • f : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ)
+            ((globalIdxAction act g).symm a)
+        = c • (f : globalIdx L → ℂ) ((globalIdxAction act g).symm a)
+    exact congrFun (lp.coeFn_smul c f) _
+  norm_map' f := by
+    have htwo : (0 : ℝ) < (2 : ENNReal).toReal := by
+      rw [ENNReal.toReal_ofNat]; norm_num
+    -- The toFun image, viewed as a `globalHilbert L` element.
+    set Uf : globalHilbert L :=
+      ⟨fun a => (f : globalIdx L → ℂ) ((globalIdxAction act g).symm a),
+        lp_memℓp_reindex (globalIdxAction act g) (lp.memℓp f)⟩
+    change ‖Uf‖ = ‖f‖
+    have hLHS := lp.norm_rpow_eq_tsum (E := fun _ : globalIdx L => ℂ) (p := 2)
+      htwo Uf
+    have hRHS := lp.norm_rpow_eq_tsum (E := fun _ : globalIdx L => ℂ) (p := 2)
+      htwo f
+    have hsum :
+        ∑' a : globalIdx L,
+            ‖(f : globalIdx L → ℂ) ((globalIdxAction act g).symm a)‖
+              ^ ((2 : ENNReal).toReal)
+          = ∑' b : globalIdx L,
+              ‖(f : globalIdx L → ℂ) b‖ ^ ((2 : ENNReal).toReal) :=
+      Equiv.tsum_eq (globalIdxAction act g).symm
+        (fun b => ‖(f : globalIdx L → ℂ) b‖ ^ ((2 : ENNReal).toReal))
+    have hpow : ‖Uf‖ ^ ((2 : ENNReal).toReal) = ‖f‖ ^ ((2 : ENNReal).toReal) := by
+      rw [hLHS, hRHS]; exact hsum
+    have h2real : (2 : ENNReal).toReal = 2 := by simp
+    rw [h2real] at hpow
+    -- Convert `^ (2 : ℝ)` to `^ (2 : ℕ)`.
+    have hpow_nat : ‖Uf‖ ^ (2 : ℕ) = ‖f‖ ^ (2 : ℕ) := by
+      have hUf := Real.rpow_natCast ‖Uf‖ 2
+      have hf := Real.rpow_natCast ‖f‖ 2
+      rw [show ((2 : ℕ) : ℝ) = (2 : ℝ) from rfl] at hUf hf
+      rw [← hUf, ← hf]; exact_mod_cast hpow
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp hpow_nat
+
+@[simp]
+theorem unitaryAction_apply_val (act : HasGroupAction L G) (g : G)
+    (f : globalHilbert L) (a : globalIdx L) :
+    ((unitaryAction act g f : globalHilbert L) : globalIdx L → ℂ) a
+      = (f : globalIdx L → ℂ) ((globalIdxAction act g).symm a) := rfl
+
+/-! ### Algebra automorphism via conjugation by the unitary representation -/
+
+/-- The `*`-algebra automorphism of `B(globalHilbert L)` induced by conjugation
+by the unitary representation `unitaryAction g`.  This is the operator-level
+realisation of the action used in the covariance axiom (Verch 2025 §1.2 axiom
+iii). -/
+noncomputable def algebraAut (act : HasGroupAction L G) (g : G) :
+    (globalHilbert L →L[ℂ] globalHilbert L)
+      ≃⋆ₐ[ℂ] (globalHilbert L →L[ℂ] globalHilbert L) :=
+  (act.unitaryAction g).conjStarAlgEquiv
+
+theorem algebraAut_apply (act : HasGroupAction L G) (g : G)
+    (T : globalHilbert L →L[ℂ] globalHilbert L) :
+    act.algebraAut g T
+      = (act.unitaryAction g).toContinuousLinearEquiv.toContinuousLinearMap.comp
+          (T.comp (act.unitaryAction g).symm.toContinuousLinearEquiv.toContinuousLinearMap) :=
+  LinearIsometryEquiv.conjStarAlgEquiv_apply _ _
+
 end HasGroupAction
 
 end LocalNetLike

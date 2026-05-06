@@ -90,17 +90,45 @@ theorem globalIdxAction_referenceTuple (act : HasGroupAction L G) (g : G) :
 
 end HasGroupAction
 
-/-- **`G`-invariance of the vacuum state** (Verch 2025 §1.2 axiom (iv) /
-Naaijkens 2012 §1.3): a placeholder Prop stating that every `G`-translate
-of the vacuum vector equals the vacuum vector.  Once the unitary
-representation `unitaryAction g : globalHilbert L ≃ₗᵢ globalHilbert L` is
-constructed (in a follow-up phase), this Prop is automatic from
-`globalIdxAction_referenceTuple` because the unitary acts as a basis
-permutation.  Stated here as data so that downstream `*`-algebra
-constructions (the GNS-style vacuum state on `quasiLocal L`) can quote it. -/
-def IsVacuumInvariant {G : Type*} [Group G]
-    (_act : HasGroupAction L G)
-    (U : G → globalHilbert L → globalHilbert L) : Prop :=
-  ∀ g : G, U g (vacuumState L) = vacuumState L
+/-- **`G`-invariance of the vacuum vector** (Verch 2025 §1.2 axiom (iv) /
+Naaijkens 2012 §1.3): the unitary representation `unitaryAction g` fixes
+the vacuum vector. -/
+theorem HasGroupAction.unitaryAction_vacuumState
+    {G : Type*} [Group G] (act : HasGroupAction L G) (g : G) :
+    act.unitaryAction g (vacuumState L) = vacuumState L := by
+  apply Subtype.ext
+  funext a
+  rw [HasGroupAction.unitaryAction_apply_val]
+  -- (vacuumState L).val (g.symm a) = (vacuumState L).val a
+  -- Both equal `if · = referenceTuple L then 1 else 0`; equivalence follows from
+  -- `globalIdxAction g (referenceTuple L) = referenceTuple L`.
+  change (vacuumState L : lp (fun _ : globalIdx L => ℂ) 2)
+        ((act.globalIdxAction g).symm a)
+      = (vacuumState L : lp (fun _ : globalIdx L => ℂ) 2) a
+  unfold vacuumState
+  rw [lp.single_apply, lp.single_apply, Pi.single_apply, Pi.single_apply]
+  -- if (g.symm a = referenceTuple L) then 1 else 0
+  -- = if (a = referenceTuple L) then 1 else 0
+  have hsymm_ref : (act.globalIdxAction g).symm (referenceTuple L)
+                    = referenceTuple L := by
+    have h := act.globalIdxAction_referenceTuple g
+    have hcong :
+        (act.globalIdxAction g).symm ((act.globalIdxAction g) (referenceTuple L))
+          = (act.globalIdxAction g).symm (referenceTuple L) :=
+      congrArg _ h
+    rw [Equiv.symm_apply_apply] at hcong
+    exact hcong.symm
+  have hiff : ((act.globalIdxAction g).symm a = referenceTuple L)
+                ↔ (a = referenceTuple L) := by
+    constructor
+    · intro h
+      have := congrArg (act.globalIdxAction g) h
+      rw [Equiv.apply_symm_apply, act.globalIdxAction_referenceTuple] at this
+      exact this
+    · rintro rfl
+      exact hsymm_ref
+  by_cases hcase : a = referenceTuple L
+  · rw [if_pos (hiff.mpr hcase), if_pos hcase]
+  · rw [if_neg (fun h => hcase (hiff.mp h)), if_neg hcase]
 
 end LocalNetLike
