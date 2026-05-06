@@ -94,6 +94,25 @@ incomplete tensor product around the basis-indexed reference vector
 The four axioms together with `instCStarAlgebra_quasiLocal` are gathered in
 `HaagKastler.lean` for downstream use.
 
+### Concrete witness: spin-1/2 chain on `ℤ`
+
+The four axiom theorems above are universally quantified over any
+`[LocalNetLike L]` and any `LocalNetLike.HasGroupAction L G`.  To make the
+"AQFT satisfying all four axioms" claim non-vacuous,
+`Examples/QubitChain.lean` constructs a concrete instance — the canonical
+Naaijkens 2012 example:
+
+* `qubitChain : LocalNet` with `sites := ℤ` and `localIdx _ := Fin 2`;
+* the auto `LocalNetLike` instance via `LocalNet → LocalNetLike L.sites`;
+* `qubitChainTranslationAction : LocalNetLike.HasGroupAction qubitChain.sites
+  (Multiplicative ℤ)` for the lattice-translation action.
+
+The packaged existence theorem
+`qubitChain_haag_kastler_axioms_realised :
+Nonempty (LocalNetLike.HasGroupAction qubitChain.sites (Multiplicative ℤ))`
+is an axiom-free term, witnessing that the four Haag–Kastler axioms are
+simultaneously realisable in a non-trivial setting.
+
 ## References
 
 - https://repository.ubn.ru.nl/handle/2066/92737
