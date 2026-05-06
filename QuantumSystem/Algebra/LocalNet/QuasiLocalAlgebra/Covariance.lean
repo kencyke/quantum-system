@@ -280,6 +280,309 @@ theorem algebraAut_apply (act : HasGroupAction L G) (g : G)
           (T.comp (act.unitaryAction g).symm.toContinuousLinearEquiv.toContinuousLinearMap) :=
   LinearIsometryEquiv.conjStarAlgEquiv_apply _ _
 
+/-! ### Region-level transport: lifting `g` to `regionHilbert` -/
+
+/-- The `g`-translate of `↥Λ` to `↥(regionImage g Λ)`. -/
+def siteSubtypeEquiv (act : HasGroupAction L G) (g : G) (Λ : Finset L) :
+    ↥Λ ≃ ↥(act.regionImage g Λ) where
+  toFun a := ⟨act.siteAction g a.val,
+    Finset.mem_image.mpr ⟨a.val, a.property, rfl⟩⟩
+  invFun b := ⟨(act.siteAction g).symm b.val, by
+    obtain ⟨u, hu, hgu⟩ := Finset.mem_image.mp b.property
+    have : (act.siteAction g).symm b.val = u := by
+      rw [← hgu]; exact (act.siteAction g).symm_apply_apply u
+    rw [this]; exact hu⟩
+  left_inv a := Subtype.ext ((act.siteAction g).symm_apply_apply a.val)
+  right_inv b := Subtype.ext ((act.siteAction g).apply_symm_apply b.val)
+
+/-- The induced bijection on region-level indices: `regionIdx Λ ≃ regionIdx (g · Λ)`. -/
+noncomputable def regionIdxAction (act : HasGroupAction L G) (g : G)
+    (Λ : Finset L) :
+    regionIdx (L := L) Λ ≃ regionIdx (L := L) (act.regionImage g Λ) :=
+  Equiv.piCongr (act.siteSubtypeEquiv g Λ) (fun a => act.siteIdxEquiv g a.val)
+
+/-- The unitary `regionHilbert Λ ≃ₗᵢ[ℂ] regionHilbert (g · Λ)` induced by the
+group action.  Built from the orthonormal basis of `EuclideanSpace ℂ` on each
+side via `OrthonormalBasis.equiv` and the index bijection `regionIdxAction`. -/
+noncomputable def regionTransport (act : HasGroupAction L G) (g : G)
+    (Λ : Finset L) :
+    regionHilbert (L := L) Λ ≃ₗᵢ[ℂ] regionHilbert (L := L) (act.regionImage g Λ) :=
+  (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).equiv
+    (EuclideanSpace.basisFun (regionIdx (L := L) (act.regionImage g Λ)) ℂ)
+    (act.regionIdxAction g Λ)
+
+/-- The `*`-algebra automorphism on `B(regionHilbert Λ)` and `B(regionHilbert (g · Λ))`
+induced by `regionTransport`, used to express the covariance theorem. -/
+noncomputable def regionTransportAlg (act : HasGroupAction L G) (g : G)
+    (Λ : Finset L) :
+    (regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+      ≃⋆ₐ[ℂ]
+      (regionHilbert (L := L) (act.regionImage g Λ)
+        →L[ℂ] regionHilbert (L := L) (act.regionImage g Λ)) :=
+  (act.regionTransport g Λ).conjStarAlgEquiv
+
+/-! ### Combinatorial identities used in the covariance theorem -/
+
+/-- The pointwise formula for `regionTransport`: it sends a vector `v : H_Λ`
+to a vector in `H_{g·Λ}` whose `a'`-coordinate is the `(regionIdxAction g Λ).symm a'`-
+coordinate of `v`. -/
+theorem regionTransport_apply_val
+    (act : HasGroupAction L G) (g : G) (Λ : Finset L)
+    (v : regionHilbert (L := L) Λ)
+    (a' : regionIdx (L := L) (act.regionImage g Λ)) :
+    ((act.regionTransport g Λ v
+        : regionHilbert (L := L) (act.regionImage g Λ))
+        : regionIdx (L := L) (act.regionImage g Λ) → ℂ) a'
+      = (v : regionIdx (L := L) Λ → ℂ)
+          ((act.regionIdxAction g Λ).symm a') := by
+  -- Decompose `v` along the standard basis, push regionTransport through, then evaluate.
+  have hbasis : v = ∑ i : regionIdx (L := L) Λ,
+      (v : regionIdx (L := L) Λ → ℂ) i • EuclideanSpace.single i (1 : ℂ) := by
+    have := (EuclideanSpace.basisFun (regionIdx (L := L) Λ) ℂ).sum_repr v
+    simpa [EuclideanSpace.basisFun_apply,
+      EuclideanSpace.basisFun_repr] using this.symm
+  conv_lhs => rw [hbasis]
+  -- regionTransport (∑) = ∑ regionTransport (...) by linearity.
+  rw [map_sum]
+  -- Each summand: c • regionTransport (basis vector) = c • basisVector at translated index.
+  have hbasis_to_single : ∀ i : regionIdx (L := L) Λ,
+      (act.regionTransport g Λ) (EuclideanSpace.single i (1 : ℂ))
+        = EuclideanSpace.single ((act.regionIdxAction g Λ) i) (1 : ℂ) := by
+    intro i
+    unfold regionTransport
+    rw [← EuclideanSpace.basisFun_apply (𝕜 := ℂ) (ι := regionIdx (L := L) Λ) i,
+      OrthonormalBasis.equiv_apply_basis,
+      EuclideanSpace.basisFun_apply]
+  conv_lhs =>
+    enter [1, 2, i]
+    rw [LinearIsometryEquiv.map_smul, hbasis_to_single]
+  -- Now the sum is ∑ i, v.ofLp i • EuclideanSpace.single (e i) 1; evaluate at a'.
+  rw [WithLp.ofLp_sum, Finset.sum_apply]
+  rw [Finset.sum_eq_single ((act.regionIdxAction g Λ).symm a')]
+  · -- The i = e.symm a' summand: c • EuclideanSpace.single a' 1 evaluated at a' = c.
+    rw [WithLp.ofLp_smul, Pi.smul_apply, PiLp.single_apply,
+      Equiv.apply_symm_apply]
+    simp
+  · intro i _ hi
+    have hne : a' ≠ (act.regionIdxAction g Λ) i := by
+      intro h
+      apply hi
+      have := congrArg (act.regionIdxAction g Λ).symm h.symm
+      rw [Equiv.symm_apply_apply] at this
+      exact this
+    rw [WithLp.ofLp_smul, Pi.smul_apply, PiLp.single_apply, if_neg hne]
+    simp
+  · intro hni
+    exact absurd (Finset.mem_univ _) hni
+
+/-- Key identity: the inverse `regionIdxAction` reconciles the Λ-restriction at the
+translated region `g·Λ` with the Λ-restriction at `Λ` of the inverse-translated tuple. -/
+theorem regionIdxAction_symm_regionRestrict (act : HasGroupAction L G) (g : G)
+    (Λ : Finset L) (g_idx : globalIdx L) :
+    (act.regionIdxAction g Λ).symm (regionRestrict (act.regionImage g Λ) g_idx)
+      = regionRestrict Λ ((act.globalIdxAction g).symm g_idx) := by
+  funext s
+  -- LHS at s = (siteIdxEquiv g s.1).symm (g_idx.val (siteAction g s.1)).
+  -- RHS at s = ((globalIdxAction g).symm g_idx).val s.1.
+  -- Both reduce to (siteIdxEquiv g s.1).symm (g_idx.val (siteAction g s.1)).
+  have hLHS :
+      (act.regionIdxAction g Λ).symm (regionRestrict (act.regionImage g Λ) g_idx) s
+        = (act.siteIdxEquiv g s.1).symm
+            (g_idx.val (act.siteAction g s.1)) := by
+    change (Equiv.piCongr (act.siteSubtypeEquiv g Λ)
+            (fun a => act.siteIdxEquiv g a.1)).symm
+              (regionRestrict (act.regionImage g Λ) g_idx) s
+        = _
+    rw [Equiv.piCongr_symm_apply]
+    rfl
+  have hRHS :
+      regionRestrict Λ ((act.globalIdxAction g).symm g_idx) s
+        = (act.siteIdxEquiv g s.1).symm
+            (g_idx.val (act.siteAction g s.1)) := by
+    change (act.piAction g).symm g_idx.val s.1 = _
+    rw [show (act.piAction g).symm g_idx.val
+            = fun s => (act.siteIdxEquiv g s).symm
+                (g_idx.val (act.siteAction g s)) from
+        Equiv.piCongr_symm_apply (act.siteAction g)
+          (fun s => act.siteIdxEquiv g s) g_idx.val]
+  rw [hLHS, hRHS]
+
+/-- Key identity: applying the `g`-action to a `Λ`-swap of the inverse-translated
+global tuple yields the corresponding `(g·Λ)`-swap. -/
+theorem globalIdxAction_globalSwap (act : HasGroupAction L G) (g : G)
+    (Λ : Finset L) (b : regionIdx (L := L) Λ) (g_idx : globalIdx L) :
+    act.globalIdxAction g
+        (globalSwap Λ b ((act.globalIdxAction g).symm g_idx))
+      = globalSwap (act.regionImage g Λ) (act.regionIdxAction g Λ b) g_idx := by
+  apply Subtype.ext
+  funext t
+  -- Replace t by siteAction g s for some s.
+  obtain ⟨s, rfl⟩ : ∃ s, act.siteAction g s = t :=
+    ⟨(act.siteAction g).symm t, Equiv.apply_symm_apply _ _⟩
+  -- Compute LHS via piAction_apply_apply.
+  change (piAction act g (globalSwap Λ b
+          ((act.globalIdxAction g).symm g_idx)).val) (act.siteAction g s) = _
+  rw [piAction_apply_apply]
+  -- siteIdxEquiv g s ((globalSwap ...).val s) = ?
+  by_cases hs : s ∈ Λ
+  · -- Λ part: globalSwap inner = b ⟨s, hs⟩.
+    rw [globalSwap_val_apply_of_mem _ _ _ hs]
+    -- LHS = siteIdxEquiv g s (b ⟨s, hs⟩).
+    -- RHS: t = siteAction g s ∈ regionImage g Λ; globalSwap (g·Λ) ... gives
+    -- (regionIdxAction g Λ b) ⟨t, ht⟩.
+    have ht : act.siteAction g s ∈ act.regionImage g Λ :=
+      Finset.mem_image.mpr ⟨s, hs, rfl⟩
+    rw [globalSwap_val_apply_of_mem _ _ _ ht]
+    -- (regionIdxAction g Λ b) ⟨siteAction g s, ht⟩ = siteIdxEquiv g s (b ⟨s, hs⟩).
+    have key := Equiv.piCongr_apply_apply (W := fun a : ↥Λ => localIdx a.1)
+      (Z := fun b : ↥(act.regionImage g Λ) => localIdx b.1)
+      (act.siteSubtypeEquiv g Λ)
+      (fun a => act.siteIdxEquiv g a.1) b ⟨s, hs⟩
+    -- key : (piCongr ...) b (siteSubtypeEquiv g Λ ⟨s, hs⟩) = siteIdxEquiv g s (b ⟨s, hs⟩).
+    -- siteSubtypeEquiv g Λ ⟨s, hs⟩ is definitionally ⟨siteAction g s, ht⟩.
+    exact key.symm
+  · -- Λᶜ part: globalSwap inner = ((globalIdxAction g).symm g_idx).val s.
+    rw [globalSwap_val_apply_of_not_mem _ _ _ hs]
+    -- = (siteIdxEquiv g s).symm (g_idx.val (siteAction g s)).
+    have hpi : ((act.globalIdxAction g).symm g_idx).val s
+        = (act.siteIdxEquiv g s).symm
+            (g_idx.val (act.siteAction g s)) := by
+      change (act.piAction g).symm g_idx.val s = _
+      rw [show (act.piAction g).symm g_idx.val
+              = fun s' => (act.siteIdxEquiv g s').symm
+                (g_idx.val (act.siteAction g s')) from
+          Equiv.piCongr_symm_apply (act.siteAction g)
+            (fun s' => act.siteIdxEquiv g s') g_idx.val]
+    rw [hpi]
+    -- LHS = siteIdxEquiv g s ((siteIdxEquiv g s).symm (g_idx.val (siteAction g s)))
+    --     = g_idx.val (siteAction g s).
+    rw [Equiv.apply_symm_apply]
+    -- RHS: t = siteAction g s ∉ regionImage g Λ (since s ∉ Λ).
+    have ht_nm : act.siteAction g s ∉ act.regionImage g Λ := by
+      intro h
+      obtain ⟨u, hu, hgu⟩ := Finset.mem_image.mp h
+      apply hs
+      have : u = s := (act.siteAction g).injective hgu
+      rwa [this] at hu
+    rw [globalSwap_val_apply_of_not_mem _ _ _ ht_nm]
+
+/-! ### Covariance theorem -/
+
+/-- Compatibility lemma: the inverse `regionTransport` of the local restriction
+at the translated region equals the local restriction of the inverse-translated
+state at the inverse-translated index. -/
+private theorem regionTransport_symm_wRestrict
+    (act : HasGroupAction L G) (g : G) (Λ : Finset L)
+    (w : globalHilbert L) (g_idx : globalIdx L) :
+    (act.regionTransport g Λ).symm (wRestrict (act.regionImage g Λ) w g_idx)
+      = wRestrict Λ ((act.unitaryAction g).symm w)
+          ((act.globalIdxAction g).symm g_idx) := by
+  apply (act.regionTransport g Λ).injective
+  rw [LinearIsometryEquiv.apply_symm_apply]
+  ext b'
+  rw [act.regionTransport_apply_val]
+  -- Now: (wRestrict Λ ((unitaryAction g).symm w) ((globalIdxAction g).symm g_idx))
+  --        ((regionIdxAction g Λ).symm b')
+  --      = (wRestrict (g·Λ) w g_idx) b'
+  rw [wRestrict_apply, wRestrict_apply]
+  -- Goal: w (globalSwap (g·Λ) b' g_idx) = ((unitaryAction g).symm w) (globalSwap Λ
+  --        ((regionIdxAction g Λ).symm b') ((globalIdxAction g).symm g_idx))
+  -- Use unitaryAction.symm formula.
+  change (w : globalIdx L → ℂ) (globalSwap (act.regionImage g Λ) b' g_idx)
+        = (((act.unitaryAction g).symm w : globalHilbert L) : globalIdx L → ℂ)
+            (globalSwap Λ ((act.regionIdxAction g Λ).symm b')
+              ((act.globalIdxAction g).symm g_idx))
+  -- ((unitaryAction g).symm w).val a = w.val (globalIdxAction g a) by definition.
+  have hsymm : ∀ a : globalIdx L,
+      (((act.unitaryAction g).symm w : globalHilbert L) : globalIdx L → ℂ) a
+        = (w : globalIdx L → ℂ) (act.globalIdxAction g a) := by
+    intro a
+    -- (unitaryAction g).symm sends f ↦ ⟨fun a => f.val (globalIdxAction g a), _⟩.
+    rfl
+  rw [hsymm]
+  -- Apply globalIdxAction_globalSwap and simplify Equiv.apply_symm_apply.
+  rw [act.globalIdxAction_globalSwap g Λ ((act.regionIdxAction g Λ).symm b') g_idx,
+    Equiv.apply_symm_apply]
+
+/-- **Covariance** (Verch 2025 §1.2 axiom (iii) / Naaijkens 2012 §1.3): the
+operator-level action `algebraAut g` intertwines the embedding `localEmbed`
+with the region-level transport `regionTransportAlg g Λ`:
+
+`algebraAut g (localEmbed Λ M) = localEmbed (g · Λ) (regionTransportAlg g Λ M)`. -/
+theorem algebraAut_localEmbed (act : HasGroupAction L G) (g : G)
+    (Λ : Finset L)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    act.algebraAut g (localEmbed Λ M)
+      = localEmbed (act.regionImage g Λ) (act.regionTransportAlg g Λ M) := by
+  apply ContinuousLinearMap.ext
+  intro w
+  apply Subtype.ext
+  funext g_idx
+  -- LHS at g_idx (via algebraAut = unitaryAction g ∘ · ∘ unitaryAction g.symm).
+  have hLHS_eq :
+      (((act.algebraAut g) (localEmbed Λ M) w : globalHilbert L)
+            : globalIdx L → ℂ) g_idx
+        = (((M (wRestrict Λ ((act.unitaryAction g).symm w)
+                  ((act.globalIdxAction g).symm g_idx))
+                : regionHilbert (L := L) Λ) : regionIdx (L := L) Λ → ℂ)
+                (regionRestrict Λ ((act.globalIdxAction g).symm g_idx))) := by
+    -- algebraAut g T = unitaryAction g ∘L T ∘L (unitaryAction g).symm.
+    rw [act.algebraAut_apply]
+    -- (... ) w  unfolds to unitaryAction g (T ((unitaryAction g).symm w)).
+    -- Coordinate at g_idx: by unitaryAction_apply_val.
+    change (((act.unitaryAction g)
+            (localEmbed Λ M ((act.unitaryAction g).symm w))
+              : globalHilbert L) : globalIdx L → ℂ) g_idx
+        = _
+    rw [act.unitaryAction_apply_val,
+      localEmbed_apply_apply]
+    rfl
+  -- RHS at g_idx via regionTransportAlg + regionTransport_apply_val + regionIdxAction_symm_regionRestrict.
+  have hRHS_eq :
+      ((localEmbed (act.regionImage g Λ) (act.regionTransportAlg g Λ M) w
+            : globalHilbert L) : globalIdx L → ℂ) g_idx
+        = (((M ((act.regionTransport g Λ).symm
+                  (wRestrict (act.regionImage g Λ) w g_idx))
+                : regionHilbert (L := L) Λ) : regionIdx (L := L) Λ → ℂ)
+                (regionRestrict Λ ((act.globalIdxAction g).symm g_idx))) := by
+    rw [localEmbed_apply_apply]
+    unfold localEmbedCoeff
+    -- ((regionTransportAlg g Λ M) (wRestrict (g·Λ) w g_idx)).val (regionRestrict (g·Λ) g_idx)
+    -- = (regionTransport g Λ (M (regionTransport.symm (wRestrict ...)))).val
+    --     (regionRestrict (g·Λ) g_idx)
+    -- = (M (regionTransport.symm (wRestrict ...))).val ((regionIdxAction g Λ).symm (regionRestrict (g·Λ) g_idx))
+    -- = (M (...)).val (regionRestrict Λ ((globalIdxAction g).symm g_idx))
+    --   [via regionIdxAction_symm_regionRestrict]
+    change (((act.regionTransportAlg g Λ M)
+              (wRestrict (act.regionImage g Λ) w g_idx)
+                : regionHilbert (L := L) (act.regionImage g Λ))
+              : regionIdx (L := L) (act.regionImage g Λ) → ℂ)
+                (regionRestrict (act.regionImage g Λ) g_idx) = _
+    rw [show (act.regionTransportAlg g Λ M)
+              (wRestrict (act.regionImage g Λ) w g_idx)
+            = (act.regionTransport g Λ)
+                (M ((act.regionTransport g Λ).symm
+                      (wRestrict (act.regionImage g Λ) w g_idx))) from
+        LinearIsometryEquiv.conjStarAlgEquiv_apply
+          (act.regionTransport g Λ) M ▸ rfl]
+    rw [regionTransport_apply_val, regionIdxAction_symm_regionRestrict]
+  rw [hLHS_eq, hRHS_eq]
+  -- Both sides have form (M(?)) (regionRestrict Λ ((globalIdxAction g).symm g_idx)).
+  -- The arguments to M are equal by regionTransport_symm_wRestrict.
+  rw [regionTransport_symm_wRestrict]
+
+/-- Covariance at the StarSubalgebra level: `algebraAut g` maps
+`localSubalgebra Λ` into `localSubalgebra (g · Λ)`. -/
+theorem algebraAut_localSubalgebra_le (act : HasGroupAction L G) (g : G)
+    (Λ : Finset L) :
+    ∀ T ∈ localSubalgebra Λ,
+      act.algebraAut g T ∈ localSubalgebra (act.regionImage g Λ) := by
+  intro T hT
+  obtain ⟨M, hM⟩ := (mem_localSubalgebra Λ T).mp hT
+  refine (mem_localSubalgebra (act.regionImage g Λ) _).mpr
+    ⟨act.regionTransportAlg g Λ M, ?_⟩
+  rw [← hM, act.algebraAut_localEmbed]
+
 end HasGroupAction
 
 end LocalNetLike
