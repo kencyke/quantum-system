@@ -83,6 +83,45 @@ noncomputable def qubitChainTranslationAction :
   siteIdxEquiv _ _ := Equiv.refl _
   siteIdxEquiv_referenceBasis _ _ := rfl
 
+private lemma qubitChain_piCongr_const_refl_apply
+    (e : Equiv.Perm ℤ) (f : (s : ℤ) → Fin 2) (t : ℤ) :
+    (Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
+        e (fun _ : ℤ => Equiv.refl (Fin 2)) f) t = f (e.symm t) := by
+  obtain ⟨s, rfl⟩ : ∃ s, e s = t := ⟨e.symm t, e.apply_symm_apply t⟩
+  rw [Equiv.piCongr_apply_apply]
+  simp
+
+/-- The translation action on the spin chain promotes to a genuine `Multiplicative ℤ`-action
+on dependent qubit-index tuples. -/
+instance instQubitChainTranslationActionIsGenuineAction :
+    qubitChainTranslationAction.IsGenuineAction where
+  piAction_one := by
+    ext f s
+    change (Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
+        ((MulAction.toPermHom (Multiplicative ℤ) ℤ) 1)
+        (fun _ : ℤ => Equiv.refl (Fin 2)) (f : (s : ℤ) → Fin 2)) (show ℤ from s) =
+      (f : (s : ℤ) → Fin 2) (show ℤ from s)
+    rw [qubitChain_piCongr_const_refl_apply]
+    exact congrArg (f : (s : ℤ) → Fin 2)
+      (show ((1 : Multiplicative ℤ)⁻¹ • (show ℤ from s)) = (show ℤ from s) by
+        rw [inv_one, one_smul])
+  piAction_mul g h := by
+    ext f s
+    change (Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
+        ((MulAction.toPermHom (Multiplicative ℤ) ℤ) (g * h))
+        (fun _ : ℤ => Equiv.refl (Fin 2)) (f : (s : ℤ) → Fin 2)) (show ℤ from s) =
+      ((Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
+          ((MulAction.toPermHom (Multiplicative ℤ) ℤ) g)
+          (fun _ : ℤ => Equiv.refl (Fin 2)))
+        ((Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
+          ((MulAction.toPermHom (Multiplicative ℤ) ℤ) h)
+          (fun _ : ℤ => Equiv.refl (Fin 2))) (f : (s : ℤ) → Fin 2))) (show ℤ from s)
+    rw [qubitChain_piCongr_const_refl_apply, qubitChain_piCongr_const_refl_apply,
+      qubitChain_piCongr_const_refl_apply]
+    exact congrArg (f : (s : ℤ) → Fin 2)
+      (show ((g * h)⁻¹ • (show ℤ from s)) = h⁻¹ • g⁻¹ • (show ℤ from s) by
+        rw [mul_inv_rev, mul_smul])
+
 /-- **Concrete `HaagKastlerNet` witness.**  The spin-1/2 chain on `ℤ`
 satisfies every component of the public Haag–Kastler bundle: full
 functoriality and injectivity of isotony, a faithful local representation
@@ -111,6 +150,22 @@ example (g : Multiplicative ℤ) :
         ∈ LocalNetLike.quasiLocal qubitChain.sites :=
   LocalNetLike.HaagKastler.covariance _ qubitChainTranslationAction g
 
+/-- The spin-1/2 chain on `ℤ` together with the translation action satisfies the
+public bundled covariant Haag–Kastler interface. -/
+instance : LocalNetLike.CovariantHaagKastlerNet qubitChain.sites (Multiplicative ℤ)
+    qubitChainTranslationAction where
+
+example (g h : Multiplicative ℤ)
+    (T : ↥(LocalNetLike.quasiLocal qubitChain.sites)) :
+    qubitChainTranslationAction.quasiLocalAut (g * h) T =
+      qubitChainTranslationAction.quasiLocalAut g
+        (qubitChainTranslationAction.quasiLocalAut h T) :=
+  qubitChainTranslationAction.quasiLocalAut_mul_apply g h T
+
+example (T : ↥(LocalNetLike.quasiLocal qubitChain.sites)) :
+    qubitChainTranslationAction.quasiLocalAut 1 T = T :=
+  qubitChainTranslationAction.quasiLocalAut_one_apply T
+
 example (g : Multiplicative ℤ) :
     qubitChainTranslationAction.unitaryAction g Ω(qubitChain.sites)
       = Ω(qubitChain.sites) :=
@@ -120,7 +175,14 @@ example (g : Multiplicative ℤ)
     (T : ↥(LocalNetLike.quasiLocal qubitChain.sites)) :
     ω(qubitChain.sites) (qubitChainTranslationAction.quasiLocalEnd g T)
       = ω(qubitChain.sites) T :=
-  LocalNetLike.HaagKastler.vacuum_state_invariance _ qubitChainTranslationAction g T
+  LocalNetLike.HaagKastler.vacuum_functional_invariance _ qubitChainTranslationAction g T
+
+example (g : Multiplicative ℤ)
+    (T : ↥(LocalNetLike.quasiLocal qubitChain.sites)) :
+    ω(qubitChain.sites) (qubitChainTranslationAction.quasiLocalAut g T)
+      = ω(qubitChain.sites) T :=
+  LocalNetLike.HaagKastler.vacuum_functional_invariance_aut _
+    qubitChainTranslationAction g T
 
 example (Λ : Finset qubitChain.sites)
     (a : LocalNetLike.localAlgebra (L := qubitChain.sites) Λ) :

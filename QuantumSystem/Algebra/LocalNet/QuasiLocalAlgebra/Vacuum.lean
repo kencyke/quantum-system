@@ -132,9 +132,9 @@ theorem HasGroupAction.unitaryAction_vacuumVector
   · rw [if_pos (hiff.mpr hcase), if_pos hcase]
   · rw [if_neg (fun h => hcase (hiff.mp h)), if_neg hcase]
 
-/-! ### Bundled vacuum-state functional and `G`-invariance -/
+/-! ### Bundled reference-vector functional and `G`-invariance -/
 
-/-- The **vacuum-state functional** on the represented operator algebra
+/-- The **reference-vector functional** on the represented operator algebra
 `B(globalHilbert L)`, bundled as a continuous linear map.  At a bounded
 operator `T` it returns `⟪Ω, T Ω⟫`, where `Ω = vacuumVector L`. -/
 noncomputable def vacuumFunctional :
@@ -177,28 +177,30 @@ theorem HasGroupAction.vacuumFunctional_algebraAut
     _ = inner ℂ (vacuumVector L) (T (vacuumVector L)) :=
             (act.unitaryAction g).inner_map_map _ _
 
-/-! ### Vacuum state on the bundled quasi-local algebra -/
+/-! ### Reference-vector functional on the bundled quasi-local algebra -/
 
-/-- The **vacuum state** on the quasi-local algebra `quasiLocal L`,
-bundled as a continuous linear functional `↥(quasiLocal L) →L[ℂ] ℂ`.  This is
-the C\*-state realisation of the reference-vector functional. -/
-noncomputable def vacuumStateOnQuasiLocal :
+/-- The **reference-vector functional** on the quasi-local algebra `quasiLocal L`,
+bundled as a continuous linear functional `↥(quasiLocal L) →L[ℂ] ℂ`.
+
+This declaration is not yet a bundled positive, normalised C\*-state; positivity
+and normalisation should be added before using it as a formal `state` object. -/
+noncomputable def vacuumFunctionalOnQuasiLocal :
     ↥(quasiLocal L) →L[ℂ] ℂ :=
   (vacuumFunctional L).comp (quasiLocal L).toSubalgebra.toSubmodule.subtypeL
 
-/-- Paper notation `ω(L)` for the vacuum state on the quasi-local algebra
-`quasiLocal L`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike` to
+/-- Paper notation `ω(L)` for the reference-vector functional on the quasi-local
+algebra `quasiLocal L`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike` to
 use it.  See Naaijkens 2012 §3.5 for the C⋆-state convention; the `(L)`
 argument is a project-level parameterisation of the paper's bare `ω`. -/
-scoped notation:max "ω(" L ")" => LocalNetLike.vacuumStateOnQuasiLocal L
+scoped notation:max "ω(" L ")" => LocalNetLike.vacuumFunctionalOnQuasiLocal L
 
-/-- **`G`-invariance of the vacuum state** on the quasi-local algebra:
+/-- **`G`-invariance of the reference-vector functional** on the quasi-local algebra:
 `ω(α_g T) = ω(T)` for every `T ∈ quasiLocal L` and every group element `g`. -/
-theorem HasGroupAction.vacuumStateOnQuasiLocal_quasiLocalEnd
+theorem HasGroupAction.vacuumFunctionalOnQuasiLocal_quasiLocalEnd
     {G : Type*} [Group G] (act : HasGroupAction L G) (g : G)
     (T : ↥(quasiLocal L)) :
-    vacuumStateOnQuasiLocal L (act.quasiLocalEnd g T)
-      = vacuumStateOnQuasiLocal L T := by
+    vacuumFunctionalOnQuasiLocal L (act.quasiLocalEnd g T)
+      = vacuumFunctionalOnQuasiLocal L T := by
   change vacuumFunctional L
       (act.algebraAut g (T : globalHilbert L →L[ℂ] globalHilbert L))
       = vacuumFunctional L (T : globalHilbert L →L[ℂ] globalHilbert L)

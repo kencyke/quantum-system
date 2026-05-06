@@ -94,6 +94,27 @@ theorem piAction_apply_apply
   Equiv.piCongr_apply_apply (act.siteAction g)
     (fun s => act.siteIdxEquiv g s) f s
 
+/-! ### Genuine group actions
+
+The fields of `HasGroupAction` make each group element act on sites and local fibres,
+but they do not on their own require the fibre equivalences to compose coherently.
+For a genuine `G`-action on the quasi-local algebra, this composition coherence is
+needed, and we record it at the already-built dependent-function action level so
+the public API avoids fragile dependent casts. -/
+
+/-- Promotes a `HasGroupAction` from "data only" to a **genuine** `G`-action: the
+induced dependent-function permutation `piAction` is a monoid homomorphism
+`G →* Equiv.Perm ((s : L) → localIdx s)`.  Without this mixin, `HasGroupAction`
+carries the per-group-element data but no compositionality, so `piAction` and its
+downstream lifts (`globalIdxAction`, `unitaryAction`, `algebraAut`, `quasiLocalAut`)
+are merely well-defined per element rather than functorial in `G`. -/
+class IsGenuineAction (act : HasGroupAction L G) : Prop where
+  /-- The identity group element acts trivially on dependent site-index tuples. -/
+  piAction_one : act.piAction 1 = Equiv.refl _
+  /-- Multiplication is respected by the dependent site-index action. -/
+  piAction_mul (g h : G) :
+    act.piAction (g * h) = (act.piAction h).trans (act.piAction g)
+
 /-- The `g`-translate sends finite-variation tuples to finite-variation
 tuples: a `Γ`-witness for `f` translates to a `Γ.image (siteAction g)`-witness
 for `piAction g f`. -/
@@ -155,6 +176,21 @@ noncomputable def globalIdxAction (act : HasGroupAction L G) (g : G) :
 @[simp]
 theorem globalIdxAction_val (act : HasGroupAction L G) (g : G) (f : globalIdx L) :
     (globalIdxAction act g f).val = piAction act g f.val := rfl
+
+/-- Under a genuine action, the identity element acts trivially on `globalIdx`. -/
+theorem globalIdxAction_one (act : HasGroupAction L G) [act.IsGenuineAction] :
+    act.globalIdxAction 1 = Equiv.refl (globalIdx L) := by
+  ext f
+  apply Subtype.ext
+  simp [globalIdxAction_val, IsGenuineAction.piAction_one (act := act)]
+
+/-- Under a genuine action, multiplication is respected on `globalIdx`. -/
+theorem globalIdxAction_mul (act : HasGroupAction L G) [act.IsGenuineAction]
+    (g h : G) :
+    act.globalIdxAction (g * h) = (act.globalIdxAction h).trans (act.globalIdxAction g) := by
+  ext f
+  apply Subtype.ext
+  simp [globalIdxAction_val, IsGenuineAction.piAction_mul (act := act) g h]
 
 /-! ### Unitary representation on `globalHilbert L` -/
 
@@ -250,6 +286,19 @@ theorem unitaryAction_apply_val (act : HasGroupAction L G) (g : G)
     ((unitaryAction act g f : globalHilbert L) : globalIdx L → ℂ) a
       = (f : globalIdx L → ℂ) ((globalIdxAction act g).symm a) := rfl
 
+/-- Under a genuine action, the identity element is implemented by the identity unitary. -/
+theorem unitaryAction_one (act : HasGroupAction L G) [act.IsGenuineAction] :
+    act.unitaryAction 1 = LinearIsometryEquiv.refl ℂ (globalHilbert L) := by
+  ext f a
+  simp [unitaryAction_apply_val, globalIdxAction_one]
+
+/-- Under a genuine action, the implementing unitaries multiply according to the group law. -/
+theorem unitaryAction_mul (act : HasGroupAction L G) [act.IsGenuineAction]
+    (g h : G) :
+    act.unitaryAction (g * h) = (act.unitaryAction h).trans (act.unitaryAction g) := by
+  ext f a
+  simp [unitaryAction_apply_val, globalIdxAction_mul]
+
 /-! ### Algebra automorphism via conjugation by the unitary representation -/
 
 /-- The `*`-algebra automorphism of `B(globalHilbert L)` induced by conjugation
@@ -267,6 +316,22 @@ theorem algebraAut_apply (act : HasGroupAction L G) (g : G)
       = (act.unitaryAction g).toContinuousLinearEquiv.toContinuousLinearMap.comp
           (T.comp (act.unitaryAction g).symm.toContinuousLinearEquiv.toContinuousLinearMap) :=
   LinearIsometryEquiv.conjStarAlgEquiv_apply _ _
+
+/-- Under a genuine action, the identity group element induces the identity automorphism. -/
+theorem algebraAut_one (act : HasGroupAction L G) [act.IsGenuineAction] :
+    act.algebraAut 1 =
+      StarAlgEquiv.refl (R := ℂ) (A := globalHilbert L →L[ℂ] globalHilbert L) := by
+  unfold algebraAut
+  rw [unitaryAction_one]
+  exact LinearIsometryEquiv.conjStarAlgEquiv_refl
+
+/-- Under a genuine action, the induced automorphisms compose according to the group law. -/
+theorem algebraAut_mul (act : HasGroupAction L G) [act.IsGenuineAction]
+    (g h : G) :
+    act.algebraAut (g * h) = (act.algebraAut h).trans (act.algebraAut g) := by
+  unfold algebraAut
+  rw [unitaryAction_mul]
+  exact LinearIsometryEquiv.conjStarAlgEquiv_trans _ _
 
 /-! ### Region-level transport: lifting `g` to `regionHilbert` -/
 
@@ -671,6 +736,71 @@ theorem quasiLocalEnd_apply (act : HasGroupAction L G) (g : G) (T : quasiLocal L
     (act.quasiLocalEnd g T : globalHilbert L →L[ℂ] globalHilbert L) =
       act.algebraAut g (T : globalHilbert L →L[ℂ] globalHilbert L) :=
   rfl
+
+/-! ### Genuine covariance as automorphisms of the quasi-local algebra -/
+
+/-- Under a genuine action, each group element induces a `*`-algebra automorphism of the
+bundled quasi-local algebra.  The inverse is the automorphism induced by `g⁻¹`. -/
+noncomputable def quasiLocalAut (act : HasGroupAction L G) [act.IsGenuineAction]
+    (g : G) :
+    quasiLocal L ≃⋆ₐ[ℂ] quasiLocal L where
+  toFun T := ⟨act.algebraAut g T.1, algebraAut_quasiLocal_le act g T.1 T.2⟩
+  invFun T := ⟨act.algebraAut g⁻¹ T.1, algebraAut_quasiLocal_le act g⁻¹ T.1 T.2⟩
+  left_inv T := by
+    apply Subtype.ext
+    have h := congrArg
+      (fun e : (globalHilbert L →L[ℂ] globalHilbert L)
+          ≃⋆ₐ[ℂ] (globalHilbert L →L[ℂ] globalHilbert L) =>
+        e (T : globalHilbert L →L[ℂ] globalHilbert L))
+      (act.algebraAut_mul g⁻¹ g)
+    simpa [inv_mul_cancel, algebraAut_one] using h.symm
+  right_inv T := by
+    apply Subtype.ext
+    have h := congrArg
+      (fun e : (globalHilbert L →L[ℂ] globalHilbert L)
+          ≃⋆ₐ[ℂ] (globalHilbert L →L[ℂ] globalHilbert L) =>
+        e (T : globalHilbert L →L[ℂ] globalHilbert L))
+      (act.algebraAut_mul g g⁻¹)
+    simpa [mul_inv_cancel, algebraAut_one] using h.symm
+  map_mul' T U := by
+    apply Subtype.ext
+    exact map_mul (act.algebraAut g)
+      (T : globalHilbert L →L[ℂ] globalHilbert L)
+      (U : globalHilbert L →L[ℂ] globalHilbert L)
+  map_add' T U := by
+    apply Subtype.ext
+    exact map_add (act.algebraAut g)
+      (T : globalHilbert L →L[ℂ] globalHilbert L)
+      (U : globalHilbert L →L[ℂ] globalHilbert L)
+  map_star' T := by
+    apply Subtype.ext
+    exact map_star (act.algebraAut g)
+      (T : globalHilbert L →L[ℂ] globalHilbert L)
+  map_smul' c T := by
+    apply Subtype.ext
+    exact map_smul (act.algebraAut g) c
+      (T : globalHilbert L →L[ℂ] globalHilbert L)
+
+@[simp]
+theorem quasiLocalAut_apply (act : HasGroupAction L G) [act.IsGenuineAction]
+    (g : G) (T : quasiLocal L) :
+    (act.quasiLocalAut g T : globalHilbert L →L[ℂ] globalHilbert L) =
+      act.algebraAut g (T : globalHilbert L →L[ℂ] globalHilbert L) :=
+  rfl
+
+/-- The quasi-local automorphism assigned to the identity acts trivially. -/
+theorem quasiLocalAut_one_apply (act : HasGroupAction L G) [act.IsGenuineAction]
+    (T : quasiLocal L) :
+    act.quasiLocalAut 1 T = T := by
+  apply Subtype.ext
+  simp [quasiLocalAut_apply, algebraAut_one]
+
+/-- The quasi-local automorphisms compose according to group multiplication. -/
+theorem quasiLocalAut_mul_apply (act : HasGroupAction L G) [act.IsGenuineAction]
+    (g h : G) (T : quasiLocal L) :
+    act.quasiLocalAut (g * h) T = act.quasiLocalAut g (act.quasiLocalAut h T) := by
+  apply Subtype.ext
+  simp [quasiLocalAut_apply, algebraAut_mul]
 
 end HasGroupAction
 

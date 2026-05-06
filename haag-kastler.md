@@ -13,10 +13,10 @@ This issue clarifies the scope and gap between three closely related concepts th
 | Region poset                           | `Finset L.sites` with `[Fintype sites]`             | `Finset L` (no `Fintype` on `L`)                              | abstract poset (open regions of spacetime, finite subsets…) | **finite** subsets of an infinite lattice `L`      |
 | Local algebra `𝔄(Λ)`                   | `Matrix (regionIdx Λ) (regionIdx Λ) ℂ` (finite-dim) | abstract `localAlgebra Λ` + represented `localSubalgebra Λ`   | general C\*-algebra (or vN factor)                          | finite-dim `⊗_{x ∈ Λ} M_{n_x}(ℂ)`                  |
 | Global algebra                         | finite-dim, just `𝔄(Finset.univ)`                   | quasi-local C\* `quasiLocal L = ‖·‖-cl ⨆ Λ, localSubalgebra Λ` | context-dependent                                           | quasi-local C\* `𝔄_∞ = ‖·‖-cl ⋃_Λ 𝔄(Λ)` (UHF type) |
-| Isotony                                | ✅ (`includeAlgebra`, `includeAlgebra_injective`)   | ✅ (`HaagKastler.isotony` / `abstract_isotony`)               | axiom (i)                                                   | ✅                                                 |
-| Locality (disjoint regions commute)    | ❌ (no global ambient)                              | ✅ (`HaagKastler.locality` / `abstract_locality`)             | axiom (ii)                                                  | ✅                                                 |
-| Covariance (`G`-action + intertwining) | ❌ (no group-action layer)                          | ✅ (`HaagKastler.covariance` / `abstract_covariance_local`)   | axiom (iii)                                                 | ✅ (lattice translation `ℤ^d`)                     |
-| Vacuum / state                         | finite-density predicates only                      | ✅ reference vector `vacuumVector L` + C\*-state `vacuumStateOnQuasiLocal L` | separate state / representation layer            | C\*-state on `𝔄_∞` + GNS                           |
+| Isotony                                | ✅ (`includeAlgebra`, `includeAlgebra_injective`)   | ✅ (`HaagKastler.isotony`)                                    | axiom (i)                                                   | ✅                                                 |
+| Locality (disjoint regions commute)    | ❌ (no global ambient)                              | ✅ (`HaagKastler.locality`)                                   | axiom (ii)                                                  | ✅                                                 |
+| Covariance (`G`-action + intertwining) | ❌ (no group-action layer)                          | ✅ (`HaagKastler.covariance`)                                 | axiom (iii)                                                 | ✅ (lattice translation `ℤ^d`)                     |
+| Vacuum / state                         | finite-density predicates only                      | ✅ reference vector `vacuumVector L` + reference-vector functional `vacuumFunctionalOnQuasiLocal L` (not yet a bundled C\*-state) | separate state / representation layer | C\*-state on `𝔄_∞` + GNS                           |
 | Dimension                              | finite-dim everywhere                               | each `localAlgebra Λ` finite-dim, `quasiLocal L` infinite-dim | typically infinite-dim                                      | each `𝔄(Λ)` finite-dim, global infinite-dim        |
 
 ## What `LocalNet` currently is
@@ -68,7 +68,7 @@ Haag–Kastler net (general framework)
     ├── infinite L  ⇒ regions = 𝒫_f(L), global = quasi-local C* (UHF)   [Naaijkens 2012]
     │     ✅ inhabited by `LocalNetLike` + `QuasiLocalAlgebra/*`:
     │        isotony, disjoint-locality, covariance,
-    │        reference-vector and C⋆-state invariance
+    │        reference-vector and reference-functional invariance
     └── finite L    ⇒ regions = Finset L = P(L), global = 𝔄(Finset.univ) finite-dim
                       └── this is the slice inhabited by `LocalNet` proper
                           (kinematic data + isotony only; the lattice axioms
@@ -80,25 +80,27 @@ Haag–Kastler net (general framework)
 `QuantumSystem/Algebra/LocalNet/QuasiLocalAlgebra/*` adds a basis-indexed
 realisation of the **infinite-lattice Haag–Kastler local-net conditions**, sitting on top of
 the new `LocalNetLike` typeclass.  The local-net conditions, the bundled
-vacuum state on the quasi-local C⋆-algebra, and the abstract-to-concrete
-bridge are all available:
+reference-vector functional on the quasi-local C⋆-algebra, and the
+abstract-to-concrete bridge are all available:
 
-| Condition / layer | Theorem | File |
+| Condition / layer | Public theorem / definition | File |
 | --- | --- | --- |
-| (i) Isotony (represented) | `LocalNetLike.HaagKastler.isotony` | `Isotony.lean` |
-| (ii) Locality (represented) | `LocalNetLike.HaagKastler.locality` | `Locality.lean` |
-| (iii) Covariance (represented) | `LocalNetLike.HaagKastler.covariance` | `Covariance.lean` |
-| (i') Abstract isotony | `LocalNetLike.HaagKastler.abstract_isotony` | `HaagKastler.lean` |
-| (ii') Abstract locality | `LocalNetLike.HaagKastler.abstract_locality` | `HaagKastler.lean` |
-| (iii') Abstract local covariance | `LocalNetLike.HaagKastler.abstract_covariance_local` | `HaagKastler.lean` |
-| Abstract quasi-local covariance corollary | `LocalNetLike.HaagKastler.abstract_covariance` | `HaagKastler.lean` |
-| Embedded membership in `quasiLocal` | `LocalNetLike.HaagKastler.abstract_mem_quasiLocal` | `HaagKastler.lean` |
-| Reference-vector invariance | `LocalNetLike.HaagKastler.vacuum_vector_invariance` | `Vacuum.lean` |
-| **Vacuum-state `G`-invariance `ω(α_g T) = ω(T)`** | `LocalNetLike.HaagKastler.vacuum_state_invariance` | `Vacuum.lean` |
-| Bundled vacuum state on `quasiLocal L` | `LocalNetLike.vacuumStateOnQuasiLocal` | `Vacuum.lean` |
+| (i) Isotony (represented) | `LocalNetLike.HaagKastler.isotony` | `HaagKastler.lean` |
+| (ii) Locality (represented) | `LocalNetLike.HaagKastler.locality` | `HaagKastler.lean` |
+| (iii) Covariance of `quasiLocal L` | `LocalNetLike.HaagKastler.covariance` | `HaagKastler.lean` |
+| Reference-vector invariance | `LocalNetLike.HaagKastler.vacuum_vector_invariance` | `HaagKastler.lean` |
+| Reference-functional invariance via `quasiLocalEnd` | `LocalNetLike.HaagKastler.vacuum_functional_invariance` | `HaagKastler.lean` |
+| Reference-functional invariance via `quasiLocalAut` | `LocalNetLike.HaagKastler.vacuum_functional_invariance_aut` | `HaagKastler.lean` |
+| Bundled reference-vector functional on `quasiLocal L` | `LocalNetLike.vacuumFunctionalOnQuasiLocal` | `Vacuum.lean` |
+| Genuine-action predicate on a site action | `LocalNetLike.HasGroupAction.IsGenuineAction` | `Covariance.lean` |
+| Bundled quasi-local automorphism | `LocalNetLike.HasGroupAction.quasiLocalAut` | `Covariance.lean` |
+| Quasi-local automorphism laws | `LocalNetLike.HasGroupAction.{quasiLocalAut_one_apply, quasiLocalAut_mul_apply}` | `Covariance.lean` |
+| Static public bundle | `LocalNetLike.HaagKastlerNet` | `HaagKastler.lean` |
+| Covariant public bundle | `LocalNetLike.CovariantHaagKastlerNet` | `HaagKastler.lean` |
 | Abstract-to-concrete `*`-algebra bridge | `LocalNetLike.localAlgebraEmbed` | `LocalEmbed.lean` |
-| Bridge × isotony compatibility | `LocalNetLike.localAlgebraEmbed_isotony` | `Isotony.lean` |
+| Embedded membership in `localSubalgebra Λ` | `LocalNetLike.localAlgebraEmbed_mem_localSubalgebra` | `LocalEmbed.lean` |
 | Functoriality (composition law) | `LocalNet.includeAlgebra_comp`, `LocalNetLike.IsFunctorial` (auto for `LocalNet`) | `LocalNet.lean`, `AsLocalNetLike.lean` |
+| C⋆-algebra structure on `↥(quasiLocal L)` | `LocalNetLike.instCStarAlgebra_quasiLocal` | `HaagKastler.lean` |
 | C⋆-algebra structure on `localAlgebra Λ` | `LocalNet.instCStarAlgebra_localAlgebra` (L2 operator-norm pullback) | `AsLocalNetLike.lean` |
 
 The quasi-local algebra `LocalNetLike.quasiLocal L : StarSubalgebra ℂ B(H)`
@@ -107,10 +109,13 @@ automatic `CStarAlgebra` instance (`instCStarAlgebra_quasiLocal`), realising
 the UHF / quasi-local construction at the operator-algebra level.  The
 underlying global Hilbert space `globalHilbert L := ↥(lp _ 2)` is the
 incomplete tensor product around the basis-indexed reference vector
-`vacuumVector L := lp.single 2 (referenceTuple L) 1` (with
-`vacuumState L` retained as a compatibility alias for the same vector).
+`vacuumVector L := lp.single 2 (referenceTuple L) 1`.  The associated
+bundled linear functional on the quasi-local algebra is
+`vacuumFunctionalOnQuasiLocal L`; it is not yet a bundled positive,
+normalised C\*-state.
 
-The lattice local-net theorems, the reference-vector invariance theorem, and
+The public entry points for the lattice local-net theorems, the
+reference-vector / reference-functional invariance theorems, and
 `instCStarAlgebra_quasiLocal` are gathered in `HaagKastler.lean` for downstream use.
 
 ### Public Haag–Kastler bundles
@@ -125,18 +130,19 @@ phrased on `localSubalgebra Λ` (the image of
 `regionHilbert Λ →L[ℂ] regionHilbert Λ` inside `B(globalHilbert L)`), not on
 the abstract `LocalNetLike.localAlgebra Λ` directly.
 
-Two public-entry-point classes promote the represented statements to
-abstract ones:
+Two public-entry-point classes bundle the optional mixins into stable
+downstream assumptions:
 
 * `LocalNetLike.HaagKastlerNet L` collects `IsFunctorial`, `IsotonyInjective`,
   `HasFaithfulLocalRepresentation`, `HasIsotonyCompatibleLocalRep`, and the
-  per-site nondegeneracy condition `∀ s, Nonempty (localIdx s)`.  Under
-  `[HasLocalRepresentation L]` + `[HaagKastlerNet L]` the abstract theorems
-  `abstract_isotony`, `abstract_locality`, `abstract_mem_quasiLocal` hold.
-* `LocalNetLike.HaagKastlerCovariantNet L G act` adds
-  `HasGroupAction.IsCoherent act` so the dependent-index permutation lift is a
-  genuine group action.  `abstract_covariance_local` (and its weakening
-  `abstract_covariance`) are stated under this bundle.
+  per-site nondegeneracy condition `∀ s, Nonempty (localIdx s)`.  It is the
+  public "single hypothesis" bundle for the static local-net side and also
+  exposes per-site nondegeneracy through `HaagKastlerNet.instNonemptyLocalIdx`.
+* `LocalNetLike.CovariantHaagKastlerNet L G act` adds
+  `HasGroupAction.IsGenuineAction act`, the extra hypothesis needed to package
+  the per-element quasi-local endomorphisms into bundled automorphisms
+  `quasiLocalAut g` satisfying `quasiLocalAut_one_apply` and
+  `quasiLocalAut_mul_apply`.
 
 Both bundles are inhabited concretely by the spin-1/2 chain on `ℤ` with the
 translation action, producing axiom-free `instance`-level witnesses in
@@ -159,21 +165,24 @@ Naaijkens 2012 example:
   optional refinements together with per-site nondegeneracy;
 * `qubitChainTranslationAction : LocalNetLike.HasGroupAction qubitChain.sites
   (Multiplicative ℤ)` for the lattice-translation action, together with
-  `qubitChainTranslationAction_isCoherent : IsCoherent qubitChainTranslationAction`
-  certifying that the dependent-index action is a *bona fide* group action;
+  `instQubitChainTranslationActionIsGenuineAction :
+  qubitChainTranslationAction.IsGenuineAction` certifying that the
+  dependent-index action is a *bona fide* group action;
 * the resulting
-  `HaagKastlerCovariantNet qubitChain.sites (Multiplicative ℤ) qubitChainTranslationAction`
-  instance combining the static bundle with coherence.
+  `CovariantHaagKastlerNet qubitChain.sites (Multiplicative ℤ)
+  qubitChainTranslationAction` instance combining the static bundle with the
+  genuine-action hypothesis.
 
-The packaged existence theorem
-`qubitChain_haag_kastler_axioms_realised :
-Nonempty (LocalNetLike.HasGroupAction qubitChain.sites (Multiplicative ℤ))`
-is an axiom-free term, witnessing that the lattice Haag–Kastler conditions
-are simultaneously realisable in a non-trivial setting.
+These are all axiom-free `instance` / `example` declarations in
+`Examples/QubitChain.lean`, witnessing that the lattice Haag–Kastler
+conditions and the genuine-action strengthening are simultaneously realisable
+in a non-trivial setting.
 
-The `IsCoherent` instance promotes `algebraAut` to a genuine group homomorphism
-`G → Aut(quasiLocal L)` via `quasiLocalAut`, closing the prior gap that the
-operator-level action was only known on individual `g`.
+The `IsGenuineAction` instance promotes the per-element quasi-local
+endomorphisms `quasiLocalEnd g` to bundled automorphisms `quasiLocalAut g`.
+The implementation currently exposes the identity and multiplication laws as
+theorems `quasiLocalAut_one_apply` and `quasiLocalAut_mul_apply`; it does not
+yet package them as a monoid homomorphism `G →* Aut(quasiLocal L)`.
 
 ## References
 

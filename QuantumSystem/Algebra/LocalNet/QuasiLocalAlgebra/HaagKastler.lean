@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Isotony
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Locality
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Vacuum
@@ -75,6 +76,17 @@ class HaagKastlerNet (L : Type*) [DecidableEq L] [LocalNetLike L]
   /-- Every site has a nonempty local Hilbert-space index type. -/
   nonempty_localIdx : ∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)
 
+/-- **Public bundle for covariant lattice Haag–Kastler data.**  This extends the
+static finite-region Haag–Kastler bundle by requiring that a chosen group action is a
+genuine `G`-action, so that its quasi-local automorphisms satisfy the identity and
+multiplication laws in `HasGroupAction.quasiLocalAut_one_apply` and
+`HasGroupAction.quasiLocalAut_mul_apply`. -/
+class CovariantHaagKastlerNet (L : Type*) [DecidableEq L] [LocalNetLike L]
+    [LocalNetLike.HasLocalRepresentation L]
+    [∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)]
+    (G : Type*) [Group G] (act : HasGroupAction L G) : Prop
+    extends HaagKastlerNet L, HasGroupAction.IsGenuineAction act
+
 /-- Per-site nondegeneracy is exposed as a typeclass instance so that
 downstream constructions requiring `[∀ s, Nonempty (localIdx s)]` resolve
 automatically once `[HaagKastlerNet L]` is in scope. -/
@@ -136,13 +148,24 @@ theorem vacuum_vector_invariance {G : Type*} [Group G]
     act.unitaryAction g Ω(L) = Ω(L) :=
   HasGroupAction.unitaryAction_vacuumVector L act g
 
-/-- **`G`-invariance of the vacuum state on the quasi-local algebra**.  This is
-the proper C⋆-state form `ω(α_g T) = ω(T)` of vacuum invariance, complementing
-the unitary-implementation statement `vacuum_vector_invariance`. -/
-theorem vacuum_state_invariance {G : Type*} [Group G]
+/-- **`G`-invariance of the reference-vector functional on the quasi-local algebra**.
+This is the functional identity `ω(α_g T) = ω(T)`, complementing the
+unitary-implementation statement `vacuum_vector_invariance`. -/
+theorem vacuum_functional_invariance {G : Type*} [Group G]
     (act : HasGroupAction L G) (g : G) (T : ↥(quasiLocal L)) :
     ω(L) (act.quasiLocalEnd g T) = ω(L) T :=
-  HasGroupAction.vacuumStateOnQuasiLocal_quasiLocalEnd L act g T
+  HasGroupAction.vacuumFunctionalOnQuasiLocal_quasiLocalEnd L act g T
+
+/-- Genuine-action version of `vacuum_functional_invariance`, stated using the bundled
+quasi-local automorphism. -/
+theorem vacuum_functional_invariance_aut {G : Type*} [Group G]
+    (act : HasGroupAction L G) [act.IsGenuineAction] (g : G) (T : ↥(quasiLocal L)) :
+    ω(L) (act.quasiLocalAut g T) = ω(L) T := by
+  have heq : act.quasiLocalAut g T = act.quasiLocalEnd g T :=
+    Subtype.ext <| by
+      rw [HasGroupAction.quasiLocalAut_apply, HasGroupAction.quasiLocalEnd_apply]
+  rw [heq]
+  exact vacuum_functional_invariance L act g T
 
 end HaagKastler
 
