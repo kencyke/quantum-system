@@ -28,6 +28,12 @@ sectors at arbitrary unit-vector reference families.
 * `LocalNetLike.regionIdxCombine h` — recombine a pair of `Λ` and `Λ' \ Λ`
   tuples into a `Λ'` tuple.
 * `LocalNetLike.regionIdxEquiv h` — the resulting `Equiv`.
+* `LocalNetLike.regionHilbertSplitEquiv h` — the corresponding linear
+  isometry equivalence
+  `regionHilbert Λ' ≃ₗᵢ[ℂ] EuclideanSpace ℂ (regionIdx Λ × regionIdx (Λ'\Λ))`.
+* `LocalNetLike.tensorWithId h M` — the operator on `regionHilbert Λ'`
+  realising `M ⊗ 1_{Λ'\Λ}` in the basis-relabelled split, with operator-norm
+  bound `‖tensorWithId h M‖ ≤ ‖M‖`.
 -/
 
 @[expose] public section
@@ -115,5 +121,292 @@ noncomputable def regionHilbertSplitEquiv {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
       ≃ₗᵢ[ℂ] EuclideanSpace ℂ
           (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)) :=
   LinearIsometryEquiv.piLpCongrLeft 2 ℂ ℂ (regionIdxEquiv h)
+
+/-! ### Operator action `M ⊗ 1` on the basis-relabelled split
+
+We realise the heuristic action `M ⊗ 1_{Λ' \ Λ}` as a continuous linear
+operator on `regionHilbert Λ'`.  The construction is staged through the
+basis-relabelled product `EuclideanSpace ℂ (regionIdx Λ × regionIdx (Λ' \ Λ))`:
+on the product side, slicing in the second coordinate gives a family of
+vectors in `regionHilbert Λ` to which `M` is applied independently.
+
+The bound `‖tensorWithId h M‖ ≤ ‖M‖` is tight (the right tensor-product norm).
+-/
+
+variable {Λ Λ' : Finset L}
+
+/-- Slice of a `(regionIdx Λ × regionIdx (Λ' \ Λ))`-indexed Euclidean vector
+at fixed `b : regionIdx (Λ' \ Λ)`: the function `a ↦ f (a, b)` viewed as an
+element of `regionHilbert Λ`. -/
+noncomputable def regionSplitSlice
+    (f : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)))
+    (b : regionIdx (L := L) (Λ' \ Λ)) : regionHilbert (L := L) Λ :=
+  WithLp.toLp 2 (fun a : regionIdx (L := L) Λ => f (a, b))
+
+@[simp]
+theorem regionSplitSlice_apply
+    (f : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)))
+    (b : regionIdx (L := L) (Λ' \ Λ))
+    (a : regionIdx (L := L) Λ) :
+    (regionSplitSlice (Λ' := Λ') f b) a = f (a, b) := rfl
+
+theorem regionSplitSlice_add
+    (f g : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)))
+    (b : regionIdx (L := L) (Λ' \ Λ)) :
+    regionSplitSlice (Λ' := Λ') (f + g) b
+      = regionSplitSlice (Λ' := Λ') f b + regionSplitSlice (Λ' := Λ') g b := by
+  ext a
+  simp
+
+theorem regionSplitSlice_smul
+    (c : ℂ)
+    (f : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)))
+    (b : regionIdx (L := L) (Λ' \ Λ)) :
+    regionSplitSlice (Λ' := Λ') (c • f) b
+      = c • regionSplitSlice (Λ' := Λ') f b := by
+  ext a
+  simp
+
+/-- Fubini-style identity for the slice norm:
+`‖f‖² = ∑_b ‖slice f b‖²`. -/
+theorem norm_sq_eq_sum_regionSplitSlice
+    (f : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ))) :
+    ‖f‖ ^ 2
+      = ∑ b : regionIdx (L := L) (Λ' \ Λ),
+          ‖regionSplitSlice (Λ' := Λ') f b‖ ^ 2 := by
+  have hb : ∀ b : regionIdx (L := L) (Λ' \ Λ),
+      ‖regionSplitSlice (Λ' := Λ') f b‖ ^ 2
+        = ∑ a : regionIdx (L := L) Λ, ‖f (a, b)‖ ^ 2 := by
+    intro b
+    rw [EuclideanSpace.norm_sq_eq]
+    rfl
+  rw [EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type_right
+    (f := fun p : regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ) =>
+      ‖f p‖ ^ 2)]
+  refine Finset.sum_congr rfl ?_
+  intro b _
+  rw [hb b]
+
+/-- Underlying linear map of `tensorWithIdSplit M`. -/
+noncomputable def tensorWithIdSplitLinear
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    EuclideanSpace ℂ (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ))
+      →ₗ[ℂ]
+    EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)) where
+  toFun f :=
+    WithLp.toLp 2 (fun p : regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ) =>
+      (M (regionSplitSlice (Λ' := Λ') f p.2)) p.1)
+  map_add' f g := by
+    ext p
+    change (M (regionSplitSlice (Λ' := Λ') (f + g) p.2)) p.1
+      = (M (regionSplitSlice (Λ' := Λ') f p.2)) p.1
+        + (M (regionSplitSlice (Λ' := Λ') g p.2)) p.1
+    rw [regionSplitSlice_add, ContinuousLinearMap.map_add]
+    rfl
+  map_smul' c f := by
+    ext p
+    change (M (regionSplitSlice (Λ' := Λ') (c • f) p.2)) p.1
+      = c • (M (regionSplitSlice (Λ' := Λ') f p.2)) p.1
+    rw [regionSplitSlice_smul, ContinuousLinearMap.map_smul]
+    rfl
+
+@[simp]
+theorem tensorWithIdSplitLinear_apply
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (f : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)))
+    (p : regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)) :
+    (tensorWithIdSplitLinear (Λ' := Λ') M f) p
+      = (M (regionSplitSlice (Λ' := Λ') f p.2)) p.1 := rfl
+
+/-- The slice of the result reassembles to `M` applied to the input slice. -/
+theorem regionSplitSlice_tensorWithIdSplitLinear
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (f : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)))
+    (b : regionIdx (L := L) (Λ' \ Λ)) :
+    regionSplitSlice (Λ' := Λ')
+        (tensorWithIdSplitLinear (Λ' := Λ') M f) b
+      = M (regionSplitSlice (Λ' := Λ') f b) := by
+  ext a
+  rw [regionSplitSlice_apply, tensorWithIdSplitLinear_apply]
+
+/-- The "M ⊗ 1" action on the basis-relabelled split, as a continuous
+linear operator with operator-norm bound `‖M‖`. -/
+noncomputable def tensorWithIdSplit
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    EuclideanSpace ℂ (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ))
+      →L[ℂ]
+    EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)) :=
+  LinearMap.mkContinuous (tensorWithIdSplitLinear (Λ' := Λ') M) ‖M‖
+    (fun f => by
+      have h_lhs_sq : ‖tensorWithIdSplitLinear (Λ' := Λ') M f‖ ^ 2
+          = ∑ b : regionIdx (L := L) (Λ' \ Λ),
+              ‖M (regionSplitSlice (Λ' := Λ') f b)‖ ^ 2 := by
+        rw [norm_sq_eq_sum_regionSplitSlice]
+        refine Finset.sum_congr rfl ?_
+        intro b _
+        rw [regionSplitSlice_tensorWithIdSplitLinear]
+      have h_bound_sq : ‖tensorWithIdSplitLinear (Λ' := Λ') M f‖ ^ 2
+          ≤ ‖M‖ ^ 2 * ‖f‖ ^ 2 := by
+        rw [h_lhs_sq, norm_sq_eq_sum_regionSplitSlice (Λ' := Λ') f,
+          Finset.mul_sum]
+        refine Finset.sum_le_sum ?_
+        intro b _
+        have hop : ‖M (regionSplitSlice (Λ' := Λ') f b)‖
+            ≤ ‖M‖ * ‖regionSplitSlice (Λ' := Λ') f b‖ := M.le_opNorm _
+        have hsq : ‖M (regionSplitSlice (Λ' := Λ') f b)‖ ^ 2
+            ≤ (‖M‖ * ‖regionSplitSlice (Λ' := Λ') f b‖) ^ 2 :=
+          pow_le_pow_left₀ (norm_nonneg _) hop 2
+        calc ‖M (regionSplitSlice (Λ' := Λ') f b)‖ ^ 2
+            ≤ (‖M‖ * ‖regionSplitSlice (Λ' := Λ') f b‖) ^ 2 := hsq
+          _ = ‖M‖ ^ 2 * ‖regionSplitSlice (Λ' := Λ') f b‖ ^ 2 := by ring
+      have hMf_nn : 0 ≤ ‖M‖ * ‖f‖ :=
+        mul_nonneg (norm_nonneg _) (norm_nonneg _)
+      have hbound_sq_form : (‖M‖ * ‖f‖) ^ 2 = ‖M‖ ^ 2 * ‖f‖ ^ 2 := by ring
+      have h_sq : ‖tensorWithIdSplitLinear (Λ' := Λ') M f‖ ^ 2
+          ≤ (‖M‖ * ‖f‖) ^ 2 := by
+        rw [hbound_sq_form]; exact h_bound_sq
+      exact (abs_le_of_sq_le_sq' h_sq hMf_nn).2)
+
+@[simp]
+theorem tensorWithIdSplit_apply
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (f : EuclideanSpace ℂ
+      (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)))
+    (p : regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ)) :
+    (tensorWithIdSplit (Λ' := Λ') M f) p
+      = (M (regionSplitSlice (Λ' := Λ') f p.2)) p.1 := rfl
+
+theorem tensorWithIdSplit_one :
+    tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ')
+        (ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ))
+      = ContinuousLinearMap.id ℂ
+          (EuclideanSpace ℂ
+            (regionIdx (L := L) Λ × regionIdx (L := L) (Λ' \ Λ))) := by
+  ext f p
+  rw [tensorWithIdSplit_apply, ContinuousLinearMap.id_apply,
+    regionSplitSlice_apply, ContinuousLinearMap.id_apply]
+
+theorem tensorWithIdSplit_zero :
+    tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ')
+        (0 : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+      = 0 := by
+  ext f p
+  rw [tensorWithIdSplit_apply, ContinuousLinearMap.zero_apply,
+    ContinuousLinearMap.zero_apply]
+  rfl
+
+theorem tensorWithIdSplit_mul
+    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') (M.comp N)
+      = (tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') M).comp
+          (tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') N) := by
+  ext f p
+  rw [tensorWithIdSplit_apply, ContinuousLinearMap.comp_apply,
+    ContinuousLinearMap.comp_apply, tensorWithIdSplit_apply]
+  congr 1
+
+theorem tensorWithIdSplit_add
+    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') (M + N)
+      = tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') M
+          + tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') N := by
+  ext f p
+  rw [tensorWithIdSplit_apply, ContinuousLinearMap.add_apply,
+    ContinuousLinearMap.add_apply]
+  change (M (regionSplitSlice (Λ' := Λ') f p.2)) p.1
+        + (N (regionSplitSlice (Λ' := Λ') f p.2)) p.1
+    = (tensorWithIdSplit (Λ' := Λ') M f
+        + tensorWithIdSplit (Λ' := Λ') N f).ofLp p
+  rw [WithLp.ofLp_add, Pi.add_apply]
+  rfl
+
+theorem tensorWithIdSplit_smul (c : ℂ)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') (c • M)
+      = c • tensorWithIdSplit (L := L) (Λ := Λ) (Λ' := Λ') M := by
+  ext f p
+  rw [tensorWithIdSplit_apply, ContinuousLinearMap.smul_apply,
+    ContinuousLinearMap.smul_apply]
+  change (c • M (regionSplitSlice (Λ' := Λ') f p.2)) p.1
+    = (c • tensorWithIdSplit (Λ' := Λ') M f).ofLp p
+  rw [WithLp.ofLp_smul, Pi.smul_apply]
+  rfl
+
+/-- The operator `M ⊗ 1_{Λ' \ Λ}` on `regionHilbert Λ'`, defined by
+conjugating the basis-relabelled action `tensorWithIdSplit M` with the
+linear isometric equivalence `regionHilbertSplitEquiv h`. -/
+noncomputable def tensorWithId (h : Λ ⊆ Λ')
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    regionHilbert (L := L) Λ' →L[ℂ] regionHilbert (L := L) Λ' :=
+  let e := regionHilbertSplitEquiv (L := L) h
+  e.symm.toContinuousLinearEquiv.toContinuousLinearMap.comp
+    ((tensorWithIdSplit (Λ' := Λ') M).comp
+      e.toContinuousLinearEquiv.toContinuousLinearMap)
+
+theorem tensorWithId_apply (h : Λ ⊆ Λ')
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (v : regionHilbert (L := L) Λ') :
+    tensorWithId h M v
+      = (regionHilbertSplitEquiv (L := L) h).symm
+          (tensorWithIdSplit (Λ' := Λ') M
+            (regionHilbertSplitEquiv (L := L) h v)) := rfl
+
+/-- `tensorWithId h` sends the identity to the identity. -/
+@[simp]
+theorem tensorWithId_one (h : Λ ⊆ Λ') :
+    tensorWithId h (ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ))
+      = ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ') := by
+  ext v
+  rw [tensorWithId_apply, tensorWithIdSplit_one,
+    ContinuousLinearMap.id_apply,
+    LinearIsometryEquiv.symm_apply_apply, ContinuousLinearMap.id_apply]
+
+/-- `tensorWithId h` sends zero to zero. -/
+@[simp]
+theorem tensorWithId_zero (h : Λ ⊆ Λ') :
+    tensorWithId h (0 : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+      = 0 := by
+  ext v
+  rw [tensorWithId_apply, tensorWithIdSplit_zero,
+    ContinuousLinearMap.zero_apply, map_zero, ContinuousLinearMap.zero_apply]
+
+/-- `tensorWithId h` is multiplicative: `tensorWithId h (M ∘ N)
+= tensorWithId h M ∘ tensorWithId h N`. -/
+theorem tensorWithId_mul (h : Λ ⊆ Λ')
+    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    tensorWithId h (M.comp N)
+      = (tensorWithId h M).comp (tensorWithId h N) := by
+  ext v
+  rw [tensorWithId_apply, tensorWithIdSplit_mul,
+    ContinuousLinearMap.comp_apply, ContinuousLinearMap.comp_apply,
+    tensorWithId_apply, tensorWithId_apply,
+    LinearIsometryEquiv.apply_symm_apply]
+
+/-- `M ↦ tensorWithId h M` is additive in `M`. -/
+theorem tensorWithId_add (h : Λ ⊆ Λ')
+    (M N : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    tensorWithId h (M + N) = tensorWithId h M + tensorWithId h N := by
+  ext v
+  rw [tensorWithId_apply, tensorWithIdSplit_add,
+    ContinuousLinearMap.add_apply, map_add,
+    ContinuousLinearMap.add_apply, tensorWithId_apply, tensorWithId_apply]
+
+/-- `M ↦ tensorWithId h M` is `ℂ`-linear in `M`. -/
+theorem tensorWithId_smul (h : Λ ⊆ Λ') (c : ℂ)
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ) :
+    tensorWithId h (c • M) = c • tensorWithId h M := by
+  ext v
+  rw [tensorWithId_apply, tensorWithIdSplit_smul,
+    ContinuousLinearMap.smul_apply, map_smul,
+    ContinuousLinearMap.smul_apply, tensorWithId_apply]
 
 end LocalNetLike
