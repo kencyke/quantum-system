@@ -429,4 +429,116 @@ theorem regionEmbedLeΩ_tensorWithId_apply_basis
       exact absurd (Finset.mem_univ _) hcontra
   rw [hLHS, hRHS]
 
+/-- Coherence (general form): for `Λ₀ ⊆ A ⊆ A'`, the Ω-extension
+`regionEmbedLeΩ (A ⊆ A')` commutes with `tensorWithId Λ₀ M` on every
+vector of `regionHilbert A`.  Follows from the basis-vector coherence by
+linearity. -/
+theorem regionEmbedLeΩ_tensorWithId_apply
+    {Λ₀ A A' : Finset L} (h₀ : Λ₀ ⊆ A) (h : A ⊆ A')
+    (Ω : (s : L) → siteHilbert s) (hΩ : ∀ s, ‖Ω s‖ = 1)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (v : regionHilbert (L := L) A) :
+    regionEmbedLeΩ Ω hΩ h (tensorWithId h₀ M v)
+      = tensorWithId (h₀.trans h) M (regionEmbedLeΩ Ω hΩ h v) := by
+  have hv : v
+      = ∑ f : regionIdx (L := L) A,
+          v.ofLp f • (EuclideanSpace.single f (1 : ℂ) : regionHilbert (L := L) A) := by
+    ext j
+    simp [EuclideanSpace.single, Pi.single_apply]
+  conv_lhs => rw [hv]
+  conv_rhs => rw [hv]
+  simp only [map_sum, map_smul]
+  refine Finset.sum_congr rfl fun f _ => ?_
+  congr 1
+  rw [regionEmbedLeΩ_apply_basis]
+  exact regionEmbedLeΩ_tensorWithId_apply_basis h₀ h Ω hΩ M f
+
+/-! ### Per-region family of linear maps
+
+For each finite region `Λ`, we define a linear map
+`regionHilbert Λ →ₗ[ℂ] tensorPreHilbertΩ L Ω hΩ` by first Ω-extending into
+`regionHilbert (Λ ∪ Λ₀)`, then applying `tensorWithId` over `Λ ∪ Λ₀`, and
+finally injecting into the colimit.  The compatibility along the directed
+system follows from the coherence theorem above. -/
+
+variable (Ω : (s : L) → siteHilbert s) (hΩ : ∀ s, ‖Ω s‖ = 1)
+
+/-- Per-region linear map sending `x : regionHilbert Λ` to the colimit element
+obtained by Ω-extending into `Λ ∪ Λ₀`, applying `tensorWithId` over `Λ ∪ Λ₀`,
+and `of`-injecting into `tensorPreHilbertΩ L Ω hΩ`. -/
+noncomputable def localEmbedΩFamily (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (Λ : Finset L) :
+    regionHilbert (L := L) Λ →ₗ[ℂ] tensorPreHilbertΩ L Ω hΩ :=
+  (tensorPreHilbertΩ.of Ω hΩ (Λ ∪ Λ₀)).comp
+    (((tensorWithId (Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀)) M).toLinearMap).comp
+      (regionEmbedLeΩ Ω hΩ
+        (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀))).toLinearMap)
+
+@[simp]
+theorem localEmbedΩFamily_apply (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (Λ : Finset L) (x : regionHilbert (L := L) Λ) :
+    localEmbedΩFamily (L := L) Ω hΩ Λ₀ M Λ x
+      = tensorPreHilbertΩ.of Ω hΩ (Λ ∪ Λ₀)
+          (tensorWithId (Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀)) M
+            (regionEmbedLeΩ Ω hΩ
+              (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀)) x)) := rfl
+
+/-- Helper: the composition of two `regionEmbedLeΩ`'s applied to a vector
+agrees with the single `regionEmbedLeΩ` of the composed inclusion. -/
+private theorem regionEmbedLeΩ_comp_apply
+    {α β γ : Finset L} (h_ab : α ⊆ β) (h_bc : β ⊆ γ)
+    (z : regionHilbert (L := L) α) :
+    regionEmbedLeΩ Ω hΩ h_bc (regionEmbedLeΩ Ω hΩ h_ab z)
+      = regionEmbedLeΩ Ω hΩ (h_ab.trans h_bc) z :=
+  (congrArg
+    (fun (f : regionHilbert (L := L) α →ₗᵢ[ℂ] regionHilbert (L := L) γ) => f z)
+    (regionEmbedLeΩ_trans Ω hΩ h_ab h_bc)).symm
+
+/-- Compatibility of the per-region family along the directed system. -/
+theorem localEmbedΩFamily_compat (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    {Λ Λ' : Finset L} (h : Λ ⊆ Λ') (x : regionHilbert (L := L) Λ) :
+    localEmbedΩFamily (L := L) Ω hΩ Λ₀ M Λ' (regionEmbedLeΩ Ω hΩ h x)
+      = localEmbedΩFamily (L := L) Ω hΩ Λ₀ M Λ x := by
+  rw [localEmbedΩFamily_apply, localEmbedΩFamily_apply]
+  have hUL : Λ ∪ Λ₀ ⊆ Λ' ∪ Λ₀ := Finset.union_subset_union_left h
+  -- Combine the regionEmbedLeΩ pair on the LHS-of-of-Λ' into a single regionEmbedLeΩ.
+  rw [regionEmbedLeΩ_comp_apply (L := L) Ω hΩ h
+    (Finset.subset_union_left (s₁ := Λ') (s₂ := Λ₀)) x]
+  rw [← regionEmbedLeΩ_comp_apply (L := L) Ω hΩ
+    (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀)) hUL x]
+  -- Goal: of (Λ' ∪ Λ₀) (tensorWithId hR' M (regionEmbedLeΩ hUL (regionEmbedLeΩ (Λ⊆Λ∪Λ₀) x)))
+  --     = of (Λ ∪ Λ₀) (tensorWithId hR M (regionEmbedLeΩ (Λ⊆Λ∪Λ₀) x)).
+  -- Apply coherence backward on the LHS.
+  rw [← regionEmbedLeΩ_tensorWithId_apply
+    (Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀)) hUL Ω hΩ M
+    (regionEmbedLeΩ Ω hΩ (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀)) x)]
+  -- Collapse via of_regionEmbedLeΩ.
+  rw [tensorPreHilbertΩ.of_regionEmbedLeΩ]
+
+/-! ### Colimit-level operator -/
+
+/-- Colimit-level linear operator obtained by lifting the family
+`localEmbedΩFamily` through `Module.DirectLimit.lift`. -/
+noncomputable def localEmbedΩPre (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) :
+    tensorPreHilbertΩ L Ω hΩ →ₗ[ℂ] tensorPreHilbertΩ L Ω hΩ :=
+  Module.DirectLimit.lift ℂ (Finset L)
+    (fun Λ : Finset L => regionHilbert (L := L) Λ)
+    (fun _ _ h => (regionEmbedLeΩ Ω hΩ h).toLinearMap)
+    (fun Λ => localEmbedΩFamily (L := L) Ω hΩ Λ₀ M Λ)
+    (fun _ _ h x => localEmbedΩFamily_compat (L := L) Ω hΩ Λ₀ M h x)
+
+@[simp]
+theorem localEmbedΩPre_of (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (Λ : Finset L) (x : regionHilbert (L := L) Λ) :
+    localEmbedΩPre (L := L) Ω hΩ Λ₀ M (tensorPreHilbertΩ.of Ω hΩ Λ x)
+      = localEmbedΩFamily (L := L) Ω hΩ Λ₀ M Λ x :=
+  Module.DirectLimit.lift_of (R := ℂ) (ι := Finset L)
+    (G := fun Λ : Finset L => regionHilbert (L := L) Λ)
+    (f := fun _ _ h => (regionEmbedLeΩ Ω hΩ h).toLinearMap) _ _ _
+
 end LocalNetLike
