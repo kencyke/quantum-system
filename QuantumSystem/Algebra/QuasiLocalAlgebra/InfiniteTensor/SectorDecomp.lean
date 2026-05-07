@@ -90,6 +90,125 @@ def referenceEquiv : Setoid (UnitFamily L) where
         push Not at hns
         exact hs (hns.1.trans hns.2) }
 
+/-! ### Strong (ℓ²) equivalence on unit families -/
+
+/-- The strong (ℓ²) equivalence on unit-vector families: `Ω ≈ Ω'` iff
+`∑_s ‖Ω.fam s - Ω'.fam s‖² < ∞`.
+
+This is strictly finer than the canonical Bratteli–Robinson C₀-equivalence
+`∑_s (1 - |⟪Ω s, Ω' s⟫|) < ∞` (because `1 - |⟪u, v⟫| ≤ ‖u - v‖² / 2` for unit
+vectors, so ℓ² summability implies C₀ summability), but its iseqv proof is
+elementary via the parallelogram-style bound
+`‖a - c‖² ≤ 2 ‖a - b‖² + 2 ‖b - c‖²`. -/
+def strongEquiv : Setoid (UnitFamily L) where
+  r Ω Ω' := Summable fun s : L => ‖Ω.fam s - Ω'.fam s‖ ^ 2
+  iseqv :=
+    { refl := fun Ω => by
+        simp only [sub_self, norm_zero, ne_eq, OfNat.ofNat_ne_zero,
+          not_false_eq_true, zero_pow]
+        exact summable_zero
+      symm := fun {Ω Ω'} h => by
+        have hpt : (fun s : L => ‖Ω'.fam s - Ω.fam s‖ ^ 2)
+            = fun s => ‖Ω.fam s - Ω'.fam s‖ ^ 2 := by
+          funext s; rw [norm_sub_rev]
+        rwa [hpt]
+      trans := fun {Ω Ω' Ω''} h₁ h₂ => by
+        -- `‖a - c‖² ≤ 2 ‖a - b‖² + 2 ‖b - c‖²` pointwise; both summands
+        -- summable, so by comparison `∑ ‖Ω - Ω''‖²` is summable too.
+        refine Summable.of_nonneg_of_le (fun _ => sq_nonneg _) ?bound
+          ((h₁.mul_left 2).add (h₂.mul_left 2))
+        intro s
+        have hT : ‖Ω.fam s - Ω''.fam s‖
+            ≤ ‖Ω.fam s - Ω'.fam s‖ + ‖Ω'.fam s - Ω''.fam s‖ := by
+          have hsplit : Ω.fam s - Ω''.fam s
+              = (Ω.fam s - Ω'.fam s) + (Ω'.fam s - Ω''.fam s) :=
+            (sub_add_sub_cancel _ _ _).symm
+          rw [hsplit]
+          exact norm_add_le _ _
+        have hsq : ‖Ω.fam s - Ω''.fam s‖ ^ 2
+            ≤ (‖Ω.fam s - Ω'.fam s‖ + ‖Ω'.fam s - Ω''.fam s‖) ^ 2 :=
+          pow_le_pow_left₀ (norm_nonneg _) hT 2
+        have hexpand : (‖Ω.fam s - Ω'.fam s‖ + ‖Ω'.fam s - Ω''.fam s‖) ^ 2
+            ≤ 2 * ‖Ω.fam s - Ω'.fam s‖ ^ 2 + 2 * ‖Ω'.fam s - Ω''.fam s‖ ^ 2 := by
+          nlinarith [sq_nonneg
+            (‖Ω.fam s - Ω'.fam s‖ - ‖Ω'.fam s - Ω''.fam s‖)]
+        linarith }
+
+/-- Agreement off a finite set implies ℓ² summability of the per-site
+difference, since the relevant sequence vanishes off a finite set. -/
+theorem referenceEquiv_le_strongEquiv {Ω Ω' : UnitFamily L}
+    (h : referenceEquiv.r Ω Ω') : strongEquiv.r Ω Ω' := by
+  -- `h : Set.Finite { s | Ω.fam s ≠ Ω'.fam s }`, so the sequence
+  -- `s ↦ ‖Ω.fam s - Ω'.fam s‖²` has finite support and is summable.
+  refine summable_of_ne_finset_zero (s := h.toFinset) ?_
+  intro s hs
+  have hagree : Ω.fam s = Ω'.fam s := by
+    by_contra hne
+    apply hs
+    exact Set.Finite.mem_toFinset h |>.mpr hne
+  rw [hagree, sub_self, norm_zero]
+  simp
+
+/-! ### Bratteli–Robinson canonical C₀-relation -/
+
+/-- The canonical Bratteli–Robinson C₀-relation on unit-vector families:
+`Ω ≈_C₀ Ω'` iff `∑_s (1 - ‖⟪Ω.fam s, Ω'.fam s⟫_ℂ‖) < ∞`.
+
+This is the equivalence relation by which the genuine BR complete infinite
+tensor product decomposes into sectors.  Reflexivity and symmetry are proved
+here; transitivity in the Setoid sense requires a phase-aligned triangle
+inequality (`1 - |⟨u, w⟩| ≤ 2(1 - |⟨u, v⟩|) + 2(1 - |⟨v, w⟩|)`) and is left
+to a follow-up. -/
+def c0Rel (Ω Ω' : UnitFamily L) : Prop :=
+  Summable fun s : L => 1 - ‖⟪Ω.fam s, Ω'.fam s⟫_ℂ‖
+
+/-- The C₀-relation is reflexive on unit families: the per-site default
+sequence is the zero sequence. -/
+theorem c0Rel.refl (Ω : UnitFamily L) : c0Rel Ω Ω := by
+  have h0 : ∀ s : L, 1 - ‖⟪Ω.fam s, Ω.fam s⟫_ℂ‖ = 0 := by
+    intro s
+    rw [inner_self_eq_norm_sq_to_K, Ω.norm_fam s]
+    simp
+  unfold c0Rel
+  simp_rw [h0]
+  exact summable_zero
+
+/-- The C₀-relation is symmetric: `‖⟪u, v⟫_ℂ‖ = ‖⟪v, u⟫_ℂ‖`. -/
+theorem c0Rel.symm {Ω Ω' : UnitFamily L} (h : c0Rel Ω Ω') : c0Rel Ω' Ω := by
+  have hpt : (fun s : L => 1 - ‖⟪Ω'.fam s, Ω.fam s⟫_ℂ‖)
+      = fun s => 1 - ‖⟪Ω.fam s, Ω'.fam s⟫_ℂ‖ := by
+    funext s
+    rw [← inner_conj_symm, RCLike.norm_conj]
+  unfold c0Rel
+  rwa [hpt]
+
+/-- Strong (ℓ²) equivalence implies the canonical Bratteli–Robinson
+C₀-relation, via the pointwise bound
+`1 - ‖⟪u, v⟫_ℂ‖ ≤ ‖u - v‖² / 2` for unit vectors. -/
+theorem strongEquiv_le_c0Rel {Ω Ω' : UnitFamily L}
+    (h : strongEquiv.r Ω Ω') : c0Rel Ω Ω' := by
+  unfold c0Rel
+  refine Summable.of_nonneg_of_le ?nonneg ?bound (h.mul_left (1 / 2))
+  · intro s
+    have hub : ‖⟪Ω.fam s, Ω'.fam s⟫_ℂ‖ ≤ 1 := by
+      calc ‖⟪Ω.fam s, Ω'.fam s⟫_ℂ‖
+          ≤ ‖Ω.fam s‖ * ‖Ω'.fam s‖ := norm_inner_le_norm _ _
+        _ = 1 := by rw [Ω.norm_fam s, Ω'.norm_fam s]; ring
+    linarith
+  · intro s
+    -- For unit u, v in a complex IPS,
+    --   ‖u - v‖² = 2 - 2 Re ⟪u, v⟫_ℂ ≥ 2(1 - ‖⟪u, v⟫_ℂ‖)
+    -- since Re z ≤ ‖z‖ for any complex z.
+    have hsub : ‖Ω.fam s - Ω'.fam s‖ ^ 2
+        = 2 - 2 * RCLike.re ⟪Ω.fam s, Ω'.fam s⟫_ℂ := by
+      rw [@norm_sub_sq ℂ _ _ _ _ (Ω.fam s) (Ω'.fam s), Ω.norm_fam s,
+          Ω'.norm_fam s]
+      ring
+    have hre_le_abs :
+        RCLike.re (⟪Ω.fam s, Ω'.fam s⟫_ℂ) ≤ ‖⟪Ω.fam s, Ω'.fam s⟫_ℂ‖ :=
+      RCLike.re_le_norm _
+    linarith
+
 /-! ### The complete (full) infinite tensor product -/
 
 /-- Classical decidable equality on `UnitFamily L`, needed to apply
