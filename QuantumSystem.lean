@@ -18,6 +18,7 @@ public import QuantumSystem.Algebra.QuasiLocalAlgebra.Examples.QubitChain
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.GlobalHilbert
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.HaagKastler
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.Hilbert
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.InfiniteTensor.ReferenceBasis
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.InfiniteTensor.RegionDirectedOmega
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.Isotony
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.LocalEmbed
