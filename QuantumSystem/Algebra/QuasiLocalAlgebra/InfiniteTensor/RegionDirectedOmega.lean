@@ -886,7 +886,7 @@ as the Cauchy completion of the algebraic colimit `tensorPreHilbertΩ L Ω hΩ`.
 
 This is the von Neumann (Bratteli–Robinson §2.7.2) reference sector containing
 `Ω` as the analogue of the vacuum vector. -/
-@[reducible] noncomputable def globalHilbertOmega
+noncomputable abbrev globalHilbertOmega
     (Ω : (s : L) → siteHilbert s) (hΩ : ∀ s, ‖Ω s‖ = 1) : Type _ :=
   UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)
 
