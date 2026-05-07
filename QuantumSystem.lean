@@ -22,6 +22,7 @@ public import QuantumSystem.Algebra.QuasiLocalAlgebra.Isotony
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.LocalEmbed
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.Locality
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.QuasiLocal
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.RegionDirected
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.RegionEmbed
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.Vacuum
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
