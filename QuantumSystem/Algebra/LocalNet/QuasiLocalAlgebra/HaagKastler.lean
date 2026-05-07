@@ -1,6 +1,5 @@
 module
 
-public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Isotony
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Locality
@@ -98,19 +97,6 @@ instance HaagKastlerNet.instNonemptyLocalIdx
 
 variable (L : Type*) [DecidableEq L] [LocalNetLike L]
     [hL : ∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)]
-
-/-- The quasi-local algebra `quasiLocal L` is a closed subset of
-`B(globalHilbert L)`. -/
-instance instIsClosed_quasiLocal :
-    IsClosed (SetLike.coe (quasiLocal L)) :=
-  isClosed_quasiLocal L
-
-/-- The **quasi-local algebra is a unital C⋆-algebra**.  This instance is
-derived from the closed-subalgebra `CStarAlgebra` instance
-`StarSubalgebra.cstarAlgebra` and the closedness of `quasiLocal L`. -/
-noncomputable instance instCStarAlgebra_quasiLocal :
-    CStarAlgebra ↥(quasiLocal L) :=
-  inferInstance
 
 namespace HaagKastler
 

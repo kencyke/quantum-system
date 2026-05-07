@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.LocalEmbed
 
 /-!
@@ -19,6 +20,9 @@ are realised as the ranges of `localEmbedHom Λ`; their `iSup` (in the
 `CompleteLattice` of `StarSubalgebra ℂ _`) is the algebraic quasi-local core
 `quasiLocalSubalg L`, and its topological closure is
 `quasiLocal L`.
+
+Here `localSubalgebra Λ` / `𝔄(Λ)` is the *represented* layer of the three
+local-algebra layers documented in `QuantumSystem.Algebra.LocalNetLike`.
 
 ## Main definitions
 
@@ -76,5 +80,18 @@ theorem quasiLocalSubalg_le_quasiLocal :
 theorem isClosed_quasiLocal :
     IsClosed (↑(quasiLocal L) : Set (globalHilbert L →L[ℂ] globalHilbert L)) :=
   StarSubalgebra.isClosed_topologicalClosure _
+
+/-- The quasi-local algebra `quasiLocal L` is a closed subset of
+`B(globalHilbert L)`. -/
+instance instIsClosed_quasiLocal :
+    IsClosed (SetLike.coe (quasiLocal L)) :=
+  isClosed_quasiLocal L
+
+/-- The **quasi-local algebra is a unital C⋆-algebra**.  This instance is
+derived from the closed-subalgebra `CStarAlgebra` instance
+`StarSubalgebra.cstarAlgebra` and the closedness of `quasiLocal L`. -/
+noncomputable instance instCStarAlgebra_quasiLocal :
+    CStarAlgebra ↥(quasiLocal L) :=
+  inferInstance
 
 end LocalNetLike

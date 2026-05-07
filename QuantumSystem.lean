@@ -13,7 +13,6 @@ public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet
 public import QuantumSystem.Algebra.LocalNet.AsLocalNetLike
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Embedding
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Examples.QubitChain
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.HaagKastler

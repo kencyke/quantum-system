@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Matrix
+public import QuantumSystem.Algebra.LocalNet
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Isotony
 
 /-!

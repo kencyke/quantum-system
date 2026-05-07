@@ -1,6 +1,8 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Embedding
+public import Mathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
 
 /-!
 # Local algebra embedding into `B(globalHilbert L)` (Phase 5'b)
@@ -34,6 +36,11 @@ injectivity, and defines the resulting represented local subalgebra
   `g ↦ g|Λ : regionIdx Λ` of a global tuple.
 * `LocalNetLike.globalSwap Λ f g` — the global tuple obtained from `g`
   by replacing its Λ component with `f`.
+* `LocalNetLike.extendRegionTuple Λ f` — extension of a region tuple to a
+  global tuple by filling outside-`Λ` coordinates with `referenceBasis L`.
+* `LocalNetLike.localSubalgebra Λ` / `𝔄(Λ)` — the represented image of
+  `B(ℋ(Λ))` inside `B(globalHilbert L)`; the *represented* layer of the three
+  documented in `QuantumSystem.Algebra.LocalNetLike`.
 
 ## References
 
@@ -50,6 +57,45 @@ namespace LocalNetLike
 
 variable {L : Type*} [DecidableEq L] [LocalNetLike L]
     [hL : ∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)]
+
+/-! ### Region tuple extensions -/
+
+/-- Equality on `globalIdx L` is classically decidable; we register this as a
+noncomputable instance so that `lp.single 2 (· : globalIdx L) 1` is well-typed
+downstream. -/
+noncomputable instance instDecidableEqGlobalIdx : DecidableEq (globalIdx L) :=
+  Classical.decEq _
+
+/-- Extension of a region tuple `f : regionIdx Λ` to a global tuple in
+`globalIdx L` by filling sites outside `Λ` with the reference basis index. -/
+noncomputable def extendRegionTuple (Λ : Finset L) (f : regionIdx (L := L) Λ) :
+    globalIdx L :=
+  ⟨fun s => if h : s ∈ Λ then f ⟨s, h⟩ else referenceBasis L s,
+   ⟨Λ, fun _ hs => dif_neg hs⟩⟩
+
+@[simp]
+theorem extendRegionTuple_val_apply_of_mem (Λ : Finset L)
+    (f : regionIdx (L := L) Λ) {s : L} (hs : s ∈ Λ) :
+    (extendRegionTuple Λ f).val s = f ⟨s, hs⟩ :=
+  dif_pos hs
+
+@[simp]
+theorem extendRegionTuple_val_apply_of_not_mem (Λ : Finset L)
+    (f : regionIdx (L := L) Λ) {s : L} (hs : s ∉ Λ) :
+    (extendRegionTuple Λ f).val s = referenceBasis L s :=
+  dif_neg hs
+
+/-- The extension `extendRegionTuple Λ` is injective. -/
+theorem extendRegionTuple_injective (Λ : Finset L) :
+    Function.Injective (extendRegionTuple (L := L) Λ) := by
+  intro f g h
+  ext ⟨s, hs⟩
+  have hval : (extendRegionTuple Λ f).val = (extendRegionTuple Λ g).val :=
+    congrArg Subtype.val h
+  have := congrFun hval s
+  simpa [extendRegionTuple_val_apply_of_mem, hs] using this
+
+/-! ### Global tuple restriction and swaps -/
 
 /-- Restrict a global tuple to a finite region `Λ`.  The result
 `regionRestrict Λ g : regionIdx Λ` lists `g`'s coordinates at the sites
@@ -832,17 +878,20 @@ theorem localEmbedHom_injective (Λ : Finset L) :
   rw [map_smul, hbasis_zero b]
   simp
 
-/-- The local subalgebra at `Λ`: the image of `M ↦ localEmbed Λ M` viewed as a
-unital `*`-subalgebra of `globalHilbert L →L[ℂ] globalHilbert L`. -/
+/-- The represented local subalgebra at `Λ`: the image of `M ↦ localEmbed Λ M`
+viewed as a unital `*`-subalgebra of `globalHilbert L →L[ℂ] globalHilbert L`.
+This is the *represented* layer of the three local-algebra layers documented in
+`QuantumSystem.Algebra.LocalNetLike`. -/
 noncomputable def localSubalgebra (Λ : Finset L) :
     StarSubalgebra ℂ (globalHilbert L →L[ℂ] globalHilbert L) :=
   (localEmbedHom Λ).range
 
-/-- Paper notation `𝔄(Λ)` for the local subalgebra at the finite lattice
-region `Λ`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike` to
-use it.  See Naaijkens 2012 §1.3 (`references/92737/INDEX.md`,
-key concept `A(Λ) — paper notation for the local algebra on region Λ`)
-for the rendering this notation matches. -/
+/-- Paper notation `𝔄(Λ)` for the represented local subalgebra at the finite
+lattice region `Λ`, scoped to `LocalNetLike`.  Open `scoped LocalNetLike` to use
+it.  See `QuantumSystem.Algebra.LocalNetLike` for the three-layer overview, and
+Naaijkens 2012 §1.3 (`references/92737/INDEX.md`, key concept `A(Λ) — paper
+notation for the local algebra on region Λ`) for the rendering this notation
+matches. -/
 scoped notation:max "𝔄(" Λ ")" => LocalNetLike.localSubalgebra Λ
 
 theorem mem_localSubalgebra (Λ : Finset L)

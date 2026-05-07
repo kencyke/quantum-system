@@ -46,6 +46,13 @@ This file provides:
 * `LocalNet.regionIdxCongr` — transport `regionIdx` along a Finset equality
 * `LocalNet.IsLocal` / `LocalNet.isLocal` — locality predicate and its constructive proof
 
+`LocalNet.localAlgebra` is the *concrete* layer of the three local-algebra
+layers documented in `QuantumSystem.Algebra.LocalNetLike`.  The bridge to the
+abstract `LocalNetLike.localAlgebra` and the represented operator subalgebra
+`LocalNetLike.localSubalgebra` / `𝔄(Λ)` is in
+`QuantumSystem.Algebra.LocalNet.AsLocalNetLike`; the layers are not identified
+definitionally here.
+
 The partial-trace / restriction operations (`Matrix.restrict`, `Matrix.restrictKraus`,
 `Matrix.QuantumChannel.restrict`, `DensityMatrix.restrict`, and the paper notation
 `ρ ↾ Λ`) are defined in `QuantumSystem/Analysis/Matrix/PartialTrace.lean`.
@@ -89,7 +96,9 @@ lemma regionIdx_nonempty_of_subset {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ
     [hne : Nonempty (L.regionIdx Λ_total)] : Nonempty (L.regionIdx Λ) :=
   hne.elim fun f => ⟨fun s => f ⟨s.val, h s.property⟩⟩
 
-/-- Local algebra `𝔄(Λ)` at a region — concrete matrix algebra over `ℂ`. -/
+/-- Concrete local algebra at a finite region — the matrix algebra over `ℂ` on
+the dependent index type `L.regionIdx Λ`.  This is the concrete `LocalNet`
+layer; see `QuantumSystem.Algebra.LocalNetLike` for the three-layer overview. -/
 abbrev localAlgebra (Λ : Finset L.sites) : Type _ :=
   Matrix (L.regionIdx Λ) (L.regionIdx Λ) ℂ
 

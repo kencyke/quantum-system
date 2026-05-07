@@ -21,10 +21,9 @@ Concretely we:
    inherits its Hilbert-space structure from `lp.instInnerProductSpace`
    in `Mathlib.Analysis.InnerProductSpace.l2Space`.
 
-The isometric embeddings `regionHilbert Λ →ₗᵢ globalHilbert L` for varying
-`Λ` are introduced in
-`QuantumSystem/Algebra/LocalNet/QuasiLocalAlgebra/Embedding.lean`
-(Phase 5'a step 4).
+The finite-region tuple extensions and the represented local-algebra embeddings
+into `B(globalHilbert L)` are introduced in
+`QuantumSystem/Algebra/LocalNet/QuasiLocalAlgebra/LocalEmbed.lean`.
 
 ## Main definitions
 

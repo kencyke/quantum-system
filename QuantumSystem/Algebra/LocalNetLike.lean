@@ -1,6 +1,8 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet
+public import Mathlib.Algebra.Star.StarAlgHom
+public import Mathlib.Data.Complex.Basic
+public import Mathlib.Data.Finset.Basic
 
 /-!
 # `LocalNetLike`: a typeclass abstraction of finite-region local net data
@@ -14,14 +16,17 @@ in a separate interface.
 
 The motivation is to formulate isotony and disjoint-region locality once over an
 abstract site carrier rather than threading type-specific bridge lemmas through
-downstream lattice/spin-system proofs.
+downstream lattice/spin-system proofs.  This module is deliberately independent
+of the concrete `LocalNet` structure; the concrete-to-abstract instance lives in
+`QuantumSystem.Algebra.LocalNet.AsLocalNetLike`.
 
 ## Design
 
 The class bundles the following pieces for finite lattice regions:
 
 * per-site Hilbert-space index types,
-* a region-indexed family of `*`-algebras over `ℂ` (presented as separate
+* a region-indexed family of abstract finite-region `*`-algebras over `ℂ`
+  (presented as separate
   `Semiring`, `Algebra ℂ`, `StarRing`, `StarModule ℂ` fields since Mathlib does
   not bundle these into a single `StarAlgebra` class),
 * the **isotony embedding** `𝔄(Λ) →⋆ₐ[ℂ] 𝔄(Λ')` for `Λ ⊆ Λ'` together with the
@@ -31,6 +36,16 @@ The class bundles the following pieces for finite lattice regions:
 Covariance and invariant-state predicates are deferred to follow-up mixin classes
 (`LocalNetLike.HasGroupAction` and `LocalNetLike.HasInvariantState`) so that this base
 class can be instantiated by carriers without a chosen group action.
+
+There are three local-algebra layers in this development:
+
+1. `LocalNet.localAlgebra Λ` is the concrete matrix algebra attached to a
+  finite-dimensional `LocalNet`.
+2. `LocalNetLike.localAlgebra Λ` is this abstract interface's finite-region
+  algebra family; it need not be definitionally a matrix algebra.
+3. `LocalNetLike.localSubalgebra Λ` / `𝔄(Λ)` is introduced later in the
+  quasi-local construction and denotes the represented image inside
+  `B(globalHilbert L)`.
 -/
 
 @[expose] public section
@@ -46,7 +61,12 @@ class LocalNetLike (L : Type*) [DecidableEq L] where
   localIdx : L → Type*
   [localFintype : ∀ s, Fintype (localIdx s)]
   [localDecEq : ∀ s, DecidableEq (localIdx s)]
-  /-- Local algebra carrier at a region. -/
+  /-- Abstract finite-region local algebra carrier at a region.
+
+  This is not the represented operator subalgebra `localSubalgebra Λ` / `𝔄(Λ)`
+  used in the quasi-local algebra construction.  When a
+  `HasLocalRepresentation` instance is available, that later layer embeds this
+  abstract algebra into operators on the global Hilbert space. -/
   localAlgebra : Finset L → Type*
   [localAlgebraSemiring : ∀ Λ, Semiring (localAlgebra Λ)]
   [localAlgebraAlgebra : ∀ Λ, Algebra ℂ (localAlgebra Λ)]

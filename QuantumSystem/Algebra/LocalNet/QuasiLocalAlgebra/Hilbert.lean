@@ -1,5 +1,7 @@
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import QuantumSystem.Algebra.LocalNetLike
 
 /-!
