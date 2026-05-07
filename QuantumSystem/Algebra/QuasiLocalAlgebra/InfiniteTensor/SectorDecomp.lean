@@ -3,6 +3,7 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.InfiniteTensor.RegionDirectedOmega
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.C0Triangle
 
 /-!
 # Complete (full) infinite tensor product as a sector direct sum
@@ -182,6 +183,34 @@ theorem c0Rel.symm {Ω Ω' : UnitFamily L} (h : c0Rel Ω Ω') : c0Rel Ω' Ω := 
   unfold c0Rel
   rwa [hpt]
 
+/-- The C₀-relation is transitive on unit families, via the phase-aligned
+triangle inequality `1 - ‖⟪u, w⟫_ℂ‖ ≤ 2 (1 - ‖⟪u, v⟫_ℂ‖) + 2 (1 - ‖⟪v, w⟫_ℂ‖)`
+for unit vectors. -/
+theorem c0Rel.trans {Ω Ω' Ω'' : UnitFamily L}
+    (h₁ : c0Rel Ω Ω') (h₂ : c0Rel Ω' Ω'') : c0Rel Ω Ω'' := by
+  unfold c0Rel
+  refine Summable.of_nonneg_of_le ?nonneg ?bound
+    ((h₁.mul_left 2).add (h₂.mul_left 2))
+  · intro s
+    have hub : ‖⟪Ω.fam s, Ω''.fam s⟫_ℂ‖ ≤ 1 := by
+      calc ‖⟪Ω.fam s, Ω''.fam s⟫_ℂ‖
+          ≤ ‖Ω.fam s‖ * ‖Ω''.fam s‖ := norm_inner_le_norm _ _
+        _ = 1 := by rw [Ω.norm_fam s, Ω''.norm_fam s]; ring
+    linarith
+  · intro s
+    exact ForMathlib.c0_triangle (Ω.fam s) (Ω'.fam s) (Ω''.fam s)
+      (Ω.norm_fam s) (Ω'.norm_fam s) (Ω''.norm_fam s)
+
+/-- The Bratteli–Robinson C₀-equivalence on unit-vector families, packaged as
+a `Setoid`.  This is the canonical equivalence by which the genuine BR
+complete infinite tensor product decomposes into sectors.
+
+ℓ²-equivalence (`strongEquiv`) is strictly finer; the BR equivalence is
+the canonical one. -/
+def c0Equiv : Setoid (UnitFamily L) where
+  r := c0Rel
+  iseqv := ⟨c0Rel.refl, c0Rel.symm, c0Rel.trans⟩
+
 /-- Strong (ℓ²) equivalence implies the canonical Bratteli–Robinson
 C₀-relation, via the pointwise bound
 `1 - ‖⟪u, v⟫_ℂ‖ ≤ ‖u - v‖² / 2` for unit vectors. -/
@@ -334,6 +363,59 @@ noncomputable instance : CompleteSpace (fullInfTensorHilbertCanonical L) :=
 class `c` into the canonical complete tensor product. -/
 noncomputable def sectorEmbedOfClass (c : Quotient (strongEquiv (L := L))) :
     SectorHilbertOfClass c →ₗᵢ[ℂ] fullInfTensorHilbertCanonical L where
+  toLinearMap := lp.lsingle 2 c
+  norm_map' x := lp.norm_single (by norm_num : (0 : ENNReal) < 2) c x
+
+/-! ### Genuine BR canonical complete tensor product via `c0Equiv` -/
+
+/-- Classical decidable equality on `Quotient c0Equiv`. -/
+noncomputable instance : DecidableEq (Quotient (c0Equiv (L := L))) :=
+  Classical.decEq _
+
+/-- The Hilbert space attached to a `c0Equiv`-class via its `Quotient.out`
+representative.  This is the canonical Bratteli–Robinson sector. -/
+abbrev SectorHilbertOfBRClass (c : Quotient (c0Equiv (L := L))) : Type _ :=
+  SectorHilbert (Quotient.out c)
+
+noncomputable instance instNormedAddCommGroupSectorHilbertOfBRClass
+    (c : Quotient (c0Equiv (L := L))) :
+    NormedAddCommGroup (SectorHilbertOfBRClass c) :=
+  inferInstanceAs (NormedAddCommGroup (SectorHilbert (Quotient.out c)))
+
+noncomputable instance instInnerProductSpaceSectorHilbertOfBRClass
+    (c : Quotient (c0Equiv (L := L))) :
+    InnerProductSpace ℂ (SectorHilbertOfBRClass c) :=
+  inferInstanceAs (InnerProductSpace ℂ (SectorHilbert (Quotient.out c)))
+
+/-- The genuine Bratteli–Robinson §2.7.2 canonical complete infinite tensor
+product: the `lp 2`-direct sum of canonical sector Hilbert spaces indexed by
+`c0Equiv` (BR C₀)-equivalence classes.
+
+Unlike `fullInfTensorHilbertCanonical L` (which uses the strictly finer
+`strongEquiv`), this object has exactly one direct summand per BR
+equivalence class. -/
+noncomputable def fullInfTensorHilbertBR (L : Type*)
+    [DecidableEq L] [LocalNetLike L] : Type _ :=
+  lp (fun c : Quotient (c0Equiv (L := L)) => SectorHilbertOfBRClass c) 2
+
+noncomputable instance :
+    NormedAddCommGroup (fullInfTensorHilbertBR L) :=
+  inferInstanceAs (NormedAddCommGroup
+    (lp (fun c : Quotient (c0Equiv (L := L)) => SectorHilbertOfBRClass c) 2))
+
+noncomputable instance :
+    InnerProductSpace ℂ (fullInfTensorHilbertBR L) :=
+  inferInstanceAs (InnerProductSpace ℂ
+    (lp (fun c : Quotient (c0Equiv (L := L)) => SectorHilbertOfBRClass c) 2))
+
+noncomputable instance : CompleteSpace (fullInfTensorHilbertBR L) :=
+  inferInstanceAs (CompleteSpace
+    (lp (fun c : Quotient (c0Equiv (L := L)) => SectorHilbertOfBRClass c) 2))
+
+/-- The canonical isometric embedding of the BR-representative sector at a
+class `c` into the BR canonical complete tensor product. -/
+noncomputable def sectorEmbedOfBRClass (c : Quotient (c0Equiv (L := L))) :
+    SectorHilbertOfBRClass c →ₗᵢ[ℂ] fullInfTensorHilbertBR L where
   toLinearMap := lp.lsingle 2 c
   norm_map' x := lp.norm_single (by norm_num : (0 : ENNReal) < 2) c x
 
