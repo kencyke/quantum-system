@@ -280,4 +280,61 @@ theorem sector_decomp (Ω : UnitFamily L) :
       ∀ x : SectorHilbert Ω, ‖φ x‖ = ‖x‖ :=
   ⟨sectorEmbed Ω, fun x => (sectorEmbed Ω).norm_map x⟩
 
+/-! ### Canonical (quotient) variant of the complete tensor product -/
+
+/-- Classical decidable equality on `Quotient strongEquiv`. -/
+noncomputable instance : DecidableEq (Quotient (strongEquiv (L := L))) :=
+  Classical.decEq _
+
+/-- The Hilbert space attached to a `strongEquiv`-class via its `Quotient.out`
+representative. -/
+abbrev SectorHilbertOfClass (c : Quotient (strongEquiv (L := L))) : Type _ :=
+  SectorHilbert (Quotient.out c)
+
+noncomputable instance instNormedAddCommGroupSectorHilbertOfClass
+    (c : Quotient (strongEquiv (L := L))) :
+    NormedAddCommGroup (SectorHilbertOfClass c) :=
+  inferInstanceAs (NormedAddCommGroup (SectorHilbert (Quotient.out c)))
+
+noncomputable instance instInnerProductSpaceSectorHilbertOfClass
+    (c : Quotient (strongEquiv (L := L))) :
+    InnerProductSpace ℂ (SectorHilbertOfClass c) :=
+  inferInstanceAs (InnerProductSpace ℂ (SectorHilbert (Quotient.out c)))
+
+/-- The canonical Bratteli–Robinson §2.7.2 complete infinite tensor product:
+the `lp 2`-direct sum of the canonical sector Hilbert spaces, indexed by
+`strongEquiv`-equivalence classes (instead of all unit families).  This
+collapses the redundancy in `fullInfTensorHilbert L` (where multiple unit
+families representing the same class give distinct summands) by picking one
+representative per class via `Quotient.out`.
+
+Built relative to `strongEquiv` (ℓ²-equivalence): the BR canonical
+C₀-equivalence is coarser, so this is still a covering of the BR object,
+but the redundancy is now controlled by the strict-vs-C₀ gap rather than
+all distinct unit families. -/
+noncomputable def fullInfTensorHilbertCanonical (L : Type*)
+    [DecidableEq L] [LocalNetLike L] : Type _ :=
+  lp (fun c : Quotient (strongEquiv (L := L)) => SectorHilbertOfClass c) 2
+
+noncomputable instance :
+    NormedAddCommGroup (fullInfTensorHilbertCanonical L) :=
+  inferInstanceAs (NormedAddCommGroup
+    (lp (fun c : Quotient (strongEquiv (L := L)) => SectorHilbertOfClass c) 2))
+
+noncomputable instance :
+    InnerProductSpace ℂ (fullInfTensorHilbertCanonical L) :=
+  inferInstanceAs (InnerProductSpace ℂ
+    (lp (fun c : Quotient (strongEquiv (L := L)) => SectorHilbertOfClass c) 2))
+
+noncomputable instance : CompleteSpace (fullInfTensorHilbertCanonical L) :=
+  inferInstanceAs (CompleteSpace
+    (lp (fun c : Quotient (strongEquiv (L := L)) => SectorHilbertOfClass c) 2))
+
+/-- The canonical isometric embedding of the representative sector at a
+class `c` into the canonical complete tensor product. -/
+noncomputable def sectorEmbedOfClass (c : Quotient (strongEquiv (L := L))) :
+    SectorHilbertOfClass c →ₗᵢ[ℂ] fullInfTensorHilbertCanonical L where
+  toLinearMap := lp.lsingle 2 c
+  norm_map' x := lp.norm_single (by norm_num : (0 : ENNReal) < 2) c x
+
 end LocalNetLike
