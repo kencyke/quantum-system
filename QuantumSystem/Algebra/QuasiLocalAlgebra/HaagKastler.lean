@@ -1,9 +1,9 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Isotony
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Locality
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Vacuum
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.Covariance
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.Isotony
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.Locality
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.Vacuum
 
 /-!
 # Lattice Haag–Kastler conditions for the quasi-local algebra

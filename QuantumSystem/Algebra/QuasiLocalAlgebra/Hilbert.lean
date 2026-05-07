@@ -27,7 +27,7 @@ correspondence.
 
 The infinite-site limit `globalHilbert : Type` and the isometric embeddings
 `regionHilbert Λ →ₗᵢ globalHilbert` for varying `Λ` are introduced in
-`QuantumSystem/Algebra/LocalNet/QuasiLocalAlgebra/GlobalHilbert.lean`
+`QuantumSystem/Algebra/QuasiLocalAlgebra/GlobalHilbert.lean`
 following Naaijkens §3.5 / Bratteli–Robinson §2.7.2.
 
 ## Main definitions

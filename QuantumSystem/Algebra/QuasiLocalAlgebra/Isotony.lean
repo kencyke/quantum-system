@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.LocalEmbed
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.LocalEmbed
 
 /-!
 # Isotony of local subalgebras (Phase 5'd)

@@ -1,8 +1,8 @@
 module
 
 public import Mathlib.Analysis.InnerProductSpace.l2Space
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.GlobalHilbert
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Hilbert
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.GlobalHilbert
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.Hilbert
 
 /-!
 # Local algebra embedding into `B(globalHilbert L)` (Phase 5'b)

@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.QuasiLocal
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.QuasiLocal
 
 /-!
 # Group action data for the quasi-local algebra (Phase 5'd kinematics)

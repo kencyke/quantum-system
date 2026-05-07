@@ -1,7 +1,7 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.LocalEmbed
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.LocalEmbed
 
 /-!
 # Quasi-local algebra (Phase 5'c)

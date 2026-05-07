@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.LocalEmbed
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.LocalEmbed
 
 /-!
 # Locality of the quasi-local algebra (Phase 5'd)

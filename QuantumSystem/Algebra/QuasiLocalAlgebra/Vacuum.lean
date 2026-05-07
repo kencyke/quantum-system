@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra.Covariance
+public import QuantumSystem.Algebra.QuasiLocalAlgebra.Covariance
 
 /-!
 # Vacuum vector and `G`-invariance

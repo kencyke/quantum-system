@@ -52,7 +52,7 @@ Concretely we:
 
 The finite-region tuple extensions and the represented local-algebra embeddings
 into `B(globalHilbert L)` are introduced in
-`QuantumSystem/Algebra/LocalNet/QuasiLocalAlgebra/LocalEmbed.lean`.
+`QuantumSystem/Algebra/QuasiLocalAlgebra/LocalEmbed.lean`.
 
 ## Main definitions
 
