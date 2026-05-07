@@ -13,11 +13,12 @@ For each finite region `Λ : Finset L` we build the canonical injective unital
 `localEmbed Λ : (regionHilbert Λ →L[ℂ] regionHilbert Λ) →⋆ₐ[ℂ]
                   (globalHilbert L →L[ℂ] globalHilbert L)`
 
-following Naaijkens 2012 §1.3 and Bratteli–Robinson Vol. 2 §2.7.2: an
-operator `M` on the region Hilbert space is sent to `M ⊗ 1_{Λᶜ}`, the
-operator on the infinite-site Hilbert space that acts as `M` on the Λ
-factor and as the identity on the complement.  In our basis-indexed model
-this is realised on basis vectors `e_g = lp.single 2 g 1` by
+following Naaijkens 2012 §1.3 and Bratteli–Robinson Vol. 2 §2.7.2.  In the
+reference-sector ℓ² model from `GlobalHilbert.lean`, this is the operator usually
+written heuristically as `M ⊗ 1_{Λᶜ}`: it acts as `M` on the finite Λ
+coordinates of a finite-variation basis tuple and leaves the complement
+coordinates unchanged.  On basis vectors `e_g = lp.single 2 g 1` this is
+realised by
 
 `localEmbed Λ M (e_g) = ∑_{f : regionIdx Λ} M_{f, g|Λ} e_{(f, g|Λᶜ)}`
 

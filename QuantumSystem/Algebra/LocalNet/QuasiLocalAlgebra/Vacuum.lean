@@ -9,8 +9,12 @@ We define the canonical **reference/vacuum vector** of the lattice system as the
 basis vector `lp.single 2 (referenceTuple L) 1` in `globalHilbert L`,
 where `referenceTuple L : globalIdx L` is the global tuple that takes the
 value `referenceBasis L s` at every site.  This is the Naaijkens-Bratteli
-"reference" / "vacuum" vector that the inductive limit is built around
-(Naaijkens 2012 §3.5 / Bratteli–Robinson Vol. 2 §2.7.2).
+"reference" / "vacuum" vector selecting the incomplete infinite tensor product
+sector modelled by `globalHilbert L` (Naaijkens 2012 §3.5 /
+Bratteli–Robinson Vol. 2 §2.7.2).
+
+As in `GlobalHilbert.lean`, this is a basis-indexed reference-sector model, not
+a separate bundled construction of the full infinite tensor product.
 
 The combinatorial *invariance* condition for a `G`-action is that the
 action fixes the reference tuple, i.e. `globalIdxAction g (referenceTuple L)
@@ -24,8 +28,8 @@ not be confused with the relativistic positive-energy vacuum condition.
 
 * `LocalNetLike.referenceTuple L` — the constant `referenceBasis`-tuple in
   `globalIdx L`.
-* `LocalNetLike.vacuumVector L` — the reference/vacuum vector
-  `lp.single 2 (referenceTuple L) 1` in `globalHilbert L`.
+* `LocalNetLike.vacuumVector L` — the reference/vacuum basis vector
+  `lp.single 2 (referenceTuple L) 1` in the reference sector `globalHilbert L`.
 * `LocalNetLike.HasGroupAction.globalIdxAction_referenceTuple` — every
   `G`-action fixes `referenceTuple L`.
 * `LocalNetLike.HasGroupAction.unitaryAction_vacuumVector` — every `G`-translate
