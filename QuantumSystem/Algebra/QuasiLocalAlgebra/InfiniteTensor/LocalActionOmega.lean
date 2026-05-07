@@ -541,4 +541,198 @@ theorem localEmbedΩPre_of (Λ₀ : Finset L)
     (G := fun Λ : Finset L => regionHilbert (L := L) Λ)
     (f := fun _ _ h => (regionEmbedLeΩ Ω hΩ h).toLinearMap) _ _ _
 
+/-! ### Norm bounds and continuous extension
+
+The colimit injection `tensorPreHilbertΩ.of Λ` is an isometry into
+`tensorPreHilbertΩ`, which makes `localEmbedΩPre` Lipschitz and lets us
+extend it first to a continuous operator on the algebraic colimit and then
+to the completion `globalHilbertOmega`. -/
+
+/-- The colimit injection `tensorPreHilbertΩ.of Ω hΩ Λ` is norm-preserving:
+`‖of Λ x‖ = ‖x‖`.  This is the key step in showing that the inner product on
+`tensorPreHilbertΩ` reduces to the inner product on each finite region. -/
+theorem tensorPreHilbertΩ_norm_of_apply (Λ : Finset L)
+    (x : regionHilbert (L := L) Λ) :
+    ‖tensorPreHilbertΩ.of Ω hΩ Λ x‖
+      = ‖x‖ := by
+  -- Reduce to squared norms via `re ⟪·, ·⟫`.
+  have hLHS_sq : ‖tensorPreHilbertΩ.of Ω hΩ Λ x‖ ^ 2
+      = ‖x‖ ^ 2 := by
+    rw [← @inner_self_eq_norm_sq ℂ]
+    rw [tensorPreHilbertΩ.inner_of_of]
+    -- Goal: re (star (innerWithLin Λ x Λ x)) = ‖x‖ ^ 2.
+    -- Unfold innerWithLin: it equals ⟪regionEmbedLeΩ_L x, regionEmbedLeΩ_R x⟫,
+    -- and the two embeddings coincide by proof-irrelevance for Λ ⊆ Λ ∪ Λ.
+    change RCLike.re
+        (star ⟪regionEmbedLeΩ Ω hΩ
+                  (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ)) x,
+                regionEmbedLeΩ Ω hΩ
+                  (Finset.subset_union_right (s₁ := Λ) (s₂ := Λ)) x⟫_ℂ)
+        = ‖x‖ ^ 2
+    have hemb :
+        regionEmbedLeΩ Ω hΩ
+            (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ)) x
+          = regionEmbedLeΩ Ω hΩ
+              (Finset.subset_union_right (s₁ := Λ) (s₂ := Λ)) x := rfl
+    rw [hemb, RCLike.star_def, RCLike.conj_re,
+      @inner_self_eq_norm_sq ℂ, LinearIsometry.norm_map]
+  -- Conclude `‖of Λ x‖ = ‖x‖` from squared equality and nonnegativity.
+  exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp hLHS_sq
+
+/-- Operator-norm bound for `localEmbedΩPre`: `‖localEmbedΩPre Λ₀ M z‖ ≤ ‖M‖ * ‖z‖`.
+
+Reduced to the `of Λ x` case via `induction_on`, where the bound follows from
+the operator-norm bound on `tensorWithId` (`tensorWithId_norm_apply_le`),
+the isometry `regionEmbedLeΩ`, and the isometry of `of Λ`. -/
+theorem norm_localEmbedΩPre_apply (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (z : tensorPreHilbertΩ L Ω hΩ) :
+    ‖localEmbedΩPre (L := L) Ω hΩ Λ₀ M z‖ ≤ ‖M‖ * ‖z‖ := by
+  refine z.induction_on (fun Λ x => ?_)
+  -- Reduce to the `of Λ x` case.
+  rw [show (Module.DirectLimit.of ℂ (Finset L)
+            (fun Λ : Finset L => regionHilbert (L := L) Λ)
+            (fun _ _ h => (regionEmbedLeΩ Ω hΩ h).toLinearMap) Λ) x
+        = tensorPreHilbertΩ.of Ω hΩ Λ x from rfl]
+  rw [localEmbedΩPre_of, localEmbedΩFamily_apply]
+  rw [tensorPreHilbertΩ_norm_of_apply, tensorPreHilbertΩ_norm_of_apply]
+  -- ‖tensorWithId h₂ M (regionEmbedLeΩ h₁ x)‖ ≤ ‖M‖ * ‖x‖.
+  refine (tensorWithId_norm_apply_le _ _ _).trans ?_
+  rw [LinearIsometry.norm_map]
+
+/-- Continuous lift of `localEmbedΩPre Λ₀ M`: a continuous linear operator
+on the algebraic colimit `tensorPreHilbertΩ L Ω hΩ`, with operator-norm
+bound `‖M‖`. -/
+noncomputable def localEmbedΩPreL (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) :
+    tensorPreHilbertΩ L Ω hΩ →L[ℂ] tensorPreHilbertΩ L Ω hΩ :=
+  LinearMap.mkContinuous (localEmbedΩPre (L := L) Ω hΩ Λ₀ M) ‖M‖
+    (norm_localEmbedΩPre_apply (L := L) Ω hΩ Λ₀ M)
+
+@[simp]
+theorem localEmbedΩPreL_apply (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (z : tensorPreHilbertΩ L Ω hΩ) :
+    localEmbedΩPreL (L := L) Ω hΩ Λ₀ M z
+      = localEmbedΩPre (L := L) Ω hΩ Λ₀ M z := rfl
+
+@[simp]
+theorem localEmbedΩPreL_of (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (Λ : Finset L) (x : regionHilbert (L := L) Λ) :
+    localEmbedΩPreL (L := L) Ω hΩ Λ₀ M (tensorPreHilbertΩ.of Ω hΩ Λ x)
+      = localEmbedΩFamily (L := L) Ω hΩ Λ₀ M Λ x := by
+  rw [localEmbedΩPreL_apply, localEmbedΩPre_of]
+
+/-! ### Completion-level operator `localEmbedΩ` -/
+
+/-- The continuous linear operator on `globalHilbertOmega L Ω hΩ` obtained
+by extending the algebraic-colimit-level operator `localEmbedΩPreL Λ₀ M`
+along the canonical dense isometric embedding into the Cauchy completion. -/
+noncomputable def localEmbedΩ (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) :
+    globalHilbertOmega L Ω hΩ →L[ℂ] globalHilbertOmega L Ω hΩ :=
+  ContinuousLinearMap.extend
+    ((UniformSpace.Completion.toComplL :
+        tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)).comp
+      (localEmbedΩPreL (L := L) Ω hΩ Λ₀ M))
+    UniformSpace.Completion.toComplL
+
+/-- Density of the canonical embedding `toComplL : tensorPreHilbertΩ L Ω hΩ
+→L[ℂ] globalHilbertOmega L Ω hΩ`. -/
+private theorem denseRange_toComplL :
+    DenseRange (UniformSpace.Completion.toComplL :
+      tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+        UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) := by
+  rw [show ⇑(UniformSpace.Completion.toComplL :
+        tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+        = ((↑) : tensorPreHilbertΩ L Ω hΩ →
+            UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) from
+      UniformSpace.Completion.coe_toComplL]
+  exact UniformSpace.Completion.denseRange_coe
+
+/-- Uniform-inducing of the canonical embedding `toComplL`. -/
+private theorem isUniformInducing_toComplL :
+    IsUniformInducing (UniformSpace.Completion.toComplL :
+      tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+        UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) := by
+  rw [show ⇑(UniformSpace.Completion.toComplL :
+        tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+        = ((↑) : tensorPreHilbertΩ L Ω hΩ →
+            UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) from
+      UniformSpace.Completion.coe_toComplL]
+  exact UniformSpace.Completion.isUniformInducing_coe _
+
+/-- Action of `localEmbedΩ Λ₀ M` on a coerced colimit element. -/
+@[simp]
+theorem localEmbedΩ_coe_apply (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (z : tensorPreHilbertΩ L Ω hΩ) :
+    localEmbedΩ (L := L) Ω hΩ Λ₀ M (z : globalHilbertOmega L Ω hΩ)
+      = (localEmbedΩPreL (L := L) Ω hΩ Λ₀ M z : globalHilbertOmega L Ω hΩ) := by
+  change localEmbedΩ (L := L) Ω hΩ Λ₀ M
+        ((UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) z) = _
+  rw [localEmbedΩ, ContinuousLinearMap.extend_eq _
+    (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ)]
+  rfl
+
+/-! ### Structural lemmas -/
+
+/-- Identity action: `localEmbedΩ Λ₀ 1 = 1`. -/
+@[simp]
+theorem localEmbedΩ_one (Λ₀ : Finset L) :
+    localEmbedΩ (L := L) Ω hΩ Λ₀
+        (ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ₀))
+      = ContinuousLinearMap.id ℂ (globalHilbertOmega L Ω hΩ) := by
+  -- Use the uniqueness of `extend`: it suffices to verify that the
+  -- identity map agrees with the extended map on the dense subspace.
+  refine ContinuousLinearMap.extend_unique _
+    (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ) _ ?_
+  ext z
+  change (UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) z
+      = (UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+          (localEmbedΩPreL (L := L) Ω hΩ Λ₀
+            (ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ₀)) z)
+  congr 1
+  -- localEmbedΩPreL Λ₀ id z = z, by induction on z.
+  refine z.induction_on (fun Λ x => ?_)
+  change tensorPreHilbertΩ.of Ω hΩ Λ x
+      = localEmbedΩPreL (L := L) Ω hΩ Λ₀
+            (ContinuousLinearMap.id ℂ (regionHilbert (L := L) Λ₀))
+            (tensorPreHilbertΩ.of Ω hΩ Λ x)
+  rw [localEmbedΩPreL_of, localEmbedΩFamily_apply, tensorWithId_one,
+    ContinuousLinearMap.id_apply, tensorPreHilbertΩ.of_regionEmbedLeΩ]
+
+/-- Zero action: `localEmbedΩ Λ₀ 0 = 0`. -/
+@[simp]
+theorem localEmbedΩ_zero (Λ₀ : Finset L) :
+    localEmbedΩ (L := L) Ω hΩ Λ₀
+        (0 : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+      = 0 := by
+  refine ContinuousLinearMap.extend_unique _
+    (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ) _ ?_
+  ext z
+  change (0 : globalHilbertOmega L Ω hΩ)
+      = (UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+          (localEmbedΩPreL (L := L) Ω hΩ Λ₀
+            (0 : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) z)
+  -- localEmbedΩPreL Λ₀ 0 z = 0 by induction.
+  rw [show localEmbedΩPreL (L := L) Ω hΩ Λ₀
+          (0 : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) z = 0 from ?_]
+  · exact (map_zero _).symm
+  refine z.induction_on (fun Λ x => ?_)
+  change localEmbedΩPreL (L := L) Ω hΩ Λ₀
+        (0 : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+        (tensorPreHilbertΩ.of Ω hΩ Λ x)
+      = 0
+  rw [localEmbedΩPreL_of, localEmbedΩFamily_apply, tensorWithId_zero,
+    ContinuousLinearMap.zero_apply, map_zero]
+
 end LocalNetLike

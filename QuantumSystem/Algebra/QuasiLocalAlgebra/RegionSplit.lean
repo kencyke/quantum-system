@@ -409,4 +409,25 @@ theorem tensorWithId_smul (h : Λ ⊆ Λ') (c : ℂ)
     ContinuousLinearMap.smul_apply, map_smul,
     ContinuousLinearMap.smul_apply, tensorWithId_apply]
 
+/-- Pointwise norm bound `‖tensorWithId h M v‖ ≤ ‖M‖ * ‖v‖`, inherited from
+the operator-norm bound on `tensorWithIdSplit M = mkContinuous _ ‖M‖ _` and
+the isometric relabelling `regionHilbertSplitEquiv h`. -/
+theorem tensorWithId_norm_apply_le (h : Λ ⊆ Λ')
+    (M : regionHilbert (L := L) Λ →L[ℂ] regionHilbert (L := L) Λ)
+    (v : regionHilbert (L := L) Λ') :
+    ‖tensorWithId h M v‖ ≤ ‖M‖ * ‖v‖ := by
+  rw [tensorWithId_apply]
+  rw [LinearIsometryEquiv.norm_map]
+  have hsplit : ‖tensorWithIdSplit (Λ' := Λ') M
+        (regionHilbertSplitEquiv (L := L) h v)‖
+      ≤ ‖M‖ * ‖regionHilbertSplitEquiv (L := L) h v‖ := by
+    have := (tensorWithIdSplit (Λ' := Λ') M).le_opNorm
+      (regionHilbertSplitEquiv (L := L) h v)
+    refine this.trans ?_
+    have hop : ‖tensorWithIdSplit (Λ' := Λ') M‖ ≤ ‖M‖ :=
+      LinearMap.mkContinuous_norm_le _ (norm_nonneg _) _
+    exact mul_le_mul_of_nonneg_right hop (norm_nonneg _)
+  refine hsplit.trans ?_
+  rw [LinearIsometryEquiv.norm_map]
+
 end LocalNetLike
