@@ -680,6 +680,23 @@ theorem localEmbedΩ_coe_apply (Λ₀ : Finset L)
     (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ)]
   rfl
 
+/-- Action of `localEmbedΩ Λ₀ M` on `toComplL z`, the explicit-`toComplL`
+form of `localEmbedΩ_coe_apply`.  The two forms are propositionally equal
+but only the explicit form unifies with goals produced by
+`ContinuousLinearMap.extend_unique`. -/
+private theorem localEmbedΩ_apply_toComplL (Λ₀ : Finset L)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀)
+    (z : tensorPreHilbertΩ L Ω hΩ) :
+    localEmbedΩ (L := L) Ω hΩ Λ₀ M
+        ((UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) z)
+      = (UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+          (localEmbedΩPreL (L := L) Ω hΩ Λ₀ M z) := by
+  rw [localEmbedΩ, ContinuousLinearMap.extend_eq _
+    (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ)]
+  rfl
+
 /-! ### Structural lemmas -/
 
 /-- Identity action: `localEmbedΩ Λ₀ 1 = 1`. -/
@@ -734,5 +751,127 @@ theorem localEmbedΩ_zero (Λ₀ : Finset L) :
       = 0
   rw [localEmbedΩPreL_of, localEmbedΩFamily_apply, tensorWithId_zero,
     ContinuousLinearMap.zero_apply, map_zero]
+
+/-- Additive in `M`: `localEmbedΩ Λ₀ (M + N) = localEmbedΩ Λ₀ M + localEmbedΩ Λ₀ N`. -/
+@[simp]
+theorem localEmbedΩ_add (Λ₀ : Finset L)
+    (M N : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) :
+    localEmbedΩ (L := L) Ω hΩ Λ₀ (M + N)
+      = localEmbedΩ (L := L) Ω hΩ Λ₀ M + localEmbedΩ (L := L) Ω hΩ Λ₀ N := by
+  refine ContinuousLinearMap.extend_unique _
+    (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ) _ ?_
+  ext z
+  change (localEmbedΩ (L := L) Ω hΩ Λ₀ M + localEmbedΩ (L := L) Ω hΩ Λ₀ N)
+        ((UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+            UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) z)
+      = (UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+          (localEmbedΩPreL (L := L) Ω hΩ Λ₀ (M + N) z)
+  rw [ContinuousLinearMap.add_apply, localEmbedΩ_apply_toComplL,
+    localEmbedΩ_apply_toComplL, ← map_add]
+  congr 1
+  -- Goal: localEmbedΩPreL M z + localEmbedΩPreL N z = localEmbedΩPreL (M+N) z
+  refine z.induction_on (fun Λ x => ?_)
+  change localEmbedΩPreL (L := L) Ω hΩ Λ₀ M (tensorPreHilbertΩ.of Ω hΩ Λ x)
+        + localEmbedΩPreL (L := L) Ω hΩ Λ₀ N (tensorPreHilbertΩ.of Ω hΩ Λ x)
+      = localEmbedΩPreL (L := L) Ω hΩ Λ₀ (M + N) (tensorPreHilbertΩ.of Ω hΩ Λ x)
+  rw [localEmbedΩPreL_of, localEmbedΩPreL_of, localEmbedΩPreL_of]
+  rw [localEmbedΩFamily_apply, localEmbedΩFamily_apply, localEmbedΩFamily_apply]
+  rw [← map_add, tensorWithId_add, ContinuousLinearMap.add_apply]
+
+/-- ℂ-linear in `M`: `localEmbedΩ Λ₀ (c • M) = c • localEmbedΩ Λ₀ M`. -/
+@[simp]
+theorem localEmbedΩ_smul (Λ₀ : Finset L) (c : ℂ)
+    (M : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) :
+    localEmbedΩ (L := L) Ω hΩ Λ₀ (c • M)
+      = c • localEmbedΩ (L := L) Ω hΩ Λ₀ M := by
+  refine ContinuousLinearMap.extend_unique _
+    (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ) _ ?_
+  ext z
+  change (c • localEmbedΩ (L := L) Ω hΩ Λ₀ M)
+        ((UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+            UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) z)
+      = (UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+          (localEmbedΩPreL (L := L) Ω hΩ Λ₀ (c • M) z)
+  rw [ContinuousLinearMap.smul_apply, localEmbedΩ_apply_toComplL, ← map_smul]
+  congr 1
+  -- Goal: c • localEmbedΩPreL M z = localEmbedΩPreL (c • M) z
+  refine z.induction_on (fun Λ x => ?_)
+  change c • localEmbedΩPreL (L := L) Ω hΩ Λ₀ M (tensorPreHilbertΩ.of Ω hΩ Λ x)
+      = localEmbedΩPreL (L := L) Ω hΩ Λ₀ (c • M) (tensorPreHilbertΩ.of Ω hΩ Λ x)
+  rw [localEmbedΩPreL_of, localEmbedΩPreL_of]
+  rw [localEmbedΩFamily_apply, localEmbedΩFamily_apply]
+  rw [← map_smul, tensorWithId_smul, ContinuousLinearMap.smul_apply]
+
+/-- Multiplicative in `M`: `localEmbedΩ Λ₀ (M.comp N)
+= (localEmbedΩ Λ₀ M).comp (localEmbedΩ Λ₀ N)`. -/
+@[simp]
+theorem localEmbedΩ_mul (Λ₀ : Finset L)
+    (M N : regionHilbert (L := L) Λ₀ →L[ℂ] regionHilbert (L := L) Λ₀) :
+    localEmbedΩ (L := L) Ω hΩ Λ₀ (M.comp N)
+      = (localEmbedΩ (L := L) Ω hΩ Λ₀ M).comp
+          (localEmbedΩ (L := L) Ω hΩ Λ₀ N) := by
+  refine ContinuousLinearMap.extend_unique _
+    (denseRange_toComplL Ω hΩ) (isUniformInducing_toComplL Ω hΩ) _ ?_
+  ext z
+  change ((localEmbedΩ (L := L) Ω hΩ Λ₀ M).comp (localEmbedΩ (L := L) Ω hΩ Λ₀ N))
+        ((UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+            UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ)) z)
+      = (UniformSpace.Completion.toComplL : tensorPreHilbertΩ L Ω hΩ →L[ℂ]
+          UniformSpace.Completion (tensorPreHilbertΩ L Ω hΩ))
+          (localEmbedΩPreL (L := L) Ω hΩ Λ₀ (M.comp N) z)
+  rw [ContinuousLinearMap.comp_apply, localEmbedΩ_apply_toComplL,
+    localEmbedΩ_apply_toComplL]
+  congr 1
+  -- Goal: localEmbedΩPreL M (localEmbedΩPreL N z) = localEmbedΩPreL (M.comp N) z
+  refine z.induction_on (fun Λ x => ?_)
+  change localEmbedΩPreL (L := L) Ω hΩ Λ₀ M
+          (localEmbedΩPreL (L := L) Ω hΩ Λ₀ N (tensorPreHilbertΩ.of Ω hΩ Λ x))
+      = localEmbedΩPreL (L := L) Ω hΩ Λ₀ (M.comp N) (tensorPreHilbertΩ.of Ω hΩ Λ x)
+  -- Reduce both sides to canonical forms via `of_regionEmbedLeΩ` to a common
+  -- ambient region `(Λ ∪ Λ₀) ∪ Λ₀`, then apply `tensorWithId_mul` and the
+  -- `regionEmbedLeΩ`/`tensorWithId` coherence.
+  rw [localEmbedΩPreL_of, localEmbedΩFamily_apply,
+    localEmbedΩPreL_apply, localEmbedΩPre_of,
+    localEmbedΩFamily_apply, localEmbedΩPreL_apply, localEmbedΩPre_of,
+    localEmbedΩFamily_apply]
+  -- Inner regionEmbedLeΩ-tensorWithId-regionEmbedLeΩ on RHS-of-of-((Λ∪Λ₀)∪Λ₀):
+  -- push the outer regionEmbedLeΩ inside via coherence, then merge the two
+  -- regionEmbedLeΩ via functoriality, then collapse via `tensorWithId_mul`.
+  rw [regionEmbedLeΩ_tensorWithId_apply
+    (Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀))
+    (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀)) Ω hΩ N]
+  rw [regionEmbedLeΩ_comp_apply Ω hΩ
+    (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀))
+    (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀)) x]
+  -- Now both arguments of the outer/inner tensorWithId are at the same
+  -- inclusion `Λ₀ ⊆ (Λ ∪ Λ₀) ∪ Λ₀`, so `tensorWithId_mul` collapses them.
+  rw [show
+    (tensorWithId
+      ((Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀)).trans
+        (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀))) M)
+        ((tensorWithId
+          ((Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀)).trans
+            (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀))) N)
+          (regionEmbedLeΩ Ω hΩ
+            ((Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀)).trans
+              (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀))) x))
+    = (tensorWithId
+        ((Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀)).trans
+          (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀))) (M.comp N))
+        (regionEmbedLeΩ Ω hΩ
+          ((Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀)).trans
+            (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀))) x) from by
+    rw [← ContinuousLinearMap.comp_apply, ← tensorWithId_mul]]
+  -- Pull the outer regionEmbedLeΩ back out via coherence (reverse direction),
+  -- then collapse via `of_regionEmbedLeΩ` to lower the `of` index.
+  rw [← regionEmbedLeΩ_comp_apply Ω hΩ
+    (Finset.subset_union_left (s₁ := Λ) (s₂ := Λ₀))
+    (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀)) x]
+  rw [← regionEmbedLeΩ_tensorWithId_apply
+    (Finset.subset_union_right (s₁ := Λ) (s₂ := Λ₀))
+    (Finset.subset_union_left (s₁ := Λ ∪ Λ₀) (s₂ := Λ₀)) Ω hΩ (M.comp N)]
+  rw [tensorPreHilbertΩ.of_regionEmbedLeΩ]
 
 end LocalNetLike
