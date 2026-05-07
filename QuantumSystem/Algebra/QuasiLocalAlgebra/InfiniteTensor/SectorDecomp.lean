@@ -419,4 +419,25 @@ noncomputable def sectorEmbedOfBRClass (c : Quotient (c0Equiv (L := L))) :
   toLinearMap := lp.lsingle 2 c
   norm_map' x := lp.norm_single (by norm_num : (0 : ENNReal) < 2) c x
 
+/-! ### Sector isomorphism for equal unit families -/
+
+/-- The sectors `SectorHilbert Ω` and `SectorHilbert Ω'` coincide via
+`Eq.mpr` when the underlying unit families are equal.
+
+This is the trivial diagonal case of the BR sector-isomorphism question.
+The full statement
+"`Ω, Ω'` ℓ²-equivalent (or C₀-equivalent) ⇒ `SectorHilbert Ω ≃ₗᵢ[ℂ]
+SectorHilbert Ω'`"
+requires constructing a unitary intertwining the two directed colimits via
+an infinite-product phase normalisation; that construction is left for
+follow-up work. -/
+noncomputable def sectorEquivOfEq {Ω Ω' : UnitFamily L} (h : Ω = Ω') :
+    SectorHilbert Ω ≃ₗᵢ[ℂ] SectorHilbert Ω' :=
+  h ▸ LinearIsometryEquiv.refl ℂ (SectorHilbert Ω)
+
+@[simp]
+theorem sectorEquivOfEq_rfl (Ω : UnitFamily L) :
+    sectorEquivOfEq (rfl : Ω = Ω) = LinearIsometryEquiv.refl ℂ (SectorHilbert Ω) :=
+  rfl
+
 end LocalNetLike
