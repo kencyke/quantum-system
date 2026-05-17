@@ -3,6 +3,7 @@ module
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.Analysis.InfiniteTensor.Completion
 public import QuantumSystem.Analysis.InfiniteTensor.SectorEquiv
+public import QuantumSystem.Analysis.InfiniteTensor.SectorIsometry
 
 /-!
 # Bratteli–Robinson sector decomposition Hilbert space
@@ -71,8 +72,12 @@ C₀-equivalence classes `q : Quotient c0Equiv`, where `Quotient.out` picks a
 representative of each class.
 
 This is the *separable* sector decomposition (one summand per `c0Equiv`
-class), **not** the non-separable von Neumann complete tensor product. -/
-noncomputable def decomposableTensorProduct : Type _ :=
+class), **not** the non-separable von Neumann complete tensor product.
+
+Declared `abbrev` so that `lp`-level lemmas (`lp.norm_single`,
+`lp.lsingle`, …) apply transparently to elements of
+`decomposableTensorProduct H` without manual `unfold`. -/
+noncomputable abbrev decomposableTensorProduct : Type _ :=
   lp (fun q : Quotient (UnitFamily.c0Equiv (H := H)) =>
         UnitFamily.ITPSector (H := H) q.out) 2
 
@@ -100,20 +105,55 @@ end decomposableTensorProduct
 noncomputable instance instDecidableEqQuotient :
     DecidableEq (Quotient (UnitFamily.c0Equiv (H := H))) := Classical.decEq _
 
-/-! ## Pending: per-sector embeddings into the decomposable space
+/-! ## Per-sector embeddings into the decomposable space
 
-The natural sector-embedding `sectorEmbed Ω : ITPSector H Ω →ₗᵢ[ℂ]
-decomposableTensorProduct H` is split into two cases:
+The sector embedding `sectorEmbed Ω : ITPSector H Ω →ₗᵢ[ℂ]
+decomposableTensorProduct H` is built in two stages:
 
-* For `Ω = q.out` (the chosen representative of its `c0Equiv`-class), the
-  embedding is `lp.single` on slot `q`.
-* For general `Ω` in a class, the embedding requires the sector-isometry
-  `sectorEquivOfEquivalent : c0Equiv.r Ω q.out → ITPSector H Ω ≃ₗᵢ[ℂ]
-  ITPSector H q.out` from Phase 3a (currently pending), composed with the
-  representative-case embedding.
+* **Representative case** (`sectorEmbedRepr q`).  For `Ω = q.out` (the
+  chosen representative of its `c0Equiv`-class), the embedding is
+  `lp.lsingle 2 q` packaged as a `LinearIsometry` via `lp.norm_single`.
+* **General case** (`sectorEmbed Ω`).  Any `Ω` is first transported to its
+  representative `(⟦Ω⟧ : Quotient c0Equiv).out` via
+  `sectorEquivOfEquivalent` (`SectorIsometry.lean`, Route 2,
+  non-canonical), then handed to the representative case.
 
-The representative-case embedding is structurally `lp.lsingle 2 q`; its
-packaging as a `LinearIsometry` is folded into the Phase 3a deliverable so
-that the general-`Ω` and representative-`Ω` cases share a single API. -/
+The construction is non-canonical: `sectorEquivOfEquivalent` consumes
+per-site rotations via `Classical.choice`.  The norm preservation
+property (and hence the type of `sectorEmbed`) is canonical. -/
+
+open UnitFamily in
+/-- The sector embedding `sectorEmbed Ω : ITPSector H Ω →ₗᵢ[ℂ]
+decomposableTensorProduct H`.
+
+The construction composes two stages:
+
+* **Sector transport** (non-canonical, `Classical.choice`-based):
+  `sectorEquivOfEquivalent` maps `ITPSector H Ω` isometrically to
+  `ITPSector H q.out`, where `q = ⟦Ω⟧ : Quotient c0Equiv`.
+* **Representative case**: `lp.lsingle 2 q` packaged as a `LinearIsometry`
+  via `lp.norm_single`, injecting `ITPSector H q.out` into the
+  `q`-summand of `decomposableTensorProduct H = lp (fun q' => ITPSector
+  H q'.out) 2`.
+
+**Non-canonical**: the per-site rotations inside
+`sectorEquivOfEquivalent` are chosen via `Classical.choice`.  The
+isometry property (norm preservation) is canonical regardless. -/
+noncomputable def sectorEmbed (Ω : UnitFamily H) :
+    UnitFamily.ITPSector (H := H) Ω →ₗᵢ[ℂ] decomposableTensorProduct H := by
+  let E : Quotient (UnitFamily.c0Equiv (H := H)) → Type _ :=
+    fun q' => UnitFamily.ITPSector (H := H) q'.out
+  let q : Quotient (UnitFamily.c0Equiv (H := H)) := Quotient.mk'' Ω
+  have hrel : UnitFamily.c0Rel Ω q.out :=
+    UnitFamily.c0Rel.symm
+      (Quotient.mk_out (s := UnitFamily.c0Equiv (H := H)) Ω)
+  let g : UnitFamily.ITPSector (H := H) Ω →ₗᵢ[ℂ] E q :=
+    (UnitFamily.sectorEquivOfEquivalent Ω q.out hrel).toLinearIsometry
+  let f : E q →ₗᵢ[ℂ] lp E 2 := by
+    refine ⟨(lp.lsingle 2 q : E q →ₗ[ℂ] lp E 2), ?_⟩
+    intro x
+    have hp : (0 : ENNReal) < 2 := by norm_num
+    exact lp.norm_single (E := E) hp q x
+  exact f.comp g
 
 end InfiniteTensor

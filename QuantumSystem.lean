@@ -37,7 +37,8 @@ public import QuantumSystem.Analysis.Entropy.SSA
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 public import QuantumSystem.Analysis.InfiniteTensor.Completion
 public import QuantumSystem.Analysis.InfiniteTensor.Extension
-public import QuantumSystem.Analysis.InfiniteTensor.LatticeBridge
+public import QuantumSystem.Analysis.InfiniteTensor.OperatorExtension
+public import QuantumSystem.Analysis.InfiniteTensor.OperatorLift
 public import QuantumSystem.Analysis.InfiniteTensor.Product
 public import QuantumSystem.Analysis.InfiniteTensor.SectorDecomp
 public import QuantumSystem.Analysis.InfiniteTensor.SectorEquiv

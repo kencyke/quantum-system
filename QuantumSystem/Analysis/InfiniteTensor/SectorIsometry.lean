@@ -933,6 +933,24 @@ noncomputable def noncanonicalSectorEquivAny :
         UniformSpace.Completion.norm_coe, UniformSpace.Completion.norm_coe]
       exact f.norm_map a }
 
+/-- The general `c0Rel` case of the sector isometry theorem, supplied via
+Route 2 (`noncanonicalSectorEquivAny`).
+
+The `c0Rel` hypothesis is recorded for API correctness — placing `Ω` and
+`Ω'` in the same Bratteli–Robinson sector class is what makes the
+identification *meaningful* at the level of physics — but is **not
+consumed** by the construction: per-site rotations from `chooseRotation`
+are total at the finite-dimensional Hilbert level (no `c0Rel` summability
+needed for the algebraic colimit / completion lift to exist).
+
+**Non-canonical**: the resulting isometry depends on `Classical.choice`
+via `chooseRotation`.  Consumers requiring functoriality (`refl`, `symm`,
+`trans` laws) should instead supply a `SectorEquivData Ω Ω'` and use
+`sectorEquivOfData`. -/
+noncomputable def sectorEquivOfEquivalent (_h : c0Rel Ω Ω') :
+    ITPSector (H := H) Ω ≃ₗᵢ[ℂ] ITPSector (H := H) Ω' :=
+  noncanonicalSectorEquivAny Ω Ω'
+
 /-! ### Phase 4: coherent same-index sector transport (`SectorEquivData`)
 
 The wrappers `sectorEquivAny` and `sectorEquivOfEquivalent` above are
@@ -1644,6 +1662,125 @@ noncomputable def sectorEquivOfReindexedData
       rw [ContinuousLinearMap.completion_apply_coe fc a,
         UniformSpace.Completion.norm_coe, UniformSpace.Completion.norm_coe]
       exact f.norm_map a }
+
+/-! ### Phase 5b: Coherent `c0Rel`-indexed sector transport (`c0Transport`)
+
+Given `h : c0Rel Ω Ω'`, transport between sectors `ITPSector Ω` and
+`ITPSector Ω'` via the canonical representative `(⟦Ω⟧ : Quotient c0Equiv).out`.
+Since `Ω ≈ Ω'` in `c0Equiv`, the quotient-classes agree (`⟦Ω⟧ = ⟦Ω'⟧`), and
+both endpoints share a common representative.
+
+The construction is non-canonical (depends on `chooseRotation` via
+`noncanonicalSectorEquivAny`), but the **functorial laws**
+`c0Transport_refl/_symm/_trans` hold by the quotient-representative
+trick: the transport `Ω → Ω'` factors through the shared representative,
+so refl/symm/trans manipulations reduce to algebra in the group
+`E ≃ₗᵢ[ℂ] E` (Mathlib's `LinearIsometryEquiv` group structure) and a
+single `Quotient.sound` rewrite. -/
+
+section C0Transport
+
+/-! #### `SectorEquivData.ofC0Rel`: non-canonical wrapping into `SectorEquivData` -/
+
+/-- Cocycle compatibility for `regionRot` on elementary tensors at the
+`regionTensor` level (a `regionMap`-level analogue of
+`forwardFiberAny_cocycle_tprod`). -/
+theorem regionRot_regionEmbedLe_compat_tprod (Ω Ω' : UnitFamily H)
+    {S T : Finset ι} (hST : S ⊆ T) (ξ : (s : {x // x ∈ S}) → H s.val) :
+    regionRot Ω Ω' T (regionEmbedLe Ω hST (PiTensorProduct.tprod ℂ ξ))
+      = regionEmbedLe Ω' hST (regionRot Ω Ω' S (PiTensorProduct.tprod ℂ ξ)) := by
+  rw [regionEmbedLe_tprod, regionRot_tprod, regionRot_tprod, regionEmbedLe_tprod]
+  congr 1
+  funext s'
+  exact rotateExtendVec_eq Ω Ω' S T hST ξ s'
+
+/-- Cocycle compatibility for `regionRot` on all `regionTensor` elements. -/
+theorem regionRot_regionEmbedLe_compat (Ω Ω' : UnitFamily H)
+    {S T : Finset ι} (hST : S ⊆ T) (x : regionTensor S (H := H)) :
+    regionRot Ω Ω' T (regionEmbedLe Ω hST x)
+      = regionEmbedLe Ω' hST (regionRot Ω Ω' S x) := by
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r ξ =>
+    simp only [map_smul]
+    congr 1
+    exact regionRot_regionEmbedLe_compat_tprod Ω Ω' hST ξ
+  | add x₁ x₂ ih₁ ih₂ =>
+    simp only [map_add, ih₁, ih₂]
+
+namespace SectorEquivData
+
+/-- Non-canonical coherent transport data derived from a `c0Rel` witness,
+built from per-site rotations `chooseRotation Ω Ω' s`.
+
+**Non-canonical**: the underlying rotations depend on `Classical.choice`,
+so this `SectorEquivData` does not satisfy strict refl/symm/trans
+identities at the `regionMap` level.  For the canonical functorial
+transport at the `ITPSector` level, use `c0Transport` instead — it
+factors through a shared `Quotient c0Equiv`-representative and is built
+to satisfy `c0Transport_refl/_symm/_trans`. -/
+noncomputable def ofC0Rel (_h : c0Rel Ω Ω') : SectorEquivData Ω Ω' where
+  regionMap := regionRot Ω Ω'
+  regionMap_compat := fun {_ _} hST x => regionRot_regionEmbedLe_compat Ω Ω' hST x
+
+end SectorEquivData
+
+/-! #### `c0Transport`: canonical `ITPSector`-level transport -/
+
+/-- Coherent same-sector transport derived from a `c0Rel` witness.
+
+Defined as the round-trip through the canonical `Quotient c0Equiv`
+representative: `ITPSector Ω → ITPSector (⟦Ω⟧).out → ITPSector Ω'`.  The
+two legs use `noncanonicalSectorEquivAny` and are non-canonical, but the
+**shared representative** makes the construction functorial in `c0Rel`
+(see `c0Transport_refl/_symm/_trans`). -/
+noncomputable def c0Transport (h : c0Rel Ω Ω') :
+    ITPSector (H := H) Ω ≃ₗᵢ[ℂ] ITPSector (H := H) Ω' :=
+  let _ := h
+  (noncanonicalSectorEquivAny Ω (Quotient.mk c0Equiv Ω).out).trans
+    (noncanonicalSectorEquivAny Ω' (Quotient.mk c0Equiv Ω).out).symm
+
+/-- **Identity law** for `c0Transport`: the canonical transport along
+`c0Rel.refl Ω` is the identity on `ITPSector Ω`. -/
+@[simp]
+theorem c0Transport_refl (Ω : UnitFamily H) :
+    c0Transport (c0Rel.refl Ω)
+      = LinearIsometryEquiv.refl ℂ (ITPSector (H := H) Ω) := by
+  unfold c0Transport
+  exact LinearIsometryEquiv.self_trans_symm _
+
+/-- **Inverse law** for `c0Transport`: the inverse of the transport along
+`h : c0Rel Ω Ω'` agrees with the transport along the symmetric witness
+`h.symm : c0Rel Ω' Ω`. -/
+theorem c0Transport_symm {Ω Ω' : UnitFamily H} (h : c0Rel Ω Ω') :
+    (c0Transport h).symm = c0Transport h.symm := by
+  have hQ : (Quotient.mk c0Equiv Ω : Quotient c0Equiv) = Quotient.mk c0Equiv Ω' :=
+    Quotient.sound h
+  have hout : ((Quotient.mk c0Equiv Ω' : Quotient c0Equiv).out : UnitFamily H)
+      = (Quotient.mk c0Equiv Ω : Quotient c0Equiv).out := by rw [hQ]
+  unfold c0Transport
+  rw [LinearIsometryEquiv.symm_trans, LinearIsometryEquiv.symm_symm, hout]
+
+/-- **Composition law** for `c0Transport`: transporting along the
+composed `c0Rel` witness `h₁.trans h₂` agrees with composing the
+individual transports. -/
+theorem c0Transport_trans {Ω Ω' Ω'' : UnitFamily H}
+    (h₁ : c0Rel Ω Ω') (h₂ : c0Rel Ω' Ω'') :
+    (c0Transport h₁).trans (c0Transport h₂)
+      = c0Transport (h₁.trans h₂) := by
+  have hQ : (Quotient.mk c0Equiv Ω : Quotient c0Equiv) = Quotient.mk c0Equiv Ω' :=
+    Quotient.sound h₁
+  have hout : ((Quotient.mk c0Equiv Ω' : Quotient c0Equiv).out : UnitFamily H)
+      = (Quotient.mk c0Equiv Ω : Quotient c0Equiv).out := by rw [hQ]
+  unfold c0Transport
+  rw [hout]
+  -- After `hout`-rewrite, both middle factors `(NSEA Ω' rep).symm` and
+  -- `NSEA Ω' rep` share the same representative and cancel pointwise via
+  -- `apply_symm_apply`.
+  ext x
+  simp only [LinearIsometryEquiv.trans_apply,
+    LinearIsometryEquiv.apply_symm_apply]
+
+end C0Transport
 
 end UnitFamily
 
