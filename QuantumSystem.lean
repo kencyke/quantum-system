@@ -35,6 +35,13 @@ public import QuantumSystem.Analysis.Entropy.Regularize
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
 public import QuantumSystem.Analysis.Entropy.SSA
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
+public import QuantumSystem.Analysis.InfiniteTensor.Completion
+public import QuantumSystem.Analysis.InfiniteTensor.Extension
+public import QuantumSystem.Analysis.InfiniteTensor.LatticeBridge
+public import QuantumSystem.Analysis.InfiniteTensor.Product
+public import QuantumSystem.Analysis.InfiniteTensor.SectorDecomp
+public import QuantumSystem.Analysis.InfiniteTensor.SectorEquiv
+public import QuantumSystem.Analysis.InfiniteTensor.SectorIsometry
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
@@ -55,7 +62,9 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.C0Triangle
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.PiTensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.UnitaryMapping
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
