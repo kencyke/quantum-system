@@ -26,22 +26,29 @@
   **Why:** tactics that compile by accident can mask unsoundness; this
   project mandates a fully axiom-free codebase.
 
-**Simplicity first.**
-- Formalize only what the current task requires. No speculative
-  generalizations, no helper lemmas "for later", no premature abstraction
-  across `CStarAlgebra` / `StarAlgebra` / `NormedAlgebra`.
-- Prefer the most direct proof that closes the goal over the cleverest one.
-  If `simp` / `linarith` / `aesop` suffices, do not unfold by hand.
-  **Why:** every extra declaration is surface area to maintain and to keep
-  axiom-free; speculative API decays faster than it earns interest.
-
-**Surgical changes.**
-- Edit only files demanded by the task. Resist opportunistic renames,
-  whitespace fixes, or namespace reshuffles in unrelated proofs.
-- Do not rewrite existing proofs that already compile. If a proof is ugly
-  but correct, leave it; flag it in review rather than touching it.
-  **Why:** Mathlib-style review is line-noise sensitive, and unrelated edits
-  break `git blame` and inflate merge conflicts.
+**Abstraction first.**
+- Aim for the abstraction level used in the source literature
+  (`[CStarAlgebra A]`, `[InnerProductSpace ℂ H]`, general index types,
+  general lattices) from the *first* commit, not as a later refactor.
+- Do not specialise to a concrete model (a fixed matrix size, a chosen
+  Hilbert-space realisation, a chosen lattice) just because the
+  immediate task uses only that case, and do not weaken hypotheses to
+  match whatever fragment Mathlib currently has the most lemmas for —
+  follow the literature, even when it forces you to build supporting
+  API that Mathlib does not yet provide.
+- Prefer the most direct proof that closes the goal over the cleverest
+  one.  If `simp` / `linarith` / `aesop` suffices, do not unfold by hand.
+  **Why:** the "build the simple specialised version first, generalise
+  later" workflow has repeatedly failed in this project — by the time
+  the generalisation is attempted, the specialised proofs and types are
+  wired into so many call sites that the refactor cost dwarfs the
+  original effort and the extension never lands.  The literature we are
+  formalising (Bratteli–Robinson, Naaijkens, Araki) already states its
+  results at the abstract C\*-algebra / Hilbert-space level, so
+  mirroring *that* level from day one — irrespective of Mathlib's
+  current coverage — both avoids the expensive late refactor and lets
+  one lemma serve every concrete model.  Direct tactic-driven proofs
+  keep the abstraction readable.
 
 **Goal-driven verification (Definition of Done).**
 - A change is done only when `lake build` completes with no new errors or
