@@ -41,7 +41,7 @@ open scoped LocalNetLike
 namespace LocalNetLike
 
 variable {L : Type*} [DecidableEq L] [LocalNetLike L]
-    [hL : ∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)]
+    {Ω : (s : L) → LocalNetLike.localIdx (L := L) s}
 
 /-! ### Index-level helpers for `Λ ⊆ Λ'` -/
 
@@ -58,7 +58,6 @@ def regionLiftSwap {Λ Λ' : Finset L} (_h : Λ ⊆ Λ')
     regionIdx (L := L) Λ' :=
   fun s => if h_s : s.1 ∈ Λ then b ⟨s.1, h_s⟩ else a' s
 
-omit hL in
 @[simp]
 theorem regionLiftSwap_apply_of_mem {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (b : regionIdx (L := L) Λ) (a' : regionIdx (L := L) Λ')
@@ -66,7 +65,6 @@ theorem regionLiftSwap_apply_of_mem {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     regionLiftSwap h b a' s = b ⟨s.1, hs⟩ :=
   dif_pos hs
 
-omit hL in
 @[simp]
 theorem regionLiftSwap_apply_of_not_mem {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (b : regionIdx (L := L) Λ) (a' : regionIdx (L := L) Λ')
@@ -74,10 +72,10 @@ theorem regionLiftSwap_apply_of_not_mem {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     regionLiftSwap h b a' s = a' s :=
   dif_neg hs
 
-/-- Compatibility: a `Λ'`-swap on `g : globalIdx L` whose `Λ'`-part has been
+/-- Compatibility: a `Λ'`-swap on `g : globalIdx L Ω` whose `Λ'`-part has been
 itself swapped on `Λ` collapses to a single `Λ`-swap. -/
 theorem globalSwap_regionLiftSwap_regionRestrict {Λ Λ' : Finset L}
-    (h : Λ ⊆ Λ') (b : regionIdx (L := L) Λ) (g : globalIdx L) :
+    (h : Λ ⊆ Λ') (b : regionIdx (L := L) Λ) (g : globalIdx L Ω) :
     globalSwap Λ' (regionLiftSwap h b (regionRestrict Λ' g)) g
       = globalSwap Λ b g := by
   apply Subtype.ext
@@ -106,7 +104,6 @@ noncomputable def vRestrict {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
   WithLp.toLp 2 (fun b : regionIdx (L := L) Λ =>
     (v' : regionIdx (L := L) Λ' → ℂ) (regionLiftSwap h b a'))
 
-omit hL in
 @[simp]
 theorem vRestrict_apply {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (v' : ℋ(Λ')) (a' : regionIdx (L := L) Λ')
@@ -122,7 +119,6 @@ noncomputable def regionLiftCoeff {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (v' : ℋ(Λ')) (a' : regionIdx (L := L) Λ') : ℂ :=
   (M (vRestrict h v' a') : regionIdx (L := L) Λ → ℂ) (regionLiftRestrict h a')
 
-omit hL in
 /-- `regionLiftCoeff h M` is additive in the `H_{Λ'}` argument. -/
 private theorem regionLiftCoeff_add {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
@@ -137,7 +133,6 @@ private theorem regionLiftCoeff_add {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
   rw [hadd, M.map_add]
   rfl
 
-omit hL in
 /-- `regionLiftCoeff h M` is `ℂ`-linear in the `H_{Λ'}` argument. -/
 private theorem regionLiftCoeff_smul {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
@@ -178,7 +173,6 @@ noncomputable def regionLift {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     ℋ(Λ') →L[ℂ] ℋ(Λ') :=
   LinearMap.toContinuousLinearMap (regionLiftLM h M)
 
-omit hL in
 @[simp]
 theorem regionLift_apply_apply {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (M : ℋ(Λ) →L[ℂ] ℋ(Λ))
@@ -191,7 +185,7 @@ theorem regionLift_apply_apply {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 /-- The local restriction at `Λ` factors through the lifted restriction at
 `Λ'`: `vRestrict h (wRestrict Λ' w g) (regionRestrict Λ' g) = wRestrict Λ w g`. -/
 theorem vRestrict_wRestrict_regionRestrict {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (w : globalHilbert L) (g : globalIdx L) :
+    (w : globalHilbert L Ω) (g : globalIdx L Ω) :
     vRestrict h (wRestrict Λ' w g) (regionRestrict Λ' g)
       = wRestrict Λ w g := by
   ext b
@@ -201,17 +195,17 @@ theorem vRestrict_wRestrict_regionRestrict {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 /-- The Λ-part of a global tuple agrees with the Λ-restriction of its
 Λ'-restriction (when `Λ ⊆ Λ'`). -/
 theorem regionLiftRestrict_regionRestrict {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
-    (g : globalIdx L) :
+    (g : globalIdx L Ω) :
     regionLiftRestrict h (regionRestrict Λ' g) = regionRestrict Λ g := by
   funext s
   rfl
 
 /-- Key compatibility: lifting `M` from `Λ` to `Λ'` and embedding via
-`localEmbed Λ'` gives the same operator on `globalHilbert L` as embedding
+`localEmbed Λ'` gives the same operator on `globalHilbert L Ω` as embedding
 `M` directly via `localEmbed Λ`. -/
 theorem localEmbed_regionLift_eq {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
     (M : ℋ(Λ) →L[ℂ] ℋ(Λ)) :
-    localEmbed Λ' (regionLift h M) = localEmbed Λ M := by
+    localEmbed (Ω := Ω) Λ' (regionLift h M) = localEmbed (Ω := Ω) Λ M := by
   ext w g
   rw [localEmbed_apply_apply, localEmbed_apply_apply]
   unfold localEmbedCoeff
@@ -229,7 +223,7 @@ theorem localEmbed_regionLift_eq {Λ Λ' : Finset L} (h : Λ ⊆ Λ')
 /-- Isotony: for `Λ ⊆ Λ'`, the local subalgebra at `Λ` is contained in the
 local subalgebra at `Λ'`.  This is Verch 2025 §1.2 axiom (i). -/
 theorem localSubalgebra_le_of_subset {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
-    localSubalgebra Λ ≤ localSubalgebra Λ' := by
+    localSubalgebra (Ω := Ω) Λ ≤ localSubalgebra (Ω := Ω) Λ' := by
   intro T hT
   obtain ⟨M, hM⟩ := (mem_localSubalgebra Λ T).mp hT
   exact (mem_localSubalgebra Λ' T).mpr ⟨regionLift h M, by rw [localEmbed_regionLift_eq, hM]⟩

@@ -6,8 +6,8 @@ public import QuantumSystem.Algebra.QuasiLocalAlgebra.LocalEmbed
 # Locality of the quasi-local algebra (Phase 5'd)
 
 We verify the locality axiom of Naaijkens 2012 §1.3 / Verch 2025 §1.2 (axiom
-ii) for the quasi-local algebra `quasiLocal L`: operators supported on
-disjoint finite regions commute.
+ii) for the represented quasi-local algebra `quasiLocal L Ω`: operators
+supported on disjoint finite regions commute.
 
 Concretely, for `Λ₁, Λ₂ : Finset L` with `Disjoint Λ₁ Λ₂` and arbitrary
 `M₁ : regionHilbert Λ₁ →L[ℂ] regionHilbert Λ₁`,
@@ -43,13 +43,13 @@ open scoped LocalNetLike
 namespace LocalNetLike
 
 variable {L : Type*} [DecidableEq L] [LocalNetLike L]
-    [hL : ∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)]
+    {Ω : (s : L) → LocalNetLike.localIdx (L := L) s}
 
 /-- Swaps on disjoint regions commute. -/
 theorem globalSwap_comm_disjoint
     {Λ₁ Λ₂ : Finset L} (hd : Disjoint Λ₁ Λ₂)
     (f₁ : regionIdx (L := L) Λ₁) (f₂ : regionIdx (L := L) Λ₂)
-    (g : globalIdx L) :
+    (g : globalIdx L Ω) :
     globalSwap Λ₁ f₁ (globalSwap Λ₂ f₂ g)
       = globalSwap Λ₂ f₂ (globalSwap Λ₁ f₁ g) := by
   apply Subtype.ext
@@ -69,7 +69,7 @@ finite region.  This expresses the geometric fact that `Λ₁` and `Λ₂` are
 "non-overlapping" sites. -/
 theorem regionRestrict_globalSwap_disjoint_left
     {Λ₁ Λ₂ : Finset L} (hd : Disjoint Λ₁ Λ₂)
-    (f₁ : regionIdx (L := L) Λ₁) (g : globalIdx L) :
+    (f₁ : regionIdx (L := L) Λ₁) (g : globalIdx L Ω) :
     regionRestrict Λ₂ (globalSwap Λ₁ f₁ g) = regionRestrict Λ₂ g := by
   funext s
   have h_ns : s.1 ∉ Λ₁ := fun h => Finset.disjoint_right.mp hd s.2 h
@@ -85,7 +85,7 @@ theorem localEmbed_commute_of_disjoint
     {Λ₁ Λ₂ : Finset L} (hd : Disjoint Λ₁ Λ₂)
     (M₁ : ℋ(Λ₁) →L[ℂ] ℋ(Λ₁))
     (M₂ : ℋ(Λ₂) →L[ℂ] ℋ(Λ₂)) :
-    Commute (localEmbed Λ₁ M₁) (localEmbed Λ₂ M₂) := by
+    Commute (localEmbed (Ω := Ω) Λ₁ M₁) (localEmbed (Ω := Ω) Λ₂ M₂) := by
   -- Show `localEmbed Λ₁ M₁ * localEmbed Λ₂ M₂ = localEmbed Λ₂ M₂ * localEmbed Λ₁ M₁`.
   change localEmbed Λ₁ M₁ * localEmbed Λ₂ M₂
         = localEmbed Λ₂ M₂ * localEmbed Λ₁ M₁
@@ -105,24 +105,24 @@ theorem localEmbed_commute_of_disjoint
   -- Expand the inner term via localEmbedCoeff_eq_sum, then simplify with disjointness.
   have hd' : Disjoint Λ₂ Λ₁ := hd.symm
   have hLHS_inner : ∀ f₁ : regionIdx (L := L) Λ₁,
-      ((localEmbed Λ₂ M₂ w : globalHilbert L) : globalIdx L → ℂ)
+      ((localEmbed Λ₂ M₂ w : globalHilbert L Ω) : globalIdx L Ω → ℂ)
             (globalSwap Λ₁ f₁ g)
         = ∑ f₂ : regionIdx (L := L) Λ₂,
             ((M₂ (EuclideanSpace.single f₂ (1 : ℂ)) : regionIdx (L := L) Λ₂ → ℂ)
                 (regionRestrict Λ₂ g))
-              * ((w : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ)
+              * ((w : lp (fun _ : globalIdx L Ω => ℂ) 2) : globalIdx L Ω → ℂ)
                   (globalSwap Λ₂ f₂ (globalSwap Λ₁ f₁ g)) := by
     intro f₁
     rw [localEmbed_apply_apply, localEmbedCoeff_eq_sum]
     refine Finset.sum_congr rfl fun f₂ _ => ?_
     rw [regionRestrict_globalSwap_disjoint_left hd f₁ g]
   have hRHS_inner : ∀ f₂ : regionIdx (L := L) Λ₂,
-      ((localEmbed Λ₁ M₁ w : globalHilbert L) : globalIdx L → ℂ)
+      ((localEmbed Λ₁ M₁ w : globalHilbert L Ω) : globalIdx L Ω → ℂ)
             (globalSwap Λ₂ f₂ g)
         = ∑ f₁ : regionIdx (L := L) Λ₁,
             ((M₁ (EuclideanSpace.single f₁ (1 : ℂ)) : regionIdx (L := L) Λ₁ → ℂ)
                 (regionRestrict Λ₁ g))
-              * ((w : lp (fun _ : globalIdx L => ℂ) 2) : globalIdx L → ℂ)
+              * ((w : lp (fun _ : globalIdx L Ω => ℂ) 2) : globalIdx L Ω → ℂ)
                   (globalSwap Λ₁ f₁ (globalSwap Λ₂ f₂ g)) := by
     intro f₂
     rw [localEmbed_apply_apply, localEmbedCoeff_eq_sum]
@@ -148,8 +148,9 @@ theorem localEmbed_commute_of_disjoint
 `localSubalgebra Λ₂` whenever `Λ₁` and `Λ₂` are disjoint. -/
 theorem localSubalgebra_commute_of_disjoint
     {Λ₁ Λ₂ : Finset L} (hd : Disjoint Λ₁ Λ₂)
-    {T₁ T₂ : globalHilbert L →L[ℂ] globalHilbert L}
-    (h₁ : T₁ ∈ localSubalgebra Λ₁) (h₂ : T₂ ∈ localSubalgebra Λ₂) :
+    {T₁ T₂ : globalHilbert L Ω →L[ℂ] globalHilbert L Ω}
+    (h₁ : T₁ ∈ localSubalgebra (Ω := Ω) Λ₁)
+    (h₂ : T₂ ∈ localSubalgebra (Ω := Ω) Λ₂) :
     Commute T₁ T₂ := by
   obtain ⟨M₁, hM₁⟩ := (mem_localSubalgebra Λ₁ T₁).mp h₁
   obtain ⟨M₂, hM₂⟩ := (mem_localSubalgebra Λ₂ T₂).mp h₂
