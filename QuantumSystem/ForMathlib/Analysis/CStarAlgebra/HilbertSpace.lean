@@ -57,9 +57,33 @@ noncomputable def asUnitary (U : H ≃ₗᵢ[ℂ] K) : UnitaryMap H K where
     ext y
     simp [LinearIsometryEquiv.adjoint_eq_symm]
 
+namespace UnitaryMap
+
 /-- Unitary maps preserve the inner product. -/
 lemma inner_map_eq (U : UnitaryMap H K) (x y : H) : inner ℂ (U.toContinuousLinearMap x) (U.toContinuousLinearMap y) = inner ℂ x y := by
   simp only [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.comp_apply,
     U.adjoint_comp, ContinuousLinearMap.one_apply]
+
+/-- A unitary map between complex Hilbert spaces, viewed as a linear isometric
+equivalence.  The forward map is `U.toContinuousLinearMap` and its inverse is the
+adjoint `U.toContinuousLinearMap.adjoint`; the relations `U†U = 1` and `UU† = 1`
+make these mutually inverse, and `inner_map_eq` makes the map an isometry. -/
+noncomputable def toLinearIsometryEquiv (U : UnitaryMap H K) : H ≃ₗᵢ[ℂ] K :=
+  LinearEquiv.isometryOfInner
+    { U.toContinuousLinearMap.toLinearMap with
+      invFun := U.toContinuousLinearMap.adjoint
+      left_inv := fun x => by
+        simpa using congrArg (fun f : H →L[ℂ] H => f x) U.adjoint_comp
+      right_inv := fun y => by
+        simpa using congrArg (fun f : K →L[ℂ] K => f y) U.comp_adjoint }
+    U.inner_map_eq
+
+@[simp] lemma toLinearIsometryEquiv_apply (U : UnitaryMap H K) (x : H) :
+    U.toLinearIsometryEquiv x = U.toContinuousLinearMap x := rfl
+
+@[simp] lemma toLinearIsometryEquiv_symm_apply (U : UnitaryMap H K) (y : K) :
+    U.toLinearIsometryEquiv.symm y = U.toContinuousLinearMap.adjoint y := rfl
+
+end UnitaryMap
 
 end UnitaryMap

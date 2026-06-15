@@ -7,6 +7,13 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
+public import QuantumSystem.Algebra.CStarAlgebra.Representation
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.Conjugation
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.DirectSum
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.Family
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.Hom
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Algebra.CStarAlgebra.State
 public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
