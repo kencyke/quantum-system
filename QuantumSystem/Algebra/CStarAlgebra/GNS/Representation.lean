@@ -4,30 +4,37 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
 public import QuantumSystem.ForMathlib.Topology.DenseLinear
 public import QuantumSystem.ForMathlib.Topology.MetricSpace.Completion
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
+public import QuantumSystem.Algebra.CStarAlgebra.Representation
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 
 @[expose] public section
+
+open scoped InnerProductSpace
 
 namespace GNS
 
 /-- A (non‑unital) GNS triplet `(π, H, ξ)` for a state `ω : A → ℂ` on a (possibly non‑unital)
 C*-algebra `A`.
 
-Fields:
+This structure extends the bundled C\*-algebra representation `CStarRep A`
+(defined in `QuantumSystem.Algebra.CStarAlgebra.Representation`) by the additional data of a
+cyclic unit vector `ξ` and the GNS identity, factoring the conceptual
+decomposition "general C\*-representation" + "cyclic vector for a specified
+state" at the type level.
+
+Inherited fields (from `CStarRep A`):
 * `H` : the underlying type of the Hilbert space.
 * `[hilbert]` : evidence that `H` is a complex Hilbert space.
 * `π : A →⋆ₙₐ[ℂ] 𝓑(H)` : a non‑unital *-representation of `A` on `H`.
+
+GNS-specific fields:
 * `ξ : H` : a cyclic unit vector.
 * `cyclic` : density of the linear span `Submodule.span ℂ { π a ξ | a : A }` in `H`.
 * `unit_norm` : normalisation `‖ξ‖ = 1`.
 * `gns_condition` : the GNS identity `ω a = ⟪ξ, π a ξ⟫` for every `a : A`.
 -/
-structure Representation {A} [NonUnitalCStarAlgebra A] (ω : State ℂ A) where
-  /-- The Hilbert space of the GNS representation -/
-  H : Type*
-  /-- The complex Hilbert space structure on H -/
-  [hilbert : ComplexHilbertSpace H]
-  /-- The representation π : A → 𝓑(H) -/
-  π : A →⋆ₙₐ[ℂ] 𝓑(H)
+structure Representation {A} [NonUnitalCStarAlgebra A] (ω : State ℂ A)
+    extends CStarRep A where
   /-- The cyclic vector ξ ∈ H -/
   ξ : H
   /-- The cyclic property: the span of {π(a)ξ : a ∈ A} is dense in H -/
@@ -35,9 +42,7 @@ structure Representation {A} [NonUnitalCStarAlgebra A] (ω : State ℂ A) where
   /-- The unit norm property: ‖ξ‖ = 1 -/
   unit_norm : ‖ξ‖ = 1
   /-- The GNS condition: ω(a) = ⟪ξ, π(a)ξ⟫ for all a ∈ A -/
-  gns_condition : ∀ a : A, ω a = @inner ℂ H hilbert.toInnerProductSpace.toCore.toInner ξ (π a ξ)
-
-attribute [instance] Representation.hilbert
+  gns_condition : ∀ a : A, ω a = ⟪ξ, π a ξ⟫_ℂ
 
 namespace Representation
 
@@ -47,50 +52,52 @@ variable {A : Type*} [NonUnitalCStarAlgebra A]
 variable {ω : State ℂ A}
 
 /-- A submodule `W` of the Hilbert space of a GNS representation is invariant if it is
-stable under the action of `π(a)` for every `a : A`. -/
+stable under the action of `π(a)` for every `a : A`.
+
+This is the generic `CStarRep.IsInvariant` of the underlying representation `T.toCStarRep`;
+it is provided here as a thin wrapper so that the GNS-specific lemmas read `T.IsInvariant W`,
+while the single source of truth for the notion is `CStarRep.IsInvariant`. -/
 def IsInvariant (T : Representation ω) (W : Submodule ℂ T.H) : Prop :=
-  ∀ a : A, W.map (T.π a).toLinearMap ≤ W
+  T.toCStarRep.IsInvariant W
 
 /-- A GNS representation is (topologically) irreducible if the only **closed** invariant
-submodules are `⊥` and `⊤`. -/
+submodules are `⊥` and `⊤`.
+
+This is the generic `CStarRep.IsIrreducible` of the underlying representation `T.toCStarRep`
+(definitionally, since `T.H`/`T.π` are the inherited fields); the GNS wrapper keeps the
+`T.IsIrreducible` spelling while delegating the definition to `CStarRep.IsIrreducible`. -/
 def IsIrreducible (T : Representation ω) : Prop :=
-  ∀ W : Submodule ℂ T.H,
-    IsClosed (W : Set T.H) →
-    T.IsInvariant W →
-    (W = ⊥ ∨ W = ⊤)
+  T.toCStarRep.IsIrreducible
 
 @[simp] lemma isInvariant_bot (T : Representation ω) : T.IsInvariant (⊥ : Submodule ℂ T.H) := by
-  unfold IsInvariant
   intro a w hw
   rcases (show w = 0 from by simpa using hw) with rfl
   simp
 
 @[simp] lemma isInvariant_top (T : Representation ω) : T.IsInvariant (⊤ : Submodule ℂ T.H) := by
-  unfold IsInvariant
   intro a w hw
   simp
 
-/-- A unitary equivalence between two GNS representations packages the underlying
-unitary between the Hilbert spaces together with the expected compatibility data. -/
-structure UnitaryEquiv (T₁ T₂ : Representation ω) where
-  /-- The underlying unitary between the Hilbert spaces. -/
-  unitary_map : UnitaryMap T₁.H T₂.H
+/-- A unitary equivalence between two GNS representations for the **same** state `ω`.
+
+This **extends** the generic unitary equivalence of the underlying `CStarRep`s
+(`CStarRep.UnitaryEquiv`, which supplies the intertwining unitary `unitary_map` and its
+`intertwines` property) by the GNS-specific compatibility `map_cyclic_vector`, requiring the
+unitary to identify the two cyclic vectors.  This is exactly the extra data of the GNS
+uniqueness statement, on top of the bare unitary intertwiner shared with sector theory. -/
+structure UnitaryEquiv (T₁ T₂ : Representation ω) extends
+    CStarRep.UnitaryEquiv T₁.toCStarRep T₂.toCStarRep where
   /-- The unitary sends the cyclic vector of the first triplet to that of the second. -/
   map_cyclic_vector :
-    (unitary_map.toContinuousLinearMap) T₁.ξ = T₂.ξ
-  /-- The unitary intertwines the two representations. -/
-  intertwines :
-    ∀ a : A,
-      (unitary_map.toContinuousLinearMap) ∘L T₁.π a =
-        T₂.π a ∘L (unitary_map.toContinuousLinearMap)
+    (toUnitaryEquiv.unitary_map.toContinuousLinearMap) T₁.ξ = T₂.ξ
 
 notation:50 T₁ " ≃ᵁ " T₂ => Representation.UnitaryEquiv (ω := _) T₁ T₂
 
 /-- Auxiliary: computes `⟪π a ξ, π b ξ⟫ = ω (star a * b)` for a single GNS triplet. -/
 private lemma inner_cyclic_aux (T : Representation ω) (a b : A) :
-    @inner ℂ T.H _ (T.π a T.ξ) (T.π b T.ξ) = ω (star a * b) := by
-  have h₁ : @inner ℂ T.H _ (T.π a T.ξ) (T.π b T.ξ) =
-            @inner ℂ T.H _ T.ξ ((T.π a).adjoint (T.π b T.ξ)) := by
+    ⟪T.π a T.ξ, T.π b T.ξ⟫_ℂ = ω (star a * b) := by
+  have h₁ : ⟪T.π a T.ξ, T.π b T.ξ⟫_ℂ =
+            ⟪T.ξ, (T.π a).adjoint (T.π b T.ξ)⟫_ℂ := by
     rw [ContinuousLinearMap.adjoint_inner_right]
   have hstar : (T.π a).adjoint = T.π (star a) := by
     have : T.π (star a) = star (T.π a) := T.π.map_star' a
@@ -102,12 +109,12 @@ private lemma inner_cyclic_aux (T : Representation ω) (a b : A) :
 
 /-- Inner products on cyclic vectors agree across triplets: both realise `ω (star a * b)`. -/
 private lemma inner_cyclic (T₁ T₂ : Representation ω) (a b : A) :
-    @inner ℂ T₁.H _ (T₁.π a T₁.ξ) (T₁.π b T₁.ξ) =
-    @inner ℂ T₂.H _ (T₂.π a T₂.ξ) (T₂.π b T₂.ξ) := by
+    ⟪T₁.π a T₁.ξ, T₁.π b T₁.ξ⟫_ℂ =
+    ⟪T₂.π a T₂.ξ, T₂.π b T₂.ξ⟫_ℂ := by
   calc
-    @inner ℂ T₁.H _ (T₁.π a T₁.ξ) (T₁.π b T₁.ξ)
+    ⟪T₁.π a T₁.ξ, T₁.π b T₁.ξ⟫_ℂ
         = ω (star a * b) := inner_cyclic_aux T₁ a b
-    _ = @inner ℂ T₂.H _ (T₂.π a T₂.ξ) (T₂.π b T₂.ξ) := (inner_cyclic_aux T₂ a b).symm
+    _ = ⟪T₂.π a T₂.ξ, T₂.π b T₂.ξ⟫_ℂ := (inner_cyclic_aux T₂ a b).symm
 
 /-- Equality of norms of corresponding cyclic orbit vectors between two triplets. -/
 private lemma norm_cyclic (T₁ T₂ : Representation ω) (a : A) :
@@ -133,7 +140,7 @@ private lemma cyclic_correspondence_well_defined (T₁ T₂ : Representation ω)
       _ = T₁.π a T₁.ξ - T₁.π b T₁.ξ := by simp [ContinuousLinearMap.sub_apply]
       _ = 0 := by rw [h]; simp
   -- Transfer vanishing inner product to T₂ using equality of inner forms on cyclic vectors
-  have h_inner_zero_T₂ : @inner ℂ T₂.H _ (T₂.π (a - b) T₂.ξ) (T₂.π (a - b) T₂.ξ) = 0 := by
+  have h_inner_zero_T₂ : ⟪T₂.π (a - b) T₂.ξ, T₂.π (a - b) T₂.ξ⟫_ℂ = 0 := by
     rw [← inner_cyclic T₁ T₂ (a - b) (a - b), h_map_sub]; simp
   -- Norm zero implies vector zero in T₂
   have h_map_sub_T₂ : T₂.π (a - b) T₂.ξ = 0 := by
@@ -209,13 +216,13 @@ private lemma dist_cyclic (T₁ T₂ : Representation ω) (a : A) :
   rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)]
   rw [@norm_sub_sq ℂ T₁.H, @norm_sub_sq ℂ T₂.H]
   have h_norm := norm_cyclic T₁ T₂ a
-  have h_inner₁ : @inner ℂ T₁.H _ (T₁.π a T₁.ξ) T₁.ξ = conj (ω a) := by
-    calc @inner ℂ T₁.H _ (T₁.π a T₁.ξ) T₁.ξ
-        = conj (@inner ℂ T₁.H _ T₁.ξ (T₁.π a T₁.ξ)) := by rw [@inner_conj_symm ℂ T₁.H]
+  have h_inner₁ : ⟪T₁.π a T₁.ξ, T₁.ξ⟫_ℂ = conj (ω a) := by
+    calc ⟪T₁.π a T₁.ξ, T₁.ξ⟫_ℂ
+        = conj ⟪T₁.ξ, T₁.π a T₁.ξ⟫_ℂ := by rw [@inner_conj_symm ℂ T₁.H]
       _ = conj (ω a) := by rw [T₁.gns_condition a]
-  have h_inner₂ : @inner ℂ T₂.H _ (T₂.π a T₂.ξ) T₂.ξ = conj (ω a) := by
-    calc @inner ℂ T₂.H _ (T₂.π a T₂.ξ) T₂.ξ
-        = conj (@inner ℂ T₂.H _ T₂.ξ (T₂.π a T₂.ξ)) := by rw [@inner_conj_symm ℂ T₂.H]
+  have h_inner₂ : ⟪T₂.π a T₂.ξ, T₂.ξ⟫_ℂ = conj (ω a) := by
+    calc ⟪T₂.π a T₂.ξ, T₂.ξ⟫_ℂ
+        = conj ⟪T₂.ξ, T₂.π a T₂.ξ⟫_ℂ := by rw [@inner_conj_symm ℂ T₂.H]
       _ = conj (ω a) := by rw [T₂.gns_condition a]
   rw [h_inner₁, h_inner₂, h_norm, T₁.unit_norm, T₂.unit_norm]
 
@@ -244,8 +251,8 @@ private lemma cyclicMap_well_defined (T₁ T₂ : Representation ω)
 /-- The cyclic map preserves inner products. -/
 private lemma cyclicMap_inner (T₁ T₂ : Representation ω)
     (x y : cyclicSet T₁) :
-    @inner ℂ T₂.H _ (cyclicMap T₁ T₂ x) (cyclicMap T₁ T₂ y) =
-    @inner ℂ T₁.H _ x.val y.val := by
+    ⟪cyclicMap T₁ T₂ x, cyclicMap T₁ T₂ y⟫_ℂ =
+    ⟪x.val, y.val⟫_ℂ := by
   obtain ⟨a, ha⟩ := Set.mem_iUnion.mp x.property
   obtain ⟨b, hb⟩ := Set.mem_iUnion.mp y.property
   simp only [Set.mem_singleton_iff] at ha hb
