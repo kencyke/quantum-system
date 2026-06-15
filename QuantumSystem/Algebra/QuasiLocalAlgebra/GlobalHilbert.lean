@@ -1,7 +1,9 @@
 module
 
 public import Mathlib.Analysis.Normed.Lp.lpSpace
+public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.Algebra.LocalNetLike
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 
 /-!
 # Sector-parametrised concrete lattice representation
@@ -77,5 +79,16 @@ representation of the observable algebra; definitionally equal to it. -/
 noncomputable abbrev concreteLatticeRepresentation
     (Ω : (s : L) → LocalNetLike.localIdx (L := L) s) : Type _ :=
   globalHilbert L Ω
+
+/-- `globalHilbert L Ω` is a complex Hilbert space.  The component instances
+(`NormedAddCommGroup`, `InnerProductSpace ℂ`, `CompleteSpace`) are inherited
+from `Mathlib.Analysis.Normed.Lp.lpSpace` and
+`Mathlib.Analysis.InnerProductSpace.l2Space`. -/
+noncomputable instance instComplexHilbertSpace
+    (Ω : (s : L) → LocalNetLike.localIdx (L := L) s) :
+    ComplexHilbertSpace (globalHilbert L Ω) where
+  toNormedAddCommGroup := inferInstance
+  toInnerProductSpace := inferInstance
+  toCompleteSpace := inferInstance
 
 end LocalNetLike
