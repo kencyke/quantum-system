@@ -4,6 +4,8 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 
 @[expose] public section
 
+open scoped InnerProductSpace
+
 /-- A complex *pre*-Hilbert space: a normed space with a complex inner product. -/
 class ComplexPreHilbertSpace (H : Type*) extends NormedAddCommGroup H, InnerProductSpace ℂ H
 
@@ -57,9 +59,41 @@ noncomputable def asUnitary (U : H ≃ₗᵢ[ℂ] K) : UnitaryMap H K where
     ext y
     simp [LinearIsometryEquiv.adjoint_eq_symm]
 
+/-- The identity unitary map on a complex Hilbert space. -/
+noncomputable def UnitaryMap.refl (H : Type*) [ComplexHilbertSpace H] :
+    UnitaryMap H H where
+  toContinuousLinearMap := ContinuousLinearMap.id ℂ H
+  adjoint_comp := by rw [ContinuousLinearMap.adjoint_id]; ext; simp
+  comp_adjoint := by rw [ContinuousLinearMap.adjoint_id]; ext; simp
+
+@[simp] lemma UnitaryMap.refl_toContinuousLinearMap (H : Type*)
+    [ComplexHilbertSpace H] :
+    (UnitaryMap.refl H).toContinuousLinearMap = ContinuousLinearMap.id ℂ H :=
+  rfl
+
 /-- Unitary maps preserve the inner product. -/
-lemma inner_map_eq (U : UnitaryMap H K) (x y : H) : inner ℂ (U.toContinuousLinearMap x) (U.toContinuousLinearMap y) = inner ℂ x y := by
+lemma inner_map_eq (U : UnitaryMap H K) (x y : H) :
+    ⟪U.toContinuousLinearMap x, U.toContinuousLinearMap y⟫_ℂ = ⟪x, y⟫_ℂ := by
   simp only [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.comp_apply,
     U.adjoint_comp, ContinuousLinearMap.one_apply]
+
+/-- A `UnitaryMap` between complex Hilbert spaces canonically yields a
+linear isometric equivalence (the inverse is the adjoint). -/
+noncomputable def UnitaryMap.toLinearIsometryEquiv (U : UnitaryMap H K) :
+    H ≃ₗᵢ[ℂ] K where
+  toFun := U.toContinuousLinearMap
+  invFun := U.toContinuousLinearMap.adjoint
+  left_inv x := by
+    have := congrArg (fun (f : H →L[ℂ] H) => f x) U.adjoint_comp
+    simpa using this
+  right_inv y := by
+    have := congrArg (fun (f : K →L[ℂ] K) => f y) U.comp_adjoint
+    simpa using this
+  map_add' := map_add U.toContinuousLinearMap
+  map_smul' := map_smul U.toContinuousLinearMap
+  norm_map' x := by
+    rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)]
+    simp only [← @inner_self_eq_norm_sq ℂ]
+    exact congr_arg RCLike.re (inner_map_eq U x x)
 
 end UnitaryMap
