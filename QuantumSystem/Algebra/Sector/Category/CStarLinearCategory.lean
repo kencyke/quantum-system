@@ -3,12 +3,11 @@ module
 public import QuantumSystem.Algebra.Sector.Category.CStarCategory
 
 /-!
-# C\*-linear categories — R7-0a (interface stabilisation)
+# C\*-linear categories
 
-This file introduces the abstract analytic interface on which the
-Doplicher–Roberts / Tannaka reconstruction is built, resolving the
-`Module ℂ (X ⟶ Y)` *instance diamond* that otherwise blocks scalar uniqueness
-in a symmetric tensor ∗-category (`implementation-notes.md` §4 R7, barrier 1).
+This file introduces the abstract analytic interface for C\*-linear categories,
+resolving the `Module ℂ (X ⟶ Y)` *instance diamond* that otherwise blocks scalar
+uniqueness in a symmetric tensor ∗-category.
 
 A `CStarCategory` (`CStarCategory.lean`) takes the Banach structure on each
 hom-space as **independent** prerequisite instances `[∀ X Y, NormedAddCommGroup
@@ -65,6 +64,13 @@ class CStarLinearCategory : Type (max u v) where
   norm_triangle : ∀ {X Y : C} (f g : X ⟶ Y), homNorm (f + g) ≤ homNorm f + homNorm g
   /-- The norm is definite: it vanishes only on the zero morphism. -/
   norm_eq_zero_iff : ∀ {X Y : C} (f : X ⟶ Y), homNorm f = 0 ↔ f = 0
+  /-- Composition is **submultiplicative** (the norm bound of a C\*-category, Müger
+  §1.4): `‖f ≫ g‖ ≤ ‖f‖ · ‖g‖`.  This is the boundedness of composition that the
+  C\*-identity alone does not entail (its standard derivation goes through positivity,
+  which presupposes the Banach-algebra structure); every C\*-category satisfies it and
+  it is what makes each `End X` a normed ring. -/
+  norm_comp_le : ∀ {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z),
+    homNorm (f ≫ g) ≤ homNorm f * homNorm g
   /-- The **C\*-identity** `‖f ≫ f†‖ = ‖f‖²`. -/
   norm_comp_dagger : ∀ {X Y : C} (f : X ⟶ Y), homNorm (f ≫ f†) = homNorm f ^ 2
   /-- The identity of the monoidal unit has **nonzero norm** (the unit is a nonzero
@@ -120,6 +126,11 @@ norm `‖·‖`.  This is the hypothesis feeding `CStarCategory.smul_id_inj` to 
 scalar uniqueness against `𝟙 (𝟙_ C)`. -/
 lemma norm_unit_id_ne_zero : ‖𝟙 (𝟙_ C)‖ ≠ 0 :=
   CStarLinearCategory.unit_id_norm_ne_zero
+
+/-- Submultiplicativity of composition phrased with the categorical norm `‖·‖`:
+`‖f ≫ g‖ ≤ ‖f‖ * ‖g‖`. -/
+lemma norm_comp_le' {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z) : ‖f ≫ g‖ ≤ ‖f‖ * ‖g‖ :=
+  CStarLinearCategory.norm_comp_le f g
 
 end CStarLinearCategory
 
