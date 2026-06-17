@@ -5,7 +5,7 @@ public import QuantumSystem.Algebra.Sector.Category.Subobject
 public import QuantumSystem.Algebra.Sector.Net.DHRCategory
 
 /-!
-# C\*-completeness of the DHR category: closure under direct sums and subobjects
+# Localization of direct sums and subobjects of DHR sectors
 
 A C\*-tensor category of DHR sectors must be closed under direct sums and
 subobjects (Müger §1.5–1.6) — this is the C\*-completeness required by the
@@ -13,8 +13,8 @@ Doplicher–Roberts reconstruction.  The *internal* constructions live at the
 abstract level (`Category/DirectSum.lean`, `Category/Subobject.lean`): a Cuntz pair
 realises a binary direct sum `ρ ⊕ σ`, and split data for a projection realises a
 subobject `ρ_e`.  This file establishes that, at the **net level**, these
-constructions stay inside the DHR object property — they are again *localized* and
-*transportable*, so the direct sum (and subobject) of DHR sectors is a DHR sector.
+constructions stay *localized*: the direct sum (and subobject) of localized
+sectors is localized, provided the Cuntz/split isometries are.
 
 ## The locality of the isometries is irreducible
 
@@ -22,10 +22,7 @@ For `ρ ⊕ σ = v₁ ρ(·) v₁⋆ + v₂ σ(·) v₂⋆` to be localized in `
 that `ρ`, `σ` are: the Cuntz isometries `v₁, v₂` must themselves be localized in
 `Λ` (commute with the spacelike complement), otherwise the direct sum spreads the
 charge.  This is captured by `CommutesComplement`, the operator-level shadow of
-`vᵢ ∈ 𝔄(Λ)`.  Transportability of `ρ ⊕ σ` further needs a local Cuntz pair *in
-every proper target cone* (`HasLocalCuntzPairs`), the properly-infinite-locally
-property of the quasi-local algebra — a net existence input discharged
-model-by-model (R8).
+`vᵢ ∈ 𝔄(Λ)`.
 
 ## References
 
@@ -96,50 +93,5 @@ lemma IsBoundedlyLocalized.subEndo {Λ : Cone L} {ρ : sectorCat L Ω} {e : ρ �
     (hw : CommutesComplement (Ω := Ω) Λ s.w) (hρ : IsLocalizedIn Λ ρ) :
     IsBoundedlyLocalized s.subEndo :=
   ⟨Λ, hΛ, IsLocalizedIn.subEndo s hw hρ⟩
-
-/-! ### Transportability is closed under direct sums -/
-
-/-- **Existence of local Cuntz pairs.**  For every proper cone `Λ` there is a Cuntz
-pair whose isometries are localized in `Λ`.  This is the
-*properly-infinite-locally* property of the quasi-local algebra: a binary direct
-sum can be formed inside `𝔄(Λ)` for any prescribed proper cone `Λ`.  It is the net
-existence input behind transportability of direct sums, discharged
-model-by-model (R8). -/
-def HasLocalCuntzPairs : Prop :=
-  ∀ Λ : Cone L, SpacelikeGeometry.IsProper Λ →
-    ∃ p : IsometryPair ↥(quasiLocal L Ω),
-      CommutesComplement (Ω := Ω) Λ p.v₁ ∧ CommutesComplement (Ω := Ω) Λ p.v₂
-
-/-- **Direct sums preserve transportability.**  Transporting `ρ` and `σ` into a
-common proper cone `Λ`, forming a *local* direct sum there (a local Cuntz pair
-exists by `HasLocalCuntzPairs`), and mapping the source direct sum to it by the
-unitary `directSumMap` of the two transporters transports `ρ ⊕ σ` into `Λ`. -/
-lemma IsTransportable.directSum (p : IsometryPair ↥(quasiLocal L Ω))
-    {ρ σ : sectorCat L Ω} (hloc : HasLocalCuntzPairs (Ω := Ω))
-    (hρ : IsTransportable ρ) (hσ : IsTransportable σ) :
-    IsTransportable (p.directSum ρ σ) := by
-  intro Λ hΛ
-  obtain ⟨ρ', hρ'loc, u, hu⟩ := hρ Λ hΛ
-  obtain ⟨σ', hσ'loc, v, hv⟩ := hσ Λ hΛ
-  obtain ⟨q, hq₁, hq₂⟩ := hloc Λ hΛ
-  exact ⟨q.directSum ρ' σ', IsLocalizedIn.directSum q hq₁ hq₂ hρ'loc hσ'loc,
-    IsometryPair.directSumMap p q u v, IsometryPair.directSumMap_isUnitary p q hu hv⟩
-
-/-! ### The DHR property is closed under direct sums -/
-
-/-- **The DHR object property is closed under direct sums.**  Given DHR sectors `ρ`,
-`σ` localized in a common bounded cone `Λ` and a Cuntz pair localized in `Λ`, the
-direct sum `ρ ⊕ σ` is again a DHR sector (boundedly localized and transportable),
-provided local Cuntz pairs exist in every proper cone (`HasLocalCuntzPairs`).  This
-is the direct-sum half of the C\*-completeness of `dhrSectorCat`. -/
-lemma IsDHR.directSum {Λ : Cone L} {ρ σ : sectorCat L Ω}
-    (p : IsometryPair ↥(quasiLocal L Ω)) (hloc : HasLocalCuntzPairs (Ω := Ω))
-    (hΛ : SpacelikeGeometry.IsBounded Λ)
-    (hv₁ : CommutesComplement (Ω := Ω) Λ p.v₁) (hv₂ : CommutesComplement (Ω := Ω) Λ p.v₂)
-    (hρl : IsLocalizedIn Λ ρ) (hσl : IsLocalizedIn Λ σ)
-    (hρ : IsDHR ρ) (hσ : IsDHR σ) :
-    IsDHR (p.directSum ρ σ) :=
-  ⟨IsBoundedlyLocalized.directSum p hΛ hv₁ hv₂ hρl hσl,
-    IsTransportable.directSum p hloc hρ.2 hσ.2⟩
 
 end LocalNetLike

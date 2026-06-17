@@ -276,23 +276,6 @@ lemma directSumMap_isUnitary (p q : IsometryPair A) {ρ ρ' σ σ' : StarEndoCat
 
 end IsometryPair
 
-/-! ### Category-wide binary biproducts -/
-
-/-- `A` **has a Cuntz pair** — a *properly infinite* property of `A`: there exist
-two isometries with orthogonal ranges summing to `1`.  Under this hypothesis the
-endomorphism category has all binary direct sums.  It holds for the quasi-local
-algebra of an infinite quantum system (to be discharged for concrete nets, R8). -/
-class HasCuntzPair (A : Type u) [CStarAlgebra A] : Prop where
-  /-- `A` admits a Cuntz pair. -/
-  nonempty_isometryPair : Nonempty (IsometryPair A)
-
-/-- **A category of endomorphisms over a properly infinite algebra has binary
-direct sums.**  This connects the internal Cuntz-pair construction to the Mathlib
-biproduct API (`⊞`, `biprod.fst`, …) for `StarEndoCat A`. -/
-instance [HasCuntzPair A] : HasBinaryBiproducts (StarEndoCat A) where
-  has_binary_biproduct ρ σ :=
-    (HasCuntzPair.nonempty_isometryPair (A := A)).elim fun p => p.hasBinaryBiproduct ρ σ
-
 end StarEndo
 
 end CategoryTheory
