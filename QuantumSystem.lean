@@ -35,8 +35,6 @@ public import QuantumSystem.Algebra.QuasiLocalAlgebra.QuasiLocal
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.RegionColimit
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.RegionDirected
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.RegionEmbed
-public import QuantumSystem.Algebra.QuasiLocalAlgebra.RegionSplit
-public import QuantumSystem.Algebra.QuasiLocalAlgebra.SectorDirectSum
 public import QuantumSystem.Algebra.QuasiLocalAlgebra.Vacuum
 public import QuantumSystem.Algebra.Sector.Category.Conjugate
 public import QuantumSystem.Algebra.Sector.Category.ConjugateDirectSum
