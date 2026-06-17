@@ -21,17 +21,11 @@
 - When stuck on a goal, search closing lemmas with `lean_state_search` /
   `lean_hammer_premise`, then verify with `lean_multi_attempt` before
   editing.
-- If Lean reports `expected '{' or indented tactic sequence`, fix indentation
-  first — almost always a whitespace issue, not a tactic bug.
-  **Why:** tactics that compile by accident can mask unsoundness; this
-  project mandates a fully axiom-free codebase.
 
 **Abstraction first.**
-- Aim for the abstraction level used in the source literature
-  (`[CStarAlgebra A]`, `[InnerProductSpace ℂ H]`, general index types,
-  general lattices) from the *first* commit, not as a later refactor.
-- Do not specialise to a concrete model (a fixed matrix size, a chosen
-  Hilbert-space realisation, a chosen lattice) just because the
+- Aim for the abstraction level used in the source literature and the mathematically conventional form
+  from the *first* commit, not as a later refactor.
+- Do not specialise to a concrete model because the
   immediate task uses only that case, and do not weaken hypotheses to
   match whatever fragment Mathlib currently has the most lemmas for —
   follow the literature, even when it forces you to build supporting
@@ -50,6 +44,28 @@
   one lemma serve every concrete model.  Direct tactic-driven proofs
   keep the abstraction readable.
 
+**Prove what is provable; do not axiomatise it — and do not *defer* it.**
+- Do not introduce a `class` / `structure` field (or a `def … : Prop`
+  hypothesis) that stands in for a theorem when that theorem has a known
+  mathematical proof — *even when Mathlib lacks the supporting lemmas, and
+  even when proving it is out of scope for the current change.*
+  Build the API and prove it (see *Abstraction first*); a hypothesis field is
+  a de-facto axiom (*Prohibited Tokens*: "assumptions smuggled into structure
+  fields count as axioms too").
+- A hypothesis class is acceptable **only** for genuinely model-dependent
+  inputs that are false for some objects in the class *and* for which no known
+  universal proof exists.
+  Do **not** stub it as a `Has…` field / `def … : Prop` to be
+  discharged later.  Either prove it now — building whatever supporting API 
+  the literature level demands (see *Abstraction first*) — 
+  or **descope the dependent work entirely**; never leave downstream code 
+  standing on an unproven placeholder.
+  **Why:** deferred hypotheses became permanent here. Once a
+  `Has…` field is wired in, discharging it later costs far more than proving it
+  up front and the trusted base grows silently.  Restricting hypotheses to the
+  irreducible (a) inputs — and proving or descoping everything else — is what
+  keeps that base bounded.
+
 **Goal-driven verification (Definition of Done).**
 - A change is done only when `lake build` completes with no new errors or
   warnings on the edited modules and their downstream importers.
@@ -60,10 +76,6 @@
 - When a tactic fails to close a goal, do not stack `try` / `<;>` to silence
   the error — re-inspect the goal with `lean_goal` and address the actual
   mismatch.
-- Never report a task as successful until the above checks pass.
-  **Why:** "looks right" is not a soundness gate; the kernel is, and
-  downstream modules can still break even when the edited file type-checks
-  in isolation.
 
 ## Editing Hygiene
 
