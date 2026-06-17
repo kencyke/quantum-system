@@ -65,15 +65,17 @@ class HaagKastlerNet (L : Type*) [DecidableEq L] [LocalNetLike L]
   nonempty_localIdx : ∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)
 
 /-- **Public bundle for covariant lattice Haag–Kastler data.**  Extends
-`HaagKastlerNet` by requiring a chosen group action to be a genuine
-`G`-action, so its quasi-local automorphisms satisfy `quasiLocalAut_one_apply`
-and `quasiLocalAut_mul_apply`. -/
+`HaagKastlerNet` with a chosen group action `act`.  The genuineness of `act`
+(functoriality of `piAction`) is no longer a hypothesis: it follows from the
+fibre coherence laws bundled into `HasGroupAction`, so the quasi-local
+automorphisms automatically satisfy `quasiLocalAut_one_apply` and
+`quasiLocalAut_mul_apply`. -/
 class CovariantHaagKastlerNet (L : Type*) [DecidableEq L] [LocalNetLike L]
     [LocalNetLike.HasLocalRepresentation L]
     [∀ s : L, Nonempty (LocalNetLike.localIdx (L := L) s)]
     (Ω : (s : L) → LocalNetLike.localIdx (L := L) s)
     (G : Type*) [Group G] (act : HasGroupAction L Ω G) : Prop
-    extends HaagKastlerNet L, HasGroupAction.IsGenuineAction act
+    extends HaagKastlerNet L
 
 /-- Per-site nondegeneracy as a typeclass instance: `[∀ s, Nonempty (localIdx s)]`
 resolves automatically once `[HaagKastlerNet L]` is in scope. -/
@@ -129,7 +131,7 @@ theorem vacuum_functional_invariance {G : Type*} [Group G]
 /-- Genuine-action version of `vacuum_functional_invariance`, stated using the bundled
 quasi-local automorphism. -/
 theorem vacuum_functional_invariance_aut {G : Type*} [Group G]
-    (act : HasGroupAction L Ω G) [act.IsGenuineAction] (g : G) (T : ↥(quasiLocal L Ω)) :
+    (act : HasGroupAction L Ω G) (g : G) (T : ↥(quasiLocal L Ω)) :
     vacuumFunctionalOnQuasiLocal L Ω (act.quasiLocalAut g T) = vacuumFunctionalOnQuasiLocal L Ω T := by
   have heq : act.quasiLocalAut g T = act.quasiLocalEnd g T :=
     Subtype.ext <| by

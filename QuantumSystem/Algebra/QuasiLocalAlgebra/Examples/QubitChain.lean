@@ -74,45 +74,8 @@ noncomputable def qubitChainTranslationAction :
   siteAction := MulAction.toPermHom (Multiplicative ℤ) ℤ
   siteIdxEquiv _ _ := Equiv.refl _
   siteIdxEquiv_sectorVec _ _ := rfl
-
-private lemma qubitChain_piCongr_const_refl_apply
-    (e : Equiv.Perm ℤ) (f : (s : ℤ) → Fin 2) (t : ℤ) :
-    (Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
-        e (fun _ : ℤ => Equiv.refl (Fin 2)) f) t = f (e.symm t) := by
-  obtain ⟨s, rfl⟩ : ∃ s, e s = t := ⟨e.symm t, e.apply_symm_apply t⟩
-  rw [Equiv.piCongr_apply_apply]
-  simp
-
-/-- The translation action on the spin chain promotes to a genuine `Multiplicative ℤ`-action
-on dependent qubit-index tuples. -/
-instance instQubitChainTranslationActionIsGenuineAction :
-    qubitChainTranslationAction.IsGenuineAction where
-  piAction_one := by
-    ext f s
-    change (Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
-        ((MulAction.toPermHom (Multiplicative ℤ) ℤ) 1)
-        (fun _ : ℤ => Equiv.refl (Fin 2)) (f : (s : ℤ) → Fin 2)) (show ℤ from s) =
-      (f : (s : ℤ) → Fin 2) (show ℤ from s)
-    rw [qubitChain_piCongr_const_refl_apply]
-    exact congrArg (f : (s : ℤ) → Fin 2)
-      (show ((1 : Multiplicative ℤ)⁻¹ • (show ℤ from s)) = (show ℤ from s) by
-        rw [inv_one, one_smul])
-  piAction_mul g h := by
-    ext f s
-    change (Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
-        ((MulAction.toPermHom (Multiplicative ℤ) ℤ) (g * h))
-        (fun _ : ℤ => Equiv.refl (Fin 2)) (f : (s : ℤ) → Fin 2)) (show ℤ from s) =
-      ((Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
-          ((MulAction.toPermHom (Multiplicative ℤ) ℤ) g)
-          (fun _ : ℤ => Equiv.refl (Fin 2)))
-        ((Equiv.piCongr (W := fun _ : ℤ => Fin 2) (Z := fun _ : ℤ => Fin 2)
-          ((MulAction.toPermHom (Multiplicative ℤ) ℤ) h)
-          (fun _ : ℤ => Equiv.refl (Fin 2))) (f : (s : ℤ) → Fin 2))) (show ℤ from s)
-    rw [qubitChain_piCongr_const_refl_apply, qubitChain_piCongr_const_refl_apply,
-      qubitChain_piCongr_const_refl_apply]
-    exact congrArg (f : (s : ℤ) → Fin 2)
-      (show ((g * h)⁻¹ • (show ℤ from s)) = h⁻¹ • g⁻¹ • (show ℤ from s) by
-        rw [mul_inv_rev, mul_smul])
+  siteIdxEquiv_one _ _ := HEq.rfl
+  siteIdxEquiv_mul _ _ _ _ := HEq.rfl
 
 /-- **Concrete `HaagKastlerNet` witness.**  The spin-1/2 chain on `ℤ`
 satisfies every component of the public Haag–Kastler bundle: full

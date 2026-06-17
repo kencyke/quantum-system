@@ -44,7 +44,13 @@ variable (Ω : (s : L) → LocalNetLike.localIdx (L := L) s)
 * `siteIdxEquiv g s : localIdx s ≃ localIdx (siteAction g s)` — per-site
   identification of local Hilbert spaces.
 * `siteIdxEquiv_sectorVec` — sector compatibility: `siteIdxEquiv g s (Ω s) =
-  Ω (siteAction g s)`.  Ensures the action descends to `globalIdx L Ω`. -/
+  Ω (siteAction g s)`.  Ensures the action descends to `globalIdx L Ω`.
+* `siteIdxEquiv_one` / `siteIdxEquiv_mul` — functoriality of the fibre
+  equivalences: they form a genuine `G`-action on the index bundle.  These are
+  the coherence laws that make `piAction` a monoid homomorphism (see
+  `piAction_one` / `piAction_mul`).  They are stated at the level of elements
+  via `HEq`, since the codomain `localIdx (siteAction g s)` depends on `g` and a
+  plain `Equiv` equation would be ill-typed. -/
 structure HasGroupAction (G : Type*) [Group G] where
   /-- Action on sites as a group hom into permutations. -/
   siteAction : G →* Equiv.Perm L
@@ -56,6 +62,14 @@ structure HasGroupAction (G : Type*) [Group G] where
   siteIdxEquiv_sectorVec :
     ∀ (g : G) (s : L),
       siteIdxEquiv g s (Ω s) = Ω (siteAction g s)
+  /-- Identity coherence: the unit acts as the identity on each fibre. -/
+  siteIdxEquiv_one : ∀ (s : L) (x : LocalNetLike.localIdx (L := L) s),
+    HEq (siteIdxEquiv 1 s x) x
+  /-- Composition coherence: the fibre equivalences compose along the group
+  law, so they assemble into a genuine `G`-action on the index bundle. -/
+  siteIdxEquiv_mul : ∀ (g h : G) (s : L) (x : LocalNetLike.localIdx (L := L) s),
+    HEq (siteIdxEquiv (g * h) s x)
+        (siteIdxEquiv g (siteAction h s) (siteIdxEquiv h s x))
 
 namespace HasGroupAction
 
@@ -81,22 +95,44 @@ theorem piAction_apply_apply
   Equiv.piCongr_apply_apply (act.siteAction g)
     (fun s => act.siteIdxEquiv g s) f s
 
-/-! ### Genuine group actions
+/-! ### Functoriality of the action
 
-The base `HasGroupAction` does not require the fibre equivalences to compose
-coherently.  The `IsGenuineAction` mixin below records this coherence at the
-already-built `piAction` level, avoiding fragile dependent casts. -/
+The fibre coherence laws `siteIdxEquiv_one` / `siteIdxEquiv_mul` bundled into
+`HasGroupAction` make `piAction` a monoid homomorphism
+`G →* Equiv.Perm ((s : L) → localIdx s)`.  This functoriality is what the
+downstream lifts (`globalIdxAction`, `unitaryAction`, `algebraAut`,
+`quasiLocalAut`) need to be functorial in `G`; we prove it here from the
+coherence data rather than assuming it. -/
 
-/-- Promotes a `HasGroupAction` to a **genuine** `G`-action: `piAction` becomes
-a monoid homomorphism `G →* Equiv.Perm ((s : L) → localIdx s)`.  Without
-this, downstream lifts (`globalIdxAction`, `unitaryAction`, `algebraAut`,
-`quasiLocalAut`) are well-defined per element but not functorial in `G`. -/
-class IsGenuineAction (act : HasGroupAction L Ω G) : Prop where
-  /-- The identity group element acts trivially on dependent site-index tuples. -/
-  piAction_one : act.piAction 1 = Equiv.refl _
-  /-- Multiplication is respected by the dependent site-index action. -/
-  piAction_mul (g h : G) :
-    act.piAction (g * h) = (act.piAction h).trans (act.piAction g)
+/-- The identity group element acts trivially on dependent site-index tuples. -/
+theorem piAction_one (act : HasGroupAction L Ω G) :
+    act.piAction 1 = Equiv.refl _ := by
+  ext f t
+  obtain ⟨s, rfl⟩ : ∃ s, act.siteAction 1 s = t :=
+    ⟨(act.siteAction 1).symm t, Equiv.apply_symm_apply _ _⟩
+  rw [piAction_apply_apply, Equiv.refl_apply]
+  have h1 : act.siteAction 1 s = s := by rw [map_one]; rfl
+  exact eq_of_heq ((act.siteIdxEquiv_one s (f s)).trans (congr_arg_heq f h1.symm))
+
+/-- Multiplication is respected by the dependent site-index action. -/
+theorem piAction_mul (act : HasGroupAction L Ω G) (g h : G) :
+    act.piAction (g * h) = (act.piAction h).trans (act.piAction g) := by
+  ext f t
+  obtain ⟨s, rfl⟩ : ∃ s, act.siteAction (g * h) s = t :=
+    ⟨(act.siteAction (g * h)).symm t, Equiv.apply_symm_apply _ _⟩
+  have hsplit : act.siteAction (g * h) s = act.siteAction g (act.siteAction h s) := by
+    rw [map_mul]; rfl
+  rw [piAction_apply_apply, Equiv.trans_apply]
+  refine eq_of_heq (HEq.trans (act.siteIdxEquiv_mul g h s (f s)) ?_)
+  have e1 : act.piAction g (act.piAction h f) (act.siteAction g (act.siteAction h s))
+              = act.siteIdxEquiv g (act.siteAction h s)
+                  (act.piAction h f (act.siteAction h s)) :=
+    piAction_apply_apply act g (act.piAction h f) (act.siteAction h s)
+  have e2 : act.piAction h f (act.siteAction h s) = act.siteIdxEquiv h s (f s) :=
+    piAction_apply_apply act h f s
+  rw [e2] at e1
+  exact (heq_of_eq e1).symm.trans
+    (congr_arg_heq (act.piAction g (act.piAction h f)) hsplit).symm
 
 /-- The `g`-translate sends finite-variation tuples to finite-variation
 tuples: a `Γ`-witness for `f` translates to a `Γ.image (siteAction g)`-witness
@@ -156,19 +192,19 @@ theorem globalIdxAction_val (act : HasGroupAction L Ω G) (g : G) (f : globalIdx
     (globalIdxAction act g f).val = piAction act g f.val := rfl
 
 /-- Under a genuine action, the identity element acts trivially on `globalIdx`. -/
-theorem globalIdxAction_one (act : HasGroupAction L Ω G) [act.IsGenuineAction] :
+theorem globalIdxAction_one (act : HasGroupAction L Ω G) :
     act.globalIdxAction 1 = Equiv.refl (globalIdx L Ω) := by
   ext f
   apply Subtype.ext
-  simp [globalIdxAction_val, IsGenuineAction.piAction_one (act := act)]
+  simp [globalIdxAction_val, act.piAction_one]
 
 /-- Under a genuine action, multiplication is respected on `globalIdx`. -/
-theorem globalIdxAction_mul (act : HasGroupAction L Ω G) [act.IsGenuineAction]
+theorem globalIdxAction_mul (act : HasGroupAction L Ω G)
     (g h : G) :
     act.globalIdxAction (g * h) = (act.globalIdxAction h).trans (act.globalIdxAction g) := by
   ext f
   apply Subtype.ext
-  simp [globalIdxAction_val, IsGenuineAction.piAction_mul (act := act) g h]
+  simp [globalIdxAction_val, act.piAction_mul g h]
 
 /-! ### Unitary representation on `globalHilbert L Ω` -/
 
@@ -263,13 +299,13 @@ theorem unitaryAction_apply_val (act : HasGroupAction L Ω G) (g : G)
       = (f : globalIdx L Ω → ℂ) ((globalIdxAction act g).symm a) := rfl
 
 /-- Under a genuine action, the identity element is implemented by the identity unitary. -/
-theorem unitaryAction_one (act : HasGroupAction L Ω G) [act.IsGenuineAction] :
+theorem unitaryAction_one (act : HasGroupAction L Ω G) :
     act.unitaryAction 1 = LinearIsometryEquiv.refl ℂ (globalHilbert L Ω) := by
   ext f a
   simp [unitaryAction_apply_val, globalIdxAction_one]
 
 /-- Under a genuine action, the implementing unitaries multiply according to the group law. -/
-theorem unitaryAction_mul (act : HasGroupAction L Ω G) [act.IsGenuineAction]
+theorem unitaryAction_mul (act : HasGroupAction L Ω G)
     (g h : G) :
     act.unitaryAction (g * h) = (act.unitaryAction h).trans (act.unitaryAction g) := by
   ext f a
@@ -294,7 +330,7 @@ theorem algebraAut_apply (act : HasGroupAction L Ω G) (g : G)
   LinearIsometryEquiv.conjStarAlgEquiv_apply _ _
 
 /-- Under a genuine action, the identity group element induces the identity automorphism. -/
-theorem algebraAut_one (act : HasGroupAction L Ω G) [act.IsGenuineAction] :
+theorem algebraAut_one (act : HasGroupAction L Ω G) :
     act.algebraAut 1 =
       StarAlgEquiv.refl (R := ℂ) (A := globalHilbert L Ω →L[ℂ] globalHilbert L Ω) := by
   unfold algebraAut
@@ -302,7 +338,7 @@ theorem algebraAut_one (act : HasGroupAction L Ω G) [act.IsGenuineAction] :
   exact LinearIsometryEquiv.conjStarAlgEquiv_refl
 
 /-- Under a genuine action, the induced automorphisms compose according to the group law. -/
-theorem algebraAut_mul (act : HasGroupAction L Ω G) [act.IsGenuineAction]
+theorem algebraAut_mul (act : HasGroupAction L Ω G)
     (g h : G) :
     act.algebraAut (g * h) = (act.algebraAut h).trans (act.algebraAut g) := by
   unfold algebraAut
@@ -662,7 +698,7 @@ theorem quasiLocalEnd_apply (act : HasGroupAction L Ω G) (g : G) (T : quasiLoca
 
 /-- Under a genuine action, each group element induces a `*`-algebra automorphism of the
 bundled quasi-local algebra.  The inverse is the automorphism induced by `g⁻¹`. -/
-noncomputable def quasiLocalAut (act : HasGroupAction L Ω G) [act.IsGenuineAction]
+noncomputable def quasiLocalAut (act : HasGroupAction L Ω G)
     (g : G) :
     quasiLocal L Ω ≃⋆ₐ[ℂ] quasiLocal L Ω where
   toFun T := ⟨act.algebraAut g T.1, algebraAut_quasiLocal_le act g T.1 T.2⟩
@@ -703,21 +739,21 @@ noncomputable def quasiLocalAut (act : HasGroupAction L Ω G) [act.IsGenuineActi
       (T : globalHilbert L Ω →L[ℂ] globalHilbert L Ω)
 
 @[simp]
-theorem quasiLocalAut_apply (act : HasGroupAction L Ω G) [act.IsGenuineAction]
+theorem quasiLocalAut_apply (act : HasGroupAction L Ω G)
     (g : G) (T : quasiLocal L Ω) :
     (act.quasiLocalAut g T : globalHilbert L Ω →L[ℂ] globalHilbert L Ω) =
       act.algebraAut g (T : globalHilbert L Ω →L[ℂ] globalHilbert L Ω) :=
   rfl
 
 /-- The quasi-local automorphism assigned to the identity acts trivially. -/
-theorem quasiLocalAut_one_apply (act : HasGroupAction L Ω G) [act.IsGenuineAction]
+theorem quasiLocalAut_one_apply (act : HasGroupAction L Ω G)
     (T : quasiLocal L Ω) :
     act.quasiLocalAut 1 T = T := by
   apply Subtype.ext
   simp [quasiLocalAut_apply, algebraAut_one]
 
 /-- The quasi-local automorphisms compose according to group multiplication. -/
-theorem quasiLocalAut_mul_apply (act : HasGroupAction L Ω G) [act.IsGenuineAction]
+theorem quasiLocalAut_mul_apply (act : HasGroupAction L Ω G)
     (g h : G) (T : quasiLocal L Ω) :
     act.quasiLocalAut (g * h) T = act.quasiLocalAut g (act.quasiLocalAut h T) := by
   apply Subtype.ext
