@@ -230,8 +230,9 @@ theorem localSubalgebra_le_of_subset {Λ Λ' : Finset L} (h : Λ ⊆ Λ') :
 
 /-! ### Compatibility between abstract `isotony` and `localRep`
 
-The mixin below records the missing bridge between two pictures of the
-finite-region embedding `Λ ↪ Λ'`:
+The mixin below is a coherence condition on the two free-data families
+`isotony` and `localRep`, comparing two pictures of the finite-region
+embedding `Λ ↪ Λ'`:
 
 * on the abstract algebra side, `LocalNetLike.isotony h` sends
   `a ∈ 𝔄(Λ)` to an element of `𝔄(Λ')`;
@@ -239,10 +240,13 @@ finite-region embedding `Λ ↪ Λ'`:
   `regionHilbert Λ` to an operator on `regionHilbert Λ'`.
 
 A `HasLocalRepresentation` already exists, so each side admits a `localRep`.
-Asking that `localRep` intertwines the two embeddings is precisely the data
-needed to transport every Haag–Kastler statement formulated on
-`localSubalgebra Λ` to an analogous statement on the abstract
-`localAlgebra Λ`. -/
+Since `localRep Λ` is chosen independently for each `Λ`, the intertwining is
+not provable in the abstract — it can be broken by post-composing with a
+unitary — so it is genuinely a piece of coherence data, discharged for each
+concrete net (e.g. `toEuclideanCLM_includeAlgebra` for matrix nets).  Asking
+that `localRep` intertwines the two embeddings is precisely the data needed to
+transport every Haag–Kastler statement formulated on `localSubalgebra Λ` to an
+analogous statement on the abstract `localAlgebra Λ`. -/
 
 /-- Optional refinement: the local representation `localRep` intertwines the
 abstract isotony embedding with the operator-level lift `regionLift`. -/
