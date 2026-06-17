@@ -45,7 +45,6 @@ public import QuantumSystem.Algebra.Sector.Category.Dagger
 public import QuantumSystem.Algebra.Sector.Category.DaggerLinear
 public import QuantumSystem.Algebra.Sector.Category.DirectSum
 public import QuantumSystem.Algebra.Sector.Category.Endomorphism
-public import QuantumSystem.Algebra.Sector.Category.IdempotentComplete
 public import QuantumSystem.Algebra.Sector.Category.Inner
 public import QuantumSystem.Algebra.Sector.Category.Positivity
 public import QuantumSystem.Algebra.Sector.Category.Rigid
