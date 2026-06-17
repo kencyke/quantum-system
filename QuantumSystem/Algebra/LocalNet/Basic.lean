@@ -3,54 +3,28 @@ module
 public import QuantumSystem.Channel
 
 /-!
-# Local Net of Matrix Algebras (finite-dim)
+# Local Net of Matrix Algebras — basic data
 
-This file defines the data of a **local net of matrix algebras** on a finite lattice.
-An AQFT system assigns to each spacetime / lattice region `Λ` an
-algebra `𝔄(Λ)` of observables, with **isotony** (`Λ₁ ⊆ Λ₂ ⟹ 𝔄(Λ₁) ⊆ 𝔄(Λ₂)`), **locality**
-(disjoint regions commute), and—in the spacetime version—**covariance**.
+This file carries the **data** of a local net of matrix algebras and the region-index
+combinatorics on which the AQFT net properties are built. An AQFT system assigns to each
+lattice region `Λ` an algebra `𝔄(Λ)` of observables; for finite-dimensional quantum spin
+systems this specialises to:
 
-For finite-dimensional quantum spin systems, the construction specialises to:
-
-- a finite set of **sites** `L`,
-- a local index type `ℂ^{n_x}` at each site `x ∈ L`,
-- regions `Λ ∈ 𝒫(L)` (`Finset L.sites`),
-- local algebra `𝔄(Λ) = ⊗_{x ∈ Λ} M_{n_x}(ℂ)` realised concretely as
+- a lattice of **sites** `L` (an arbitrary type with `DecidableEq`),
+- a finite local index type `ℂ^{n_x}` at each site `x`,
+- regions `Λ : Finset L.sites`,
+- local algebra `𝔄(Λ) = ⊗_{x ∈ Λ} M_{n_x}(ℂ)` realised as
   `Matrix (Π s ∈ Λ, idx s) (Π s ∈ Λ, idx s) ℂ`.
 
-This file provides:
+This file provides the carrier structure, the derived region-index types, the index-combiner
+equivalence `combineIdx` realising `regionIdx Λ_total ≃ regionIdx Λ × regionIdx (Λ_total \ Λ)`,
+the cardinality factorisation, the transport `regionIdxCongr`, and the `n`-partite region
+factorisation equivalences (`regionIdxPairEquiv`, `regionIdxTripleEquiv`, `regionIdxCompl*`).
 
-1. the structure carrying the lattice + per-site Hilbert-space data, the derived region index
-   types, and the index-combiner equivalence relating `regionIdx Λ_total` to the product
-   `regionIdx Λ × regionIdx (Λ_total \ Λ)`;
-2. the **restriction** (Schrödinger-picture partial trace): given regions `Λ ⊆ Λ_total`,
-   the restriction of a state on `𝔄(Λ_total)` to `𝔄(Λ)`. In density-matrix language this is
-   exactly the partial trace over the complementary region `Λ_total \ Λ`.
-   The restriction is the Schrödinger-picture dual of the algebra
-   inclusion `𝔄(Λ) ↪ 𝔄(Λ_total)`. There is no positional ("left/right") concept — the
-   operation is parameterised by the region itself.
-
-## Main definitions
-
-* `LocalNet` — data carrier: sites + per-site finite index types
-* `LocalNet.regionIdx` — index type of a region (dependent product)
-* `LocalNet.localAlgebra` — the matrix algebra at a region
-* `LocalNet.densityMatrix` — density matrices at a region
-* `LocalNet.combineIdx` — `regionIdx Λ × regionIdx (Λ_total \ Λ) ≃ regionIdx Λ_total`
-* `LocalNet.includeAlgebra` — isotony embedding `𝔄(Λ) ↪ 𝔄(Λ_total)`
-* `LocalNet.regionIdxInsertEquiv` — recursive split: `regionIdx (insert s Λ) ≃ localIdx s × regionIdx Λ`
-* `LocalNet.regionIdxPairEquiv` / `regionIdxTripleEquiv` / `regionIdxTripleEquiv'` —
-  factorisation of `n`-element regions into per-site product types
-* `LocalNet.regionIdxComplLeftSite` / `regionIdxComplRightSite` —
-  `regionIdx ({a, b} \ {a}) ≃ localIdx b` and its right-site dual
-
-The generic primitives above subsume any partite count; the bipartite / tripartite
-factorisation specialisations are exposed below as `regionIdxPairEquiv`,
-`regionIdxTripleEquiv`, and `regionIdxTripleEquiv'`.
-
-The partial-trace / restriction operations (`Matrix.restrict`, `Matrix.restrictKraus`,
-`Matrix.QuantumChannel.restrict`, `DensityMatrix.restrict`, and the paper notation
-`ρ ↾ Λ`) are defined in `QuantumSystem/Analysis/Matrix/PartialTrace.lean`.
+The net **properties** built on this data live in sibling modules:
+`LocalNet.Isotony` (the embedding `𝔄(Λ) ↪ 𝔄(Λ_total)` + functoriality), `LocalNet.Locality`
+(disjoint regions commute), `LocalNet.QuasiLocal` (quasi-local C⋆-algebra), `LocalNet.Covariance`
+(symmetry action). Restriction / partial trace lives in `Analysis/Matrix/PartialTrace.lean`.
 
 ## References
 
@@ -60,14 +34,17 @@ The partial-trace / restriction operations (`Matrix.restrict`, `Matrix.restrictK
 
 @[expose] public section
 
-/-- Data for a finite-dimensional **local net of matrix algebras** on a finite lattice.
+/-- Data for a **local net of matrix algebras** on a (possibly infinite) lattice of sites.
     Each site `s : sites` carries a finite index type `localIdx s` whose cardinality is the
-    local Hilbert-space dimension. The local algebra at a region `Λ ⊆ sites` is then the
-    matrix algebra on the dependent product `Π s ∈ Λ, localIdx s`. -/
+    local Hilbert-space dimension. The local algebra at a *finite* region `Λ : Finset sites`
+    is then the matrix algebra on the dependent product `Π s ∈ Λ, localIdx s` — finite even
+    when `sites` is infinite, since regions are finite subsets. Leaving `sites` unrestricted
+    (only `DecidableEq`) is what allows the quasi-local algebra to be a genuine inductive
+    limit over the directed set of finite regions, as in Naaijkens 2012 §1.3 and
+    Bratteli–Robinson Vol.2 §6.2. -/
 structure LocalNet where
-  /-- Lattice of sites — `Fintype` for the finite-dim project scope. -/
+  /-- Lattice of sites — an arbitrary type; regions are its finite subsets. -/
   sites : Type*
-  [sitesFintype : Fintype sites]
   [sitesDecEq : DecidableEq sites]
   /-- Local Hilbert-space index type at each site. -/
   localIdx : sites → Type*
@@ -76,7 +53,7 @@ structure LocalNet where
 
 namespace LocalNet
 
-attribute [instance] sitesFintype sitesDecEq localFintype localDecEq
+attribute [instance] sitesDecEq localFintype localDecEq
 
 variable (L : LocalNet)
 
@@ -152,199 +129,6 @@ theorem card_regionIdx_total {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total
   rw [← Fintype.card_prod]
   exact Fintype.card_congr (L.combineIdx h).symm
 
-/-! ### Isotony embedding (algebra inclusion)
-
-The isotony embedding `𝔄(Λ) ↪ 𝔄(Λ_total)` is realised concretely as the tensor with
-identity on the complement, `A ↦ A ⊗ I_{Λ_total \ Λ}`. We bundle it as a unital
-`*`-algebra homomorphism (`StarAlgHom`) so that the AQFT axioms (Naaijkens 2012 §1.3
-line 211, Verch 2025 §1.2 axiom (i), Bratteli–Robinson Vol.2 §6.2) — preservation of
-unit, product, and adjoint — are guaranteed at the type level.
-
-Pipeline: entry-wise underlying function `includeAlgebraFun` → algebraic identities
-`includeAlgebraFun_{one,mul,star,...}` → bundled `includeAlgebra : _ →⋆ₐ[ℂ] _`. -/
-
-/-- Entry-wise underlying function for `includeAlgebra`, defined separately so the
-    structural simp lemmas (`includeAlgebraFun_apply`, `..._apply_combineIdx`) reduce
-    by `rfl`/`simp` without going through the `StarAlgHom` coercion. -/
-noncomputable def includeAlgebraFun {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (X : L.localAlgebra Λ) : L.localAlgebra Λ_total :=
-  Matrix.of fun s s' =>
-    if ((L.combineIdx h).symm s).2 = ((L.combineIdx h).symm s').2 then
-      X ((L.combineIdx h).symm s).1 ((L.combineIdx h).symm s').1
-    else 0
-
-@[simp] lemma includeAlgebraFun_apply {Λ Λ_total : Finset L.sites}
-    (h : Λ ⊆ Λ_total) (X : L.localAlgebra Λ) (s s' : L.regionIdx Λ_total) :
-    L.includeAlgebraFun h X s s' =
-      if ((L.combineIdx h).symm s).2 = ((L.combineIdx h).symm s').2 then
-        X ((L.combineIdx h).symm s).1 ((L.combineIdx h).symm s').1
-      else 0 := rfl
-
-/-- Entry-wise behaviour of `includeAlgebraFun` at combined indices: the off-diagonal
-    components in the complementary region vanish, leaving `X a a'` on the diagonal. -/
-@[simp] lemma includeAlgebraFun_apply_combineIdx
-    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) (X : L.localAlgebra Λ)
-    (a a' : L.regionIdx Λ) (b b' : L.regionIdx (Λ_total \ Λ)) :
-    L.includeAlgebraFun h X (L.combineIdx h (a, b)) (L.combineIdx h (a', b')) =
-      if b = b' then X a a' else 0 := by
-  simp [includeAlgebraFun, Equiv.symm_apply_apply]
-
-lemma includeAlgebraFun_zero {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) :
-    L.includeAlgebraFun h 0 = 0 := by
-  ext s s'
-  simp only [includeAlgebraFun_apply, Matrix.zero_apply]
-  split_ifs <;> rfl
-
-lemma includeAlgebraFun_add {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (X Y : L.localAlgebra Λ) :
-    L.includeAlgebraFun h (X + Y) =
-      L.includeAlgebraFun h X + L.includeAlgebraFun h Y := by
-  ext s s'
-  simp only [includeAlgebraFun_apply, Matrix.add_apply]
-  split_ifs with hbb
-  · rfl
-  · rw [add_zero]
-
-lemma includeAlgebraFun_smul {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (c : ℂ) (X : L.localAlgebra Λ) :
-    L.includeAlgebraFun h (c • X) = c • L.includeAlgebraFun h X := by
-  ext s s'
-  simp only [includeAlgebraFun_apply, Matrix.smul_apply, smul_eq_mul]
-  split_ifs with hbb
-  · rfl
-  · rw [mul_zero]
-
-lemma includeAlgebraFun_one {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) :
-    L.includeAlgebraFun h 1 = 1 := by
-  ext s s'
-  by_cases hss : s = s'
-  · subst hss
-    rw [includeAlgebraFun_apply, if_pos rfl, Matrix.one_apply_eq, Matrix.one_apply_eq]
-  · rw [includeAlgebraFun_apply, Matrix.one_apply_ne hss]
-    -- Translate `s ≠ s'` to a disjunction on the two coordinates of `(combineIdx h).symm`.
-    have hne : (L.combineIdx h).symm s ≠ (L.combineIdx h).symm s' := fun heq =>
-      hss ((L.combineIdx h).symm.injective heq)
-    rw [Ne, Prod.ext_iff, not_and_or] at hne
-    by_cases h2 : ((L.combineIdx h).symm s).2 = ((L.combineIdx h).symm s').2
-    · rw [if_pos h2]
-      rcases hne with h1 | h2'
-      · rw [Matrix.one_apply_ne h1]
-      · exact absurd h2 h2'
-    · rw [if_neg h2]
-
-lemma includeAlgebraFun_star {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (X : L.localAlgebra Λ) :
-    L.includeAlgebraFun h (star X) = star (L.includeAlgebraFun h X) := by
-  ext s s'
-  simp only [includeAlgebraFun_apply, Matrix.star_apply]
-  by_cases h2 : ((L.combineIdx h).symm s).2 = ((L.combineIdx h).symm s').2
-  · rw [if_pos h2, if_pos h2.symm]
-  · rw [if_neg h2, if_neg (fun hh => h2 hh.symm), star_zero]
-
-lemma includeAlgebraFun_mul {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (X Y : L.localAlgebra Λ) :
-    L.includeAlgebraFun h (X * Y) =
-      L.includeAlgebraFun h X * L.includeAlgebraFun h Y := by
-  ext s s'
-  -- Express both rows/columns through `combineIdx` so the `_apply_combineIdx` simp lemma fires.
-  set sa := ((L.combineIdx h).symm s).1 with hsa
-  set sb := ((L.combineIdx h).symm s).2 with hsb
-  set s'a := ((L.combineIdx h).symm s').1 with hs'a
-  set s'b := ((L.combineIdx h).symm s').2 with hs'b
-  have hs : s = L.combineIdx h (sa, sb) := by
-    simp [sa, sb, Equiv.apply_symm_apply]
-  have hs' : s' = L.combineIdx h (s'a, s'b) := by
-    simp [s'a, s'b, Equiv.apply_symm_apply]
-  rw [hs, hs', includeAlgebraFun_apply_combineIdx, Matrix.mul_apply]
-  -- Reindex the RHS sum (over `regionIdx Λ_total`) via `combineIdx`.
-  rw [show ((L.includeAlgebraFun h X * L.includeAlgebraFun h Y)
-              (L.combineIdx h (sa, sb)) (L.combineIdx h (s'a, s'b))) =
-      ∑ p : L.regionIdx Λ × L.regionIdx (Λ_total \ Λ),
-        L.includeAlgebraFun h X (L.combineIdx h (sa, sb)) (L.combineIdx h p) *
-          L.includeAlgebraFun h Y (L.combineIdx h p) (L.combineIdx h (s'a, s'b)) from by
-    rw [Matrix.mul_apply]
-    exact ((L.combineIdx h).sum_comp _).symm]
-  rw [Fintype.sum_prod_type]
-  simp_rw [includeAlgebraFun_apply_combineIdx]
-  -- Goal:
-  -- (if sb = s'b then ∑ a'', X sa a'' * Y a'' s'a else 0)
-  --   = ∑ a'', ∑ b'', (if sb = b'' then X sa a'' else 0) * (if b'' = s'b then Y a'' s'a else 0)
-  by_cases hbb : sb = s'b
-  · rw [if_pos hbb]
-    refine Finset.sum_congr rfl fun a'' _ => ?_
-    rw [Finset.sum_eq_single sb
-      (fun b'' _ hb'' => by rw [if_neg fun heq => hb'' heq.symm, zero_mul])
-      (fun h_not_mem => absurd (Finset.mem_univ sb) h_not_mem)]
-    rw [if_pos rfl, ← hbb, if_pos rfl]
-  · rw [if_neg hbb]
-    refine (Finset.sum_eq_zero fun a'' _ => ?_).symm
-    refine Finset.sum_eq_zero fun b'' _ => ?_
-    by_cases hb_sb : sb = b''
-    · subst hb_sb
-      rw [if_neg hbb, mul_zero]
-    · rw [if_neg hb_sb, zero_mul]
-
-lemma includeAlgebraFun_algebraMap {Λ Λ_total : Finset L.sites}
-    (h : Λ ⊆ Λ_total) (c : ℂ) :
-    L.includeAlgebraFun h ((algebraMap ℂ (L.localAlgebra Λ)) c) =
-      (algebraMap ℂ (L.localAlgebra Λ_total)) c := by
-  rw [Algebra.algebraMap_eq_smul_one, Algebra.algebraMap_eq_smul_one,
-      includeAlgebraFun_smul, includeAlgebraFun_one]
-
-/-- **Isotony embedding** `𝔄(Λ) ↪ 𝔄(Λ_total)`: tensor a local matrix with the identity on
-    the complementary region. Realises the inclusion `A ↦ A ⊗ I_{Λ_total \ Λ}` from
-    Naaijkens 2012 §1.3 line 211, Verch 2025 §1.2 axiom (i), Bratteli–Robinson Vol.2 §6.2.
-    Bundled as a unital `*`-algebra homomorphism so that `map_one`, `map_mul`, `map_star`
-    are available via the `StarAlgHom` API. Entry-wise:
-    `(includeAlgebra h X) s s' = X (combineIdx⁻¹ s).1 (combineIdx⁻¹ s').1` when the
-    complementary indices match, else `0`. -/
-noncomputable def includeAlgebra {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) :
-    L.localAlgebra Λ →⋆ₐ[ℂ] L.localAlgebra Λ_total where
-  toFun := L.includeAlgebraFun h
-  map_zero' := L.includeAlgebraFun_zero h
-  map_add' := L.includeAlgebraFun_add h
-  map_one' := L.includeAlgebraFun_one h
-  map_mul' := L.includeAlgebraFun_mul h
-  commutes' := L.includeAlgebraFun_algebraMap h
-  map_star' := L.includeAlgebraFun_star h
-
-/-- Entry-wise unfolding of `includeAlgebra h X`: at indices `(s, s')` of the larger
-    region, the embedded matrix equals `X` on the diagonal (in the complementary index)
-    and zero off-diagonal. -/
-@[simp] lemma includeAlgebra_apply {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (X : L.localAlgebra Λ) (s s' : L.regionIdx Λ_total) :
-    L.includeAlgebra h X s s' =
-      if ((L.combineIdx h).symm s).2 = ((L.combineIdx h).symm s').2 then
-        X ((L.combineIdx h).symm s).1 ((L.combineIdx h).symm s').1
-      else 0 := rfl
-
-/-- **Injectivity of the isotony embedding** (the `↪` of `𝔄(Λ) ↪ 𝔄(Λ_total)`): under
-    the standing AQFT non-degeneracy assumption that the complementary region has a
-    non-empty index type, `includeAlgebra h` is injective as a map of `*`-algebras. -/
-theorem includeAlgebra_injective {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    [hne : Nonempty (L.regionIdx (Λ_total \ Λ))] :
-    Function.Injective (L.includeAlgebra h) := by
-  rw [injective_iff_map_eq_zero]
-  intro X hX
-  ext a a'
-  obtain ⟨b⟩ := hne
-  have heq : L.includeAlgebra h X (L.combineIdx h (a, b)) (L.combineIdx h (a', b)) =
-      0 := by rw [hX]; rfl
-  have key : L.includeAlgebra h X (L.combineIdx h (a, b)) (L.combineIdx h (a', b)) =
-      X a a' := by
-    change L.includeAlgebraFun h X (L.combineIdx h (a, b)) (L.combineIdx h (a', b)) = X a a'
-    rw [includeAlgebraFun_apply_combineIdx, if_pos rfl]
-  rw [key] at heq
-  simpa using heq
-
-/-! ### Region equivalences
-
-Generic equivalences over arbitrary `Fintype` site sets — used both directly (for any
-finite site set) and as building blocks for the bipartite (`regionIdxPairEquiv`) and
-tripartite (`regionIdxTripleEquiv`, `regionIdxTripleEquiv'`) factorisations below. -/
-
-variable (L : LocalNet)
-
 /-- Transport `regionIdx` along a Finset equality. -/
 def regionIdxCongr {Λ Λ' : Finset L.sites} (h : Λ = Λ') :
     L.regionIdx Λ ≃ L.regionIdx Λ' :=
@@ -356,6 +140,14 @@ def regionIdxCongr {Λ Λ' : Finset L.sites} (h : Λ = Λ') :
     (L.regionIdxCongr h x) ⟨s, hs'⟩ = x ⟨s, hs⟩ := by
   subst h
   rfl
+
+/-! ### Region equivalences
+
+Generic equivalences over arbitrary site types — used both directly (for any finite region)
+and as building blocks for the bipartite (`regionIdxPairEquiv`) and tripartite
+(`regionIdxTripleEquiv`, `regionIdxTripleEquiv'`) factorisations below. -/
+
+variable (L : LocalNet)
 
 /-- Singleton region: `regionIdx {s} ≃ localIdx s`. -/
 def singletonRegionIdxEquiv (s : L.sites) :
@@ -376,10 +168,11 @@ def singletonRegionIdxEquiv (s : L.sites) :
 
 /-! ### Generic n-partite primitives
 
-Building blocks for any finite site set: `regionIdx ∅ ≃ PUnit`, an `insert`-based
-recursive split, and the universal product form `regionIdx Finset.univ ≃ Π s, localIdx s`.
-Two- and three-element factor equivs are derived from the recursive split — adding more
-partite counts (4, 5, ...) is now a one-liner with no new boilerplate. -/
+Building blocks for any finite region: `regionIdx ∅ ≃ PUnit`, an `insert`-based recursive
+split, and (for finite site types) the universal product form
+`regionIdx Finset.univ ≃ Π s, localIdx s`. Two- and three-element factor equivs are derived
+from the recursive split — adding more partite counts (4, 5, ...) is now a one-liner with no
+new boilerplate. -/
 
 /-- The empty region: `regionIdx ∅ ≃ PUnit`. The dependent product over the empty
     subtype has a unique element. -/
@@ -409,8 +202,9 @@ def regionIdxInsertEquiv {s : L.sites} {Λ : Finset L.sites} (hs : s ∉ Λ) :
     (Equiv.prodCongr (L.singletonRegionIdxEquiv s) (L.regionIdxCongr h_compl_eq))
 
 /-- The universal region: `regionIdx Finset.univ ≃ Π s : sites, localIdx s`.
-    Collapses the `Finset.univ`-subtype back to the underlying type. -/
-def regionIdxUnivEquiv : L.regionIdx (Finset.univ : Finset L.sites) ≃
+    Collapses the `Finset.univ`-subtype back to the underlying type. Requires `Fintype sites`
+    (the only place a finite site set is needed; the rest of the API runs on infinite lattices). -/
+def regionIdxUnivEquiv [Fintype L.sites] : L.regionIdx (Finset.univ : Finset L.sites) ≃
     ∀ s : L.sites, L.localIdx s where
   toFun f s := f ⟨s, Finset.mem_univ s⟩
   invFun g := fun ⟨s, _⟩ => g s

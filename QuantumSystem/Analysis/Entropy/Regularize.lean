@@ -14,7 +14,7 @@ The structural definitions (`maximallyMixed`, `regularize`, `regularize_eq_cfc`,
 This file specialises that infrastructure to a `LocalNet`. It proves compatibility of
 regularization with restriction (partial trace), which is the key fact behind extending
 PosDef-only theorems to PosSemidef. The cardinality factorisation for region indices now
-lives next to `LocalNet.combineIdx` in `LocalNet.lean`.
+lives next to `LocalNet.combineIdx` in `LocalNet/Basic.lean`.
 -/
 
 @[expose] public section

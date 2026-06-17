@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet
+public import QuantumSystem.Algebra.LocalNet.Isotony
 
 /-!
 # Partial trace as restriction (matrix-level)
@@ -314,15 +314,6 @@ theorem restrict_restrict {Λ' Λ Λ_total : Finset L.sites}
 The matrix-level dual of the restriction: tracing `ρ` against an embedded observable
 `includeAlgebra h X` equals tracing the marginal `restrict h ρ` against `X`. -/
 
-/-- Entry-wise behaviour of `includeAlgebra` at combined indices: the off-diagonal
-    components in the complementary region vanish, leaving `X a a'` on the diagonal. -/
-@[simp] private lemma includeAlgebra_apply_combineIdx
-    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) (X : L.localAlgebra Λ)
-    (a a' : L.regionIdx Λ) (b b' : L.regionIdx (Λ_total \ Λ)) :
-    L.includeAlgebra h X (L.combineIdx h (a, b)) (L.combineIdx h (a', b')) =
-      if b = b' then X a a' else 0 := by
-  simp [LocalNet.includeAlgebra_apply, Equiv.symm_apply_apply]
-
 /-- **Heisenberg-picture trace identity**:
 `Tr(ρ · includeAlgebra h X) = Tr((restrict h ρ) · X)`.
 This is the AQFT-natural form of `trace_mul_kronecker_one`. -/
@@ -369,9 +360,9 @@ theorem trace_mul_includeAlgebra {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_t
               L.includeAlgebra h X (L.combineIdx h (a', b')) (L.combineIdx h (a, b))) =
         ρ (L.combineIdx h (a, b)) (L.combineIdx h (a', b)) * X a' a from by
       rw [Finset.sum_eq_single b]
-      · rw [includeAlgebra_apply_combineIdx]; simp
+      · rw [LocalNet.includeAlgebra_apply_combineIdx]; simp
       · intro b' _ hb'
-        rw [includeAlgebra_apply_combineIdx, if_neg hb']
+        rw [LocalNet.includeAlgebra_apply_combineIdx, if_neg hb']
         ring
       · simp]
   -- Combine: LHS = ∑ a, ∑ b, ∑ a', ... = ∑ a, ∑ a', ∑ b, ... = RHS

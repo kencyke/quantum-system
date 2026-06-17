@@ -17,7 +17,7 @@ Notations and abbreviations for quantum information theory.
 | `S(ρ)` | `Matrix.vonNeumannEntropy ρ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/VonNeumannEntropy.lean` |
 | `D(ρ ∥ σ)` | `Matrix.relativeEntropy ρ σ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/RelativeEntropy.lean` |
 | `⟪X, Y⟫_HS` | `Matrix.hsInnerProduct X Y` | `open scoped Matrix.QuantumInfo` | `Analysis/Matrix/LiebConcavity.lean` |
-| `ρ ↾ Λ` | `DensityMatrix.restrict (by …) ρ` | `open scoped LocalNet.QuantumInfo` | `Algebra/LocalNet.lean` |
+| `ρ ↾ Λ` | `DensityMatrix.restrict (by …) ρ` | `open scoped LocalNet.QuantumInfo` | `Algebra/LocalNet/Basic.lean` |
 
 `ρ ↾ Λ` is the AQFT-style **restriction of a density matrix to a sub-region** —
 equivalently, the partial trace over the complementary region.
