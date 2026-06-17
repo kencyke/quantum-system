@@ -76,12 +76,6 @@ lemma localConeSubalg_le_quasiLocal (Λ : Cone L) :
   refine StarSubalgebra.topologicalClosure_mono ?_
   exact iSup_le fun Λ' => iSup_le fun _ => le_iSup _ Λ'
 
-/-- The complement-cone algebra is contained in the quasi-local algebra. -/
-lemma complementConeSubalg_le_quasiLocal (Λ : Cone L) :
-    complementConeSubalg L Ω Λ ≤ quasiLocal L Ω := by
-  refine StarSubalgebra.topologicalClosure_mono ?_
-  exact iSup_le fun Λ' => iSup_le fun _ => le_iSup _ Λ'
-
 /-- Enlarging to a union cone shrinks the complement-cone algebra below the left
 summand's complement-cone algebra. -/
 lemma complementConeSubalg_union_le_left (Λ₁ Λ₂ : Cone L) :
