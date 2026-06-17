@@ -48,6 +48,7 @@ public import QuantumSystem.Algebra.Sector.Category.Endomorphism
 public import QuantumSystem.Algebra.Sector.Category.Inner
 public import QuantumSystem.Algebra.Sector.Category.Positivity
 public import QuantumSystem.Algebra.Sector.Category.Rigid
+public import QuantumSystem.Algebra.Sector.Category.StarEndoLinear
 public import QuantumSystem.Algebra.Sector.Category.Statistics
 public import QuantumSystem.Algebra.Sector.Category.Subobject
 public import QuantumSystem.Algebra.Sector.Net.BraidedCategory
