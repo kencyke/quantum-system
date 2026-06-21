@@ -2,6 +2,7 @@ module
 
 public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.Normed.Operator.Extend
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Ideal
 public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
@@ -14,6 +15,7 @@ namespace GNS
 namespace Construction
 
 open ComplexConjugate NNReal Topology Filter
+open scoped InnerProductSpace Adjoint
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 variable (ω : State ℂ A)
@@ -104,7 +106,7 @@ noncomputable instance instInnerProductSpaceQuot : InnerProductSpace ℂ (A ⧸ 
 `InnerProductSpace` instance on the quotient is built reducibly from the corresponding
 `InnerProductSpace.Core`. -/
 private lemma inner_quotient_eq (x y : A ⧸ Nω) :
-    @inner ℂ (A ⧸ Nω) _ x y = innerQuotient ω x y := rfl
+    ⟪x, y⟫_ℂ = innerQuotient ω x y := rfl
 
 /-- The squared norm of the class `[x]` equals the real part `Re (ω (star x * x))`. -/
 private lemma norm_sq_eq_inner (x : A) :
@@ -185,7 +187,7 @@ lemma πω'_mul (a b : A) (c : A ⧸ Nω) : πω' ω (a * b) c = πω' ω a (π�
 
 /-- Adjoint property of the algebraic action: `⟪πω'(a) b, c⟫ = ⟪b, πω'(a*) c⟫`. -/
 lemma πω'_inner (a : A) (b c : A ⧸ Nω) :
-    @inner ℂ (A ⧸ Nω) _ (πω' ω a b) c = @inner ℂ (A ⧸ Nω) _ b (πω' ω (star a) c) := by
+    ⟪πω' ω a b, c⟫_ℂ = ⟪b, πω' ω (star a) c⟫_ℂ := by
   refine Quotient.inductionOn₂' b c fun b' c' => ?_
   unfold πω'
   simp only [Quotient.liftOn'_mk'']
@@ -236,7 +238,7 @@ noncomputable def πω'CLM (a : A) : (A ⧸ Nω) →L[ℂ] (A ⧸ Nω) :=
 dense quotient into its Hilbert space completion. -/
 noncomputable def πω (a : A) : 𝓑(Hω) :=
   ContinuousLinearMap.extend
-    (UniformSpace.Completion.toComplL.comp (πω'CLM ω a))
+    (UniformSpace.Completion.toComplL ∘L (πω'CLM ω a))
     (UniformSpace.Completion.toComplL (𝕜 := ℂ) (E := A ⧸ Nω))
 
 /-- Agreement on the dense subspace: `πω(a) (↑x) = ↑(πω'(a) x)` for `x : A ⧸ Nω`. -/
@@ -260,27 +262,27 @@ lemma πω_mul (a b : A) : πω ω (a * b) = πω ω a ∘L πω ω b := by
   intro x
   simp [ContinuousLinearMap.comp_apply, πω_apply_coe, πω'_mul]
 
-/-- *-preservation: `(πω(a)).adjoint = πω (star a)`. -/
-lemma πω_star (a : A) : (πω ω a).adjoint = πω ω (star a) := by
+/-- *-preservation: `(πω a)† = πω (star a)`. -/
+lemma πω_star (a : A) : (πω ω a)† = πω ω (star a) := by
   ext x
   refine DenseRange.induction_on
-    (p := fun x => (πω ω a).adjoint x = πω ω (star a) x)
+    (p := fun x => (πω ω a)† x = πω ω (star a) x)
     (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) x
-    (isClosed_eq ((πω ω a).adjoint).continuous (πω ω (star a)).continuous)
+    (isClosed_eq ((πω ω a)†).continuous (πω ω (star a)).continuous)
     (fun c => by
       -- Reduce to checking equality of inner products with arbitrary y (Riesz representation)
       have : ∀ y,
-          @inner ℂ Hω _ ((πω ω a).adjoint (↑c)) y = @inner ℂ Hω _ (πω ω (star a) (↑c)) y := by
+          ⟪(πω ω a)† (↑c), y⟫_ℂ = ⟪πω ω (star a) (↑c), y⟫_ℂ := by
         intro y
         refine DenseRange.induction_on
           (p := fun y =>
-            @inner ℂ Hω _ ((πω ω a).adjoint (↑c)) y = @inner ℂ Hω _ (πω ω (star a) (↑c)) y)
+            ⟪(πω ω a)† (↑c), y⟫_ℂ = ⟪πω ω (star a) (↑c), y⟫_ℂ)
           (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) y
           (isClosed_eq (Continuous.inner continuous_const continuous_id)
             (Continuous.inner continuous_const continuous_id))
           (fun d => by
             -- Now both vectors are in the dense subspace; rewrite via the quotient-level identity
-            change @inner ℂ Hω _ ((πω ω a).adjoint (↑c)) (↑d) = @inner ℂ Hω _ (πω ω (star a) (↑c)) (↑d)
+            change ⟪(πω ω a)† (↑c), (↑d)⟫_ℂ = ⟪πω ω (star a) (↑c), (↑d)⟫_ℂ
             rw [ContinuousLinearMap.adjoint_inner_left]
             simp only [πω_apply_coe]
             rw [UniformSpace.Completion.inner_coe, UniformSpace.Completion.inner_coe]
@@ -439,13 +441,13 @@ lemma stateOnHilbert_coe (x : A ⧸ Nω) :
     (h_e := (UniformSpace.Completion.isUniformEmbedding_coe (α := A ⧸ Nω)).isUniformInducing)]
 
 /-- Riesz identification: `⟪ξω, x⟫ = stateOnHilbert x`. -/
-lemma inner_ξω_eq (x : Hω) : @inner ℂ Hω _ (ξω ω) x = stateOnHilbert ω x := by
+lemma inner_ξω_eq (x : Hω) : ⟪ξω ω, x⟫_ℂ = stateOnHilbert ω x := by
   unfold ξω
   rw [@InnerProductSpace.toDual_symm_apply ℂ Hω _ _ _ _]
 
 /-- Recovery of the original state on the quotient: `ω x = ⟪ξω, [x]⟫`. -/
 lemma state_recovery_quot (x : A) :
-    ω x = @inner ℂ Hω _ (ξω ω) (↑(Quotient.mk'' x : A ⧸ Nω) : Hω) := by
+    ω x = ⟪ξω ω, (↑(Quotient.mk'' x : A ⧸ Nω) : Hω)⟫_ℂ := by
   rw [inner_ξω_eq]
   rw [stateOnHilbert_coe]
   rfl
@@ -467,17 +469,19 @@ lemma πω_cyclic_identity (b : A) :
   intro yq
   obtain ⟨c, rfl⟩ := Quotient.exists_rep yq
   -- Typeclass instances are resolved using the renamed quotient instances
-  calc @inner ℂ Hω _ (πω ω b (ξω ω)) (↑(Quotient.mk'' c : A ⧸ Nω))
-      = @inner ℂ Hω _ (ξω ω) (ContinuousLinearMap.adjoint (πω ω b) (↑(Quotient.mk'' c : A ⧸ Nω))) := by
+  calc ⟪πω ω b (ξω ω), (↑(Quotient.mk'' c : A ⧸ Nω) : Hω)⟫_ℂ
+      = ⟪ξω ω, (πω ω b)† (↑(Quotient.mk'' c : A ⧸ Nω) : Hω)⟫_ℂ := by
         rw [ContinuousLinearMap.adjoint_inner_right]
-    _ = @inner ℂ Hω _ (ξω ω) (πω ω (star b) (↑(Quotient.mk'' c : A ⧸ Nω))) := by
+    _ = ⟪ξω ω, πω ω (star b) (↑(Quotient.mk'' c : A ⧸ Nω) : Hω)⟫_ℂ := by
         rw [πω_star]
-    _ = @inner ℂ Hω _ (ξω ω) (↑(Quotient.mk'' (star b * c) : A ⧸ Nω)) := by rw [πω_apply_quotient_coe]
+    _ = ⟪ξω ω, (↑(Quotient.mk'' (star b * c) : A ⧸ Nω) : Hω)⟫_ℂ := by rw [πω_apply_quotient_coe]
     _ = stateOnHilbert ω (↑(Quotient.mk'' (star b * c) : A ⧸ Nω)) := by rw [inner_ξω_eq]
     _ = stateOnQuot ω (Quotient.mk'' (star b * c)) := by rw [stateOnHilbert_coe]
     _ = ω (star b * c) := rfl
     _ = innerQuotient ω (Quotient.mk'' b) (Quotient.mk'' c) := by
       unfold innerQuotient; simp
+    -- The bare quotient/completion coercions give the elaborator no type anchor for the
+    -- `⟪·,·⟫_ℂ` instance metavariable, so the inner product is spelled explicitly here.
     _ = @inner ℂ (A ⧸ Nω) _ (Quotient.mk'' b) (Quotient.mk'' c) := rfl
     _ = @inner ℂ Hω _ (↑(Quotient.mk'' b : A ⧸ Nω)) (↑(Quotient.mk'' c : A ⧸ Nω)) := by
       -- Lift inner product from dense subspace into completion
@@ -503,7 +507,7 @@ lemma ξω_is_cyclic : Dense (↑(Submodule.span ℂ {πω ω a (ξω ω) | a : 
 
 /-- GNS identity for the constructed triplet: `ω a = ⟪ξω, πω a ξω⟫`. -/
 lemma state_recovery (a : A) :
-    ω a = @inner ℂ Hω _ (ξω ω) (πω ω a (ξω ω)) := by
+    ω a = ⟪ξω ω, πω ω a (ξω ω)⟫_ℂ := by
   rw [πω_cyclic_identity]
   exact state_recovery_quot ω a
 
@@ -753,15 +757,15 @@ lemma approxUnit_eval_tendsto_one :
     Tendsto (fun e : A => ω e) (CStarAlgebra.approximateUnit A) (nhds (1 : ℂ)) := by
   classical
   have h_vec := tendsto_on_vector (ω := ω) (x := ξω ω)
-  have h_inner : Continuous fun v : Hω => @inner ℂ Hω _ (ξω ω) v :=
+  have h_inner : Continuous fun v : Hω => ⟪ξω ω, v⟫_ℂ :=
     Continuous.inner continuous_const continuous_id
   have h_comp :
-      Tendsto (fun e : A => @inner ℂ Hω _ (ξω ω) (πω ω e (ξω ω)))
+      Tendsto (fun e : A => ⟪ξω ω, πω ω e (ξω ω)⟫_ℂ)
         (CStarAlgebra.approximateUnit A)
-        (nhds (@inner ℂ Hω _ (ξω ω) (ξω ω))) :=
+        (nhds ⟪ξω ω, ξω ω⟫_ℂ) :=
     (h_inner.tendsto (ξω ω)).comp h_vec
   have h_eq :
-      (fun e : A => @inner ℂ Hω _ (ξω ω) (πω ω e (ξω ω))) =
+      (fun e : A => ⟪ξω ω, πω ω e (ξω ω)⟫_ℂ) =
         fun e : A => ω e := by
     funext e
     simpa using (state_recovery (ω := ω) e).symm
