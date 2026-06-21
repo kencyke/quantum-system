@@ -155,6 +155,9 @@ lemma includeAlgebraFun_algebraMap {Λ Λ_total : Finset L.sites}
 /-- **Isotony embedding** `𝔄(Λ) ↪ 𝔄(Λ_total)`: tensor a local matrix with the identity on
     the complementary region. Realises the inclusion `A ↦ A ⊗ I_{Λ_total \ Λ}` from
     Naaijkens 2012 §1.3 line 211, Verch 2025 §1.2 axiom (i), Bratteli–Robinson Vol.2 §6.2.
+    That this embedding is literally `A ↦ A ⊗ 1` of operators on Hilbert spaces is proved in
+    `LocalNet.opEquiv_includeAlgebra` (`TensorDecomposition`); the dual marginal is the partial
+    trace `LocalNet.opEquiv_restrict` (`PartialTraceOperator`).
     Bundled as a unital `*`-algebra homomorphism so that `map_one`, `map_mul`, `map_star`
     are available via the `StarAlgHom` API. Entry-wise:
     `(includeAlgebra h X) s s' = X (combineIdx⁻¹ s).1 (combineIdx⁻¹ s').1` when the

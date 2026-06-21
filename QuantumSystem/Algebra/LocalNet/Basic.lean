@@ -78,7 +78,9 @@ abbrev densityMatrix (Λ : Finset L.sites) : Type _ :=
 
 /-- For `Λ ⊆ Λ_total`, the index type of the larger region splits as a product:
     `regionIdx Λ × regionIdx (Λ_total \ Λ) ≃ regionIdx Λ_total`. This realises the tensor
-    factorisation `ℋ_Λ_total = ℋ_Λ ⊗ ℋ_{Λ_total \ Λ}` underlying isotony and partial trace. -/
+    factorisation `ℋ_Λ_total = ℋ_Λ ⊗ ℋ_{Λ_total \ Λ}` underlying isotony and partial trace.
+    The factorisation is made formal at the operator level by `LocalNet.tensorEquiv`
+    (`TensorDecomposition`), an algebra isomorphism of the corresponding operator algebras. -/
 def combineIdx {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) :
     (L.regionIdx Λ × L.regionIdx (Λ_total \ Λ)) ≃ L.regionIdx Λ_total where
   toFun ab s :=

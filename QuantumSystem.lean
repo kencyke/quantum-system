@@ -15,6 +15,7 @@ public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Isotony
 public import QuantumSystem.Algebra.LocalNet.Locality
 public import QuantumSystem.Algebra.LocalNet.QuasiLocal
+public import QuantumSystem.Algebra.LocalNet.TensorDecomposition
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Analysis.CFC.Diagonal
@@ -28,6 +29,7 @@ public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.Analysis.Matrix.PartialTrace
+public import QuantumSystem.Analysis.Matrix.PartialTraceOperator
 public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Channel
@@ -56,6 +58,7 @@ public import QuantumSystem.ForMathlib.Analysis.SpecialFunctions.Pow.Real
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.DenseLinear
