@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 /-!
 # Intertwiners between `CStarRep`s
@@ -29,6 +30,8 @@ isomorphisms in this category.
 -/
 
 @[expose] public section
+
+open scoped Adjoint
 
 namespace CStarRep
 
@@ -107,7 +110,7 @@ noncomputable def toHom (U : UnitaryEquiv R₁ R₂) : Hom R₁ R₂ where
 
 @[simp] lemma symm_toHom (U : UnitaryEquiv R₁ R₂) :
     U.symm.toHom.toContinuousLinearMap =
-      U.unitary_map.toContinuousLinearMap.adjoint := rfl
+      U.unitary_map.toContinuousLinearMap† := rfl
 
 @[simp] lemma refl_toHom (R : CStarRep A) :
     (UnitaryEquiv.refl R).toHom = Hom.id R := by

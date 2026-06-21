@@ -3,8 +3,11 @@ module
 public import Mathlib.Analysis.CStarAlgebra.Hom
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 @[expose] public section
+
+open scoped Adjoint
 
 namespace GNS
 
@@ -124,10 +127,10 @@ noncomputable def directSumCLM (a : A) : 𝓑(Hilbert A) :=
   LinearMap.mkContinuous (directSumLinearMap a) ‖a‖ (componentWiseMap_norm_bound a)
 
 /-- The adjoint of the direct sum operator equals the direct sum operator of the adjoint:
-`(directSumCLM a)* = directSumCLM (star a)`. This follows from the *-homomorphism property
+`(directSumCLM a)† = directSumCLM (star a)`. This follows from the *-homomorphism property
 of each component GNS representation. -/
 lemma directSumCLM_adjoint (a : A) :
-    ContinuousLinearMap.adjoint (directSumCLM a) = directSumCLM (star a) := by
+    (directSumCLM a)† = directSumCLM (star a) := by
   refine ContinuousLinearMap.ext fun x => ?_
   apply ext_inner_right ℂ
   intro y

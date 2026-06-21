@@ -3,6 +3,7 @@ module
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 /-!
 # The double commutant theorem (hard half)
@@ -67,6 +68,7 @@ To prove the hard-half statement `A'' ⊆ A`, we argue by separation:
 namespace WOTClosedSubalgebra
 
 open InnerProductSpace WeakOperatorTopology
+open scoped Adjoint
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -153,14 +155,14 @@ lemma isReducing_cyclicSubspace (A : StarSubalgebra ℂ B) (x : H) :
   refine ⟨?_, ?_⟩
   · exact isInvariant_cyclicSubspace_of_mem (H := H) (A := A) (x := x) (a := a) ha
   · -- Use `A` is star-closed.
-    have ha' : ContinuousLinearMap.adjoint a ∈ (A : Set B) := by
+    have ha' : a† ∈ (A : Set B) := by
       -- `star` on `B` is adjoint.
       have : (star a) ∈ (A : Set B) := A.star_mem' ha
       simpa [ContinuousLinearMap.star_eq_adjoint] using this
     -- Now apply invariance to `a†`.
     simpa using
       (isInvariant_cyclicSubspace_of_mem (H := H) (A := A) (x := x)
-        (a := ContinuousLinearMap.adjoint a) ha')
+        (a := a†) ha')
 
 /-- `T` preserves the reducing subspaces for `S` if it leaves invariant every `S`-reducing subspace
 (and also its orthogonal complement). -/
@@ -279,14 +281,14 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : StarSubalgebra ℂ B)
         f ((toWOTEquiv (H := H)) S) = g (diagonal (H := H) (n := n) S x) := by
       classical
       have hg : g (diagonal (H := H) (n := n) S x) =
-          ∑ i : Fin n, @inner ℂ H _ (uFun i) (S (xFun i)) := by
+          ∑ i : Fin n, ⟪uFun i, S (xFun i)⟫_ℂ := by
         simp only [g, u, x]
         rw [InnerProductSpace.toDual_apply_apply, PiLp.inner_apply]
         congr 1
         funext i
         simp only [diagonal_apply, uFun, xFun, WithLp.equiv_symm_apply]
       have hf : f ((toWOTEquiv (H := H)) S) =
-          ∑ i : Fin n, @inner ℂ H _ (uFun i) (S (xFun i)) := by
+          ∑ i : Fin n, ⟪uFun i, S (xFun i)⟫_ℂ := by
         classical
         have hsum : (∑ j : (↥I),
             (coeff j) • ((inducingFnRestrictCLM (H := H) I) ((toWOTEquiv (H := H)) S) j)) =
@@ -314,7 +316,7 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : StarSubalgebra ℂ B)
         simp only [toWOTEquiv, ContinuousLinearMap.toWOT_apply]
         conv_lhs =>
           rw [show (e i).1.2 (S (e i).1.1) =
-            @inner ℂ H _ ((InnerProductSpace.toDual ℂ H).symm (e i).1.2) (S (e i).1.1) from
+            ⟪(InnerProductSpace.toDual ℂ H).symm (e i).1.2, S (e i).1.1⟫_ℂ from
             InnerProductSpace.toDual_symm_apply.symm]
         simp only [uFun, xFun, inner_smul_left, starRingEnd_self_apply, smul_eq_mul]
       simpa [hg] using hf

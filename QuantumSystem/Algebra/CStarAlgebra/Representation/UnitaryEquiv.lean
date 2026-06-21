@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 /-!
 # Unitary equivalence of `CStarRep`s
@@ -31,6 +32,8 @@ unrelated origin.
 -/
 
 @[expose] public section
+
+open scoped Adjoint
 
 namespace CStarRep
 
@@ -66,7 +69,7 @@ noncomputable def refl (R : CStarRep A) : UnitaryEquiv R R where
 noncomputable def symm {R₁ R₂ : CStarRep A} (U : UnitaryEquiv R₁ R₂) :
     UnitaryEquiv R₂ R₁ where
   unitary_map :=
-    { toContinuousLinearMap := U.unitary_map.toContinuousLinearMap.adjoint
+    { toContinuousLinearMap := U.unitary_map.toContinuousLinearMap†
       adjoint_comp := by
         rw [ContinuousLinearMap.adjoint_adjoint]
         exact U.unitary_map.comp_adjoint
@@ -80,18 +83,17 @@ noncomputable def symm {R₁ R₂ : CStarRep A} (U : UnitaryEquiv R₁ R₂) :
     -- `a ↦ star a` (and using `star (star a) = a`) yields the goal.
     have h := U.intertwines (star a)
     have h' :
-        (U.unitary_map.toContinuousLinearMap ∘L R₁.π (star a)).adjoint =
-          (R₂.π (star a) ∘L U.unitary_map.toContinuousLinearMap).adjoint := by
+        (U.unitary_map.toContinuousLinearMap ∘L R₁.π (star a))† =
+          (R₂.π (star a) ∘L U.unitary_map.toContinuousLinearMap)† := by
       rw [h]
     rw [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.adjoint_comp] at h'
-    -- Now `(π₁ (star a))† ∘L U†.adjoint.adjoint = U†.adjoint.adjoint ∘L (π₂ (star a))†`.
-    -- But the LHS is `(π₁ (star a))† ∘L U†` after no rewriting since adjoint sits in
-    -- the outer position. The relevant simp lemma: `(π a)† = π (star a)`.
-    have hπ₁ : (R₁.π (star a)).adjoint = R₁.π a := by
+    -- Now `h' : (π₁ (star a))† ∘L U† = U† ∘L (π₂ (star a))†`.
+    -- It remains to rewrite `(πᵢ (star a))† = πᵢ a` via `(π a)† = π (star a)` and `star_star`.
+    have hπ₁ : (R₁.π (star a))† = R₁.π a := by
       have := (R₁.π).map_star' (star a)
       rw [ContinuousLinearMap.star_eq_adjoint, star_star] at this
       exact this.symm
-    have hπ₂ : (R₂.π (star a)).adjoint = R₂.π a := by
+    have hπ₂ : (R₂.π (star a))† = R₂.π a := by
       have := (R₂.π).map_star' (star a)
       rw [ContinuousLinearMap.star_eq_adjoint, star_star] at this
       exact this.symm
@@ -112,7 +114,7 @@ noncomputable def trans {R₁ R₂ R₃ : CStarRep A}
         simp only [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.coe_comp',
           Function.comp_apply, ContinuousLinearMap.one_apply]
         have hV :
-            V.unitary_map.toContinuousLinearMap.adjoint
+            V.unitary_map.toContinuousLinearMap†
               (V.unitary_map.toContinuousLinearMap (U.unitary_map.toContinuousLinearMap x)) =
               U.unitary_map.toContinuousLinearMap x := by
           have := congrArg
@@ -121,7 +123,7 @@ noncomputable def trans {R₁ R₂ R₃ : CStarRep A}
           simpa using this
         rw [hV]
         have hU :
-            U.unitary_map.toContinuousLinearMap.adjoint
+            U.unitary_map.toContinuousLinearMap†
               (U.unitary_map.toContinuousLinearMap x) = x := by
           have := congrArg
             (fun (f : R₁.H →L[ℂ] R₁.H) => f x) U.unitary_map.adjoint_comp
@@ -133,17 +135,17 @@ noncomputable def trans {R₁ R₂ R₃ : CStarRep A}
           Function.comp_apply, ContinuousLinearMap.one_apply]
         have hU :
             U.unitary_map.toContinuousLinearMap
-              (U.unitary_map.toContinuousLinearMap.adjoint
-                (V.unitary_map.toContinuousLinearMap.adjoint y)) =
-              V.unitary_map.toContinuousLinearMap.adjoint y := by
+              (U.unitary_map.toContinuousLinearMap†
+                (V.unitary_map.toContinuousLinearMap† y)) =
+              V.unitary_map.toContinuousLinearMap† y := by
           have := congrArg
-            (fun (f : R₂.H →L[ℂ] R₂.H) => f (V.unitary_map.toContinuousLinearMap.adjoint y))
+            (fun (f : R₂.H →L[ℂ] R₂.H) => f (V.unitary_map.toContinuousLinearMap† y))
             U.unitary_map.comp_adjoint
           simpa using this
         rw [hU]
         have hV :
             V.unitary_map.toContinuousLinearMap
-              (V.unitary_map.toContinuousLinearMap.adjoint y) = y := by
+              (V.unitary_map.toContinuousLinearMap† y) = y := by
           have := congrArg
             (fun (f : R₃.H →L[ℂ] R₃.H) => f y) V.unitary_map.comp_adjoint
           simpa using this

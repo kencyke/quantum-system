@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 /-!
 # Irreducibility for `CStarRep`
@@ -28,6 +29,8 @@ descend to the quotient).
 -/
 
 @[expose] public section
+
+open scoped Adjoint
 
 namespace CStarRep
 
@@ -75,11 +78,11 @@ private lemma isIrreducible_of {R₁ R₂ : CStarRep A}
     refine Or.inl ?_
     refine le_antisymm ?_ bot_le
     intro w hw
-    -- Surjectivity of `f`: `w = f (f.adjoint w)` since `f ∘L f.adjoint = 1`.
-    have hsurj : f (f.adjoint w) = w := by
+    -- Surjectivity of `f`: `w = f (f† w)` since `f ∘L f† = 1`.
+    have hsurj : f (f† w) = w := by
       have := congrArg (fun (g : R₂.H →L[ℂ] R₂.H) => g w) U.unitary_map.comp_adjoint
       simpa using this
-    set x := f.adjoint w with hx_def
+    set x := f† w with hx_def
     have hx_mem : x ∈ W' := by
       change f x ∈ W
       rw [hx_def]; rw [hsurj]
@@ -93,12 +96,12 @@ private lemma isIrreducible_of {R₁ R₂ : CStarRep A}
     refine Or.inr ?_
     refine le_antisymm le_top ?_
     intro w _
-    have hsurj : f (f.adjoint w) = w := by
+    have hsurj : f (f† w) = w := by
       have := congrArg (fun (g : R₂.H →L[ℂ] R₂.H) => g w) U.unitary_map.comp_adjoint
       simpa using this
-    have hx_mem : f.adjoint w ∈ W' :=
+    have hx_mem : f† w ∈ W' :=
       htop ▸ Submodule.mem_top
-    have hfx : f (f.adjoint w) ∈ W := hx_mem
+    have hfx : f (f† w) ∈ W := hx_mem
     rw [hsurj] at hfx
     exact hfx
 

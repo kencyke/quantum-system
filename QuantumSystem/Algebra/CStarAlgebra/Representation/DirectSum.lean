@@ -4,6 +4,7 @@ public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Data.Real.StarOrdered
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Family
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 /-!
 # Direct sum of a sector family
@@ -47,6 +48,7 @@ decomposition.  The skeleton version
 @[expose] public section
 
 open ENNReal
+open scoped Adjoint
 
 namespace SectorFamily
 
@@ -232,7 +234,7 @@ noncomputable def directSumCLM (F : SectorFamily.{u, v, w} A) (a : A) :
 
 /-- Block-diagonality is compatible with the `*`-structure. -/
 lemma directSumCLM_adjoint (F : SectorFamily.{u, v, w} A) (a : A) :
-    ContinuousLinearMap.adjoint (F.directSumCLM a) = F.directSumCLM (star a) := by
+    (F.directSumCLM a)† = F.directSumCLM (star a) := by
   refine ContinuousLinearMap.ext fun x => ?_
   apply ext_inner_right ℂ
   intro y
