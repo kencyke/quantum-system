@@ -49,6 +49,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Ideal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.NonUnital
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.WeakDual
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
