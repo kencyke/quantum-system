@@ -33,6 +33,7 @@ This file provides a minimal API for invariant / reducing subspaces for a set of
 namespace InnerProductSpace
 
 local notation "⟪" x ", " y "⟫" => inner ℂ x y
+local postfix:max "†" => ContinuousLinearMap.adjoint
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 
@@ -137,25 +138,25 @@ variable [CompleteSpace H]
 /-- A subspace `K` is reducing for a set of operators `S` if it is invariant under every operator
 in `S` and also invariant under every adjoint operator. -/
 def IsReducing (S : Set (H →L[ℂ] H)) (K : Submodule ℂ H) : Prop :=
-  ∀ T ∈ S, IsInvariant T K ∧ IsInvariant (ContinuousLinearMap.adjoint T) K
+  ∀ T ∈ S, IsInvariant T K ∧ IsInvariant (T†) K
 
 /-- If `K` is invariant under `T†`, then `Kᗮ` is invariant under `T`. -/
 lemma orthogonalComplement_invariant_of_adjoint_invariant
     {T : H →L[ℂ] H} {K : Submodule ℂ H}
-  (hK : IsInvariant (ContinuousLinearMap.adjoint T) K) : IsInvariant T Kᗮ := by
+  (hK : IsInvariant (T†) K) : IsInvariant T Kᗮ := by
   -- Unfold to the pointwise characterization.
   refine (IsInvariant.iff_forall_mem (T := T) (K := Kᗮ)).2 ?_
   intro y hy
   -- Show `T y ∈ Kᗮ` via the inner-product characterization.
   refine (K.mem_orthogonal (T y)).2 ?_
   intro x hx
-  have hx' : (ContinuousLinearMap.adjoint T) x ∈ K :=
-    (IsInvariant.iff_forall_mem (T := ContinuousLinearMap.adjoint T) (K := K)).1 hK x hx
+  have hx' : (T†) x ∈ K :=
+    (IsInvariant.iff_forall_mem (T := T†) (K := K)).1 hK x hx
   -- `y ∈ Kᗮ` implies `⟪(T†) x, y⟫ = 0`, hence also `⟪x, T y⟫ = 0`.
-  have hy0 : ⟪(ContinuousLinearMap.adjoint T) x, y⟫ = 0 :=
-    (K.mem_orthogonal y).1 hy ((ContinuousLinearMap.adjoint T) x) hx'
+  have hy0 : ⟪(T†) x, y⟫ = 0 :=
+    (K.mem_orthogonal y).1 hy ((T†) x) hx'
   -- Use adjointness: `⟪(T†) x, y⟫ = ⟪x, T y⟫`.
-  have hAdj : ⟪x, T y⟫ = ⟪(ContinuousLinearMap.adjoint T) x, y⟫ := by
+  have hAdj : ⟪x, T y⟫ = ⟪(T†) x, y⟫ := by
     -- `adjoint_inner_left` is: `⟪(T†) y, x⟫ = ⟪y, T x⟫`.
     simpa using (ContinuousLinearMap.adjoint_inner_left (A := T) (x := y) (y := x)).symm
   exact hAdj.trans hy0
@@ -167,7 +168,7 @@ lemma starProjection_mem_centralizer_of_isReducing
     (hK : IsReducing S K) : K.starProjection ∈ Set.centralizer S := by
   intro T hT
   have hInv : IsInvariant T K := (hK T hT).1
-  have hInvAdj : IsInvariant (ContinuousLinearMap.adjoint T) K := (hK T hT).2
+  have hInvAdj : IsInvariant (T†) K := (hK T hT).2
   have hInvOrth : IsInvariant T Kᗮ :=
     orthogonalComplement_invariant_of_adjoint_invariant (T := T) hInvAdj
   exact commutes_starProjection_of_invariant (T := T) (K := K) hInv hInvOrth

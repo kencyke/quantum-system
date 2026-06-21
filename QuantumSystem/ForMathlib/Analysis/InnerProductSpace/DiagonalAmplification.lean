@@ -89,7 +89,7 @@ lemma single_apply {n : ℕ} (i : Fin n) (v : H) (k : Fin n) :
 /-- Diagonal action of an operator `T : H →L[ℂ] H` on `H^n`. -/
 noncomputable def diagonal {n : ℕ} (T : H →L[ℂ] H) : Hn (H := H) n →L[ℂ] Hn (H := H) n := by
   classical
-  exact ∑ i : Fin n, (single (H := H) (n := n) i).comp (T.comp (proj (H := H) (n := n) i))
+  exact ∑ i : Fin n, single (H := H) (n := n) i ∘L (T ∘L proj (H := H) (n := n) i)
 
 @[simp]
 lemma diagonal_apply {n : ℕ} (T : H →L[ℂ] H) (x : Hn (H := H) n) (i : Fin n) :
@@ -109,7 +109,7 @@ lemma diagonal_apply {n : ℕ} (T : H →L[ℂ] H) (x : Hn (H := H) n) (i : Fin 
 /-- The projection of an operator `S` on `H^n` to its `(i, j)`-th component in `B(H)`. -/
 noncomputable def matrixComponent {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n)
     (i j : Fin n) : H →L[ℂ] H :=
-  (proj (H := H) (n := n) i).comp (S.comp (single (H := H) (n := n) j))
+  proj (H := H) (n := n) i ∘L (S ∘L single (H := H) (n := n) j)
 
 @[simp]
 lemma matrixComponent_apply {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n)

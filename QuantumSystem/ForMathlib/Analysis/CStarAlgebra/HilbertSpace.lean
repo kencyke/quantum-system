@@ -4,6 +4,8 @@ public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 
 @[expose] public section
 
+open scoped InnerProductSpace
+
 /-- A complex *pre*-Hilbert space: a normed space with a complex inner product. -/
 class ComplexPreHilbertSpace (H : Type*) extends NormedAddCommGroup H, InnerProductSpace ℂ H
 
@@ -60,7 +62,8 @@ noncomputable def asUnitary (U : H ≃ₗᵢ[ℂ] K) : UnitaryMap H K where
 namespace UnitaryMap
 
 /-- Unitary maps preserve the inner product. -/
-lemma inner_map_eq (U : UnitaryMap H K) (x y : H) : inner ℂ (U.toContinuousLinearMap x) (U.toContinuousLinearMap y) = inner ℂ x y := by
+lemma inner_map_eq (U : UnitaryMap H K) (x y : H) :
+    ⟪U.toContinuousLinearMap x, U.toContinuousLinearMap y⟫_ℂ = ⟪x, y⟫_ℂ := by
   simp only [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.comp_apply,
     U.adjoint_comp, ContinuousLinearMap.one_apply]
 
