@@ -31,9 +31,8 @@ public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 public import QuantumSystem.Analysis.Entropy.Regularize
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
-public import QuantumSystem.Analysis.Entropy.SSA
-public import QuantumSystem.Analysis.Entropy.SSAProduct
-public import QuantumSystem.Analysis.Entropy.StrongSubadditivityEval
+public import QuantumSystem.Analysis.Entropy.StrongSubadditivityLocalNet
+public import QuantumSystem.Analysis.Entropy.StrongSubadditivityProduct
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus

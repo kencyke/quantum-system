@@ -1,7 +1,7 @@
 module
 
-public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 public import QuantumSystem.Analysis.Channel.PartialTrace
+public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 
 /-!
 # Strong subadditivity of the von Neumann entropy (product form, LocalNet-free)
@@ -16,9 +16,9 @@ net: the proof is the bare finite-dimensional quantum-information argument
 2. the data-processing inequality `Matrix.relativeEntropy_channel_le` for the
    trace-out-`C` channel `Matrix.QuantumChannel.traceOutC`.
 
-The `lean-eval` density-matrix statement `LeanEval.Physics.strong_subadditivity_density` is then a
-direct corollary (in `StrongSubadditivityEval.lean`), replacing the previous reduction through the
-three-site `LocalNet`.
+The `LocalNet`/AQFT companion — the same inequality stated over an abstract local net with
+overlapping regions — is `DensityMatrix.vonNeumannEntropy_SSA_localNet`
+(`StrongSubadditivityLocalNet.lean`).
 
 ## Main results
 
@@ -120,7 +120,7 @@ variable {A B C : Type*} [Fintype A] [DecidableEq A] [Fintype B] [DecidableEq B]
 /-- **Strong subadditivity (product form, positive definite case).** For a positive definite
 density matrix `ρ` on `A × B × C`, with all four marginals positive definite,
 `S(ρ) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`. -/
-theorem vonNeumannEntropy_SSA_product_posDef
+private lemma vonNeumannEntropy_SSA_product_posDef
     (ρ_ABC : DensityMatrix (A × B × C))
     (ρ_A : DensityMatrix A) (ρ_AB : DensityMatrix (A × B))
     (ρ_BC : DensityMatrix (B × C)) (ρ_B : DensityMatrix B)

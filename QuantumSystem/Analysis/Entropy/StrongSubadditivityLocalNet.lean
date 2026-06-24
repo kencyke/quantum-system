@@ -1,11 +1,8 @@
 module
 
-public import QuantumSystem.Analysis.Entropy.KroneckerProduct
-public import QuantumSystem.Analysis.Entropy.RelativeEntropy
-public import QuantumSystem.Analysis.Entropy.Regularize
-public import QuantumSystem.Analysis.Matrix.PartialTrace
-public import QuantumSystem.Analysis.Matrix.KroneckerPartialTraceBridge
 public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
+public import QuantumSystem.Analysis.Entropy.Regularize
+public import QuantumSystem.Analysis.Matrix.KroneckerPartialTraceBridge
 
 /-!
 # Strong subadditivity of the von Neumann entropy (LocalNet form)
@@ -57,8 +54,11 @@ AQFT-natural form:
 
 * `Matrix.relativeEntropy_kronecker_marginals_product` — product-type mutual-information
   identity.
-* `DensityMatrix.vonNeumannEntropy_SSA` — SSA for arbitrary states on a
+* `DensityMatrix.vonNeumannEntropy_SSA_localNet` — SSA for arbitrary states on a
   `LocalNet`, with the common region and split equalities explicit.
+
+The same inequality on a plain tensor product `A × B × C` is the companion
+`DensityMatrix.vonNeumannEntropy_SSA_product` (`StrongSubadditivityProduct.lean`).
 
 ## References
 
@@ -100,7 +100,7 @@ Given nested regions `ΛA ⊆ ΛAB ⊆ ΛABC`, write the middle/common region as
 
 This statement contains the split subset in the hypotheses and does not rely on
 site names such as `a b c` or product-factor names such as `A/B`. -/
-private lemma vonNeumannEntropy_SSA_posDef_nested
+private lemma vonNeumannEntropy_SSA_localNet_posDef_nested
     {L : LocalNet} {ΛA ΛAB ΛABC : Finset L.sites}
     (h_AB : ΛAB ⊆ ΛABC) (h_A : ΛA ⊆ ΛAB)
     (ρ_ABC : L.densityMatrix ΛABC)
@@ -325,7 +325,7 @@ private lemma vonNeumannEntropy_SSA_posDef_nested
 For two `Λ ⊆ Λ_total` and `Λ' ⊆ Λ_total` Subset proofs whose Finsets are propositionally
 equal (`Λ = Λ'`), the partial-trace `restrict h ρ` and `restrict h' ρ` are essentially
 identical: their entropies and PosDef status agree. Discharged by `subst h_eq` plus
-proof-irrelevance for `Subset`. Used in `vonNeumannEntropy_SSA_posDef` to bridge
+proof-irrelevance for `Subset`. Used in `vonNeumannEntropy_SSA_localNet_posDef` to bridge
 user-facing `S(restrict h_BC ρ)` (with `{b,c}`) to the bipartite-natural form
 `S(restrict sdiff_subset ρ)` (with `{a,b,c} \ {a}`). -/
 
@@ -346,7 +346,7 @@ private lemma posDef_restrict_finset_eq
 /-- **Strong subadditivity (PosDef case, common-region-explicit form).**
 
 This is the public region-level wrapper around
-`vonNeumannEntropy_SSA_posDef_nested`. The theorem does not infer the common region from
+`vonNeumannEntropy_SSA_localNet_posDef_nested`. The theorem does not infer the common region from
 the names `a b c` or from a product-factor order. Instead it receives explicit data:
 
 * `ΛAB ⊆ ΛABC`, the first two-block marginal,
@@ -358,7 +358,7 @@ the names `a b c` or from a product-factor order. Instead it receives explicit d
 
 Under PosDef hypotheses for the displayed marginals, the conclusion is exactly
 `S(ρ_ABC ↾ ΛAB) + S(ρ_ABC ↾ ΛBC) ≥ S(ρ_ABC) + S(ρ_ABC ↾ ΛB)`. -/
-private lemma vonNeumannEntropy_SSA_posDef
+private lemma vonNeumannEntropy_SSA_localNet_posDef
     {L : LocalNet} {ΛA ΛB ΛAB ΛBC ΛABC : Finset L.sites}
     (h_AB_total : ΛAB ⊆ ΛABC) (h_A_in_AB : ΛA ⊆ ΛAB)
     (h_BC_total : ΛBC ⊆ ΛABC) (h_B_total : ΛB ⊆ ΛABC)
@@ -379,7 +379,7 @@ private lemma vonNeumannEntropy_SSA_posDef
     posDef_restrict_finset_eq h_BC_eq.symm h_BC_total Finset.sdiff_subset ρ_ABC |>.mp h_BC_pos
   have h_B_pos_nested : (ρ_ABC ↾[h_B_nested]).toMatrix.PosDef :=
     posDef_restrict_finset_eq h_B_eq.symm h_B_total h_B_nested ρ_ABC |>.mp h_B_pos
-  have h_nested := vonNeumannEntropy_SSA_posDef_nested h_AB_total h_A_in_AB ρ_ABC h_ABC_pos
+  have h_nested := vonNeumannEntropy_SSA_localNet_posDef_nested h_AB_total h_A_in_AB ρ_ABC h_ABC_pos
     h_A_pos h_AB_pos h_BC_pos_nested h_B_pos_nested
   have h_S_BC : S(ρ_ABC ↾[h_BC_total]) =
       S(ρ_ABC ↾[(Finset.sdiff_subset : ΛABC \ ΛA ⊆ ΛABC)]) :=
@@ -392,7 +392,7 @@ private lemma vonNeumannEntropy_SSA_posDef
 
 /-- **Strong subadditivity (common-region-explicit form, no PosDef hypothesis).**
 
-PosDef-free version of `vonNeumannEntropy_SSA_posDef`. Given the geometric data of a
+PosDef-free version of `vonNeumannEntropy_SSA_localNet_posDef`. Given the geometric data of a
 common-region split
 
 * `ΛAB ⊆ ΛABC`, `ΛA ⊆ ΛAB`, `ΛBC ⊆ ΛABC`, `ΛB ⊆ ΛABC`,
@@ -405,9 +405,9 @@ and `[Nonempty (L.regionIdx ΛABC)]` (which propagates to every sub-region by
   `S(ρ_ABC ↾ ΛAB) + S(ρ_ABC ↾ ΛBC) ≥ S(ρ_ABC) + S(ρ_ABC ↾ ΛB)`.
 
 The proof regularises `ρ` to the PosDef state `(1 - ε) ρ + ε · π_ΛABC` for `ε ∈ (0, 1]`,
-applies `vonNeumannEntropy_SSA_posDef`, and passes to the limit `ε → 0⁺`
+applies `vonNeumannEntropy_SSA_localNet_posDef`, and passes to the limit `ε → 0⁺`
 via the eigenvalue continuity formulas in `Regularize.lean`. -/
-theorem vonNeumannEntropy_SSA
+theorem vonNeumannEntropy_SSA_localNet
     {L : LocalNet} {ΛA ΛB ΛAB ΛBC ΛABC : Finset L.sites}
     (h_AB : ΛAB ⊆ ΛABC) (h_A : ΛA ⊆ ΛAB)
     (h_BC : ΛBC ⊆ ΛABC) (h_B : ΛB ⊆ ΛABC)
@@ -478,7 +478,7 @@ theorem vonNeumannEntropy_SSA
       change (Matrix.restrict h_B
         (DensityMatrix.regularize ρ_ABC hε_pos.le hε_le).toMatrix).PosDef
       rw [h_B_eq_reg]; exact DensityMatrix.regularize_posDef _ hε_pos hε_le
-    have h_ssa := vonNeumannEntropy_SSA_posDef
+    have h_ssa := vonNeumannEntropy_SSA_localNet_posDef
       h_AB h_A h_BC h_B h_B_eq h_BC_eq
       (DensityMatrix.regularize ρ_ABC hε_pos.le hε_le)
       hρ_reg_pos hA_reg_pos hAB_reg_pos hBC_reg_pos hB_reg_pos
