@@ -58,9 +58,9 @@ theorem vonNeumannEntropy_ofReal (ρ : DensityMatrix n) :
 /-- Von Neumann entropy equals the eigenvalue sum S(ρ) = ∑ᵢ (−λᵢ log λᵢ). -/
 theorem vonNeumannEntropy_eq_sum (ρ : DensityMatrix n) :
     S(ρ) = ∑ i, entropyFun (ρ.isHermitian.eigenvalues i) := by
-  unfold vonNeumannEntropy DensityMatrix.log matrixLog
-  change -(Tr (ρ.toMatrix * matrixFunction _ ρ.toMatrix ρ.isHermitian)).re = _
-  rw [trace_mul_matrixFunction, Complex.re_sum]
+  unfold vonNeumannEntropy DensityMatrix.log
+  change -(Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix)).re = _
+  rw [trace_mul_cfc ρ.isHermitian, Complex.re_sum]
   simp_rw [← Complex.ofReal_mul, Complex.ofReal_re, ← Finset.sum_neg_distrib]
   congr 1
   ext i
@@ -89,14 +89,12 @@ theorem vonNeumannEntropy_eq_negMulLog_sum (ρ : DensityMatrix n) :
   refine Finset.sum_congr rfl fun i _ => ?_
   exact entropyFun_eq_negMulLog_of_nonneg (ρ.eigenvalues_nonneg i)
 
-/-- `vonNeumannEntropy` expressed via the spectral matrix function `matrixFunction`
-    applied to `Real.negMulLog`. This bridges to Mathlib's continuous functional
-    calculus, enabling continuity arguments. -/
-theorem vonNeumannEntropy_eq_matrixFunction_re (ρ : DensityMatrix n) :
+/-- `vonNeumannEntropy` expressed via Mathlib's continuous functional calculus
+    `cfc` applied to `Real.negMulLog`, enabling continuity arguments. -/
+theorem vonNeumannEntropy_eq_cfc_re (ρ : DensityMatrix n) :
     vonNeumannEntropy ρ =
-      (Tr (matrixFunction (fun x : ℝ => (Real.negMulLog x : ℂ))
-        ρ.toMatrix ρ.isHermitian)).re := by
-  rw [matrixFunction_trace, vonNeumannEntropy_eq_negMulLog_sum]
+      (Tr (cfc Real.negMulLog ρ.toMatrix)).re := by
+  rw [trace_cfc ρ.isHermitian, vonNeumannEntropy_eq_negMulLog_sum]
   rw [Complex.re_sum]
   simp_rw [Complex.ofReal_re]
 
@@ -168,7 +166,8 @@ This follows from the spectral theorem: ρ^s = U diag(λᵢ^s) U†,
 and trace cyclicity Tr (U D U†) = Tr (D) = ∑ Dᵢᵢ. -/
 lemma trace_rpow_eq_sum_pow (ρ : Matrix n n ℂ) (hρ : ρ.PosSemidef) (s : ℝ) :
     (Tr (ρ ^ s)).re = ∑ i, hρ.1.eigenvalues i ^ s := by
-  rw [← matrixFunction_rpow_eq hρ s, matrixFunction_trace]
+  have h0 : (0 : Matrix n n ℂ) ≤ ρ := by rw [Matrix.le_iff, sub_zero]; exact hρ
+  rw [CFC.rpow_eq_cfc_real (a := ρ) (ha := h0), trace_cfc hρ.1]
   simp [Complex.ofReal_re]
 
 /-- HasDerivAt of eigenvalue rpow sum.
@@ -211,12 +210,18 @@ lemma trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosS
     (hA.real_smul hp).add (hB.real_smul (by linarith))
   have hlowner := rpow_isLownerConcave hs0 hs1 n A B hA hB p hp hp1 hpsd_mix.1
   simp only [] at hlowner
-  have hfunc_eq : (fun x : ℝ => ((-x ^ s : ℝ) : ℂ)) = (fun x : ℝ => -(((x ^ s : ℝ) : ℂ))) := by
-    ext x
-    exact Complex.ofReal_neg _
-  rw [hfunc_eq] at hlowner
-  rw [matrixFunction_neg hA.1, matrixFunction_neg hB.1, matrixFunction_neg hpsd_mix.1,
-      matrixFunction_rpow_eq hA, matrixFunction_rpow_eq hB, matrixFunction_rpow_eq hpsd_mix] at hlowner
+  have hA0 : (0 : Matrix n n ℂ) ≤ A := by rw [Matrix.le_iff, sub_zero]; exact hA
+  have hB0 : (0 : Matrix n n ℂ) ≤ B := by rw [Matrix.le_iff, sub_zero]; exact hB
+  have hM0 : (0 : Matrix n n ℂ) ≤ p • A + (1 - p) • B := by
+    rw [Matrix.le_iff, sub_zero]; exact hpsd_mix
+  have eA : cfc (fun x : ℝ => -(x ^ s)) A = -(A ^ s) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := A) (ha := hA0)]
+  have eB : cfc (fun x : ℝ => -(x ^ s)) B = -(B ^ s) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := B) (ha := hB0)]
+  have eM : cfc (fun x : ℝ => -(x ^ s)) (p • A + (1 - p) • B) =
+      -((p • A + (1 - p) • B) ^ s) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := p • A + (1 - p) • B) (ha := hM0)]
+  rw [eA, eB, eM] at hlowner
   have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s := by
     have heq : p • -A ^ s + (1 - p) • -B ^ s = -(p • A ^ s + (1 - p) • B ^ s) := by
       have h1 : p • -A ^ s = -(p • A ^ s) := smul_neg p (A ^ s)
@@ -361,17 +366,17 @@ theorem vonNeumannEntropy_map_starAlgEquiv_posDef
     (hφ : ∀ A, (φ A).trace = A.trace) :
     S(ρ.map φ hφ) = S(ρ) := by
   unfold vonNeumannEntropy
-  have h_log_eq : matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian =
-      φ (matrixLog ρ.toMatrix ρ.isHermitian) := by
-    change matrixLog (φ ρ.toMatrix) _ = _
-    exact matrixLog_map_starAlgEquiv hρ φ
+  have h_log_eq : cfc Real.log (ρ.map φ hφ).toMatrix =
+      φ (cfc Real.log ρ.toMatrix) := by
+    change cfc Real.log (φ ρ.toMatrix) = _
+    exact cfc_log_map_starAlgEquiv hρ φ
   have h_tr : Tr ((ρ.map φ hφ).toMatrix *
-        matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian) =
-      Tr (ρ.toMatrix * matrixLog ρ.toMatrix ρ.isHermitian) := by
+        cfc Real.log (ρ.map φ hφ).toMatrix) =
+      Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix) := by
     rw [h_log_eq, DensityMatrix.map_toMatrix, ← map_mul, hφ]
   change -(Tr ((ρ.map φ hφ).toMatrix *
-      matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian)).re =
-    -(Tr (ρ.toMatrix * matrixLog ρ.toMatrix ρ.isHermitian)).re
+      cfc Real.log (ρ.map φ hφ).toMatrix)).re =
+    -(Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix)).re
   rw [h_tr]
 
 /-- Specialisation of `vonNeumannEntropy_map_starAlgEquiv_posDef` to reindexing. -/
@@ -399,8 +404,7 @@ theorem vonNeumannEntropy_regularize_eq_negMulLog_sum [Nonempty n]
     (ρ : DensityMatrix n) {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
     vonNeumannEntropy (DensityMatrix.regularize ρ hε hε') =
       ∑ i, Real.negMulLog ((1 - ε) * ρ.isHermitian.eigenvalues i + ε / Fintype.card n) := by
-  rw [vonNeumannEntropy_eq_matrixFunction_re]
-  rw [matrixFunction_eq_cfc]
+  rw [vonNeumannEntropy_eq_cfc_re]
   rw [DensityMatrix.regularize_eq_cfc ρ hε hε']
   have hρ_sa : IsSelfAdjoint ρ.toMatrix := ρ.isHermitian
   rw [← cfc_comp (R := ℝ) Real.negMulLog
@@ -408,9 +412,8 @@ theorem vonNeumannEntropy_regularize_eq_negMulLog_sum [Nonempty n]
       hρ_sa Real.continuous_negMulLog.continuousOn (by fun_prop)]
   rw [show (Real.negMulLog ∘ (fun x : ℝ => (1 - ε) * x + ε / (Fintype.card n : ℝ))) =
       (fun x : ℝ => Real.negMulLog ((1 - ε) * x + ε / (Fintype.card n : ℝ))) from rfl]
-  rw [← matrixFunction_eq_cfc ρ.isHermitian
-      (fun x : ℝ => Real.negMulLog ((1 - ε) * x + ε / Fintype.card n))]
-  rw [matrixFunction_trace, Complex.re_sum]
+  rw [trace_cfc ρ.isHermitian
+      (fun x : ℝ => Real.negMulLog ((1 - ε) * x + ε / Fintype.card n)), Complex.re_sum]
   simp_rw [Complex.ofReal_re]
 
 /-- The eigenvalue-formula function `ε ↦ ∑ᵢ Real.negMulLog ((1-ε) λᵢ + ε/d)` is

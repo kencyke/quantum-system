@@ -112,18 +112,18 @@ noncomputable instance : HPow (DensityMatrix n) ℝ (Matrix n n ℂ) where
 theorem densityMatrix_hpow_eq (ρ : DensityMatrix n) (s : ℝ) :
     ρ ^ s = ρ.toMatrix ^ s := rfl
 
-/-- Matrix logarithm of a density matrix: `log ρ = U diag(log λᵢ) U*`.
-    Computed via the spectral decomposition of `ρ`. -/
+/-- Matrix logarithm of a density matrix: `log ρ = U diag(log λᵢ) U*`,
+Mathlib's continuous functional calculus applied to `Real.log`. -/
 noncomputable def log (ρ : DensityMatrix n) :
     Matrix n n ℂ :=
-  matrixLog ↑ρ ρ.isHermitian
+  cfc Real.log ↑ρ
 
 /-- The product `ρ * log ρ` is Hermitian.
 Both factors are Hermitian and commute because `log ρ` is a matrix function of `ρ`. -/
 lemma mul_log_isHermitian (ρ : DensityMatrix n) :
     (ρ.toMatrix * log ρ).IsHermitian := by
-  simpa [DensityMatrix.log] using
-    (mul_matrixFunction_isHermitian ρ.isHermitian Real.log)
+  unfold log
+  exact mul_cfc_isHermitian ρ.isHermitian Real.log
 
 /-- Convex combination of two density matrices is a density matrix. -/
 noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)

@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.LocalNet.Isotony
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 
 /-!
 # Partial trace as restriction (matrix-level)
@@ -68,6 +69,17 @@ noncomputable def restrict {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) 
     restrict h M a a' =
       ∑ b : L.regionIdx (Λ_total \ Λ),
         M (L.combineIdx h (a, b)) (L.combineIdx h (a', b)) := rfl
+
+/-- **`restrict` is a partial trace over the right tensor factor.** Transporting the matrix
+along the factorisation `combineIdx h : regionIdx Λ × regionIdx (Λ_total \ Λ) ≃ regionIdx Λ_total`
+turns the region restriction into `Matrix.traceRight`, which traces out the complement factor.
+This bridges the region-parameterised partial trace to the positional `traceLeft`/`traceRight`
+form. -/
+theorem restrict_eq_traceRight_reindex {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
+    (M : L.localAlgebra Λ_total) :
+    restrict h M = (M.reindex (L.combineIdx h).symm (L.combineIdx h).symm).traceRight := by
+  ext a a'
+  simp [restrict_apply, Matrix.traceRight_apply, Matrix.reindex_apply]
 
 /-! ### Trace preservation -/
 

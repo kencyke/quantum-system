@@ -26,13 +26,18 @@ public import QuantumSystem.Algebra.LocalNet.TensorDecomposition
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Analysis.CFC.Diagonal
+public import QuantumSystem.Analysis.Channel.PartialTrace
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
+public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 public import QuantumSystem.Analysis.Entropy.Regularize
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
 public import QuantumSystem.Analysis.Entropy.SSA
+public import QuantumSystem.Analysis.Entropy.SSAProduct
+public import QuantumSystem.Analysis.Entropy.StrongSubadditivityEval
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
+public import QuantumSystem.Analysis.Matrix.KroneckerPartialTraceBridge
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.Analysis.Matrix.PartialTrace
@@ -59,6 +64,8 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace

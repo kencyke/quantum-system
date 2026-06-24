@@ -11,7 +11,7 @@ This file formalises the Effros (2008) machinery used to prove Lieb's joint conc
 ## Contents
 
 1. **Compression lemmas** – `compression_pow_eq`, `compression_aeval_eq`,
-   `eigenvalues_compression_subset`, and `matrixFunction_compression_of_commuting`:
+   `eigenvalues_compression_subset`, and `cfc_compression_of_commuting`:
    the map `X ↦ V† X V` (sandwiching) interacts well with polynomial/functional calculus
    when `V†V = I` and `M` commutes with `VV†`.
 2. **Block diagonal** – `compression_of_fromBlocks_cfc` and related CFC lemmas.
@@ -334,12 +334,10 @@ theorem rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
 /-- Matrix perspective of a function `f` using the Kubo-Ando style formula.
 Defined for PSD `L` and PD `R`. -/
 noncomputable def matrixPerspective {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℝ) (L R : Matrix m m ℂ) (hL : L.PosSemidef) (hR : R.PosDef) : Matrix m m ℂ :=
+    (f : ℝ → ℝ) (L R : Matrix m m ℂ) (_hL : L.PosSemidef) (hR : R.PosDef) : Matrix m m ℂ :=
   let Rinv := matrixInvSqrt R hR
   let inner := Rinvᴴ * L * Rinv
-  let hinner : inner.IsHermitian :=
-    isHermitian_conjTranspose_mul_mul (B := Rinv) (A := L) hL.1
-  let fInner := matrixFunction (fun x => (f x : ℂ)) inner hinner
+  let fInner := cfc f inner
   let Rhalf := matrixSqrt R hR.posSemidef
   Rhalf * fInner * Rhalf
 
@@ -485,21 +483,18 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
       (isHermitian_conjTranspose_mul_mul (B := A₁) (A := T₁) hT₁_herm)
       (isHermitian_conjTranspose_mul_mul (B := A₂) (A := T₂) hT₂_herm)
   have hconv' := hconv (m := m) (A := A₁) (B := A₂) (T₁ := T₁) (T₂ := T₂) hT₁ hT₂ hAB hC
+  simp only [] at hconv'
   have hpsd :
-      (A₁ᴴ *
-          matrixFunction (fun x => (f x : ℂ)) T₁ hT₁.1 * A₁ +
-        A₂ᴴ *
-          matrixFunction (fun x => (f x : ℂ)) T₂ hT₂.1 * A₂ -
-          matrixFunction (fun x => (f x : ℂ)) (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) hC
+      (A₁ᴴ * cfc f T₁ * A₁ +
+        A₂ᴴ * cfc f T₂ * A₂ -
+          cfc f (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂)
         ).PosSemidef := by
     simpa [Matrix.le_iff] using hconv'
   have hpsd' :
       (Rhalfᴴ *
-          (A₁ᴴ *
-              matrixFunction (fun x => (f x : ℂ)) T₁ hT₁.1 * A₁ +
-            A₂ᴴ *
-              matrixFunction (fun x => (f x : ℂ)) T₂ hT₂.1 * A₂ -
-              matrixFunction (fun x => (f x : ℂ)) (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) hC) * Rhalf
+          (A₁ᴴ * cfc f T₁ * A₁ +
+            A₂ᴴ * cfc f T₂ * A₂ -
+              cfc f (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂)) * Rhalf
         ).PosSemidef :=
     hpsd.conjTranspose_mul_mul_same Rhalf
   have hRhalf_eq : Rhalfᴴ = Rhalf := hRhalf_herm.eq
@@ -536,13 +531,9 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     rw [hA₂_adj, mul_smul_comm]; congr 1; rw [← mul_assoc, hRhalf_Rinv, one_mul]
   have hA₂_Rhalf : A₂ * Rhalf = (Real.sqrt w₂ : ℂ) • R₂half := by
     simp only [A₂, smul_mul_assoc, mul_assoc, hRinv_Rhalf, mul_one]
-  -- matrixFunction_congr for the f(C) term (precomputed for performance)
-  have hmfC : matrixFunction (fun x => (f x : ℂ))
-      (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) hC =
-      matrixFunction (fun x => (f x : ℂ)) (Rinvᴴ * L * Rinv)
-        (isHermitian_conjTranspose_mul_mul (B := Rinv) (A := L)
-          ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂)).1) :=
-    matrixFunction_congr (fun x => (f x : ℂ)) hC _ hinner
+  -- congruence for the f(C) term (precomputed for performance)
+  have hmfC : cfc f (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) = cfc f (Rinvᴴ * L * Rinv) :=
+    congrArg (cfc f) hinner
   -- Final step: apply sandwich equation and conclude
   have hfinal :
       matrixPerspective f L R ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂)) hR ≤
@@ -576,8 +567,7 @@ lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
     (hcomm : L * R = R * L) :
     (matrixInvSqrt R hR)ᴴ * L * matrixInvSqrt R hR = L * R⁻¹ := by
   rw [perspective_inner_eq_commuting hL hR hcomm]
-  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := by
-    simpa [matrixInvSqrt] using matrixFunction_rpow_eq hR.posSemidef (-1 / 2 : ℝ)
+  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
   rw [hRinv_eq]
   letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
@@ -767,9 +757,7 @@ lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [Decida
   have hR_nonneg : (0 : Matrix (m × m) (m × m) ℂ) ≤ R := by
     simpa [Matrix.le_iff] using hR_pd.posSemidef
   have hR_unit : IsUnit R := hR_pd.isUnit
-  have hRhalf_eq : T = R ^ (1 / 2 : ℝ) := by
-    change matrixSqrt R hR_pd.posSemidef = R ^ (1 / 2 : ℝ)
-    simpa [matrixSqrt] using matrixFunction_rpow_eq hR_pd.posSemidef (1 / 2 : ℝ)
+  have hRhalf_eq : T = R ^ (1 / 2 : ℝ) := matrixSqrt_eq_rpow hR_pd.posSemidef
   have hR_det : IsUnit R.det := (Matrix.isUnit_iff_isUnit_det R).mp hR_unit
   have hLRinv_comm_R : Commute R (L * R⁻¹) := by
     rw [Commute, SemiconjBy]
@@ -805,13 +793,9 @@ theorem matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq 
   set T := matrixSqrt R hR_pd.posSemidef
   have hinner_psd : (Sᴴ * L * S).PosSemidef :=
     hL_psd.conjTranspose_mul_mul_same S
-  have hfun_neg : matrixFunction (fun x => ((-(x ^ p) : ℝ) : ℂ))
-      (Sᴴ * L * S) hinner_psd.1 = -((Sᴴ * L * S) ^ p) := by
-    have h1 : (fun x : ℝ => ((-(x ^ p) : ℝ) : ℂ)) = (fun x : ℝ => -((x ^ p : ℝ) : ℂ)) := by
-      ext x
-      push_cast
-      ring
-    rw [h1, matrixFunction_neg hinner_psd.1, matrixFunction_rpow_eq hinner_psd p]
+  have hfun_neg : cfc (fun x : ℝ => -(x ^ p)) (Sᴴ * L * S) = -((Sᴴ * L * S) ^ p) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := Sᴴ * L * S)
+      (ha := by rw [Matrix.le_iff, sub_zero]; exact hinner_psd)]
   have hRhalf_sq : T * T = R := matrixSqrt_mul_self_posSemidef hR_pd.posSemidef
   have hinnerp_comm_Rhalf : (Sᴴ * L * S) ^ p * T = T * (Sᴴ * L * S) ^ p := by
     simpa [L, R, S, T] using

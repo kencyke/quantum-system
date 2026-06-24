@@ -95,11 +95,11 @@ private lemma hsInnerProduct_leftMul_rightMul {m : Type*} [Fintype m] [Decidable
   -- (A^p * K† * B^{1-p})† = B^{1-p}† * K * (A^p)†
   -- Since A^p and B^{1-p} are Hermitian (rpow of PSD is PSD hence Hermitian):
   have hAp_herm : (A ^ p)ᴴ = A ^ p := by
-    rw [← matrixFunction_rpow_eq hA p]
-    exact matrixFunction_isHermitian hA.1 (fun x => x ^ p)
+    rw [CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA)]
+    exact cfc_isHermitian hA.1 (fun x => x ^ p)
   have hBp_herm : (B ^ (1 - p))ᴴ = B ^ (1 - p) := by
-    rw [← matrixFunction_rpow_eq hB (1 - p)]
-    exact matrixFunction_isHermitian hB.1 (fun x => x ^ (1 - p))
+    rw [CFC.rpow_eq_cfc_real (a := B) (ha := by rw [Matrix.le_iff, sub_zero]; exact hB)]
+    exact cfc_isHermitian hB.1 (fun x => x ^ (1 - p))
   simp only [Matrix.conjTranspose_mul, Matrix.conjTranspose_conjTranspose,
     hAp_herm, hBp_herm, Matrix.mul_assoc]
   -- LHS: Tr(B^{1-p} * K * A^p * K†), RHS: Tr(A^p * K† * B^{1-p} * K)
@@ -369,14 +369,14 @@ private lemma rpow_tendsto_smul_one {m : Type*} [Fintype m] [DecidableEq m]
     Filter.Tendsto (fun ε : ℝ => (A + (ε : ℂ) • (1 : Matrix m m ℂ)) ^ p)
       (nhdsWithin 0 (Set.Ioi 0)) (nhds (A ^ p)) := by
   -- Express A^p and (A + ε•1)^p via the continuous functional calculus.
-  -- Using matrixFunction and cfc, reduce to pointwise convergence of x^p as ε → 0+.
-  have hA_eq : A ^ p = cfc (fun x : ℝ => x ^ p) A := by
-    rw [← matrixFunction_rpow_eq hA, matrixFunction_eq_cfc hA.1]
+  -- Using cfc, reduce to pointwise convergence of x^p as ε → 0+.
+  have hA_eq : A ^ p = cfc (fun x : ℝ => x ^ p) A :=
+    CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA)
   have hshift_eq : ∀ ε : ℝ, 0 < ε → (A + (ε : ℂ) • (1 : Matrix m m ℂ)) ^ p =
       cfc (fun x : ℝ => (x + ε) ^ p) A := by
     intro ε hε
-    have hcfc_shift : cfc (fun x : ℝ => x + ε) A = A + (ε : ℂ) • (1 : Matrix m m ℂ) := by
-      rw [← matrixFunction_eq_cfc hA.1]; exact matrixFunction_add_const hA.1 ε
+    have hcfc_shift : cfc (fun x : ℝ => x + ε) A = A + (ε : ℂ) • (1 : Matrix m m ℂ) :=
+      cfc_add_const_eq hA.1 ε
     have hcont_p : ContinuousOn (fun x : ℝ => x ^ p) ((fun x : ℝ => x + ε) '' spectrum ℝ A) := by
       apply ContinuousOn.rpow_const continuousOn_id
       rintro x ⟨_, hy_spec, rfl⟩

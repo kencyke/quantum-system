@@ -151,6 +151,21 @@ Both are direct definitions with concrete `toFun`, so every projection evaluates
 
 variable (L : LocalNet)
 
+/-- **1-element factorisation**: `regionIdx {a} ≃ localIdx a`. Evaluation at the single site `a`. -/
+def regionIdxSingletonEquiv (a : L.sites) :
+    L.regionIdx ({a} : Finset L.sites) ≃ L.localIdx a where
+  toFun f := f ⟨a, Finset.mem_singleton_self a⟩
+  invFun x := fun ⟨s, hs⟩ => (Finset.mem_singleton.mp hs) ▸ x
+  left_inv f := by
+    funext ⟨s, hs⟩
+    obtain rfl : s = a := Finset.mem_singleton.mp hs
+    rfl
+  right_inv x := rfl
+
+@[simp] lemma regionIdxSingletonEquiv_apply (a : L.sites)
+    (f : L.regionIdx ({a} : Finset L.sites)) :
+    L.regionIdxSingletonEquiv a f = f ⟨a, Finset.mem_singleton_self a⟩ := rfl
+
 /-- **2-element factorisation**: `regionIdx {a, b} ≃ localIdx a × localIdx b` when
     `a ≠ b`. Direct definition with concrete `toFun` so both projections evaluate by `rfl`. -/
 def regionIdxPairEquiv {a b : L.sites} (hab : a ≠ b) :
@@ -191,12 +206,12 @@ def regionIdxPairEquiv {a b : L.sites} (hab : a ≠ b) :
        f ⟨b, Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)⟩) := rfl
 
 /-- Closed-form first projection of `regionIdxPairEquiv` — picks out the value at site `a`. -/
-@[simp] private lemma regionIdxPairEquiv_apply_fst {a b : L.sites} (hab : a ≠ b)
+@[simp] lemma regionIdxPairEquiv_apply_fst {a b : L.sites} (hab : a ≠ b)
     (f : L.regionIdx ({a, b} : Finset L.sites)) :
     (L.regionIdxPairEquiv hab f).1 = f ⟨a, Finset.mem_insert_self a {b}⟩ := rfl
 
 /-- Closed-form second projection of `regionIdxPairEquiv` — picks out the value at site `b`. -/
-@[simp] private lemma regionIdxPairEquiv_apply_snd {a b : L.sites} (hab : a ≠ b)
+@[simp] lemma regionIdxPairEquiv_apply_snd {a b : L.sites} (hab : a ≠ b)
     (f : L.regionIdx ({a, b} : Finset L.sites)) :
     (L.regionIdxPairEquiv hab f).2 =
       f ⟨b, Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl)⟩ := rfl
@@ -248,24 +263,67 @@ def regionIdxTripleEquiv {a b c : L.sites} (hab : a ≠ b) (hbc : b ≠ c) (hac 
       · simp [hca, hcb]
 
 /-- Closed-form first projection of `regionIdxTripleEquiv` — value at site `a`. -/
-@[simp] private lemma regionIdxTripleEquiv_apply_fst {a b c : L.sites}
+@[simp] lemma regionIdxTripleEquiv_apply_fst {a b c : L.sites}
     (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
     (f : L.regionIdx ({a, b, c} : Finset L.sites)) :
     (L.regionIdxTripleEquiv hab hbc hac f).1 = f ⟨a, Finset.mem_insert_self a {b, c}⟩ := rfl
 
 /-- Second projection of `regionIdxTripleEquiv` — value at site `b`. -/
-@[simp] private lemma regionIdxTripleEquiv_apply_snd_fst {a b c : L.sites}
+@[simp] lemma regionIdxTripleEquiv_apply_snd_fst {a b c : L.sites}
     (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
     (f : L.regionIdx ({a, b, c} : Finset L.sites)) :
     (L.regionIdxTripleEquiv hab hbc hac f).2.1 =
       f ⟨b, Finset.mem_insert_of_mem (Finset.mem_insert_self b {c})⟩ := rfl
 
 /-- Third projection of `regionIdxTripleEquiv` — value at site `c`. -/
-@[simp] private lemma regionIdxTripleEquiv_apply_snd_snd {a b c : L.sites}
+@[simp] lemma regionIdxTripleEquiv_apply_snd_snd {a b c : L.sites}
     (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
     (f : L.regionIdx ({a, b, c} : Finset L.sites)) :
     (L.regionIdxTripleEquiv hab hbc hac f).2.2 =
       f ⟨c, Finset.mem_insert_of_mem
             (Finset.mem_insert_of_mem (Finset.mem_singleton.mpr rfl))⟩ := rfl
+
+/-- **Compatibility of the triple factorisation with the `{a, b}`-cut.** Reading a region index
+of `{a, b, c}` that was assembled from an `{a, b}`-part `ab` and a complement-part `cc` (via
+`combineIdx`) through the three-element factorisation returns the `a`- and `b`-values from `ab`
+(via `regionIdxPairEquiv`) and the `c`-value from `cc`. This is the index-level statement that
+the associative regrouping `(localIdx a × localIdx b) × localIdx c` underlying `combineIdx` for
+`{a, b} ⊆ {a, b, c}` agrees with the right-associated `regionIdxTripleEquiv`. -/
+theorem regionIdxTripleEquiv_combineIdx {a b c : L.sites}
+    (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
+    (h_ab : ({a, b} : Finset L.sites) ⊆ {a, b, c})
+    (ab : L.regionIdx ({a, b} : Finset L.sites))
+    (cc : L.regionIdx (({a, b, c} : Finset L.sites) \ {a, b}))
+    (hc : c ∈ ({a, b, c} : Finset L.sites) \ {a, b}) :
+    L.regionIdxTripleEquiv hab hbc hac (L.combineIdx h_ab (ab, cc))
+      = ((L.regionIdxPairEquiv hab ab).1, (L.regionIdxPairEquiv hab ab).2, cc ⟨c, hc⟩) := by
+  have hca : c ∉ ({a, b} : Finset L.sites) := (Finset.mem_sdiff.mp hc).2
+  refine Prod.ext ?_ (Prod.ext ?_ ?_) <;> simp [hca]
+
+/-- **Compatibility of the triple factorisation with the `{b, c}`-cut.** The dual of
+`regionIdxTripleEquiv_combineIdx` for the inclusion `{b, c} ⊆ {a, b, c}`: the `a`-value comes from
+the complement part, the `b`- and `c`-values from the `{b, c}`-part via `regionIdxPairEquiv`. -/
+theorem regionIdxTripleEquiv_combineIdx_bc {a b c : L.sites}
+    (hab : a ≠ b) (hbc : b ≠ c) (hac : a ≠ c)
+    (h_bc : ({b, c} : Finset L.sites) ⊆ {a, b, c})
+    (bc : L.regionIdx ({b, c} : Finset L.sites))
+    (aa : L.regionIdx (({a, b, c} : Finset L.sites) \ {b, c}))
+    (ha : a ∈ ({a, b, c} : Finset L.sites) \ {b, c}) :
+    L.regionIdxTripleEquiv hab hbc hac (L.combineIdx h_bc (bc, aa))
+      = (aa ⟨a, ha⟩, (L.regionIdxPairEquiv hbc bc).1, (L.regionIdxPairEquiv hbc bc).2) := by
+  have haa : a ∉ ({b, c} : Finset L.sites) := (Finset.mem_sdiff.mp ha).2
+  refine Prod.ext ?_ (Prod.ext ?_ ?_) <;> simp [haa]
+
+/-- **Compatibility of the pair factorisation with the `{a}`-cut.** For `{a} ⊆ {a, b}`, the
+`a`-value comes from the singleton part, the `b`-value from the complement part. -/
+theorem regionIdxPairEquiv_combineIdx {a b : L.sites} (hab : a ≠ b)
+    (h_a : ({a} : Finset L.sites) ⊆ {a, b})
+    (ma : L.regionIdx ({a} : Finset L.sites))
+    (mb : L.regionIdx (({a, b} : Finset L.sites) \ {a}))
+    (hb : b ∈ ({a, b} : Finset L.sites) \ {a}) :
+    L.regionIdxPairEquiv hab (L.combineIdx h_a (ma, mb))
+      = (L.regionIdxSingletonEquiv a ma, mb ⟨b, hb⟩) := by
+  have hba : b ∉ ({a} : Finset L.sites) := (Finset.mem_sdiff.mp hb).2
+  refine Prod.ext ?_ ?_ <;> simp [hba]
 
 end LocalNet

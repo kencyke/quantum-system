@@ -230,8 +230,8 @@ private lemma trace_ρlogρ_eq (ρ : DensityMatrix n) :
   have hρ_spec := spectral_expand ρ.toMatrix ρ.isHermitian
   -- log(ρ) = U * diag(log ev) * Uᴴ
   have hlogρ_spec : log ρ = U * diagonal (fun i => (Real.log (ev_ρ i) : ℂ)) * Uᴴ := by
-    unfold DensityMatrix.log matrixLog matrixFunction
-    rfl
+    unfold DensityMatrix.log
+    exact cfc_log_spectral_eq ρ.isHermitian
   -- ρ * log(ρ) = U * diag(ev) * Uᴴ * U * diag(log ev) * Uᴴ = U * diag(ev * log ev) * Uᴴ
   -- First rewrite log, then ρ
   have h1 : (ρ.toMatrix * log ρ).trace.re =
@@ -276,12 +276,10 @@ private lemma trace_ρlogσ_eq (ρ σ : DensityMatrix n) :
   set W := eigW ρ σ
   set ev_ρ := ρ.isHermitian.eigenvalues
   set ev_σ := σ.isHermitian.eigenvalues
-  have hρ : ρ.toMatrix = U * diagonal (fun i => (ev_ρ i : ℂ)) * Uᴴ := by
-    have h := (matrixFunction_id ρ.isHermitian).symm
-    unfold matrixFunction at h
-    simpa [Function.comp] using h
+  have hρ : ρ.toMatrix = U * diagonal (fun i => (ev_ρ i : ℂ)) * Uᴴ :=
+    spectral_expand ρ.toMatrix ρ.isHermitian
   have hlogσ : log σ = V * diagonal (fun i => (Real.log (ev_σ i) : ℂ)) * Vᴴ := by
-    unfold DensityMatrix.log matrixLog matrixFunction; rfl
+    unfold DensityMatrix.log; exact cfc_log_spectral_eq σ.isHermitian
   have hUHV : Uᴴ * V = Wᴴ := by
     calc Uᴴ * V = Uᴴ * (Vᴴ)ᴴ := by rw [conjTranspose_conjTranspose]
       _ = (Vᴴ * U)ᴴ := by rw [conjTranspose_mul]
@@ -675,9 +673,11 @@ private lemma trace_rpow_mul_double_sum (ρ σ : DensityMatrix n) (s : ℝ) :
   have hpsdρ := ρ.posSemidef
   have hpsdσ := σ.posSemidef
   have hρs : ρ.toMatrix ^ s = U * diagonal (fun i => ((ev_ρ i ^ s : ℝ) : ℂ)) * Uᴴ := by
-    rw [← matrixFunction_rpow_eq hpsdρ]; unfold matrixFunction; rfl
+    rw [CFC.rpow_eq_cfc_real (a := ρ.toMatrix) (ha := by rw [Matrix.le_iff, sub_zero]; exact hpsdρ),
+      cfc_spectral_eq ρ.isHermitian (fun x => x ^ s)]
   have hσs : σ.toMatrix ^ (1 - s) = V * diagonal (fun j => ((ev_σ j ^ (1 - s) : ℝ) : ℂ)) * Vᴴ := by
-    rw [← matrixFunction_rpow_eq hpsdσ]; unfold matrixFunction; rfl
+    rw [CFC.rpow_eq_cfc_real (a := σ.toMatrix) (ha := by rw [Matrix.le_iff, sub_zero]; exact hpsdσ),
+      cfc_spectral_eq σ.isHermitian (fun x => x ^ (1 - s))]
   have hVU : Vᴴ * U = W := rfl
   rw [hρs, hσs]
   -- Use cyclic trace property and W = Vᴴ * U to reduce to W D_ρ Wᴴ D_σ
@@ -1733,19 +1733,19 @@ theorem relativeEntropy_map_starAlgEquiv_posDef
   simp only [h_supp_map, h_supp, if_true]
   congr 1
   change (Tr ((ρ.map φ hφ).toMatrix *
-      (matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian -
-        matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian))).re =
+      (cfc Real.log (ρ.map φ hφ).toMatrix -
+        cfc Real.log (σ.map φ hφ).toMatrix))).re =
     (Tr (ρ.toMatrix *
-      (matrixLog ρ.toMatrix ρ.isHermitian -
-        matrixLog σ.toMatrix σ.isHermitian))).re
-  have h_log_ρ : matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian =
-      φ (matrixLog ρ.toMatrix ρ.isHermitian) := by
-    change matrixLog (φ ρ.toMatrix) _ = _
-    exact matrixLog_map_starAlgEquiv hρ φ
-  have h_log_σ : matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian =
-      φ (matrixLog σ.toMatrix σ.isHermitian) := by
-    change matrixLog (φ σ.toMatrix) _ = _
-    exact matrixLog_map_starAlgEquiv hσ φ
+      (cfc Real.log ρ.toMatrix -
+        cfc Real.log σ.toMatrix))).re
+  have h_log_ρ : cfc Real.log (ρ.map φ hφ).toMatrix =
+      φ (cfc Real.log ρ.toMatrix) := by
+    change cfc Real.log (φ ρ.toMatrix) = _
+    exact cfc_log_map_starAlgEquiv hρ φ
+  have h_log_σ : cfc Real.log (σ.map φ hφ).toMatrix =
+      φ (cfc Real.log σ.toMatrix) := by
+    change cfc Real.log (φ σ.toMatrix) = _
+    exact cfc_log_map_starAlgEquiv hσ φ
   rw [h_log_ρ, h_log_σ, DensityMatrix.map_toMatrix, ← map_sub, ← map_mul, hφ]
 
 /-- Specialisation of `relativeEntropy_map_starAlgEquiv_posDef` to reindexing. -/

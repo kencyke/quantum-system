@@ -1,7 +1,6 @@
 module
 
 public import QuantumSystem.Analysis.CFC.Diagonal
-public import QuantumSystem.Analysis.Matrix.PartialTrace
 public import QuantumSystem.State
 
 /-!
@@ -17,7 +16,7 @@ This file is the hub for **Kronecker-product calculus on bipartite matrices**:
 * preservation of Hermitian / unitary structure under `⊗ₖ`,
 * Kronecker spectral decomposition,
 * the **log-tensor identity**
-  `matrixLog (A ⊗ₖ B) = matrixLog A ⊗ₖ 1 + 1 ⊗ₖ matrixLog B` for PosDef `A`, `B`,
+  `cfc Real.log (A ⊗ₖ B) = cfc Real.log A ⊗ₖ 1 + 1 ⊗ₖ cfc Real.log B` for PosDef `A`, `B`,
 * the **equivalence-indexed partial trace** `partialTrace`
   (for `e : X ≃ A × B`, retain `A` and sum over `B`),
 * and the **Heisenberg duality at product type**
@@ -33,11 +32,9 @@ only after reindexing by `LocalNet.combineIdx`.
 
 The proof of the log-tensor identity uses the spectral decomposition of `A ⊗ B`
 constructed explicitly from spectral decompositions of `A` and `B`, combined
-with **spectral invariance** of `matrixFunction` (derived from
-`Matrix.matrixFunction_eq_cfc` and `StarAlgHomClass.map_cfc` on the ⋆-algebra
-automorphism given by conjugation by a unitary). Working via `matrixFunction`
-(spectral, bare `Matrix n n ℂ`) instead of the `CStarMatrix` wrapper avoids the
-instance diamond that blocked a previous `cfc`-only approach.
+with **spectral invariance** of `cfc` (derived from `cfc_spectral_eq` and
+`StarAlgHomClass.map_cfc` on the ⋆-algebra automorphism given by conjugation by
+a unitary).
 
 ## Main definitions
 
@@ -49,7 +46,7 @@ instance diamond that blocked a previous `cfc`-only approach.
 * `DensityMatrix.kronecker_toMatrix` — underlying-matrix unfolding.
 * `Matrix.IsHermitian.kronecker` — Kronecker of Hermitian matrices is Hermitian.
 * `Matrix.kronecker_eq_unitary_conj_diagonal` — Kronecker spectral decomposition.
-* `Matrix.matrixLog_kronecker_posDef` — the log-tensor identity.
+* `Matrix.cfc_log_kronecker_posDef` — the log-tensor identity.
 * `Matrix.partialTrace_apply` — entrywise unfolding of the equivalence-indexed partial trace.
 * `Matrix.restrict_eq_partialTrace_combineIdx` /
   `Matrix.restrict_compl_eq_partialTrace_combineIdx` — LocalNet restriction as an
@@ -121,30 +118,15 @@ theorem kronecker_eq_unitary_conj_diagonal
 
 section LogTensor
 
-/-- `matrixLog` of a unitary conjugate of a positive real diagonal is the same
-unitary conjugation of the diagonal logarithm. Auxiliary for the log-tensor identity. -/
-private lemma matrixLog_unitary_conj_diagonal
-    {k : Type*} [Fintype k] [DecidableEq k]
-    (W : unitary (Matrix k k ℂ)) (d : k → ℝ) (hd : ∀ i, 0 < d i)
-    (hM : ((W : Matrix k k ℂ) * diagonal (fun i => ((d i : ℝ) : ℂ)) *
-        (W : Matrix k k ℂ)ᴴ).IsHermitian) :
-    matrixLog ((W : Matrix k k ℂ) * diagonal (fun i => ((d i : ℝ) : ℂ)) *
-        (W : Matrix k k ℂ)ᴴ) hM =
-      (W : Matrix k k ℂ) *
-        diagonal (fun i => ((Real.log (d i) : ℝ) : ℂ)) * (W : Matrix k k ℂ)ᴴ := by
-  unfold matrixLog
-  rw [matrixFunction_eq_cfc]
-  exact cfc_log_unitary_conj_diagonal W d hd
-
 /-- **Log-tensor identity.** For positive-definite matrices `A` and `B`, the matrix
 logarithm of the Kronecker product decomposes as the sum of tensor-embedded logs:
-`matrixLog (A ⊗ₖ B) = matrixLog A ⊗ₖ 1 + 1 ⊗ₖ matrixLog B`. -/
-theorem matrixLog_kronecker_posDef
+`cfc Real.log (A ⊗ₖ B) = cfc Real.log A ⊗ₖ 1 + 1 ⊗ₖ cfc Real.log B`. -/
+theorem cfc_log_kronecker_posDef
     {A : Matrix n n ℂ} (hA : A.PosDef)
     {B : Matrix m m ℂ} (hB : B.PosDef) :
-    matrixLog (A ⊗ₖ B) (IsHermitian.kronecker hA.1 hB.1) =
-      matrixLog A hA.1 ⊗ₖ (1 : Matrix m m ℂ) +
-        (1 : Matrix n n ℂ) ⊗ₖ matrixLog B hB.1 := by
+    cfc Real.log (A ⊗ₖ B) =
+      cfc Real.log A ⊗ₖ (1 : Matrix m m ℂ) +
+        (1 : Matrix n n ℂ) ⊗ₖ cfc Real.log B := by
   -- Spectral data
   set U_A := (hA.1.eigenvectorUnitary : Matrix n n ℂ) with hU_A_def
   set U_B := (hB.1.eigenvectorUnitary : Matrix m m ℂ) with hU_B_def
@@ -191,29 +173,19 @@ theorem matrixLog_kronecker_posDef
     rw [h]
     congr 1; congr 1
     funext ij; push_cast; ring
-  -- Hermitianness of Kronecker
-  have hAB_herm : (A ⊗ₖ B).IsHermitian := IsHermitian.kronecker hA.1 hB.1
   -- Positivity of the diagonal product
   have h_dA_dB_pos : ∀ ij : n × m, 0 < (dA ij.1 * dB ij.2 : ℝ) :=
     fun ij => mul_pos (hdA_pos ij.1) (hdB_pos ij.2)
-  -- matrixLog of A ⊗ B via aux lemma
-  have hAB_herm' : ((W : Matrix (n × m) (n × m) ℂ) *
-      diagonal (fun ij : n × m => (((dA ij.1 * dB ij.2 : ℝ) : ℂ))) *
-      (W : Matrix (n × m) (n × m) ℂ)ᴴ).IsHermitian := by
-    rw [← hAB_decomp]; exact hAB_herm
-  have h_matrixLog_AB :
-      matrixLog (A ⊗ₖ B) hAB_herm =
+  -- cfc Real.log of A ⊗ B via aux lemma
+  have h_cfcLog_AB :
+      cfc Real.log (A ⊗ₖ B) =
         (W : Matrix (n × m) (n × m) ℂ) *
           diagonal (fun ij : n × m => ((Real.log (dA ij.1 * dB ij.2) : ℝ) : ℂ)) *
           (W : Matrix (n × m) (n × m) ℂ)ᴴ := by
-    rw [show matrixLog (A ⊗ₖ B) hAB_herm =
-        matrixLog ((W : Matrix (n × m) (n × m) ℂ) *
-          diagonal (fun ij : n × m => (((dA ij.1 * dB ij.2 : ℝ) : ℂ))) *
-          (W : Matrix (n × m) (n × m) ℂ)ᴴ) hAB_herm' from ?_]
-    · exact matrixLog_unitary_conj_diagonal W
-        (fun ij : n × m => (dA ij.1 * dB ij.2 : ℝ)) h_dA_dB_pos hAB_herm'
-    · congr 1
-  rw [h_matrixLog_AB]
+    rw [hAB_decomp]
+    exact cfc_log_unitary_conj_diagonal W
+      (fun ij : n × m => (dA ij.1 * dB ij.2 : ℝ)) h_dA_dB_pos
+  rw [h_cfcLog_AB]
   -- Split log(dA*dB) = log dA + log dB
   have h_log_split :
       diagonal (fun ij : n × m => ((Real.log (dA ij.1 * dB ij.2) : ℝ) : ℂ)) =
@@ -249,8 +221,8 @@ theorem matrixLog_kronecker_posDef
       ← mul_kronecker_mul, ← mul_kronecker_mul]
   -- Clean up: U_A * 1 * U_Aᴴ = 1, U_B * 1 * U_Bᴴ = 1
   rw [Matrix.mul_one U_A, hUA_self', Matrix.mul_one U_B, hUB_self']
-  -- Now unfold matrixLog of A and B via their spectral decomposition
-  rw [matrixLog_spectral_eq hA.1, matrixLog_spectral_eq hB.1]
+  -- Now unfold cfc Real.log of A and B via their spectral decomposition
+  rw [cfc_log_spectral_eq hA.1, cfc_log_spectral_eq hB.1]
 
 end LogTensor
 
@@ -286,68 +258,6 @@ omit [Fintype m] [DecidableEq n] [DecidableEq m] in
   partialTrace (A := m) (B := n) (Equiv.prodComm n m) ρ b b' =
     ∑ a : n, ρ (a, b) (a, b') := rfl
 
-/-! ### LocalNet bridge
-
-These lemmas identify `Matrix.restrict` on a `LocalNet` with the equivalence-indexed
-partial trace of the reindexed matrix induced by `LocalNet.combineIdx`. -/
-
-section LocalNetBridge
-
-variable {L : LocalNet}
-
-/-- Combining via `h : Λ ⊆ Λ_total` agrees with combining via the complementary split,
-after transporting the remaining factor along `Λ_total \ (Λ_total \ Λ) = Λ`. -/
-private lemma combineIdx_swap_apply
-    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (x : L.regionIdx Λ) (y : L.regionIdx (Λ_total \ Λ)) :
-    L.combineIdx h (x, y) =
-      L.combineIdx Finset.sdiff_subset
-        (y, L.regionIdxCongr (sdiff_sdiff_eq_self h).symm x) := by
-  have h_eq : Λ_total \ (Λ_total \ Λ) = Λ := sdiff_sdiff_eq_self h
-  funext ⟨s, hs⟩
-  by_cases hsΛ : s ∈ Λ
-  · have hns_compl : s ∉ Λ_total \ Λ := fun h_in => (Finset.mem_sdiff.mp h_in).2 hsΛ
-    have hs_recast : s ∈ Λ_total \ (Λ_total \ Λ) := by
-      rw [h_eq]
-      exact hsΛ
-    rw [LocalNet.combineIdx_apply_mem h _ _ ⟨s, hs⟩ hsΛ,
-        LocalNet.combineIdx_apply_not_mem Finset.sdiff_subset _ _ ⟨s, hs⟩ hns_compl,
-      LocalNet.regionIdxCongr_apply (L := L) h_eq.symm x hsΛ hs_recast]
-  · have hs_compl : s ∈ Λ_total \ Λ := Finset.mem_sdiff.mpr ⟨hs, hsΛ⟩
-    rw [LocalNet.combineIdx_apply_not_mem h _ _ ⟨s, hs⟩ hsΛ,
-        LocalNet.combineIdx_apply_mem Finset.sdiff_subset _ _ ⟨s, hs⟩ hs_compl]
-
-/-- Restriction to `Λ` equals the partial trace of the reindexed matrix induced by
-`combineIdx h`, retaining the `Λ` factor. -/
-theorem restrict_eq_partialTrace_combineIdx
-    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (ρ : L.localAlgebra Λ_total) (x x' : L.regionIdx Λ) :
-    Matrix.restrict h ρ x x' =
-      Matrix.partialTrace
-        (A := L.regionIdx Λ) (B := L.regionIdx (Λ_total \ Λ))
-        (Equiv.refl (L.regionIdx Λ × L.regionIdx (Λ_total \ Λ)))
-        (ρ.submatrix (L.combineIdx h) (L.combineIdx h)) x x' := by
-  rw [Matrix.partialTrace_refl_apply, Matrix.restrict_apply]
-  simp [Matrix.submatrix_apply]
-
-/-- Restriction to the complement of `Λ` equals the partial trace of the reindexed matrix
-induced by `combineIdx h`, retaining the complementary factor. -/
-theorem restrict_compl_eq_partialTrace_combineIdx
-    {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
-    (ρ : L.localAlgebra Λ_total) (y y' : L.regionIdx (Λ_total \ Λ)) :
-    Matrix.restrict Finset.sdiff_subset ρ y y' =
-      Matrix.partialTrace
-        (A := L.regionIdx (Λ_total \ Λ)) (B := L.regionIdx Λ)
-        (Equiv.prodComm (L.regionIdx Λ) (L.regionIdx (Λ_total \ Λ)))
-        (ρ.submatrix (L.combineIdx h) (L.combineIdx h)) y y' := by
-  rw [Matrix.partialTrace_prodComm_apply, Matrix.restrict_apply]
-  rw [← (L.regionIdxCongr (sdiff_sdiff_eq_self h).symm).sum_comp
-        (fun z => ρ (L.combineIdx Finset.sdiff_subset (y, z))
-          (L.combineIdx Finset.sdiff_subset (y', z)))]
-  refine Finset.sum_congr rfl fun x _ => ?_
-  rw [Matrix.submatrix_apply, combineIdx_swap_apply h x y, combineIdx_swap_apply h x y']
-
-end LocalNetBridge
 
 /-! ### Heisenberg duality at product type
 

@@ -4,6 +4,8 @@ public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
 public import QuantumSystem.Analysis.Entropy.Regularize
 public import QuantumSystem.Analysis.Matrix.PartialTrace
+public import QuantumSystem.Analysis.Matrix.KroneckerPartialTraceBridge
+public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 
 /-!
 # Strong subadditivity of the von Neumann entropy (LocalNet form)
@@ -66,87 +68,6 @@ AQFT-natural form:
 -/
 
 @[expose] public section
-
-namespace Matrix
-
-open scoped Kronecker MatrixOrder ComplexOrder QuantumInfo
-
-variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
-
-/-! ### Product-type relative-entropy identity -/
-
-/-- **Mutual-information identity (product-type form)**: for a bipartite density
-matrix `ρ_AB : DensityMatrix (n × m)` whose canonical partial traces coincide with PosDef
-factor states `ρ_A` and `ρ_B`, the relative entropy w.r.t. the product `ρ_A ⊗ ρ_B`
-equals `-S(ρ_AB) + S(ρ_A) + S(ρ_B)`. -/
-theorem relativeEntropy_kronecker_marginals_product
-    (ρ_AB : DensityMatrix (n × m))
-    (ρ_A : DensityMatrix n) (hρ_A : ρ_A.toMatrix.PosDef)
-    (ρ_B : DensityMatrix m) (hρ_B : ρ_B.toMatrix.PosDef)
-    (h_A_partialTrace : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix)
-    (h_B_partialTrace : tr₁(ρ_AB.toMatrix) = ρ_B.toMatrix) :
-    D(ρ_AB ∥ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) := by
-  classical
-  have hρ_A_kron_pos : (ρ_A ⊗ ρ_B).toMatrix.PosDef := by
-    rw [DensityMatrix.kronecker_toMatrix]; exact hρ_A.kronecker hρ_B
-  -- supp(ρ) ⊆ supp(ρ_A ⊗ ρ_B) holds for PosDef σ.
-  have h_supp : suppSubset ρ_AB.toMatrix (ρ_A ⊗ ρ_B).toMatrix := by
-    intro v hv
-    have hinj : Function.Injective (ρ_A ⊗ ρ_B).toMatrix.mulVec :=
-      Matrix.mulVec_injective_iff_isUnit.mpr hρ_A_kron_pos.isUnit
-    have h0 : (ρ_A ⊗ ρ_B).toMatrix.mulVec 0 = 0 := by simp
-    have hv_zero : v = 0 := hinj (hv.trans h0.symm)
-    rw [hv_zero]; simp
-  unfold relativeEntropy
-  simp only [h_supp, if_true]
-  -- log of ρ_A ⊗ ρ_B decomposes via matrixLog_kronecker_posDef.
-  -- The two `IsHermitian` proofs differ proof-wise but match by Prop irrelevance.
-  have h_log_kron : matrixLog (ρ_A ⊗ ρ_B).toMatrix (ρ_A ⊗ ρ_B).isHermitian =
-      matrixLog ρ_A.toMatrix hρ_A.1 ⊗ₖ (1 : Matrix m m ℂ) +
-        (1 : Matrix n n ℂ) ⊗ₖ matrixLog ρ_B.toMatrix hρ_B.1 :=
-    matrixLog_kronecker_posDef hρ_A hρ_B
-  -- The trace identity after substitution.
-  have h_trace_log_kron :
-      Tr (ρ_AB.toMatrix * matrixLog (ρ_A ⊗ ρ_B).toMatrix (ρ_A ⊗ ρ_B).isHermitian) =
-        Tr (ρ_A.toMatrix * matrixLog ρ_A.toMatrix hρ_A.1) +
-        Tr (ρ_B.toMatrix * matrixLog ρ_B.toMatrix hρ_B.1) := by
-    rw [h_log_kron, Matrix.mul_add, Matrix.trace_add, trace_mul_kronecker_one_right,
-      trace_mul_kronecker_one_left, h_A_partialTrace, h_B_partialTrace]
-  -- Split (log ρ - log(ρ_A⊗ρ_B)) and reduce trace.
-  have h_split : Tr (ρ_AB.toMatrix * (matrixLog ρ_AB.toMatrix ρ_AB.isHermitian -
-        matrixLog (ρ_A ⊗ ρ_B).toMatrix (ρ_A ⊗ ρ_B).isHermitian)) =
-      Tr (ρ_AB.toMatrix * matrixLog ρ_AB.toMatrix ρ_AB.isHermitian) -
-        Tr (ρ_AB.toMatrix * matrixLog (ρ_A ⊗ ρ_B).toMatrix (ρ_A ⊗ ρ_B).isHermitian) := by
-    rw [Matrix.mul_sub, Matrix.trace_sub]
-  -- Translate to the goal in EReal.
-  change (↑(Tr (ρ_AB.toMatrix * (matrixLog ρ_AB.toMatrix ρ_AB.isHermitian -
-        matrixLog (ρ_A ⊗ ρ_B).toMatrix (ρ_A ⊗ ρ_B).isHermitian))).re : EReal) =
-      -S(ρ_AB) + S(ρ_A) + S(ρ_B)
-  rw [h_split, Complex.sub_re, h_trace_log_kron, Complex.add_re]
-  -- Now: ↑((Tr(ρ · log ρ)).re - ((Tr(ρ_A · log ρ_A)).re + (Tr(ρ_B · log ρ_B)).re))
-  --      = -S(ρ) + S(ρ_A) + S(ρ_B)
-  -- Express the LHS Real value:
-  set α : ℝ := (Tr (ρ_AB.toMatrix * matrixLog ρ_AB.toMatrix ρ_AB.isHermitian)).re with hα
-  set β : ℝ := (Tr (ρ_A.toMatrix * matrixLog ρ_A.toMatrix hρ_A.1)).re with hβ
-  set γ : ℝ := (Tr (ρ_B.toMatrix * matrixLog ρ_B.toMatrix hρ_B.1)).re with hγ
-  -- And the S values:
-  change (↑(α - (β + γ)) : EReal) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)
-  have hSρ : S(ρ_AB) = -α := by
-    change -(Tr (ρ_AB.toMatrix * DensityMatrix.log ρ_AB)).re = -α
-    rfl
-  have hSρ_A : S(ρ_A) = -β := by
-    change -(Tr (ρ_A.toMatrix * DensityMatrix.log ρ_A)).re = -β
-    rfl
-  have hSρ_B : S(ρ_B) = -γ := by
-    change -(Tr (ρ_B.toMatrix * DensityMatrix.log ρ_B)).re = -γ
-    rfl
-  rw [hSρ, hSρ_A, hSρ_B]
-  -- Goal in EReal: ↑(α - (β + γ)) = -↑(-α) + ↑(-β) + ↑(-γ)
-  -- Equivalent Real identity:
-  have h_real : α - (β + γ) = -(-α) + (-β) + (-γ) := by ring
-  exact_mod_cast h_real
-
-end Matrix
 
 /-! ### Strong subadditivity (LocalNet form, PosDef case)
 
