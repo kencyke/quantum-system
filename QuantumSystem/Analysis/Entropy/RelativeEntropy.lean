@@ -13,6 +13,9 @@ This file collects fundamental entropy inequalities for quantum channels.
 
 ## Main Results
 
+* `relativeEntropy_nonneg`: Klein's inequality — relative entropy is non-negative,
+  `0 ≤ D(ρ ‖ σ)`.
+* `relativeEntropy_eq_zero_iff`: faithfulness — `D(ρ ‖ σ) = 0 ↔ ρ = σ`.
 * `relativeEntropy_channel_le`: Monotonicity of relative entropy — quantum channels do not
   increase relative entropy: S(Φ(ρ) ‖ Φ(σ)) ≤ S(ρ ‖ σ).
 * `relativeEntropy_channel_eq_iff_recoverable`: Equality in monotonicity holds when a Petz
