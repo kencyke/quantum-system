@@ -29,6 +29,135 @@ below are thin wrappers around the corresponding `LocalNet` constructions on `to
 
 @[expose] public section
 
+namespace LocalNet
+
+variable {sites : Type*} [DecidableEq sites] (N : LocalNet sites)
+
+/-! ### Abstract quasi-local algebra
+
+These constructions apply to any abstract local net. The concrete `SiteIndexSystem` wrappers are
+provided later in this file after `SiteIndexSystem.toLocalNet` is built.
+-/
+
+/-- The **algebra of local observables** of the net: the algebraic inductive limit of the local
+    algebras along the isotony embeddings. Its C⋆-completion is the quasi-local algebra. -/
+noncomputable abbrev quasiLocalAlgebra : Type _ :=
+  DirectLimit N.algebra (fun _ _ h => N.incl h)
+
+/-- Componentwise behaviour of the involution on the algebra of local observables. The
+    `Star`, `StarRing`, `Algebra ℂ` and `StarModule ℂ` instances come from the general
+    direct-limit constructions, since each `algebra Λ` is a `ℂ`-`*`-algebra and `incl` is a
+    `*`-algebra homomorphism. -/
+@[simp] theorem star_mk {Λ : Finset sites} (X : N.algebra Λ) :
+    star (⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨Λ, star X⟩⟧ := rfl
+
+/-- The canonical embedding `𝔄(Λ) ↪ 𝔄_loc` of a local algebra into the algebra of local
+    observables, as a unital ring homomorphism (the cocone of the inductive limit). -/
+noncomputable def ιLocal (Λ : Finset sites) :
+    N.algebra Λ →+* N.quasiLocalAlgebra :=
+  DirectLimit.Ring.of N.algebra (fun _ _ h => N.incl h) Λ
+
+/-- Compatibility of the cocone with the isotony embeddings: including `X` from `Λ` into the
+    larger region `Λ'` and then into `𝔄_loc` is the same as including `X` directly. -/
+@[simp] theorem ιLocal_incl {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (X : N.algebra Λ) :
+    N.ιLocal Λ' (N.incl h X) = N.ιLocal Λ X :=
+  DirectLimit.Ring.of_f (G := N.algebra) (f := fun _ _ h => N.incl h) h X
+
+/-- The cocone is a `*`-homomorphism: it intertwines the local and quasi-local involutions. -/
+@[simp] theorem ιLocal_star {Λ : Finset sites} (X : N.algebra Λ) :
+    N.ιLocal Λ (star X) = star (N.ιLocal Λ X) :=
+  (star_mk (N := N) X).symm
+
+/-- The cocone of the inductive limit absorbs the region-equality transport. -/
+@[simp] theorem ιLocal_algebraCongr {Λ Λ' : Finset sites} (h : Λ = Λ') (x : N.algebra Λ) :
+    N.ιLocal Λ' (N.algebraCongr h x) = N.ιLocal Λ x := by
+  subst h; rfl
+
+/-- **Exhaustion**: every element of the algebra of local observables is the image of a local
+    observable from some finite region — the union of the local algebras is the whole limit. -/
+theorem exists_ιLocal (z : N.quasiLocalAlgebra) :
+    ∃ (Λ : Finset sites) (X : N.algebra Λ), z = N.ιLocal Λ X := by
+  induction z using DirectLimit.induction with
+  | _ Λ X => exact ⟨Λ, X, rfl⟩
+
+/-- **Locality in the algebra of local observables**: observables localised in disjoint regions
+    commute inside `𝔄_loc`. Lifts the net's `locality` along the ring-hom cocone. -/
+theorem ιLocal_commute_of_disjoint {Λ₁ Λ₂ : Finset sites} (hd : Disjoint Λ₁ Λ₂)
+    (X : N.algebra Λ₁) (Y : N.algebra Λ₂) :
+    Commute (N.ιLocal Λ₁ X) (N.ιLocal Λ₂ Y) := by
+  have h1 : N.ιLocal Λ₁ X
+      = N.ιLocal (Λ₁ ∪ Λ₂) (N.incl Finset.subset_union_left X) :=
+    (N.ιLocal_incl Finset.subset_union_left X).symm
+  have h2 : N.ιLocal Λ₂ Y
+      = N.ιLocal (Λ₁ ∪ Λ₂) (N.incl Finset.subset_union_right Y) :=
+    (N.ιLocal_incl Finset.subset_union_right Y).symm
+  rw [h1, h2]
+  exact (N.locality Finset.subset_union_left Finset.subset_union_right hd X Y).map
+    (N.ιLocal (Λ₁ ∪ Λ₂))
+
+/-! ### Faithful nets and the quasi-local C⋆-algebra
+
+For a faithful net the connecting maps are isometric, so the algebra of local observables carries
+a C⋆-norm whose completion is the quasi-local C⋆-algebra `𝔄 = ‾⋃_Λ 𝔄(Λ)`.
+-/
+
+section CStar
+
+variable [N.Faithful]
+
+/-- The algebra of local observables is a normed ring under the C⋆-norm of the inductive limit
+    (the inclusions are injective, hence isometric). -/
+noncomputable instance : NormedRing N.quasiLocalAlgebra :=
+  DirectLimit.cstarNormedRing (fun _ _ h => Faithful.incl_injective h)
+
+@[simp] theorem norm_mk {Λ : Finset sites} (X : N.algebra Λ) :
+    ‖(⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra)‖ = ‖X‖ := rfl
+
+/-- The C⋆-norm is compatible with the `ℂ`-algebra structure. -/
+noncomputable instance : NormedAlgebra ℂ N.quasiLocalAlgebra where
+  norm_smul_le c x := by
+    induction x using DirectLimit.induction with
+    | _ Λ X => rw [DirectLimit.smul_def, norm_mk, norm_mk]; exact norm_smul_le c X
+
+/-- `star` is isometric on the algebra of local observables. -/
+instance : NormedStarGroup N.quasiLocalAlgebra where
+  norm_star_le x := by
+    induction x using DirectLimit.induction with
+    | _ Λ X => rw [star_mk, norm_mk, norm_mk]; exact (norm_star X).le
+
+/-- The C⋆-identity holds on the algebra of local observables. -/
+instance : CStarRing N.quasiLocalAlgebra where
+  norm_mul_self_le x := by
+    induction x using DirectLimit.induction with
+    | _ Λ X => rw [star_mk, DirectLimit.mul_def, norm_mk, norm_mk]
+               exact CStarRing.norm_mul_self_le X
+
+/-- The **quasi-local C⋆-algebra** of a faithful net: the completion of the algebra of local
+    observables. This is the AQFT quasi-local algebra `𝔄 = ‾⋃_Λ 𝔄(Λ)`. -/
+noncomputable abbrev quasiLocalCStarAlgebra : Type _ :=
+  UniformSpace.Completion N.quasiLocalAlgebra
+
+noncomputable example : CStarAlgebra N.quasiLocalCStarAlgebra := inferInstance
+
+/-- The canonical embedding `𝔄(Λ) → 𝔄` of a local algebra into the quasi-local C⋆-algebra,
+    as the completion coercion composed with the inductive-limit cocone. Its range is dense. -/
+noncomputable def ιLocalCStar (Λ : Finset sites) :
+    N.algebra Λ → N.quasiLocalCStarAlgebra :=
+  (↑) ∘ N.ιLocal Λ
+
+/-- The local algebras are dense in the quasi-local C⋆-algebra: every element is a norm-limit of
+    local observables. -/
+theorem denseRange_iUnion_ιLocalCStar :
+    Dense (⋃ Λ : Finset sites, Set.range (N.ιLocalCStar Λ)) := by
+  refine UniformSpace.Completion.denseRange_coe.mono ?_
+  rintro _ ⟨z, rfl⟩
+  obtain ⟨Λ, X, rfl⟩ := N.exists_ιLocal z
+  exact Set.mem_iUnion.2 ⟨Λ, X, rfl⟩
+
+end CStar
+
+end LocalNet
+
 namespace SiteIndexSystem
 
 open scoped Matrix.Norms.L2Operator
