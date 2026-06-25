@@ -33,7 +33,14 @@ On any local net this file builds, once and for all:
   `Symmetry.id`/`Symmetry.comp`/`Symmetry.inv`), and the purely algebraic action
   `Symmetry.quasiLocalRelabel` on the algebra of local observables, which is a monoid homomorphism
   out of that group (`quasiLocalRelabel_one`/`quasiLocalRelabel_mul`) — so a group `G` acting on
-  the net (a hom `G →* N.Symmetry`) acts on the local observables by `*`-endomorphisms.
+  the net (a hom `G →* N.Symmetry`) acts on the local observables by `*`-endomorphisms. Since each
+  `β` is a `*`-isomorphism this action is in fact by `*`-algebra automorphisms:
+  `Symmetry.quasiLocalRelabelStarEquiv` packages each symmetry as a `*`-algebra automorphism
+  `𝔄_loc ≃⋆ₐ[ℂ] 𝔄_loc` and `Symmetry.quasiLocalRelabelStarHom` bundles them into a group
+  homomorphism into its `*`-automorphism group. For a **faithful** net the action is isometric, so
+  `Symmetry.quasiLocalCStarRelabel` extends it to a `*`-automorphism `𝔄 ≃⋆ₐ[ℂ] 𝔄` of the quasi-local
+  C⋆-algebra and `Symmetry.quasiLocalCStarRelabelHom` to a group homomorphism — the genuine AQFT
+  covariant automorphic action.
 
 The injectivity needed for the C⋆-norm is carried by the separate `Faithful` typeclass rather
 than a structure field, so that the purely algebraic constructions (`quasiLocalAlgebra`,
@@ -452,6 +459,160 @@ theorem inv_def (a : N.Symmetry) : a⁻¹ = a.inv := rfl
 theorem quasiLocalRelabel_mul (a b : N.Symmetry) :
     (a * b).quasiLocalRelabel = a.quasiLocalRelabel.comp b.quasiLocalRelabel := by
   rw [mul_def, quasiLocalRelabel_comp]
+
+/-! #### The covariance action as a `*`-automorphism
+
+The ring endomorphism `quasiLocalRelabel` is in fact `ℂ`-linear and `*`-preserving, since each
+covariance isomorphism `β` is a `*`-isomorphism. Recording this upgrades the action to a genuine
+`*`-algebra automorphism `≃⋆ₐ[ℂ]` and the assignment to a group homomorphism into the
+`*`-automorphism group — the AQFT covariance action on the algebra of local observables. -/
+
+/-- The covariance action is `ℂ`-linear: `β_a (c • z) = c • β_a z`, since each `β` is. -/
+theorem quasiLocalRelabel_smul (c : ℂ) (z : N.quasiLocalAlgebra) :
+    a.quasiLocalRelabel (c • z) = c • a.quasiLocalRelabel z := by
+  induction z using DirectLimit.induction with
+  | _ Λ X =>
+    rw [DirectLimit.smul_def, quasiLocalRelabel_mk, quasiLocalRelabel_mk, DirectLimit.smul_def,
+      map_smul]
+    rfl
+
+/-- The covariance action preserves the involution: `β_a (star z) = star (β_a z)`, since each `β`
+    is a `*`-isomorphism. -/
+theorem quasiLocalRelabel_star (z : N.quasiLocalAlgebra) :
+    a.quasiLocalRelabel (star z) = star (a.quasiLocalRelabel z) := by
+  induction z using DirectLimit.induction with
+  | _ Λ X =>
+    rw [star_mk, quasiLocalRelabel_mk, quasiLocalRelabel_mk, star_mk, map_star]
+    rfl
+
+/-- The **covariance action** of a symmetry as a `*`-algebra automorphism `𝔄_loc ≃⋆ₐ[ℂ] 𝔄_loc` of
+    the algebra of local observables, with the action of the inverse symmetry `a⁻¹` as its inverse.
+    This is the AQFT covariance automorphism at the level of the (incomplete) algebra of local
+    observables; its continuous extension to the quasi-local C⋆-algebra is `quasiLocalCStarRelabel`
+    (for a faithful net). -/
+noncomputable def quasiLocalRelabelStarEquiv :
+    N.quasiLocalAlgebra ≃⋆ₐ[ℂ] N.quasiLocalAlgebra where
+  toFun := a.quasiLocalRelabel
+  invFun := a⁻¹.quasiLocalRelabel
+  left_inv z := by
+    rw [← RingHom.comp_apply, ← quasiLocalRelabel_mul, inv_mul_cancel, quasiLocalRelabel_one,
+      RingHom.id_apply]
+  right_inv z := by
+    rw [← RingHom.comp_apply, ← quasiLocalRelabel_mul, mul_inv_cancel, quasiLocalRelabel_one,
+      RingHom.id_apply]
+  map_mul' := map_mul a.quasiLocalRelabel
+  map_add' := map_add a.quasiLocalRelabel
+  map_smul' := a.quasiLocalRelabel_smul
+  map_star' := a.quasiLocalRelabel_star
+
+@[simp] theorem quasiLocalRelabelStarEquiv_apply (z : N.quasiLocalAlgebra) :
+    a.quasiLocalRelabelStarEquiv z = a.quasiLocalRelabel z := rfl
+
+@[simp] theorem quasiLocalRelabelStarEquiv_symm_apply (z : N.quasiLocalAlgebra) :
+    a.quasiLocalRelabelStarEquiv.symm z = a⁻¹.quasiLocalRelabel z := rfl
+
+/-- A symmetry of the net acts on the algebra of local observables by `*`-algebra automorphisms,
+    assembled as a **group homomorphism** into the `*`-automorphism group `𝔄_loc ≃⋆ₐ[ℂ] 𝔄_loc`.
+    This is the covariance action of the symmetry group, upgrading the monoid-homomorphic
+    endomorphism action (`quasiLocalRelabel_one`/`quasiLocalRelabel_mul`) to a group action by
+    automorphisms that tracks the `ℂ`-linear and `*`-structure. -/
+noncomputable def quasiLocalRelabelStarHom :
+    N.Symmetry →* (N.quasiLocalAlgebra ≃⋆ₐ[ℂ] N.quasiLocalAlgebra) where
+  toFun a := a.quasiLocalRelabelStarEquiv
+  map_one' := by
+    ext z
+    simp only [quasiLocalRelabelStarEquiv_apply, quasiLocalRelabel_one, RingHom.id_apply,
+      StarAlgEquiv.one_apply]
+  map_mul' a b := by
+    ext z
+    simp only [quasiLocalRelabelStarEquiv_apply, quasiLocalRelabel_mul, RingHom.comp_apply,
+      StarAlgEquiv.mul_apply]
+
+@[simp] theorem quasiLocalRelabelStarHom_apply (z : N.quasiLocalAlgebra) :
+    quasiLocalRelabelStarHom a z = a.quasiLocalRelabel z := rfl
+
+/-! #### The covariance automorphism of the quasi-local C⋆-algebra
+
+For a **faithful** net the covariance action is *isometric* — each `β` is a `*`-isomorphism of
+C⋆-algebras, hence norm-preserving (`StarAlgEquiv.norm_map`) — so `quasiLocalRelabelStarEquiv` is
+uniformly continuous and extends, by the functoriality of completion (`mapStarAlgEquiv`), to a
+`*`-automorphism of the quasi-local C⋆-algebra `𝔄`. This is the genuine AQFT covariance
+automorphism on `𝔄`, and the assignment is a group homomorphism. -/
+
+section CStarCovariance
+
+variable [N.Faithful]
+
+/-- The covariance action is **isometric** on the algebra of local observables: each `β` is a
+    `*`-isomorphism of C⋆-algebras, hence norm-preserving. -/
+theorem quasiLocalRelabel_norm (z : N.quasiLocalAlgebra) :
+    ‖a.quasiLocalRelabel z‖ = ‖z‖ := by
+  induction z using DirectLimit.induction with
+  | _ Λ X =>
+    rw [quasiLocalRelabel_mk, norm_mk, norm_mk]
+    exact StarAlgEquiv.norm_map _ X
+
+/-- The covariance automorphism of the algebra of local observables is uniformly continuous (it is
+    an isometry), so it extends to the C⋆-completion. -/
+theorem quasiLocalRelabelStarEquiv_uniformContinuous :
+    UniformContinuous a.quasiLocalRelabelStarEquiv :=
+  (AddMonoidHomClass.isometry_of_norm _ (fun z => by
+    rw [quasiLocalRelabelStarEquiv_apply]; exact a.quasiLocalRelabel_norm z)).uniformContinuous
+
+/-- The inverse covariance automorphism is uniformly continuous as well (the action of `a⁻¹` is
+    also an isometry). -/
+theorem quasiLocalRelabelStarEquiv_symm_uniformContinuous :
+    UniformContinuous a.quasiLocalRelabelStarEquiv.symm := by
+  have h : ∀ z, ‖a.quasiLocalRelabelStarEquiv.symm z‖ = ‖z‖ := fun z => by
+    rw [quasiLocalRelabelStarEquiv_symm_apply]; exact a⁻¹.quasiLocalRelabel_norm z
+  exact (AddMonoidHomClass.isometry_of_norm _ h).uniformContinuous
+
+/-- The **covariance automorphism of the quasi-local C⋆-algebra** `𝔄 ≃⋆ₐ[ℂ] 𝔄`: the continuous
+    extension of `quasiLocalRelabelStarEquiv` to the completion. This is the AQFT covariant
+    `*`-automorphism on the quasi-local C⋆-algebra of a faithful net (Naaijkens 2012 §3.2,
+    Bratteli–Robinson Vol.2 §6.2). -/
+noncomputable def quasiLocalCStarRelabel :
+    N.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] N.quasiLocalCStarAlgebra :=
+  UniformSpace.Completion.mapStarAlgEquiv a.quasiLocalRelabelStarEquiv
+    a.quasiLocalRelabelStarEquiv_uniformContinuous
+    a.quasiLocalRelabelStarEquiv_symm_uniformContinuous
+
+@[simp] theorem quasiLocalCStarRelabel_coe (z : N.quasiLocalAlgebra) :
+    a.quasiLocalCStarRelabel (↑z : N.quasiLocalCStarAlgebra) = ↑(a.quasiLocalRelabel z) :=
+  UniformSpace.Completion.mapStarAlgEquiv_coe _ _ _ z
+
+theorem quasiLocalCStarRelabel_continuous :
+    Continuous (⇑a.quasiLocalCStarRelabel) :=
+  UniformSpace.Completion.continuous_map
+
+/-- A symmetry of a faithful net acts on the quasi-local C⋆-algebra by `*`-automorphisms,
+    assembled as a **group homomorphism** into the `*`-automorphism group `𝔄 ≃⋆ₐ[ℂ] 𝔄`. This is the
+    covariance action of the symmetry group on the quasi-local C⋆-algebra — the AQFT covariant
+    automorphic action. -/
+noncomputable def quasiLocalCStarRelabelHom :
+    N.Symmetry →* (N.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] N.quasiLocalCStarAlgebra) where
+  toFun a := a.quasiLocalCStarRelabel
+  map_one' := by
+    refine StarAlgEquiv.ext fun z => ?_
+    rw [StarAlgEquiv.one_apply]
+    refine UniformSpace.Completion.induction_on z
+      (isClosed_eq (1 : N.Symmetry).quasiLocalCStarRelabel_continuous continuous_id) ?_
+    intro w
+    simp only [quasiLocalCStarRelabel_coe, quasiLocalRelabel_one, RingHom.id_apply]
+  map_mul' a b := by
+    refine StarAlgEquiv.ext fun z => ?_
+    rw [StarAlgEquiv.mul_apply]
+    refine UniformSpace.Completion.induction_on z
+      (isClosed_eq (a * b).quasiLocalCStarRelabel_continuous
+        (a.quasiLocalCStarRelabel_continuous.comp b.quasiLocalCStarRelabel_continuous)) ?_
+    intro w
+    simp only [quasiLocalCStarRelabel_coe, quasiLocalRelabel_mul, RingHom.comp_apply]
+
+@[simp] theorem quasiLocalCStarRelabelHom_apply
+    (z : N.quasiLocalCStarAlgebra) :
+    quasiLocalCStarRelabelHom a z = a.quasiLocalCStarRelabel z := rfl
+
+end CStarCovariance
 
 end Symmetry
 
