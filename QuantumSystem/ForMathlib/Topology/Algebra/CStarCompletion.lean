@@ -11,7 +11,9 @@ The completion of a normed `*`-algebra is again a normed `*`-algebra, and the co
 `NormedRing`, `NormedAlgebra` and `CompleteSpace` instances on `UniformSpace.Completion`; this
 file adds the missing `Star`, `StarRing`, `NormedStarGroup`, `CStarRing` and `StarModule`
 instances, obtained by extending the operations on the dense image by continuity, and assembles
-them into a `CStarAlgebra` instance.
+them into a `CStarAlgebra` instance. It also records the **functoriality** of the completion for
+`*`-algebra equivalences (`mapStarAlgEquiv`): a uniformly continuous `*`-isomorphism with uniformly
+continuous inverse extends to a `*`-isomorphism of the completions.
 
 These are general facts about completions and are candidates for upstreaming to Mathlib.
 -/
@@ -75,8 +77,8 @@ variable [NormedRing A] [StarRing A] [NormedStarGroup A] [CStarRing A]
 instance : CStarRing (Completion A) where
   norm_mul_self_le a := by
     refine induction_on a
-      (isClosed_le (continuous_norm.mul continuous_norm) (continuous_id.star.mul continuous_id).norm)
-      ?_
+      (isClosed_le (continuous_norm.mul continuous_norm)
+        (continuous_id.star.mul continuous_id).norm) ?_
     intro a
     rw [star_coe, ← coe_mul, norm_coe, norm_coe]
     exact CStarRing.norm_mul_self_le a
@@ -113,5 +115,65 @@ noncomputable instance instNormedAlgebraOfNormedRing {𝕜 : Type*} [NormedField
 /-- The completion of a (possibly incomplete) C⋆-normed `ℂ`-algebra is a `CStarAlgebra`. -/
 noncomputable instance instCStarAlgebra [NormedRing A] [StarRing A] [NormedStarGroup A]
     [CStarRing A] [NormedAlgebra ℂ A] [StarModule ℂ A] : CStarAlgebra (Completion A) where
+
+section MapStarAlgEquiv
+
+variable {𝕜 A B : Type*} [NormedField 𝕜]
+  [NormedRing A] [NormedAlgebra 𝕜 A] [StarRing A] [NormedStarGroup A]
+  [NormedRing B] [NormedAlgebra 𝕜 B] [StarRing B] [NormedStarGroup B]
+
+/-- **Functoriality of the completion for star algebra equivalences**: a uniformly continuous
+`*`-algebra equivalence whose inverse is also uniformly continuous extends, by continuity on the
+dense image, to a `*`-algebra equivalence of the completions. (In particular every `*`-isomorphism
+of C⋆-normed algebras, being isometric, extends to the completions.) -/
+noncomputable def mapStarAlgEquiv (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
+    (he' : UniformContinuous e.symm) : Completion A ≃⋆ₐ[𝕜] Completion B where
+  toFun := Completion.map e
+  invFun := Completion.map e.symm
+  left_inv x := by
+    refine induction_on x (isClosed_eq (continuous_map.comp continuous_map) continuous_id) ?_
+    intro a
+    rw [map_coe he, map_coe he', StarAlgEquiv.symm_apply_apply]
+  right_inv x := by
+    refine induction_on x (isClosed_eq (continuous_map.comp continuous_map) continuous_id) ?_
+    intro a
+    rw [map_coe he', map_coe he, StarAlgEquiv.apply_symm_apply]
+  map_mul' x y := by
+    refine induction_on₂ x y
+      (isClosed_eq ((continuous_map (f := ⇑e)).comp continuous_mul)
+        (((continuous_map (f := ⇑e)).comp continuous_fst).mul
+          ((continuous_map (f := ⇑e)).comp continuous_snd))) ?_
+    intro a b
+    rw [← coe_mul, map_coe he, map_coe he, map_coe he, ← coe_mul, map_mul]
+  map_add' x y := by
+    refine induction_on₂ x y
+      (isClosed_eq ((continuous_map (f := ⇑e)).comp continuous_add)
+        (((continuous_map (f := ⇑e)).comp continuous_fst).add
+          ((continuous_map (f := ⇑e)).comp continuous_snd))) ?_
+    intro a b
+    rw [← coe_add, map_coe he, map_coe he, map_coe he, ← coe_add, map_add]
+  map_smul' c x := by
+    refine induction_on x
+      (isClosed_eq (continuous_map.comp (continuous_const_smul c))
+        ((continuous_const_smul c).comp continuous_map)) ?_
+    intro a
+    rw [← coe_smul, map_coe he, map_coe he, ← coe_smul, map_smul]
+  map_star' x := by
+    refine induction_on x
+      (isClosed_eq (continuous_map.comp continuous_star) (continuous_star.comp continuous_map)) ?_
+    intro a
+    rw [star_coe, map_coe he, map_coe he, star_coe, map_star]
+
+@[simp] theorem mapStarAlgEquiv_coe (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
+    (he' : UniformContinuous e.symm) (a : A) :
+    mapStarAlgEquiv e he he' (↑a : Completion A) = (↑(e a) : Completion B) :=
+  map_coe he a
+
+theorem coe_mapStarAlgEquiv (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
+    (he' : UniformContinuous e.symm) :
+    ⇑(mapStarAlgEquiv e he he') = Completion.map e :=
+  rfl
+
+end MapStarAlgEquiv
 
 end UniformSpace.Completion
