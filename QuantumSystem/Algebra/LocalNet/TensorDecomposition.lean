@@ -28,9 +28,9 @@ The isotony embedding is then literally "tensoring with the identity on the comp
 open WithLp
 open scoped TensorProduct Matrix
 
-namespace LocalNet
+namespace SiteIndexSystem
 
-variable (L : LocalNet)
+variable (L : SiteIndexSystem)
 
 /-- The Hilbert space of a region: the Euclidean space on its index type. -/
 abbrev ℋ (Λ : Finset L.sites) : Type _ := EuclideanSpace ℂ (L.regionIdx Λ)
@@ -115,4 +115,4 @@ theorem opEquiv_includeAlgebra {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_tot
     TensorProduct.endTensorEndAlgEquiv_tmul, regionBipartition, LinearEquiv.symm_conjAlgEquiv,
     LinearEquiv.symm_symm]
 
-end LocalNet
+end SiteIndexSystem

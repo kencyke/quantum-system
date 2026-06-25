@@ -5,7 +5,7 @@ public import QuantumSystem.Algebra.LocalNet.Isotony
 /-!
 # Locality (Einstein causality) of the local net
 
-Observables localised in **disjoint** regions commute. For finite-dimensional spin systems this
+Observables localised in **disjoint** regions commute. For finite-dimensional lattice systems this
 is the concrete realisation of the AQFT locality axiom (Naaijkens 2012 §3.2: spacelike-separated
 — here disjoint — regions commute; Verch 2025 §1.2). The proof reduces to the union region
 `Λ₁ ∪ Λ₂`, where the two embeddings act on complementary tensor factors, and ultimately to
@@ -14,9 +14,9 @@ commutativity of the scalar matrix entries in `ℂ`.
 
 @[expose] public section
 
-namespace LocalNet
+namespace SiteIndexSystem
 
-variable (L : LocalNet)
+variable (L : SiteIndexSystem)
 
 /-- The right-region embedding `𝔄(Λ₂) ↪ 𝔄(Λ₁ ∪ Λ₂)` evaluated at indices factored through
     the *left* split `combineIdx (Λ₁ ⊆ Λ₁ ∪ Λ₂)`: since `Λ₁` and `Λ₂` are disjoint, the
@@ -105,7 +105,7 @@ private lemma includeAlgebra_commute_union {Λ₁ Λ₂ : Finset L.sites} (hd : 
     Finset.sum_ite_eq, Finset.sum_ite_eq', Finset.mem_univ, if_true]
   ring
 
-/-- **Locality / Einstein causality (spin systems)**: observables localised in disjoint
+/-- **Locality / Einstein causality (lattice systems)**: observables localised in disjoint
     regions commute inside any common total region. The finite-dimensional concrete form of
     the AQFT locality axiom (Naaijkens 2012 §3.2; Verch 2025 §1.2). Reduces to the bipartite
     case via functoriality (`includeAlgebra_trans_apply`) and the ring-hom property of the
@@ -124,4 +124,4 @@ theorem includeAlgebra_commute_of_disjoint {Λ₁ Λ₂ Λ_total : Finset L.site
   rw [e1, e2]
   exact (L.includeAlgebra_commute_union hd X Y).map (L.includeAlgebra hU)
 
-end LocalNet
+end SiteIndexSystem

@@ -7,10 +7,10 @@ public import QuantumSystem.Channel
 
 This file carries the **data** of a local net of matrix algebras and the region-index
 combinatorics on which the AQFT net properties are built. An AQFT system assigns to each
-lattice region `Λ` an algebra `𝔄(Λ)` of observables; for finite-dimensional quantum spin
+region `Λ` an algebra `𝔄(Λ)` of observables; for finite-dimensional site-index
 systems this specialises to:
 
-- a lattice of **sites** `L` (an arbitrary type with `DecidableEq`),
+- a **set of sites** `L` (an arbitrary type with `DecidableEq`; no order/geometric structure),
 - a finite local index type `ℂ^{n_x}` at each site `x`,
 - regions `Λ : Finset L.sites`,
 - local algebra `𝔄(Λ) = ⊗_{x ∈ Λ} M_{n_x}(ℂ)` realised as
@@ -34,7 +34,8 @@ The net **properties** built on this data live in sibling modules:
 
 @[expose] public section
 
-/-- Data for a **local net of matrix algebras** on a (possibly infinite) lattice of sites.
+/-- Data for a **local net of matrix algebras** over a (possibly infinite) **set of sites** — an
+    arbitrary index type with no order or geometric lattice structure assumed.
     Each site `s : sites` carries a finite index type `localIdx s` whose cardinality is the
     local Hilbert-space dimension. The local algebra at a *finite* region `Λ : Finset sites`
     is then the matrix algebra on the dependent product `Π s ∈ Λ, localIdx s` — finite even
@@ -42,8 +43,8 @@ The net **properties** built on this data live in sibling modules:
     (only `DecidableEq`) is what allows the quasi-local algebra to be a genuine inductive
     limit over the directed set of finite regions, as in Naaijkens 2012 §1.3 and
     Bratteli–Robinson Vol.2 §6.2. -/
-structure LocalNet where
-  /-- Lattice of sites — an arbitrary type; regions are its finite subsets. -/
+structure SiteIndexSystem where
+  /-- The set of sites — an arbitrary index type; regions are its finite subsets. -/
   sites : Type*
   [sitesDecEq : DecidableEq sites]
   /-- Local Hilbert-space index type at each site. -/
@@ -51,11 +52,11 @@ structure LocalNet where
   [localFintype : ∀ s, Fintype (localIdx s)]
   [localDecEq : ∀ s, DecidableEq (localIdx s)]
 
-namespace LocalNet
+namespace SiteIndexSystem
 
 attribute [instance] sitesDecEq localFintype localDecEq
 
-variable (L : LocalNet)
+variable (L : SiteIndexSystem)
 
 /-- Index type of a region: dependent product of local indices over the sites in `Λ`. -/
 abbrev regionIdx (Λ : Finset L.sites) : Type _ := ∀ s : Λ, L.localIdx s.val
@@ -79,7 +80,7 @@ abbrev densityMatrix (Λ : Finset L.sites) : Type _ :=
 /-- For `Λ ⊆ Λ_total`, the index type of the larger region splits as a product:
     `regionIdx Λ × regionIdx (Λ_total \ Λ) ≃ regionIdx Λ_total`. This realises the tensor
     factorisation `ℋ_Λ_total = ℋ_Λ ⊗ ℋ_{Λ_total \ Λ}` underlying isotony and partial trace.
-    The factorisation is made formal at the operator level by `LocalNet.tensorEquiv`
+    The factorisation is made formal at the operator level by `SiteIndexSystem.tensorEquiv`
     (`TensorDecomposition`), an algebra isomorphism of the corresponding operator algebras. -/
 def combineIdx {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total) :
     (L.regionIdx Λ × L.regionIdx (Λ_total \ Λ)) ≃ L.regionIdx Λ_total where
@@ -149,7 +150,7 @@ Bipartite and tripartite factorisations of a region's index type over arbitrary 
 `regionIdx {a, b} ≃ localIdx a × localIdx b` and the right-associated three-element analogue.
 Both are direct definitions with concrete `toFun`, so every projection evaluates by `rfl`. -/
 
-variable (L : LocalNet)
+variable (L : SiteIndexSystem)
 
 /-- **1-element factorisation**: `regionIdx {a} ≃ localIdx a`. Evaluation at the single site `a`. -/
 def regionIdxSingletonEquiv (a : L.sites) :
@@ -326,4 +327,4 @@ theorem regionIdxPairEquiv_combineIdx {a b : L.sites} (hab : a ≠ b)
   have hba : b ∉ ({a} : Finset L.sites) := (Finset.mem_sdiff.mp hb).2
   refine Prod.ext ?_ ?_ <;> simp [hba]
 
-end LocalNet
+end SiteIndexSystem

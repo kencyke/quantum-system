@@ -5,7 +5,7 @@ public import QuantumSystem.Algebra.LocalNet.QuasiLocal
 /-!
 # Covariance of the local net
 
-A **symmetry** of a `LocalNet` is a permutation `σ` of the sites together with, for each site,
+A **symmetry** of a `SiteIndexSystem` is a permutation `σ` of the sites together with, for each site,
 an equivalence `localIdx s ≃ localIdx (σ s)` matching the local dimensions. Such data induces a
 `*`-isomorphism `β : 𝔄(Λ) ≃⋆ₐ[ℂ] 𝔄(σ Λ)` between the local algebras of a region and its image,
 realising the AQFT covariance axiom `β(𝔄(Λ)) = 𝔄(σ Λ)` (Naaijkens 2012 §3.2, Verch 2025 §1.2).
@@ -18,16 +18,16 @@ natural with respect to isotony (`relabelAlgebra_includeAlgebra`), so they assem
 
 @[expose] public section
 
-namespace LocalNet
+namespace SiteIndexSystem
 
 /-- Pointwise value of the complement projection of `combineIdx.symm` (holds by `rfl`). -/
-@[simp] theorem combineIdx_symm_snd_apply {L : LocalNet} {Λ Λ_total : Finset L.sites}
+@[simp] theorem combineIdx_symm_snd_apply {L : SiteIndexSystem} {Λ Λ_total : Finset L.sites}
     (h : Λ ⊆ Λ_total) (f : L.regionIdx Λ_total) (w : ↥(Λ_total \ Λ)) :
     ((L.combineIdx h).symm f).2 w = f ⟨w.val, (Finset.mem_sdiff.mp w.property).1⟩ := rfl
 
 /-- A symmetry of a local net: a site permutation together with dimension-matching equivalences
     on the local index types. A group acting on the net is a homomorphism into these. -/
-structure Symmetry (L : LocalNet) where
+structure Symmetry (L : SiteIndexSystem) where
   /-- The underlying permutation of the sites. -/
   σ : L.sites ≃ L.sites
   /-- Dimension matching: relabel the local index type at each site. -/
@@ -35,7 +35,7 @@ structure Symmetry (L : LocalNet) where
 
 namespace Symmetry
 
-variable {L : LocalNet} (a : L.Symmetry)
+variable {L : SiteIndexSystem} (a : L.Symmetry)
 
 /-- The image of a region under a symmetry. -/
 def region (Λ : Finset L.sites) : Finset L.sites := Λ.map a.σ.toEmbedding
@@ -135,23 +135,25 @@ theorem relabelAlgebra_includeAlgebra {Λ Λ' : Finset L.sites} (h : Λ ⊆ Λ')
 
 /-! ### Covariance action on the quasi-local algebra
 
-The per-region symmetry `*`-isomorphisms, being natural with respect to isotony, assemble into
-a `*`-endomorphism of the algebra of local observables `β_a ⟦⟨Λ, X⟩⟧ = ⟦⟨a Λ, β_a X⟩⟧`.
-Well-definedness is exactly `relabelAlgebra_includeAlgebra`. This is the AQFT covariance action
-on the (pre-completion) quasi-local algebra. -/
+The per-region symmetry `*`-isomorphisms, being natural with respect to isotony
+(`relabelAlgebra_includeAlgebra`), assemble a symmetry `toLocalNetSymmetry` of the abstract net
+`toLocalNet`. Its covariance action `β_a ⟦⟨Λ, X⟩⟧ = ⟦⟨a Λ, β_a X⟩⟧` on the algebra of local
+observables is therefore inherited from the net-level `LocalNet.Symmetry.quasiLocalRelabel`. -/
+
+/-- The symmetry of the generated local net `toLocalNet` induced by a lattice symmetry: the same
+    site permutation, with the reindexing `*`-isomorphisms `relabelAlgebra` as its covariance maps
+    and `relabelAlgebra_includeAlgebra` as the isotony naturality. This exhibits the concrete
+    covariance as an instance of the abstract `LocalNet.Symmetry`. -/
+noncomputable def toLocalNetSymmetry : L.toLocalNet.Symmetry where
+  σ := a.σ
+  β := a.relabelAlgebra
+  β_incl h x := a.relabelAlgebra_includeAlgebra h x
 
 /-- The action of a symmetry on the algebra of local observables, as a ring homomorphism:
-    `β_a ⟦⟨Λ, X⟩⟧ = ⟦⟨a Λ, relabel X⟩⟧`. Well-defined by net-covariance
-    (`relabelAlgebra_includeAlgebra`). -/
+    `β_a ⟦⟨Λ, X⟩⟧ = ⟦⟨a Λ, relabel X⟩⟧`. Inherited from the abstract net-level covariance action
+    `LocalNet.Symmetry.quasiLocalRelabel` on `toLocalNet`. -/
 noncomputable def quasiLocalRelabel : L.quasiLocalAlgebra →+* L.quasiLocalAlgebra :=
-  DirectLimit.Ring.lift (fun Λ : Finset L.sites => L.localAlgebra Λ)
-    (fun _ _ h => L.includeAlgebra h) L.quasiLocalAlgebra
-    (fun Λ => (L.ιLocal (a.region Λ)).comp
-      ((a.relabelAlgebra Λ).toAlgEquiv.toAlgHom.toRingHom))
-    (fun Λ Λ' h X => by
-      simp only [RingHom.comp_apply, AlgHom.toRingHom_eq_coe, RingHom.coe_coe,
-        AlgEquiv.coe_algHom, StarAlgEquiv.coe_toAlgEquiv, a.relabelAlgebra_includeAlgebra h]
-      exact L.ιLocal_includeAlgebra _ _)
+  a.toLocalNetSymmetry.quasiLocalRelabel
 
 @[simp] theorem quasiLocalRelabel_mk {Λ : Finset L.sites} (X : L.localAlgebra Λ) :
     a.quasiLocalRelabel (⟦⟨Λ, X⟩⟧ : L.quasiLocalAlgebra) = ⟦⟨a.region Λ, a.relabelAlgebra Λ X⟩⟧ :=
@@ -159,4 +161,4 @@ noncomputable def quasiLocalRelabel : L.quasiLocalAlgebra →+* L.quasiLocalAlge
 
 end Symmetry
 
-end LocalNet
+end SiteIndexSystem
