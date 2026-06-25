@@ -5,9 +5,9 @@ public import QuantumSystem.Analysis.Entropy.Regularize
 public import QuantumSystem.Analysis.Matrix.KroneckerPartialTraceBridge
 
 /-!
-# Strong subadditivity of the von Neumann entropy (LocalNet form)
+# Strong subadditivity of the von Neumann entropy (SiteIndexSystem form)
 
-For a quantum system on a `LocalNet L`, the public theorem in this file is stated
+For a quantum system on a `SiteIndexSystem L`, the public theorem in this file is stated
 in a **common-region-explicit** form. Given regions
 
 - `ΛAB ⊆ ΛABC`,
@@ -47,7 +47,7 @@ AQFT-natural form:
   applied twice — once for the `(ΛA vs ΛABC \ ΛA)` bipartition of the full system,
   once for the `(ΛA vs ΛAB \ ΛA)` bipartition of the `ΛAB`-marginal.
 2. The **data-processing inequality** for relative entropy
-   (`Matrix.relativeEntropy_channel_le`) applied to the LocalNet
+   (`Matrix.relativeEntropy_channel_le`) applied to the SiteIndexSystem
   `Matrix.QuantumChannel.restrict` channel for the inclusion `ΛAB ⊆ ΛABC`.
 
 ## Main results
@@ -55,7 +55,7 @@ AQFT-natural form:
 * `Matrix.relativeEntropy_kronecker_marginals_product` — product-type mutual-information
   identity.
 * `DensityMatrix.vonNeumannEntropy_SSA_localNet` — SSA for arbitrary states on a
-  `LocalNet`, with the common region and split equalities explicit.
+  `SiteIndexSystem`, with the common region and split equalities explicit.
 
 The same inequality on a plain tensor product `A × B × C` is the companion
 `DensityMatrix.vonNeumannEntropy_SSA_product` (`StrongSubadditivityProduct.lean`).
@@ -69,19 +69,19 @@ The same inequality on a plain tensor product `A × B × C` is the companion
 
 @[expose] public section
 
-/-! ### Strong subadditivity (LocalNet form, PosDef case)
+/-! ### Strong subadditivity (SiteIndexSystem form, PosDef case)
 
 The main theorem. We use the bipartite mutual-information identity twice
 (for `(A vs BC)` and for `(A vs B)` within `ρ ↾ {A, B}`) and the data-processing
-inequality on the LocalNet `restrict` channel for `{A, B} ⊆ univ`. -/
+inequality on the SiteIndexSystem `restrict` channel for `{A, B} ⊆ univ`. -/
 
 namespace DensityMatrix
 
 open scoped Kronecker MatrixOrder ComplexOrder
 open scoped Matrix.QuantumInfo
-open scoped LocalNet.QuantumInfo
+open scoped SiteIndexSystem.QuantumInfo
 
-variable {L : LocalNet}
+variable {L : SiteIndexSystem}
 
 /-! #### Split-explicit nested-region SSA
 
@@ -101,7 +101,7 @@ Given nested regions `ΛA ⊆ ΛAB ⊆ ΛABC`, write the middle/common region as
 This statement contains the split subset in the hypotheses and does not rely on
 site names such as `a b c` or product-factor names such as `A/B`. -/
 private lemma vonNeumannEntropy_SSA_localNet_posDef_nested
-    {L : LocalNet} {ΛA ΛAB ΛABC : Finset L.sites}
+    {L : SiteIndexSystem} {ΛA ΛAB ΛABC : Finset L.sites}
     (h_AB : ΛAB ⊆ ΛABC) (h_A : ΛA ⊆ ΛAB)
     (ρ_ABC : L.densityMatrix ΛABC)
     (h_ABC_pos : ρ_ABC.toMatrix.PosDef)
@@ -251,7 +251,7 @@ private lemma vonNeumannEntropy_SSA_localNet_posDef_nested
       by_cases hv_in_AB : v ∈ ΛAB
       · have hv_in_combine : v ∈ ΛAB \ ΛA :=
           Finset.mem_sdiff.mpr ⟨hv_in_AB, (Finset.mem_sdiff.mp hv).2⟩
-        rw [LocalNet.combineIdx_apply_mem h_B_in_BC _ _ ⟨v, hv⟩ hv_in_combine]
+        rw [SiteIndexSystem.combineIdx_apply_mem h_B_in_BC _ _ ⟨v, hv⟩ hv_in_combine]
         exact dif_pos hv_in_AB
       · have hv_not_in_combine : v ∉ ΛAB \ ΛA := fun h_in =>
           hv_in_AB (Finset.mem_sdiff.mp h_in).1
@@ -259,9 +259,9 @@ private lemma vonNeumannEntropy_SSA_localNet_posDef_nested
           Finset.mem_sdiff.mpr ⟨(Finset.mem_sdiff.mp hv).1, hv_in_AB⟩
         have hv_compl_compl : v ∈ (ΛABC \ ΛA) \ (ΛAB \ ΛA) :=
           Finset.mem_sdiff.mpr ⟨hv, hv_not_in_combine⟩
-        rw [LocalNet.combineIdx_apply_not_mem h_B_in_BC _ _ ⟨v, hv⟩ hv_not_in_combine,
+        rw [SiteIndexSystem.combineIdx_apply_not_mem h_B_in_BC _ _ ⟨v, hv⟩ hv_not_in_combine,
             show L.regionIdxCongr h_compl_eq.symm γ ⟨v, hv_compl_compl⟩ = γ ⟨v, hv_compl⟩
-          from LocalNet.regionIdxCongr_apply (L := L) h_compl_eq.symm γ hv_compl hv_compl_compl]
+          from SiteIndexSystem.regionIdxCongr_apply (L := L) h_compl_eq.symm γ hv_compl hv_compl_compl]
         exact dif_neg hv_in_AB
     rw [hR_eq p.2, hR_eq p'.2]
     rfl
@@ -330,14 +330,14 @@ user-facing `S(restrict h_BC ρ)` (with `{b,c}`) to the bipartite-natural form
 `S(restrict sdiff_subset ρ)` (with `{a,b,c} \ {a}`). -/
 
 private lemma vonNeumannEntropy_restrict_finset_eq
-    {L : LocalNet} {Λ Λ' Λ_total : Finset L.sites} (h_eq : Λ = Λ')
+    {L : SiteIndexSystem} {Λ Λ' Λ_total : Finset L.sites} (h_eq : Λ = Λ')
     (h : Λ ⊆ Λ_total) (h' : Λ' ⊆ Λ_total) (ρ : L.densityMatrix Λ_total) :
     S(ρ ↾[h]) = S(ρ ↾[h']) := by
   subst h_eq
   rfl
 
 private lemma posDef_restrict_finset_eq
-    {L : LocalNet} {Λ Λ' Λ_total : Finset L.sites} (h_eq : Λ = Λ')
+    {L : SiteIndexSystem} {Λ Λ' Λ_total : Finset L.sites} (h_eq : Λ = Λ')
     (h : Λ ⊆ Λ_total) (h' : Λ' ⊆ Λ_total) (ρ : L.densityMatrix Λ_total) :
     (ρ ↾[h]).toMatrix.PosDef ↔ (ρ ↾[h']).toMatrix.PosDef := by
   subst h_eq
@@ -359,7 +359,7 @@ the names `a b c` or from a product-factor order. Instead it receives explicit d
 Under PosDef hypotheses for the displayed marginals, the conclusion is exactly
 `S(ρ_ABC ↾ ΛAB) + S(ρ_ABC ↾ ΛBC) ≥ S(ρ_ABC) + S(ρ_ABC ↾ ΛB)`. -/
 private lemma vonNeumannEntropy_SSA_localNet_posDef
-    {L : LocalNet} {ΛA ΛB ΛAB ΛBC ΛABC : Finset L.sites}
+    {L : SiteIndexSystem} {ΛA ΛB ΛAB ΛBC ΛABC : Finset L.sites}
     (h_AB_total : ΛAB ⊆ ΛABC) (h_A_in_AB : ΛA ⊆ ΛAB)
     (h_BC_total : ΛBC ⊆ ΛABC) (h_B_total : ΛB ⊆ ΛABC)
     (h_B_eq : ΛAB \ ΛA = ΛB) (h_BC_eq : ΛABC \ ΛA = ΛBC)
@@ -408,7 +408,7 @@ The proof regularises `ρ` to the PosDef state `(1 - ε) ρ + ε · π_ΛABC` fo
 applies `vonNeumannEntropy_SSA_localNet_posDef`, and passes to the limit `ε → 0⁺`
 via the eigenvalue continuity formulas in `Regularize.lean`. -/
 theorem vonNeumannEntropy_SSA_localNet
-    {L : LocalNet} {ΛA ΛB ΛAB ΛBC ΛABC : Finset L.sites}
+    {L : SiteIndexSystem} {ΛA ΛB ΛAB ΛBC ΛABC : Finset L.sites}
     (h_AB : ΛAB ⊆ ΛABC) (h_A : ΛA ⊆ ΛAB)
     (h_BC : ΛBC ⊆ ΛABC) (h_B : ΛB ⊆ ΛABC)
     (h_B_eq : ΛAB \ ΛA = ΛB) (h_BC_eq : ΛABC \ ΛA = ΛBC)

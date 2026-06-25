@@ -4,12 +4,12 @@ public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Matrix.PartialTrace
 
 /-!
-# LocalNet bridge: restriction as an equivalence-indexed partial trace
+# SiteIndexSystem bridge: restriction as an equivalence-indexed partial trace
 
-These lemmas identify the `LocalNet` restriction `Matrix.restrict` with the equivalence-indexed
-partial trace `Matrix.partialTrace` of the reindexed matrix induced by `LocalNet.combineIdx`.
+These lemmas identify the `SiteIndexSystem` restriction `Matrix.restrict` with the equivalence-indexed
+partial trace `Matrix.partialTrace` of the reindexed matrix induced by `SiteIndexSystem.combineIdx`.
 They are factored out of `Analysis/Entropy/KroneckerProduct.lean` so that the Kronecker-product
-and product-type partial-trace API there stays `LocalNet`-free.
+and product-type partial-trace API there stays `SiteIndexSystem`-free.
 -/
 
 @[expose] public section
@@ -18,14 +18,14 @@ namespace Matrix
 
 open scoped Kronecker MatrixOrder ComplexOrder
 
-/-! ### LocalNet bridge
+/-! ### SiteIndexSystem bridge
 
-These lemmas identify `Matrix.restrict` on a `LocalNet` with the equivalence-indexed
-partial trace of the reindexed matrix induced by `LocalNet.combineIdx`. -/
+These lemmas identify `Matrix.restrict` on a `SiteIndexSystem` with the equivalence-indexed
+partial trace of the reindexed matrix induced by `SiteIndexSystem.combineIdx`. -/
 
 section LocalNetBridge
 
-variable {L : LocalNet}
+variable {L : SiteIndexSystem}
 
 /-- Combining via `h : Λ ⊆ Λ_total` agrees with combining via the complementary split,
 after transporting the remaining factor along `Λ_total \ (Λ_total \ Λ) = Λ`. -/
@@ -42,12 +42,12 @@ private lemma combineIdx_swap_apply
     have hs_recast : s ∈ Λ_total \ (Λ_total \ Λ) := by
       rw [h_eq]
       exact hsΛ
-    rw [LocalNet.combineIdx_apply_mem h _ _ ⟨s, hs⟩ hsΛ,
-        LocalNet.combineIdx_apply_not_mem Finset.sdiff_subset _ _ ⟨s, hs⟩ hns_compl,
-      LocalNet.regionIdxCongr_apply (L := L) h_eq.symm x hsΛ hs_recast]
+    rw [SiteIndexSystem.combineIdx_apply_mem h _ _ ⟨s, hs⟩ hsΛ,
+        SiteIndexSystem.combineIdx_apply_not_mem Finset.sdiff_subset _ _ ⟨s, hs⟩ hns_compl,
+      SiteIndexSystem.regionIdxCongr_apply (L := L) h_eq.symm x hsΛ hs_recast]
   · have hs_compl : s ∈ Λ_total \ Λ := Finset.mem_sdiff.mpr ⟨hs, hsΛ⟩
-    rw [LocalNet.combineIdx_apply_not_mem h _ _ ⟨s, hs⟩ hsΛ,
-        LocalNet.combineIdx_apply_mem Finset.sdiff_subset _ _ ⟨s, hs⟩ hs_compl]
+    rw [SiteIndexSystem.combineIdx_apply_not_mem h _ _ ⟨s, hs⟩ hsΛ,
+        SiteIndexSystem.combineIdx_apply_mem Finset.sdiff_subset _ _ ⟨s, hs⟩ hs_compl]
 
 /-- Restriction to `Λ` equals the partial trace of the reindexed matrix induced by
 `combineIdx h`, retaining the `Λ` factor. -/

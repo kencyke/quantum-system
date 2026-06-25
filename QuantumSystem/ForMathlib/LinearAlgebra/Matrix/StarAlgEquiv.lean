@@ -152,7 +152,7 @@ theorem PosDef.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.PosDef)
 
 `Equiv`-flavoured restatements derived from `PosSemidef.map_starAlgEquiv` and
 `PosDef.map_starAlgEquiv`, useful when an index-set bijection `e : n ≃ m`
-is naturally available (e.g. from `LocalNet` region equivalences). -/
+is naturally available (e.g. from region index-set equivalences). -/
 
 omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 /-- `Matrix.PosSemidef` is preserved by reindexing the index set via a bijection.

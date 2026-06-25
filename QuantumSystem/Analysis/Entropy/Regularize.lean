@@ -11,10 +11,10 @@ The structural definitions (`maximallyMixed`, `regularize`, `regularize_eq_cfc`,
 (`vonNeumannEntropy_regularize_eq_negMulLog_sum`, `tendsto_negMulLog_regularize_sum_zero`,
 `vonNeumannEntropy_mapEquiv`) live in `State.lean` and `VonNeumannEntropy.lean`.
 
-This file specialises that infrastructure to a `LocalNet`. It proves compatibility of
+This file specialises that infrastructure to a `SiteIndexSystem`. It proves compatibility of
 regularization with restriction (partial trace), which is the key fact behind extending
 PosDef-only theorems to PosSemidef. The cardinality factorisation for region indices now
-lives next to `LocalNet.combineIdx` in `LocalNet/Basic.lean`.
+lives next to `SiteIndexSystem.combineIdx` in `SiteIndexSystem/Basic.lean`.
 -/
 
 @[expose] public section
@@ -33,7 +33,7 @@ namespace Matrix
 
 /-- `Matrix.restrict h` of the maximally-mixed state at `Λ_total` equals the
     maximally-mixed state at `Λ`, after dimension cancellation. -/
-theorem restrict_maximallyMixed {L : LocalNet} {Λ Λ_total : Finset L.sites}
+theorem restrict_maximallyMixed {L : SiteIndexSystem} {Λ Λ_total : Finset L.sites}
     (h : Λ ⊆ Λ_total) [Nonempty (L.regionIdx Λ)] [Nonempty (L.regionIdx Λ_total)] :
     Matrix.restrict h (DensityMatrix.maximallyMixed (n := L.regionIdx Λ_total)).toMatrix =
       (DensityMatrix.maximallyMixed (n := L.regionIdx Λ)).toMatrix := by
@@ -49,7 +49,7 @@ theorem restrict_maximallyMixed {L : LocalNet} {Λ Λ_total : Finset L.sites}
     exact_mod_cast (Fintype.card_pos (α := L.regionIdx Λ)).ne'
   have hdComp : (Fintype.card (L.regionIdx (Λ_total \ Λ)) : ℂ) ≠ 0 := by
     exact_mod_cast (Fintype.card_pos (α := L.regionIdx (Λ_total \ Λ))).ne'
-  rw [LocalNet.card_regionIdx_total (L := L) h]
+  rw [SiteIndexSystem.card_regionIdx_total (L := L) h]
   have h_inv_mul :
       ((((Fintype.card (L.regionIdx Λ) : ℂ) *
           (Fintype.card (L.regionIdx (Λ_total \ Λ)) : ℂ)))⁻¹) *
@@ -64,7 +64,7 @@ namespace DensityMatrix
 
 /-- The regularization commutes with `restrict` (Matrix-level):
     `restrict h (regularize ρ ε).toMatrix = (regularize (restrict h ρ) ε).toMatrix`. -/
-theorem regularize_restrict_toMatrix {L : LocalNet} {Λ Λ_total : Finset L.sites}
+theorem regularize_restrict_toMatrix {L : SiteIndexSystem} {Λ Λ_total : Finset L.sites}
     (h : Λ ⊆ Λ_total) [Nonempty (L.regionIdx Λ)] [Nonempty (L.regionIdx Λ_total)]
     (ρ : L.densityMatrix Λ_total) {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
     Matrix.restrict h (regularize ρ hε hε').toMatrix =
@@ -77,7 +77,7 @@ theorem regularize_restrict_toMatrix {L : LocalNet} {Λ Λ_total : Finset L.site
 
 /-- The regularization commutes with `restrict` (DensityMatrix-level):
     `(regularize ρ ε).restrict h = regularize (restrict h ρ) ε`. -/
-theorem regularize_restrict {L : LocalNet} {Λ Λ_total : Finset L.sites}
+theorem regularize_restrict {L : SiteIndexSystem} {Λ Λ_total : Finset L.sites}
     (h : Λ ⊆ Λ_total) [Nonempty (L.regionIdx Λ)] [Nonempty (L.regionIdx Λ_total)]
     (ρ : L.densityMatrix Λ_total) {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
     restrict h (regularize ρ hε hε') =

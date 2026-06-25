@@ -4,20 +4,20 @@ public import QuantumSystem.Analysis.Channel.PartialTrace
 public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 
 /-!
-# Strong subadditivity of the von Neumann entropy (product form, LocalNet-free)
+# Strong subadditivity of the von Neumann entropy (product form, `SiteIndexSystem`-free)
 
 This file proves strong subadditivity (SSA) directly on plain product index types
 `A × B × C`, with marginals taken by the positional partial traces `Matrix.traceLeft` /
-`Matrix.traceRight`. It uses NO `LocalNet`, `regionIdx`, `combineIdx`, `restrict`, or three-site
-net: the proof is the bare finite-dimensional quantum-information argument
+`Matrix.traceRight`. It uses NO `SiteIndexSystem`, `regionIdx`, `combineIdx`, `restrict`, or
+three-site net: the proof is the bare finite-dimensional quantum-information argument
 
 1. the mutual-information identity `Matrix.relativeEntropy_kronecker_marginals_product`
    (applied to the `(A : B×C)` and `(A : B)` bipartitions), and
 2. the data-processing inequality `Matrix.relativeEntropy_channel_le` for the
    trace-out-`C` channel `Matrix.QuantumChannel.traceOutC`.
 
-The `LocalNet`/AQFT companion — the same inequality stated over an abstract local net with
-overlapping regions — is `DensityMatrix.vonNeumannEntropy_SSA_localNet`
+The `SiteIndexSystem`/AQFT companion — the same inequality stated over a lattice system
+with overlapping regions — is `DensityMatrix.vonNeumannEntropy_SSA_localNet`
 (`StrongSubadditivityLocalNet.lean`).
 
 ## Main results

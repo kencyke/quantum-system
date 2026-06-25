@@ -26,9 +26,9 @@ This file is the hub for **Kronecker-product calculus on bipartite matrices**:
 The retained subsystem is determined by the codomain of the chosen equivalence
 `e : X ≃ A × B`. For native product types, `partialTrace (Equiv.refl (n × m))`
 retains the `n` factor, while `partialTrace (Equiv.prodComm n m)` retains the
-`m` factor. LocalNet-facing theorems should instead expose the split subset
+`m` factor. SiteIndexSystem-facing theorems should instead expose the split subset
 `Λ ⊆ Λ_total` (and its complement) explicitly, and use these matrix-level lemmas
-only after reindexing by `LocalNet.combineIdx`.
+only after reindexing by `SiteIndexSystem.combineIdx`.
 
 The proof of the log-tensor identity uses the spectral decomposition of `A ⊗ B`
 constructed explicitly from spectral decompositions of `A` and `B`, combined
@@ -49,7 +49,7 @@ a unitary).
 * `Matrix.cfc_log_kronecker_posDef` — the log-tensor identity.
 * `Matrix.partialTrace_apply` — entrywise unfolding of the equivalence-indexed partial trace.
 * `Matrix.restrict_eq_partialTrace_combineIdx` /
-  `Matrix.restrict_compl_eq_partialTrace_combineIdx` — LocalNet restriction as an
+  `Matrix.restrict_compl_eq_partialTrace_combineIdx` — SiteIndexSystem restriction as an
   equivalence-indexed partial trace.
 * `Matrix.trace_mul_kronecker_one_right` —
   `Tr(ρ · (X ⊗ 1)) = Tr((partialTrace (Equiv.refl (n × m)) ρ) · X)`.

@@ -7,8 +7,8 @@ public import Mathlib.Analysis.InnerProductSpace.Trace
 /-!
 # The partial trace is the operator form of `restrict`
 
-Completing the operator-level tensor decomposition (`LocalNet.tensorEquiv`,
-`LocalNet.opEquiv_includeAlgebra`), this file shows that the marginal `Matrix.restrict` is, under
+Completing the operator-level tensor decomposition (`SiteIndexSystem.tensorEquiv`,
+`SiteIndexSystem.opEquiv_includeAlgebra`), this file shows that the marginal `Matrix.restrict` is, under
 the operator identifications, exactly the **partial trace** over the complementary Hilbert-space
 factor: tracing out `ℋ (Λ_total \ Λ)`.
 
@@ -26,9 +26,9 @@ operators on Hilbert spaces.
 open WithLp
 open scoped TensorProduct Matrix
 
-namespace LocalNet
+namespace SiteIndexSystem
 
-variable (L : LocalNet)
+variable (L : SiteIndexSystem)
 
 /-- Matrix entries of `(opEquiv Λ).symm T`: the `(i, j)` entry is the `i`-coordinate of the image
 of the `j`-th standard basis vector under the operator `T`. (Internal helper.) -/
@@ -89,4 +89,4 @@ theorem opEquiv_restrict {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
   rw [L.opEquiv_restrict_aux, LinearMap.partialTrace_apply]
   congr 1
 
-end LocalNet
+end SiteIndexSystem

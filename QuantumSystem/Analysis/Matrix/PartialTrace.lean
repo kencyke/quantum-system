@@ -7,14 +7,14 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 # Partial trace as restriction (matrix-level)
 
 The **restriction** (Schrödinger-picture partial trace) on the matrix algebra of a local
-net. Given regions `Λ ⊆ Λ_total` of a `LocalNet`, the restriction of a matrix on
+net. Given regions `Λ ⊆ Λ_total` of a `SiteIndexSystem`, the restriction of a matrix on
 `𝔄(Λ_total)` to `𝔄(Λ)` is defined as the partial trace over the complementary region
 `Λ_total \ Λ`. This is the Schrödinger-picture dual of the algebra
 inclusion `𝔄(Λ) ↪ 𝔄(Λ_total)`. There is no positional ("left/right") concept — the
 operation is parameterised by the region itself.
 
 The matrix-level operation `Matrix.restrict` is defined as a linear map factoring through
-`LocalNet.combineIdx` (which factors `regionIdx Λ_total ≃ regionIdx Λ × regionIdx (Λ_total \ Λ)`).
+`SiteIndexSystem.combineIdx` (which factors `regionIdx Λ_total ≃ regionIdx Λ × regionIdx (Λ_total \ Λ)`).
 The bundled quantum-channel structure, Kraus operators, trace preservation, and
 Heisenberg-picture duality are also provided.
 
@@ -45,7 +45,7 @@ Heisenberg-picture duality are also provided.
 
 namespace Matrix
 
-variable {L : LocalNet}
+variable {L : SiteIndexSystem}
 
 /-! ### Linear restriction map -/
 
@@ -234,11 +234,11 @@ lemma combineIdx_assoc_aux
         else γ ⟨s.val, Finset.mem_sdiff.mpr ⟨hsΛ, hsΛ'⟩⟩
       else β ⟨s.val, Finset.mem_sdiff.mpr ⟨s.property, hsΛ⟩⟩ := by
   by_cases hsΛ : s.val ∈ Λ
-  · rw [LocalNet.combineIdx_apply_mem h₁ _ _ s hsΛ, dif_pos hsΛ]
+  · rw [SiteIndexSystem.combineIdx_apply_mem h₁ _ _ s hsΛ, dif_pos hsΛ]
     by_cases hsΛ' : s.val ∈ Λ'
-    · rw [LocalNet.combineIdx_apply_mem h₂ _ _ ⟨s.val, hsΛ⟩ hsΛ', dif_pos hsΛ']
-    · rw [LocalNet.combineIdx_apply_not_mem h₂ _ _ ⟨s.val, hsΛ⟩ hsΛ', dif_neg hsΛ']
-  · rw [LocalNet.combineIdx_apply_not_mem h₁ _ _ s hsΛ, dif_neg hsΛ]
+    · rw [SiteIndexSystem.combineIdx_apply_mem h₂ _ _ ⟨s.val, hsΛ⟩ hsΛ', dif_pos hsΛ']
+    · rw [SiteIndexSystem.combineIdx_apply_not_mem h₂ _ _ ⟨s.val, hsΛ⟩ hsΛ', dif_neg hsΛ']
+  · rw [SiteIndexSystem.combineIdx_apply_not_mem h₁ _ _ s hsΛ, dif_neg hsΛ]
 
 /-- Splitting a `regionIdx (Λ_total \ Λ')` into its `(Λ \ Λ')` and `(Λ_total \ Λ)` parts.
     Used by `restrict_restrict` to convert iterated marginalisation into a single one,
@@ -286,9 +286,9 @@ lemma combineIdx_assoc_eq {Λ' Λ Λ_total : Finset L.sites}
   rw [combineIdx_assoc_aux h₁ h₂]
   by_cases hsΛ' : s.val ∈ Λ'
   · have hsΛ : s.val ∈ Λ := h₂ hsΛ'
-    rw [LocalNet.combineIdx_apply_mem (h₂.trans h₁) _ _ s hsΛ',
+    rw [SiteIndexSystem.combineIdx_apply_mem (h₂.trans h₁) _ _ s hsΛ',
         dif_pos hsΛ, dif_pos hsΛ']
-  · rw [LocalNet.combineIdx_apply_not_mem (h₂.trans h₁) _ _ s hsΛ']
+  · rw [SiteIndexSystem.combineIdx_apply_not_mem (h₂.trans h₁) _ _ s hsΛ']
     by_cases hsΛ : s.val ∈ Λ
     · rw [dif_pos hsΛ, dif_neg hsΛ']
       simp [restrictAssocEquiv, hsΛ]
@@ -372,9 +372,9 @@ theorem trace_mul_includeAlgebra {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_t
               L.includeAlgebra h X (L.combineIdx h (a', b')) (L.combineIdx h (a, b))) =
         ρ (L.combineIdx h (a, b)) (L.combineIdx h (a', b)) * X a' a from by
       rw [Finset.sum_eq_single b]
-      · rw [LocalNet.includeAlgebra_apply_combineIdx]; simp
+      · rw [SiteIndexSystem.includeAlgebra_apply_combineIdx]; simp
       · intro b' _ hb'
-        rw [LocalNet.includeAlgebra_apply_combineIdx, if_neg hb']
+        rw [SiteIndexSystem.includeAlgebra_apply_combineIdx, if_neg hb']
         ring
       · simp]
   -- Combine: LHS = ∑ a, ∑ b, ∑ a', ... = ∑ a, ∑ a', ∑ b, ... = RHS
@@ -386,7 +386,7 @@ end Matrix
 
 namespace DensityMatrix
 
-variable {L : LocalNet}
+variable {L : SiteIndexSystem}
 
 /-- Restriction of a density matrix to a sub-region (= partial trace over the complement). -/
 noncomputable def restrict {Λ Λ_total : Finset L.sites} (h : Λ ⊆ Λ_total)
@@ -421,7 +421,7 @@ The subset proof is auto-resolved by trying, in order: `Finset.subset_univ _`
 For raw `Matrix`-level work, use `Matrix.restrict h M` (no notation provided to keep `↾`
 unambiguous on the density-matrix surface). -/
 
-namespace LocalNet
+namespace SiteIndexSystem
 namespace QuantumInfo
 
 scoped syntax:65 term:65 " ↾ " term:66 : term
@@ -436,4 +436,4 @@ scoped macro_rules
   | `($ρ ↾[$h]) => `(DensityMatrix.restrict $h $ρ)
 
 end QuantumInfo
-end LocalNet
+end SiteIndexSystem
