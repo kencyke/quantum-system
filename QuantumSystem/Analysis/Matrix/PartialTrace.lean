@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.Isotony
+public import QuantumSystem.Algebra.LocalNet.MatrixModel.Isotony
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 
 /-!

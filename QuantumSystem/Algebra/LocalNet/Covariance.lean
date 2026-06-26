@@ -15,7 +15,7 @@ This file isolates the abstract covariance *data* and its group structure. Its *
 quasi-local algebra — assembling the per-region `*`-isomorphisms into a `*`-automorphism
 `quasiLocalCovariance` and (for a `Faithful` net) its continuous extension to the quasi-local
 C⋆-algebra — is built in `LocalNet.QuasiLocal`. The concrete covariance of the matrix net generated
-by a `SiteIndexSystem`, together with its inherited action, lives in `LocalNet.LatticeCovariance`.
+by a `SiteIndexSystem`, together with its inherited action, lives in `LocalNet.MatrixModel.Covariance`.
 -/
 
 @[expose] public section

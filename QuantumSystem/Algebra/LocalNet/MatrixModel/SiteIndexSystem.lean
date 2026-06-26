@@ -3,12 +3,14 @@ module
 public import QuantumSystem.Channel
 
 /-!
-# Local Net of Matrix Algebras — basic data
+# Site-index system: data of a local net of matrix algebras
 
-This file carries the **data** of a local net of matrix algebras and the region-index
-combinatorics on which the AQFT net properties are built. An AQFT system assigns to each
-region `Λ` an algebra `𝔄(Λ)` of observables; for finite-dimensional site-index
-systems this specialises to:
+This file carries the **data** of the finite-dimensional matrix model of a local net — the
+`SiteIndexSystem` — and the region-index combinatorics on which the concrete AQFT net properties
+are built. It is the foundation of the *concrete* layer (`LocalNet.MatrixModel`), which instances
+the abstract Haag–Kastler net `LocalNet` (`LocalNet.Net`). An AQFT system assigns to each region
+`Λ` an algebra `𝔄(Λ)` of observables; for finite-dimensional site-index systems this specialises
+to:
 
 - a **set of sites** `L` (an arbitrary type with `DecidableEq`; no order/geometric structure),
 - a finite local index type `ℂ^{n_x}` at each site `x`,
@@ -21,10 +23,12 @@ equivalence `combineIdx` realising `regionIdx Λ_total ≃ regionIdx Λ × regio
 the cardinality factorisation, the transport `regionIdxCongr`, and the bipartite and tripartite
 region factorisation equivalences (`regionIdxPairEquiv`, `regionIdxTripleEquiv`).
 
-The net **properties** built on this data live in sibling modules:
-`LocalNet.Isotony` (the embedding `𝔄(Λ) ↪ 𝔄(Λ_total)` + functoriality), `LocalNet.Locality`
-(disjoint regions commute), `LocalNet.QuasiLocal` (quasi-local C⋆-algebra), `LocalNet.Covariance`
-(covariance data and action). Restriction / partial trace lives in `Analysis/Matrix/PartialTrace.lean`.
+The net **properties** built on this data live in sibling modules of `LocalNet.MatrixModel`:
+`MatrixModel.Isotony` (the embedding `𝔄(Λ) ↪ 𝔄(Λ_total)` + functoriality), `MatrixModel.Locality`
+(disjoint regions commute), `MatrixModel.Net` (the generated `LocalNet` and quasi-local wrappers),
+`MatrixModel.Covariance` (concrete covariance data and action). The abstract net axioms and the
+quasi-local C⋆-algebra they generate live in `LocalNet.Net` / `LocalNet.QuasiLocal`. Restriction /
+partial trace lives in `Analysis/Matrix/PartialTrace.lean`.
 
 ## References
 

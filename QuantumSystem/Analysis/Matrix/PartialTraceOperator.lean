@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.TensorDecomposition
+public import QuantumSystem.Algebra.LocalNet.MatrixModel.TensorDecomposition
 public import QuantumSystem.Analysis.Matrix.PartialTrace
 public import Mathlib.Analysis.InnerProductSpace.Trace
 

@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Algebra.LocalNet.Basic
+public import QuantumSystem.Algebra.LocalNet.MatrixModel.SiteIndexSystem
 
 /-!
 # Isotony embedding of the local net
