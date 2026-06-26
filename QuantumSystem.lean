@@ -25,7 +25,7 @@ public import QuantumSystem.Algebra.LocalNet.MatrixModel.Net
 public import QuantumSystem.Algebra.LocalNet.MatrixModel.SiteIndexSystem
 public import QuantumSystem.Algebra.LocalNet.MatrixModel.TensorDecomposition
 public import QuantumSystem.Algebra.LocalNet.Net
-public import QuantumSystem.Algebra.LocalNet.QuasiLocal
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Analysis.CFC.Diagonal

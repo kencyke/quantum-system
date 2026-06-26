@@ -27,8 +27,8 @@ The net **properties** built on this data live in sibling modules of `LocalNet.M
 `MatrixModel.Isotony` (the embedding `𝔄(Λ) ↪ 𝔄(Λ_total)` + functoriality), `MatrixModel.Locality`
 (disjoint regions commute), `MatrixModel.Net` (the generated `LocalNet` and quasi-local wrappers),
 `MatrixModel.Covariance` (concrete covariance data and action). The abstract net axioms and the
-quasi-local C⋆-algebra they generate live in `LocalNet.Net` / `LocalNet.QuasiLocal`. Restriction /
-partial trace lives in `Analysis/Matrix/PartialTrace.lean`.
+quasi-local C⋆-algebra they generate live in `LocalNet.Net` / `LocalNet.QuasiLocalAlgebra`.
+Restriction / partial trace lives in `Analysis/Matrix/PartialTrace.lean`.
 
 ## References
 
