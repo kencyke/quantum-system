@@ -20,6 +20,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet.Basic
 public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Isotony
+public import QuantumSystem.Algebra.LocalNet.LatticeCovariance
 public import QuantumSystem.Algebra.LocalNet.Locality
 public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocal

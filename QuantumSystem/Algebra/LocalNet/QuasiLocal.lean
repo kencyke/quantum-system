@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Matrix
+public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Locality
 public import QuantumSystem.Algebra.LocalNet.Net
 
@@ -25,6 +26,14 @@ assignment `Λ ↦ 𝔄(Λ) = ⊗_{x ∈ Λ} M_{n_x}(ℂ)` to each finite region
 
 The lattice-system-level abbreviations `quasiLocalAlgebra` / `ιLocal` / `quasiLocalCStarAlgebra`
 below are thin wrappers around the corresponding `LocalNet` constructions on `toLocalNet`.
+
+A `LocalNet.Covariance` (defined in `LocalNet.Covariance`) acts on these algebras: its per-region
+`*`-isomorphisms assemble into a `*`-endomorphism `quasiLocalCovariance` of the algebra of local
+observables, which is functorial, `ℂ`-linear and `*`-preserving — hence a `*`-automorphism
+`quasiLocalCovarianceEquiv`, assembled into a group homomorphism `quasiLocalCovarianceHom`. For a
+`Faithful` net it is isometric and extends to a `*`-automorphism `quasiLocalCStarCovarianceEquiv` of
+the quasi-local C⋆-algebra. The concrete `SiteIndexSystem.Covariance` and its inherited action are
+built on top of these constructions in `LocalNet.LatticeCovariance`.
 -/
 
 @[expose] public section
@@ -155,6 +164,191 @@ theorem denseRange_iUnion_ιLocalCStar :
   exact Set.mem_iUnion.2 ⟨Λ, X, rfl⟩
 
 end CStar
+
+namespace Covariance
+
+variable {N} (a : N.Covariance)
+
+/-! ### The induced covariance action -/
+
+/-- The **covariance action** `β_a ⟦⟨Λ, X⟩⟧ = ⟦⟨σΛ, β_Λ X⟩⟧` of a covariance on the algebra of local
+    observables, as a ring homomorphism. Well-defined by naturality (`β_incl`). -/
+noncomputable def quasiLocalCovariance : N.quasiLocalAlgebra →+* N.quasiLocalAlgebra :=
+  DirectLimit.Ring.lift N.algebra (fun _ _ h => N.incl h) N.quasiLocalAlgebra
+    (fun Λ => (N.ιLocal (a.region Λ)).comp (a.β Λ).toAlgEquiv.toAlgHom.toRingHom)
+    (fun Λ Λ' h X => by
+      change N.ιLocal (a.region Λ') (a.β Λ' (N.incl h X)) = N.ιLocal (a.region Λ) (a.β Λ X)
+      rw [a.β_incl h]
+      exact N.ιLocal_incl _ _)
+
+@[simp] theorem quasiLocalCovariance_mk {Λ : Finset sites} (X : N.algebra Λ) :
+  a.quasiLocalCovariance (⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨a.region Λ, a.β Λ X⟩⟧ :=
+  rfl
+
+/-- The covariance action of the identity covariance is the identity: `β_{id} = id`. -/
+@[simp] theorem quasiLocalCovariance_id :
+  (Covariance.id N).quasiLocalCovariance = RingHom.id N.quasiLocalAlgebra := by
+  refine RingHom.ext fun z => ?_
+  induction z using DirectLimit.induction with
+  | _ Λ X => rw [quasiLocalCovariance_mk, RingHom.id_apply]; exact N.ιLocal_algebraCongr _ X
+
+/-- **Functoriality of the covariance action**: composing covariances composes their actions,
+    `β_{a∘b} = β_a ∘ β_b`. -/
+@[simp] theorem quasiLocalCovariance_comp (a b : N.Covariance) :
+  (a.comp b).quasiLocalCovariance = a.quasiLocalCovariance.comp b.quasiLocalCovariance := by
+  refine RingHom.ext fun z => ?_
+  induction z using DirectLimit.induction with
+  | _ Λ X =>
+    simp only [RingHom.comp_apply, quasiLocalCovariance_mk]
+    exact N.ιLocal_algebraCongr _ _
+
+/-- The covariance action sends the unit covariance to the identity: `β_1 = id`. -/
+@[simp] theorem quasiLocalCovariance_one :
+    (1 : N.Covariance).quasiLocalCovariance = RingHom.id N.quasiLocalAlgebra := by
+  rw [one_def, quasiLocalCovariance_id]
+
+/-- The covariance action is multiplicative: `β_{a·b} = β_a ∘ β_b`. -/
+theorem quasiLocalCovariance_mul (a b : N.Covariance) :
+    (a * b).quasiLocalCovariance = a.quasiLocalCovariance.comp b.quasiLocalCovariance := by
+  rw [mul_def, quasiLocalCovariance_comp]
+
+/-! #### The covariance action as a `*`-automorphism -/
+
+/-- The covariance action is `ℂ`-linear: `β_a (c • z) = c • β_a z`, since each `β` is. -/
+theorem quasiLocalCovariance_smul (c : ℂ) (z : N.quasiLocalAlgebra) :
+  a.quasiLocalCovariance (c • z) = c • a.quasiLocalCovariance z := by
+  induction z using DirectLimit.induction with
+  | _ Λ X =>
+    rw [DirectLimit.smul_def, quasiLocalCovariance_mk, quasiLocalCovariance_mk, DirectLimit.smul_def,
+      map_smul]
+    rfl
+
+/-- The covariance action preserves the involution: `β_a (star z) = star (β_a z)`, since each `β`
+    is a `*`-isomorphism. -/
+theorem quasiLocalCovariance_star (z : N.quasiLocalAlgebra) :
+  a.quasiLocalCovariance (star z) = star (a.quasiLocalCovariance z) := by
+  induction z using DirectLimit.induction with
+  | _ Λ X =>
+    rw [star_mk, quasiLocalCovariance_mk, quasiLocalCovariance_mk, star_mk, map_star]
+    rfl
+
+/-- The covariance action as a `*`-algebra automorphism of the algebra of local observables, with
+  the action of the inverse covariance `a⁻¹` as its inverse. -/
+noncomputable def quasiLocalCovarianceEquiv :
+    N.quasiLocalAlgebra ≃⋆ₐ[ℂ] N.quasiLocalAlgebra where
+  toFun := a.quasiLocalCovariance
+  invFun := a⁻¹.quasiLocalCovariance
+  left_inv z := by
+    rw [← RingHom.comp_apply, ← quasiLocalCovariance_mul, inv_mul_cancel, quasiLocalCovariance_one,
+      RingHom.id_apply]
+  right_inv z := by
+    rw [← RingHom.comp_apply, ← quasiLocalCovariance_mul, mul_inv_cancel, quasiLocalCovariance_one,
+      RingHom.id_apply]
+  map_mul' := map_mul a.quasiLocalCovariance
+  map_add' := map_add a.quasiLocalCovariance
+  map_smul' := a.quasiLocalCovariance_smul
+  map_star' := a.quasiLocalCovariance_star
+
+@[simp] theorem quasiLocalCovarianceEquiv_apply (z : N.quasiLocalAlgebra) :
+    a.quasiLocalCovarianceEquiv z = a.quasiLocalCovariance z := rfl
+
+@[simp] theorem quasiLocalCovarianceEquiv_symm_apply (z : N.quasiLocalAlgebra) :
+    a.quasiLocalCovarianceEquiv.symm z = a⁻¹.quasiLocalCovariance z := rfl
+
+/-- A covariance of the net acts on the algebra of local observables by `*`-algebra automorphisms,
+    assembled as a group homomorphism into the `*`-automorphism group. -/
+noncomputable def quasiLocalCovarianceHom :
+    N.Covariance →* (N.quasiLocalAlgebra ≃⋆ₐ[ℂ] N.quasiLocalAlgebra) where
+  toFun a := a.quasiLocalCovarianceEquiv
+  map_one' := by
+    ext z
+    simp only [quasiLocalCovarianceEquiv_apply, quasiLocalCovariance_one, RingHom.id_apply,
+      StarAlgEquiv.one_apply]
+  map_mul' a b := by
+    ext z
+    simp only [quasiLocalCovarianceEquiv_apply, quasiLocalCovariance_mul, RingHom.comp_apply,
+      StarAlgEquiv.mul_apply]
+
+@[simp] theorem quasiLocalCovarianceHom_apply (z : N.quasiLocalAlgebra) :
+    quasiLocalCovarianceHom a z = a.quasiLocalCovariance z := rfl
+
+/-! #### The covariance automorphism of the quasi-local C⋆-algebra -/
+
+section CStarCovariance
+
+variable [N.Faithful]
+
+/-- The covariance action is **isometric** on the algebra of local observables: each `β` is a
+    `*`-isomorphism of C⋆-algebras, hence norm-preserving. -/
+theorem quasiLocalCovariance_norm (z : N.quasiLocalAlgebra) :
+  ‖a.quasiLocalCovariance z‖ = ‖z‖ := by
+  induction z using DirectLimit.induction with
+  | _ Λ X =>
+    rw [quasiLocalCovariance_mk, norm_mk, norm_mk]
+    exact StarAlgEquiv.norm_map _ X
+
+/-- The covariance automorphism of the algebra of local observables is uniformly continuous (it is
+    an isometry), so it extends to the C⋆-completion. -/
+theorem quasiLocalCovarianceEquiv_uniformContinuous :
+    UniformContinuous a.quasiLocalCovarianceEquiv :=
+  (AddMonoidHomClass.isometry_of_norm _ (fun z => by
+    rw [quasiLocalCovarianceEquiv_apply]; exact a.quasiLocalCovariance_norm z)).uniformContinuous
+
+/-- The inverse covariance automorphism is uniformly continuous as well (the action of `a⁻¹` is
+    also an isometry). -/
+theorem quasiLocalCovarianceEquiv_symm_uniformContinuous :
+    UniformContinuous a.quasiLocalCovarianceEquiv.symm := by
+  have h : ∀ z, ‖a.quasiLocalCovarianceEquiv.symm z‖ = ‖z‖ := fun z => by
+    rw [quasiLocalCovarianceEquiv_symm_apply]; exact a⁻¹.quasiLocalCovariance_norm z
+  exact (AddMonoidHomClass.isometry_of_norm _ h).uniformContinuous
+
+/-- The covariance automorphism of the quasi-local C⋆-algebra: the continuous extension of
+    `quasiLocalCovarianceEquiv` to the completion. -/
+noncomputable def quasiLocalCStarCovarianceEquiv :
+    N.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] N.quasiLocalCStarAlgebra :=
+  UniformSpace.Completion.mapStarAlgEquiv a.quasiLocalCovarianceEquiv
+    a.quasiLocalCovarianceEquiv_uniformContinuous
+    a.quasiLocalCovarianceEquiv_symm_uniformContinuous
+
+@[simp] theorem quasiLocalCStarCovarianceEquiv_coe (z : N.quasiLocalAlgebra) :
+    a.quasiLocalCStarCovarianceEquiv (↑z : N.quasiLocalCStarAlgebra) =
+      ↑(a.quasiLocalCovariance z) :=
+  UniformSpace.Completion.mapStarAlgEquiv_coe _ _ _ z
+
+theorem quasiLocalCStarCovarianceEquiv_continuous :
+    Continuous (⇑a.quasiLocalCStarCovarianceEquiv) :=
+  UniformSpace.Completion.continuous_map
+
+/-- A covariance of a faithful net acts on the quasi-local C⋆-algebra by `*`-automorphisms,
+    assembled as a group homomorphism into the `*`-automorphism group. -/
+noncomputable def quasiLocalCStarCovarianceHom :
+    N.Covariance →* (N.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] N.quasiLocalCStarAlgebra) where
+  toFun a := a.quasiLocalCStarCovarianceEquiv
+  map_one' := by
+    refine StarAlgEquiv.ext fun z => ?_
+    rw [StarAlgEquiv.one_apply]
+    refine UniformSpace.Completion.induction_on z
+      (isClosed_eq (1 : N.Covariance).quasiLocalCStarCovarianceEquiv_continuous
+        continuous_id) ?_
+    intro w
+    simp only [quasiLocalCStarCovarianceEquiv_coe, quasiLocalCovariance_one, RingHom.id_apply]
+  map_mul' a b := by
+    refine StarAlgEquiv.ext fun z => ?_
+    rw [StarAlgEquiv.mul_apply]
+    refine UniformSpace.Completion.induction_on z
+      (isClosed_eq (a * b).quasiLocalCStarCovarianceEquiv_continuous
+        (a.quasiLocalCStarCovarianceEquiv_continuous.comp
+          b.quasiLocalCStarCovarianceEquiv_continuous)) ?_
+    intro w
+    simp only [quasiLocalCStarCovarianceEquiv_coe, quasiLocalCovariance_mul, RingHom.comp_apply]
+
+@[simp] theorem quasiLocalCStarCovarianceHom_apply
+    (z : N.quasiLocalCStarAlgebra) :
+  quasiLocalCStarCovarianceHom a z = a.quasiLocalCStarCovarianceEquiv z := rfl
+
+end CStarCovariance
+
+end Covariance
 
 end LocalNet
 
