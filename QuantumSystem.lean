@@ -23,7 +23,6 @@ public import QuantumSystem.Algebra.LocalNet.Isotony
 public import QuantumSystem.Algebra.LocalNet.Locality
 public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocal
-public import QuantumSystem.Algebra.LocalNet.Symmetry
 public import QuantumSystem.Algebra.LocalNet.TensorDecomposition
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra

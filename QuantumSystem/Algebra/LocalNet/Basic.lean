@@ -24,7 +24,7 @@ region factorisation equivalences (`regionIdxPairEquiv`, `regionIdxTripleEquiv`)
 The net **properties** built on this data live in sibling modules:
 `LocalNet.Isotony` (the embedding `𝔄(Λ) ↪ 𝔄(Λ_total)` + functoriality), `LocalNet.Locality`
 (disjoint regions commute), `LocalNet.QuasiLocal` (quasi-local C⋆-algebra), `LocalNet.Covariance`
-(symmetry action). Restriction / partial trace lives in `Analysis/Matrix/PartialTrace.lean`.
+(covariance data and action). Restriction / partial trace lives in `Analysis/Matrix/PartialTrace.lean`.
 
 ## References
 
