@@ -12,8 +12,9 @@ product index type `n × m`:
 
   `D(ρ_AB ‖ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
 
-This is `SiteIndexSystem`-free; it is the analytic core reused both by the AQFT strong-subadditivity proof
-(`Analysis/Entropy/SSA.lean`) and by the product-form proof (`Analysis/Entropy/SSAProduct.lean`).
+It is representation-free; the analytic core reused both by the product-form proof
+(`Analysis/Entropy/StrongSubadditivityProduct.lean`) and, via transport, by the abstract split-net
+proof (`Analysis/Entropy/SplitSSA.lean`).
 -/
 
 @[expose] public section

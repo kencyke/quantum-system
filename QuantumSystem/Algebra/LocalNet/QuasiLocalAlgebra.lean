@@ -9,8 +9,7 @@ public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 # The quasi-local algebra of a local net
 
 The **algebra of local observables** and the **quasi-local C⋆-algebra** of an abstract local net
-`LocalNet`. These constructions apply to *any* local net; the concrete finite-dimensional matrix
-model that instantiates them lives in `LocalNet.MatrixModel.Net`.
+`LocalNet`. These constructions apply to *any* local net.
 
 * `LocalNet.quasiLocalAlgebra` is the algebraic inductive limit `‾⋃_Λ 𝔄(Λ)` of the local algebras
   along the isotony embeddings, with cocone `ιLocal`, exhaustion (`exists_ιLocal`) and locality
@@ -36,8 +35,7 @@ variable {sites : Type*} [DecidableEq sites] (N : LocalNet sites)
 
 /-! ### Algebra of local observables
 
-These constructions apply to any abstract local net. The concrete `SiteIndexSystem` wrappers are
-built on `SiteIndexSystem.toLocalNet` in `LocalNet.MatrixModel.Net`.
+These constructions apply to any abstract local net.
 -/
 
 /-- The **algebra of local observables** of the net: the algebraic inductive limit of the local

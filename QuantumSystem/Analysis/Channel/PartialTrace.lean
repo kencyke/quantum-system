@@ -7,10 +7,8 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 # Partial trace as a quantum channel (product index types)
 
 The **partial trace** on plain product index types `X × Y`, packaged as a completely positive
-trace-preserving map (`QuantumChannel`). This is the `SiteIndexSystem`-free analogue of
-`Matrix.QuantumChannel.restrict` (`Analysis/Matrix/PartialTrace.lean`): it traces out the right
-factor `Y` of a matrix on `X × Y`, leaving a matrix on `X`. The construction mirrors the region
-version with `SiteIndexSystem.combineIdx (a, b)` replaced by the plain pair `(x, y)`.
+trace-preserving map (`QuantumChannel`): it traces out the right factor `Y` of a matrix on `X × Y`,
+leaving a matrix on `X`.
 
 We also package conjugation by an index equivalence (`reindexₗ`) as a channel, and compose the two
 into the trace-out-`C` channel `QuantumChannel.traceOutC : QuantumChannel (A × B × C) (A × B)`,

@@ -17,12 +17,6 @@ Notations and abbreviations for quantum information theory.
 | `S(ρ)` | `Matrix.vonNeumannEntropy ρ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/VonNeumannEntropy.lean` |
 | `D(ρ ∥ σ)` | `Matrix.relativeEntropy ρ σ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/RelativeEntropy.lean` |
 | `⟪X, Y⟫_HS` | `Matrix.hsInnerProduct X Y` | `open scoped Matrix.QuantumInfo` | `Analysis/Matrix/LiebConcavity.lean` |
-| `ρ ↾ Λ` | `DensityMatrix.restrict (by …) ρ` | `open scoped SiteIndexSystem.QuantumInfo` | `Analysis/Matrix/PartialTrace.lean` |
-
-`ρ ↾ Λ` is the AQFT-style **restriction of a density matrix to a sub-region** —
-equivalently, the partial trace over the complementary region.
-The subset proof `Λ ⊆ Λ_total` is auto-resolved by `Finset.subset_univ _`, `Finset.Subset.refl _`, or `decide`.
-For complex hypotheses, write `DensityMatrix.restrict h ρ` directly.
 
 ## `Tr` syntax
 
