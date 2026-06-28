@@ -11,7 +11,7 @@ Turn a PDF (paper, lecture notes) into Markdown + extracted images + a filled
 formalization plan gets grilled against afterwards.
 
 This skill stops at a navigable document. It does **not** plan or formalize; the
-last step hands off to `/grilling`.
+last step hands off to `/grill-formalization`.
 
 ## Steps
 
@@ -47,5 +47,5 @@ last step hands off to `/grilling`.
 4. **Hand off to planning.** Report the `INDEX.md` path and any caveats (OCR
    skipped, document split into `sections/`, no images found) — do not paste the
    summary into chat. Then tell the user the substrate is ready and the next move
-   is `/grilling` to stress-test the formalization plan against it.
-   *Done when:* the user has the INDEX path and the `/grilling` pointer.
+   is `/grill-formalization` to stress-test the formalization plan against it.
+   *Done when:* the user has the INDEX path and the `/grill-formalization` pointer.

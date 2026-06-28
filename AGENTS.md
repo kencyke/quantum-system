@@ -23,8 +23,10 @@
   editing.
 
 **Abstraction first.**
-- Aim for the abstraction level used in the source literature and the mathematically conventional form
-  from the *first* commit, not as a later refactor.
+- Build the general interface before the concrete model — even when the source
+  literature treats only a specific case. Introduce the abstract structure and
+  the mathematically conventional form from the *first* commit, not as a later
+  refactor, then instantiate the concrete model the task needs.
 - Do not specialise to a concrete model because the
   immediate task uses only that case, and do not weaken hypotheses to
   match whatever fragment Mathlib currently has the most lemmas for —
