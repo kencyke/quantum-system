@@ -20,11 +20,11 @@ The **algebra of local observables** and the **quasi-local C⋆-algebra** of an 
   embeddings `ιLocalCStar`.
 
 A `LocalNet.Covariance` (defined in `LocalNet.Covariance`) acts on these algebras: its per-region
-`*`-isomorphisms assemble into a `*`-endomorphism `quasiLocalCovariance` of the algebra of local
-observables, which is functorial, `ℂ`-linear and `*`-preserving — hence a `*`-automorphism
-`quasiLocalCovarianceEquiv`, assembled into a group homomorphism `quasiLocalCovarianceHom`. For a
-`Faithful` net it is isometric and extends to a `*`-automorphism `quasiLocalCStarCovarianceEquiv` of
-the quasi-local C⋆-algebra.
+`*`-isomorphisms assemble into a ring endomorphism `quasiLocalCovariance` of the algebra of local
+observables, which is functorial and is shown `ℂ`-linear and `*`-preserving — hence bundled as a
+`*`-automorphism `quasiLocalCovarianceEquiv`, assembled into a group homomorphism
+`quasiLocalCovarianceHom`. For a `Faithful` net it is isometric and extends to a `*`-automorphism
+`quasiLocalCStarCovarianceEquiv` of the quasi-local C⋆-algebra.
 -/
 
 @[expose] public section
@@ -152,6 +152,13 @@ theorem denseRange_iUnion_ιLocalCStar :
   rintro _ ⟨z, rfl⟩
   obtain ⟨Λ, X, rfl⟩ := N.exists_ιLocal z
   exact Set.mem_iUnion.2 ⟨Λ, X, rfl⟩
+
+/-- **Locality in the quasi-local C⋆-algebra**: observables localised in disjoint regions commute
+    inside `𝔄`. Transports `ιLocal_commute_of_disjoint` along the completion coercion. -/
+theorem ιLocalCStar_commute_of_disjoint {Λ₁ Λ₂ : Finset sites} (hd : Disjoint Λ₁ Λ₂)
+    (X : N.algebra Λ₁) (Y : N.algebra Λ₂) :
+    Commute (N.ιLocalCStar Λ₁ X) (N.ιLocalCStar Λ₂ Y) :=
+  (N.ιLocal_commute_of_disjoint hd X Y).map UniformSpace.Completion.coeRingHom
 
 end CStar
 
