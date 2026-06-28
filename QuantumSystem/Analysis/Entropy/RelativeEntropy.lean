@@ -1324,8 +1324,8 @@ private lemma trace_rpow_mul_channel_le
 
 /-- **Monotonicity of Relative Entropy**: Quantum channels do not increase relative entropy.
 
-For a quantum channel Φ and positive definite density matrices ρ, σ:
-  S(Φ(ρ) || Φ(σ)) ≤ S(ρ || σ)
+For a quantum channel Φ and density matrices ρ, σ:
+  D(Φ(ρ) ∥ Φ(σ)) ≤ D(ρ ∥ σ)
 
 **Proof**: Uses derivative argument on g(s) = F_s(Φρ, Φσ) - F_s(ρ, σ) where
 F_s(A, B) = Tr (Aˢ B¹⁻ˢ). Since g(s) ≥ 0 on (0,1] and g(1) = 0, we get g'(1) ≤ 0,
