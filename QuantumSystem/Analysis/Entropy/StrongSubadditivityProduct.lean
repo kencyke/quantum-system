@@ -1,6 +1,6 @@
 module
 
-public import QuantumSystem.Analysis.Channel.PartialTrace
+public import QuantumSystem.Channel
 public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 
 /-!

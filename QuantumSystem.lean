@@ -23,7 +23,6 @@ public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Analysis.CFC.Diagonal
-public import QuantumSystem.Analysis.Channel.PartialTrace
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
