@@ -98,7 +98,7 @@ The Mathlib contribute templates are authoritative; the bullets below distill wh
 - Prefer the `_of_` pattern for implications (`continuous_of_lipschitz`); `iff` joins equivalences; `not_` prefixes negations.
 
 **Layout.**
-- 100-column line limit.
+- 120-column line limit.
 - 2-space indentation; `by` stays on the same line as the goal it opens unless the resulting line would exceed the limit.
 - Hoist shared hypotheses into `variable` blocks; keep explicit/implicit arity consistent with sibling lemmas.
 - Align `calc` steps on the relation; use `·` (centered dot) for focused goals, not `case _ =>`.
