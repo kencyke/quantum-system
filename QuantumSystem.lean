@@ -20,7 +20,6 @@ public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
-public import QuantumSystem.Algebra.LocalNet.TensorDecomposition
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Analysis.CFC.Diagonal
@@ -28,11 +27,6 @@ public import QuantumSystem.Analysis.Channel.PartialTrace
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
-public import QuantumSystem.Analysis.Entropy.SplitEntropy
-public import QuantumSystem.Analysis.Entropy.SplitRelativeEntropy
-public import QuantumSystem.Analysis.Entropy.SplitSSA
-public import QuantumSystem.Analysis.Entropy.SplitTrace
-public import QuantumSystem.Analysis.Entropy.SplitTransport
 public import QuantumSystem.Analysis.Entropy.StrongSubadditivityProduct
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 public import QuantumSystem.Analysis.Matrix.Effros
