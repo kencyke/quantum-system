@@ -14,7 +14,10 @@ covariances form a `Group` under composition (`Covariance.id`, `Covariance.comp`
 This file isolates the abstract covariance *data* and its group structure. Its *action* on the
 quasi-local algebra — assembling the per-region `*`-isomorphisms into a `*`-automorphism
 `quasiLocalCovariance` and (for a `Faithful` net) its continuous extension to the quasi-local
-C⋆-algebra — is built in `LocalNet.QuasiLocalAlgebra`.
+C⋆-algebra — is built in `LocalNet.QuasiLocalAlgebra`. A symmetry group `G` acts on the net by
+supplying a group homomorphism `G →* N.Covariance` (whose `σ`-component is the geometric action
+`G → sites ≃ sites`); composing it with `quasiLocalCovarianceHom` — or, for a `Faithful` net,
+`quasiLocalCStarCovarianceHom` — yields the automorphic action of `G` on the (quasi-local) algebra.
 -/
 
 @[expose] public section
