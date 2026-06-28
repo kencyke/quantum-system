@@ -1,30 +1,30 @@
 module
 
 public import QuantumSystem.Channel
-public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
+public import QuantumSystem.Analysis.Entropy.MutualInformation
 
 /-!
-# Strong subadditivity of the von Neumann entropy (product form)
+# Strong subadditivity of the von Neumann entropy
 
 This file proves strong subadditivity (SSA) directly on plain product index types
 `A × B × C`, with marginals taken by the positional partial traces `Matrix.traceLeft` /
 `Matrix.traceRight`. It is representation-free — no net structure — the proof is the bare
 finite-dimensional quantum-information argument
 
-1. the mutual-information identity `Matrix.relativeEntropy_kronecker_marginals_product`
+1. the mutual-information identity `Matrix.relativeEntropy_kronecker_marginals`
    (applied to the `(A : B×C)` and `(A : B)` bipartitions), and
 2. the data-processing inequality `Matrix.relativeEntropy_channel_le` for the
    trace-out-`C` channel `Matrix.QuantumChannel.traceOutC`.
 
 The AQFT companion — the same inequality stated representation-free over an abstract operator-
 algebraic split net with nested regions — is `LocalNet.Split.vonNeumannEntropy_SSA`
-(`SplitSSA.lean`), which transports this product-form result to the net.
+(`SplitSSA.lean`), which transports this result to the net.
 
 ## Main results
 
-* `DensityMatrix.vonNeumannEntropy_SSA_product_posDef` — SSA on `A × B × C` for a positive
+* `DensityMatrix.vonNeumannEntropy_SSA_posDef` — SSA on `A × B × C` for a positive
   definite density matrix.
-* `DensityMatrix.vonNeumannEntropy_SSA_product` — SSA on `A × B × C` for an arbitrary density
+* `DensityMatrix.vonNeumannEntropy_SSA` — SSA on `A × B × C` for an arbitrary density
   matrix (via regularisation).
 -/
 
@@ -112,15 +112,15 @@ noncomputable def ptLeft {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y] [
 @[simp] lemma ptLeft_toMatrix {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y] [DecidableEq Y]
     (ρ : DensityMatrix (X × Y)) : (ρ.ptLeft).toMatrix = Matrix.traceLeft ρ.toMatrix := rfl
 
-/-! ### Strong subadditivity (product form) -/
+/-! ### Strong subadditivity -/
 
 variable {A B C : Type*} [Fintype A] [DecidableEq A] [Fintype B] [DecidableEq B]
   [Fintype C] [DecidableEq C]
 
-/-- **Strong subadditivity (product form, positive definite case).** For a positive definite
+/-- **Strong subadditivity (positive definite case).** For a positive definite
 density matrix `ρ` on `A × B × C`, with all four marginals positive definite,
 `S(ρ) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`. -/
-private lemma vonNeumannEntropy_SSA_product_posDef
+private lemma vonNeumannEntropy_SSA_posDef
     (ρ_ABC : DensityMatrix (A × B × C))
     (ρ_A : DensityMatrix A) (ρ_AB : DensityMatrix (A × B))
     (ρ_BC : DensityMatrix (B × C)) (ρ_B : DensityMatrix B)
@@ -141,7 +141,7 @@ private lemma vonNeumannEntropy_SSA_product_posDef
   have h_tr1 : tr₁(ρ_ABC.toMatrix) = ρ_BC.toMatrix := by
     rw [hρ_BC, ptLeft_toMatrix]; exact partialTrace_prodComm_eq_traceLeft ρ_ABC.toMatrix
   have h_id1 : D(ρ_ABC ∥ ρ_A ⊗ ρ_BC) = -S(ρ_ABC) + S(ρ_A) + S(ρ_BC) :=
-    Matrix.relativeEntropy_kronecker_marginals_product ρ_ABC ρ_A hA ρ_BC hBC h_tr2 h_tr1
+    Matrix.relativeEntropy_kronecker_marginals ρ_ABC ρ_A hA ρ_BC hBC h_tr2 h_tr1
   -- Mutual-information identity for the `(A : B)` split of `ρ_AB`.
   have h_tr2' : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix := by
     rw [hρ_AB, hρ_A, ptRight_toMatrix, ptRight_toMatrix, DensityMatrix.mapEquiv_toMatrix,
@@ -152,7 +152,7 @@ private lemma vonNeumannEntropy_SSA_product_posDef
       DensityMatrix.mapEquiv_toMatrix, partialTrace_prodComm_eq_traceLeft]
     exact traceLeft_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
   have h_id2 : D(ρ_AB ∥ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) :=
-    Matrix.relativeEntropy_kronecker_marginals_product ρ_AB ρ_A hA ρ_B hB h_tr2' h_tr1'
+    Matrix.relativeEntropy_kronecker_marginals ρ_AB ρ_A hA ρ_B hB h_tr2' h_tr1'
   -- Data-processing inequality for the trace-out-`C` channel.
   set Φ := Matrix.QuantumChannel.traceOutC (A := A) (B := B) (C := C) with hΦ
   have h_Φρ_ABC : Φ ρ_ABC = ρ_AB := by
@@ -228,10 +228,10 @@ lemma ptLeft_regularize {X Y : Type*} [Fintype X] [DecidableEq X] [Nonempty X]
     ptLeft_toMatrix, ← Matrix.partialTraceLeftₗ_apply, map_add, map_smul, map_smul,
     Matrix.partialTraceLeftₗ_apply, Matrix.partialTraceLeftₗ_apply, traceLeft_maximallyMixed]
 
-/-- **Strong subadditivity (product form).** For any density matrix `ρ` on `A × B × C`,
+/-- **Strong subadditivity.** For any density matrix `ρ` on `A × B × C`,
 `S(ρ) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`. Obtained from the positive-definite case by regularisation
 and a limit. -/
-theorem vonNeumannEntropy_SSA_product [Nonempty A] [Nonempty B] [Nonempty C]
+theorem vonNeumannEntropy_SSA [Nonempty A] [Nonempty B] [Nonempty C]
     (ρ_ABC : DensityMatrix (A × B × C))
     (ρ_AB : DensityMatrix (A × B)) (ρ_BC : DensityMatrix (B × C)) (ρ_B : DensityMatrix B)
     (h_AB : ρ_AB = (ρ_ABC.mapEquiv (Equiv.prodAssoc A B C)).ptRight)
@@ -258,7 +258,7 @@ theorem vonNeumannEntropy_SSA_product [Nonempty A] [Nonempty B] [Nonempty C]
     have hB_pos :
         ((DensityMatrix.regularize ρ_ABC hε_pos.le hε_le).ptLeft.ptRight).toMatrix.PosDef := by
       rw [ptLeft_regularize, ptRight_regularize]; exact DensityMatrix.regularize_posDef _ hε_pos hε_le
-    have h_ssa := vonNeumannEntropy_SSA_product_posDef
+    have h_ssa := vonNeumannEntropy_SSA_posDef
       (DensityMatrix.regularize ρ_ABC hε_pos.le hε_le) _ _ _ _ rfl rfl rfl rfl
       hA_pos hBC_pos hB_pos
     rw [show (DensityMatrix.regularize ρ_ABC hε_pos.le hε_le).ptLeft.ptRight

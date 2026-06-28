@@ -24,9 +24,9 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
-public import QuantumSystem.Analysis.Entropy.MutualInfoProduct
+public import QuantumSystem.Analysis.Entropy.MutualInformation
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
-public import QuantumSystem.Analysis.Entropy.StrongSubadditivityProduct
+public import QuantumSystem.Analysis.Entropy.StrongSubadditivity
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus

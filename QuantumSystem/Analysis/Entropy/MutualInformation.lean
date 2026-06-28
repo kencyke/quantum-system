@@ -5,15 +5,15 @@ public import QuantumSystem.Analysis.Entropy.RelativeEntropy
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 
 /-!
-# Mutual-information identity (product-type form)
+# Mutual-information identity
 
 The relative-entropy form of quantum mutual information for a bipartite density matrix on a plain
 product index type `n × m`:
 
   `D(ρ_AB ‖ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
 
-It is representation-free; the analytic core reused both by the product-form proof
-(`Analysis/Entropy/StrongSubadditivityProduct.lean`) and, via transport, by the abstract split-net
+It is representation-free; the analytic core reused both by the direct proof
+(`Analysis/Entropy/StrongSubadditivity.lean`) and, via transport, by the abstract split-net
 proof (`Analysis/Entropy/SplitSSA.lean`).
 -/
 
@@ -25,13 +25,13 @@ open scoped Kronecker MatrixOrder ComplexOrder QuantumInfo
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
-/-! ### Product-type relative-entropy identity -/
+/-! ### Relative-entropy identity -/
 
-/-- **Mutual-information identity (product-type form)**: for a bipartite density
+/-- **Mutual-information identity**: for a bipartite density
 matrix `ρ_AB : DensityMatrix (n × m)` whose canonical partial traces coincide with PosDef
 factor states `ρ_A` and `ρ_B`, the relative entropy w.r.t. the product `ρ_A ⊗ ρ_B`
 equals `-S(ρ_AB) + S(ρ_A) + S(ρ_B)`. -/
-theorem relativeEntropy_kronecker_marginals_product
+theorem relativeEntropy_kronecker_marginals
     (ρ_AB : DensityMatrix (n × m))
     (ρ_A : DensityMatrix n) (hρ_A : ρ_A.toMatrix.PosDef)
     (ρ_B : DensityMatrix m) (hρ_B : ρ_B.toMatrix.PosDef)
