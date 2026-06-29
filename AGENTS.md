@@ -47,6 +47,15 @@
   irreducible (a) inputs — and proving or descoping everything else — is what
   keeps that base bounded.
 
+**Match the code to the docs, not the docs to the code.**
+- When a docstring or module comment claims more than the code actually
+  establishes, raise the code to meet the claim — strengthen the statement,
+  discharge the missing hypothesis, or generalise the definition. Do not
+  weaken the documentation to match a thinner implementation.
+  **Why:** the documentation records the *intended* theorem; trimming it to
+  match a shortfall silently shrinks the goal and hides the gap instead of
+  closing it.
+
 **Goal-driven verification (Definition of Done).**
 - A change is done only when `lake build` completes with no new errors or
   warnings on the edited modules and their downstream importers.
