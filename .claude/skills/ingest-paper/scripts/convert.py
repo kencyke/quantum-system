@@ -7,9 +7,9 @@
 
 Produces under ``<output-dir>/<slug>/``:
 
-- ``INDEX.md``     Metadata, ToC, and scaffolded Summary / Key concepts / Bibliography
-                   frontmatter sections that the caller (Claude) fills in after
-                   reading the content.
+- ``INDEX.md``     Metadata, ToC, and scaffolded Summary / Key concepts /
+                   Main results / Load-bearing assumptions sections that the caller
+                   (Claude) fills in after reading the content.
 - ``content.md``   Full Markdown (if total pages <= max-pages-per-section).
 - ``sections/``    Split Markdown files (if total pages exceed the threshold and
                    the document has top-level ``#`` / ``## `` headings to split on).
@@ -349,8 +349,8 @@ def main() -> int:
         content_md.write_text(md_text, encoding="utf-8")
         toc_lines.extend(_flat_toc_for_content(md_text))
 
-    # Scaffold INDEX.md (Claude fills Summary / Key concepts / authors /
-    # bibliography / mathlib annotations per SKILL.md steps 4a-4f).
+    # Scaffold INDEX.md (Claude fills Summary / Key concepts / Main results /
+    # Load-bearing assumptions per SKILL.md step 3).
     index = [
         "---",
         f"title: {json.dumps(title, ensure_ascii=False)}",
@@ -373,6 +373,29 @@ def main() -> int:
         "     MUST start with a `backtick-quoted` identifier — this drives the",
         "     cross-document concept index. Omit the section if no greppable",
         "     terminology exists (e.g. pure prose papers). -->",
+        "",
+        "## Main results",
+        "",
+        "<!-- TODO: The results this document targets for formalization, recorded as a",
+        "     dependency DAG so the proof skeleton survives. Include the headline",
+        "     theorems AND the intermediate lemmas/propositions they rest on, so every",
+        "     edge resolves. Each bullet:",
+        "       - `result-id` — one-line MATHEMATICAL statement (sections/NN-*.md#anchor)",
+        "         depends on: `other-result-id`, `assumption-id`, [cited: Author Year, Thm N]",
+        "     `assumption-id` points at a Load-bearing-assumptions bullet; [cited: ...]",
+        "     names an external result (a Mathlib-reuse candidate). Drop the `depends on:`",
+        "     line for a leaf with no stated dependencies. Record what the paper states;",
+        "     do not judge formalizability or proof order — that is grill-formalization's",
+        "     job. -->",
+        "",
+        "## Load-bearing assumptions",
+        "",
+        "<!-- TODO: The hypotheses the Main results depend on, recorded NEUTRALLY from",
+        "     the paper. Each bullet starts with a `backtick-identifier` (referenced from",
+        "     the Main-results `depends on:` lines), then the assumption and which",
+        "     result(s) rely on it. Do NOT classify model-dependent vs provable —",
+        "     grill-formalization decides that (AGENTS.md: \"Prove what is provable\").",
+        "     Omit only if the document states no explicit hypotheses. -->",
         "",
         "## Contents",
         "",
