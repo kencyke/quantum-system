@@ -45,6 +45,7 @@ public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Channel
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
+public import QuantumSystem.ForMathlib.Algebra.Group.Center
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
