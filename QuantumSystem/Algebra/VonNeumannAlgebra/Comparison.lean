@@ -24,8 +24,7 @@ supports and polar decomposition; it is developed in subsequent steps.
   are star projections.
 * `isStarProjection_subproj_comm` — the subprojection relation `e * f = f` is left/right symmetric
   for projections.
-* `IsPartialIsometry.range_mul_self` / `mul_source` — the range and source projections act as
-  one-sided identities.
+* `IsPartialIsometry.mul_source` — the source projection acts as a one-sided identity.
 * `MvNEquiv.exists_subproj_equiv` — an equivalence `q ∼[N] r'` transports a subprojection
   `q' ≤ q` to a subprojection of `r'` equivalent to `q'`.
 * `MvNSub.refl` / `MvNSub.trans` — subordination is a preorder on projections.
@@ -63,10 +62,6 @@ theorem isStarProjection_subproj_comm {R : Type*} [Ring R] [StarRing R] {e f : R
     (he : IsStarProjection e) (hf : IsStarProjection f) (h : e * f = f) : f * e = f := by
   have := congrArg star h
   rwa [star_mul, he.isSelfAdjoint.star_eq, hf.isSelfAdjoint.star_eq] at this
-
-/-- The range projection of a partial isometry acts as a left identity. -/
-theorem IsPartialIsometry.range_mul_self {R : Type*} [Monoid R] [StarMul R] {v : R}
-    (h : IsPartialIsometry v) : (v * star v) * v = v := h
 
 /-- The source projection of a partial isometry acts as a right identity. -/
 theorem IsPartialIsometry.mul_source {R : Type*} [Monoid R] [StarMul R] {v : R}

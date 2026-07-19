@@ -81,12 +81,6 @@ theorem vnTensorLeft_commutant_eq_commutantSet :
       = VonNeumannAlgebra.commutantSet (Set.range (amplifyLeft (H₂ := H₂))) :=
   VonNeumannAlgebra.commutant_generated _
 
-/-- The commutant of `1 ⊗̄ B(H₂)` is the commutant of the range of `amplifyRight`. -/
-theorem vnTensorRight_commutant_eq_commutantSet :
-    (vnTensorRight (H₁ := H₁) (H₂ := H₂)).commutant
-      = VonNeumannAlgebra.commutantSet (Set.range (amplifyRight (H₁ := H₁))) :=
-  VonNeumannAlgebra.commutant_generated _
-
 /-! ### The tensor commutation theorem
 
 The commutant of `B(H₁) ⊗̄ 1` is exactly `1 ⊗̄ B(H₂)` — von Neumann's commutation theorem for the

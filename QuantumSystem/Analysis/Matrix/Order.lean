@@ -875,29 +875,6 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m]
 
 end RpowOperatorConcaveAux
 
-/-- Helper: The difference in quadratic forms for operator concavity. -/
-private lemma rpow_concavity_quadform_nonneg {m : Type*} [Fintype m] [DecidableEq m]
-    {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1)
-    (A B : Matrix m m ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
-    (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1)
-    (hC : (t • A + (1 - t) • B).IsHermitian) (v : m → ℂ) :
-    0 ≤ (star v ⬝ᵥ
-      ((t • A + (1 - t) • B) ^ s - t • A ^ s - (1 - t) • B ^ s) *ᵥ v).re := by
-  have hle : t • A ^ s + (1 - t) • B ^ s ≤ (t • A + (1 - t) • B) ^ s :=
-    rpow_operator_concave_le hs0 hs1 A B hA hB t ht0 ht1 hC
-  have hpsd :
-      ((t • A + (1 - t) • B) ^ s - (t • A ^ s + (1 - t) • B ^ s)).PosSemidef := by
-    simpa [Matrix.le_iff] using hle
-  have hpsd' :
-      ((t • A + (1 - t) • B) ^ s - t • A ^ s - (1 - t) • B ^ s).PosSemidef := by
-    have hcalc :
-        ((t • A + (1 - t) • B) ^ s - (t • A ^ s + (1 - t) • B ^ s)) =
-        ((t • A + (1 - t) • B) ^ s - t • A ^ s - (1 - t) • B ^ s) := by
-      module
-    simpa [hcalc] using hpsd
-  have hnonneg := hpsd'.dotProduct_mulVec_nonneg v
-  exact (Complex.nonneg_iff.mp hnonneg).1
-
 /-- The power function t^s (0 < s ≤ 1) is Löwner concave.
 This means: (λA + (1-λ)B)^s ≥ λ·A^s + (1-λ)·B^s in Löwner order.
 

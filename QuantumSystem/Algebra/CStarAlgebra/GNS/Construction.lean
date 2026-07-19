@@ -117,11 +117,6 @@ private lemma norm_sq_eq_inner (x : A) :
   simp only [Quotient.liftOn₂'_mk'']
   rfl
 
-/-- Inner products with elements of the kernel ideal vanish: if `s ∈ Nω` then
-`ω (star x * s) = 0`. -/
-private lemma inner_kernel_elem_zero (x : A) (s : Nω) : ω (star x * s.val) = 0 :=
-  State.kernel_degenerate_left (ω := ω) (x := s.val) (a := x) s.property
-
 /-- The GNS Hilbert space `Hω`, defined as the completion of the quotient `A ⧸ Nω`. -/
 abbrev Hω := UniformSpace.Completion (A ⧸ Nω)
 local notation "Hω" => (Hω (ω := ω))
@@ -219,10 +214,6 @@ lemma πω'_norm_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ≤ ‖a‖ * �
   rw [show ‖a‖ ^ 2 * ‖b‖ ^ 2 = (‖a‖ * ‖b‖) ^ 2 by ring] at h_sq
   simpa [Real.sqrt_sq (norm_nonneg _), mul_nonneg (norm_nonneg a) (norm_nonneg b)] using
     Real.sqrt_le_sqrt h_sq
-
-/-- Lipschitz continuity of `b ↦ πω'(a)b` with optimal constant `‖a‖`. -/
-lemma πω'_lipschitz (a : A) : ∃ C : ℝ≥0, ∀ b : A ⧸ Nω, ‖πω' ω a b‖ ≤ C * ‖b‖ :=
-  ⟨⟨‖a‖, norm_nonneg a⟩, fun b => by simpa using πω'_norm_le (ω := ω) a b⟩
 
 /-- Continuous linear map version of the pre-representation: `πω'(a) : A ⧸ Nω →L[ℂ] A ⧸ Nω`. -/
 noncomputable def πω'CLM (a : A) : (A ⧸ Nω) →L[ℂ] (A ⧸ Nω) :=
@@ -486,12 +477,6 @@ lemma πω_cyclic_identity (b : A) :
     _ = @inner ℂ Hω _ (↑(Quotient.mk'' b : A ⧸ Nω)) (↑(Quotient.mk'' c : A ⧸ Nω)) := by
       -- Lift inner product from dense subspace into completion
       simp [UniformSpace.Completion.inner_coe]
-
-/-- The quotient image of any element lies in the closure of the cyclic orbit. -/
-lemma quotient_in_cyclic_closure (b : A) :
-    (↑(Quotient.mk'' b : A ⧸ Nω) : Hω) ∈ closure (⋃ (a : A), {πω ω a (ξω ω)}) := by
-  rw [← πω_cyclic_identity]
-  exact subset_closure (Set.mem_iUnion.mpr ⟨b, rfl⟩)
 
 /-- Cyclicity of `ξω`: the span of `{πω a ξω | a : A}` is dense in `Hω`. -/
 lemma ξω_is_cyclic : Dense (↑(Submodule.span ℂ {πω ω a (ξω ω) | a : A}) : Set Hω) := by

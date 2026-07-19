@@ -107,15 +107,6 @@ theorem OrthEquivFam.matrixUnit_mem (hF : OrthEquivFam N e F) (p q : F) :
     hF.matrixUnit p q ∈ N :=
   mul_mem (hF.pisom_mem p) (star_mem (hF.pisom_mem q))
 
-/-- The diagonal matrix unit is the projection: `e_{pp} = p`. -/
-theorem OrthEquivFam.matrixUnit_self (hF : OrthEquivFam N e F) (p : F) :
-    hF.matrixUnit p p = (p : H →L[ℂ] H) := hF.pisom_range p
-
-/-- Matrix units are adjoint-symmetric: `e_{pq}⋆ = e_{qp}`. -/
-theorem OrthEquivFam.star_matrixUnit (hF : OrthEquivFam N e F) (p q : F) :
-    star (hF.matrixUnit p q) = hF.matrixUnit q p := by
-  rw [matrixUnit_def, matrixUnit_def, star_mul, star_star]
-
 /-- Matrix-unit multiplication law `e_{pq} e_{rs} = δ_{qr} e_{ps}`, diagonal case `q = r`:
 `e_{pq} e_{qs} = e_{ps}`. -/
 theorem OrthEquivFam.matrixUnit_mul_of_eq (hF : OrthEquivFam N e F) (p q s : F) :

@@ -83,31 +83,6 @@ namespace QuantumInfo
 scoped notation "⟪" X ", " Y "⟫_HS" => Matrix.hsInnerProduct X Y
 end QuantumInfo
 
-/-- Hilbert-Schmidt inner product is related to liebJointFunction via left/right multiplication.
-For positive semidefinite A, B and real p:
-  ⟨A^p · K† · B^{1-p}, K†⟩_HS = Tr(A^p · K† · B^{1-p} · K)
-This connects the operator-level perspective to the trace-level Lieb function. -/
-private lemma hsInnerProduct_leftMul_rightMul {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
-    (K : Matrix m m ℂ) (p : ℝ) :
-    hsInnerProduct ((A ^ p) * Kᴴ * (B ^ (1 - p))) Kᴴ = liebJointFunction K p A hA B hB := by
-  simp only [hsInnerProduct, liebJointFunction]
-  -- (A^p * K† * B^{1-p})† = B^{1-p}† * K * (A^p)†
-  -- Since A^p and B^{1-p} are Hermitian (rpow of PSD is PSD hence Hermitian):
-  have hAp_herm : (A ^ p)ᴴ = A ^ p := by
-    rw [CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA)]
-    exact cfc_isHermitian hA.1 (fun x => x ^ p)
-  have hBp_herm : (B ^ (1 - p))ᴴ = B ^ (1 - p) := by
-    rw [CFC.rpow_eq_cfc_real (a := B) (ha := by rw [Matrix.le_iff, sub_zero]; exact hB)]
-    exact cfc_isHermitian hB.1 (fun x => x ^ (1 - p))
-  simp only [Matrix.conjTranspose_mul, Matrix.conjTranspose_conjTranspose,
-    hAp_herm, hBp_herm, Matrix.mul_assoc]
-  -- LHS: Tr(B^{1-p} * K * A^p * K†), RHS: Tr(A^p * K† * B^{1-p} * K)
-  -- By trace cyclicity (two shifts) these are equal
-  simp only [← Matrix.mul_assoc]
-  rw [trace_mul_cycle, trace_mul_cycle]
-  simp only [Matrix.mul_assoc]
-
 /-- The HS inner product ⟨v, matrixPerspective(f, L_A, R_B) v⟩ for f(t) = -t^p
 and v = vec(K†) equals -Tr(A^p K† B^{1-p} K).
 
@@ -123,8 +98,8 @@ The proof is technical but the key insight is:
 - Combining: ⟨v, (-L^p R^{1-p}) v⟩ = -Tr(A^p K† B^{1-p} K) = -liebJointFunction
 
 For full generality this requires functional calculus on Kronecker products,
-but the result follows from the trace identity hsInnerProduct_leftMul_rightMul
-and the perspective structure. -/
+but the result follows from the underlying trace identity and the perspective
+structure. -/
 private lemma matrixPerspective_inner_eq_neg_liebJointFunction {m : Type*} [Fintype m] [DecidableEq m]
     (K : Matrix m m ℂ) (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
     (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef)
