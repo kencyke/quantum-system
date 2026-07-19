@@ -115,6 +115,41 @@ not part of the definition. The equivalence with the general abelian-projection 
 def IsTypeIFactor (N : VonNeumannAlgebra H) : Prop :=
   IsFactor N ∧ ∃ e : H →L[ℂ] H, IsMinimalProjection N e
 
+/-- A **type I_∞ factor**: a type I factor carrying an infinite sequence of pairwise orthogonal
+minimal projections. This is the intrinsic form of *infinite multiplicity*: through the structure
+theorem `N ≃⋆ₐ B(K)` the minimal projections are the rank-one projections, and an infinite
+orthogonal family of them exists exactly when `K` is infinite-dimensional — a type `I_n` factor
+`B(ℂⁿ)` has at most `n` pairwise orthogonal nonzero projections. As with `IsTypeIFactor`, the
+spatial identification with an infinite-dimensional `B(K)` is then a theorem, not part of the
+definition. -/
+def IsTypeIInfinite (N : VonNeumannAlgebra H) : Prop :=
+  IsTypeIFactor N ∧
+    ∃ e : ℕ → (H →L[ℂ] H),
+      (∀ n, IsMinimalProjection N (e n)) ∧
+      (∀ m n, m ≠ n → e m * e n = 0)
+
+/-- An orthogonal sequence of minimal projections is injective. -/
+lemma injective_of_isMinimalProjection_orthogonal {N : VonNeumannAlgebra H}
+    {e : ℕ → (H →L[ℂ] H)} (hmin : ∀ n, IsMinimalProjection N (e n))
+    (horth : ∀ m n, m ≠ n → e m * e n = 0) : Function.Injective e := by
+  intro m n hmn
+  by_contra hne
+  have h0 := horth m n hne
+  rw [hmn, (hmin n).1.isIdempotentElem] at h0
+  exact (hmin n).2.2.1 h0
+
+/-- The witnessing minimal projections of a type I_∞ factor may be chosen injectively. -/
+lemma IsTypeIInfinite.exists_injective {N : VonNeumannAlgebra H} (hN : IsTypeIInfinite N) :
+    ∃ e : ℕ → (H →L[ℂ] H), Function.Injective e ∧
+      (∀ n, IsMinimalProjection N (e n)) ∧
+      (∀ m n, m ≠ n → e m * e n = 0) := by
+  obtain ⟨-, e, hmin, horth⟩ := hN
+  exact ⟨e, injective_of_isMinimalProjection_orthogonal hmin horth, hmin, horth⟩
+
+/-- A type I_∞ factor is in particular a type I factor. -/
+lemma IsTypeIInfinite.isTypeIFactor {N : VonNeumannAlgebra H} (hN : IsTypeIInfinite N) :
+    IsTypeIFactor N := hN.1
+
 /-- **Murray–von Neumann equivalence** of projections inside `N`: there is a partial isometry
 `v ∈ N` with source projection `v⋆v = p` and range projection `vv⋆ = q`. -/
 def MvNEquiv (N : VonNeumannAlgebra H) (p q : H →L[ℂ] H) : Prop :=

@@ -22,8 +22,10 @@ when `H` is infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**
 * `VonNeumannAlgebra.isTypeIFactor_boundedLinearOperators` — `B(H)` is a type I factor.
 * `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(K)` for some
   Hilbert space `K`.
-* `VonNeumannAlgebra.isTypeIInfinite_boundedLinearOperators` — for infinite-dimensional `H`, the
-  space `K` is infinite-dimensional (`B(H)` is type I_∞).
+* `VonNeumannAlgebra.isTypeIInfinite_boundedLinearOperators` — for infinite-dimensional `H`, `B(H)`
+  is a type I_∞ factor, packaged as the intrinsic predicate `IsTypeIInfinite ⊤`.
+* `VonNeumannAlgebra.exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators` — for
+  infinite-dimensional `H`, `B(H) ≃⋆ₐ B(K)` with `K` itself infinite-dimensional.
 -/
 
 @[expose] public section
@@ -88,18 +90,24 @@ theorem exists_starAlgEquiv_boundedLinearOperators {H : Type u} [NormedAddCommGr
       Nonempty ((⊤ : VonNeumannAlgebra H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :=
   isTypeIFactor_boundedLinearOperators.exists_starAlgEquiv
 
-/-- **`B(H)` is a type I_∞ factor when `H` is infinite-dimensional.** The full algebra is
-`⋆`-isomorphic to `B(K)` for a complex Hilbert space `K` that is itself infinite-dimensional. Here
-`K = ℓ²(F)` for `F` an orthonormal basis of `H`; a finite `F` would, through the spatial
-decomposition `H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` with one-dimensional multiplicity `eH` (the range of the
-rank-one minimal projection), force `H` finite-dimensional. Expressing type I_∞ as
+/-- **`B(H) ≃⋆ₐ B(K)` with `K` infinite-dimensional, when `H` is infinite-dimensional.** The full
+algebra is `⋆`-isomorphic to `B(K)` for a complex Hilbert space `K` that is itself
+infinite-dimensional. Here `K = ℓ²(F)` for `F` an orthonormal basis of `H`; a finite `F` would,
+through the spatial decomposition `H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` with one-dimensional multiplicity `eH` (the
+range of the rank-one minimal projection), force `H` finite-dimensional. Expressing type I_∞ as
 `¬FiniteDimensional ℂ K` is the standard reading: a type I_n factor is `B(K)` with `dim K = n`, so
 I_∞ is exactly the infinite-dimensional `K`. -/
-theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
-    [InnerProductSpace ℂ H] [CompleteSpace H] [Nontrivial H] (hinf : ¬FiniteDimensional ℂ H) :
+theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type u}
+    [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+    (hinf : ¬FiniteDimensional ℂ H) :
     ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
       ¬FiniteDimensional ℂ K ∧
       Nonempty ((⊤ : VonNeumannAlgebra H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
+  haveI : Nontrivial H := by
+    rcases subsingleton_or_nontrivial H with h | h
+    · haveI := h
+      exact absurd (inferInstance : FiniteDimensional ℂ H) hinf
+    · exact h
   obtain ⟨u, hu⟩ := exists_unit_vector (H := H)
   have he : IsMinimalProjection (⊤ : VonNeumannAlgebra H) (rankOne ℂ u u) :=
     isMinimalProjection_rankOne_boundedLinearOperators hu
@@ -117,5 +125,36 @@ theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup 
   intro hK
   haveI := hK
   exact hinf U.symm.toLinearEquiv.finiteDimensional
+
+/-- **`B(H)` is a type I_∞ factor when `H` is infinite-dimensional.** Packaged as the intrinsic
+predicate `IsTypeIInfinite`: `⊤ = B(H)` is a type I factor (`isTypeIFactor_boundedLinearOperators`)
+carrying an infinite orthogonal family of minimal projections — the rank-one projections
+`|uₙ⟩⟨uₙ|` onto a countable orthonormal sequence `(uₙ)` extracted from a Hilbert basis of the
+infinite-dimensional `H`. The `⋆`-isomorphism to an infinite-dimensional `B(K)` is
+`exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators`. -/
+theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] (hinf : ¬FiniteDimensional ℂ H) :
+    IsTypeIInfinite (⊤ : VonNeumannAlgebra H) := by
+  obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
+  have hwinf : Infinite w := by
+    rw [← not_finite_iff_infinite]
+    intro hfin
+    haveI : Finite w := hfin
+    haveI : Fintype w := Fintype.ofFinite w
+    exact hinf b.toOrthonormalBasis.toBasis.finiteDimensional_of_finite
+  haveI := hwinf
+  let g : ℕ ↪ w := Infinite.natEmbedding w
+  set u : ℕ → H := fun n => b (g n) with hu_def
+  have hon : Orthonormal ℂ u := by
+    rw [hu_def]; exact b.orthonormal.comp g g.injective
+  have hnorm : ∀ n, ‖u n‖ = 1 := fun n => hon.1 n
+  have hmin : ∀ n, IsMinimalProjection (⊤ : VonNeumannAlgebra H) (rankOne ℂ (u n) (u n)) :=
+    fun n => isMinimalProjection_rankOne_boundedLinearOperators (hnorm n)
+  have horth : ∀ m n, m ≠ n → rankOne ℂ (u m) (u m) * rankOne ℂ (u n) (u n) = 0 := by
+    intro m n hmn
+    rw [ContinuousLinearMap.mul_def, rankOne_comp_rankOne, hon.2 hmn, zero_smul]
+  haveI : Nontrivial H :=
+    nontrivial_of_ne (u 0) 0 (by rw [← norm_ne_zero_iff, hnorm 0]; norm_num)
+  exact ⟨isTypeIFactor_boundedLinearOperators, fun n => rankOne ℂ (u n) (u n), hmin, horth⟩
 
 end VonNeumannAlgebra
