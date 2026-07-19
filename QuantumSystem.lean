@@ -22,6 +22,15 @@ public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
+public import QuantumSystem.Algebra.Star.TensorProduct
+public import QuantumSystem.Algebra.VonNeumannAlgebra.CentralProjection
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Comparison
+public import QuantumSystem.Algebra.VonNeumannAlgebra.CoveringFamily
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Factor
+public import QuantumSystem.Algebra.VonNeumannAlgebra.GeneratedByMatrixUnits
+public import QuantumSystem.Algebra.VonNeumannAlgebra.MatrixUnits
+public import QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorIdentification
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInformation
@@ -36,6 +45,7 @@ public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Channel
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
+public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
@@ -48,11 +58,13 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotatio
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
+public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
