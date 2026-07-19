@@ -31,6 +31,7 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.MatrixUnits
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorIdentification
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInformation

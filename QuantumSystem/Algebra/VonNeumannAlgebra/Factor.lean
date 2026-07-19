@@ -85,9 +85,26 @@ theorem IsMinimalProjection.no_proper_subprojection {N : VonNeumannAlgebra H}
   · exact Or.inl (by rw [hc, h, zero_smul])
   · exact Or.inr (by rw [hc, sub_eq_zero.mp h, one_smul])
 
+/-- An **abelian projection** of `N`: a star projection `p ∈ N` whose corner `p N p` is
+commutative. Minimal projections are abelian (`IsMinimalProjection.isAbelianProjection`); the
+general type I property (`IsTypeI`) is phrased through abelian projections. -/
+def IsAbelianProjection (N : VonNeumannAlgebra H) (p : H →L[ℂ] H) : Prop :=
+  IsStarProjection p ∧ p ∈ N ∧
+    ∀ a ∈ N, ∀ b ∈ N, (p * a * p) * (p * b * p) = (p * b * p) * (p * a * p)
+
+/-- A minimal projection is abelian: its corner `e N e = ℂ e` is one-dimensional, hence
+commutative. -/
+theorem IsMinimalProjection.isAbelianProjection {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) : IsAbelianProjection N e := by
+  refine ⟨he.1, he.2.1, fun a haN b hbN => ?_⟩
+  obtain ⟨c, hc⟩ := he.2.2.2 a haN
+  obtain ⟨d, hd⟩ := he.2.2.2 b hbN
+  rw [hc, hd, smul_mul_smul_comm, smul_mul_smul_comm, mul_comm c d]
+
 /-- A **type I factor**: a factor possessing a minimal projection. This is the mathematically
 conventional, intrinsic definition; the spatial decomposition `N ≅ B(H₁) ⊗̄ 1` is then a theorem,
-not part of the definition. -/
+not part of the definition. The equivalence with the general abelian-projection definition
+`IsTypeI` is `isTypeIFactor_iff_isFactor_and_isTypeI`. -/
 def IsTypeIFactor (N : VonNeumannAlgebra H) : Prop :=
   IsFactor N ∧ ∃ e : H →L[ℂ] H, IsMinimalProjection N e
 
