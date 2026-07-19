@@ -47,11 +47,43 @@ theorem MvNEquiv.ne_zero {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
     exact hpi.symm
   rw [← hvp, hv0]; simp
 
+/-- **Minimality transports along Murray–von Neumann equivalence.** If `e` is a minimal projection
+and `e ∼[N] p`, then `p` is minimal: with `v⋆v = e` and `vv⋆ = p`, the corner computes as
+`p a p = v (e (v⋆ a v) e) v⋆ = c • v e v⋆ = c • p`. -/
+theorem IsMinimalProjection.of_mvNEquiv {N : VonNeumannAlgebra H} {e p : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) (h : e ∼[N] p) : IsMinimalProjection N p := by
+  have hpproj : IsStarProjection p := h.isStarProjection_right
+  have hp0 : p ≠ 0 := h.ne_zero he.2.2.1
+  obtain ⟨v, hvN, hvpi, hvp, hvq⟩ := h
+  have hpN : p ∈ N := by rw [← hvq]; exact mul_mem hvN (star_mem hvN)
+  have hve : v * e = v := by rw [← hvp]; exact IsPartialIsometry.mul_source hvpi
+  have hev : e * star v = star v := by
+    have := congrArg star hve
+    rwa [star_mul, he.1.isSelfAdjoint.star_eq] at this
+  refine ⟨hpproj, hpN, hp0, fun a haN => ?_⟩
+  obtain ⟨c, hc⟩ := he.2.2.2 (star v * a * v) (mul_mem (mul_mem (star_mem hvN) haN) hvN)
+  refine ⟨c, ?_⟩
+  calc p * a * p
+      = (v * star v) * a * (v * star v) := by rw [hvq]
+    _ = (v * e) * (star v * a * v) * (e * star v) := by
+        rw [hve, hev]; simp only [mul_assoc]
+    _ = v * (e * (star v * a * v) * e) * star v := by simp only [mul_assoc]
+    _ = v * (c • e) * star v := by rw [hc]
+    _ = c • (v * e * star v) := by simp only [mul_smul_comm, smul_mul_assoc]
+    _ = c • p := by rw [hve, hvq]
+
 /-- A family of pairwise-orthogonal nonzero projections in `N`, each Murray–von Neumann equivalent
 to `e`. -/
 def OrthEquivFam (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) (F : Set (H →L[ℂ] H)) : Prop :=
   (∀ p ∈ F, IsStarProjection p ∧ p ∈ N ∧ p ≠ 0 ∧ e ∼[N] p) ∧
     F.Pairwise (fun p q => p * q = 0)
+
+/-- When `e` is minimal, every member of an `OrthEquivFam` for `e` is itself a minimal
+projection, since minimality transports along `∼[N]` (`IsMinimalProjection.of_mvNEquiv`). -/
+theorem OrthEquivFam.isMinimalProjection_of_mem {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F) (he : IsMinimalProjection N e)
+    {p : H →L[ℂ] H} (hp : p ∈ F) : IsMinimalProjection N p :=
+  he.of_mvNEquiv (hF.1 p hp).2.2.2
 
 /-- By Zorn's lemma, there is a maximal orthogonal family of `e`-equivalent projections. -/
 theorem exists_maximal_orthEquivFam (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) :

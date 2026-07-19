@@ -287,31 +287,38 @@ theorem OrthEquivFam.coe_hilbertSumEquiv_apply {N : VonNeumannAlgebra H} {e : H 
 
 /-- The minimal projection `e` of a type I factor is the multiplicity space: a type I factor with
 minimal projection `e` acts on a Hilbert space isometric to the `ℓ²` sum `ℓ²(F; eH)` of copies of
-`eH = range e`, indexed by a maximal orthogonal family `F` of minimal projections equivalent to
-`e`. Composing with the tensor bridge turns this `ℓ²` sum into the literal tensor product
-`H ≅ ℓ²(F) ⊗̂ eH`; see `exists_tmul_decomposition`. -/
+`eH = range e`, indexed by a covering orthogonal family `F` (`OrthEquivFam`, with densely
+spanning ranges) of minimal projections equivalent to `e`. Composing with the tensor bridge turns
+this `ℓ²` sum into the literal tensor product `H ≅ ℓ²(F) ⊗̂ eH`; see
+`exists_tmul_decomposition`. -/
 theorem IsFactor.exists_tensor_decomposition [Nontrivial H] {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
-    ∃ (F : Set (H →L[ℂ] H)),
+    ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
+      (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ ∧
+      (∀ p ∈ F, IsMinimalProjection N p) ∧
       Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : F => LinearMap.range (e : H →ₗ[ℂ] H)) 2) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  exact ⟨F, ⟨hF.multiplicityEquiv htop⟩⟩
+  exact ⟨F, hF, htop, fun p hp => hF.isMinimalProjection_of_mem he hp,
+    ⟨hF.multiplicityEquiv htop⟩⟩
 
 /-- **Tensor-product decomposition (literal form).** A type I factor `N ⊆ B(H)` with minimal
 projection `e` acts on a Hilbert space isometric to the completed Hilbert tensor product
-`ℓ²(F) ⊗̂ (eH)`, where `F` is a maximal orthogonal family of minimal projections equivalent to `e`
-and `eH = range e` is the multiplicity space. This is the literal `H ≅ ℓ²(F) ⊗̂ eH` form of the
-type I structure theorem, obtained from `exists_tensor_decomposition` by composing with the tensor
-bridge `HilbertTensor.lpTensorEquiv`. -/
+`ℓ²(F) ⊗̂ (eH)`, where `F` is a covering orthogonal family (`OrthEquivFam`, with densely spanning
+ranges) of minimal projections equivalent to `e` and `eH = range e` is the multiplicity space.
+This is the literal `H ≅ ℓ²(F) ⊗̂ eH` form of the type I structure theorem, obtained from
+`exists_tensor_decomposition` by composing with the tensor bridge `HilbertTensor.lpTensorEquiv`. -/
 theorem IsFactor.exists_tmul_decomposition [Nontrivial H] {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
-    ∃ (F : Set (H →L[ℂ] H)),
+    ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
+      (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ ∧
+      (∀ p ∈ F, IsMinimalProjection N p) ∧
       Nonempty (H ≃ₗᵢ[ℂ]
         HilbertTensor (lp (fun _ : F => ℂ) 2) (LinearMap.range (e : H →ₗ[ℂ] H))) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
   haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
   haveI : DecidableEq (↥F) := Classical.decEq _
-  exact ⟨F, ⟨(hF.multiplicityEquiv htop).trans
-    (HilbertTensor.lpTensorEquiv (ι := F) (K := LinearMap.range (e : H →ₗ[ℂ] H)))⟩⟩
+  exact ⟨F, hF, htop, fun p hp => hF.isMinimalProjection_of_mem he hp,
+    ⟨(hF.multiplicityEquiv htop).trans
+      (HilbertTensor.lpTensorEquiv (ι := F) (K := LinearMap.range (e : H →ₗ[ℂ] H)))⟩⟩
 
 end VonNeumannAlgebra
