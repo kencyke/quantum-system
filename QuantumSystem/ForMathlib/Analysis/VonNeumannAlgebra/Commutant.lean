@@ -66,6 +66,14 @@ commutant of its commutant. -/
 noncomputable def generated (s : Set (H →L[ℂ] H)) : VonNeumannAlgebra H :=
   (commutantSet s).commutant
 
+/-- The carrier of a von Neumann algebra is norm-closed: it is a double centralizer, and
+centralizers are closed. (Von Neumann algebras are even weakly closed, but the norm-closedness
+is what the subalgebra-membership lemmas of the continuous functional calculus consume.) -/
+theorem isClosed_coe (N : VonNeumannAlgebra H) : IsClosed (N : Set (H →L[ℂ] H)) := by
+  rw [show (N : Set (H →L[ℂ] H)) = Set.centralizer (Set.centralizer (N : Set (H →L[ℂ] H))) from
+    N.centralizer_centralizer.symm]
+  exact Set.isClosed_centralizer _
+
 /-- `M′` denotes the commutant `VonNeumannAlgebra.commutant M`, the prime of the operator-algebra
 literature. -/
 scoped postfix:max "′" => VonNeumannAlgebra.commutant
