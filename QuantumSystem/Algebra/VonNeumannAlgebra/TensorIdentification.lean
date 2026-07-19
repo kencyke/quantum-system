@@ -241,13 +241,9 @@ theorem generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
   haveI : Nontrivial (lp (fun _ : F => ℂ) 2) :=
     ⟨lpDelta (Classical.arbitrary F), 0, by
       rw [← norm_ne_zero_iff, lpDelta_norm]; norm_num⟩
-  have hcc : (vnTensorRight (H₁ := lp (fun _ : F => ℂ) 2)
-      (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))).commutant = vnTensorLeft :=
-    (congrArg VonNeumannAlgebra.commutant
-      (vnTensorLeft_commutant (H₁ := lp (fun _ : F => ℂ) 2)
-        (H₂ := LinearMap.range (e : H →ₗ[ℂ] H)))).symm.trans
-      (VonNeumannAlgebra.commutant_commutant _)
-  exact (congrArg VonNeumannAlgebra.commutant hcomm).trans hcc
+  exact (congrArg VonNeumannAlgebra.commutant hcomm).trans
+    (vnTensorRight_commutant (H₁ := lp (fun _ : F => ℂ) 2)
+      (H₂ := LinearMap.range (e : H →ₗ[ℂ] H)))
 
 /-- **Type I factor structure theorem (explicit identification).** Under the spatial isomorphism
 `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)`, the type I factor `N` is carried exactly onto the tensor factor
