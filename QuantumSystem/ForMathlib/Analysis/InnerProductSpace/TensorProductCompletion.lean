@@ -3,6 +3,9 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 public import Mathlib.Analysis.InnerProductSpace.l2Space
+public import Mathlib.RingTheory.TensorProduct.Finite
+public import Mathlib.Analysis.Normed.Module.FiniteDimension
+public import Mathlib.Topology.Algebra.LinearMapCompletion
 
 /-!
 # The completed Hilbert-space tensor product and operator amplification
@@ -62,6 +65,82 @@ The textbook symbols `⊗̂` (completed tensor) and `⊗ₕ` (pure tensor) live 
 
 open scoped TensorProduct
 
+/-! ### Completion of a linear isometric equivalence and of a finite-dimensional space
+
+These are general facts about `UniformSpace.Completion` phrased for normed spaces; they are the
+analytic inputs to the constructions below. The completion of a linear isometric equivalence
+extends it to the completions, and the completion of a finite-dimensional space is again
+finite-dimensional. -/
+
+section Completion
+
+open UniformSpace UniformSpace.Completion
+
+namespace LinearIsometryEquiv
+
+variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
+  [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedAddCommGroup F] [NormedSpace 𝕜 F]
+
+/-- The completed forward map of a linear isometric equivalence, as a continuous linear map. -/
+noncomputable def completionCLM (f : E ≃ₗᵢ[𝕜] F) : Completion E →L[𝕜] Completion F :=
+  f.toLinearIsometry.toContinuousLinearMap.completion
+
+@[simp] theorem completionCLM_coe (f : E ≃ₗᵢ[𝕜] F) (a : E) :
+    f.completionCLM (a : Completion E) = (f a : Completion F) := by
+  rw [completionCLM, ContinuousLinearMap.completion_apply_coe,
+    LinearIsometry.coe_toContinuousLinearMap, LinearIsometryEquiv.coe_toLinearIsometry]
+
+theorem completionCLM_left (f : E ≃ₗᵢ[𝕜] F) (x : Completion E) :
+    f.symm.completionCLM (f.completionCLM x) = x := by
+  induction x using Completion.induction_on with
+  | hp => exact isClosed_eq ((map_continuous _).comp (map_continuous _)) continuous_id
+  | ih a => rw [completionCLM_coe, completionCLM_coe, LinearIsometryEquiv.symm_apply_apply]
+
+/-- The completion of a linear isometric equivalence `f : E ≃ₗᵢ[𝕜] F`, a linear isometric
+equivalence `Completion E ≃ₗᵢ[𝕜] Completion F`. -/
+noncomputable def completion (f : E ≃ₗᵢ[𝕜] F) : Completion E ≃ₗᵢ[𝕜] Completion F where
+  toFun := f.completionCLM
+  invFun := f.symm.completionCLM
+  map_add' x y := _root_.map_add f.completionCLM x y
+  map_smul' m x := _root_.map_smul f.completionCLM m x
+  left_inv := f.completionCLM_left
+  right_inv x := by
+    have h := f.symm.completionCLM_left x
+    rwa [LinearIsometryEquiv.symm_symm] at h
+  norm_map' x := by
+    induction x using Completion.induction_on with
+    | hp => exact isClosed_eq (continuous_norm.comp f.completionCLM.continuous) continuous_norm
+    | ih a =>
+      change ‖f.completionCLM (a : Completion E)‖ = ‖(a : Completion E)‖
+      rw [completionCLM_coe, Completion.norm_coe, Completion.norm_coe, f.norm_map]
+
+@[simp] theorem completion_coe (f : E ≃ₗᵢ[𝕜] F) (a : E) :
+    f.completion (a : Completion E) = (f a : Completion F) := by
+  change f.completionCLM (a : Completion E) = _
+  exact f.completionCLM_coe a
+
+end LinearIsometryEquiv
+
+/-- The completion of a finite-dimensional normed space (over a complete field) is
+finite-dimensional. The coercion `toComplL : E → Completion E` is a linear map with dense range
+whose image is a finite-dimensional (hence closed) subspace, so it is surjective, and
+finite-dimensionality transfers along a surjection. -/
+theorem FiniteDimensional.completion {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
+    [NormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
+    FiniteDimensional 𝕜 (Completion E) := by
+  set f : E →L[𝕜] Completion E := Completion.toComplL with hf
+  have hdense : DenseRange f := by
+    simpa [hf, Completion.coe_toComplL] using Completion.denseRange_coe (α := E)
+  have hclosed : IsClosed (Set.range f) := by
+    have h := (LinearMap.range (f : E →ₗ[𝕜] Completion E)).closed_of_finiteDimensional
+    rwa [LinearMap.coe_range] at h
+  have hsurj : Function.Surjective f := by
+    have hu : Set.range f = Set.univ := by rw [← hclosed.closure_eq, hdense.closure_eq]
+    exact Set.range_eq_univ.mp hu
+  exact Module.Finite.of_surjective (f : E →ₗ[𝕜] Completion E) hsurj
+
+end Completion
+
 variable {H₁ H₂ : Type*}
   [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
   [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂]
@@ -75,6 +154,14 @@ abbrev HilbertTensor (H₁ H₂ : Type*)
     [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂] : Type _ :=
   UniformSpace.Completion (H₁ ⊗[ℂ] H₂)
+
+/-- The completed tensor product of two finite-dimensional Hilbert spaces is finite-dimensional:
+the algebraic tensor product is already finite-dimensional (hence complete), so completing it
+changes nothing. -/
+instance instFiniteDimensionalHilbertTensor [FiniteDimensional ℂ H₁] [FiniteDimensional ℂ H₂] :
+    FiniteDimensional ℂ (HilbertTensor H₁ H₂) := by
+  haveI : FiniteDimensional ℂ (H₁ ⊗[ℂ] H₂) := Module.Finite.tensorProduct ℂ H₁ H₂
+  exact FiniteDimensional.completion
 
 namespace HilbertTensor
 
@@ -473,6 +560,61 @@ theorem amplifyRight_smul (c : ℂ) (B : H₂ →L[ℂ] H₂) :
       ((continuous_const_smul c).comp (amplifyRight B).continuous)) (fun a => ?_)
   rw [amplifyRight_coe, algAmplifyRight_smul_apply, UniformSpace.Completion.coe_smul,
     ContinuousLinearMap.smul_apply, amplifyRight_coe]
+
+/-! ### The commutation (swap) equivalence
+
+Swapping the two tensor factors is a linear isometric equivalence
+`HilbertTensor H₁ H₂ ≃ₗᵢ HilbertTensor H₂ H₁`, the completion of Mathlib's algebraic
+`TensorProduct.commIsometry`. Conjugating by it turns a right amplification `1 ⊗̂ B` into the left
+amplification `B ⊗̂ 1` on the swapped space, which is what lets the right-hand slice lemma be
+reused verbatim on the left. -/
+
+/-- The **commutation (swap) equivalence** `x ⊗̂ y ↦ y ⊗̂ x`, a linear isometric equivalence
+`HilbertTensor H₁ H₂ ≃ₗᵢ HilbertTensor H₂ H₁`, obtained by completing `TensorProduct.commIsometry`. -/
+noncomputable def commEquiv : HilbertTensor H₁ H₂ ≃ₗᵢ[ℂ] HilbertTensor H₂ H₁ :=
+  (TensorProduct.commIsometry ℂ H₁ H₂).completion
+
+@[simp] theorem commEquiv_tmul (x : H₁) (y : H₂) : commEquiv (x ⊗ₕ y) = y ⊗ₕ x := by
+  rw [commEquiv, tmul, LinearIsometryEquiv.completion_coe, TensorProduct.commIsometry_apply,
+    TensorProduct.comm_tmul, tmul]
+
+@[simp] theorem commEquiv_symm_tmul (y : H₂) (x : H₁) :
+    commEquiv.symm (y ⊗ₕ x) = x ⊗ₕ y := by
+  rw [← commEquiv_tmul x y, LinearIsometryEquiv.symm_apply_apply]
+
+/-- Conjugating a right amplification `1 ⊗̂ B` by the swap equivalence yields the left
+amplification `B ⊗̂ 1` on the swapped space. -/
+theorem conjStarAlgEquiv_commEquiv_amplifyRight (B : H₂ →L[ℂ] H₂) :
+    commEquiv.conjStarAlgEquiv (amplifyRight (H₁ := H₁) B) = amplifyLeft (H₂ := H₁) B := by
+  refine ContinuousLinearMap.ext fun w => ?_
+  rw [LinearIsometryEquiv.conjStarAlgEquiv_apply_apply]
+  refine UniformSpace.Completion.induction_on w
+    (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
+  induction a using TensorProduct.induction_on with
+  | zero => simp only [UniformSpace.Completion.coe_zero, map_zero]
+  | tmul y x =>
+      change commEquiv (amplifyRight B (commEquiv.symm (y ⊗ₕ x))) = amplifyLeft B (y ⊗ₕ x)
+      rw [commEquiv_symm_tmul, amplifyRight_tmul, commEquiv_tmul, amplifyLeft_tmul]
+  | add p q hp hq =>
+      simp only [UniformSpace.Completion.coe_add, map_add, hp, hq]
+
+/-- Conjugating a right amplification `1 ⊗̂ S` by the *inverse* swap equivalence yields the left
+amplification `S ⊗̂ 1`. This is the back-transport companion of
+`conjStarAlgEquiv_commEquiv_amplifyRight`, used to carry the right-hand slice lemma back to the
+original space. -/
+theorem conjStarAlgEquiv_symm_commEquiv_amplifyRight (S : H₁ →L[ℂ] H₁) :
+    commEquiv.conjStarAlgEquiv.symm (amplifyRight (H₁ := H₂) S) = amplifyLeft (H₂ := H₂) S := by
+  refine ContinuousLinearMap.ext fun w => ?_
+  rw [LinearIsometryEquiv.symm_conjStarAlgEquiv_apply_apply]
+  refine UniformSpace.Completion.induction_on w
+    (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
+  induction a using TensorProduct.induction_on with
+  | zero => simp only [UniformSpace.Completion.coe_zero, map_zero]
+  | tmul x y =>
+      change commEquiv.symm (amplifyRight S (commEquiv (x ⊗ₕ y))) = amplifyLeft S (x ⊗ₕ y)
+      rw [commEquiv_tmul, amplifyRight_tmul, commEquiv_symm_tmul, amplifyLeft_tmul]
+  | add p q hp hq =>
+      simp only [UniformSpace.Completion.coe_add, map_add, hp, hq]
 
 /-! ### Adjoints
 

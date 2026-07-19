@@ -2,7 +2,8 @@ module
 
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
-public import QuantumSystem.ForMathlib.Algebra.Group.Center
+public import Mathlib.Algebra.Group.Center
+public import Mathlib.Algebra.Group.Equiv.Defs
 
 /-!
 # The commutant of a set, the generated von Neumann algebra, and unitary conjugation
@@ -40,9 +41,34 @@ scope; activate it with `open scoped VonNeumannAlgebra`.
 
 @[expose] public section
 
+/-- A multiplicative bijection carries the centralizer of a set onto the centralizer of the image:
+`φ '' s' = (φ '' s)'`. This is the algebraic core of the fact that a spatial isomorphism of von
+Neumann algebras commutes with taking commutants. -/
+theorem Set.image_centralizer {M₁ M₂ F : Type*} [Mul M₁] [Mul M₂]
+    [EquivLike F M₁ M₂] [MulEquivClass F M₁ M₂] (φ : F) (s : Set M₁) :
+    ⇑φ '' Set.centralizer s = Set.centralizer (⇑φ '' s) := by
+  ext y
+  simp only [Set.mem_image, Set.mem_centralizer_iff]
+  constructor
+  · rintro ⟨x, hx, rfl⟩ _ ⟨a, ha, rfl⟩
+    rw [← map_mul, ← map_mul, hx a ha]
+  · intro hy
+    obtain ⟨x, rfl⟩ := EquivLike.surjective φ y
+    refine ⟨x, fun a ha => ?_, rfl⟩
+    have h := hy (φ a) ⟨a, ha, rfl⟩
+    apply EquivLike.injective φ
+    rw [map_mul, map_mul, h]
+
 namespace VonNeumannAlgebra
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+/-- A von Neumann algebra is closed under scalar multiplication. This upgrades the `SubringClass`
+and `StarMemClass` instances of `VonNeumannAlgebra` with the missing `ℂ`-scalar closure, so that
+the subtype `↥N` inherits an `Algebra ℂ ↥N` structure (via `SubalgebraClass.toAlgebra`) and
+`*`-algebra equivalences `N ≃⋆ₐ[ℂ] _` typecheck. -/
+instance instSMulMemClass : SMulMemClass (VonNeumannAlgebra H) ℂ (H →L[ℂ] H) where
+  smul_mem {s} c _ hx := s.toStarSubalgebra.smul_mem hx c
 
 /-- The commutant `(s ∪ s⋆)′` of the *symmetrized* set of an arbitrary set of bounded operators,
 packaged as a von Neumann algebra. For star-closed `s` — in particular for every self-adjoint
@@ -179,5 +205,39 @@ theorem conj_commutantSet (U : H ≃ₗᵢ[ℂ] H') (s : Set (H →L[ℂ] H)) :
 theorem conj_generated (U : H ≃ₗᵢ[ℂ] H') (s : Set (H →L[ℂ] H)) :
     conj U (generated s) = generated (⇑U.conjStarAlgEquiv '' s) := by
   rw [generated, ← conj_commutant, conj_commutantSet, generated]
+
+/-! ### Transport of a von Neumann algebra as a `*`-algebra -/
+
+/-- **Spatial conjugation as a `*`-algebra equivalence.** The conjugation `*`-isomorphism
+`U.conjStarAlgEquiv : B(H) ≃⋆ₐ B(H')` restricts to a `*`-isomorphism `N ≃⋆ₐ U N U⋆` of the
+subtypes: the carrier of `conj U N` is exactly the image of `N` (`coe_conj`), so `x ↦ U x U⋆`
+is a bijection between the two. -/
+noncomputable def conjEquiv (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) :
+    N ≃⋆ₐ[ℂ] conj U N where
+  toFun x := ⟨U.conjStarAlgEquiv (x : H →L[ℂ] H), by
+    rw [← SetLike.mem_coe, coe_conj]; exact ⟨x, x.2, rfl⟩⟩
+  invFun y := ⟨U.conjStarAlgEquiv.symm (y : H' →L[ℂ] H'), by
+    have hy : (y : H' →L[ℂ] H') ∈ ⇑U.conjStarAlgEquiv '' (N : Set (H →L[ℂ] H)) := by
+      rw [← coe_conj]; exact y.2
+    obtain ⟨x, hx, hxy⟩ := hy
+    rw [← SetLike.mem_coe, ← hxy, StarAlgEquiv.symm_apply_apply]; exact hx⟩
+  left_inv x := Subtype.ext (U.conjStarAlgEquiv.symm_apply_apply (x : H →L[ℂ] H))
+  right_inv y := Subtype.ext (U.conjStarAlgEquiv.apply_symm_apply (y : H' →L[ℂ] H'))
+  map_mul' x y := Subtype.ext (map_mul U.conjStarAlgEquiv (x : H →L[ℂ] H) (y : H →L[ℂ] H))
+  map_add' x y := Subtype.ext (map_add U.conjStarAlgEquiv (x : H →L[ℂ] H) (y : H →L[ℂ] H))
+  map_smul' c x := Subtype.ext (map_smul U.conjStarAlgEquiv c (x : H →L[ℂ] H))
+  map_star' x := Subtype.ext (map_star U.conjStarAlgEquiv (x : H →L[ℂ] H))
+
+/-- **Definitional-equality transport as a `*`-algebra equivalence.** Two equal von Neumann
+algebras have `*`-isomorphic subtypes via the identity on operators. -/
+def equivOfEq {N M : VonNeumannAlgebra H} (h : N = M) : N ≃⋆ₐ[ℂ] M where
+  toFun x := ⟨x, h ▸ x.2⟩
+  invFun x := ⟨x, h ▸ x.2⟩
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_mul' _ _ := rfl
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  map_star' _ := rfl
 
 end VonNeumannAlgebra
