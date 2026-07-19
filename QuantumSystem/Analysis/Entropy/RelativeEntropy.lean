@@ -1711,7 +1711,7 @@ variable {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- **Quantum relative entropy is invariant under trace-preserving `*-`algebra
 equivalence** (PosDef case). -/
-theorem relativeEntropy_map_starAlgEquiv_posDef
+lemma relativeEntropy_map_starAlgEquiv_posDef
     (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ)
     (hφ : ∀ A, (φ A).trace = A.trace) :
@@ -1752,7 +1752,7 @@ theorem relativeEntropy_map_starAlgEquiv_posDef
   rw [h_log_ρ, h_log_σ, DensityMatrix.map_toMatrix, ← map_sub, ← map_mul, hφ]
 
 /-- Specialisation of `relativeEntropy_map_starAlgEquiv_posDef` to reindexing. -/
-theorem relativeEntropy_mapEquiv_posDef
+lemma relativeEntropy_mapEquiv_posDef
     (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef) (e : n ≃ m) :
     D(ρ.mapEquiv e ∥ σ.mapEquiv e) = D(ρ ∥ σ) :=
   relativeEntropy_map_starAlgEquiv_posDef ρ σ hρ hσ _ _

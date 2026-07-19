@@ -35,11 +35,11 @@ def IsCentralProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
   IsStarProjection e ∧ e ∈ N ∧ e ∈ N.commutant
 
 /-- `0` is a central projection. -/
-theorem isCentralProjection_zero (N : VonNeumannAlgebra H) : IsCentralProjection N 0 :=
+lemma isCentralProjection_zero (N : VonNeumannAlgebra H) : IsCentralProjection N 0 :=
   ⟨IsStarProjection.zero _, zero_mem _, zero_mem _⟩
 
 /-- `1` is a central projection. -/
-theorem isCentralProjection_one (N : VonNeumannAlgebra H) : IsCentralProjection N 1 :=
+lemma isCentralProjection_one (N : VonNeumannAlgebra H) : IsCentralProjection N 1 :=
   ⟨IsStarProjection.one _, one_mem _, one_mem _⟩
 
 /-- In a factor, every central projection is trivial: it is `0` or `1`. This is the

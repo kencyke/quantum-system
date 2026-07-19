@@ -76,7 +76,7 @@ private lemma trace_reindex {α : Type*} [AddCommMonoid α] (e : m ≃ n) (M : M
 omit [DecidableEq m] [DecidableEq n] in
 /-- Trace is preserved when reindexing the matrix indices via a bijection.
     This is the `submatrix _ e e` form (vs. `reindex` form in `trace_reindex`). -/
-theorem trace_submatrix_eq {α : Type*} [AddCommMonoid α] (M : Matrix m m α) (e : n ≃ m) :
+lemma trace_submatrix_eq {α : Type*} [AddCommMonoid α] (M : Matrix m m α) (e : n ≃ m) :
     (M.submatrix e e).trace = M.trace := by
   rw [show (M.submatrix e e) = reindex e.symm e.symm M from rfl]
   exact trace_reindex e.symm M
@@ -89,7 +89,7 @@ theorem trace_reindexStarAlgEquiv [CommSemiring R] [Semiring A] [StarRing A] [Al
   exact trace_reindex e M
 
 /-- Trace is preserved under unitary conjugation `Unitary.conjStarAlgAut`. -/
-theorem trace_conjStarAlgAut [CommSemiring R] [CommSemiring A] [StarRing A] [Algebra R A]
+lemma trace_conjStarAlgAut [CommSemiring R] [CommSemiring A] [StarRing A] [Algebra R A]
     (u : unitary (Matrix n n A)) (M : Matrix n n A) :
     (Unitary.conjStarAlgAut R (Matrix n n A) u M).trace = M.trace := by
   rw [Unitary.conjStarAlgAut_apply, trace_mul_cycle,
@@ -157,7 +157,7 @@ is naturally available (e.g. from region index-set equivalences). -/
 omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 /-- `Matrix.PosSemidef` is preserved by reindexing the index set via a bijection.
     Specialisation of `PosSemidef.map_starAlgEquiv` to `reindexStarAlgEquiv`. -/
-theorem PosSemidef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosSemidef) (e : n ≃ m) :
+lemma PosSemidef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosSemidef) (e : n ≃ m) :
     (M.submatrix e e).PosSemidef := by
   classical
   letI := Fintype.ofFinite m
@@ -168,7 +168,7 @@ theorem PosSemidef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosSemidef) 
 omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 /-- `Matrix.PosDef` is preserved by reindexing the index set via a bijection.
     Specialisation of `PosDef.map_starAlgEquiv` to `reindexStarAlgEquiv`. -/
-theorem PosDef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosDef) (e : n ≃ m) :
+lemma PosDef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosDef) (e : n ≃ m) :
     (M.submatrix e e).PosDef := by
   classical
   letI := Fintype.ofFinite m

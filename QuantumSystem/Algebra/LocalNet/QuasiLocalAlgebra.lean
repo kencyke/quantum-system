@@ -47,7 +47,7 @@ noncomputable abbrev quasiLocalAlgebra : Type _ :=
     `Star`, `StarRing`, `Algebra ℂ` and `StarModule ℂ` instances come from the general
     direct-limit constructions, since each `algebra Λ` is a `ℂ`-`*`-algebra and `incl` is a
     `*`-algebra homomorphism. -/
-@[simp] theorem star_mk {Λ : Finset sites} (X : N.algebra Λ) :
+@[simp] lemma star_mk {Λ : Finset sites} (X : N.algebra Λ) :
     star (⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨Λ, star X⟩⟧ := rfl
 
 /-- The canonical embedding `𝔄(Λ) ↪ 𝔄_loc` of a local algebra into the algebra of local
@@ -58,17 +58,17 @@ noncomputable def ιLocal (Λ : Finset sites) :
 
 /-- Compatibility of the cocone with the isotony embeddings: including `X` from `Λ` into the
     larger region `Λ'` and then into `𝔄_loc` is the same as including `X` directly. -/
-@[simp] theorem ιLocal_incl {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (X : N.algebra Λ) :
+@[simp] lemma ιLocal_incl {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (X : N.algebra Λ) :
     N.ιLocal Λ' (N.incl h X) = N.ιLocal Λ X :=
   DirectLimit.Ring.of_f (G := N.algebra) (f := fun _ _ h => N.incl h) h X
 
 /-- The cocone is a `*`-homomorphism: it intertwines the local and quasi-local involutions. -/
-@[simp] theorem ιLocal_star {Λ : Finset sites} (X : N.algebra Λ) :
+@[simp] lemma ιLocal_star {Λ : Finset sites} (X : N.algebra Λ) :
     N.ιLocal Λ (star X) = star (N.ιLocal Λ X) :=
   (star_mk (N := N) X).symm
 
 /-- The cocone of the inductive limit absorbs the region-equality transport. -/
-@[simp] theorem ιLocal_algebraCongr {Λ Λ' : Finset sites} (h : Λ = Λ') (x : N.algebra Λ) :
+@[simp] lemma ιLocal_algebraCongr {Λ Λ' : Finset sites} (h : Λ = Λ') (x : N.algebra Λ) :
     N.ιLocal Λ' (N.algebraCongr h x) = N.ιLocal Λ x := by
   subst h; rfl
 
@@ -109,7 +109,7 @@ variable [N.Faithful]
 noncomputable instance : NormedRing N.quasiLocalAlgebra :=
   DirectLimit.cstarNormedRing (fun _ _ h => Faithful.incl_injective h)
 
-@[simp] theorem norm_mk {Λ : Finset sites} (X : N.algebra Λ) :
+@[simp] lemma norm_mk {Λ : Finset sites} (X : N.algebra Λ) :
     ‖(⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra)‖ = ‖X‖ := rfl
 
 /-- The C⋆-norm is compatible with the `ℂ`-algebra structure. -/
@@ -178,12 +178,12 @@ noncomputable def quasiLocalCovariance : N.quasiLocalAlgebra →+* N.quasiLocalA
       rw [a.β_incl h]
       exact N.ιLocal_incl _ _)
 
-@[simp] theorem quasiLocalCovariance_mk {Λ : Finset sites} (X : N.algebra Λ) :
+@[simp] lemma quasiLocalCovariance_mk {Λ : Finset sites} (X : N.algebra Λ) :
   a.quasiLocalCovariance (⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨a.region Λ, a.β Λ X⟩⟧ :=
   rfl
 
 /-- The covariance action of the identity covariance is the identity: `β_{id} = id`. -/
-@[simp] theorem quasiLocalCovariance_id :
+@[simp] lemma quasiLocalCovariance_id :
   (Covariance.id N).quasiLocalCovariance = RingHom.id N.quasiLocalAlgebra := by
   refine RingHom.ext fun z => ?_
   induction z using DirectLimit.induction with
@@ -191,7 +191,7 @@ noncomputable def quasiLocalCovariance : N.quasiLocalAlgebra →+* N.quasiLocalA
 
 /-- **Functoriality of the covariance action**: composing covariances composes their actions,
     `β_{a∘b} = β_a ∘ β_b`. -/
-@[simp] theorem quasiLocalCovariance_comp (a b : N.Covariance) :
+@[simp] lemma quasiLocalCovariance_comp (a b : N.Covariance) :
   (a.comp b).quasiLocalCovariance = a.quasiLocalCovariance.comp b.quasiLocalCovariance := by
   refine RingHom.ext fun z => ?_
   induction z using DirectLimit.induction with
@@ -200,19 +200,19 @@ noncomputable def quasiLocalCovariance : N.quasiLocalAlgebra →+* N.quasiLocalA
     exact N.ιLocal_algebraCongr _ _
 
 /-- The covariance action sends the unit covariance to the identity: `β_1 = id`. -/
-@[simp] theorem quasiLocalCovariance_one :
+@[simp] lemma quasiLocalCovariance_one :
     (1 : N.Covariance).quasiLocalCovariance = RingHom.id N.quasiLocalAlgebra := by
   rw [one_def, quasiLocalCovariance_id]
 
 /-- The covariance action is multiplicative: `β_{a·b} = β_a ∘ β_b`. -/
-theorem quasiLocalCovariance_mul (a b : N.Covariance) :
+lemma quasiLocalCovariance_mul (a b : N.Covariance) :
     (a * b).quasiLocalCovariance = a.quasiLocalCovariance.comp b.quasiLocalCovariance := by
   rw [mul_def, quasiLocalCovariance_comp]
 
 /-! #### The covariance action as a `*`-automorphism -/
 
 /-- The covariance action is `ℂ`-linear: `β_a (c • z) = c • β_a z`, since each `β` is. -/
-theorem quasiLocalCovariance_smul (c : ℂ) (z : N.quasiLocalAlgebra) :
+lemma quasiLocalCovariance_smul (c : ℂ) (z : N.quasiLocalAlgebra) :
   a.quasiLocalCovariance (c • z) = c • a.quasiLocalCovariance z := by
   induction z using DirectLimit.induction with
   | _ Λ X =>
@@ -222,7 +222,7 @@ theorem quasiLocalCovariance_smul (c : ℂ) (z : N.quasiLocalAlgebra) :
 
 /-- The covariance action preserves the involution: `β_a (star z) = star (β_a z)`, since each `β`
     is a `*`-isomorphism. -/
-theorem quasiLocalCovariance_star (z : N.quasiLocalAlgebra) :
+lemma quasiLocalCovariance_star (z : N.quasiLocalAlgebra) :
   a.quasiLocalCovariance (star z) = star (a.quasiLocalCovariance z) := by
   induction z using DirectLimit.induction with
   | _ Λ X =>
@@ -246,10 +246,10 @@ noncomputable def quasiLocalCovarianceEquiv :
   map_smul' := a.quasiLocalCovariance_smul
   map_star' := a.quasiLocalCovariance_star
 
-@[simp] theorem quasiLocalCovarianceEquiv_apply (z : N.quasiLocalAlgebra) :
+@[simp] lemma quasiLocalCovarianceEquiv_apply (z : N.quasiLocalAlgebra) :
     a.quasiLocalCovarianceEquiv z = a.quasiLocalCovariance z := rfl
 
-@[simp] theorem quasiLocalCovarianceEquiv_symm_apply (z : N.quasiLocalAlgebra) :
+@[simp] lemma quasiLocalCovarianceEquiv_symm_apply (z : N.quasiLocalAlgebra) :
     a.quasiLocalCovarianceEquiv.symm z = a⁻¹.quasiLocalCovariance z := rfl
 
 /-- A covariance of the net acts on the algebra of local observables by `*`-algebra automorphisms,
@@ -266,7 +266,7 @@ noncomputable def quasiLocalCovarianceHom :
     simp only [quasiLocalCovarianceEquiv_apply, quasiLocalCovariance_mul, RingHom.comp_apply,
       StarAlgEquiv.mul_apply]
 
-@[simp] theorem quasiLocalCovarianceHom_apply (z : N.quasiLocalAlgebra) :
+@[simp] lemma quasiLocalCovarianceHom_apply (z : N.quasiLocalAlgebra) :
     quasiLocalCovarianceHom a z = a.quasiLocalCovariance z := rfl
 
 /-! #### The covariance automorphism of the quasi-local C⋆-algebra -/
@@ -277,7 +277,7 @@ variable [N.Faithful]
 
 /-- The covariance action is **isometric** on the algebra of local observables: each `β` is a
     `*`-isomorphism of C⋆-algebras, hence norm-preserving. -/
-theorem quasiLocalCovariance_norm (z : N.quasiLocalAlgebra) :
+lemma quasiLocalCovariance_norm (z : N.quasiLocalAlgebra) :
   ‖a.quasiLocalCovariance z‖ = ‖z‖ := by
   induction z using DirectLimit.induction with
   | _ Λ X =>
@@ -286,14 +286,14 @@ theorem quasiLocalCovariance_norm (z : N.quasiLocalAlgebra) :
 
 /-- The covariance automorphism of the algebra of local observables is uniformly continuous (it is
     an isometry), so it extends to the C⋆-completion. -/
-theorem quasiLocalCovarianceEquiv_uniformContinuous :
+lemma quasiLocalCovarianceEquiv_uniformContinuous :
     UniformContinuous a.quasiLocalCovarianceEquiv :=
   (AddMonoidHomClass.isometry_of_norm _ (fun z => by
     rw [quasiLocalCovarianceEquiv_apply]; exact a.quasiLocalCovariance_norm z)).uniformContinuous
 
 /-- The inverse covariance automorphism is uniformly continuous as well (the action of `a⁻¹` is
     also an isometry). -/
-theorem quasiLocalCovarianceEquiv_symm_uniformContinuous :
+lemma quasiLocalCovarianceEquiv_symm_uniformContinuous :
     UniformContinuous a.quasiLocalCovarianceEquiv.symm := by
   have h : ∀ z, ‖a.quasiLocalCovarianceEquiv.symm z‖ = ‖z‖ := fun z => by
     rw [quasiLocalCovarianceEquiv_symm_apply]; exact a⁻¹.quasiLocalCovariance_norm z
@@ -307,12 +307,12 @@ noncomputable def quasiLocalCStarCovarianceEquiv :
     a.quasiLocalCovarianceEquiv_uniformContinuous
     a.quasiLocalCovarianceEquiv_symm_uniformContinuous
 
-@[simp] theorem quasiLocalCStarCovarianceEquiv_coe (z : N.quasiLocalAlgebra) :
+@[simp] lemma quasiLocalCStarCovarianceEquiv_coe (z : N.quasiLocalAlgebra) :
     a.quasiLocalCStarCovarianceEquiv (↑z : N.quasiLocalCStarAlgebra) =
       ↑(a.quasiLocalCovariance z) :=
   UniformSpace.Completion.mapStarAlgEquiv_coe _ _ _ z
 
-theorem quasiLocalCStarCovarianceEquiv_continuous :
+lemma quasiLocalCStarCovarianceEquiv_continuous :
     Continuous (⇑a.quasiLocalCStarCovarianceEquiv) :=
   UniformSpace.Completion.continuous_map
 
@@ -339,7 +339,7 @@ noncomputable def quasiLocalCStarCovarianceHom :
     intro w
     simp only [quasiLocalCStarCovarianceEquiv_coe, quasiLocalCovariance_mul, RingHom.comp_apply]
 
-@[simp] theorem quasiLocalCStarCovarianceHom_apply
+@[simp] lemma quasiLocalCStarCovarianceHom_apply
     (z : N.quasiLocalCStarAlgebra) :
   quasiLocalCStarCovarianceHom a z = a.quasiLocalCStarCovarianceEquiv z := rfl
 

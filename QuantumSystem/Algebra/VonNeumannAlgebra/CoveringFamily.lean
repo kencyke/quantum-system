@@ -36,7 +36,7 @@ namespace VonNeumannAlgebra
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- The range projection of a Murray–von Neumann equivalence with nonzero source is nonzero. -/
-theorem MvNEquiv.ne_zero {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
+lemma MvNEquiv.ne_zero {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
     (h : p ∼[N] q) (hp : p ≠ 0) : q ≠ 0 := by
   obtain ⟨v, _, hvpi, hvp, hvq⟩ := h
   intro hq0
@@ -50,7 +50,7 @@ theorem MvNEquiv.ne_zero {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
 /-- **Minimality transports along Murray–von Neumann equivalence.** If `e` is a minimal projection
 and `e ∼[N] p`, then `p` is minimal: with `v⋆v = e` and `vv⋆ = p`, the corner computes as
 `p a p = v (e (v⋆ a v) e) v⋆ = c • v e v⋆ = c • p`. -/
-theorem IsMinimalProjection.of_mvNEquiv {N : VonNeumannAlgebra H} {e p : H →L[ℂ] H}
+lemma IsMinimalProjection.of_mvNEquiv {N : VonNeumannAlgebra H} {e p : H →L[ℂ] H}
     (he : IsMinimalProjection N e) (h : e ∼[N] p) : IsMinimalProjection N p := by
   have hpproj : IsStarProjection p := h.isStarProjection_right
   have hp0 : p ≠ 0 := h.ne_zero he.2.2.1
@@ -80,13 +80,13 @@ def OrthEquivFam (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) (F : Set (H →L[
 
 /-- When `e` is minimal, every member of an `OrthEquivFam` for `e` is itself a minimal
 projection, since minimality transports along `∼[N]` (`IsMinimalProjection.of_mvNEquiv`). -/
-theorem OrthEquivFam.isMinimalProjection_of_mem {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma OrthEquivFam.isMinimalProjection_of_mem {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F) (he : IsMinimalProjection N e)
     {p : H →L[ℂ] H} (hp : p ∈ F) : IsMinimalProjection N p :=
   he.of_mvNEquiv (hF.1 p hp).2.2.2
 
 /-- By Zorn's lemma, there is a maximal orthogonal family of `e`-equivalent projections. -/
-theorem exists_maximal_orthEquivFam (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) :
+lemma exists_maximal_orthEquivFam (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) :
     ∃ F, OrthEquivFam N e F ∧ ∀ G, OrthEquivFam N e G → F ⊆ G → G ⊆ F := by
   obtain ⟨F, hFmax⟩ := zorn_subset {F | OrthEquivFam N e F} (by
     intro c hcsub hchain
@@ -101,7 +101,7 @@ theorem exists_maximal_orthEquivFam (N : VonNeumannAlgebra H) (e : H →L[ℂ] H
 /-- The orthogonal projection onto the closed span of the ranges of an `OrthEquivFam` lies in `N`,
 because that subspace is invariant under the commutant `N'`: for `y ∈ N'` and `f ∈ F ⊆ N`,
 `y (f x) = (y f) x = (f y) x = f (y x)` lies in the range of `f`. -/
-theorem OrthEquivFam.starProjection_mem {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma OrthEquivFam.starProjection_mem {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F) :
     (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure.starProjection ∈ N := by
   set S : Set H := {y | ∃ f ∈ F, ∃ x, f x = y} with hS

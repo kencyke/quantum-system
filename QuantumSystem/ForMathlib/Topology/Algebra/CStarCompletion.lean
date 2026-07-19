@@ -28,7 +28,7 @@ section StarRing
 
 variable [NormedRing A] [StarRing A] [NormedStarGroup A]
 
-theorem uniformContinuous_star : UniformContinuous (star : A → A) := by
+lemma uniformContinuous_star : UniformContinuous (star : A → A) := by
   have h : Isometry (star : A → A) :=
     AddMonoidHomClass.isometry_of_norm (starAddEquiv (R := A)) fun x => norm_star x
   exact h.uniformContinuous
@@ -36,7 +36,7 @@ theorem uniformContinuous_star : UniformContinuous (star : A → A) := by
 /-- Involution on a completion, the continuous extension of the involution on the dense image. -/
 noncomputable instance : Star (Completion A) := ⟨Completion.map star⟩
 
-@[simp] theorem star_coe (a : A) : star (↑a : Completion A) = (↑(star a) : Completion A) :=
+@[simp] lemma star_coe (a : A) : star (↑a : Completion A) = (↑(star a) : Completion A) :=
   map_coe uniformContinuous_star a
 
 instance : ContinuousStar (Completion A) := ⟨continuous_map⟩
@@ -164,12 +164,12 @@ noncomputable def mapStarAlgEquiv (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinu
     intro a
     rw [star_coe, map_coe he, map_coe he, star_coe, map_star]
 
-@[simp] theorem mapStarAlgEquiv_coe (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
+@[simp] lemma mapStarAlgEquiv_coe (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
     (he' : UniformContinuous e.symm) (a : A) :
     mapStarAlgEquiv e he he' (↑a : Completion A) = (↑(e a) : Completion B) :=
   map_coe he a
 
-theorem coe_mapStarAlgEquiv (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
+lemma coe_mapStarAlgEquiv (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
     (he' : UniformContinuous e.symm) :
     ⇑(mapStarAlgEquiv e he he') = Completion.map e :=
   rfl

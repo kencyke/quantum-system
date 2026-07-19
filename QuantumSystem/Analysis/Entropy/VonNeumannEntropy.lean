@@ -38,7 +38,7 @@ end QuantumInfo
 
 /-- Casting `S(ρ)` back to ℂ recovers −Tr(ρ log ρ) exactly, confirming the trace is real. -/
 @[simp]
-theorem vonNeumannEntropy_ofReal (ρ : DensityMatrix n) :
+lemma vonNeumannEntropy_ofReal (ρ : DensityMatrix n) :
     (S(ρ) : ℂ) = -(Tr (ρ * log ρ)) := by
   unfold vonNeumannEntropy
   rw [Complex.ofReal_neg]
@@ -60,7 +60,7 @@ theorem vonNeumannEntropy_eq_negMulLog_sum (ρ : DensityMatrix n) :
 
 /-- `vonNeumannEntropy` expressed via Mathlib's continuous functional calculus
     `cfc` applied to `Real.negMulLog`, enabling continuity arguments. -/
-theorem vonNeumannEntropy_eq_cfc_re (ρ : DensityMatrix n) :
+lemma vonNeumannEntropy_eq_cfc_re (ρ : DensityMatrix n) :
     vonNeumannEntropy ρ =
       (Tr (cfc Real.negMulLog ρ.toMatrix)).re := by
   rw [trace_cfc ρ.isHermitian, vonNeumannEntropy_eq_negMulLog_sum]
@@ -311,7 +311,7 @@ variable {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- **Von Neumann entropy is invariant under trace-preserving `*-`algebra equivalence**
 (PosDef case). -/
-theorem vonNeumannEntropy_map_starAlgEquiv_posDef
+lemma vonNeumannEntropy_map_starAlgEquiv_posDef
     (ρ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ)
     (hφ : ∀ A, (φ A).trace = A.trace) :
@@ -331,7 +331,7 @@ theorem vonNeumannEntropy_map_starAlgEquiv_posDef
   rw [h_tr]
 
 /-- Specialisation of `vonNeumannEntropy_map_starAlgEquiv_posDef` to reindexing. -/
-theorem vonNeumannEntropy_mapEquiv_posDef
+lemma vonNeumannEntropy_mapEquiv_posDef
     (ρ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (e : n ≃ m) :
     S(ρ.mapEquiv e) = S(ρ) :=
   vonNeumannEntropy_map_starAlgEquiv_posDef ρ hρ _ _
@@ -351,7 +351,7 @@ variable {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- **Eigenvalue formula for the entropy of a regularization**:
     `S(regularize ρ ε) = ∑ᵢ Real.negMulLog ((1-ε) λᵢ + ε/d)` where `λᵢ = ρ.eigenvalues i`. -/
-theorem vonNeumannEntropy_regularize_eq_negMulLog_sum [Nonempty n]
+lemma vonNeumannEntropy_regularize_eq_negMulLog_sum [Nonempty n]
     (ρ : DensityMatrix n) {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
     vonNeumannEntropy (DensityMatrix.regularize ρ hε hε') =
       ∑ i, Real.negMulLog ((1 - ε) * ρ.isHermitian.eigenvalues i + ε / Fintype.card n) := by
@@ -369,7 +369,7 @@ theorem vonNeumannEntropy_regularize_eq_negMulLog_sum [Nonempty n]
 
 /-- The eigenvalue-formula function `ε ↦ ∑ᵢ Real.negMulLog ((1-ε) λᵢ + ε/d)` is
     continuous in `ε ∈ ℝ`. -/
-theorem continuous_negMulLog_regularize_sum (ρ : DensityMatrix n) :
+lemma continuous_negMulLog_regularize_sum (ρ : DensityMatrix n) :
     Continuous (fun ε : ℝ =>
       ∑ i, Real.negMulLog ((1 - ε) * ρ.isHermitian.eigenvalues i + ε / Fintype.card n)) := by
   refine continuous_finset_sum _ fun i _ => ?_
@@ -383,7 +383,7 @@ theorem continuous_negMulLog_regularize_sum (ρ : DensityMatrix n) :
 This is the key continuity result. Combined with `vonNeumannEntropy_regularize_eq_negMulLog_sum`,
 it gives `lim_{ε → 0+} S(regularize ρ ε) = S(ρ)`, the foundation for extending PosDef-only
 theorems to PosSemidef. -/
-theorem tendsto_negMulLog_regularize_sum_zero (ρ : DensityMatrix n) :
+lemma tendsto_negMulLog_regularize_sum_zero (ρ : DensityMatrix n) :
     Filter.Tendsto
       (fun ε : ℝ =>
         ∑ i, Real.negMulLog ((1 - ε) * ρ.isHermitian.eigenvalues i + ε / Fintype.card n))
@@ -401,7 +401,7 @@ theorem tendsto_negMulLog_regularize_sum_zero (ρ : DensityMatrix n) :
 
 For any density matrix `ρ` and equivalence `e`, the entropy is preserved:
 `S(ρ.mapEquiv e) = S(ρ)`. Proven via regularization + limit. -/
-theorem vonNeumannEntropy_mapEquiv [Nonempty n] [Nonempty m]
+lemma vonNeumannEntropy_mapEquiv [Nonempty n] [Nonempty m]
     (ρ : DensityMatrix m) (e : n ≃ m) :
     vonNeumannEntropy (DensityMatrix.mapEquiv ρ e) = vonNeumannEntropy ρ := by
   have h_eq : ∀ ε : ℝ, ∀ (hε_pos : 0 < ε) (hε_le : ε ≤ 1),

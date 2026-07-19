@@ -44,30 +44,30 @@ oriented with source projection `v_p⋆ v_p = e` (`pisom_source`) and range proj
 noncomputable def OrthEquivFam.pisom (hF : OrthEquivFam N e F) (p : F) : H →L[ℂ] H :=
   (hF.1 p.1 p.2).2.2.2.choose
 
-theorem OrthEquivFam.pisom_mem (hF : OrthEquivFam N e F) (p : F) : hF.pisom p ∈ N :=
+lemma OrthEquivFam.pisom_mem (hF : OrthEquivFam N e F) (p : F) : hF.pisom p ∈ N :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.1
 
-theorem OrthEquivFam.pisom_isPI (hF : OrthEquivFam N e F) (p : F) :
+lemma OrthEquivFam.pisom_isPI (hF : OrthEquivFam N e F) (p : F) :
     IsPartialIsometry (hF.pisom p) :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.2.1
 
-theorem OrthEquivFam.pisom_source (hF : OrthEquivFam N e F) (p : F) :
+lemma OrthEquivFam.pisom_source (hF : OrthEquivFam N e F) (p : F) :
     star (hF.pisom p) * hF.pisom p = e :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.2.2.1
 
-theorem OrthEquivFam.pisom_range (hF : OrthEquivFam N e F) (p : F) :
+lemma OrthEquivFam.pisom_range (hF : OrthEquivFam N e F) (p : F) :
     hF.pisom p * star (hF.pisom p) = (p : H →L[ℂ] H) :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.2.2.2
 
 /-- `v_p e = v_p`: the source projection acts as a right unit on `v_p`. -/
-theorem OrthEquivFam.pisom_mul_source (hF : OrthEquivFam N e F) (p : F) :
+lemma OrthEquivFam.pisom_mul_source (hF : OrthEquivFam N e F) (p : F) :
     hF.pisom p * e = hF.pisom p := by
   have h : hF.pisom p * (star (hF.pisom p) * hF.pisom p) = hF.pisom p := by
     rw [← mul_assoc]; exact hF.pisom_isPI p
   rwa [hF.pisom_source p] at h
 
 /-- `e v_p⋆ = v_p⋆`: the source projection acts as a left unit on `v_p⋆`. -/
-theorem OrthEquivFam.e_mul_star_pisom (hF : OrthEquivFam N e F) (p : F) :
+lemma OrthEquivFam.e_mul_star_pisom (hF : OrthEquivFam N e F) (p : F) :
     e * star (hF.pisom p) = star (hF.pisom p) := by
   have h : star (hF.pisom p) * hF.pisom p * star (hF.pisom p) = star (hF.pisom p) := by
     have h' : star (hF.pisom p) * star (star (hF.pisom p)) * star (hF.pisom p)
@@ -76,7 +76,7 @@ theorem OrthEquivFam.e_mul_star_pisom (hF : OrthEquivFam N e F) (p : F) :
   rwa [hF.pisom_source p] at h
 
 /-- For distinct family members the partial isometries are orthogonal: `v_q⋆ v_r = 0`. -/
-theorem OrthEquivFam.star_pisom_mul_pisom_of_ne (hF : OrthEquivFam N e F) {q r : F}
+lemma OrthEquivFam.star_pisom_mul_pisom_of_ne (hF : OrthEquivFam N e F) {q r : F}
     (hqr : q ≠ r) : star (hF.pisom q) * hF.pisom r = 0 := by
   have hq : (q : H →L[ℂ] H) * hF.pisom q = hF.pisom q := by
     have h : hF.pisom q * star (hF.pisom q) * hF.pisom q = hF.pisom q := hF.pisom_isPI q
@@ -99,11 +99,11 @@ noncomputable def OrthEquivFam.matrixUnit (hF : OrthEquivFam N e F) (p q : F) : 
   hF.pisom p * star (hF.pisom q)
 
 /-- Definitional unfolding of the matrix unit: `e_{pq} = v_p v_q⋆`. -/
-theorem OrthEquivFam.matrixUnit_def (hF : OrthEquivFam N e F) (p q : F) :
+lemma OrthEquivFam.matrixUnit_def (hF : OrthEquivFam N e F) (p q : F) :
     hF.matrixUnit p q = hF.pisom p * star (hF.pisom q) := rfl
 
 /-- Matrix units lie in `N`. -/
-theorem OrthEquivFam.matrixUnit_mem (hF : OrthEquivFam N e F) (p q : F) :
+lemma OrthEquivFam.matrixUnit_mem (hF : OrthEquivFam N e F) (p q : F) :
     hF.matrixUnit p q ∈ N :=
   mul_mem (hF.pisom_mem p) (star_mem (hF.pisom_mem q))
 

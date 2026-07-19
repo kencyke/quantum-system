@@ -50,7 +50,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 variable {N : VonNeumannAlgebra H} {e : H →L[ℂ] H} {F : Set (H →L[ℂ] H)}
 
 /-- The set of matrix units is contained in `N`. -/
-theorem OrthEquivFam.matrixUnit_subset (hF : OrthEquivFam N e F) :
+lemma OrthEquivFam.matrixUnit_subset (hF : OrthEquivFam N e F) :
     Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2) ⊆ (N : Set (H →L[ℂ] H)) := by
   rintro x ⟨pq, rfl⟩
   exact hF.matrixUnit_mem pq.1 pq.2
@@ -143,7 +143,7 @@ theorem OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
   exact hL.unique hR
 
 /-- The centralizer of the matrix units is contained in the commutant of `N`. -/
-theorem OrthEquivFam.centralizer_subset_commutant (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.centralizer_subset_commutant (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
     Set.centralizer (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2))

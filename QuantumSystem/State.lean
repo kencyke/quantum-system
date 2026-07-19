@@ -58,14 +58,14 @@ namespace DensityMatrix
 variable {n : Type*} [Fintype n] [DecidableEq n]
 
 /-- Two density matrices are equal iff their underlying matrices are equal. -/
-@[ext] theorem ext {ρ σ : DensityMatrix n} (h : ρ.toMatrix = σ.toMatrix) : ρ = σ := by
+@[ext] lemma ext {ρ σ : DensityMatrix n} (h : ρ.toMatrix = σ.toMatrix) : ρ = σ := by
   cases ρ; cases σ; congr
 
 /-- A density matrix is Hermitian. -/
-theorem isHermitian (ρ : DensityMatrix n) : ρ.toMatrix.IsHermitian := ρ.posSemidef.1
+lemma isHermitian (ρ : DensityMatrix n) : ρ.toMatrix.IsHermitian := ρ.posSemidef.1
 
 /-- All eigenvalues of a density matrix are non-negative. -/
-theorem eigenvalues_nonneg (ρ : DensityMatrix n) (i : n) :
+lemma eigenvalues_nonneg (ρ : DensityMatrix n) (i : n) :
     0 ≤ ρ.isHermitian.eigenvalues i :=
   (ρ.isHermitian.posSemidef_iff_eigenvalues_nonneg.mp ρ.posSemidef) i
 
@@ -96,20 +96,20 @@ lemma eigenvalue_le_one (ρ : DensityMatrix n) (i : n) :
 instance : Coe (DensityMatrix n) (Matrix n n ℂ) where
   coe := DensityMatrix.toMatrix
 
-@[simp] theorem coe_eq_toMatrix (ρ : DensityMatrix n) : (↑ρ : Matrix n n ℂ) = ρ.toMatrix := rfl
+@[simp] lemma coe_eq_toMatrix (ρ : DensityMatrix n) : (↑ρ : Matrix n n ℂ) = ρ.toMatrix := rfl
 
 /-- Density matrix times a complex matrix (coercion on the left). -/
 noncomputable instance : HMul (DensityMatrix n) (Matrix n n ℂ) (Matrix n n ℂ) where
   hMul ρ A := ρ.toMatrix * A
 
-@[simp] theorem densityMatrix_hmul_eq (ρ : DensityMatrix n) (A : Matrix n n ℂ) :
+@[simp] lemma densityMatrix_hmul_eq (ρ : DensityMatrix n) (A : Matrix n n ℂ) :
     ρ * A = ρ.toMatrix * A := rfl
 
 /-- Real-power of a density matrix, delegated to matrix rpow. -/
 noncomputable instance : HPow (DensityMatrix n) ℝ (Matrix n n ℂ) where
   hPow ρ s := ρ.toMatrix ^ s
 
-theorem densityMatrix_hpow_eq (ρ : DensityMatrix n) (s : ℝ) :
+lemma densityMatrix_hpow_eq (ρ : DensityMatrix n) (s : ℝ) :
     ρ ^ s = ρ.toMatrix ^ s := rfl
 
 /-- Matrix logarithm of a density matrix: `log ρ = U diag(log λᵢ) U*`,
@@ -152,7 +152,7 @@ noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)
     push_cast
     ring
 
-@[simp] theorem mix_toMatrix (ρ₁ ρ₂ : DensityMatrix n)
+@[simp] lemma mix_toMatrix (ρ₁ ρ₂ : DensityMatrix n)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1) :
     ↑(mix ρ₁ ρ₂ p hp hp1) = p • (↑ρ₁ : Matrix n n ℂ) + (1 - p) • ↑ρ₂ := rfl
 
@@ -326,7 +326,7 @@ theorem regularize_eq_cfc (ρ : DensityMatrix n) {ε : ℝ}
 The regularization commutes with `mapEquiv`. -/
 
 /-- For an `Equiv e : n ≃ m`, the regularization commutes with `mapEquiv`. -/
-theorem regularize_mapEquiv {m : Type*} [Fintype m] [DecidableEq m] [Nonempty m]
+lemma regularize_mapEquiv {m : Type*} [Fintype m] [DecidableEq m] [Nonempty m]
     (ρ : DensityMatrix m) (e : n ≃ m) {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 1) :
     regularize (mapEquiv ρ e) hε hε' = mapEquiv (regularize ρ hε hε') e := by
   apply DensityMatrix.ext

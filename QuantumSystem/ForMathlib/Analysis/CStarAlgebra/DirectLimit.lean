@@ -38,7 +38,7 @@ noncomputable def cstarNorm : DirectLimit F f → ℝ :=
     (fun i j h x => (NonUnitalStarAlgHom.norm_map (f i j h) (hf i j h) x).symm)
 
 omit [Nonempty ι] in
-@[simp] theorem cstarNorm_mk (i) (x : F i) :
+@[simp] lemma cstarNorm_mk (i) (x : F i) :
     cstarNorm hf (⟦⟨i, x⟩⟧ : DirectLimit F f) = ‖x‖ := rfl
 
 /-- The bundled ring norm on the direct limit. -/

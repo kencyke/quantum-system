@@ -38,7 +38,7 @@ variable {α : Type*} {𝕜 : Type*} [RCLike 𝕜] {G G' : α → Type*}
   [∀ i, NormedAddCommGroup (G' i)] [∀ i, NormedSpace 𝕜 (G' i)]
 
 /-- A family of isometries preserves `Memℓp`: norms are pointwise unchanged. -/
-theorem memℓp_congr_linearIsometryEquiv (e : ∀ i, G i ≃ₗᵢ[𝕜] G' i) {f : ∀ i, G i}
+lemma memℓp_congr_linearIsometryEquiv (e : ∀ i, G i ≃ₗᵢ[𝕜] G' i) {f : ∀ i, G i}
     (hf : Memℓp f 2) : Memℓp (fun i => e i (f i)) 2 := by
   apply Memℓp.of_norm
   have hnorm : (fun i => ‖e i (f i)‖) = fun i => ‖f i‖ := funext fun i => (e i).norm_map (f i)
@@ -81,7 +81,7 @@ namespace IsPartialIsometry
 
 /-- For `x` in the source subspace (`p x = x` where `p = v⋆v`), the map preserves the norm:
 `‖v x‖ = ‖x‖`. -/
-theorem norm_apply {v : H →L[ℂ] H} {p : H →L[ℂ] H}
+lemma norm_apply {v : H →L[ℂ] H} {p : H →L[ℂ] H}
     (hsource : star v * v = p) {x : H} (hx : (p : H →L[ℂ] H) x = x) : ‖v x‖ = ‖x‖ := by
   have hinner : (inner ℂ (v x) (v x) : ℂ) = inner ℂ x x := by
     rw [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.star_eq_adjoint,
@@ -94,7 +94,7 @@ theorem norm_apply {v : H →L[ℂ] H} {p : H →L[ℂ] H}
 
 /-- The image of any vector under a partial isometry lands in the range subspace: if `q = v v⋆`
 then `q (v x) = v x`. -/
-theorem apply_mem_range {v : H →L[ℂ] H} (hv : IsPartialIsometry v) {q : H →L[ℂ] H}
+lemma apply_mem_range {v : H →L[ℂ] H} (hv : IsPartialIsometry v) {q : H →L[ℂ] H}
     (hrange : v * star v = q) (x : H) : (q : H →L[ℂ] H) (v x) = v x := by
   rw [← ContinuousLinearMap.mul_apply, ← hrange, hv]
 
@@ -137,13 +137,13 @@ noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v
 end IsPartialIsometry
 
 /-- A vector in the range of a star projection is fixed by it: `p x = x`. -/
-theorem IsStarProjection.apply_eq_self_of_mem_range {p : H →L[ℂ] H} (hp : IsStarProjection p)
+lemma IsStarProjection.apply_eq_self_of_mem_range {p : H →L[ℂ] H} (hp : IsStarProjection p)
     {x : H} (hx : x ∈ LinearMap.range (p : H →ₗ[ℂ] H)) : (p : H →L[ℂ] H) x = x := by
   obtain ⟨z, rfl⟩ := hx
   rw [ContinuousLinearMap.coe_coe, ← ContinuousLinearMap.mul_apply, hp.isIdempotentElem]
 
 /-- The range of a star projection is closed: it equals the kernel of `1 - p`. -/
-theorem IsStarProjection.isClosed_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
+lemma IsStarProjection.isClosed_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
     IsClosed (LinearMap.range (p : H →ₗ[ℂ] H) : Set H) := by
   have hker : LinearMap.range (p : H →ₗ[ℂ] H)
       = LinearMap.ker ((1 - p : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
@@ -159,13 +159,13 @@ theorem IsStarProjection.isClosed_range {p : H →L[ℂ] H} (hp : IsStarProjecti
   exact (1 - p).isClosed_ker
 
 /-- The range of a star projection, as a closed subspace, is complete. -/
-theorem IsStarProjection.completeSpace_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
+lemma IsStarProjection.completeSpace_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
     CompleteSpace (LinearMap.range (p : H →ₗ[ℂ] H)) :=
   completeSpace_coe_iff_isComplete.mpr hp.isClosed_range.isComplete
 
 /-- The inverse of the partial-isometry-induced equivalence acts as `v⋆`: for `η` in the range
 subspace, `(sourceRangeEquiv v).symm η = v⋆ η`. -/
-theorem IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
+lemma IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
     {p q : H →L[ℂ] H} (hsource : star v * v = p) (hrange : v * star v = q)
     (η : LinearMap.range (q : H →ₗ[ℂ] H)) :
     ((hv.sourceRangeEquiv hsource hrange).symm η : H) = star v (η : H) := by
@@ -190,7 +190,7 @@ namespace VonNeumannAlgebra
 
 /-- A covering orthogonal family of star projections (each in `OrthEquivFam`) realises `H` as the
 internal Hilbert sum of the ranges. -/
-theorem OrthEquivFam.isHilbertSum {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma OrthEquivFam.isHilbertSum {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
     IsHilbertSum ℂ (fun i : F => LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H))
@@ -244,7 +244,7 @@ noncomputable def OrthEquivFam.multiplicityEquiv {N : VonNeumannAlgebra H} {e : 
 /-- The `i`-th Hilbert-sum coordinate of `y`, embedded back into `H`, is the orthogonal projection
 `(↑i) y`. This identifies the abstract Hilbert-sum decomposition with the explicit family of range
 projections. -/
-theorem OrthEquivFam.coe_hilbertSumEquiv_apply {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma OrthEquivFam.coe_hilbertSumEquiv_apply {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     (y : H) (i : F) :

@@ -50,7 +50,7 @@ theorem isFactor_boundedLinearOperators : IsFactor (⊤ : VonNeumannAlgebra H) :
 /-- **A rank-one projection is minimal in `B(H)`.** For a unit vector `u`, the rank-one orthogonal
 projection `|u⟩⟨u|` is a minimal projection of `⊤`: it is a star projection, nonzero, and its corner
 is trivial because `|u⟩⟨u| ∘ a ∘ |u⟩⟨u| = ⟪u, a u⟫ • |u⟩⟨u|`. -/
-theorem isMinimalProjection_rankOne_boundedLinearOperators {u : H} (hu : ‖u‖ = 1) :
+lemma isMinimalProjection_rankOne_boundedLinearOperators {u : H} (hu : ‖u‖ = 1) :
     IsMinimalProjection (⊤ : VonNeumannAlgebra H) (rankOne ℂ u u) := by
   have hu_ne : u ≠ 0 := by rw [← norm_pos_iff, hu]; norm_num
   refine ⟨⟨isIdempotentElem_rankOne_self hu, ?_⟩, mem_top _,

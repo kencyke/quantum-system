@@ -41,7 +41,7 @@ orthogonal complement of its kernel. -/
 def IsPartialIsometry (v : R) : Prop := v * star v * v = v
 
 /-- Every star projection is a partial isometry (with itself as source and range). -/
-theorem IsStarProjection.isPartialIsometry {p : R} (hp : IsStarProjection p) :
+lemma IsStarProjection.isPartialIsometry {p : R} (hp : IsStarProjection p) :
     IsPartialIsometry p := by
   unfold IsPartialIsometry
   rw [hp.isSelfAdjoint.star_eq, hp.isIdempotentElem.eq, hp.isIdempotentElem.eq]

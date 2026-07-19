@@ -79,7 +79,7 @@ abbrev QuantumChannel (n : Type*) (m : Type*) [Fintype n] [Fintype m] :=
   { Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ // IsQuantumChannel Φ }
 
 /-- The identity map is a quantum channel. -/
-theorem isQuantumChannel_id : IsQuantumChannel (LinearMap.id : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) where
+lemma isQuantumChannel_id : IsQuantumChannel (LinearMap.id : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) where
   completelyPositive := by
     classical
     -- id has Kraus representation with single operator K = I
@@ -90,7 +90,7 @@ theorem isQuantumChannel_id : IsQuantumChannel (LinearMap.id : Matrix n n ℂ �
   tracePreserving := fun _ => rfl
 
 /-- Composition of quantum channels is a quantum channel. -/
-theorem QuantumChannel.comp
+lemma QuantumChannel.comp
     (Φ : QuantumChannel n m) (Ψ : QuantumChannel m k) :
     IsQuantumChannel (Ψ.val.comp Φ.val) where
   completelyPositive := by
@@ -127,7 +127,7 @@ theorem QuantumChannel.comp
 omit [Fintype m] in
 /-- A completely positive map preserves Hermitianity of matrices.
 If Φ(A) = Σᵢ Kᵢ A Kᵢ† and A is Hermitian, then Φ(A) is Hermitian. -/
-theorem IsCompletelyPositive.map_isHermitian
+lemma IsCompletelyPositive.map_isHermitian
     {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} (hΦ : IsCompletelyPositive Φ)
     {A : Matrix n n ℂ} (hA : A.IsHermitian) : (Φ A).IsHermitian := by
   classical
@@ -169,7 +169,7 @@ private lemma matrix_eq_one_of_trace_mul [DecidableEq n]
   Matrix.ext_iff_trace_mul_right.mpr fun A => by rw [one_mul]; exact h A
 
 /-- Trace-preserving Kraus channels satisfy the completeness relation: ∑ₖ Kₖ† Kₖ = I. -/
-theorem QuantumChannel.kraus_sum_eq_one [DecidableEq n]
+lemma QuantumChannel.kraus_sum_eq_one [DecidableEq n]
     (Φ : QuantumChannel n m)
     {r : ℕ} {K : Fin r → Matrix m n ℂ} (hK : ∀ A, Φ.val A = ∑ i, K i * A * (K i)ᴴ) :
     ∑ i, (K i)ᴴ * K i = 1 := by
@@ -211,7 +211,7 @@ lemma stinespringIsometry_conjTranspose_mul {r : ℕ} [DecidableEq n]
 
 /-- The right partial trace preserves positive semidefiniteness (it is a sum of principal
 submatrices). -/
-theorem traceRight_posSemidef {l n : Type*} [Fintype n]
+lemma traceRight_posSemidef {l n : Type*} [Fintype n]
     {M : Matrix (l × n) (l × n) ℂ} (hM : M.PosSemidef) : (Matrix.traceRight M).PosSemidef := by
   have hsum : Matrix.traceRight M
       = ∑ k : n, M.submatrix (fun i : l => (i, k)) (fun j : l => (j, k)) := by
@@ -220,7 +220,7 @@ theorem traceRight_posSemidef {l n : Type*} [Fintype n]
   exact Matrix.posSemidef_sum _ (fun k _ => hM.submatrix _)
 
 /-- The left partial trace preserves positive semidefiniteness. -/
-theorem traceLeft_posSemidef {l n : Type*} [Fintype n]
+lemma traceLeft_posSemidef {l n : Type*} [Fintype n]
     {M : Matrix (n × l) (n × l) ℂ} (hM : M.PosSemidef) : (Matrix.traceLeft M).PosSemidef := by
   have hsum : Matrix.traceLeft M
       = ∑ k : n, M.submatrix (fun i : l => (k, i)) (fun j : l => (k, j)) := by
@@ -229,13 +229,13 @@ theorem traceLeft_posSemidef {l n : Type*} [Fintype n]
   exact Matrix.posSemidef_sum _ (fun k _ => hM.submatrix _)
 
 /-- Reindexing by an index equivalence preserves the trace. -/
-@[simp] theorem trace_reindex_self {n m : Type*} [Fintype n] [Fintype m] (e : n ≃ m)
+@[simp] lemma trace_reindex_self {n m : Type*} [Fintype n] [Fintype m] (e : n ≃ m)
     (M : Matrix n n ℂ) : (M.reindex e e).trace = M.trace := by
   simp only [Matrix.trace, Matrix.diag_apply, Matrix.reindex_apply, Matrix.submatrix_apply]
   exact Equiv.sum_comp e.symm (fun i => M i i)
 
 /-- The right partial trace of the identity scales by the cardinality of the traced factor. -/
-theorem traceRight_one {X Y : Type*} [DecidableEq X] [Fintype Y] [DecidableEq Y] :
+lemma traceRight_one {X Y : Type*} [DecidableEq X] [Fintype Y] [DecidableEq Y] :
     Matrix.traceRight (1 : Matrix (X × Y) (X × Y) ℂ) = (Fintype.card Y : ℂ) • (1 : Matrix X X ℂ) := by
   ext i j
   simp only [traceRight_apply, Matrix.smul_apply, smul_eq_mul, Matrix.one_apply, Prod.mk.injEq]
@@ -244,7 +244,7 @@ theorem traceRight_one {X Y : Type*} [DecidableEq X] [Fintype Y] [DecidableEq Y]
   · simp [hij]
 
 /-- The left partial trace of the identity scales by the cardinality of the traced factor. -/
-theorem traceLeft_one {X Y : Type*} [Fintype X] [DecidableEq X] [DecidableEq Y] :
+lemma traceLeft_one {X Y : Type*} [Fintype X] [DecidableEq X] [DecidableEq Y] :
     Matrix.traceLeft (1 : Matrix (X × Y) (X × Y) ℂ) = (Fintype.card X : ℂ) • (1 : Matrix Y Y ℂ) := by
   ext i j
   simp only [traceLeft_apply, Matrix.smul_apply, smul_eq_mul, Matrix.one_apply, Prod.mk.injEq]
@@ -287,7 +287,7 @@ def traceRightKraus {X Y : Type*} [DecidableEq X] [DecidableEq Y] (y : Y) :
     Matrix X (X × Y) ℂ :=
   Matrix.of fun x p => if p = (x, y) then (1 : ℂ) else 0
 
-theorem isCompletelyPositive_partialTraceRight {X Y : Type*} [Fintype X] [Fintype Y] :
+lemma isCompletelyPositive_partialTraceRight {X Y : Type*} [Fintype X] [Fintype Y] :
     IsCompletelyPositive (partialTraceRightₗ (X := X) (Y := Y)) := by
   classical
   refine ⟨Fintype.card Y, fun i => traceRightKraus ((Fintype.equivFin Y).symm i), fun M => ?_⟩
@@ -312,7 +312,7 @@ theorem isCompletelyPositive_partialTraceRight {X Y : Type*} [Fintype X] [Fintyp
     rw [if_neg hq]; simp
   · simp
 
-theorem isTracePreserving_partialTraceRight {X Y : Type*} [Fintype X] [Fintype Y] :
+lemma isTracePreserving_partialTraceRight {X Y : Type*} [Fintype X] [Fintype Y] :
     IsTracePreserving (partialTraceRightₗ (X := X) (Y := Y)) :=
   fun M => by rw [partialTraceRightₗ_apply]; exact trace_traceRight M
 
@@ -337,7 +337,7 @@ noncomputable def reindexₗ {Z W : Type*} (e : Z ≃ W) :
 def reindexKraus {Z W : Type*} [DecidableEq Z] (e : Z ≃ W) : Matrix W Z ℂ :=
   Matrix.of fun w z => if z = e.symm w then (1 : ℂ) else 0
 
-theorem isCompletelyPositive_reindexₗ {Z W : Type*} [Fintype Z] (e : Z ≃ W) :
+lemma isCompletelyPositive_reindexₗ {Z W : Type*} [Fintype Z] (e : Z ≃ W) :
     IsCompletelyPositive (reindexₗ e) := by
   classical
   refine ⟨1, fun _ => reindexKraus e, fun M => ?_⟩
@@ -358,7 +358,7 @@ theorem isCompletelyPositive_reindexₗ {Z W : Type*} [Fintype Z] (e : Z ≃ W) 
     rw [if_neg hz]; simp
   · simp
 
-theorem isTracePreserving_reindexₗ {Z W : Type*} [Fintype Z] [Fintype W] (e : Z ≃ W) :
+lemma isTracePreserving_reindexₗ {Z W : Type*} [Fintype Z] [Fintype W] (e : Z ≃ W) :
     IsTracePreserving (reindexₗ e) := by
   intro M
   rw [reindexₗ_apply]

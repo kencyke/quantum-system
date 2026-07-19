@@ -55,17 +55,17 @@ hypotheses throughout this file.) -/
 local notation "δ" => lpDelta
 
 omit [CompleteSpace H] in
-theorem lpDelta_apply [DecidableEq F] (i : F) :
+lemma lpDelta_apply [DecidableEq F] (i : F) :
     lpDelta i = lp.single (E := fun _ : F => ℂ) 2 i (1 : ℂ) := rfl
 
 omit [CompleteSpace H] in
 /-- The basis vectors `δ_i` are unit vectors. -/
-theorem lpDelta_norm [DecidableEq F] (i : F) : ‖lpDelta i‖ = 1 := by
+lemma lpDelta_norm [DecidableEq F] (i : F) : ‖lpDelta i‖ = 1 := by
   rw [lpDelta_apply, lp.norm_single (by norm_num), norm_one]
 
 omit [CompleteSpace H] in
 /-- The standard basis vectors `δ_i` span a dense subspace of `ℓ²(F)`. -/
-theorem dense_span_lpDelta [DecidableEq F] :
+lemma dense_span_lpDelta [DecidableEq F] :
     Dense (Submodule.span ℂ (Set.range (lpDelta : F → lp (fun _ : F => ℂ) 2)) :
       Set (lp (fun _ : F => ℂ) 2)) := by
   intro g
@@ -121,7 +121,7 @@ attribute [local irreducible] OrthEquivFam.spatialEquiv OrthEquivFam.multiplicit
 
 /-- The `p`-th coordinate of `U (e_{pq} y)` collapses to the single term `δ_p ⊗̂ (v_q⋆ y)`: every
 other coordinate vanishes because `v_i⋆ e_{pq} = 0` for `i ≠ p`. -/
-theorem OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
     hF.spatialEquiv htop (hF.matrixUnit p q y)
@@ -139,7 +139,7 @@ theorem OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
     Subtype.ext (by rw [hcoe]; rfl), ← tmulRightL_apply, map_zero]
 
 /-- The surviving coordinates agree: `v_p⋆ (e_{pq} y) = v_q⋆ y`. -/
-theorem OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     (p q : F) (y : H) :
     hF.multiplicityEquiv htop (hF.matrixUnit p q y) p = hF.multiplicityEquiv htop y q := by
@@ -151,7 +151,7 @@ theorem OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F
 
 /-- The amplified rank-one operator on `U y` collapses to the single term `δ_p ⊗̂ (v_q⋆ y)`: the
 rank-one operator picks out the `q`-th coordinate. -/
-theorem OrthEquivFam.amplifyLeft_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.amplifyLeft_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
     amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)) (hF.spatialEquiv htop y)
@@ -180,7 +180,7 @@ theorem OrthEquivFam.amplifyLeft_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
 
 /-- **Intertwining relation.** The spatial isomorphism intertwines the matrix unit `e_{pq}` with
 the amplified rank-one operator: `U (e_{pq} y) = (|δ_p⟩⟨δ_q| ⊗̂ 1) (U y)`. -/
-theorem OrthEquivFam.spatialEquiv_intertwine (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.spatialEquiv_intertwine (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
     hF.spatialEquiv htop (hF.matrixUnit p q y)
@@ -211,7 +211,7 @@ proof computes the commutant: an operator commuting with all the amplified rank-
 in `1 ⊗̄ B(eH)` (the dense slice lemma, using that `{δ_p}` spans densely), and conversely
 `1 ⊗̄ B(eH)` commutes with them; so the commutant is `vnTensorRight`, whose commutant is
 `vnTensorLeft`. -/
-theorem generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
+lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
     [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] :
     VonNeumannAlgebra.generated (Set.range (fun pq : F × F =>
         amplifyLeft (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))
@@ -294,7 +294,7 @@ theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_vnTensorRight (hF : OrthEqui
 /-- **Split inclusion (left factor).** Any von Neumann subalgebra `A₁ ≤ N` of the type I factor `N`
 is carried by the spatial isomorphism into the left tensor factor: `U A₁ U⋆ ≤ B(ℓ²(F)) ⊗̄ 1`. This
 is monotonicity of spatial conjugation composed with `U N U⋆ = vnTensorLeft`. -/
-theorem OrthEquivFam.conj_spatialEquiv_le_vnTensorLeft (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.conj_spatialEquiv_le_vnTensorLeft (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))]
@@ -306,7 +306,7 @@ theorem OrthEquivFam.conj_spatialEquiv_le_vnTensorLeft (hF : OrthEquivFam N e F)
 (equivalently `A₂ ⊆ N'`) is carried by the spatial isomorphism into the right tensor factor:
 `U A₂ U⋆ ≤ 1 ⊗̄ B(eH)`. The hypothesis `N ≤ A₂'` is the split-property condition; taking commutants
 turns it into `A₂ ≤ N'`, and monotonicity composed with `U N' U⋆ = vnTensorRight` finishes. -/
-theorem OrthEquivFam.conj_spatialEquiv_le_vnTensorRight (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.conj_spatialEquiv_le_vnTensorRight (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))]
@@ -321,7 +321,7 @@ theorem OrthEquivFam.conj_spatialEquiv_le_vnTensorRight (hF : OrthEquivFam N e F
 omit [CompleteSpace H] in
 /-- A covering orthogonal family of a nonzero Hilbert space is nonempty: its ranges span a dense
 subspace, which would be `{0}` were the family empty. -/
-theorem OrthEquivFam.nonempty_of_top [Nontrivial H] {F : Set (H →L[ℂ] H)}
+lemma OrthEquivFam.nonempty_of_top [Nontrivial H] {F : Set (H →L[ℂ] H)}
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
     Nonempty F := by
   rw [← not_isEmpty_iff]

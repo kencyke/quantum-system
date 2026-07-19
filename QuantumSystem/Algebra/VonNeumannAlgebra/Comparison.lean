@@ -48,23 +48,23 @@ namespace VonNeumannAlgebra
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- The source projection of a Murray–von Neumann equivalence is a star projection. -/
-theorem MvNEquiv.isStarProjection_left {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
+lemma MvNEquiv.isStarProjection_left {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
     (h : p ∼[N] q) : IsStarProjection p := by
   obtain ⟨v, _, hpi, hvp, _⟩ := h; exact hvp ▸ hpi.isStarProjection_star_mul_self
 
 /-- The range projection of a Murray–von Neumann equivalence is a star projection. -/
-theorem MvNEquiv.isStarProjection_right {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
+lemma MvNEquiv.isStarProjection_right {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
     (h : p ∼[N] q) : IsStarProjection q := by
   obtain ⟨v, _, hpi, _, hvq⟩ := h; exact hvq ▸ hpi.isStarProjection_mul_star_self
 
 /-- For projections, the subprojection relation `e * f = f` is left/right symmetric. -/
-theorem isStarProjection_subproj_comm {R : Type*} [Ring R] [StarRing R] {e f : R}
+lemma isStarProjection_subproj_comm {R : Type*} [Ring R] [StarRing R] {e f : R}
     (he : IsStarProjection e) (hf : IsStarProjection f) (h : e * f = f) : f * e = f := by
   have := congrArg star h
   rwa [star_mul, he.isSelfAdjoint.star_eq, hf.isSelfAdjoint.star_eq] at this
 
 /-- The source projection of a partial isometry acts as a right identity. -/
-theorem IsPartialIsometry.mul_source {R : Type*} [Monoid R] [StarMul R] {v : R}
+lemma IsPartialIsometry.mul_source {R : Type*} [Monoid R] [StarMul R] {v : R}
     (h : IsPartialIsometry v) : v * (star v * v) = v := by rw [← mul_assoc]; exact h
 
 /-- `p ≼ q` in `N`: `p` is Murray–von Neumann equivalent to a subprojection of `q`. -/
@@ -76,7 +76,7 @@ equivalent to a subprojection of `q` inside `N`. -/
 scoped notation:50 p:51 " ≼[" N "] " q:51 => MvNSub N p q
 
 /-- Subordination is reflexive on projections of `N`. -/
-theorem MvNSub.refl {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
+lemma MvNSub.refl {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
     (hp : IsStarProjection p) (hpN : p ∈ N) : p ≼[N] p :=
   ⟨p, hpN, hp.isIdempotentElem, MvNEquiv.refl hp hpN⟩
 
@@ -110,7 +110,7 @@ theorem MvNEquiv.exists_subproj_equiv {N : VonNeumannAlgebra H} {q r' q' : H →
       rw [← mul_assoc q' q' (star w), hq'.isIdempotentElem]
 
 /-- Subordination is transitive: `≼` is a preorder on the projections of `N`. -/
-theorem MvNSub.trans {N : VonNeumannAlgebra H} {p q r : H →L[ℂ] H}
+lemma MvNSub.trans {N : VonNeumannAlgebra H} {p q r : H →L[ℂ] H}
     (hpq : p ≼[N] q) (hqr : q ≼[N] r) : p ≼[N] r := by
   obtain ⟨q', hq'N, hqsub, hpq'⟩ := hpq
   obtain ⟨r', hr'N, hrsub, hqr'⟩ := hqr
@@ -155,7 +155,7 @@ theorem mvNSub_of_posCorner {N : VonNeumannAlgebra H} {e q a : H →L[ℂ] H}
 `q a e ≠ 0`, the corner element `(q a e)⋆ (q a e) = e (a⋆ q a) e` equals a *strictly positive
 real* scalar multiple of `e`. (Reality comes from self-adjointness; strict positivity from
 evaluating on a nonzero vector of `e H` on which `q a e` does not vanish.) -/
-theorem IsMinimalProjection.posCorner {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma IsMinimalProjection.posCorner {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsMinimalProjection N e) {q a : H →L[ℂ] H} (hq : IsStarProjection q)
     (hqN : q ∈ N) (haN : a ∈ N) (hne : q * a * e ≠ 0) :
     ∃ c : ℝ, 0 < c ∧ star (q * a * e) * (q * a * e) = (c : ℂ) • e := by
@@ -202,7 +202,7 @@ theorem IsMinimalProjection.posCorner {N : VonNeumannAlgebra H} {e : H →L[ℂ]
 /-- A minimal projection is subordinate to any projection it "meets": if some `a ∈ N` has
 `q a e ≠ 0`, then `e ≼ q`. Combined with central supports (which guarantee `q a e ≠ 0` for every
 nonzero `q` in a factor) this yields the comparison theorem `minimal e ≼ q`. -/
-theorem IsMinimalProjection.mvNSub_of_ne {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma IsMinimalProjection.mvNSub_of_ne {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsMinimalProjection N e) {q a : H →L[ℂ] H} (hq : IsStarProjection q)
     (hqN : q ∈ N) (haN : a ∈ N) (hne : q * a * e ≠ 0) : e ≼[N] q := by
   obtain ⟨c, hcpos, hcorner⟩ := he.posCorner hq hqN haN hne

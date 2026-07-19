@@ -95,7 +95,7 @@ lemma leftMulMatrix_rightMulMatrix_commute {m : Type*} [Fintype m] [DecidableEq 
   simpa [hcomp_left, hcomp_right] using hcomm
 
 /-- leftMulMatrix is additive: leftMulMatrix (A + B) = leftMulMatrix A + leftMulMatrix B -/
-theorem leftMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐋 (A + B) = 𝐋 A + 𝐋 B := by
   simp only [leftMulMatrix]
@@ -115,7 +115,7 @@ lemma leftMulMatrix_smul {m : Type*} [Fintype m] [DecidableEq m]
   exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_smul c (leftMul A)
 
 /-- rightMulMatrix is additive: rightMulMatrix (A + B) = rightMulMatrix A + rightMulMatrix B -/
-theorem rightMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐑 (A + B) = 𝐑 A + 𝐑 B := by
   simp only [rightMulMatrix]
@@ -135,7 +135,7 @@ lemma rightMulMatrix_smul {m : Type*} [Fintype m] [DecidableEq m]
   exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_smul c (rightMul A)
 
 /-- leftMulMatrix is homogeneous for real scalars -/
-theorem leftMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
     (r : ℝ) (A : Matrix m m ℂ) :
     𝐋 (r • A) = r • 𝐋 A := by
   have h : (r : ℂ) • A = r • A := by
@@ -146,7 +146,7 @@ theorem leftMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
   simp [Complex.real_smul]
 
 /-- rightMulMatrix is homogeneous for real scalars -/
-theorem rightMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
     (r : ℝ) (A : Matrix m m ℂ) :
     𝐑 (r • A) = r • 𝐑 A := by
   have h : (r : ℂ) • A = r • A := by
@@ -226,7 +226,7 @@ lemma matrixBasis_repr_apply {m : Type*} [Fintype m] [DecidableEq m]
     _ = M i j := hsum'
 
 /-- Entry `(i, j), (k, l)` of `leftMulMatrix A` equals `A i k` if `j = l`, else `0`. -/
-theorem leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
     (A : Matrix m m ℂ) (i j k l : m) :
     𝐋 A (i, j) (k, l) = if j = l then A i k else 0 := by
   classical
@@ -240,7 +240,7 @@ theorem leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
   · simp [hjl]
 
 /-- Entry `(i, j), (k, l)` of `rightMulMatrix B` equals `B l j` if `i = k`, else `0`. -/
-theorem rightMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
     (B : Matrix m m ℂ) (i j k l : m) :
     𝐑 B (i, j) (k, l) = if i = k then B l j else 0 := by
   classical
@@ -279,7 +279,7 @@ lemma leftRightMul_mulVec_vecConjTranspose {m : Type*} [Fintype m] [DecidableEq 
 
 /-- The quadratic form star(vec(K†)) ⬝ᵥ (leftMulMatrix X * rightMulMatrix Y) *ᵥ vec(K†)
 equals Tr(K * X * K† * Y). -/
-theorem quadForm_leftRightMul_eq_trace {m : Type*} [Fintype m] [DecidableEq m]
+lemma quadForm_leftRightMul_eq_trace {m : Type*} [Fintype m] [DecidableEq m]
     (X Y K : Matrix m m ℂ) :
     let v : (m × m) → ℂ := fun x => Kᴴ x.1 x.2
     star v ⬝ᵥ ((leftMulMatrix X * rightMulMatrix Y) *ᵥ v) =
@@ -315,7 +315,7 @@ lemma rightMulMatrix_eq_one_kronecker_transpose {m : Type*} [Fintype m] [Decidab
   · simp [rightMulMatrix_apply, Matrix.kroneckerMap_apply, Matrix.transpose_apply, hik]
 
 /-- `leftMulMatrix` preserves positive semidefiniteness. -/
-theorem leftMulMatrix_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) :
     (𝐋 A).PosSemidef := by
   classical
@@ -323,7 +323,7 @@ theorem leftMulMatrix_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
     (Matrix.PosSemidef.kronecker (m := m) (x := A) (y := (1 : Matrix m m ℂ)) hA posSemidef_one)
 
 /-- `rightMulMatrix` preserves positive definiteness. -/
-theorem rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
     {B : Matrix m m ℂ} (hB : B.PosDef) :
     (𝐑 B).PosDef := by
   classical
@@ -343,7 +343,7 @@ noncomputable def matrixPerspective {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- Congruence lemma for matrixPerspective: equal matrices give equal results
     regardless of the proof terms. -/
-theorem matrixPerspective_congr {m : Type*} [Fintype m] [DecidableEq m]
+lemma matrixPerspective_congr {m : Type*} [Fintype m] [DecidableEq m]
     (f : ℝ → ℝ) (L₁ L₂ R₁ R₂ : Matrix m m ℂ)
     (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef) (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
     (hL : L₁ = L₂) (hR : R₁ = R₂) :
@@ -782,7 +782,7 @@ lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [Decida
 equals −(L_{Aᵖ} · R_{B¹⁻ᵖ}) for PD matrices A, B and p ≥ 0.
 Here L = L_A, R = R_B, S = R^(⁻¹⁄₂), T = R^(¹⁄₂), and the perspective is
 T · f(S* L S) · T. -/
-theorem matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq m]
+lemma matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p)
     (hL_psd : (𝐋 A).PosSemidef) (hR_pd : (𝐑 B).PosDef) :
     matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) hL_psd hR_pd =

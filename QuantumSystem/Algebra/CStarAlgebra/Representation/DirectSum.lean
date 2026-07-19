@@ -113,7 +113,7 @@ lemma sectorEmbed_apply_coord_ne (F : SectorFamily.{u, v, w} A)
   exact lp.single_apply_ne
     (E := fun α'' : F.Index => (F.rep α'').H) 2 α v h
 
-@[simp] theorem sectorComponent_sectorEmbed (F : SectorFamily.{u, v, w} A)
+@[simp] lemma sectorComponent_sectorEmbed (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H) :
     sectorComponent F α (sectorEmbed F α v) = v := by
   change (sectorEmbed F α v).val α = v
@@ -295,7 +295,7 @@ noncomputable def directSumRep (F : SectorFamily.{u, v, w} A) :
     rfl
 
 /-- The operator-norm bound `‖F.directSumRep a‖ ≤ ‖a‖`. -/
-theorem directSumRep_norm_le (F : SectorFamily.{u, v, w} A) (a : A) :
+lemma directSumRep_norm_le (F : SectorFamily.{u, v, w} A) (a : A) :
     ‖F.directSumRep a‖ ≤ ‖a‖ := by
   change ‖F.directSumCLM a‖ ≤ ‖a‖
   exact LinearMap.mkContinuous_norm_le _ (norm_nonneg _) _

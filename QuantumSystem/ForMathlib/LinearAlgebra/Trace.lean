@@ -122,7 +122,7 @@ noncomputable def partialTrace (e : ℋ ≃ₗ[𝕜] A ⊗[𝕜] B) :
     (TensorProduct.endTensorEndAlgEquiv (R := 𝕜) (M := A) (N := B)).symm.toLinearMap ∘ₗ
     (e.conjAlgEquiv 𝕜).toLinearMap
 
-theorem partialTrace_apply (e : ℋ ≃ₗ[𝕜] A ⊗[𝕜] B) (ρ : Module.End 𝕜 ℋ) :
+lemma partialTrace_apply (e : ℋ ≃ₗ[𝕜] A ⊗[𝕜] B) (ρ : Module.End 𝕜 ℋ) :
     partialTrace e ρ = TensorProduct.partialTraceRight
       ((TensorProduct.endTensorEndAlgEquiv (R := 𝕜) (M := A) (N := B)).symm (e.conjAlgEquiv 𝕜 ρ)) :=
   rfl
@@ -145,7 +145,7 @@ private theorem endTensorEndAlgEquiv_symm_map_one (M : Module.End 𝕜 A) :
 
 /-- **`Tr_B((M⊗1)·ρ) = M·Tr_B(ρ)`**: the partial trace along `e` is a left module map over the
 ampliation, with `B` (the traced-out subspace) named explicitly by `e`. -/
-theorem partialTrace_ampliate_mul (e : ℋ ≃ₗ[𝕜] A ⊗[𝕜] B) (M : Module.End 𝕜 A)
+lemma partialTrace_ampliate_mul (e : ℋ ≃ₗ[𝕜] A ⊗[𝕜] B) (M : Module.End 𝕜 A)
     (ρ : Module.End 𝕜 ℋ) :
     partialTrace e (ampliate e M * ρ) = M * partialTrace e ρ := by
   rw [partialTrace_apply, partialTrace_apply, ampliate, map_mul (e.conjAlgEquiv 𝕜),
@@ -207,7 +207,7 @@ theorem exists_includeRight_of_commute_includeLeft
 omit [Module.Finite ℂ A] [Module.Free ℂ A] [Module.Finite ℂ B] [Module.Free ℂ B] in
 /-- **Commutant of `1 ⊗ End B`, algebra form.** An element of `End ℂ A ⊗ End ℂ B` that commutes
 with every `includeRight g = 1 ⊗ g` is of the form `includeLeft f = f ⊗ 1`. -/
-theorem exists_includeLeft_of_commute_includeRight
+lemma exists_includeLeft_of_commute_includeRight
     (S : Module.End ℂ A ⊗[ℂ] Module.End ℂ B)
     (hS : ∀ g : Module.End ℂ B,
       (Algebra.TensorProduct.includeRight (R := ℂ) (A := Module.End ℂ A)
@@ -288,7 +288,7 @@ theorem exists_map_one_of_commute_map_id
 /-- **Commutant of `1 ⊗ End B`, operator form.** An operator `T : End (A ⊗ B)` commuting with every
 `1 ⊗ g = TensorProduct.map 1 g` is an ampliation `f ⊗ 1 = TensorProduct.map f 1` of the first
 factor. -/
-theorem exists_map_id_of_commute_map_one
+lemma exists_map_id_of_commute_map_one
     (T : Module.End ℂ (A ⊗[ℂ] B))
     (hT : ∀ g : Module.End ℂ B,
       T ∘ₗ TensorProduct.map LinearMap.id g = TensorProduct.map LinearMap.id g ∘ₗ T) :

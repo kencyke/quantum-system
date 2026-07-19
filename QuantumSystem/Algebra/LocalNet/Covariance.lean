@@ -57,7 +57,7 @@ def region (Λ : Finset sites) : Finset sites := Λ.map a.σ.toEmbedding
 /-- **Extensionality** for covariances: two covariances with the same site permutation and the same
     local `*`-isomorphisms (compared along the induced region equality) are equal. The naturality
     field `β_incl` is a proposition, hence irrelevant. -/
-@[ext (iff := false)] theorem ext {s t : N.Covariance} (hσ : s.σ = t.σ)
+@[ext (iff := false)] lemma ext {s t : N.Covariance} (hσ : s.σ = t.σ)
     (hβ : ∀ (Λ : Finset sites) (x : N.algebra Λ) (e : s.region Λ = t.region Λ),
       N.algebraCongr e (s.β Λ x) = t.β Λ x) : s = t := by
   revert hσ hβ
@@ -72,14 +72,14 @@ def region (Λ : Finset sites) : Finset sites := Λ.map a.σ.toEmbedding
   rfl
 
 /-- Naturality of the inverse local `*`-isomorphisms with respect to isotony. -/
-theorem β_symm_incl {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (y : N.algebra (Λ.map a.σ.toEmbedding)) :
+lemma β_symm_incl {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (y : N.algebra (Λ.map a.σ.toEmbedding)) :
     (a.β Λ').symm (N.incl (Finset.map_subset_map.mpr h) y) = N.incl h ((a.β Λ).symm y) := by
   have key := a.β_incl h ((a.β Λ).symm y)
   rw [StarAlgEquiv.apply_symm_apply] at key
   rw [← key, StarAlgEquiv.symm_apply_apply]
 
 /-- The local `*`-isomorphisms commute with the region-equality transport. -/
-theorem β_algebraCongr {Λ Λ' : Finset sites} (e : Λ = Λ') (x : N.algebra Λ) :
+lemma β_algebraCongr {Λ Λ' : Finset sites} (e : Λ = Λ') (x : N.algebra Λ) :
     a.β Λ' (N.algebraCongr e x) = N.algebraCongr (by rw [e]) (a.β Λ x) := by
   subst e; simp
 
@@ -115,31 +115,31 @@ def inv (a : N.Covariance) : N.Covariance where
     rw [N.incl_algebraCongr _ _ h (Finset.map_subset_map.mpr (Finset.map_subset_map.mpr h)),
       a.β_symm_incl]
 
-@[simp] theorem id_β_apply (Λ : Finset sites) (x : N.algebra Λ) :
+@[simp] lemma id_β_apply (Λ : Finset sites) (x : N.algebra Λ) :
     (Covariance.id N).β Λ x =
       N.algebraCongr (show Λ = Λ.map (Equiv.refl sites).toEmbedding by simp) x :=
   rfl
 
-@[simp] theorem comp_β_apply (a b : N.Covariance) (Λ : Finset sites) (x : N.algebra Λ) :
+@[simp] lemma comp_β_apply (a b : N.Covariance) (Λ : Finset sites) (x : N.algebra Λ) :
     (a.comp b).β Λ x = N.algebraCongr (show (Λ.map b.σ.toEmbedding).map a.σ.toEmbedding
         = Λ.map (b.σ.trans a.σ).toEmbedding by simp [Finset.map_map, Equiv.trans_toEmbedding])
       (a.β (Λ.map b.σ.toEmbedding) (b.β Λ x)) :=
   rfl
 
-@[simp] theorem inv_β_apply (a : N.Covariance) (Λ : Finset sites) (x : N.algebra Λ) :
+@[simp] lemma inv_β_apply (a : N.Covariance) (Λ : Finset sites) (x : N.algebra Λ) :
     (Covariance.inv a).β Λ x = (a.β (Λ.map a.σ.symm.toEmbedding)).symm
       (N.algebraCongr (show (Λ.map a.σ.symm.toEmbedding).map a.σ.toEmbedding = Λ by
         simp [Finset.map_map]).symm x) :=
   rfl
 
-@[simp] theorem region_id (Λ : Finset sites) : (Covariance.id N).region Λ = Λ := by
+@[simp] lemma region_id (Λ : Finset sites) : (Covariance.id N).region Λ = Λ := by
   simp [region, Covariance.id]
 
-@[simp] theorem region_comp (a b : N.Covariance) (Λ : Finset sites) :
+@[simp] lemma region_comp (a b : N.Covariance) (Λ : Finset sites) :
     (a.comp b).region Λ = a.region (b.region Λ) := by
   simp [region, Covariance.comp, Finset.map_map, Equiv.trans_toEmbedding]
 
-theorem id_comp (a : N.Covariance) : (Covariance.id N).comp a = a := by
+lemma id_comp (a : N.Covariance) : (Covariance.id N).comp a = a := by
   refine Covariance.ext ?_ fun Λ x e => ?_
   · simp [Covariance.comp, Covariance.id]
   · rw [algebraCongr_eq_iff]
@@ -147,7 +147,7 @@ theorem id_comp (a : N.Covariance) : (Covariance.id N).comp a = a := by
     erw [algebraCongr_trans]
     rfl
 
-theorem comp_id (a : N.Covariance) : a.comp (Covariance.id N) = a := by
+lemma comp_id (a : N.Covariance) : a.comp (Covariance.id N) = a := by
   refine Covariance.ext ?_ fun Λ x e => ?_
   · simp [Covariance.comp, Covariance.id]
   · rw [algebraCongr_eq_iff]
@@ -155,7 +155,7 @@ theorem comp_id (a : N.Covariance) : a.comp (Covariance.id N) = a := by
     erw [a.β_algebraCongr, algebraCongr_trans]
     rfl
 
-theorem comp_assoc (a b c : N.Covariance) : (a.comp b).comp c = a.comp (b.comp c) := by
+lemma comp_assoc (a b c : N.Covariance) : (a.comp b).comp c = a.comp (b.comp c) := by
   refine Covariance.ext ?_ fun Λ x e => ?_
   · simp [Covariance.comp, Equiv.trans_assoc]
   · rw [algebraCongr_eq_iff]
@@ -163,7 +163,7 @@ theorem comp_assoc (a b c : N.Covariance) : (a.comp b).comp c = a.comp (b.comp c
     erw [a.β_algebraCongr, algebraCongr_trans, algebraCongr_trans, algebraCongr_trans]
     rfl
 
-theorem inv_comp (a : N.Covariance) : (Covariance.inv a).comp a = Covariance.id N := by
+lemma inv_comp (a : N.Covariance) : (Covariance.inv a).comp a = Covariance.id N := by
   refine Covariance.ext ?_ fun Λ x e => ?_
   · simp [Covariance.comp, Covariance.inv, Covariance.id, Equiv.self_trans_symm]
   · rw [algebraCongr_eq_iff]
@@ -185,13 +185,13 @@ noncomputable instance : Group N.Covariance where
   inv_mul_cancel := Covariance.inv_comp
 
 /-- The group multiplication is composition of covariances. -/
-theorem mul_def (a b : N.Covariance) : a * b = a.comp b := rfl
+lemma mul_def (a b : N.Covariance) : a * b = a.comp b := rfl
 
 /-- The group unit is the identity covariance. -/
-theorem one_def : (1 : N.Covariance) = Covariance.id N := rfl
+lemma one_def : (1 : N.Covariance) = Covariance.id N := rfl
 
 /-- The group inverse is the inverse covariance. -/
-theorem inv_def (a : N.Covariance) : a⁻¹ = a.inv := rfl
+lemma inv_def (a : N.Covariance) : a⁻¹ = a.inv := rfl
 
 end Covariance
 

@@ -76,7 +76,7 @@ theorem amplifyRight_mem_vnTensorRight (B : H₂ →L[ℂ] H₂) :
 /-- The commutant of `B(H₁) ⊗̄ 1` is the commutant of the range of `amplifyLeft` (bicommutant
 collapse). This reduces the tensor commutation theorem `vnTensorLeft.commutant = vnTensorRight`
 to the identity `(range amplifyLeft)' = 1 ⊗̄ B(H₂)`. -/
-theorem vnTensorLeft_commutant_eq_commutantSet :
+lemma vnTensorLeft_commutant_eq_commutantSet :
     (vnTensorLeft (H₁ := H₁) (H₂ := H₂)).commutant
       = VonNeumannAlgebra.commutantSet (Set.range (amplifyLeft (H₂ := H₂))) :=
   VonNeumannAlgebra.commutant_generated _
@@ -97,7 +97,7 @@ noncomputable def tmulRightL (f : H₁) : H₂ →L[ℂ] HilbertTensor H₁ H₂
     (LinearMap.mkContinuous (TensorProduct.mk ℂ H₁ H₂ f) ‖f‖ fun z => by
       rw [TensorProduct.mk_apply, TensorProduct.norm_tmul])
 
-@[simp] theorem tmulRightL_apply (f : H₁) (z : H₂) : tmulRightL f z = tmul f z := rfl
+@[simp] lemma tmulRightL_apply (f : H₁) (z : H₂) : tmulRightL f z = tmul f z := rfl
 
 /-- The left and right amplifications commute: `(A ⊗̂ 1)(1 ⊗̂ B) = A ⊗̂ B = (1 ⊗̂ B)(A ⊗̂ 1)`. -/
 theorem amplifyLeft_comp_amplifyRight (A : H₁ →L[ℂ] H₁) (B : H₂ →L[ℂ] H₂) :
@@ -119,7 +119,7 @@ variable [CompleteSpace H₂]
 
 /-- The adjoint of the inclusion `ι_e` acts on pure tensors as the `e`-slice
 `g ⊗ z ↦ ⟪e, g⟫ • z`. -/
-theorem adjoint_tmulRightL_tmul (e g : H₁) (z : H₂) :
+lemma adjoint_tmulRightL_tmul (e g : H₁) (z : H₂) :
     ContinuousLinearMap.adjoint (tmulRightL (H₂ := H₂) e) (tmul g z) = (inner ℂ e g) • z := by
   refine ext_inner_right ℂ fun y => ?_
   rw [ContinuousLinearMap.adjoint_inner_left, tmulRightL_apply, inner_tmul, inner_smul_left,
@@ -128,7 +128,7 @@ theorem adjoint_tmulRightL_tmul (e g : H₁) (z : H₂) :
 /-- The amplification of a rank-one operator `|f⟩⟨e|` factors through the `e`-slice and the
 inclusion `ι_f`: `(|f⟩⟨e|) ⊗̂ 1 = ι_f ∘ ι_e*`. This is the algebraic heart of the slice
 argument. -/
-theorem amplifyLeft_rankOne_eq (e f : H₁) :
+lemma amplifyLeft_rankOne_eq (e f : H₁) :
     amplifyLeft (H₂ := H₂) (InnerProductSpace.rankOne ℂ f e)
       = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) := by
   refine ContinuousLinearMap.ext fun w => ?_
@@ -149,7 +149,7 @@ amplifications `(|f⟩⟨e|) ⊗̂ 1` for `f` ranging over a set `D` whose span 
 fixed unit vector `e ∈ H₁`), then `T = 1 ⊗̂ S` for `S = ι_e* ∘ T ∘ ι_e`. The relation
 `T (f ⊗̂ y) = f ⊗̂ (S y)` is first established for `f ∈ D` and then extended to all `f` by density,
 working at the level of the bounded inclusions `ι_y : f ↦ f ⊗̂ y`. -/
-theorem exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set H₁)
+lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set H₁)
     (hD : Dense (Submodule.span ℂ D : Set H₁))
     (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
     (hT : ∀ f ∈ D, T.comp (amplifyLeft (InnerProductSpace.rankOne ℂ f e))
@@ -193,7 +193,7 @@ theorem exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D :
 /-- **Slice lemma (dense form).** If `T` commutes with the rank-one amplifications
 `(|f⟩⟨e|) ⊗̂ 1` for `f` ranging over a set `D` whose span is dense in `H₁` (and a fixed unit
 vector `e ∈ H₁`), then `T = 1 ⊗̂ S`, hence `T ∈ 1 ⊗̄ B(H₂)`. -/
-theorem mem_vnTensorRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set H₁)
+lemma mem_vnTensorRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set H₁)
     (hD : Dense (Submodule.span ℂ D : Set H₁))
     (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
     (hT : ∀ f ∈ D, T.comp (amplifyLeft (InnerProductSpace.rankOne ℂ f e))
@@ -204,7 +204,7 @@ theorem mem_vnTensorRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : S
 
 /-- **Slice lemma (explicit representation).** If `T` commutes with every left amplification
 `A ⊗̂ 1`, then `T = 1 ⊗̂ S` for `S = ι_e* ∘ T ∘ ι_e` (any unit vector `e ∈ H₁`). -/
-theorem exists_amplifyRight_of_commutes (e : H₁) (he : ‖e‖ = 1)
+lemma exists_amplifyRight_of_commutes (e : H₁) (he : ‖e‖ = 1)
     (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
     (hT : ∀ A : H₁ →L[ℂ] H₁, T.comp (amplifyLeft A) = (amplifyLeft A).comp T) :
     ∃ S : H₂ →L[ℂ] H₂, T = amplifyRight S :=
@@ -266,7 +266,7 @@ theorem vnTensorRight_commutant [CompleteSpace H₁] [CompleteSpace H₂] [Nontr
 
 /-- The right amplification `B ↦ 1 ⊗̂ B` is injective (for nontrivial `H₁`): evaluating on pure
 tensors `f ⊗̂ y` with `f ≠ 0` recovers `B y` up to the norm factor `‖f‖`. -/
-theorem amplifyRight_injective [Nontrivial H₁] :
+lemma amplifyRight_injective [Nontrivial H₁] :
     Function.Injective (amplifyRight (H₁ := H₁) (H₂ := H₂)) := by
   intro B₁ B₂ h
   obtain ⟨f, hf⟩ := exists_ne (0 : H₁)
@@ -286,7 +286,7 @@ theorem amplifyRight_injective [Nontrivial H₁] :
 `B(H₁) ⊗̄ 1` and `1 ⊗̄ B(H₂)` is a scalar: by the slice lemma it is `1 ⊗̂ S`, membership in
 `B(H₁) ⊗̄ 1 = (1 ⊗̄ B(H₂))'` makes `S` commute with all of `B(H₂)` — in particular with every
 rank-one operator — so `S` is scalar. -/
-theorem eq_smul_one_of_mem_vnTensorLeft_of_mem_vnTensorRight
+lemma eq_smul_one_of_mem_vnTensorLeft_of_mem_vnTensorRight
     [CompleteSpace H₁] [CompleteSpace H₂] [Nontrivial H₁]
     {x : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂}
     (hL : x ∈ vnTensorLeft (H₁ := H₁) (H₂ := H₂)) (hR : x ∈ vnTensorRight) :
@@ -339,7 +339,7 @@ is a `⋆`-isomorphism `B(H₁) ≃⋆ₐ B(H₁) ⊗̄ 1` (`amplifyLeftStarAlgE
 
 /-- The left amplification `A ↦ A ⊗̂ 1` is injective (for nontrivial `H₂`): evaluating on pure
 tensors `x ⊗̂ g` with `g ≠ 0` recovers `A x` up to the norm factor `‖g‖`. -/
-theorem amplifyLeft_injective [Nontrivial H₂] :
+lemma amplifyLeft_injective [Nontrivial H₂] :
     Function.Injective (amplifyLeft (H₁ := H₁) (H₂ := H₂)) := by
   intro A₁ A₂ h
   obtain ⟨g, hg⟩ := exists_ne (0 : H₂)
@@ -358,7 +358,7 @@ theorem amplifyLeft_injective [Nontrivial H₂] :
 /-- Every right amplification `1 ⊗̂ B` commutes with the factor `B(H₁) ⊗̄ 1`, i.e. lies in its
 commutant. This is the easy inclusion of the commutation theorem and needs no completeness or
 nontriviality hypotheses. -/
-theorem amplifyRight_mem_commutant_vnTensorLeft [CompleteSpace H₁] (B : H₂ →L[ℂ] H₂) :
+lemma amplifyRight_mem_commutant_vnTensorLeft [CompleteSpace H₁] (B : H₂ →L[ℂ] H₂) :
     amplifyRight (H₁ := H₁) B ∈ (vnTensorLeft (H₁ := H₁) (H₂ := H₂)).commutant := by
   rw [vnTensorLeft_commutant_eq_commutantSet, VonNeumannAlgebra.mem_commutantSet_iff]
   rintro h ⟨A, rfl⟩
@@ -373,7 +373,7 @@ theorem amplifyRight_mem_commutant_vnTensorLeft [CompleteSpace H₁] (B : H₂ �
 right amplification (`amplifyRight_mem_commutant_vnTensorLeft`); transporting through the swap
 equivalence `commEquiv` turns this into commutation with every left amplification on the swapped
 space, where the slice lemma `exists_amplifyRight_of_commutes` produces the operator. -/
-theorem exists_amplifyLeft_of_mem_vnTensorLeft [CompleteSpace H₁] [Nontrivial H₂]
+lemma exists_amplifyLeft_of_mem_vnTensorLeft [CompleteSpace H₁] [Nontrivial H₂]
     {T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂}
     (hT : T ∈ vnTensorLeft (H₁ := H₁) (H₂ := H₂)) :
     ∃ A : H₁ →L[ℂ] H₁, T = amplifyLeft A := by

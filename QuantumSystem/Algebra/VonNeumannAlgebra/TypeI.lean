@@ -59,7 +59,7 @@ def IsTypeI (N : VonNeumannAlgebra H) : Prop :=
 /-- A factor with a minimal projection is type I: the only nonzero central projection of a factor
 is `1` (`central_projection_eq`), and it dominates the minimal projection, which is abelian and
 nonzero. -/
-theorem IsFactor.isTypeI_of_exists_isMinimalProjection [Nontrivial H] {N : VonNeumannAlgebra H}
+lemma IsFactor.isTypeI_of_exists_isMinimalProjection [Nontrivial H] {N : VonNeumannAlgebra H}
     (hN : IsFactor N) (h : ∃ e : H →L[ℂ] H, IsMinimalProjection N e) : IsTypeI N := by
   obtain ⟨e, he⟩ := h
   intro z hz hz0
@@ -158,14 +158,14 @@ def cornerNonUnitalStarSubalgebra (N : VonNeumannAlgebra H) {p : H →L[ℂ] H}
       rwa [star_mul, hp.isSelfAdjoint.star_eq] at h
 
 /-- Membership in the corner subalgebra, unfolded. -/
-theorem mem_cornerNonUnitalStarSubalgebra_iff {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
+lemma mem_cornerNonUnitalStarSubalgebra_iff {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
     {hp : IsStarProjection p} {y : H →L[ℂ] H} :
     y ∈ cornerNonUnitalStarSubalgebra N hp ↔ y ∈ N ∧ p * y = y ∧ y * p = y :=
   Iff.rfl
 
 /-- The corner subalgebra is norm-closed: it is the intersection of the (double-centralizer,
 hence closed) carrier of `N` with the closed support conditions `p * y = y` and `y * p = y`. -/
-theorem isClosed_cornerNonUnitalStarSubalgebra (N : VonNeumannAlgebra H) {p : H →L[ℂ] H}
+lemma isClosed_cornerNonUnitalStarSubalgebra (N : VonNeumannAlgebra H) {p : H →L[ℂ] H}
     (hp : IsStarProjection p) :
     IsClosed ((cornerNonUnitalStarSubalgebra N hp : Set (H →L[ℂ] H))) := by
   have hset : (cornerNonUnitalStarSubalgebra N hp : Set (H →L[ℂ] H))
@@ -178,7 +178,7 @@ theorem isClosed_cornerNonUnitalStarSubalgebra (N : VonNeumannAlgebra H) {p : H 
   · exact isClosed_eq (continuous_id.mul continuous_const) continuous_id
 
 /-- The positive part of a corner element stays in the corner. -/
-theorem posPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
+lemma posPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
     (hp : IsStarProjection p) {d : H →L[ℂ] H}
     (hd : d ∈ cornerNonUnitalStarSubalgebra N hp) :
     d⁺ ∈ cornerNonUnitalStarSubalgebra N hp := by
@@ -189,7 +189,7 @@ theorem posPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p :
   exact cfcₙ_mem _ hd
 
 /-- The negative part of a corner element stays in the corner. -/
-theorem negPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
+lemma negPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
     (hp : IsStarProjection p) {d : H →L[ℂ] H}
     (hd : d ∈ cornerNonUnitalStarSubalgebra N hp) :
     d⁻ ∈ cornerNonUnitalStarSubalgebra N hp := by
@@ -207,7 +207,7 @@ range projections of two operators with `x₁ x₂ = 0`, `x₁` self-adjoint, ar
 
 /-- The orthogonal projection onto the closure of the range of `x ∈ N` lies in `N`, because that
 subspace is invariant under the commutant. -/
-theorem starProjection_range_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (hx : x ∈ N) :
+lemma starProjection_range_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (hx : x ∈ N) :
     (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection ∈ N := by
   set M : Submodule ℂ H := (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure with hM
   have hpproj : IsStarProjection M.starProjection := isStarProjection_starProjection
@@ -227,7 +227,7 @@ theorem starProjection_range_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (
   exact hle
 
 /-- The range projection of a nonzero operator is nonzero. -/
-theorem starProjection_range_ne_zero {x : H →L[ℂ] H} (hx0 : x ≠ 0) :
+lemma starProjection_range_ne_zero {x : H →L[ℂ] H} (hx0 : x ≠ 0) :
     (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection ≠ 0 := by
   intro h0
   apply hx0
@@ -239,7 +239,7 @@ theorem starProjection_range_ne_zero {x : H →L[ℂ] H} (hx0 : x ≠ 0) :
   simpa using hfix.symm
 
 /-- If `p * x = x`, then the range projection of `x` is a subprojection of `p`. -/
-theorem starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
+lemma starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
     p * (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection
       = (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection := by
   set M : Submodule ℂ H := (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure with hM
@@ -258,7 +258,7 @@ theorem starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
 
 /-- The range projections of `x₁` and `x₂` with `x₁` self-adjoint and `x₁ * x₂ = 0` are
 orthogonal. -/
-theorem starProjection_range_mul_eq_zero {x₁ x₂ : H →L[ℂ] H} (hsa : star x₁ = x₁)
+lemma starProjection_range_mul_eq_zero {x₁ x₂ : H →L[ℂ] H} (hsa : star x₁ = x₁)
     (h12 : x₁ * x₂ = 0) :
     (LinearMap.range (x₁ : H →ₗ[ℂ] H)).topologicalClosure.starProjection
       * (LinearMap.range (x₂ : H →ₗ[ℂ] H)).topologicalClosure.starProjection = 0 := by
@@ -294,7 +294,7 @@ orthogonal nonzero subprojections of `p`. A Dedekind-cut argument on
 
 /-- **Dichotomy.** If `p` has no proper nonzero subprojection in `N`, every self-adjoint corner
 element `d` satisfies `0 ≤ d` or `d ≤ 0`. -/
-theorem nonneg_or_nonpos_of_forall_subprojection {N : VonNeumannAlgebra H}
+lemma nonneg_or_nonpos_of_forall_subprojection {N : VonNeumannAlgebra H}
     {p : H →L[ℂ] H} (hp : IsStarProjection p) (hp0 : p ≠ 0)
     (hmin : ∀ q, IsStarProjection q → q ∈ N → p * q = q → q = 0 ∨ q = p)
     {d : H →L[ℂ] H} (hdsa : IsSelfAdjoint d)
@@ -329,7 +329,7 @@ theorem nonneg_or_nonpos_of_forall_subprojection {N : VonNeumannAlgebra H}
 element is a real multiple of `p`: the supremum `c₀` of `{c : ℝ | 0 ≤ x - c • p}` (nonempty,
 bounded, closed) satisfies `x = c₀ • p`, since by the dichotomy `x - c • p ≤ 0` for every
 `c > c₀`. -/
-theorem exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
+lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     {p : H →L[ℂ] H} (hp : IsStarProjection p) (hpN : p ∈ N) (hp0 : p ≠ 0)
     (hmin : ∀ q, IsStarProjection q → q ∈ N → p * q = q → q = 0 ∨ q = p)
     {x : H →L[ℂ] H} (hxsa : IsSelfAdjoint x)

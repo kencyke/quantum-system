@@ -77,28 +77,28 @@ class Faithful {sites : Type*} [DecidableEq sites] (N : LocalNet sites) : Prop w
 def algebraCongr {Λ Λ' : Finset sites} (h : Λ = Λ') : N.algebra Λ ≃⋆ₐ[ℂ] N.algebra Λ' := by
   subst h; exact StarAlgEquiv.refl
 
-@[simp] theorem algebraCongr_apply {Λ : Finset sites} (x : N.algebra Λ) :
+@[simp] lemma algebraCongr_apply {Λ : Finset sites} (x : N.algebra Λ) :
     N.algebraCongr (rfl : Λ = Λ) x = x := rfl
 
 /-- The isotony embeddings are natural with respect to the region-equality transport. -/
-theorem incl_algebraCongr {Λ₁ Λ₂ Λ₁' Λ₂' : Finset sites} (e₁ : Λ₁ = Λ₁') (e₂ : Λ₂ = Λ₂')
+lemma incl_algebraCongr {Λ₁ Λ₂ Λ₁' Λ₂' : Finset sites} (e₁ : Λ₁ = Λ₁') (e₂ : Λ₂ = Λ₂')
     (h : Λ₁ ⊆ Λ₂) (h' : Λ₁' ⊆ Λ₂') (x : N.algebra Λ₁) :
     N.algebraCongr e₂ (N.incl h x) = N.incl h' (N.algebraCongr e₁ x) := by
   subst e₁; subst e₂; rfl
 
 /-- Transports along composable region equalities compose. -/
-@[simp] theorem algebraCongr_trans {Λ₁ Λ₂ Λ₃ : Finset sites} (h₁ : Λ₁ = Λ₂) (h₂ : Λ₂ = Λ₃)
+@[simp] lemma algebraCongr_trans {Λ₁ Λ₂ Λ₃ : Finset sites} (h₁ : Λ₁ = Λ₂) (h₂ : Λ₂ = Λ₃)
     (x : N.algebra Λ₁) :
     N.algebraCongr h₂ (N.algebraCongr h₁ x) = N.algebraCongr (h₁.trans h₂) x := by
   subst h₁; subst h₂; rfl
 
 /-- A transport along a reflexive region equality is the identity. -/
-@[simp] theorem algebraCongr_self {Λ : Finset sites} (h : Λ = Λ) (x : N.algebra Λ) :
+@[simp] lemma algebraCongr_self {Λ : Finset sites} (h : Λ = Λ) (x : N.algebra Λ) :
     N.algebraCongr h x = x := by
   rw [Subsingleton.elim h rfl]; rfl
 
 /-- Cancelling a transport against a target value moves it to the other side. -/
-theorem algebraCongr_eq_iff {Λ Λ' : Finset sites} (h : Λ = Λ') (x : N.algebra Λ)
+lemma algebraCongr_eq_iff {Λ Λ' : Finset sites} (h : Λ = Λ') (x : N.algebra Λ)
     (y : N.algebra Λ') : N.algebraCongr h x = y ↔ x = N.algebraCongr h.symm y := by
   subst h; simp
 

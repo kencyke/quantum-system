@@ -43,7 +43,7 @@ namespace VonNeumannAlgebra
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- A von Neumann algebra is closed under scalar multiplication. -/
-theorem smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
+lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
   rw [Algebra.smul_def]
   exact mul_mem (algebraMap_mem N.toStarSubalgebra c) hx
 
@@ -62,7 +62,7 @@ def IsMinimalProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
 
 /-- A von Neumann algebra with a minimal projection acts on a nonzero space: the minimal
 projection is nonzero, so it sends some vector to a nonzero vector, witnessing `Nontrivial H`. -/
-theorem IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsMinimalProjection N e) : Nontrivial H :=
   let ⟨x, hx⟩ := ContinuousLinearMap.exists_ne_zero he.2.2.1
   ⟨⟨e x, 0, hx⟩⟩
@@ -71,7 +71,7 @@ theorem IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ
 satisfies `f ≤ e` (the Loewner order on projections, equivalently the range inclusion
 `ran f ⊆ ran e`, written algebraically as `e * f = f`), then `f = 0` or `f = e`. This recovers the
 order-theoretic form of minimality from the corner definition `e N e = ℂ e`. -/
-theorem IsMinimalProjection.no_proper_subprojection {N : VonNeumannAlgebra H}
+lemma IsMinimalProjection.no_proper_subprojection {N : VonNeumannAlgebra H}
     {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
     {f : H →L[ℂ] H} (hf : IsStarProjection f) (hfN : f ∈ N) (hsub : e * f = f) :
     f = 0 ∨ f = e := by
@@ -101,7 +101,7 @@ def IsAbelianProjection (N : VonNeumannAlgebra H) (p : H →L[ℂ] H) : Prop :=
 
 /-- A minimal projection is abelian: its corner `e N e = ℂ e` is one-dimensional, hence
 commutative. -/
-theorem IsMinimalProjection.isAbelianProjection {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma IsMinimalProjection.isAbelianProjection {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsMinimalProjection N e) : IsAbelianProjection N e := by
   refine ⟨he.1, he.2.1, fun a haN b hbN => ?_⟩
   obtain ⟨c, hc⟩ := he.2.2.2 a haN

@@ -85,12 +85,12 @@ variable {𝕜 E F : Type*} [NontriviallyNormedField 𝕜]
 noncomputable def completionCLM (f : E ≃ₗᵢ[𝕜] F) : Completion E →L[𝕜] Completion F :=
   f.toLinearIsometry.toContinuousLinearMap.completion
 
-@[simp] theorem completionCLM_coe (f : E ≃ₗᵢ[𝕜] F) (a : E) :
+@[simp] lemma completionCLM_coe (f : E ≃ₗᵢ[𝕜] F) (a : E) :
     f.completionCLM (a : Completion E) = (f a : Completion F) := by
   rw [completionCLM, ContinuousLinearMap.completion_apply_coe,
     LinearIsometry.coe_toContinuousLinearMap, LinearIsometryEquiv.coe_toLinearIsometry]
 
-theorem completionCLM_left (f : E ≃ₗᵢ[𝕜] F) (x : Completion E) :
+lemma completionCLM_left (f : E ≃ₗᵢ[𝕜] F) (x : Completion E) :
     f.symm.completionCLM (f.completionCLM x) = x := by
   induction x using Completion.induction_on with
   | hp => exact isClosed_eq ((map_continuous _).comp (map_continuous _)) continuous_id
@@ -114,7 +114,7 @@ noncomputable def completion (f : E ≃ₗᵢ[𝕜] F) : Completion E ≃ₗᵢ[
       change ‖f.completionCLM (a : Completion E)‖ = ‖(a : Completion E)‖
       rw [completionCLM_coe, Completion.norm_coe, Completion.norm_coe, f.norm_map]
 
-@[simp] theorem completion_coe (f : E ≃ₗᵢ[𝕜] F) (a : E) :
+@[simp] lemma completion_coe (f : E ≃ₗᵢ[𝕜] F) (a : E) :
     f.completion (a : Completion E) = (f a : Completion F) := by
   change f.completionCLM (a : Completion E) = _
   exact f.completionCLM_coe a
@@ -125,7 +125,7 @@ end LinearIsometryEquiv
 finite-dimensional. The coercion `toComplL : E → Completion E` is a linear map with dense range
 whose image is a finite-dimensional (hence closed) subspace, so it is surjective, and
 finite-dimensionality transfers along a surjection. -/
-theorem FiniteDimensional.completion {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
+lemma FiniteDimensional.completion {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
     [NormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
     FiniteDimensional 𝕜 (Completion E) := by
   set f : E →L[𝕜] Completion E := Completion.toComplL with hf
@@ -184,7 +184,7 @@ product of the inner products of the factors. -/
   rw [tmul, tmul, UniformSpace.Completion.inner_coe, TensorProduct.inner_tmul]
 
 /-- The norm of a pure tensor factorises. -/
-@[simp] theorem norm_tmul (x : H₁) (y : H₂) : ‖x ⊗ₕ y‖ = ‖x‖ * ‖y‖ := by
+@[simp] lemma norm_tmul (x : H₁) (y : H₂) : ‖x ⊗ₕ y‖ = ‖x‖ * ‖y‖ := by
   rw [tmul, UniformSpace.Completion.norm_coe, TensorProduct.norm_tmul]
 
 /-- The pure tensor is additive in its right argument. -/
@@ -204,11 +204,11 @@ theorem smul_tmul_right (c : ℂ) (x : H₁) (y : H₂) : x ⊗ₕ (c • y) = c
   rw [tmul, tmul, ← UniformSpace.Completion.coe_smul, TensorProduct.tmul_smul]
 
 /-- A pure tensor with a zero left argument vanishes. -/
-@[simp] theorem zero_tmul (y : H₂) : (0 : H₁) ⊗ₕ y = 0 := by
+@[simp] lemma zero_tmul (y : H₂) : (0 : H₁) ⊗ₕ y = 0 := by
   rw [tmul, TensorProduct.zero_tmul, UniformSpace.Completion.coe_zero]
 
 /-- A pure tensor with a zero right argument vanishes. -/
-@[simp] theorem tmul_zero (x : H₁) : x ⊗ₕ (0 : H₂) = 0 := by
+@[simp] lemma tmul_zero (x : H₁) : x ⊗ₕ (0 : H₂) = 0 := by
   rw [tmul, TensorProduct.tmul_zero, UniformSpace.Completion.coe_zero]
 
 /-- The bounded inclusion `H₁ → H₁ ⊗̂ H₂`, `x ↦ x ⊗ z`, for a fixed `z ∈ H₂`. Its operator norm is
@@ -219,7 +219,7 @@ noncomputable def tmulLeftL (z : H₂) : H₁ →L[ℂ] HilbertTensor H₁ H₂ 
     (LinearMap.mkContinuous ((TensorProduct.mk ℂ H₁ H₂).flip z) ‖z‖ fun x => by
       rw [LinearMap.flip_apply, TensorProduct.mk_apply, TensorProduct.norm_tmul, mul_comm])
 
-@[simp] theorem tmulLeftL_apply (z : H₂) (x : H₁) : tmulLeftL z x = tmul x z := by
+@[simp] lemma tmulLeftL_apply (z : H₂) (x : H₁) : tmulLeftL z x = tmul x z := by
   rw [tmulLeftL, ContinuousLinearMap.comp_apply, LinearMap.mkContinuous_apply,
     LinearMap.flip_apply, TensorProduct.mk_apply]
   rfl
@@ -232,7 +232,7 @@ namespace TensorProduct
 `∑ ξ i ⊗ₜ e i` where the second factors `e i` form an orthonormal family of `H₂`. This is the
 analytic normal form behind the cross-norm bound: choose a finite-dimensional submodule of `H₂`
 carrying the element and take an orthonormal basis of it. -/
-theorem exists_orthonormal_rep (z : H₁ ⊗[ℂ] H₂) :
+lemma exists_orthonormal_rep (z : H₁ ⊗[ℂ] H₂) :
     ∃ (n : ℕ) (e : Fin n → H₂) (ξ : Fin n → H₁),
       Orthonormal ℂ e ∧ z = ∑ i, ξ i ⊗ₜ[ℂ] e i := by
   obtain ⟨N', hN'fin, hz⟩ :=
@@ -283,7 +283,7 @@ theorem norm_map_left_le (A : H₁ →L[ℂ] H₁) (z : H₁ ⊗[ℂ] H₂) :
 
 /-- The commutation isometry intertwines the two one-sided amplifications on the algebraic
 tensor product: swapping the factors turns `1 ⊗ B` into `B ⊗ 1`. -/
-theorem commIsometry_map_id (B : H₂ →L[ℂ] H₂) (z : H₁ ⊗[ℂ] H₂) :
+lemma commIsometry_map_id (B : H₂ →L[ℂ] H₂) (z : H₁ ⊗[ℂ] H₂) :
     commIsometry ℂ H₁ H₂ (TensorProduct.map LinearMap.id B.toLinearMap z)
       = TensorProduct.map B.toLinearMap LinearMap.id (commIsometry ℂ H₁ H₂ z) := by
   induction z using TensorProduct.induction_on with
@@ -316,11 +316,11 @@ noncomputable def algAmplifyRight (B : H₂ →L[ℂ] H₂) : (H₁ ⊗[ℂ] H�
   LinearMap.mkContinuous (TensorProduct.map LinearMap.id B.toLinearMap) ‖B‖
     (TensorProduct.norm_map_right_le B)
 
-@[simp] theorem algAmplifyLeft_tmul (A : H₁ →L[ℂ] H₁) (x : H₁) (y : H₂) :
+@[simp] lemma algAmplifyLeft_tmul (A : H₁ →L[ℂ] H₁) (x : H₁) (y : H₂) :
     algAmplifyLeft (H₂ := H₂) A (x ⊗ₜ[ℂ] y) = (A x) ⊗ₜ[ℂ] y := by
   simp [algAmplifyLeft]
 
-@[simp] theorem algAmplifyRight_tmul (B : H₂ →L[ℂ] H₂) (x : H₁) (y : H₂) :
+@[simp] lemma algAmplifyRight_tmul (B : H₂ →L[ℂ] H₂) (x : H₁) (y : H₂) :
     algAmplifyRight (H₁ := H₁) B (x ⊗ₜ[ℂ] y) = x ⊗ₜ[ℂ] (B y) := by
   simp [algAmplifyRight]
 
@@ -387,13 +387,13 @@ noncomputable def amplifyRight (B : H₂ →L[ℂ] H₂) :
   rw [Completion.map_coe (algAmplifyRight B).uniformContinuous, algAmplifyRight_tmul, tmul]
 
 /-- The defining action of the left amplification on the image of the algebraic tensor product. -/
-@[simp] theorem amplifyLeft_coe (A : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
+@[simp] lemma amplifyLeft_coe (A : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
     amplifyLeft A (a : HilbertTensor H₁ H₂)
       = ((algAmplifyLeft A a : H₁ ⊗[ℂ] H₂) : HilbertTensor H₁ H₂) :=
   Completion.map_coe (algAmplifyLeft A).uniformContinuous a
 
 /-- The defining action of the right amplification on the image of the algebraic tensor product. -/
-@[simp] theorem amplifyRight_coe (B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
+@[simp] lemma amplifyRight_coe (B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
     amplifyRight B (a : HilbertTensor H₁ H₂)
       = ((algAmplifyRight B a : H₁ ⊗[ℂ] H₂) : HilbertTensor H₁ H₂) :=
   Completion.map_coe (algAmplifyRight B).uniformContinuous a
@@ -404,28 +404,28 @@ The amplifications are unital algebra homomorphisms onto their images: they send
 the identity and turn composition in `B(H₁)` (resp. `B(H₂)`) into composition in
 `B(HilbertTensor H₁ H₂)`. -/
 
-theorem algAmplifyLeft_one_apply (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyLeft_one_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (H₂ := H₂) (1 : H₁ →L[ℂ] H₁) a = a := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
-theorem algAmplifyLeft_mul_apply (A B : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyLeft_mul_apply (A B : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (A * B) a = algAmplifyLeft A (algAmplifyLeft B a) := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp [ContinuousLinearMap.mul_apply]
   | add p q hp hq => simp [map_add, hp, hq]
 
-theorem algAmplifyRight_one_apply (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyRight_one_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (H₁ := H₁) (1 : H₂ →L[ℂ] H₂) a = a := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
-theorem algAmplifyRight_mul_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyRight_mul_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (A * B) a = algAmplifyRight A (algAmplifyRight B a) := by
   induction a using TensorProduct.induction_on with
   | zero => simp
@@ -467,49 +467,49 @@ theorem amplifyRight_mul (A B : H₂ →L[ℂ] H₂) :
 The amplifications `A ↦ A ⊗̂ 1` and `B ↦ 1 ⊗̂ B` are themselves `ℂ`-linear in the operator
 being amplified: they preserve `0`, addition, and scalar multiplication. -/
 
-theorem algAmplifyLeft_zero_apply (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyLeft_zero_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (H₂ := H₂) (0 : H₁ →L[ℂ] H₁) a = 0 := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
-theorem algAmplifyLeft_add_apply (A B : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyLeft_add_apply (A B : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (A + B) a = algAmplifyLeft A a + algAmplifyLeft B a := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp [ContinuousLinearMap.add_apply, TensorProduct.add_tmul]
   | add p q hp hq => simp only [map_add, hp, hq]; abel
 
-theorem algAmplifyLeft_smul_apply (c : ℂ) (A : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyLeft_smul_apply (c : ℂ) (A : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (c • A) a = c • algAmplifyLeft A a := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp [ContinuousLinearMap.smul_apply, TensorProduct.smul_tmul']
   | add p q hp hq => simp only [map_add, hp, hq, smul_add]
 
-theorem algAmplifyRight_zero_apply (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyRight_zero_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (H₁ := H₁) (0 : H₂ →L[ℂ] H₂) a = 0 := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
-theorem algAmplifyRight_add_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyRight_add_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (A + B) a = algAmplifyRight A a + algAmplifyRight B a := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp [ContinuousLinearMap.add_apply, TensorProduct.tmul_add]
   | add p q hp hq => simp only [map_add, hp, hq]; abel
 
-theorem algAmplifyRight_smul_apply (c : ℂ) (B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyRight_smul_apply (c : ℂ) (B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (c • B) a = c • algAmplifyRight B a := by
   induction a using TensorProduct.induction_on with
   | zero => simp
   | tmul x y => simp [ContinuousLinearMap.smul_apply, TensorProduct.tmul_smul]
   | add p q hp hq => simp only [map_add, hp, hq, smul_add]
 
-@[simp] theorem amplifyLeft_zero :
+@[simp] lemma amplifyLeft_zero :
     amplifyLeft (0 : H₁ →L[ℂ] H₁) = (0 : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂) := by
   ext z
   refine Completion.induction_on z
@@ -535,7 +535,7 @@ theorem amplifyLeft_smul (c : ℂ) (A : H₁ →L[ℂ] H₁) :
   rw [amplifyLeft_coe, algAmplifyLeft_smul_apply, UniformSpace.Completion.coe_smul,
     ContinuousLinearMap.smul_apply, amplifyLeft_coe]
 
-@[simp] theorem amplifyRight_zero :
+@[simp] lemma amplifyRight_zero :
     amplifyRight (0 : H₂ →L[ℂ] H₂) = (0 : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂) := by
   ext z
   refine Completion.induction_on z
@@ -574,17 +574,17 @@ reused verbatim on the left. -/
 noncomputable def commEquiv : HilbertTensor H₁ H₂ ≃ₗᵢ[ℂ] HilbertTensor H₂ H₁ :=
   (TensorProduct.commIsometry ℂ H₁ H₂).completion
 
-@[simp] theorem commEquiv_tmul (x : H₁) (y : H₂) : commEquiv (x ⊗ₕ y) = y ⊗ₕ x := by
+@[simp] lemma commEquiv_tmul (x : H₁) (y : H₂) : commEquiv (x ⊗ₕ y) = y ⊗ₕ x := by
   rw [commEquiv, tmul, LinearIsometryEquiv.completion_coe, TensorProduct.commIsometry_apply,
     TensorProduct.comm_tmul, tmul]
 
-@[simp] theorem commEquiv_symm_tmul (y : H₂) (x : H₁) :
+@[simp] lemma commEquiv_symm_tmul (y : H₂) (x : H₁) :
     commEquiv.symm (y ⊗ₕ x) = x ⊗ₕ y := by
   rw [← commEquiv_tmul x y, LinearIsometryEquiv.symm_apply_apply]
 
 /-- Conjugating a right amplification `1 ⊗̂ B` by the swap equivalence yields the left
 amplification `B ⊗̂ 1` on the swapped space. -/
-theorem conjStarAlgEquiv_commEquiv_amplifyRight (B : H₂ →L[ℂ] H₂) :
+lemma conjStarAlgEquiv_commEquiv_amplifyRight (B : H₂ →L[ℂ] H₂) :
     commEquiv.conjStarAlgEquiv (amplifyRight (H₁ := H₁) B) = amplifyLeft (H₂ := H₁) B := by
   refine ContinuousLinearMap.ext fun w => ?_
   rw [LinearIsometryEquiv.conjStarAlgEquiv_apply_apply]
@@ -602,7 +602,7 @@ theorem conjStarAlgEquiv_commEquiv_amplifyRight (B : H₂ →L[ℂ] H₂) :
 amplification `S ⊗̂ 1`. This is the back-transport companion of
 `conjStarAlgEquiv_commEquiv_amplifyRight`, used to carry the right-hand slice lemma back to the
 original space. -/
-theorem conjStarAlgEquiv_symm_commEquiv_amplifyRight (S : H₁ →L[ℂ] H₁) :
+lemma conjStarAlgEquiv_symm_commEquiv_amplifyRight (S : H₁ →L[ℂ] H₁) :
     commEquiv.conjStarAlgEquiv.symm (amplifyRight (H₁ := H₂) S) = amplifyLeft (H₂ := H₂) S := by
   refine ContinuousLinearMap.ext fun w => ?_
   rw [LinearIsometryEquiv.symm_conjStarAlgEquiv_apply_apply]
@@ -630,7 +630,7 @@ section Adjoint
 variable [CompleteSpace H₁] [CompleteSpace H₂]
 
 omit [CompleteSpace H₂] in
-theorem algAmplifyLeft_inner_adjoint (A : H₁ →L[ℂ] H₁) (a b : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyLeft_inner_adjoint (A : H₁ →L[ℂ] H₁) (a b : H₁ ⊗[ℂ] H₂) :
     inner ℂ (algAmplifyLeft (ContinuousLinearMap.adjoint A) a) b
       = inner ℂ a (algAmplifyLeft A b) := by
   simp only [algAmplifyLeft, LinearMap.mkContinuous_apply]
@@ -647,7 +647,7 @@ theorem algAmplifyLeft_inner_adjoint (A : H₁ →L[ℂ] H₁) (a b : H₁ ⊗[�
   | add p q hp hq => simp only [inner_add_left, map_add, hp, hq]
 
 omit [CompleteSpace H₁] in
-theorem algAmplifyRight_inner_adjoint (B : H₂ →L[ℂ] H₂) (a b : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyRight_inner_adjoint (B : H₂ →L[ℂ] H₂) (a b : H₁ ⊗[ℂ] H₂) :
     inner ℂ (algAmplifyRight (ContinuousLinearMap.adjoint B) a) b
       = inner ℂ a (algAmplifyRight B b) := by
   simp only [algAmplifyRight, LinearMap.mkContinuous_apply]
@@ -665,7 +665,7 @@ theorem algAmplifyRight_inner_adjoint (B : H₂ →L[ℂ] H₂) (a b : H₁ ⊗[
 
 omit [CompleteSpace H₂] in
 /-- The adjoint of the left amplification of `A` is the left amplification of the adjoint of `A`. -/
-theorem amplifyLeft_adjoint (A : H₁ →L[ℂ] H₁) :
+lemma amplifyLeft_adjoint (A : H₁ →L[ℂ] H₁) :
     ContinuousLinearMap.adjoint (amplifyLeft (H₂ := H₂) A)
       = amplifyLeft (ContinuousLinearMap.adjoint A) := by
   symm
@@ -678,7 +678,7 @@ theorem amplifyLeft_adjoint (A : H₁ →L[ℂ] H₁) :
 omit [CompleteSpace H₁] in
 /-- The adjoint of the right amplification of `B` is the right amplification of the adjoint of
 `B`. -/
-theorem amplifyRight_adjoint (B : H₂ →L[ℂ] H₂) :
+lemma amplifyRight_adjoint (B : H₂ →L[ℂ] H₂) :
     ContinuousLinearMap.adjoint (amplifyRight (H₁ := H₁) B)
       = amplifyRight (ContinuousLinearMap.adjoint B) := by
   symm
@@ -690,13 +690,13 @@ theorem amplifyRight_adjoint (B : H₂ →L[ℂ] H₂) :
 
 omit [CompleteSpace H₂] in
 /-- The left amplification preserves the `star` (adjoint) operation. -/
-@[simp] theorem amplifyLeft_star (A : H₁ →L[ℂ] H₁) :
+@[simp] lemma amplifyLeft_star (A : H₁ →L[ℂ] H₁) :
     star (amplifyLeft (H₂ := H₂) A) = amplifyLeft (star A) :=
   amplifyLeft_adjoint A
 
 omit [CompleteSpace H₁] in
 /-- The right amplification preserves the `star` (adjoint) operation. -/
-@[simp] theorem amplifyRight_star (B : H₂ →L[ℂ] H₂) :
+@[simp] lemma amplifyRight_star (B : H₂ →L[ℂ] H₂) :
     star (amplifyRight (H₁ := H₁) B) = amplifyRight (star B) :=
   amplifyRight_adjoint B
 
@@ -717,7 +717,7 @@ noncomputable def amplifyLeftₐ :
   map_star' A := (amplifyLeft_star A).symm
 
 omit [CompleteSpace H₂] in
-@[simp] theorem amplifyLeftₐ_apply (A : H₁ →L[ℂ] H₁) :
+@[simp] lemma amplifyLeftₐ_apply (A : H₁ →L[ℂ] H₁) :
     amplifyLeftₐ (H₂ := H₂) A = amplifyLeft A := rfl
 
 omit [CompleteSpace H₁] in
@@ -736,7 +736,7 @@ noncomputable def amplifyRightₐ :
   map_star' B := (amplifyRight_star B).symm
 
 omit [CompleteSpace H₁] in
-@[simp] theorem amplifyRightₐ_apply (B : H₂ →L[ℂ] H₂) :
+@[simp] lemma amplifyRightₐ_apply (B : H₂ →L[ℂ] H₂) :
     amplifyRightₐ (H₁ := H₁) B = amplifyRight B := rfl
 
 end Adjoint
@@ -770,12 +770,12 @@ noncomputable def tmulSingleₗᵢ (i : ι) :
     simp only [LinearMap.coe_mk, AddHom.coe_mk, norm_tmul]
     rw [lp.norm_single (p := 2) (by norm_num), norm_one, one_mul]
 
-@[simp] theorem tmulSingleₗᵢ_apply (i : ι) (k : K) :
+@[simp] lemma tmulSingleₗᵢ_apply (i : ι) (k : K) :
     tmulSingleₗᵢ i k = tmul (lp.single 2 i (1 : ℂ)) k := by rfl
 
 /-- Distinct standard basis vectors of `ℓ²(ι)` are orthogonal, so the inclusions `tmulSingleₗᵢ`
 form an orthogonal family. -/
-theorem orthogonalFamily_tmulSingleₗᵢ :
+lemma orthogonalFamily_tmulSingleₗᵢ :
     OrthogonalFamily ℂ (fun _ : ι => K) (fun i => tmulSingleₗᵢ (K := K) i) := by
   intro i j hij k k'
   have hδ : inner ℂ (lp.single 2 i (1 : ℂ) : lp (fun _ : ι => ℂ) 2) (lp.single 2 j (1 : ℂ)) = 0 := by
@@ -786,7 +786,7 @@ theorem orthogonalFamily_tmulSingleₗᵢ :
 Hilbert sum of `ι`-many copies of `K`. Density is proved by approximating a pure tensor
 `a ⊗ k` (`a ∈ ℓ²(ι)`) by the convergent series `∑ᵢ (a i) • (δᵢ ⊗ k)`, each term of which lies in
 the range of `tmulSingleₗᵢ i`. -/
-theorem isHilbertSum_tmulSingleₗᵢ [CompleteSpace K] :
+lemma isHilbertSum_tmulSingleₗᵢ [CompleteSpace K] :
     IsHilbertSum ℂ (fun _ : ι => K) (fun i => tmulSingleₗᵢ (K := K) i) := by
   haveI : ∀ _ : ι, CompleteSpace K := fun _ => inferInstance
   refine IsHilbertSum.mk orthogonalFamily_tmulSingleₗᵢ ?_
@@ -843,7 +843,7 @@ noncomputable def lpTensorEquiv [CompleteSpace K] :
     lp (fun _ : ι => K) 2 ≃ₗᵢ[ℂ] (lp (fun _ : ι => ℂ) 2) ⊗̂ K :=
   isHilbertSum_tmulSingleₗᵢ.linearIsometryEquiv.symm
 
-@[simp] theorem lpTensorEquiv_single [CompleteSpace K] (i : ι) (k : K) :
+@[simp] lemma lpTensorEquiv_single [CompleteSpace K] (i : ι) (k : K) :
     lpTensorEquiv (lp.single 2 i k) = (lp.single 2 i (1 : ℂ)) ⊗ₕ k := by
   rw [lpTensorEquiv,
     IsHilbertSum.linearIsometryEquiv_symm_apply_single isHilbertSum_tmulSingleₗᵢ,

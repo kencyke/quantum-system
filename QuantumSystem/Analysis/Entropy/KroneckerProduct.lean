@@ -64,7 +64,7 @@ variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
 omit [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m] in
 /-- The Kronecker product of two Hermitian matrices is Hermitian. -/
-theorem IsHermitian.kronecker {A : Matrix n n ℂ} {B : Matrix m m ℂ}
+lemma IsHermitian.kronecker {A : Matrix n n ℂ} {B : Matrix m m ℂ}
     (hA : A.IsHermitian) (hB : B.IsHermitian) : (A ⊗ₖ B).IsHermitian := by
   unfold IsHermitian
   rw [conjTranspose_kronecker, hA.eq, hB.eq]
@@ -95,7 +95,7 @@ exhibiting `U_A ⊗ U_B` as a valid unitary diagonaliser of `A ⊗ B`. -/
 /-- **Kronecker spectral decomposition.** If `A = U_A * D_A * U_Aᴴ` and
 `B = U_B * D_B * U_Bᴴ` with `D_A = diagonal dA`, `D_B = diagonal dB`, then
 `A ⊗ₖ B = (U_A ⊗ U_B) * diagonal (fun (i,j) => dA i * dB j) * (U_A ⊗ U_B)ᴴ`. -/
-theorem kronecker_eq_unitary_conj_diagonal
+lemma kronecker_eq_unitary_conj_diagonal
     {U_A : Matrix n n ℂ} {U_B : Matrix m m ℂ}
     {dA : n → ℂ} {dB : m → ℂ}
     {A : Matrix n n ℂ} {B : Matrix m m ℂ}
@@ -262,7 +262,7 @@ omit [Fintype m] [DecidableEq n] [DecidableEq m] in
 omit [DecidableEq n] in
 /-- **Right-factor Heisenberg dual**: tracing `ρ` against the embedded observable
 `X ⊗ 1` reduces to the trace against the partial trace that retains the first factor. -/
-theorem trace_mul_kronecker_one_right
+lemma trace_mul_kronecker_one_right
     (ρ : Matrix (n × m) (n × m) ℂ) (X : Matrix n n ℂ) :
   Tr (ρ * (X ⊗ₖ (1 : Matrix m m ℂ))) =
     Tr (partialTrace (A := n) (B := m) (Equiv.refl (n × m)) ρ * X) := by
@@ -290,7 +290,7 @@ theorem trace_mul_kronecker_one_right
 omit [DecidableEq m] in
 /-- **Left-factor Heisenberg dual**: `Tr(ρ · (1 ⊗ Y))` reduces to the trace against the
 partial trace that retains the second factor. -/
-theorem trace_mul_kronecker_one_left
+lemma trace_mul_kronecker_one_left
     (ρ : Matrix (n × m) (n × m) ℂ) (Y : Matrix m m ℂ) :
     Tr (ρ * ((1 : Matrix n n ℂ) ⊗ₖ Y)) =
       Tr (partialTrace (A := m) (B := n) (Equiv.prodComm n m) ρ * Y) := by

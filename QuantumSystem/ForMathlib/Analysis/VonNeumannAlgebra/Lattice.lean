@@ -38,9 +38,9 @@ noncomputable instance : Top (VonNeumannAlgebra H) where
       centralizer_centralizer' :=
         Set.Subset.antisymm (Set.subset_univ _) Set.subset_centralizer_centralizer }
 
-@[simp] theorem coe_top : ((⊤ : VonNeumannAlgebra H) : Set (H →L[ℂ] H)) = Set.univ := rfl
+@[simp] lemma coe_top : ((⊤ : VonNeumannAlgebra H) : Set (H →L[ℂ] H)) = Set.univ := rfl
 
 /-- Every bounded operator lies in the full algebra `⊤ = B(H)`. -/
-@[simp] theorem mem_top (x : H →L[ℂ] H) : x ∈ (⊤ : VonNeumannAlgebra H) := Set.mem_univ x
+@[simp] lemma mem_top (x : H →L[ℂ] H) : x ∈ (⊤ : VonNeumannAlgebra H) := Set.mem_univ x
 
 end VonNeumannAlgebra

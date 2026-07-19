@@ -81,14 +81,14 @@ theorem traceLeft_eq_traceRight_prodComm {l c n : Type*} [Fintype n]
   simp [Matrix.reindex_apply]
 
 /-- The right partial trace preserves the full trace: `Tr (traceRight M) = Tr M`. -/
-@[simp] theorem trace_traceRight {l n : Type*} [Fintype l] [Fintype n]
+@[simp] lemma trace_traceRight {l n : Type*} [Fintype l] [Fintype n]
     (M : Matrix (l × n) (l × n) R) :
     (traceRight M).trace = M.trace := by
   simp only [Matrix.trace, Matrix.diag_apply, traceRight_apply]
   exact (Fintype.sum_prod_type fun p : l × n => M p p).symm
 
 /-- The left partial trace preserves the full trace: `Tr (traceLeft M) = Tr M`. -/
-@[simp] theorem trace_traceLeft {l n : Type*} [Fintype l] [Fintype n]
+@[simp] lemma trace_traceLeft {l n : Type*} [Fintype l] [Fintype n]
     (M : Matrix (n × l) (n × l) R) :
     (traceLeft M).trace = M.trace := by
   simp only [Matrix.trace, Matrix.diag_apply, traceLeft_apply]
