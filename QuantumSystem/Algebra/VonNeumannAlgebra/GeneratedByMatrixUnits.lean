@@ -57,58 +57,20 @@ theorem OrthEquivFam.matrixUnit_subset (hF : OrthEquivFam N e F) :
 
 /-- **Resolution of the identity.** For a covering orthogonal family, the projections `↑i` sum to
 the identity in the strong operator sense: `HasSum (fun i : F => (↑i) y) y` for every `y`. This is
-the analytic heart of the generation theorem; it is extracted from the internal Hilbert-sum
-decomposition `H ≅ ℓ²(F; eᵢH)` by recognising the `i`-th Hilbert-sum coordinate of `y` as the
-orthogonal projection `(↑i) y`. -/
+the analytic heart of the generation theorem; it is the Hilbert-sum reconstruction of `y` from its
+coordinates, with the `i`-th coordinate recognised as the orthogonal projection `(↑i) y` by
+`coe_hilbertSumEquiv_apply`. -/
 theorem OrthEquivFam.hasSum_resolutionOfIdentity (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) (y : H) :
     HasSum (fun i : F => (i : H →L[ℂ] H) y) y := by
-  have hHS := hF.isHilbertSum htop
   have hdecomp : HasSum
-      (fun i : F => (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-        ((hHS.linearIsometryEquiv y) i)) y := by
-    have h := hHS.hasSum_linearIsometryEquiv_symm (hHS.linearIsometryEquiv y)
-    rwa [LinearIsometryEquiv.symm_apply_apply] at h
-  have hWmem : ∀ j : F,
-      (LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j)
-        ∈ LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H) := fun j => Submodule.coe_mem _
-  have key : ∀ i : F, (i : H →L[ℂ] H) y
-      = (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i) := by
-    intro i
-    have happ := hdecomp.mapL (i : H →L[ℂ] H)
-    have hii : (i : H →L[ℂ] H)
-        ((LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i))
-        = (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-            ((hHS.linearIsometryEquiv y) i) :=
-      (hF.1 i.1 i.2).1.apply_eq_self_of_mem_range (hWmem i)
-    have hsingle : HasSum
-        (fun j : F => (i : H →L[ℂ] H)
-          ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-            ((hHS.linearIsometryEquiv y) j)))
-        ((i : H →L[ℂ] H)
-          ((LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-            ((hHS.linearIsometryEquiv y) i))) :=
-      hasSum_single i (fun j hj => by
-        have hjfix : (j : H →L[ℂ] H)
-            ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-              ((hHS.linearIsometryEquiv y) j))
-            = (LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-                ((hHS.linearIsometryEquiv y) j) :=
-          (hF.1 j.1 j.2).1.apply_eq_self_of_mem_range (hWmem j)
-        have hij0 : (i : H →L[ℂ] H) * (j : H →L[ℂ] H) = 0 :=
-          hF.2 i.2 j.2 (fun h => hj (Subtype.ext h).symm)
-        calc (i : H →L[ℂ] H)
-              ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-                ((hHS.linearIsometryEquiv y) j))
-            = (i : H →L[ℂ] H) ((j : H →L[ℂ] H)
-                ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-                  ((hHS.linearIsometryEquiv y) j))) := by rw [hjfix]
-          _ = ((i : H →L[ℂ] H) * (j : H →L[ℂ] H))
-                ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
-                  ((hHS.linearIsometryEquiv y) j)) := rfl
-          _ = 0 := by rw [hij0]; rfl)
-    exact (happ.unique hsingle).trans hii
-  simpa only [key] using hdecomp
+      (fun i : F => ((hF.hilbertSumEquiv htop y i :
+          LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) : H)) y := by
+    have h := (hF.isHilbertSum htop).hasSum_linearIsometryEquiv_symm (hF.hilbertSumEquiv htop y)
+    have hy : (hF.isHilbertSum htop).linearIsometryEquiv.symm (hF.hilbertSumEquiv htop y) = y :=
+      (hF.hilbertSumEquiv htop).symm_apply_apply y
+    rwa [hy] at h
+  simpa only [hF.coe_hilbertSumEquiv_apply htop y] using hdecomp
 
 /-- **The content of the generation theorem.** Any operator `b` commuting with every matrix unit
 commutes with every `a ∈ N`. Equivalently `Set.centralizer S ⊆ Set.centralizer N`, which is the
