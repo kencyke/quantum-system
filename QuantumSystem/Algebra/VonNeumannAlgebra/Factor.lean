@@ -60,6 +60,13 @@ supports comparison theory without invoking Borel functional calculus. -/
 def IsMinimalProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
   IsStarProjection e ∧ e ∈ N ∧ e ≠ 0 ∧ ∀ a ∈ N, ∃ c : ℂ, e * a * e = c • e
 
+/-- A von Neumann algebra with a minimal projection acts on a nonzero space: the minimal
+projection is nonzero, so it sends some vector to a nonzero vector, witnessing `Nontrivial H`. -/
+theorem IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) : Nontrivial H :=
+  let ⟨x, hx⟩ := ContinuousLinearMap.exists_ne_zero he.2.2.1
+  ⟨⟨e x, 0, hx⟩⟩
+
 /-- A minimal projection has no proper nonzero subprojection in `N`: if a projection `f ∈ N`
 satisfies `f ≤ e` (the Loewner order on projections, equivalently the range inclusion
 `ran f ⊆ ran e`, written algebraically as `e * f = f`), then `f = 0` or `f = e`. This recovers the

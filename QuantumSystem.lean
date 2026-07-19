@@ -22,6 +22,7 @@ public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
+public import QuantumSystem.Algebra.VonNeumannAlgebra.BoundedLinearOperators
 public import QuantumSystem.Algebra.VonNeumannAlgebra.CentralProjection
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Comparison
 public import QuantumSystem.Algebra.VonNeumannAlgebra.CoveringFamily
@@ -67,6 +68,7 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Lattice
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef

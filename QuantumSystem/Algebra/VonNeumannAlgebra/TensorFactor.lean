@@ -336,4 +336,92 @@ theorem isFactor_vnTensorRight [CompleteSpace H₁] [CompleteSpace H₂] [Nontri
     VonNeumannAlgebra.IsFactor (vnTensorRight (H₁ := H₁) (H₂ := H₂)) := fun _ hx hx' =>
   eq_smul_one_of_mem_vnTensorLeft_of_mem_vnTensorRight (by rwa [← vnTensorRight_commutant]) hx
 
+/-! ### `B(H₁) ⊗̄ 1` is `⋆`-isomorphic to `B(H₁)`
+
+The left amplification `amplifyLeft : B(H₁) → B(H₁)⊗̄1` is a `⋆`-algebra homomorphism that is
+injective (`amplifyLeft_injective`) and, by the slice lemma transported through the swap
+equivalence, surjective onto `vnTensorLeft` (`exists_amplifyLeft_of_mem_vnTensorLeft`). Hence it
+is a `⋆`-isomorphism `B(H₁) ≃⋆ₐ B(H₁) ⊗̄ 1` (`amplifyLeftStarAlgEquiv`). -/
+
+/-- The left amplification `A ↦ A ⊗̂ 1` is injective (for nontrivial `H₂`): evaluating on pure
+tensors `x ⊗̂ g` with `g ≠ 0` recovers `A x` up to the norm factor `‖g‖`. -/
+theorem amplifyLeft_injective [Nontrivial H₂] :
+    Function.Injective (amplifyLeft (H₁ := H₁) (H₂ := H₂)) := by
+  intro A₁ A₂ h
+  obtain ⟨g, hg⟩ := exists_ne (0 : H₂)
+  ext x
+  have h1 := congrArg
+    (fun L : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂ => L (tmul x g)) h
+  simp only [amplifyLeft_tmul] at h1
+  have h2 : tmul (A₁ x - A₂ x) g = 0 := by
+    rw [sub_eq_add_neg, add_tmul, ← neg_one_smul ℂ (A₂ x), tmul_smul_left, h1, neg_one_smul,
+      add_neg_cancel]
+  have h3 : ‖A₁ x - A₂ x‖ * ‖g‖ = 0 := by rw [← norm_tmul, h2, norm_zero]
+  rcases mul_eq_zero.mp h3 with h4 | h4
+  · exact sub_eq_zero.mp (norm_eq_zero.mp h4)
+  · exact absurd (norm_eq_zero.mp h4) hg
+
+/-- Every right amplification `1 ⊗̂ B` commutes with the factor `B(H₁) ⊗̄ 1`, i.e. lies in its
+commutant. This is the easy inclusion of the commutation theorem and needs no completeness or
+nontriviality hypotheses. -/
+theorem amplifyRight_mem_commutant_vnTensorLeft [CompleteSpace H₁] (B : H₂ →L[ℂ] H₂) :
+    amplifyRight (H₁ := H₁) B ∈ (vnTensorLeft (H₁ := H₁) (H₂ := H₂)).commutant := by
+  rw [vnTensorLeft_commutant_eq_commutantSet, VonNeumannAlgebra.mem_commutantSet_iff]
+  rintro h ⟨A, rfl⟩
+  refine ⟨?_, ?_⟩
+  · rw [ContinuousLinearMap.mul_def, ContinuousLinearMap.mul_def]
+    exact amplifyLeft_comp_amplifyRight A B
+  · rw [amplifyLeft_star, ContinuousLinearMap.mul_def, ContinuousLinearMap.mul_def]
+    exact amplifyLeft_comp_amplifyRight (star A) B
+
+/-- **Surjectivity of the left amplification onto `B(H₁) ⊗̄ 1`.** Every operator in the factor
+`vnTensorLeft` is a left amplification `A ⊗̂ 1`. An element `T ∈ vnTensorLeft` commutes with every
+right amplification (`amplifyRight_mem_commutant_vnTensorLeft`); transporting through the swap
+equivalence `commEquiv` turns this into commutation with every left amplification on the swapped
+space, where the slice lemma `exists_amplifyRight_of_commutes` produces the operator. -/
+theorem exists_amplifyLeft_of_mem_vnTensorLeft [CompleteSpace H₁] [Nontrivial H₂]
+    {T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂}
+    (hT : T ∈ vnTensorLeft (H₁ := H₁) (H₂ := H₂)) :
+    ∃ A : H₁ →L[ℂ] H₁, T = amplifyLeft A := by
+  have hcomm : ∀ B : H₂ →L[ℂ] H₂, T * amplifyRight B = amplifyRight B * T := fun B =>
+    VonNeumannAlgebra.mem_commutant_iff.mp (amplifyRight_mem_commutant_vnTensorLeft B) T hT
+  obtain ⟨u, hu⟩ := exists_ne (0 : H₂)
+  have he : ‖(‖u‖⁻¹ : ℂ) • u‖ = 1 := by
+    rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
+      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hu)]
+  have hhyp : ∀ A : H₂ →L[ℂ] H₂,
+      (commEquiv.conjStarAlgEquiv T).comp (amplifyLeft A)
+        = (amplifyLeft A).comp (commEquiv.conjStarAlgEquiv T) := fun A => by
+    rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def,
+      ← conjStarAlgEquiv_commEquiv_amplifyRight A, ← map_mul, ← map_mul, hcomm A]
+  obtain ⟨S, hS⟩ := exists_amplifyRight_of_commutes (H₁ := H₂) (H₂ := H₁)
+    ((‖u‖⁻¹ : ℂ) • u) he (commEquiv.conjStarAlgEquiv T) hhyp
+  refine ⟨S, ?_⟩
+  have hsymm := congrArg (⇑commEquiv.conjStarAlgEquiv.symm) hS
+  rw [StarAlgEquiv.symm_apply_apply, conjStarAlgEquiv_symm_commEquiv_amplifyRight] at hsymm
+  exact hsymm
+
+/-- The left amplification as a unital `⋆`-algebra homomorphism `B(H₁) →⋆ₐ[ℂ] B(H₁) ⊗̄ 1` onto the
+factor, i.e. with codomain restricted to `vnTensorLeft`. -/
+noncomputable def amplifyLeftVnₐ [CompleteSpace H₁] :
+    (H₁ →L[ℂ] H₁) →⋆ₐ[ℂ] (vnTensorLeft (H₁ := H₁) (H₂ := H₂)) where
+  toFun A := ⟨amplifyLeft A, amplifyLeft_mem_vnTensorLeft A⟩
+  map_one' := Subtype.ext amplifyLeft_one
+  map_mul' A B := Subtype.ext (amplifyLeft_mul A B)
+  map_zero' := Subtype.ext amplifyLeft_zero
+  map_add' A B := Subtype.ext (amplifyLeft_add A B)
+  commutes' r := Subtype.ext <| by
+    simp [Algebra.algebraMap_eq_smul_one, amplifyLeft_smul, amplifyLeft_one]
+  map_star' A := Subtype.ext (amplifyLeft_star A).symm
+
+/-- **`B(H₁) ⊗̄ 1` is `⋆`-isomorphic to `B(H₁)`.** The left amplification is a `⋆`-isomorphism of
+`B(H₁)` onto the factor `vnTensorLeft`, for nontrivial complete `H₁` and nontrivial `H₂`. -/
+noncomputable def amplifyLeftStarAlgEquiv [CompleteSpace H₁] [Nontrivial H₂] :
+    (H₁ →L[ℂ] H₁) ≃⋆ₐ[ℂ] (vnTensorLeft (H₁ := H₁) (H₂ := H₂)) :=
+  StarAlgEquiv.ofBijective amplifyLeftVnₐ
+    ⟨fun A B hAB => amplifyLeft_injective (H₂ := H₂) (Subtype.ext_iff.mp hAB),
+     fun ⟨T, hT⟩ => by
+       obtain ⟨A, rfl⟩ := exists_amplifyLeft_of_mem_vnTensorLeft hT
+       exact ⟨A, rfl⟩⟩
+
 end HilbertTensor
