@@ -1,7 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.GeneratedByMatrixUnits
-public import QuantumSystem.Algebra.Star.TensorProduct
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
 
 /-!
 # Spatial identification of a type I factor with `B(H₁) ⊗̄ 1`
@@ -11,7 +11,7 @@ projection `e`: there is a linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F
 becomes exactly the tensor factor `B(ℓ²(F)) ⊗̄ 1` and `N'` becomes the right factor `1 ⊗̄ B(eH)`.
 
 The identification glues the generation theorem `N = ⟨matrix units⟩''` (`GeneratedByMatrixUnits`)
-to the tensor commutation theorem (`Algebra.Star.TensorProduct`) through the spatial isomorphism
+to the tensor commutation theorem (`Algebra.VonNeumannAlgebra.TensorFactor`) through the spatial isomorphism
 `U = multiplicityEquiv ∘ lpTensorEquiv`. The key computation is that `U` carries the matrix unit
 `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨δ_q| ⊗̂ 1`, where `δ_p = lp.single 2 p 1` is the
 `p`-th standard basis vector of `ℓ²(F)`.

@@ -22,7 +22,6 @@ public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
-public import QuantumSystem.Algebra.Star.TensorProduct
 public import QuantumSystem.Algebra.VonNeumannAlgebra.CentralProjection
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Comparison
 public import QuantumSystem.Algebra.VonNeumannAlgebra.CoveringFamily
@@ -30,6 +29,7 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.Factor
 public import QuantumSystem.Algebra.VonNeumannAlgebra.GeneratedByMatrixUnits
 public import QuantumSystem.Algebra.VonNeumannAlgebra.MatrixUnits
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorIdentification
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
