@@ -1,13 +1,19 @@
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorIdentification
-public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Lattice
+public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 
 /-!
 # The algebra of all bounded operators is a type I factor
 
-The algebra `B(H) = H →L[ℂ] H` of *all* bounded operators — realised as the greatest von Neumann
-algebra `⊤ : VonNeumannAlgebra H` — is a factor: its centre is the scalars, by the elementary fact
+The algebra `B(H) = H →L[ℂ] H` of *all* bounded operators is realised as the greatest von Neumann
+algebra `⊤ : VonNeumannAlgebra H`. The von Neumann subalgebras of `B(H)` form a bounded lattice
+under inclusion, whose greatest element is `B(H)` itself; Mathlib's `VonNeumannAlgebra H` carries no
+`Top` instance, so this file first supplies one (carrier `Set.univ`, double-commutant law from
+`Set.subset_centralizer_centralizer` together with `Set.subset_univ`) before developing the factor
+theory.
+
+This `⊤` is a factor: its centre is the scalars, by the elementary fact
 that an operator commuting with every rank-one operator is scalar. It possesses a minimal
 projection, namely any rank-one orthogonal projection `|u⟩⟨u|` with `‖u‖ = 1`. Hence `B(H)` is a
 **type I factor**, and by the abstract structure theorem `IsTypeIFactor.exists_starAlgEquiv` it is
@@ -16,6 +22,8 @@ when `H` is infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**
 
 ## Main results
 
+* `Top (VonNeumannAlgebra H)` — the greatest element `⊤`, the algebra of all bounded operators, with
+  carrier `Set.univ` (`VonNeumannAlgebra.coe_top` / `VonNeumannAlgebra.mem_top`).
 * `VonNeumannAlgebra.isFactor_boundedLinearOperators` — `B(H)` is a factor.
 * `VonNeumannAlgebra.exists_isMinimalProjection_boundedLinearOperators` — `B(H)` has a minimal
   projection (rank-one).
@@ -37,6 +45,21 @@ open InnerProductSpace
 universe u
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+/-- The **algebra of all bounded operators** `B(H) = H →L[ℂ] H`, as the greatest element `⊤` of the
+inclusion order on `VonNeumannAlgebra H`. Its carrier is `Set.univ`; the double-commutant property is
+the bicommutant inclusion `s ⊆ s''` applied to `s = univ`, together with `univ` being the largest
+set. -/
+noncomputable instance : Top (VonNeumannAlgebra H) where
+  top :=
+    { toStarSubalgebra := ⊤
+      centralizer_centralizer' :=
+        Set.Subset.antisymm (Set.subset_univ _) Set.subset_centralizer_centralizer }
+
+@[simp] lemma coe_top : ((⊤ : VonNeumannAlgebra H) : Set (H →L[ℂ] H)) = Set.univ := rfl
+
+/-- Every bounded operator lies in the full algebra `⊤ = B(H)`. -/
+@[simp] lemma mem_top (x : H →L[ℂ] H) : x ∈ (⊤ : VonNeumannAlgebra H) := Set.mem_univ x
 
 /-- **`B(H)` is a factor.** The centre of the full algebra is trivial: an operator lying in the
 commutant of `⊤` commutes with every operator, in particular with every rank-one operator, hence is
