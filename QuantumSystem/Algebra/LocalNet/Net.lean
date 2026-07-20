@@ -55,6 +55,27 @@ attribute [instance] algebraCStar
 
 variable {sites : Type*} [DecidableEq sites] (N : LocalNet sites)
 
+/-- Smart constructor for `LocalNet` taking locality only inside the canonical union region
+    `Λ₁ ∪ Λ₂`: given `incl_trans`, commutation there pushes forward along
+    `incl : 𝔄(Λ₁ ∪ Λ₂) →⋆ₐ[ℂ] 𝔄(Λ)` to any common superregion `Λ`, so the union case is
+    equivalent to the general `locality` field. -/
+def mk' (algebra : Finset sites → Type*) [algebraCStar : ∀ Λ, CStarAlgebra (algebra Λ)]
+    (incl : ∀ {Λ Λ' : Finset sites}, Λ ⊆ Λ' → (algebra Λ →⋆ₐ[ℂ] algebra Λ'))
+    (incl_refl : ∀ {Λ : Finset sites} (x : algebra Λ), incl (Finset.Subset.refl Λ) x = x)
+    (incl_trans : ∀ {Λ₁ Λ₂ Λ₃ : Finset sites} (h₁₂ : Λ₁ ⊆ Λ₂) (h₂₃ : Λ₂ ⊆ Λ₃) (x : algebra Λ₁),
+      incl h₂₃ (incl h₁₂ x) = incl (h₁₂.trans h₂₃) x)
+    (locality_union : ∀ {Λ₁ Λ₂ : Finset sites}, Disjoint Λ₁ Λ₂ →
+      ∀ (x : algebra Λ₁) (y : algebra Λ₂),
+        Commute (incl Finset.subset_union_left x) (incl Finset.subset_union_right y)) :
+    LocalNet sites where
+  algebra := algebra
+  incl := incl
+  incl_refl := incl_refl
+  incl_trans := incl_trans
+  locality h₁ h₂ hdisj x y := by
+    have h := (locality_union hdisj x y).map (incl (Finset.union_subset h₁ h₂))
+    rwa [incl_trans, incl_trans] at h
+
 /-- The net forms a directed system of `*`-algebras: the isotony embeddings compose and the
     identity inclusion is the identity. -/
 instance directedSystem :
