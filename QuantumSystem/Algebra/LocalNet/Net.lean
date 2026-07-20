@@ -106,9 +106,6 @@ class Faithful {sites : Type*} [DecidableEq sites] (N : LocalNet sites) : Prop w
 def algebraCongr {Λ Λ' : Finset sites} (h : Λ = Λ') : N.algebra Λ ≃⋆ₐ[ℂ] N.algebra Λ' := by
   subst h; exact StarAlgEquiv.refl
 
-@[simp] lemma algebraCongr_apply {Λ : Finset sites} (x : N.algebra Λ) :
-    N.algebraCongr (rfl : Λ = Λ) x = x := rfl
-
 /-- The isotony embeddings are natural with respect to the region-equality transport. -/
 lemma incl_algebraCongr {Λ₁ Λ₂ Λ₁' Λ₂' : Finset sites} (e₁ : Λ₁ = Λ₁') (e₂ : Λ₂ = Λ₂')
     (h : Λ₁ ⊆ Λ₂) (h' : Λ₁' ⊆ Λ₂') (x : N.algebra Λ₁) :
