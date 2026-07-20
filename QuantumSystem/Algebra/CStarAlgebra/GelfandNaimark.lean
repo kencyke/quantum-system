@@ -4,6 +4,8 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum
 
 @[expose] public section
 
+open scoped ComplexHilbertSpace
+
 universe u
 
 

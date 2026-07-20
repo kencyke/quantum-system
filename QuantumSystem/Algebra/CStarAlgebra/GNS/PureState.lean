@@ -20,7 +20,7 @@ namespace GNS
 
 namespace Representation
 
-open scoped ComplexConjugate CStarAlgebra InnerProduct NNReal
+open scoped ComplexConjugate CStarAlgebra InnerProduct NNReal ComplexHilbertSpace
 
 local notation "⟪" x ", " y "⟫" => inner ℂ x y
 

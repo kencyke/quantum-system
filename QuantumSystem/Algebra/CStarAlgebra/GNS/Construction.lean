@@ -15,7 +15,7 @@ namespace GNS
 namespace Construction
 
 open ComplexConjugate NNReal Topology Filter
-open scoped InnerProductSpace Adjoint
+open scoped InnerProductSpace Adjoint ComplexHilbertSpace
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 variable (ω : State ℂ A)

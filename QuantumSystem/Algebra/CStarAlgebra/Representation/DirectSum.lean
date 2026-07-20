@@ -48,7 +48,7 @@ decomposition.  The skeleton version
 @[expose] public section
 
 open ENNReal
-open scoped Adjoint
+open scoped Adjoint ComplexHilbertSpace
 
 namespace SectorFamily
 

@@ -20,8 +20,11 @@ variable (H : Type*) [ComplexHilbertSpace H]
 /-- The space of bounded linear operators on a complex Hilbert space. -/
 abbrev BoundedLinearOperator := H →L[ℂ] H
 
-/-- Notation for bounded linear operators on a Hilbert space. -/
-notation:50 "𝓑(" H ")" => BoundedLinearOperator H
+/-- Notation `𝓑(H)` for the bounded linear operators on a Hilbert space, living in the opt-in
+`ComplexHilbertSpace` scope; activate it with `open scoped ComplexHilbertSpace`. This is the
+type-level counterpart of the von Neumann algebra `𝓑(H)` of `Algebra.VonNeumannAlgebra.Basic`
+(they denote the same object B(H) at different levels; see `boundedLinearOperators.starAlgEquiv`). -/
+scoped notation:max "𝓑(" H ")" => BoundedLinearOperator H
 
 noncomputable instance : NonUnitalCStarAlgebra (𝓑(H)) := inferInstance
 

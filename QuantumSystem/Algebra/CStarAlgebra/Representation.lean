@@ -56,6 +56,8 @@ The forgetful projection sending a GNS triplet to its underlying
 
 @[expose] public section
 
+open scoped ComplexHilbertSpace
+
 universe u v
 
 variable {A : Type u} [NonUnitalCStarAlgebra A]

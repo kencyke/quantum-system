@@ -9,7 +9,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 
 @[expose] public section
 
-open scoped InnerProductSpace
+open scoped InnerProductSpace ComplexHilbertSpace
 
 namespace GNS
 

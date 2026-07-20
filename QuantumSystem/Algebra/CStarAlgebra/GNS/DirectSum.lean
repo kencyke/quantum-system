@@ -7,7 +7,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotatio
 
 @[expose] public section
 
-open scoped Adjoint
+open scoped Adjoint ComplexHilbertSpace
 
 namespace GNS
 
