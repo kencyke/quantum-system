@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorIdentification
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 
 /-!

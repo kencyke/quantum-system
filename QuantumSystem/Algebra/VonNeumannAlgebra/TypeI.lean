@@ -1,6 +1,7 @@
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Comparison
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorIdentification
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
@@ -22,10 +23,18 @@ continuous functional calculus inside the norm-closed corner subalgebra) yield a
 dichotomy, and a Dedekind-cut argument on `{c : ℝ | 0 ≤ x - c • p}` pins each self-adjoint
 corner element to a real multiple of `p`.
 
+This file is also the home of the factor-level type I predicates `IsTypeIFactor` and
+`IsTypeIInfinite`, and of the abstract structure theorem `IsTypeIFactor.exists_starAlgEquiv`
+identifying a type I factor with `B(K)` for some Hilbert space `K` (whose spatial content lives in
+`Algebra.VonNeumannAlgebra.TensorIdentification`).
+
 ## Main definitions
 
 * `VonNeumannAlgebra.IsTypeI N` — every nonzero central projection of `N` dominates a nonzero
   abelian projection.
+* `VonNeumannAlgebra.IsTypeIFactor N` — a factor possessing a minimal projection.
+* `VonNeumannAlgebra.IsTypeIInfinite N` — a type I factor carrying an infinite orthogonal family
+  of minimal projections (infinite multiplicity).
 * `VonNeumannAlgebra.cornerNonUnitalStarSubalgebra N hp` — the norm-closed corner `{y ∈ N | p y
   = y = y p}`.
 
@@ -41,6 +50,10 @@ corner element to a real multiple of `p`.
   it has a minimal projection.
 * `VonNeumannAlgebra.isTypeIFactor_iff_isFactor_and_isTypeI` — `IsTypeIFactor N ↔ IsFactor N ∧
   IsTypeI N`.
+* `VonNeumannAlgebra.IsTypeIInfinite.exists_injective` — the witnessing minimal projections of a
+  type I_∞ factor may be chosen injectively.
+* `VonNeumannAlgebra.IsTypeIFactor.exists_starAlgEquiv` — a type I factor is `⋆`-isomorphic to
+  `B(K)` for some complex Hilbert space `K`.
 -/
 
 @[expose] public section
@@ -55,6 +68,13 @@ everywhere in this development. -/
 def IsTypeI (N : VonNeumannAlgebra H) : Prop :=
   ∀ z : H →L[ℂ] H, IsCentralProjection N z → z ≠ 0 →
     ∃ p : H →L[ℂ] H, IsAbelianProjection N p ∧ p ≠ 0 ∧ z * p = p
+
+/-- A **type I factor**: a factor possessing a minimal projection. This is the mathematically
+conventional, intrinsic definition; the spatial decomposition `N ≅ B(H₁) ⊗̄ 1` is then a theorem,
+not part of the definition. The equivalence with the general abelian-projection definition
+`IsTypeI` is `isTypeIFactor_iff_isFactor_and_isTypeI`. -/
+def IsTypeIFactor (N : VonNeumannAlgebra H) : Prop :=
+  IsFactor N ∧ ∃ e : H →L[ℂ] H, IsMinimalProjection N e
 
 /-- A factor with a minimal projection is type I: the only nonzero central projection of a factor
 is `1` (`central_projection_eq`), and it dominates the minimal projection, which is abelian and
@@ -568,5 +588,77 @@ theorem isTypeIFactor_iff_isFactor_and_isTypeI [Nontrivial H] {N : VonNeumannAlg
     exact ⟨hf, hf.isTypeI_of_exists_isMinimalProjection he⟩
   · rintro ⟨hf, ht⟩
     exact ⟨hf, hf.isTypeI_iff_exists_isMinimalProjection.mp ht⟩
+
+/-! ### Type I_∞ factors
+
+A **type I_∞ factor** is a type I factor of infinite multiplicity, recorded intrinsically as the
+existence of an infinite orthogonal family of minimal projections. -/
+
+/-- A **type I_∞ factor**: a type I factor carrying an infinite sequence of pairwise orthogonal
+minimal projections. This is the intrinsic form of *infinite multiplicity*: through the structure
+theorem `N ≃⋆ₐ B(K)` the minimal projections are the rank-one projections, and an infinite
+orthogonal family of them exists exactly when `K` is infinite-dimensional — a type `I_n` factor
+`B(ℂⁿ)` has at most `n` pairwise orthogonal nonzero projections. As with `IsTypeIFactor`, the
+spatial identification with an infinite-dimensional `B(K)` is then a theorem, not part of the
+definition. -/
+def IsTypeIInfinite (N : VonNeumannAlgebra H) : Prop :=
+  IsTypeIFactor N ∧
+    ∃ e : ℕ → (H →L[ℂ] H),
+      (∀ n, IsMinimalProjection N (e n)) ∧
+      (∀ m n, m ≠ n → e m * e n = 0)
+
+/-- An orthogonal sequence of minimal projections is injective. -/
+lemma injective_of_isMinimalProjection_orthogonal {N : VonNeumannAlgebra H}
+    {e : ℕ → (H →L[ℂ] H)} (hmin : ∀ n, IsMinimalProjection N (e n))
+    (horth : ∀ m n, m ≠ n → e m * e n = 0) : Function.Injective e := by
+  intro m n hmn
+  by_contra hne
+  have h0 := horth m n hne
+  rw [hmn, (hmin n).1.isIdempotentElem] at h0
+  exact (hmin n).2.2.1 h0
+
+/-- The witnessing minimal projections of a type I_∞ factor may be chosen injectively. -/
+lemma IsTypeIInfinite.exists_injective {N : VonNeumannAlgebra H} (hN : IsTypeIInfinite N) :
+    ∃ e : ℕ → (H →L[ℂ] H), Function.Injective e ∧
+      (∀ n, IsMinimalProjection N (e n)) ∧
+      (∀ m n, m ≠ n → e m * e n = 0) := by
+  obtain ⟨-, e, hmin, horth⟩ := hN
+  exact ⟨e, injective_of_isMinimalProjection_orthogonal hmin horth, hmin, horth⟩
+
+/-- A type I_∞ factor is in particular a type I factor. -/
+lemma IsTypeIInfinite.isTypeIFactor {N : VonNeumannAlgebra H} (hN : IsTypeIInfinite N) :
+    IsTypeIFactor N := hN.1
+
+/-! ### Abstract structure theorem
+
+A type I factor is `⋆`-isomorphic to `B(K)` for some Hilbert space `K`. The spatial content — the
+implementing unitary and the multiplicity model `K = ℓ²(F)` — is
+`IsFactor.exists_spatial_tensorDecomposition` in `Algebra.VonNeumannAlgebra.TensorIdentification`;
+here it is packaged as an abstract `⋆`-isomorphism. -/
+
+universe u
+
+/-- **Type I factor abstract structure theorem.** A type I factor `N` (a factor with a minimal
+projection, acting on a nonzero Hilbert space) is `⋆`-isomorphic to the algebra `B(K)` of all
+bounded operators on *some* complex Hilbert space `K`. This is the model-independent form of the
+classification of type I factors: `B(K)` for `K = ℓ²(F)` is exactly the type `I_{|F|}` factor, and
+`K = H` recovers the full algebra `B(H)` as the type `I` factor `⊤`. The spatial content — that the
+isomorphism is implemented by a unitary and that `K` is the multiplicity space of the minimal
+projection — is `IsFactor.exists_spatial_tensorDecomposition`; here it is packaged as an abstract
+`⋆`-isomorphism, hiding the specific model `K = ℓ²(F)` behind an existential. -/
+theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] {N : VonNeumannAlgebra H}
+    (hN : IsTypeIFactor N) :
+    ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
+      Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
+  obtain ⟨hFactor, e, he⟩ := hN
+  obtain ⟨F, U, hU, -⟩ := hFactor.exists_spatial_tensorDecomposition he
+  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  haveI : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
+    rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
+    exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
+      (h.trans ContinuousLinearMap.coe_zero.symm))
+  exact ⟨lp (fun _ : F => ℂ) 2, inferInstance, inferInstance, inferInstance,
+    ⟨(conjEquiv U N).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
 
 end VonNeumannAlgebra

@@ -383,29 +383,4 @@ theorem IsFactor.exists_split_tensorDecomposition {N : VonNeumannAlgebra H}
     hF.conj_spatialEquiv_le_vnTensorLeft he htop h₁,
     hF.conj_spatialEquiv_le_vnTensorRight he htop h₂⟩
 
-universe u
-
-/-- **Type I factor abstract structure theorem.** A type I factor `N` (a factor with a minimal
-projection, acting on a nonzero Hilbert space) is `⋆`-isomorphic to the algebra `B(K)` of all
-bounded operators on *some* complex Hilbert space `K`. This is the model-independent form of the
-classification of type I factors: `B(K)` for `K = ℓ²(F)` is exactly the type `I_{|F|}` factor, and
-`K = H` recovers the full algebra `B(H)` as the type `I` factor `⊤`. The spatial content — that the
-isomorphism is implemented by a unitary and that `K` is the multiplicity space of the minimal
-projection — is `IsFactor.exists_spatial_tensorDecomposition`; here it is packaged as an abstract
-`⋆`-isomorphism, hiding the specific model `K = ℓ²(F)` behind an existential. -/
-theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
-    [InnerProductSpace ℂ H] [CompleteSpace H] {N : VonNeumannAlgebra H}
-    (hN : IsTypeIFactor N) :
-    ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
-      Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
-  obtain ⟨hFactor, e, he⟩ := hN
-  obtain ⟨F, U, hU, -⟩ := hFactor.exists_spatial_tensorDecomposition he
-  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  haveI : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
-    rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
-    exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
-      (h.trans ContinuousLinearMap.coe_zero.symm))
-  exact ⟨lp (fun _ : F => ℂ) 2, inferInstance, inferInstance, inferInstance,
-    ⟨(conjEquiv U N).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
-
 end VonNeumannAlgebra
