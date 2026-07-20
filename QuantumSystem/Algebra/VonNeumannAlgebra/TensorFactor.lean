@@ -3,7 +3,7 @@ module
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
-public import QuantumSystem.Algebra.VonNeumannAlgebra.Factor
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
