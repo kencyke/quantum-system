@@ -20,10 +20,12 @@ public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
+public import QuantumSystem.Algebra.LocalNet.SplitProperty
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition
+public import QuantumSystem.Algebra.VonNeumannAlgebra.SplitInclusion
 public import QuantumSystem.Algebra.VonNeumannAlgebra.StructureTheorem
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI

@@ -16,9 +16,10 @@ finite-dimensional quantum-information argument
 2. the data-processing inequality `Matrix.relativeEntropy_channel_le` for the
    trace-out-`C` channel `Matrix.QuantumChannel.traceOutC`.
 
-The AQFT companion — the same inequality stated representation-free over an abstract operator-
-algebraic split net with nested regions — is `LocalNet.Split.vonNeumannEntropy_SSA`
-(`SplitSSA.lean`), which transports this result to the net.
+The AQFT companion — the same inequality stated over a local net with nested regions, using the
+split property `LocalNet.SplitProperty` (`Algebra/LocalNet/SplitProperty.lean`) — is the planned
+`LocalNet.SplitProperty.vonNeumannEntropy_SSA` (`Analysis/Entropy/SplitSSA.lean`, not yet
+formalised), which will transport this result to the net.
 
 ## Main results
 

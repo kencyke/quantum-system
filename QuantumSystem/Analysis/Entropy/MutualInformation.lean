@@ -12,9 +12,10 @@ product index type `n × m`:
 
   `D(ρ_AB ‖ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
 
-It is representation-free; the analytic core reused both by the direct proof
-(`Analysis/Entropy/StrongSubadditivity.lean`) and, via transport, by the abstract split-net
-proof (`Analysis/Entropy/SplitSSA.lean`).
+It is representation-free; the analytic core reused by the direct proof
+(`Analysis/Entropy/StrongSubadditivity.lean`) and, via transport, by the planned split-net proof
+(`Analysis/Entropy/SplitSSA.lean`, not yet formalised — the split property it rests on is
+`LocalNet.SplitProperty`).
 -/
 
 @[expose] public section
