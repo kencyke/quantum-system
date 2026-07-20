@@ -9,14 +9,17 @@ public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 # The quasi-local algebra of a local net
 
 The **algebra of local observables** and the **quasi-local C⋆-algebra** of an abstract local net
-`LocalNet`. These constructions apply to *any* local net.
+`LocalNet`. These constructions apply to any local net over a *directed* causal index set
+(`IsDirectedOrder`, with a region to start from, `Nonempty`): directedness is what makes the
+union of the local algebras an algebra. Lattice nets (`K = Finset sites`) are directed by unions
+with the empty region as base point.
 
-* `LocalNet.quasiLocalAlgebra` is the algebraic inductive limit `‾⋃_Λ 𝔄(Λ)` of the local algebras
+* `LocalNet.quasiLocalAlgebra` is the algebraic inductive limit `‾⋃_O 𝔄(O)` of the local algebras
   along the isotony embeddings, with cocone `ιLocal`, exhaustion (`exists_ιLocal`) and locality
-  (`ιLocal_commute_of_disjoint`).
+  (`ιLocal_commute_of_orthogonal`).
 * For a `Faithful` net the connecting maps are isometric, so the algebra of local observables
   carries a C⋆-norm whose completion `LocalNet.quasiLocalCStarAlgebra` is the AQFT quasi-local
-  algebra `𝔄 = ‾⋃_Λ 𝔄(Λ)` (Naaijkens 2012 §1.3, Bratteli–Robinson Vol.2 §6.2), with dense local
+  algebra `𝔄 = ‾⋃_O 𝔄(O)` (Naaijkens 2012 §1.3, Bratteli–Robinson Vol.2 §6.2), with dense local
   embeddings `ιLocalCStar`.
 
 A `LocalNet.Covariance` (defined in `LocalNet.Covariance`) acts on these algebras: its per-region
@@ -31,11 +34,14 @@ observables, which is functorial and is shown `ℂ`-linear and `*`-preserving �
 
 namespace LocalNet
 
-variable {sites : Type*} [DecidableEq sites] (N : LocalNet sites)
+open scoped CausalOrthogonality
+
+variable {K : Type*} [PartialOrder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
+variable (N : LocalNet K)
 
 /-! ### Algebra of local observables
 
-These constructions apply to any abstract local net.
+These constructions apply to any abstract local net over a directed causal index set.
 -/
 
 /-- The **algebra of local observables** of the net: the algebraic inductive limit of the local
@@ -43,61 +49,57 @@ These constructions apply to any abstract local net.
 noncomputable abbrev quasiLocalAlgebra : Type _ :=
   DirectLimit N.algebra (fun _ _ h => N.incl h)
 
+omit [Nonempty K] in
 /-- Componentwise behaviour of the involution on the algebra of local observables. The
     `Star`, `StarRing`, `Algebra ℂ` and `StarModule ℂ` instances come from the general
-    direct-limit constructions, since each `algebra Λ` is a `ℂ`-`*`-algebra and `incl` is a
+    direct-limit constructions, since each `algebra O` is a `ℂ`-`*`-algebra and `incl` is a
     `*`-algebra homomorphism. -/
-@[simp] lemma star_mk {Λ : Finset sites} (X : N.algebra Λ) :
-    star (⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨Λ, star X⟩⟧ := rfl
+@[simp] lemma star_mk {O : K} (X : N.algebra O) :
+    star (⟦⟨O, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨O, star X⟩⟧ := rfl
 
-/-- The canonical embedding `𝔄(Λ) ↪ 𝔄_loc` of a local algebra into the algebra of local
+/-- The canonical embedding `𝔄(O) ↪ 𝔄_loc` of a local algebra into the algebra of local
     observables, as a unital ring homomorphism (the cocone of the inductive limit). -/
-noncomputable def ιLocal (Λ : Finset sites) :
-    N.algebra Λ →+* N.quasiLocalAlgebra :=
-  DirectLimit.Ring.of N.algebra (fun _ _ h => N.incl h) Λ
+noncomputable def ιLocal (O : K) :
+    N.algebra O →+* N.quasiLocalAlgebra :=
+  DirectLimit.Ring.of N.algebra (fun _ _ h => N.incl h) O
 
-/-- Compatibility of the cocone with the isotony embeddings: including `X` from `Λ` into the
-    larger region `Λ'` and then into `𝔄_loc` is the same as including `X` directly. -/
-@[simp] lemma ιLocal_incl {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (X : N.algebra Λ) :
-    N.ιLocal Λ' (N.incl h X) = N.ιLocal Λ X :=
+/-- Compatibility of the cocone with the isotony embeddings: including `X` from `O` into the
+    larger region `O'` and then into `𝔄_loc` is the same as including `X` directly. -/
+@[simp] lemma ιLocal_incl {O O' : K} (h : O ≤ O') (X : N.algebra O) :
+    N.ιLocal O' (N.incl h X) = N.ιLocal O X :=
   DirectLimit.Ring.of_f (G := N.algebra) (f := fun _ _ h => N.incl h) h X
 
 /-- The cocone is a `*`-homomorphism: it intertwines the local and quasi-local involutions. -/
-@[simp] lemma ιLocal_star {Λ : Finset sites} (X : N.algebra Λ) :
-    N.ιLocal Λ (star X) = star (N.ιLocal Λ X) :=
+@[simp] lemma ιLocal_star {O : K} (X : N.algebra O) :
+    N.ιLocal O (star X) = star (N.ιLocal O X) :=
   (star_mk (N := N) X).symm
 
 /-- The cocone of the inductive limit absorbs the region-equality transport. -/
-@[simp] lemma ιLocal_algebraCongr {Λ Λ' : Finset sites} (h : Λ = Λ') (x : N.algebra Λ) :
-    N.ιLocal Λ' (N.algebraCongr h x) = N.ιLocal Λ x := by
+@[simp] lemma ιLocal_algebraCongr {O O' : K} (h : O = O') (x : N.algebra O) :
+    N.ιLocal O' (N.algebraCongr h x) = N.ιLocal O x := by
   subst h; rfl
 
 /-- **Exhaustion**: every element of the algebra of local observables is the image of a local
-    observable from some finite region — the union of the local algebras is the whole limit. -/
+    observable from some region — the union of the local algebras is the whole limit. -/
 theorem exists_ιLocal (z : N.quasiLocalAlgebra) :
-    ∃ (Λ : Finset sites) (X : N.algebra Λ), z = N.ιLocal Λ X := by
+    ∃ (O : K) (X : N.algebra O), z = N.ιLocal O X := by
   induction z using DirectLimit.induction with
-  | _ Λ X => exact ⟨Λ, X, rfl⟩
+  | _ O X => exact ⟨O, X, rfl⟩
 
-/-- **Locality in the algebra of local observables**: observables localised in disjoint regions
-    commute inside `𝔄_loc`. Lifts the net's `locality` along the ring-hom cocone. -/
-theorem ιLocal_commute_of_disjoint {Λ₁ Λ₂ : Finset sites} (hd : Disjoint Λ₁ Λ₂)
-    (X : N.algebra Λ₁) (Y : N.algebra Λ₂) :
-    Commute (N.ιLocal Λ₁ X) (N.ιLocal Λ₂ Y) := by
-  have h1 : N.ιLocal Λ₁ X
-      = N.ιLocal (Λ₁ ∪ Λ₂) (N.incl Finset.subset_union_left X) :=
-    (N.ιLocal_incl Finset.subset_union_left X).symm
-  have h2 : N.ιLocal Λ₂ Y
-      = N.ιLocal (Λ₁ ∪ Λ₂) (N.incl Finset.subset_union_right Y) :=
-    (N.ιLocal_incl Finset.subset_union_right Y).symm
-  rw [h1, h2]
-  exact (N.locality Finset.subset_union_left Finset.subset_union_right hd X Y).map
-    (N.ιLocal (Λ₁ ∪ Λ₂))
+/-- **Locality in the algebra of local observables**: observables localised in causally orthogonal
+    regions commute inside `𝔄_loc`. Pushes both observables into a directed upper bound of the two
+    regions and lifts the net's `locality` along the ring-hom cocone. -/
+theorem ιLocal_commute_of_orthogonal {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) :
+    Commute (N.ιLocal O₁ X) (N.ιLocal O₂ Y) := by
+  obtain ⟨O, h₁, h₂⟩ := directed_of (· ≤ ·) O₁ O₂
+  rw [← N.ιLocal_incl h₁ X, ← N.ιLocal_incl h₂ Y]
+  exact (N.locality h₁ h₂ hd X Y).map (N.ιLocal O)
 
 /-! ### Faithful nets and the quasi-local C⋆-algebra
 
 For a faithful net the connecting maps are isometric, so the algebra of local observables carries
-a C⋆-norm whose completion is the quasi-local C⋆-algebra `𝔄 = ‾⋃_Λ 𝔄(Λ)`.
+a C⋆-norm whose completion is the quasi-local C⋆-algebra `𝔄 = ‾⋃_O 𝔄(O)`.
 -/
 
 section CStar
@@ -109,56 +111,57 @@ variable [N.Faithful]
 noncomputable instance : NormedRing N.quasiLocalAlgebra :=
   DirectLimit.cstarNormedRing (fun _ _ h => Faithful.incl_injective h)
 
-@[simp] lemma norm_mk {Λ : Finset sites} (X : N.algebra Λ) :
-    ‖(⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra)‖ = ‖X‖ := rfl
+@[simp] lemma norm_mk {O : K} (X : N.algebra O) :
+    ‖(⟦⟨O, X⟩⟧ : N.quasiLocalAlgebra)‖ = ‖X‖ := rfl
 
 /-- The C⋆-norm is compatible with the `ℂ`-algebra structure. -/
 noncomputable instance : NormedAlgebra ℂ N.quasiLocalAlgebra where
   norm_smul_le c x := by
     induction x using DirectLimit.induction with
-    | _ Λ X => rw [DirectLimit.smul_def, norm_mk, norm_mk]; exact norm_smul_le c X
+    | _ O X => rw [DirectLimit.smul_def, norm_mk, norm_mk]; exact norm_smul_le c X
 
 /-- `star` is isometric on the algebra of local observables. -/
 instance : NormedStarGroup N.quasiLocalAlgebra where
   norm_star_le x := by
     induction x using DirectLimit.induction with
-    | _ Λ X => rw [star_mk, norm_mk, norm_mk]; exact (norm_star X).le
+    | _ O X => rw [star_mk, norm_mk, norm_mk]; exact (norm_star X).le
 
 /-- The C⋆-identity holds on the algebra of local observables. -/
 instance : CStarRing N.quasiLocalAlgebra where
   norm_mul_self_le x := by
     induction x using DirectLimit.induction with
-    | _ Λ X => rw [star_mk, DirectLimit.mul_def, norm_mk, norm_mk]
+    | _ O X => rw [star_mk, DirectLimit.mul_def, norm_mk, norm_mk]
                exact CStarRing.norm_mul_self_le X
 
 /-- The **quasi-local C⋆-algebra** of a faithful net: the completion of the algebra of local
-    observables. This is the AQFT quasi-local algebra `𝔄 = ‾⋃_Λ 𝔄(Λ)`. -/
+    observables. This is the AQFT quasi-local algebra `𝔄 = ‾⋃_O 𝔄(O)`. -/
 noncomputable abbrev quasiLocalCStarAlgebra : Type _ :=
   UniformSpace.Completion N.quasiLocalAlgebra
 
 noncomputable example : CStarAlgebra N.quasiLocalCStarAlgebra := inferInstance
 
-/-- The canonical embedding `𝔄(Λ) → 𝔄` of a local algebra into the quasi-local C⋆-algebra,
+/-- The canonical embedding `𝔄(O) → 𝔄` of a local algebra into the quasi-local C⋆-algebra,
     as the completion coercion composed with the inductive-limit cocone. Its range is dense. -/
-noncomputable def ιLocalCStar (Λ : Finset sites) :
-    N.algebra Λ → N.quasiLocalCStarAlgebra :=
-  (↑) ∘ N.ιLocal Λ
+noncomputable def ιLocalCStar (O : K) :
+    N.algebra O → N.quasiLocalCStarAlgebra :=
+  (↑) ∘ N.ιLocal O
 
 /-- The local algebras are dense in the quasi-local C⋆-algebra: every element is a norm-limit of
     local observables. -/
 theorem denseRange_iUnion_ιLocalCStar :
-    Dense (⋃ Λ : Finset sites, Set.range (N.ιLocalCStar Λ)) := by
+    Dense (⋃ O : K, Set.range (N.ιLocalCStar O)) := by
   refine UniformSpace.Completion.denseRange_coe.mono ?_
   rintro _ ⟨z, rfl⟩
-  obtain ⟨Λ, X, rfl⟩ := N.exists_ιLocal z
-  exact Set.mem_iUnion.2 ⟨Λ, X, rfl⟩
+  obtain ⟨O, X, rfl⟩ := N.exists_ιLocal z
+  exact Set.mem_iUnion.2 ⟨O, X, rfl⟩
 
-/-- **Locality in the quasi-local C⋆-algebra**: observables localised in disjoint regions commute
-    inside `𝔄`. Transports `ιLocal_commute_of_disjoint` along the completion coercion. -/
-theorem ιLocalCStar_commute_of_disjoint {Λ₁ Λ₂ : Finset sites} (hd : Disjoint Λ₁ Λ₂)
-    (X : N.algebra Λ₁) (Y : N.algebra Λ₂) :
-    Commute (N.ιLocalCStar Λ₁ X) (N.ιLocalCStar Λ₂ Y) :=
-  (N.ιLocal_commute_of_disjoint hd X Y).map UniformSpace.Completion.coeRingHom
+/-- **Locality in the quasi-local C⋆-algebra**: observables localised in causally orthogonal
+    regions commute inside `𝔄`. Transports `ιLocal_commute_of_orthogonal` along the completion
+    coercion. -/
+theorem ιLocalCStar_commute_of_orthogonal {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) :
+    Commute (N.ιLocalCStar O₁ X) (N.ιLocalCStar O₂ Y) :=
+  (N.ιLocal_commute_of_orthogonal hd X Y).map UniformSpace.Completion.coeRingHom
 
 end CStar
 
@@ -168,18 +171,18 @@ variable {N} (a : N.Covariance)
 
 /-! ### The induced covariance action -/
 
-/-- The **covariance action** `β_a ⟦⟨Λ, X⟩⟧ = ⟦⟨σΛ, β_Λ X⟩⟧` of a covariance on the algebra of local
+/-- The **covariance action** `β_a ⟦⟨O, X⟩⟧ = ⟦⟨σO, β_O X⟩⟧` of a covariance on the algebra of local
     observables, as a ring homomorphism. Well-defined by naturality (`β_incl`). -/
 noncomputable def quasiLocalCovariance : N.quasiLocalAlgebra →+* N.quasiLocalAlgebra :=
   DirectLimit.Ring.lift N.algebra (fun _ _ h => N.incl h) N.quasiLocalAlgebra
-    (fun Λ => (N.ιLocal (a.region Λ)).comp (a.β Λ).toAlgEquiv.toAlgHom.toRingHom)
-    (fun Λ Λ' h X => by
-      change N.ιLocal (a.region Λ') (a.β Λ' (N.incl h X)) = N.ιLocal (a.region Λ) (a.β Λ X)
+    (fun O => (N.ιLocal (a.region O)).comp (a.β O).toAlgEquiv.toAlgHom.toRingHom)
+    (fun O O' h X => by
+      change N.ιLocal (a.region O') (a.β O' (N.incl h X)) = N.ιLocal (a.region O) (a.β O X)
       rw [a.β_incl h]
       exact N.ιLocal_incl _ _)
 
-@[simp] lemma quasiLocalCovariance_mk {Λ : Finset sites} (X : N.algebra Λ) :
-  a.quasiLocalCovariance (⟦⟨Λ, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨a.region Λ, a.β Λ X⟩⟧ :=
+@[simp] lemma quasiLocalCovariance_mk {O : K} (X : N.algebra O) :
+  a.quasiLocalCovariance (⟦⟨O, X⟩⟧ : N.quasiLocalAlgebra) = ⟦⟨a.region O, a.β O X⟩⟧ :=
   rfl
 
 /-- The covariance action of the identity covariance is the identity: `β_{id} = id`. -/
@@ -187,7 +190,7 @@ noncomputable def quasiLocalCovariance : N.quasiLocalAlgebra →+* N.quasiLocalA
   (Covariance.id N).quasiLocalCovariance = RingHom.id N.quasiLocalAlgebra := by
   refine RingHom.ext fun z => ?_
   induction z using DirectLimit.induction with
-  | _ Λ X => rw [quasiLocalCovariance_mk, RingHom.id_apply]; exact N.ιLocal_algebraCongr _ X
+  | _ O X => rw [quasiLocalCovariance_mk, RingHom.id_apply]; rfl
 
 /-- **Functoriality of the covariance action**: composing covariances composes their actions,
     `β_{a∘b} = β_a ∘ β_b`. -/
@@ -195,9 +198,9 @@ noncomputable def quasiLocalCovariance : N.quasiLocalAlgebra →+* N.quasiLocalA
   (a.comp b).quasiLocalCovariance = a.quasiLocalCovariance.comp b.quasiLocalCovariance := by
   refine RingHom.ext fun z => ?_
   induction z using DirectLimit.induction with
-  | _ Λ X =>
+  | _ O X =>
     simp only [RingHom.comp_apply, quasiLocalCovariance_mk]
-    exact N.ιLocal_algebraCongr _ _
+    rfl
 
 /-- The covariance action sends the unit covariance to the identity: `β_1 = id`. -/
 @[simp] lemma quasiLocalCovariance_one :
@@ -215,7 +218,7 @@ lemma quasiLocalCovariance_mul (a b : N.Covariance) :
 lemma quasiLocalCovariance_smul (c : ℂ) (z : N.quasiLocalAlgebra) :
   a.quasiLocalCovariance (c • z) = c • a.quasiLocalCovariance z := by
   induction z using DirectLimit.induction with
-  | _ Λ X =>
+  | _ O X =>
     rw [DirectLimit.smul_def, quasiLocalCovariance_mk, quasiLocalCovariance_mk, DirectLimit.smul_def,
       map_smul]
     rfl
@@ -225,7 +228,7 @@ lemma quasiLocalCovariance_smul (c : ℂ) (z : N.quasiLocalAlgebra) :
 lemma quasiLocalCovariance_star (z : N.quasiLocalAlgebra) :
   a.quasiLocalCovariance (star z) = star (a.quasiLocalCovariance z) := by
   induction z using DirectLimit.induction with
-  | _ Λ X =>
+  | _ O X =>
     rw [star_mk, quasiLocalCovariance_mk, quasiLocalCovariance_mk, star_mk, map_star]
     rfl
 
@@ -280,7 +283,7 @@ variable [N.Faithful]
 lemma quasiLocalCovariance_norm (z : N.quasiLocalAlgebra) :
   ‖a.quasiLocalCovariance z‖ = ‖z‖ := by
   induction z using DirectLimit.induction with
-  | _ Λ X =>
+  | _ O X =>
     rw [quasiLocalCovariance_mk, norm_mk, norm_mk]
     exact StarAlgEquiv.norm_map _ X
 
