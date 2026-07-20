@@ -1,6 +1,6 @@
 ---
 name: ingest-paper
-description: Convert a paper or lecture-note PDF into agent-navigable Markdown under references/<slug>/, as the groundwork for grilling its formalization plan.
+description: Convert a paper or lecture-note PDF into agent-navigable Markdown under references/<slug>/, as the groundwork for interrogating its formalization plan.
 disable-model-invocation: true
 ---
 

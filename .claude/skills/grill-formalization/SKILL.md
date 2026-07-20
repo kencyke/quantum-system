@@ -8,8 +8,8 @@ disable-model-invocation: true
 
 Interview the user relentlessly about a formalization plan until every decision
 that would become permanent sediment in the Lean development is settled —
-*before* any tactic is typed. This is `grilling` aimed at one target: the plan to
-formalize an ingested paper.
+*before* any tactic is typed. This is a relentless interview aimed at one target:
+the plan to formalize an ingested paper.
 
 Run this after `ingest-paper` has left a navigable `references/<slug>/INDEX.md`.
 Read that substrate and `AGENTS.md` first; every recommendation you make is
