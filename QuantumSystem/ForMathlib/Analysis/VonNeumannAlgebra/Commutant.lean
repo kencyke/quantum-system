@@ -147,6 +147,10 @@ lemma generated_le {s : Set (H →L[ℂ] H)} {M : VonNeumannAlgebra H}
   have h2 := commutant_le h1
   rwa [VonNeumannAlgebra.commutant_commutant, VonNeumannAlgebra.commutant_commutant] at h2
 
+/-- The generated von Neumann algebra is monotone in the generating set. -/
+lemma generated_mono {s t : Set (H →L[ℂ] H)} (h : s ⊆ t) : generated s ≤ generated t :=
+  generated_le fun _ hx => SetLike.mem_coe.mpr (mem_generated_of_mem (h hx))
+
 /-! ### Unitary conjugation of a von Neumann algebra -/
 
 variable {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H'] [CompleteSpace H']
