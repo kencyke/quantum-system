@@ -56,8 +56,10 @@ carries the matrix unit `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨
   `U N U⋆ = B(ℓ²(F)) ⊗̄ 1`, with commutant companion `conj_spatialEquiv_commutant_eq_vnTensorRight`.
 * `VonNeumannAlgebra.IsFactor.exists_spatial_tensorDecomposition` — the existence headline.
 * `VonNeumannAlgebra.IsFactor.exists_split_tensorDecomposition` — the split tensor decomposition:
-  for an intermediate type I factor `A₁ ≤ N ≤ A₂'`, the same `U` sends `A₁` into `B(ℓ²(F)) ⊗̄ 1`
-  and `A₂` into `1 ⊗̄ B(eH)`.
+  for an inclusion `A ≤ B` of von Neumann algebras with intermediate type I factor `A ≤ N ≤ B` —
+  a *split inclusion* in the sense of Doplicher–Longo (see
+  `VonNeumannAlgebra.IsSplitInclusion`) — the same `U` sends `A` into `B(ℓ²(F)) ⊗̄ 1` and the
+  commutant `B′` into `1 ⊗̄ B(eH)`.
 -/
 
 @[expose] public section
@@ -481,31 +483,28 @@ theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_vnTensorRight (hF : OrthEqui
   rw [← VonNeumannAlgebra.conj_commutant, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     vnTensorLeft_commutant]
 
-/-- **Split inclusion (left factor).** Any von Neumann subalgebra `A₁ ≤ N` of the type I factor `N`
-is carried by the spatial isomorphism into the left tensor factor: `U A₁ U⋆ ≤ B(ℓ²(F)) ⊗̄ 1`. This
+/-- **Left factor absorption.** Any von Neumann subalgebra `A ≤ N` of the type I factor `N`
+is carried by the spatial isomorphism into the left tensor factor: `U A U⋆ ≤ B(ℓ²(F)) ⊗̄ 1`. This
 is monotonicity of spatial conjugation composed with `U N U⋆ = vnTensorLeft`. -/
 lemma OrthEquivFam.conj_spatialEquiv_le_vnTensorLeft (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))]
-    {A₁ : VonNeumannAlgebra H} (h₁ : A₁ ≤ N) :
-    VonNeumannAlgebra.conj (hF.spatialEquiv htop) A₁ ≤ vnTensorLeft :=
+    {A : VonNeumannAlgebra H} (h₁ : A ≤ N) :
+    VonNeumannAlgebra.conj (hF.spatialEquiv htop) A ≤ vnTensorLeft :=
   (VonNeumannAlgebra.conj_mono _ h₁).trans_eq (hF.conj_spatialEquiv_eq_vnTensorLeft he htop)
 
-/-- **Split inclusion (right factor).** Any von Neumann algebra `A₂` whose commutant contains `N`
-(equivalently `A₂ ⊆ N'`) is carried by the spatial isomorphism into the right tensor factor:
-`U A₂ U⋆ ≤ 1 ⊗̄ B(eH)`. The hypothesis `N ≤ A₂'` is the split-property condition; taking commutants
-turns it into `A₂ ≤ N'`, and monotonicity composed with `U N' U⋆ = vnTensorRight` finishes. -/
+/-- **Right factor absorption.** For any von Neumann algebra `B` containing `N`, the commutant
+`B′` is carried by the spatial isomorphism into the right tensor factor: `U B′ U⋆ ≤ 1 ⊗̄ B(eH)`.
+Taking commutants in `N ≤ B` gives `B′ ≤ N′`, and monotonicity composed with
+`U N′ U⋆ = vnTensorRight` finishes. -/
 lemma OrthEquivFam.conj_spatialEquiv_le_vnTensorRight (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))]
-    {A₂ : VonNeumannAlgebra H} (h₂ : N ≤ A₂′) :
-    VonNeumannAlgebra.conj (hF.spatialEquiv htop) A₂ ≤ vnTensorRight := by
-  have hA₂ : A₂ ≤ N′ := by
-    have h := VonNeumannAlgebra.commutant_le h₂
-    rwa [VonNeumannAlgebra.commutant_commutant] at h
-  exact (VonNeumannAlgebra.conj_mono _ hA₂).trans_eq
+    {B : VonNeumannAlgebra H} (h₂ : N ≤ B) :
+    VonNeumannAlgebra.conj (hF.spatialEquiv htop) B′ ≤ vnTensorRight :=
+  (VonNeumannAlgebra.conj_mono _ (VonNeumannAlgebra.commutant_le h₂)).trans_eq
     (hF.conj_spatialEquiv_commutant_eq_vnTensorRight he htop)
 
 omit [CompleteSpace H] in
@@ -547,22 +546,29 @@ theorem IsFactor.exists_spatial_tensorDecomposition {N : VonNeumannAlgebra H}
   exact ⟨F, hF.spatialEquiv htop, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     hF.conj_spatialEquiv_commutant_eq_vnTensorRight he htop⟩
 
-/-- **Split tensor decomposition (Yngvason §5.1 (38)→(39)).** Suppose an intermediate type I factor
-`N ⊆ B(H)` with minimal projection `e` is sandwiched between two von Neumann algebras,
-`A₁ ≤ N ≤ A₂'` — the *split property* for the pair `(A₁, A₂)`. Then there is a spatial isomorphism
-`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` simultaneously tensor-splitting both algebras: `A₁` lands in the left
-factor `B(ℓ²(F)) ⊗̄ 1` and `A₂` lands in the right factor `1 ⊗̄ B(eH)`, with `N` and its commutant
-identified exactly. The existence of such an intermediate type I factor `N` is the
-model-dependent split-property input; everything downstream of it is proved here. -/
+/-- **Split tensor decomposition (Yngvason §5.1 (38)→(39)).** Suppose an inclusion `A ≤ B` of von
+Neumann algebras admits an intermediate factor `N ⊆ B(H)` with minimal projection `e` — that is,
+`A ≤ N ≤ B` with `N` type I. The existence of such an `N` is precisely what makes `A ≤ B` a
+*split inclusion* in the sense of Doplicher–Longo (*Standard and split inclusions of von Neumann
+algebras*, Invent. Math. 75, 1984); the named form of that definition, `IsSplitInclusion`, and its
+consequences live in `QuantumSystem.Algebra.VonNeumannAlgebra.SplitInclusion`. In AQFT the split
+inclusions of interest are `𝓡(O₁) ≤ 𝓡(O₂)` for properly contained regions — the *split property*
+of a local net (Buchholz, *Product states for local algebras*, Comm. Math. Phys. 36, 1974).
+
+The conclusion: there is a spatial isomorphism `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` simultaneously
+tensor-splitting the inclusion — `A` lands in the left factor `B(ℓ²(F)) ⊗̄ 1` and the commutant
+`B′` lands in the right factor `1 ⊗̄ B(eH)`, with `N` and its commutant identified exactly. The
+commuting-pair form of this statement — `A₁ ≤ N ≤ A₂′` for a pair `(A₁, A₂)` — is recovered by
+instantiating `B := A₂′`. -/
 theorem IsFactor.exists_split_tensorDecomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
-    {A₁ A₂ : VonNeumannAlgebra H} (h₁ : A₁ ≤ N) (h₂ : N ≤ A₂′) :
+    {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ]
         HilbertTensor (lp (fun _ : F => ℂ) 2) (LinearMap.range (e : H →ₗ[ℂ] H))),
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight ∧
-      VonNeumannAlgebra.conj U A₁ ≤ vnTensorLeft ∧
-      VonNeumannAlgebra.conj U A₂ ≤ vnTensorRight := by
+      VonNeumannAlgebra.conj U A ≤ vnTensorLeft ∧
+      VonNeumannAlgebra.conj U B′ ≤ vnTensorRight := by
   haveI := he.nontrivial
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
   haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
