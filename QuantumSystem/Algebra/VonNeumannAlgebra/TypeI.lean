@@ -29,7 +29,7 @@ identifying a type I factor with `B(K)` for some Hilbert space `K` (whose spatia
 `QuantumSystem.Algebra.VonNeumannAlgebra.StructureTheorem`).
 
 Finally, the file develops the **fundamental example** `B(H)`: the algebra of *all* bounded
-operators, realised as the greatest von Neumann algebra `⊤ : VonNeumannAlgebra H` (supplied in
+operators, `𝓑(H) : VonNeumannAlgebra H` (supplied in
 `QuantumSystem.Algebra.VonNeumannAlgebra.Basic`), is a factor — its centre is the scalars, by the
 elementary fact that an operator commuting with every rank-one operator is scalar. It possesses a
 minimal projection, namely any rank-one orthogonal projection `|u⟩⟨u|` with `‖u‖ = 1`. Hence
@@ -70,7 +70,7 @@ infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**.
 * `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(K)` for some
   Hilbert space `K`.
 * `VonNeumannAlgebra.isTypeIInfinite_boundedLinearOperators` — for infinite-dimensional `H`, `B(H)`
-  is a type I_∞ factor, packaged as the intrinsic predicate `IsTypeIInfinite ⊤`.
+  is a type I_∞ factor, packaged as the intrinsic predicate `IsTypeIInfinite 𝓑(H)`.
 * `VonNeumannAlgebra.exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators` — for
   infinite-dimensional `H`, `B(H) ≃⋆ₐ B(K)` with `K` itself infinite-dimensional.
 -/
@@ -661,7 +661,7 @@ universe u
 projection, acting on a nonzero Hilbert space) is `⋆`-isomorphic to the algebra `B(K)` of all
 bounded operators on *some* complex Hilbert space `K`. This is the model-independent form of the
 classification of type I factors: `B(K)` for `K = ℓ²(F)` is exactly the type `I_{|F|}` factor, and
-`K = H` recovers the full algebra `B(H)` as the type `I` factor `⊤`. The spatial content — that the
+`K = H` recovers the full algebra `B(H)` as the type `I` factor `𝓑(H)`. The spatial content — that the
 isomorphism is implemented by a unitary and that `K` is the multiplicity space of the minimal
 projection — is `IsFactor.exists_spatial_tensorDecomposition`; here it is packaged as an abstract
 `⋆`-isomorphism, hiding the specific model `K = ℓ²(F)` behind an existential. -/
@@ -685,23 +685,23 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
 open InnerProductSpace
 
 /-- **`B(H)` is a factor.** The centre of the full algebra is trivial: an operator lying in the
-commutant of `⊤` commutes with every operator, in particular with every rank-one operator, hence is
-a scalar (`ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm`). -/
-theorem isFactor_boundedLinearOperators : IsFactor (⊤ : VonNeumannAlgebra H) := by
+commutant of `𝓑(H)` commutes with every operator, in particular with every rank-one operator, hence
+is a scalar (`ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm`). -/
+theorem isFactor_boundedLinearOperators : IsFactor 𝓑(H) := by
   intro x _ hxComm
   rw [VonNeumannAlgebra.mem_commutant_iff] at hxComm
   refine ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm (fun a b => ?_)
-  have hg := hxComm (rankOne ℂ a b) (mem_top _)
+  have hg := hxComm (rankOne ℂ a b) (mem_boundedLinearOperators _)
   rw [ContinuousLinearMap.mul_def, ContinuousLinearMap.mul_def] at hg
   exact hg.symm
 
 /-- **A rank-one projection is minimal in `B(H)`.** For a unit vector `u`, the rank-one orthogonal
-projection `|u⟩⟨u|` is a minimal projection of `⊤`: it is a star projection, nonzero, and its corner
+projection `|u⟩⟨u|` is a minimal projection of `𝓑(H)`: it is a star projection, nonzero, and its corner
 is trivial because `|u⟩⟨u| ∘ a ∘ |u⟩⟨u| = ⟪u, a u⟫ • |u⟩⟨u|`. -/
 lemma isMinimalProjection_rankOne_boundedLinearOperators {u : H} (hu : ‖u‖ = 1) :
-    IsMinimalProjection (⊤ : VonNeumannAlgebra H) (rankOne ℂ u u) := by
+    IsMinimalProjection 𝓑(H) (rankOne ℂ u u) := by
   have hu_ne : u ≠ 0 := by rw [← norm_pos_iff, hu]; norm_num
-  refine ⟨⟨isIdempotentElem_rankOne_self hu, ?_⟩, mem_top _,
+  refine ⟨⟨isIdempotentElem_rankOne_self hu, ?_⟩, mem_boundedLinearOperators _,
     rankOne_ne_zero hu_ne hu_ne, fun a _ => ?_⟩
   · rw [isSelfAdjoint_iff, ContinuousLinearMap.star_eq_adjoint, adjoint_rankOne]
   · exact ⟨inner ℂ u (a u), by
@@ -718,13 +718,13 @@ private theorem exists_unit_vector [Nontrivial H] : ∃ u : H, ‖u‖ = 1 := by
 
 /-- **`B(H)` has a minimal projection** (a rank-one projection). Needs `H` nonzero. -/
 theorem exists_isMinimalProjection_boundedLinearOperators [Nontrivial H] :
-    ∃ e : H →L[ℂ] H, IsMinimalProjection (⊤ : VonNeumannAlgebra H) e :=
+    ∃ e : H →L[ℂ] H, IsMinimalProjection 𝓑(H) e :=
   let ⟨u, hu⟩ := exists_unit_vector (H := H)
   ⟨rankOne ℂ u u, isMinimalProjection_rankOne_boundedLinearOperators hu⟩
 
 /-- **`B(H)` is a type I factor** (for nonzero `H`). -/
 theorem isTypeIFactor_boundedLinearOperators [Nontrivial H] :
-    IsTypeIFactor (⊤ : VonNeumannAlgebra H) :=
+    IsTypeIFactor 𝓑(H) :=
   ⟨isFactor_boundedLinearOperators, exists_isMinimalProjection_boundedLinearOperators⟩
 
 /-- **`B(H)` is `⋆`-isomorphic to `B(K)`** for some complex Hilbert space `K`. This applies the
@@ -733,7 +733,7 @@ abstract type I factor structure theorem `IsTypeIFactor.exists_starAlgEquiv` to 
 theorem exists_starAlgEquiv_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
     [InnerProductSpace ℂ H] [CompleteSpace H] [Nontrivial H] :
     ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
-      Nonempty ((⊤ : VonNeumannAlgebra H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :=
+      Nonempty (𝓑(H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :=
   isTypeIFactor_boundedLinearOperators.exists_starAlgEquiv
 
 /-- **`B(H) ≃⋆ₐ B(K)` with `K` infinite-dimensional, when `H` is infinite-dimensional.** The full
@@ -748,14 +748,14 @@ theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type
     (hinf : ¬FiniteDimensional ℂ H) :
     ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
       ¬FiniteDimensional ℂ K ∧
-      Nonempty ((⊤ : VonNeumannAlgebra H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
+      Nonempty (𝓑(H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
   haveI : Nontrivial H := by
     rcases subsingleton_or_nontrivial H with h | h
     · haveI := h
       exact absurd (inferInstance : FiniteDimensional ℂ H) hinf
     · exact h
   obtain ⟨u, hu⟩ := exists_unit_vector (H := H)
-  have he : IsMinimalProjection (⊤ : VonNeumannAlgebra H) (rankOne ℂ u u) :=
+  have he : IsMinimalProjection 𝓑(H) (rankOne ℂ u u) :=
     isMinimalProjection_rankOne_boundedLinearOperators hu
   obtain ⟨F, U, hU, -⟩ := isFactor_boundedLinearOperators.exists_spatial_tensorDecomposition he
   haveI : CompleteSpace (LinearMap.range ((rankOne ℂ u u : H →L[ℂ] H) : H →ₗ[ℂ] H)) :=
@@ -767,20 +767,20 @@ theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type
     exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
       (h.trans ContinuousLinearMap.coe_zero.symm))
   refine ⟨lp (fun _ : F => ℂ) 2, inferInstance, inferInstance, inferInstance, ?_,
-    ⟨(conjEquiv U ⊤).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
+    ⟨(conjEquiv U 𝓑(H)).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
   intro hK
   haveI := hK
   exact hinf U.symm.toLinearEquiv.finiteDimensional
 
 /-- **`B(H)` is a type I_∞ factor when `H` is infinite-dimensional.** Packaged as the intrinsic
-predicate `IsTypeIInfinite`: `⊤ = B(H)` is a type I factor (`isTypeIFactor_boundedLinearOperators`)
+predicate `IsTypeIInfinite`: `𝓑(H) = B(H)` is a type I factor (`isTypeIFactor_boundedLinearOperators`)
 carrying an infinite orthogonal family of minimal projections — the rank-one projections
 `|uₙ⟩⟨uₙ|` onto a countable orthonormal sequence `(uₙ)` extracted from a Hilbert basis of the
 infinite-dimensional `H`. The `⋆`-isomorphism to an infinite-dimensional `B(K)` is
 `exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators`. -/
 theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
     [InnerProductSpace ℂ H] [CompleteSpace H] (hinf : ¬FiniteDimensional ℂ H) :
-    IsTypeIInfinite (⊤ : VonNeumannAlgebra H) := by
+    IsTypeIInfinite 𝓑(H) := by
   obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
   have hwinf : Infinite w := by
     rw [← not_finite_iff_infinite]
@@ -794,7 +794,7 @@ theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup 
   have hon : Orthonormal ℂ u := by
     rw [hu_def]; exact b.orthonormal.comp g g.injective
   have hnorm : ∀ n, ‖u n‖ = 1 := fun n => hon.1 n
-  have hmin : ∀ n, IsMinimalProjection (⊤ : VonNeumannAlgebra H) (rankOne ℂ (u n) (u n)) :=
+  have hmin : ∀ n, IsMinimalProjection 𝓑(H) (rankOne ℂ (u n) (u n)) :=
     fun n => isMinimalProjection_rankOne_boundedLinearOperators (hnorm n)
   have horth : ∀ m n, m ≠ n → rankOne ℂ (u m) (u m) * rankOne ℂ (u n) (u n) = 0 := by
     intro m n hmn

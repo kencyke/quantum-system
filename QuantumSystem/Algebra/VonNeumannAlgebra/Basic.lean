@@ -8,8 +8,9 @@ public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 
 This file sets up the basic vocabulary of the comparison theory of projections in a von Neumann
 algebra, the foundation of the type classification (and, downstream, of the type I factor
-structure theorem). It also supplies the greatest element `⊤ : VonNeumannAlgebra H` — the full
-algebra `B(H)` — which Mathlib's `VonNeumannAlgebra H` does not provide.
+structure theorem). It also supplies `𝓑(H)`, the von Neumann algebra of *all* bounded operators
+— the object the literature writes `B(H)` — which Mathlib's `VonNeumannAlgebra H` does not provide
+as a distinguished element.
 
 The file is organised in three parts:
 
@@ -24,8 +25,12 @@ The file is organised in three parts:
 
 ## Main definitions
 
-* `Top (VonNeumannAlgebra H)` — the greatest element `⊤`, the algebra of all bounded operators,
-  with carrier `Set.univ` (`VonNeumannAlgebra.coe_top` / `VonNeumannAlgebra.mem_top`).
+* `VonNeumannAlgebra.boundedLinearOperators H` — the algebra of all bounded operators, with carrier
+  `Set.univ`, denoted `𝓑(H)` (`VonNeumannAlgebra.coe_boundedLinearOperators` /
+  `VonNeumannAlgebra.mem_boundedLinearOperators`).
+* `VonNeumannAlgebra.boundedLinearOperators.starAlgEquiv` — the canonical `⋆`-isomorphism
+  `𝓑(H) ≃⋆ₐ[ℂ] (H →L[ℂ] H)` identifying the bundled von Neumann algebra with the operator type
+  (the `⋆`-algebra analogue of `Subalgebra.topEquiv`).
 * `VonNeumannAlgebra.IsFactor N` — `N` has trivial centre: every element of `N ∩ N'` is a scalar.
 * `VonNeumannAlgebra.IsMinimalProjection N e` — `e` is a nonzero star projection in `N` with
   trivial corner `e N e = ℂ e`. This implies the order-theoretic minimality (no proper nonzero
@@ -70,6 +75,11 @@ activate them with `open scoped VonNeumannAlgebra`.
 |---|---|---|
 | `p ∼[N] q` | `VonNeumannAlgebra.MvNEquiv N p q` | `open scoped VonNeumannAlgebra` |
 | `p ≼[N] q` | `VonNeumannAlgebra.MvNSub N p q` | `open scoped VonNeumannAlgebra` |
+| `𝓑(H)` | `VonNeumannAlgebra.boundedLinearOperators H` | `open scoped VonNeumannAlgebra` |
+
+The `𝓑(H)` glyph overloads the type-level notation `𝓑(H) = H →L[ℂ] H` of
+`ForMathlib.Analysis.CStarAlgebra.HilbertSpace`; the two denote the same object B(H) at different
+levels and are related by `boundedLinearOperators.starAlgEquiv`. The expected type disambiguates.
 -/
 
 @[expose] public section
@@ -78,22 +88,54 @@ namespace VonNeumannAlgebra
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
-/-! ### The full algebra `B(H)` as the greatest von Neumann algebra -/
+/-! ### The full algebra `𝓑(H)` of all bounded operators -/
 
-/-- The **algebra of all bounded operators** `B(H) = H →L[ℂ] H`, as the greatest element `⊤` of the
-inclusion order on `VonNeumannAlgebra H`. Its carrier is `Set.univ`; the double-commutant property is
-the bicommutant inclusion `s ⊆ s''` applied to `s = univ`, together with `univ` being the largest
-set. Mathlib's `VonNeumannAlgebra H` carries no `Top` instance, so this file supplies one. -/
-noncomputable instance : Top (VonNeumannAlgebra H) where
-  top :=
-    { toStarSubalgebra := ⊤
-      centralizer_centralizer' :=
-        Set.Subset.antisymm (Set.subset_univ _) Set.subset_centralizer_centralizer }
+/-- The von Neumann algebra `𝓑(H)` of **all bounded linear operators** on `H` — the object the
+literature writes `B(H)`. Its carrier is `Set.univ`; the double-commutant property is the
+bicommutant inclusion `s ⊆ s''` applied to `s = univ`, together with `univ` being the largest set.
+Mathlib's bundled `VonNeumannAlgebra H` provides no such distinguished element, so this file
+supplies it. -/
+noncomputable def boundedLinearOperators (H : Type*) [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] : VonNeumannAlgebra H where
+  toStarSubalgebra := ⊤
+  centralizer_centralizer' :=
+    Set.Subset.antisymm (Set.subset_univ _) Set.subset_centralizer_centralizer
 
-@[simp] lemma coe_top : ((⊤ : VonNeumannAlgebra H) : Set (H →L[ℂ] H)) = Set.univ := rfl
+/-- `𝓑(H)` denotes the von Neumann algebra of all bounded operators on `H`
+(`VonNeumannAlgebra.boundedLinearOperators H`). This overloads the type-level notation
+`𝓑(H) = H →L[ℂ] H` of `ForMathlib.Analysis.CStarAlgebra.HilbertSpace`: the two denote the same
+mathematical object B(H) at different levels (the operator *type* vs. the bundled *von Neumann
+algebra* of all operators), and the expected type disambiguates. The two levels are related by the
+canonical `⋆`-isomorphism `boundedLinearOperators.starAlgEquiv`. -/
+scoped notation:max "𝓑(" H ")" => VonNeumannAlgebra.boundedLinearOperators H
 
-/-- Every bounded operator lies in the full algebra `⊤ = B(H)`. -/
-@[simp] lemma mem_top (x : H →L[ℂ] H) : x ∈ (⊤ : VonNeumannAlgebra H) := Set.mem_univ x
+@[simp] lemma coe_boundedLinearOperators :
+    ((𝓑(H) : VonNeumannAlgebra H) : Set (H →L[ℂ] H)) = Set.univ := rfl
+
+/-- Every bounded operator lies in `𝓑(H)`. -/
+@[simp] lemma mem_boundedLinearOperators (x : H →L[ℂ] H) : x ∈ (𝓑(H) : VonNeumannAlgebra H) :=
+  Set.mem_univ x
+
+/-- **The two levels of `𝓑(H)` agree.** The underlying `⋆`-subalgebra of the bundled von Neumann
+algebra `𝓑(H)`, coerced to a type, is canonically `⋆`-isomorphic to the operator type
+`H →L[ℂ] H` (itself the type-level `𝓑(H)` of `ForMathlib.Analysis.CStarAlgebra.HilbertSpace`).
+This is the `⋆`-algebra analogue of `Subalgebra.topEquiv` / `Submodule.topEquiv`, making explicit
+that the notation overload denotes one and the same object B(H). The equivalence is phrased on
+`(𝓑(H)).toStarSubalgebra` because Mathlib equips the `⋆`-subalgebra — not the bundled
+`VonNeumannAlgebra` — with the `ℂ`-algebra structure. -/
+noncomputable def boundedLinearOperators.starAlgEquiv :
+    (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra ≃⋆ₐ[ℂ] (H →L[ℂ] H) :=
+  StarAlgEquiv.ofStarAlgHom
+    (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra.subtype
+    ({ toFun := fun x => ⟨x, StarSubalgebra.mem_top⟩
+       map_one' := rfl
+       map_mul' := fun _ _ => rfl
+       map_zero' := rfl
+       map_add' := fun _ _ => rfl
+       commutes' := fun _ => rfl
+       map_star' := fun _ => rfl } :
+      (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
+    (fun _ => rfl) (fun _ => rfl)
 
 /-! ### Factors, minimal projections and Murray–von Neumann equivalence -/
 
