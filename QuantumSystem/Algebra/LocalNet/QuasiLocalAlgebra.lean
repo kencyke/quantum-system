@@ -146,6 +146,17 @@ noncomputable def ιLocalCStar (O : K) :
     N.algebra O → N.quasiLocalCStarAlgebra :=
   (↑) ∘ N.ιLocal O
 
+/-- The dense embedding is compatible with the isotony embeddings: including into a larger
+    region first does not change the image in the quasi-local C⋆-algebra. -/
+@[simp] lemma ιLocalCStar_incl {O O' : K} (h : O ≤ O') (X : N.algebra O) :
+    N.ιLocalCStar O' (N.incl h X) = N.ιLocalCStar O X :=
+  congrArg _ (N.ιLocal_incl h X)
+
+/-- The dense embedding is a `*`-map: it intertwines the local and quasi-local involutions. -/
+@[simp] lemma ιLocalCStar_star {O : K} (X : N.algebra O) :
+    N.ιLocalCStar O (star X) = star (N.ιLocalCStar O X) := by
+  simp [ιLocalCStar]
+
 /-- The local algebras are dense in the quasi-local C⋆-algebra: every element is a norm-limit of
     local observables. -/
 theorem denseRange_iUnion_ιLocalCStar :
