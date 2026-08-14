@@ -186,7 +186,7 @@ variable {R : CStarRep N.quasiLocalCStarAlgebra}
 
 /-- The split property extends to enlarged pairs: if `O₀ ≤ O₁ ⋐ O₂ ≤ O₃` then the inclusion
     `𝓡(O₀) ≤ 𝓡(O₃)` is split as well. -/
-lemma SplitProperty.isSplitInclusion_of_le_of_le (hs : N.SplitProperty R)
+lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : N.SplitProperty R)
     {O₀ O₁ O₂ O₃ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⋐ O₂) (h₃ : O₂ ≤ O₃) :
     VonNeumannAlgebra.IsSplitInclusion
       (N.localVonNeumannAlgebra R O₀) (N.localVonNeumannAlgebra R O₃) :=
