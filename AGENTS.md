@@ -90,11 +90,15 @@ The following tokens are strictly prohibited, grouped by reason.
 
 ## Commit Style
 
-`lefthook` + `commitlint` enforce this; the accepted vocabulary is:
+`lefthook` + `commitizen` (`cz check`, configured in `pyproject.toml`) enforce this; the accepted
+vocabulary is:
 
 - Conventional Commits: `feat` / `fix` / `chore` / `docs` / `refactor` / `test` / `perf`.
 - Lowercase type, colon, imperative subject. Example: `feat: add GNS faithfulness lemma`.
 - One logical change per commit.
+
+The hook runs the stock `cz_conventional_commits` schema, which also accepts `build` / `ci` /
+`style` / `revert` / `bump`; the list above is the deliberately narrower project convention.
 
 ## Style Guidelines
 
