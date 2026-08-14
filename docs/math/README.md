@@ -11,6 +11,11 @@ skill. They contain mathematics only: no Lean types, no declaration names, no
 docstring drafts. How the object is eventually formalized is decided when it is
 formalized, and a note that guessed in advance would only add noise.
 
+They are read twice afterwards: when the object is designed (AGENTS.md *Think
+before coding*), and by `/math-review`, which compares the elaborated Lean back
+against the note's adopted general form, hypothesis classification and
+degeneracy table — and which maintains the `Implemented as` column below.
+
 The format is specified in
 `.claude/skills/math-extract/references/note-format.md`. The retrieval history
 and locator adjudications for the sources these notes cite live in
@@ -24,5 +29,7 @@ the product.
 |---|---|---|
 
 <!-- One row per note. "Implemented as" is a fact recorded after the object is
-     formalized — the module or declaration that ended up carrying it, or
-     "none" while it is still only a note. It is a back-link, not a plan. -->
+     formalized — the fully-qualified declaration that ended up carrying it, or
+     "none" while it is still only a note. It is a back-link, not a plan.
+     /math-review writes it, and resets it to "none" when the declaration is
+     gone; it must agree with the note's own `implemented-as:` frontmatter. -->

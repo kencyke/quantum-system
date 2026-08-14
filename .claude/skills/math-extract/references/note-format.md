@@ -63,9 +63,19 @@ revisions:
 
 ### Adopted general form
 
-<Written by the orchestrator at merge time, not by a lane. States the form this
- note takes forward and cites the discriminators that justify it — e.g. "(D1),
- because (X3) shows (D2) drops the non-σ-finite case that [DL84] §1 covers".>
+<Written by the orchestrator at merge time, not by a lane. Two parts, in this
+ order.
+
+ First the statement itself, written out in this note's conventions: the
+ ambient objects and their standing assumptions, the quantifiers in order, and
+ the (A#) rows it carries. Complete enough to be compared against an elaborated
+ Lean type without opening a source.
+
+ Then the justification, one sentence citing the (D#) followed and the (X#)
+ that discriminates — e.g. "This is (D1); (X3) shows (D2) drops the non-σ-finite
+ case that [DL84] §1 covers." If no discriminator justifies the choice, write
+ "provisional — no discriminator separates (D1) from (D2)" and stop; do not
+ manufacture a reason.>
 
 ## Notation and conventions
 
@@ -144,7 +154,7 @@ revisions:
 
 ## Not investigated
 
-<Never omitted.>
+<Never omitted, and never empty.>
 ````
 
 ## Section rules
@@ -156,9 +166,16 @@ revisions:
   thing a reader sees, and it is an honesty indicator: a note whose conclusions
   ride on recollection says so at the top.
 - `implemented-as` is a **fact-only back-link**, `none` until the object is
-  implemented and a declaration name afterwards. Writing the name is this
-  skill's job; checking that the declaration still matches the note is
-  `math-review`'s job.
+  implemented and a fully-qualified declaration name afterwards. This skill
+  writes `none`, because it runs *before* the Lean exists and has nothing to
+  point at. `math-review` fills the name in — and resets it to `none` when the
+  declaration is gone — as part of checking that the declaration still matches
+  the note; those two fields (here and in the `docs/math/README.md` index row)
+  are the only thing it may write in this file. A re-extraction carries the
+  field forward unchanged rather than resetting it.
+  **Why:** a back-link nobody is obliged to maintain decays into a claim that
+  the object was formalized as something it no longer is, which is worse than
+  the honest `none` it started as.
 - `mathlib-rev` is the Mathlib revision from `lake-manifest.json` at extraction
   time. It is what expires the `## Prior art` rows.
 - `revisions` carries the history. **The body never does** — a note is the
@@ -185,6 +202,18 @@ mean, and why the generality is the one under discussion. Not a survey.
   justification comes from lane 4's discriminators and lane 1 cannot see them
   while running in parallel. It may never be justified by formalization
   convenience.
+- **The adopted form is written out, not merely named.** State the definition
+  as a complete sentence in this note's own conventions — the ambient objects
+  and their standing assumptions, the quantifiers in order, and the `(A#)` rows
+  it carries — and only then cite the `(D#)` it follows and the `(X#)` that
+  justifies it. "(D1), because (X3) shows (D2) drops the non-σ-finite case" is
+  the *justification*; it is not the definition, and a reader who stops there
+  has to reconstruct the mathematics from a verbatim quote in some source's own
+  notation.
+  **Why:** this paragraph is what the eventual formalization is written
+  against, and it is what `math-review` compares an elaborated type to. Both
+  need a statement whose quantifier order and hypotheses are unambiguous in
+  *one* place; a pointer to a quote in another notation is not that.
 - No proposed notation, no identifiers.
 
 ### Notation and conventions
@@ -263,7 +292,11 @@ quantifier swap and per dropped hypothesis. This is coverage, not a quota.
 - A search miss is recorded as "could not find X, having searched …" — never
   "Mathlib has no X".
 - Every row carries the Mathlib revision it was measured against. The row is
-  void once `lake-manifest.json`'s Mathlib revision moves.
+  void once `lake-manifest.json`'s Mathlib revision moves. Nothing enforces this
+  automatically: expiry is decided by a reader comparing the row's revision to
+  the manifest, which is why the revision is written into the row rather than
+  left implicit in the note's date. A void row is not wrong — it is unmeasured,
+  and a claim resting on it drops to (c).
 
 ### Sources
 
@@ -274,7 +307,9 @@ facts. The cross-object retrieval ledger and the locator adjudications live in
 
 ### Not investigated
 
-**Never omitted, even when empty.** State:
+**Never omitted, and never empty.** The last item below always has content, so
+an empty section means it was not written rather than that nothing was left
+unexamined. State:
 
 - the `[ext: …]` edges from `## Results` that lane 5 never reached;
 - the sources listed as not retrieved, and which rows depend on them;
@@ -313,10 +348,24 @@ can actually falsify.
 
 ### The quote check
 
-> Every blockquote in the note must survive `grep -F` against the corpus cache
-> under `references/`. What fails is downgraded to (b) or deleted.
+> Every blockquote in the note must survive `grep -F` against
+> `source.flat.txt` of **the source that row cites** — not against the cache at
+> large. What fails is downgraded to (b) or deleted.
+
+Matching some other file in the cache proves the sentence exists somewhere,
+which is not the claim the row makes. `source.flat.txt` rather than `source.txt`
+because a quotation crossing a line break matches only there; see
+`ingestion.md`.
 
 **Why:** it makes tier (a) mechanically decidable instead of self-reported, at a
 cost of seconds. Converted PDFs are model output, not text, so a quote taken
 from converted Markdown is (b) with `mineru-unchecked` until compared against
 the page image; an arXiv LaTeX source is the original and needs no such check.
+
+**Known limitation.** The check is decidable only while the cache exists, and
+the cache under `references/<slug>/` is untracked and disposable. Once it is
+deleted, a tier (a) row is re-checkable only by re-ingesting the source — the
+`## Sources` table records the path and enough bibliographic detail to do that,
+which is why that table is append-only. A downstream reader who cannot re-ingest
+treats an (a) row as an (a) row: the check was run when the row was written, and
+the row's locator is what makes the claim falsifiable against a physical copy.

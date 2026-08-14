@@ -11,12 +11,8 @@ definitions, the evidence tiers, the locator rule, the rejection discipline —
 lives in `.claude/agents/math-extractor.md`; the note's format lives in
 `references/note-format.md`. Never duplicate either here.
 
-**This skill stops at the mathematics.** The note contains no Lean types, no
-`def`/`structure`/`class` sketches, no candidate declaration names, no docstring
-drafts, no ` ```lean ` fences. Reporting that Mathlib already contains something
-is a fact and belongs in the note; proposing how this project should define
-anything does not. A premature Lean sketch is noise at the moment the Lean is
-actually written, and step 6 fails the run if one reaches the note.
+**This skill stops at the mathematics.** `references/note-format.md` states what
+that bars from the note; step 6 fails the run if any of it reaches the note.
 
 For reviewing Lean that already exists, use `math-review` instead.
 
@@ -74,9 +70,8 @@ short form:
    that matters rather than the whole book.
 5. Not obtainable — record it and move on.
 
-Everything lands in `references/<slug-of-source>/`, which is gitignored. **The
-cache is navigation; the note is the product.** Nothing in the cache is a
-deliverable and it may be deleted at any time.
+Everything lands in `references/<slug-of-source>/`, which is gitignored and may
+be deleted at any time.
 
 Keep two lists as you go: the **corpus** (source key → cache path → how it was
 obtained) and the **unfetchable list** (source key → what was tried). Both go to
@@ -100,11 +95,15 @@ Count three numbers from step 2:
 - **D** — definitional variants sighted.
 - **R** — results that will appear in the note.
 
+Read the table top to bottom and take the **first** row whose condition holds.
+Largest first, because one number out of range is enough to make a run large:
+a corpus of three that disagrees irreconcilably is not a medium run.
+
 | Size | Condition | Lanes |
 |---|---|---|
-| **small** | D ≤ 1 and S ≤ 2 and R ≤ 3 | **Do not fan out** — see below |
-| **medium** | D = 2, or S ≤ 3, or R ≤ 8 | three agents: **1+2**, **3+4**, **5** |
 | **large** | D ≥ 3, or S ≥ 4, or R ≥ 9, or the sources disagree irreconcilably | all five, one agent each, plus step 4 |
+| **small** | D ≤ 1 and S ≤ 2 and R ≤ 3 | **Do not fan out** — see below |
+| **medium** | neither of the above | three agents: **1+2**, **3+4**, **5** |
 
 At **small**, launch a single `math-extractor` with no lane assigned — its agent
 file then has it cover all five lanes itself, in 5–15 tool calls. Continue with
@@ -206,7 +205,9 @@ Three things are **yours**, not any lane's:
 
 On a re-extraction, carry `## Rejected formulations and refuted claims` and
 `## Sources` forward verbatim and append to them; replace every other section.
-Add a `revisions:` entry.
+Add a `revisions:` entry. Carry `implemented-as` forward unchanged too — it is
+`math-review`'s field, not yours, and a re-extraction that resets it to `none`
+silently deletes the back-link to a formalization that still exists.
 
 Do not soften or drop what the lanes returned. Rows from different lanes that
 touch the same object stay separate; only `## Out of lane` items get
@@ -246,9 +247,15 @@ so read every hit rather than counting them.
 3. **Locator check.**
 
    ```bash
-   grep -nE 'tier \((c|d)\)' docs/math/<slug>.md |
+   grep -nE 'tier \([cd]\)|\| *[cd] *\|' docs/math/<slug>.md |
      grep -E 'Theorem|Thm|Lemma|Prop|Cor|§|p\. ?[0-9]|eq\. ?\('
    ```
+
+   Both spellings of the tier are needed: the prose rows write `tier (c)`, while
+   the `## Hypotheses`, `## Rejected` and `## Sources` rows carry a bare `c` or
+   `d` in a column. The second alternative costs some false positives on any
+   one-letter cell, which is the right trade here — a missed (c) row with a
+   theorem number is the failure this check exists to catch.
 
    Every hit is a violation: the row must carry the substitution sentence
    instead of the number. Then read the `[ext: …]` markers and the
@@ -257,7 +264,7 @@ so read every hit rather than counting them.
 4. **Discipline check.**
 
    ```bash
-   awk -F'|' '/model-dependent/ { w=$5; gsub(/^[ \t]+|[ \t]+$/,"",w)
+   awk -F'|' '/model-dependent/ { w=$6; gsub(/^[ \t]+|[ \t]+$/,"",w)
      if (w=="" || w=="—" || w=="-") print NR": no witness: "$2 }' docs/math/<slug>.md
    awk -F'|' '/\| rejected \|/ { if ($5 !~ /\(X[1-5]\)/) print NR": untyped: "$2 }' docs/math/<slug>.md
    grep -niE 'harder to formalize|awkward in a proof assistant|not standard|more lemmas' docs/math/<slug>.md
@@ -336,20 +343,3 @@ tool are paired into one agent at medium size for exactly that reason.
 Conversion is deliberately outside all of this: it is serial, minutes long, and
 breaks under concurrency, so it happens once in step 2 and the lanes only read
 what it produced.
-
-## Sources ledger
-
-`sources.md`, next to this file, is keyed by **source**, while the notes are
-keyed by **object**. It holds the three things a note structurally cannot:
-
-1. **Retrieval attempts** — that a book could not be obtained is true for every
-   object that cites it, and rediscovering it each time costs the same ten
-   minutes each time.
-2. **Locator adjudications** — when someone finally opens a source and finds
-   that a widely-copied theorem number does not say what it is said to say, that
-   correction belongs to the source, not to whichever object was being extracted
-   that day. It gets recorded once and read forever.
-3. **Edition and version drift** — preprint and published numbering, second
-   editions, arXiv versions.
-
-Step 1 reads it; step 6 writes it. Nothing else touches it.

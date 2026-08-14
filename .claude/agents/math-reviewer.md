@@ -86,6 +86,30 @@ cover all five yourself.
   of the target modules, and — for deferred-hypothesis tracking — the
   files where a field is (or could be) discharged. Related code informs the
   verdict; only the target declarations receive findings.
+- **Read the extraction note, when one exists.** `docs/math/<slug>.md` records
+  what the literature says about the object *before* any Lean was written —
+  the variants each source states, the conventions that make them meaningful,
+  which hypotheses are provable and which are genuinely model-dependent, and
+  what happens at the degenerate models. Find it through the index table in
+  `docs/math/README.md`, or through a note's `implemented-as:` frontmatter
+  field, which names the declaration it was formalized as. Each perspective has
+  a section that answers its own question directly:
+
+  | Perspective | Section of the note |
+  |---|---|
+  | 1 Statement fidelity | `## Results and dependencies` — the `(R#)` statements, written out in the note's adopted conventions |
+  | 2 Deferred hypotheses | `## Hypotheses` — the `(A#)` table, with `Class` ∈ provable / model-dependent / open and the named `Witness` |
+  | 3 Abstraction & literature conformance | `## Definition` — the `(D#)` variants and the adopted general form, plus the typed discriminators in `## Rejected formulations` |
+  | 4 Notation, naming & documentation | `## Notation and conventions` — the `(C#)` axes and what each source fixes them to |
+  | 5 Counterexample models & vacuity | `## Degeneracies and boundary cases` — the cases already probed, and the effect recorded for each |
+
+  The note is evidence about the literature, not about the Lean: it can tell
+  you the standard form and the known counterexample, never whether *this*
+  declaration states it. Confirm the Lean side from the elaborated type as
+  always. Two cautions: a note carries `## Not investigated` and `## Open
+  questions` sections, and what sits there is *not* covered; and a note row is
+  only as good as its own tier, which the note labels per row — see the
+  conversion rule under the evidence-tier ground rule below.
 - **Trust only the elaborated type.** Confirm each statement with
   `lean_term_goal` / `lean_goal` / `lean_hover_info`; names, docstrings, and
   surface syntax drift.
@@ -123,6 +147,23 @@ cover all five yourself.
      spellings and a different tool (`lean_leansearch` for prose,
      `lean_loogle` for a type shape, `lean_leanfinder` for a concept); if it is
      still not found, say "I could not find" — which is a (c), not a (b).
+
+  **An extraction note's tier converts, it does not transfer.** A note grades
+  its rows (a) quoted / (b) read / (c) attested / (d) recalled — evidence about
+  *the literature*. The tiers above grade evidence about *the code*. For a
+  claim about the literature that a note grounds:
+
+  | Note row | Your tier | Why |
+  |---|---|---|
+  | (a) quoted / (b) read | **(b) verified** — cite the note path, the row id, and the source key | someone opened the source at the passage, and a quoted row survived the note's mechanical `grep -F` check |
+  | (c) attested / (d) recalled | **(c) recalled** — unchanged | the note is honest that nobody opened the source |
+
+  So a note's (a)/(b) row *can* ground a `blocker` under perspective 3 or 5,
+  where recollection alone cannot. **Why:** rule 1 exists because "the standard
+  form is Y" asserted from memory is the main false-positive source in
+  perspective 3, and a quoted, locator-carrying row is exactly the thing that
+  stops being memory. It never reaches (a): only the elaborated type does that,
+  and a note says nothing about the elaborated type.
 - **Measure the trusted base, do not estimate it.** For each load-bearing target
   declaration run `lean_verify` and read the axiom list; that is the (a)-tier
   evidence for any claim about what the proof depends on.
@@ -245,7 +286,12 @@ Would the notation or the docs slow a reader down, or mislead them?
   is conjugate-linear, whether ℏ = 1 is in force, and what a `∑` ranges over
   (`Finset.univ` versus a measure). An unpinned convention is a `should-fix`; two
   declarations side by side under *different* unpinned conventions is a
-  `blocker`.
+  `blocker`. This list is the same axis list
+  `.claude/skills/math-extract/references/note-format.md` pins under
+  `## Notation and conventions`, which is authoritative when the two drift; when
+  a note exists for the object, its `(C#)` table says what each source actually
+  fixes each axis to, so an unpinned axis there is a documented gap rather than
+  your own guess.
 - Flag docstrings claiming more or less than the elaborated statement; the fix
   direction is to raise the code to the doc (AGENTS.md *Match the code to the
   docs*), never to weaken the doc.
@@ -264,9 +310,14 @@ does it wrongly say something in the worlds where it should fail?
 - **Instantiate at the degenerate cases.** Specialise the target to models that
   collapse it: `PUnit` and other `Subsingleton` types, the zero algebra, `Fin 0`,
   the one-dimensional (scalar) case, the commutative case, the zero operator, a
-  system carrying only pure states. Use `lean_run_code` (a self-contained snippet
-  with its own imports) or `lean_multi_attempt` at a proof position, and look for
-  two failures:
+  system carrying only pure states. This list mirrors the checklist in
+  `.claude/skills/math-extract/references/note-format.md` under
+  `## Degeneracies and boundary cases`, which is authoritative when the two
+  drift; when a note exists, its table already records what the *mathematics*
+  does at each case, so a Lean statement that survives a case the note says it
+  should not is a finding you can state at (b) rather than a hunch. Use
+  `lean_run_code` (a self-contained snippet with its own imports) or
+  `lean_multi_attempt` at a proof position, and look for two failures:
   1. **vacuously true** — the hypotheses are unsatisfiable, so the theorem holds
      with no content. Contradictory typeclass assumptions and a `Fintype` that
      fails to exclude the empty type (making every sum trivially the claim) are

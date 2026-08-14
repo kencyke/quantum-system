@@ -13,6 +13,12 @@
 
 **Think before coding.**
 - Read the target file and its importers before editing.
+- Before designing a new object, check `docs/math/README.md` for an extraction
+  note on it and read the note if one exists — its adopted general form is the
+  statement the Lean is meant to realise, and its `## Hypotheses` table already
+  separates the provable from the genuinely model-dependent. A note is
+  mathematics, not a design: it never says how to define anything in Lean, and
+  no note is a normal state, not a blocker.
 - State your assumptions about the goal, the existing lemmas, and the proof
   skeleton before typing tactics. Capture the goal with `lean_goal` rather
   than guessing the shape from the file context.

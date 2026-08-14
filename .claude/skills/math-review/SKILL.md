@@ -42,6 +42,21 @@ explicit file or directory target has no diff; its scope is the entire file.
 Announce the resolved target before dispatching, so a wrong default costs one
 word to correct.
 
+**Then resolve the extraction notes.** `docs/math/<slug>.md` records what the
+literature says about an object, written before its Lean by `/math-extract`;
+`references/note-format.md` in that skill states that checking the declaration
+still matches the note is *this* skill's job. Read `docs/math/README.md` and
+match its index rows to the target: a row's `Implemented as` column names the
+declaration, and each note's `implemented-as:` frontmatter field carries the
+same back-link. When neither names a target declaration, match by object —
+a note on the split inclusion covers `SplitInclusion.lean` whether or not the
+back-link was ever written. Collect the absolute paths of the notes that match.
+
+No note is a normal state, not a violation: most objects here predate the
+skill. Missing notes are recorded in `## Not reviewed` (step 4) and nothing
+else follows from them — never file a finding for the absence of a note, and
+never write one yourself. `/math-extract` owns that file.
+
 ### 2. Spawn one sub-agent per perspective
 
 **Scale to the target first.** When the scope is small — roughly three target
@@ -75,6 +90,13 @@ permission to prove that guess wrong. Each prompt must state:
   perspective's definition, the agent file owns it;
 - the target files, with the changed line ranges collected in step 1 — or
   *entire file* for an explicit target that has no diff;
+- **the absolute paths of the extraction notes resolved in step 1**, or the
+  explicit statement that none matched. Do not summarise a note into the
+  prompt: the agent file tells each perspective which section answers its own
+  question, and a summary would decide that for it. Say only which object each
+  note covers. When no note matched, say so — silence reads as "nobody
+  looked", and a reviewer that assumes a note exists will hunt for it and
+  spend the sweep on filesystem searches;
 - a reminder to investigate related code beyond the diff, and to sweep the
   whole target rather than stopping at the first finding;
 - **the absolute path of the notes file** it must append confirmed findings to
@@ -144,8 +166,31 @@ next run repeat this one's dead ends.
 
 ### 4. Aggregate
 
-Wait for every perspective (and the refutation pass, if any) to complete, then
-emit one markdown report to the chat, grouped by severity. Do not soften,
+Wait for every perspective (and the refutation pass, if any) to complete.
+
+**First, reconcile each extraction note's back-link.** For every note resolved
+in step 1, check the two facts that go stale on their own: whether
+`implemented-as:` names a declaration that still exists (`lean_local_search`,
+or `lean_declaration_file`), and whether the `docs/math/README.md` index row
+agrees with it. Then:
+
+- **Back-link absent or stale, and a target declaration implements the note's
+  object** — write the fully-qualified declaration name into the note's
+  `implemented-as:` field and into the README index row. These two fields are
+  the *only* thing this skill may write in `docs/math/`; everything else there
+  belongs to `/math-extract`, and a review that edits a `## Hypotheses` row has
+  overwritten an extraction it did not perform.
+- **Back-link names a declaration that no longer exists** — set it back to
+  `none` and say so in the report. A back-link pointing at a deleted
+  declaration is worse than none: it claims a formalization that is gone.
+- **The declaration exists but does not state the note's adopted general
+  form** — do **not** touch the back-link. That is a perspective 3 finding, and
+  it is the finding this whole reconciliation exists to surface; silently
+  rewriting the link would record agreement where there is a divergence.
+
+Skip this entirely when step 1 found no notes.
+
+Then emit one markdown report to the chat, grouped by severity. Do not soften,
 merge, or drop findings; findings from different perspectives on the same line
 stay separate entries. The one exception: the reviewers' `## Out of
 perspective` sections (defects fitting no perspective — layout violations,
@@ -172,6 +217,7 @@ Template:
 
 **Scope**: <N> files / <M> declarations   <!-- from the agents' reviewed-declaration lists -->
 **Verdict**: <worst severity present, or ✅ no findings>
+**Extraction notes**: <the notes consulted, with any back-link written or reset — or `none matched`>
 
 ## 🛑 Blocker
 ### 1. <one-line title>
@@ -206,6 +252,9 @@ Template:
 
 ## Not reviewed
 <deleted files; files no agent could reach; perspectives that returned partial;
+ target declarations with no extraction note, and — for the notes that were
+ consulted — what their own `## Not investigated` and `## Open questions`
+ sections leave uncovered, since a reviewer leaning on a note inherits its gaps;
  and — always — the **unexamined dependencies the verdict rests on**: the
  declarations the reviewers relied upon without opening, taken from each
  reviewer's per-finding confidence split. The risk lives here, not in what was
