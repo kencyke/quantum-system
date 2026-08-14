@@ -22,7 +22,7 @@ prints a JSON summary and exits 0 on success.
 | 1 | `arxiv.org/e-print/<id>` — LaTeX | **the original text** | seconds |
 | 2 | `arxiv.org/html/<id>` — LaTeXML | high; formulas re-rendered | seconds |
 | 3 | any other URL, or a local `.html`/`.txt`/`.tex` | tags stripped | seconds |
-| 4 | a PDF through MinerU | **model inference, not text** | minutes, serial |
+| 4 | a PDF through MinerU, with `--allow-mineru` | **model inference, not text** | minutes, serial |
 | 5 | not obtainable | — | — |
 
 **Rung 1 is the reason to check arXiv even for a published paper.** The LaTeX
@@ -59,9 +59,9 @@ That flag is the input to the tier rule: quotes from a `verbatim` cache are
 |---|---|---|
 | 0 | text cached | proceed |
 | 2 | target uninterpretable | fix the argument |
-| 3 | every rung failed | record `not retrieved` in `sources.md` with what was tried; every claim resting on the source is capped at tier (d), no locators |
+| 3 | every rung failed, or the conversion failed or timed out | record `not retrieved` in `sources.md` with what was tried; every claim resting on the source is capped at tier (d), no locators |
 | 4 | fetched but almost no text | treat as not retrieved unless the cache shows otherwise |
-| 5 | the source is a PDF | rung 4, below |
+| 5 | the source is a PDF and `--allow-mineru` was not given, or was given and `mineru` is not installed | rung 4, below |
 
 A non-zero exit **does not stop the extraction**. It lowers what can be claimed:
 the source joins the unfetchable list, and every lane is told that no locator may
@@ -69,15 +69,19 @@ be written for it.
 
 ## Rung 4 — converting a PDF
 
-Not yet wired into the script. Run it by hand, one PDF at a time.
+**Opt-in per call.** A PDF without the flag exits 5 and states what the
+conversion would cost; the script never installs the converter for you.
 
 ```bash
-uv tool install "mineru[pipeline]"          # first time only
-mineru -p <file.pdf> -o references/<slug>/mineru -b pipeline
+uv tool install "mineru[pipeline]"                     # first time only
+uv run .claude/skills/math-extract/scripts/ingest.py <file.pdf> --allow-mineru
+uv run .claude/skills/math-extract/scripts/ingest.py <file.pdf> --allow-mineru --pages 40-62
 ```
 
-Then point the note's rows at the Markdown MinerU produces, and flatten it the
-same way the script does if it is going to be quote-checked.
+The script runs `mineru -b pipeline`, takes the largest Markdown file produced,
+and writes `source.txt` and `source.flat.txt` from it exactly as for the other
+rungs — so the quote check works the same way. The JSON summary comes back with
+`verbatim: false` and a `caveat` field spelling out the tier consequence.
 
 Things that are easy to get wrong, and cost a lot when got wrong:
 

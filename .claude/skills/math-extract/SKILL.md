@@ -69,7 +69,9 @@ short form:
 1. arXiv LaTeX source — the original text, formulas exactly as written.
 2. arXiv HTML.
 3. Any other URL.
-4. A PDF through the converter — **slow, serial, and not verbatim**.
+4. A PDF through the converter — **slow, serial, and not verbatim**. Opt-in per
+   call with `--allow-mineru`, and `--pages START-END` to convert the chapter
+   that matters rather than the whole book.
 5. Not obtainable — record it and move on.
 
 Everything lands in `references/<slug-of-source>/`, which is gitignored. **The

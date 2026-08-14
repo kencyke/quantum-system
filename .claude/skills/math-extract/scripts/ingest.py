@@ -9,6 +9,8 @@ Usage:
     uv run .claude/skills/math-extract/scripts/ingest.py <arxiv-id | url | path>
                                                          [--slug SLUG]
                                                          [--cache-dir DIR]
+                                                         [--allow-mineru]
+                                                         [--pages START-END]
 
 Tries the ladder in order and stops at the first rung that yields text:
 
@@ -18,10 +20,13 @@ Tries the ladder in order and stops at the first rung that yields text:
     2. arXiv HTML (arxiv.org/html/<id>) -- LaTeXML output.
     3. Any other URL, or a local .html/.txt/.tex file -- tags stripped.
 
-    A PDF exits 5 without converting: the converter is a separate, slow, serial
-    rung that is not wired up here yet.  See references/ingestion.md.  An arXiv
-    *pdf* URL is not a PDF for this purpose -- the identifier is recovered from
-    it and rung 1 fetches the LaTeX instead, which is strictly better.
+    4. A PDF through MinerU's CPU pipeline, but only with --allow-mineru.  It
+       costs minutes, runs one document at a time, and produces model inference
+       rather than text, so it is opt-in per call and the script will never
+       install the converter itself.  Without the flag a PDF exits 5 and says
+       what the conversion would cost.  An arXiv *pdf* URL is not a PDF for this
+       purpose: the identifier is recovered from it and rung 1 fetches the LaTeX
+       instead, which is strictly better.
 
 Writes into <cache-dir>/<slug>/ (default cache-dir: references/, gitignored):
 
@@ -44,19 +49,31 @@ import gzip
 import io
 import json
 import re
+import shutil
+import subprocess
 import sys
 import tarfile
 import unicodedata
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 
 USER_AGENT = "math-extract/1.0 (Lean formalization research; contact via repository)"
 TIMEOUT = 60
+MINERU_TIMEOUT = 3600
 TEX_SUFFIXES = {".tex", ".ltx", ".bbl"}
 MIN_USEFUL_CHARS = 400
+
+
+@dataclass(frozen=True)
+class Options:
+    """Choices the rungs need that are not part of the target itself."""
+
+    allow_mineru: bool = False
+    pages: str | None = None
 
 # 2202.03357 / 2202.03357v2 / math/0604123 / math-ph/0411058v1
 ARXIV_NEW = re.compile(r"(?<!\d)(\d{4}\.\d{4,5})(v\d+)?(?!\d)")
@@ -177,20 +194,20 @@ def rung_arxiv_source(arxiv_id: str, raw_dir: Path) -> tuple[str, str] | None:
     return joined, "arxiv-latex"
 
 
-def rung_html(url: str, raw_dir: Path, stage: str) -> tuple[str, str] | None:
+def rung_html(url: str, raw_dir: Path, stage: str, opts: Options) -> tuple[str, str] | None:
     payload, content_type = fetch(url)
     if payload[:4] == b"%PDF" or "application/pdf" in content_type:
-        raise SystemExit(pdf_refusal(url))
+        return handle_pdf_bytes(payload, raw_dir, "downloaded.pdf", url, opts)
     (raw_dir / "page.html").write_bytes(payload)
     parser = TextExtractor()
     parser.feed(payload.decode("utf-8", errors="replace"))
     return parser.text(), stage
 
 
-def rung_local(path: Path, raw_dir: Path) -> tuple[str, str]:
+def rung_local(path: Path, raw_dir: Path, opts: Options) -> tuple[str, str] | None:
     payload = path.read_bytes()
     if payload[:4] == b"%PDF":
-        raise SystemExit(pdf_refusal(str(path)))
+        return handle_pdf_bytes(payload, raw_dir, path.name, str(path), opts)
     (raw_dir / path.name).write_bytes(payload)
     body = payload.decode("utf-8", errors="replace")
     if path.suffix.lower() in {".html", ".htm"}:
@@ -200,17 +217,77 @@ def rung_local(path: Path, raw_dir: Path) -> tuple[str, str]:
     return body, "local-text"
 
 
+def handle_pdf_bytes(payload: bytes, raw_dir: Path, name: str,
+                     target: str, opts: Options) -> tuple[str, str]:
+    """Send a PDF to the converter, or refuse and say what it would cost."""
+    if not opts.allow_mineru:
+        raise SystemExit(pdf_refusal(target))
+    pdf_path = raw_dir / name
+    pdf_path.write_bytes(payload)
+    return rung_mineru(pdf_path, raw_dir.parent, opts)
+
+
 def pdf_refusal(target: str) -> int:
     report({
         "ok": False,
         "reason": "pdf",
         "target": target,
-        "message": "PDF sources need the converter rung, which is not wired up "
-                   "here yet. See .claude/skills/math-extract/references/"
-                   "ingestion.md, and record the source as not retrieved in "
-                   "sources.md if it cannot be obtained another way.",
+        "message": "This source is a PDF. Converting it is rung 4: minutes of CPU, "
+                   "one document at a time, and the result is model output rather "
+                   "than text, so quotes taken from it are tier (b) until checked "
+                   "against the page image. Re-run with --allow-mineru (and "
+                   "--pages START-END where only part of the document is needed) "
+                   "once that cost is agreed. See references/ingestion.md.",
     })
     return 5
+
+
+def rung_mineru(pdf_path: Path, out_dir: Path, opts: Options) -> tuple[str, str]:
+    """Convert a PDF with MinerU's CPU pipeline. Never installs anything."""
+    binary = shutil.which("mineru")
+    if binary is None:
+        report({
+            "ok": False,
+            "reason": "mineru-missing",
+            "target": str(pdf_path),
+            "message": "mineru is not on PATH. Install it with "
+                       "`uv tool install \"mineru[pipeline]\"` — the pipeline extra, "
+                       "not [all], which pulls GPU serving stacks this machine "
+                       "cannot use. This script will not install it for you.",
+        })
+        raise SystemExit(5)
+
+    mineru_dir = out_dir / "mineru"
+    mineru_dir.mkdir(parents=True, exist_ok=True)
+    # -b pipeline is not optional: MinerU 3.x defaults to a GPU backend.
+    command = [binary, "-p", str(pdf_path), "-o", str(mineru_dir), "-b", "pipeline"]
+    if opts.pages:
+        start, _, end = opts.pages.partition("-")
+        command += ["-s", start]
+        if end:
+            command += ["-e", end]
+
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True,
+                                   timeout=MINERU_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        report({"ok": False, "reason": "mineru-timeout", "target": str(pdf_path),
+                "message": f"Conversion exceeded {MINERU_TIMEOUT}s. Convert a page "
+                           "range with --pages instead of the whole document."})
+        raise SystemExit(3)
+    if completed.returncode != 0:
+        report({"ok": False, "reason": "mineru-failed", "target": str(pdf_path),
+                "returncode": completed.returncode,
+                "message": completed.stderr[-800:] or "no stderr"})
+        raise SystemExit(3)
+
+    markdowns = sorted(mineru_dir.rglob("*.md"), key=lambda p: p.stat().st_size, reverse=True)
+    if not markdowns:
+        report({"ok": False, "reason": "mineru-empty", "target": str(pdf_path),
+                "message": "The converter produced no Markdown. A scanned document "
+                           "may need OCR; see references/ingestion.md."})
+        raise SystemExit(4)
+    return markdowns[0].read_text(encoding="utf-8", errors="replace"), "mineru"
 
 
 def report(payload: dict) -> None:
@@ -223,12 +300,19 @@ def main() -> int:
     parser.add_argument("target", help="arXiv id, URL, or local path")
     parser.add_argument("--slug", help="override the derived cache slug")
     parser.add_argument("--cache-dir", default="references", help="cache root (default: references)")
+    parser.add_argument("--allow-mineru", action="store_true",
+                        help="permit rung 4 (PDF conversion): minutes of CPU, serial, "
+                             "and the output is model inference rather than text")
+    parser.add_argument("--pages", metavar="START-END",
+                        help="page range for rung 4, e.g. 40-62 — convert the chapter "
+                             "that matters instead of the whole book")
     args = parser.parse_args()
 
     target = args.target.strip()
     if not target:
         print("[error] empty target", file=sys.stderr)
         return 2
+    opts = Options(allow_mineru=args.allow_mineru, pages=args.pages)
 
     arxiv_id = arxiv_id_of(target)
     slug = args.slug or derive_slug(target, arxiv_id)
@@ -241,16 +325,18 @@ def main() -> int:
 
     local_path = Path(target)
     if local_path.exists():
-        result = rung_local(local_path, raw_dir)
-        attempts.append({"rung": result[1], "ok": True})
+        result = rung_local(local_path, raw_dir, opts)
+        if result is not None:
+            attempts.append({"rung": result[1], "ok": True})
     else:
         ladder = []
         if arxiv_id:
             ladder.append(("arxiv-latex", lambda: rung_arxiv_source(arxiv_id, raw_dir)))
             ladder.append(("arxiv-html",
-                           lambda: rung_html(f"https://arxiv.org/html/{arxiv_id}", raw_dir, "arxiv-html")))
+                           lambda: rung_html(f"https://arxiv.org/html/{arxiv_id}",
+                                             raw_dir, "arxiv-html", opts)))
         if target.startswith(("http://", "https://")):
-            ladder.append(("url-html", lambda: rung_html(target, raw_dir, "url-html")))
+            ladder.append(("url-html", lambda: rung_html(target, raw_dir, "url-html", opts)))
         if not ladder:
             print(f"[error] cannot interpret target: {target}", file=sys.stderr)
             return 2
@@ -295,6 +381,11 @@ def main() -> int:
         "arxiv_id": arxiv_id,
         "stage_attempts": attempts,
     }
+    if stage == "mineru":
+        summary["caveat"] = ("Converted, not transcribed: the formulas are model "
+                             "output. Quotes from this cache are tier (b) with "
+                             "mineru-unchecked, and reach (a) only after being "
+                             "compared against the page image.")
     if len(flat.strip()) < MIN_USEFUL_CHARS:
         summary["ok"] = False
         summary["reason"] = "empty"
