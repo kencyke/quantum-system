@@ -67,6 +67,25 @@
   the error — re-inspect the goal with `lean_goal` and address the actual
   mismatch.
 
+## Plan Mode & Responses
+
+**In plan mode, a question deserves an answer — not a plan.**
+- When the user asks a question under plan mode, reply with the
+  AskUserQuestion tool and answer *only* what was asked. Do not invent a
+  problem statement or start drafting a plan the user never requested.
+
+**Numbered steps first, prose second.**
+- Do not narrate a whole plan in prose. Lead with the concrete steps as a
+  numbered list, then add brief supplementary notes after it.
+  **Why:** the reader has ADHD; a response that demands sustained attention
+  to parse is a response that does not get read. Keep it scannable.
+
+**Do not force a plan that does not fit.**
+- If the request is judged infeasible or inappropriate to turn into an
+  implementation plan, do not force one. State the grounds for that
+  judgement, then offer alternative approaches that are viable for the
+  current codebase, or point to references worth investigating further.
+
 ## Lint Rules
 
 Editing hygiene, prohibited tokens, commit style, and style guidelines live in
