@@ -257,20 +257,35 @@ def resolve_backend(opts: Options) -> str:
     return "pipeline" if opts.backend == "auto" else opts.backend
 
 
+def find_mineru() -> str | None:
+    """Locate the converter: project venv first, then PATH.
+
+    This script runs under `uv run` with its own PEP 723 metadata, so uv builds
+    it an isolated environment and the project venv is *not* on PATH.  The
+    converter lives in that venv (installed by `uv sync`), so look there
+    explicitly before falling back to PATH.
+    """
+    repo_root = Path(__file__).resolve().parents[4]
+    candidate = repo_root / ".venv" / "bin" / "mineru"
+    if candidate.is_file():
+        return str(candidate)
+    return shutil.which("mineru")
+
+
 def rung_mineru(pdf_path: Path, out_dir: Path, opts: Options) -> tuple[str, str]:
     """Convert a PDF with MinerU. Never installs anything."""
-    binary = shutil.which("mineru")
+    binary = find_mineru()
     if binary is None:
         report({
             "ok": False,
             "reason": "mineru-missing",
             "target": str(pdf_path),
-            "message": "mineru is not on PATH. Install it with "
-                       "`uv tool install \"mineru[pipeline,vlm]\"` — not [all], "
-                       "which pulls the vllm/lmdeploy serving stacks. The "
-                       "devcontainer installs it in onCreateCommand, so a missing "
-                       "binary usually means the container predates that. This "
-                       "script will not install it for you.",
+            "message": "The converter is not installed. Run `uv sync` from the "
+                       "repository root — mineru is a locked dependency group in "
+                       "pyproject.toml and is in default-groups, so a plain sync "
+                       "installs it. If someone ran `uv sync --no-group mineru`, "
+                       "that is what removed it. This script will not install it "
+                       "for you.",
         })
         raise SystemExit(5)
 

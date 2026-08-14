@@ -77,14 +77,9 @@ uv run .claude/skills/math-extract/scripts/ingest.py <file.pdf> --allow-mineru
 uv run .claude/skills/math-extract/scripts/ingest.py <file.pdf> --allow-mineru --pages 40-62
 ```
 
-The devcontainer installs the converter in `onCreateCommand`
-(`uv tool install --with six "mineru[pipeline,vlm]"` — the `--with six` works
-around mineru 3.4.5's pipeline importing `six` without declaring it, which
-otherwise fails every conversion with `No module named 'six'`); if the binary
-is missing, the container predates that — run the same command by hand. It is a `uv tool`, not
-a `pyproject.toml` dependency, on purpose: mineru drags torch and a few hundred
-packages with hard version pins, and none of that belongs in the project venv
-that the commit hooks run from.
+The converter installs with a plain `uv sync` — it is the `mineru` dependency
+group in `pyproject.toml`, which is in `default-groups`. To skip it deliberately,
+`uv sync --no-group mineru` drops ~100 packages including torch.
 
 The script takes the largest Markdown file MinerU produces and writes
 `source.txt` and `source.flat.txt` from it exactly as for the other rungs — so
@@ -94,9 +89,8 @@ tier consequence.
 
 ### GPU
 
-The devcontainer passes the host GPU through (`"runArgs": ["--gpus", "all"]`,
-Docker Desktop provides the runtime). **The setting takes effect on a container
-rebuild**; the post-rebuild verification procedure lives in
+The devcontainer passes the host GPU through. **The setting takes effect on a
+container rebuild**; the post-rebuild verification procedure lives in
 `.devcontainer/gpu-verification.md` and is deliberately self-contained.
 
 - **The default backend stays `pipeline` even on GPU.** torch picks up CUDA by
@@ -106,10 +100,11 @@ rebuild**; the post-rebuild verification procedure lives in
   path. **This machine's 8GB of VRAM is that backend's minimum, shared with the
   Windows desktop** — on `CUDA out of memory`, drop the flag and rerun; the
   pipeline result is the fallback, not a failure.
-- Models land in `~/.cache/huggingface`, which is a named volume (`hf-models`),
-  so they survive rebuilds. `mineru-models-download` fetches them ahead of
-  time; `MINERU_MODEL_SOURCE` can force `huggingface`/`modelscope` (leave it
-  unset for auto).
+- Models survive rebuilds in the `hf-models` named volume, and
+  `mineru-models-download` fetches them ahead of time. The devcontainer pins the
+  origin (see its comment on `MINERU_MODEL_SOURCE`); to fetch from elsewhere
+  once, prefix the single command — `MINERU_MODEL_SOURCE=modelscope mineru …` —
+  rather than unpinning.
 
 Things that are easy to get wrong, and cost a lot when got wrong:
 
