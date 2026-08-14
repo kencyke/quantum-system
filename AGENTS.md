@@ -6,6 +6,8 @@
 - `QuantumSystem.lean` — aggregate root that re-exports every module.
 - `scripts/mk_all.lean` — regenerates the aggregate.
 - `lakefile.toml`, `lean-toolchain`, `lake-manifest.json` — pinned toolchain and manifest.
+- `docs/math/` — extraction notes: what the literature says about an object, written
+  before its Lean. Mathematics only, no Lean. Produced by `/math-extract`.
 
 ## Working Principles
 

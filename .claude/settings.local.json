@@ -2,7 +2,13 @@
   "permissions": {
     "defaultMode": "auto",
     "allow": [
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:ncatlab.org)",
+      "WebFetch(domain:leanprover.zulipchat.com)",
+      "WebFetch(domain:www.isa-afp.org)",
+      "Bash(uv run .claude/skills/math-extract/scripts/ingest.py:*)"
     ]
   },
   "language": "japanese"

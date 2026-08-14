@@ -1,0 +1,130 @@
+# Building the corpus
+
+How `math-extract` obtains source texts, what each rung costs, and what to do
+when one fails. `SKILL.md` step 2 points here; read it when a fetch fails or
+when a PDF has to be converted.
+
+Everything lands under `references/<slug>/`, which is gitignored. **The cache is
+navigation; the note under `docs/math/` is the product.** Nothing here is a
+deliverable and the whole directory may be deleted at any time.
+
+## The ladder
+
+```bash
+uv run .claude/skills/math-extract/scripts/ingest.py "<arxiv-id | url | path>"
+```
+
+The script walks the rungs in order and stops at the first that yields text. It
+prints a JSON summary and exits 0 on success.
+
+| Rung | Source | Faithfulness | Cost |
+|---|---|---|---|
+| 1 | `arxiv.org/e-print/<id>` — LaTeX | **the original text** | seconds |
+| 2 | `arxiv.org/html/<id>` — LaTeXML | high; formulas re-rendered | seconds |
+| 3 | any other URL, or a local `.html`/`.txt`/`.tex` | tags stripped | seconds |
+| 4 | a PDF through MinerU | **model inference, not text** | minutes, serial |
+| 5 | not obtainable | — | — |
+
+**Rung 1 is the reason to check arXiv even for a published paper.** The LaTeX
+source is what the author wrote, so a quotation taken from it is verbatim by
+construction and reaches tier (a) with no further work. Every other rung
+produces a derived text.
+
+An arXiv *pdf* URL is not a PDF here: the identifier is recovered from it and
+rung 1 runs instead.
+
+## Output
+
+```
+references/<slug>/
+├── raw/              the bytes as fetched, unmodified
+├── source.txt        concatenated text, one line per source line
+└── source.flat.txt   the same, each paragraph flattened onto one line
+```
+
+**`source.flat.txt` is what the quote check greps.** A sentence in a LaTeX
+source is wrapped across several lines, so a verbatim quotation of it matches
+nothing in `source.txt`; flattening paragraphs onto single lines is what makes
+`grep -F` usable. Measured on `math-ph/0411058`: a real sentence matches in
+`source.flat.txt`, fails in `source.txt`, and a sentence with a plausible clause
+appended fails in both.
+
+The JSON summary carries `verbatim: true` exactly when the text came from rung 1.
+That flag is the input to the tier rule: quotes from a `verbatim` cache are
+(a); quotes from any other rung are (b) until checked against the original.
+
+## Exit codes
+
+| Code | Meaning | What to do |
+|---|---|---|
+| 0 | text cached | proceed |
+| 2 | target uninterpretable | fix the argument |
+| 3 | every rung failed | record `not retrieved` in `sources.md` with what was tried; every claim resting on the source is capped at tier (d), no locators |
+| 4 | fetched but almost no text | treat as not retrieved unless the cache shows otherwise |
+| 5 | the source is a PDF | rung 4, below |
+
+A non-zero exit **does not stop the extraction**. It lowers what can be claimed:
+the source joins the unfetchable list, and every lane is told that no locator may
+be written for it.
+
+## Rung 4 — converting a PDF
+
+Not yet wired into the script. Run it by hand, one PDF at a time.
+
+```bash
+uv tool install "mineru[pipeline]"          # first time only
+mineru -p <file.pdf> -o references/<slug>/mineru -b pipeline
+```
+
+Then point the note's rows at the Markdown MinerU produces, and flatten it the
+same way the script does if it is going to be quote-checked.
+
+Things that are easy to get wrong, and cost a lot when got wrong:
+
+- **`-b pipeline` is not optional here.** MinerU 3.x defaults to
+  `hybrid-engine`, which expects a GPU. This machine has none.
+- **Install `mineru[pipeline]`, not `mineru[all]`.** The `all` extra pulls in
+  vllm, lmdeploy and mlx — GPU serving stacks that are useless here and large.
+- **`-s/--start` and `-e/--end` take a page range.** Converting the twenty pages
+  that matter instead of a four-hundred-page book is the difference between
+  minutes and an afternoon. Use it.
+- `-f/--formula` and `-t/--table` are already on by default. Leave `-l` unset:
+  the language is detected, and the option's value list does not include a plain
+  English code.
+- **Conversion is serial.** Concurrent runs hit the per-task timeout and fail.
+  This is why step 2 of the skill builds the corpus before dispatching lanes,
+  and why the lane briefs say *do not run the converter*.
+- Roughly seven minutes for eighteen pages on CPU; a long paper is half an hour.
+  **Four or more PDFs means telling the user the estimate first.**
+- The models download on first use (`MINERU_MODEL_SOURCE=huggingface|modelscope`,
+  auto-detected). `mineru-models-download` fetches them ahead of time.
+- The container already has `libgl1` and `libglib2.0-0`, which MinerU's OpenCV
+  dependency needs.
+
+**A converted PDF is model output, not text.** MinerU's formula recognition can
+produce plausible, wrong LaTeX, and presenting that as a verbatim quotation is
+the worst failure this skill has. A quote from converted Markdown is tier (b)
+with `mineru-unchecked` attached, and reaches (a) only after being compared
+against the page image.
+
+## What is deliberately not used
+
+- **`pymupdf`, `poppler`, `marker-pdf`** — license-incompatible with this
+  project. This also means the `Read` tool cannot open PDFs here: it shells out
+  to `pdftoppm`, which is part of poppler and is not installed.
+- **Docling** — its formula model makes no useful progress on CPU, and without
+  it every equation comes out as a placeholder. For a mathematics corpus that is
+  the whole content.
+- **MinerU's Python API** — the CLI is the stable interface; importing the
+  library pulls in a far heavier dependency graph.
+
+Recording this here is the point: the next person to look for a PDF converter
+should find out in one place what was already tried and why it was rejected.
+
+## Rate limits and manners
+
+arXiv asks for roughly one request every three seconds. The script is serial and
+the skill fetches the whole corpus in one pass before dispatching, so this takes
+care of itself — but a lane that decides to fetch on its own can violate it. The
+lane briefs say to read the cache instead, for this reason as well as the
+converter's.
