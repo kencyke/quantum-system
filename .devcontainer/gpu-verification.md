@@ -13,8 +13,10 @@ Windows 側に NVIDIA ドライバが入っていればよく、**WSL やコン�
 
 VS Code のコマンドパレット → **Dev Containers: Rebuild Container**。
 
-`onCreateCommand` が `lake exe cache get` と `uv tool install "mineru[pipeline,vlm]"`
-を再実行する。mineru の wheel（torch 含む ~4GB）は `uv-cache` volume に、モデルは
+`onCreateCommand` が `lake exe cache get` と
+`uv tool install --with six "mineru[pipeline,vlm]"` を再実行する
+（`--with six` は mineru 3.4.5 の未宣言依存の回避で、外すと変換が
+`No module named 'six'` で全滅する。実測済み）。mineru の wheel（torch 含む ~4GB）は `uv-cache` volume に、モデルは
 `hf-models` volume にキャッシュされているので、2 回目以降の再ビルドは大幅に速い。
 
 ## 2. GPU がコンテナに見えているか

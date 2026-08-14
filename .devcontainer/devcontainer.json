@@ -17,7 +17,8 @@
 		},
 		"ghcr.io/thamaji/devcontainer-features/gitleaks:latest": {}
 	},
-	"onCreateCommand": "rm -rf .lake/ && lake exe cache get && uv sync && uv run lefthook install && uv tool install \"mineru[pipeline,vlm]\"",
+	// --with six: mineru 3.4.5's pipeline imports six without declaring it (measured).
+	"onCreateCommand": "rm -rf .lake/ && lake exe cache get && uv sync && uv run lefthook install && uv tool install --with six \"mineru[pipeline,vlm]\"",
 	// Pass the host GPU through (Docker Desktop bundles the NVIDIA runtime).
 	// If the container fails to start on a machine without a GPU, drop this line.
 	"runArgs": [
