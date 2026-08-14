@@ -220,20 +220,52 @@ formality** — this is the one step that costs your own tool calls rather than 
 agent's, and it is worth it, because a fabricated quote or an invented theorem
 number is the worst thing this skill can produce.
 
-1. **Firewall** — `grep -nE '```lean|^\s*(theorem|lemma|def|structure|class|instance|example)\b' docs/math/<slug>.md`.
-   A Lean fence is a hard fail: remove it. A prose false positive (a sentence
-   beginning "Definition …") is fine — read the hits, do not just count them.
-2. **Quote check** — for every blockquote, `grep -F` its text against the cache
-   file the row cites. A quote that does not match is downgraded to (b) or
-   deleted. Report the counts.
-3. **Locator check** — no theorem number, section number, page, or equation
-   number may appear on a tier (c) or (d) row, and every such row must carry the
-   substitution sentence instead. Check the `[ext: …]` markers and the
+The commands below are the detection half; the judgement is yours. Each was
+measured against a note written to violate all four, and each flagged the bad
+rows without flagging the good ones — but a grep finds candidates, not verdicts,
+so read every hit rather than counting them.
+
+1. **Firewall.**
+
+   ````bash
+   grep -nE '```lean|^\s*(theorem|lemma|def|structure|class|instance|example)\b' docs/math/<slug>.md
+   ````
+
+   A Lean fence is a hard fail: remove it and the material around it. A prose
+   hit — a sentence opening "Definition of …" — is fine.
+
+2. **Quote check.** For each blockquote, `grep -F` its text against
+   **`source.flat.txt` of the source that row cites**, not against the cache at
+   large: matching some other file proves the sentence exists somewhere, which
+   is not the claim. Use the flattened file, since a quotation crossing a line
+   break in the original matches there and nowhere else. A quote that does not
+   match is downgraded to (b) or deleted. Report the counts.
+
+3. **Locator check.**
+
+   ```bash
+   grep -nE 'tier \((c|d)\)' docs/math/<slug>.md |
+     grep -E 'Theorem|Thm|Lemma|Prop|Cor|§|p\. ?[0-9]|eq\. ?\('
+   ```
+
+   Every hit is a violation: the row must carry the substitution sentence
+   instead of the number. Then read the `[ext: …]` markers and the
    `## Sources` rows for anything on the unfetchable list.
-4. **Discipline check** — every `model-dependent` hypothesis names a witness
-   (otherwise it should be `open`); every `rejected` row has a typed
-   discriminator (otherwise `preference-only`); every degeneracy checklist item
-   has a row, including the ones with no effect.
+
+4. **Discipline check.**
+
+   ```bash
+   awk -F'|' '/model-dependent/ { w=$5; gsub(/^[ \t]+|[ \t]+$/,"",w)
+     if (w=="" || w=="—" || w=="-") print NR": no witness: "$2 }' docs/math/<slug>.md
+   awk -F'|' '/\| rejected \|/ { if ($5 !~ /\(X[1-5]\)/) print NR": untyped: "$2 }' docs/math/<slug>.md
+   grep -niE 'harder to formalize|awkward in a proof assistant|not standard|more lemmas' docs/math/<slug>.md
+   ```
+
+   A `model-dependent` row with no witness becomes `open`. A `rejected` row with
+   no typed discriminator, or resting on a banned ground, becomes
+   `preference-only`. Then check by eye that every degeneracy checklist item has
+   a row, including the ones with no effect, and that `## Not investigated` is
+   present **and** non-empty.
 
 Then update `sources.md`: one row per source attempted this run, and a `Notes`
 entry for any locator you adjudicated. **This is the only step that writes to
