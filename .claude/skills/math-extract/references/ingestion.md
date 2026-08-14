@@ -73,35 +73,63 @@ be written for it.
 conversion would cost; the script never installs the converter for you.
 
 ```bash
-uv tool install "mineru[pipeline]"                     # first time only
 uv run .claude/skills/math-extract/scripts/ingest.py <file.pdf> --allow-mineru
 uv run .claude/skills/math-extract/scripts/ingest.py <file.pdf> --allow-mineru --pages 40-62
 ```
 
-The script runs `mineru -b pipeline`, takes the largest Markdown file produced,
-and writes `source.txt` and `source.flat.txt` from it exactly as for the other
-rungs — so the quote check works the same way. The JSON summary comes back with
-`verbatim: false` and a `caveat` field spelling out the tier consequence.
+The devcontainer installs the converter in `onCreateCommand`
+(`uv tool install --with six "mineru[pipeline,vlm]"` — the `--with six` works
+around mineru 3.4.5's pipeline importing `six` without declaring it, which
+otherwise fails every conversion with `No module named 'six'`); if the binary
+is missing, the container predates that — run the same command by hand. It is a `uv tool`, not
+a `pyproject.toml` dependency, on purpose: mineru drags torch and a few hundred
+packages with hard version pins, and none of that belongs in the project venv
+that the commit hooks run from.
+
+The script takes the largest Markdown file MinerU produces and writes
+`source.txt` and `source.flat.txt` from it exactly as for the other rungs — so
+the quote check works the same way. The JSON summary comes back with
+`verbatim: false`, the `backend` used, and a `caveat` field spelling out the
+tier consequence.
+
+### GPU
+
+The devcontainer passes the host GPU through (`"runArgs": ["--gpus", "all"]`,
+Docker Desktop provides the runtime). **The setting takes effect on a container
+rebuild**; the post-rebuild verification procedure lives in
+`.devcontainer/gpu-verification.md` and is deliberately self-contained.
+
+- **The default backend stays `pipeline` even on GPU.** torch picks up CUDA by
+  itself, so pipeline gets the speedup with no configuration and cannot OOM the
+  way the VLM backends can.
+- `--backend hybrid-engine --effort high` opts into the higher-accuracy VLM
+  path. **This machine's 8GB of VRAM is that backend's minimum, shared with the
+  Windows desktop** — on `CUDA out of memory`, drop the flag and rerun; the
+  pipeline result is the fallback, not a failure.
+- Models land in `~/.cache/huggingface`, which is a named volume (`hf-models`),
+  so they survive rebuilds. `mineru-models-download` fetches them ahead of
+  time; `MINERU_MODEL_SOURCE` can force `huggingface`/`modelscope` (leave it
+  unset for auto).
 
 Things that are easy to get wrong, and cost a lot when got wrong:
 
-- **`-b pipeline` is not optional here.** MinerU 3.x defaults to
-  `hybrid-engine`, which expects a GPU. This machine has none.
-- **Install `mineru[pipeline]`, not `mineru[all]`.** The `all` extra pulls in
-  vllm, lmdeploy and mlx — GPU serving stacks that are useless here and large.
-- **`-s/--start` and `-e/--end` take a page range.** Converting the twenty pages
-  that matter instead of a four-hundred-page book is the difference between
-  minutes and an afternoon. Use it.
+- **The script always passes `-b` explicitly.** MinerU 3.x defaults to
+  `hybrid-engine`, which is the wrong default at 8GB of shared VRAM.
+- **Install `mineru[pipeline,vlm]`, not `mineru[all]`.** The `all` extra pulls
+  in vllm, lmdeploy and mlx — serving stacks that are useless here and large.
+  `[core]` would also work but drags in gradio.
+- **`--pages START-END` takes a page range.** Converting the twenty pages that
+  matter instead of a four-hundred-page book is the difference between minutes
+  and an afternoon. Use it.
 - `-f/--formula` and `-t/--table` are already on by default. Leave `-l` unset:
   the language is detected, and the option's value list does not include a plain
   English code.
 - **Conversion is serial.** Concurrent runs hit the per-task timeout and fail.
   This is why step 2 of the skill builds the corpus before dispatching lanes,
   and why the lane briefs say *do not run the converter*.
-- Roughly seven minutes for eighteen pages on CPU; a long paper is half an hour.
-  **Four or more PDFs means telling the user the estimate first.**
-- The models download on first use (`MINERU_MODEL_SOURCE=huggingface|modelscope`,
-  auto-detected). `mineru-models-download` fetches them ahead of time.
+- Roughly seven minutes for eighteen pages on CPU, far less on GPU; a long
+  paper on CPU is half an hour. **Four or more PDFs means telling the user the
+  estimate first.**
 - The container already has `libgl1` and `libglib2.0-0`, which MinerU's OpenCV
   dependency needs.
 
@@ -109,7 +137,10 @@ Things that are easy to get wrong, and cost a lot when got wrong:
 produce plausible, wrong LaTeX, and presenting that as a verbatim quotation is
 the worst failure this skill has. A quote from converted Markdown is tier (b)
 with `mineru-unchecked` attached, and reaches (a) only after being compared
-against the page image.
+against the page image. Measured example: on a five-page paper set in Knuth's
+small-caps font, the CPU pipeline rendered the byline as
+`D<sub>on</sub> K<sub>nu</sub>th` — ordinary body text and formulas came out
+clean, but unusual typography gets mangled silently.
 
 ## What is deliberately not used
 

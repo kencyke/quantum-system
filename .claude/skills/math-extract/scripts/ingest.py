@@ -11,6 +11,7 @@ Usage:
                                                          [--cache-dir DIR]
                                                          [--allow-mineru]
                                                          [--pages START-END]
+                                                         [--backend B] [--effort E]
 
 Tries the ladder in order and stops at the first rung that yields text:
 
@@ -74,6 +75,8 @@ class Options:
 
     allow_mineru: bool = False
     pages: str | None = None
+    backend: str = "auto"
+    effort: str | None = None
 
 # 2202.03357 / 2202.03357v2 / math/0604123 / math-ph/0411058v1
 ARXIV_NEW = re.compile(r"(?<!\d)(\d{4}\.\d{4,5})(v\d+)?(?!\d)")
@@ -242,8 +245,20 @@ def pdf_refusal(target: str) -> int:
     return 5
 
 
+def resolve_backend(opts: Options) -> str:
+    """Pick the mineru backend.
+
+    `auto` resolves to `pipeline` regardless of GPU: torch uses CUDA on its own
+    when the device is there, so pipeline is fast on GPU and correct on CPU.
+    The VLM-based backends (`hybrid-engine`, `vlm-engine`) are opt-in — this
+    machine's 8GB of VRAM is their minimum, shared with the Windows desktop,
+    so they can OOM where pipeline cannot.
+    """
+    return "pipeline" if opts.backend == "auto" else opts.backend
+
+
 def rung_mineru(pdf_path: Path, out_dir: Path, opts: Options) -> tuple[str, str]:
-    """Convert a PDF with MinerU's CPU pipeline. Never installs anything."""
+    """Convert a PDF with MinerU. Never installs anything."""
     binary = shutil.which("mineru")
     if binary is None:
         report({
@@ -251,16 +266,23 @@ def rung_mineru(pdf_path: Path, out_dir: Path, opts: Options) -> tuple[str, str]
             "reason": "mineru-missing",
             "target": str(pdf_path),
             "message": "mineru is not on PATH. Install it with "
-                       "`uv tool install \"mineru[pipeline]\"` — the pipeline extra, "
-                       "not [all], which pulls GPU serving stacks this machine "
-                       "cannot use. This script will not install it for you.",
+                       "`uv tool install \"mineru[pipeline,vlm]\"` — not [all], "
+                       "which pulls the vllm/lmdeploy serving stacks. The "
+                       "devcontainer installs it in onCreateCommand, so a missing "
+                       "binary usually means the container predates that. This "
+                       "script will not install it for you.",
         })
         raise SystemExit(5)
 
     mineru_dir = out_dir / "mineru"
     mineru_dir.mkdir(parents=True, exist_ok=True)
-    # -b pipeline is not optional: MinerU 3.x defaults to a GPU backend.
-    command = [binary, "-p", str(pdf_path), "-o", str(mineru_dir), "-b", "pipeline"]
+    # The backend is always passed explicitly: MinerU 3.x defaults to
+    # hybrid-engine, which is not the right default at 8GB of shared VRAM.
+    backend = resolve_backend(opts)
+    command = [binary, "-p", str(pdf_path), "-o", str(mineru_dir), "-b", backend]
+    if opts.effort and backend != "pipeline":
+        # --effort steers the VLM backends only; pipeline does not take it.
+        command += ["--effort", opts.effort]
     if opts.pages:
         start, _, end = opts.pages.partition("-")
         command += ["-s", start]
@@ -287,7 +309,7 @@ def rung_mineru(pdf_path: Path, out_dir: Path, opts: Options) -> tuple[str, str]
                 "message": "The converter produced no Markdown. A scanned document "
                            "may need OCR; see references/ingestion.md."})
         raise SystemExit(4)
-    return markdowns[0].read_text(encoding="utf-8", errors="replace"), "mineru"
+    return markdowns[0].read_text(encoding="utf-8", errors="replace"), f"mineru-{backend}"
 
 
 def report(payload: dict) -> None:
@@ -306,13 +328,22 @@ def main() -> int:
     parser.add_argument("--pages", metavar="START-END",
                         help="page range for rung 4, e.g. 40-62 — convert the chapter "
                              "that matters instead of the whole book")
+    parser.add_argument("--backend", choices=["auto", "pipeline", "hybrid-engine", "vlm-engine"],
+                        default="auto",
+                        help="mineru backend for rung 4. auto = pipeline (uses the GPU "
+                             "by itself when one is there). The VLM backends are "
+                             "opt-in: 8GB of VRAM is their minimum and it is shared "
+                             "with the Windows desktop, so they can OOM")
+    parser.add_argument("--effort", choices=["medium", "high"],
+                        help="rung 4 quality knob, forwarded only to the VLM backends")
     args = parser.parse_args()
 
     target = args.target.strip()
     if not target:
         print("[error] empty target", file=sys.stderr)
         return 2
-    opts = Options(allow_mineru=args.allow_mineru, pages=args.pages)
+    opts = Options(allow_mineru=args.allow_mineru, pages=args.pages,
+                   backend=args.backend, effort=args.effort)
 
     arxiv_id = arxiv_id_of(target)
     slug = args.slug or derive_slug(target, arxiv_id)
@@ -381,7 +412,8 @@ def main() -> int:
         "arxiv_id": arxiv_id,
         "stage_attempts": attempts,
     }
-    if stage == "mineru":
+    if stage.startswith("mineru"):
+        summary["backend"] = stage.removeprefix("mineru-")
         summary["caveat"] = ("Converted, not transcribed: the formulas are model "
                              "output. Quotes from this cache are tier (b) with "
                              "mineru-unchecked, and reach (a) only after being "
