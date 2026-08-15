@@ -67,7 +67,11 @@ short form:
 3. Any other URL.
 4. A PDF through the converter — **slow, serial, and not verbatim**. Opt-in per
    call with `--allow-mineru`, and `--pages START-END` to convert the chapter
-   that matters rather than the whole book.
+   that matters rather than the whole book. The default backend is the CPU/GPU
+   pipeline; `--backend hybrid-engine --effort high` opts into the
+   higher-accuracy VLM path, which can exhaust this machine's VRAM — on
+   `CUDA out of memory`, drop both flags and rerun. Neither choice raises the
+   tier: converted text is (b) either way.
 5. Not obtainable — record it and move on.
 
 Everything lands in `references/<slug-of-source>/`, which is gitignored and may
@@ -188,6 +192,10 @@ general form has been attacked on all three fronts.
 ### 5. Merge and write the note
 
 Write `docs/math/<slug>.md` to the format in `references/note-format.md`.
+
+If any quote you merge carries a macro its source defines — `\lok`, `\A`, `\bC` —
+the note opens with the macro preamble that format specifies. Never edit a quote
+to make it render.
 
 Three things are **yours**, not any lane's:
 

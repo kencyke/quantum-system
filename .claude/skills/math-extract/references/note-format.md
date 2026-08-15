@@ -36,6 +36,16 @@ revisions:
   - 2026-08-14 · <short commit> · initial extraction · sources: DL84, BU74
 ---
 
+<!--
+Macros the quotes below need, copied from each source's own preamble:
+  \lok  DL84, references/<slug-of-source>/raw/<file>.tex:144
+Omit this block and the comment when no quote carries a source macro.
+-->
+
+$$
+\newcommand{\lok}[1]{{\mathcal #1}}
+$$
+
 # <Object, as a mathematician names it>
 
 ## What this object is for
@@ -158,6 +168,41 @@ revisions:
 ````
 
 ## Section rules
+
+### Macro preamble
+
+Verbatim quotes carry the source's own LaTeX, and sources define their own
+macros — `\lok`, `\A`, `\bC`. Any renderer that parses `$…$` (KaTeX in VS Code's
+Markdown preview, MathJax elsewhere) raises a parse error on every one of them,
+and **the fix is never to edit the quote**: those bytes are the evidence the
+quote check verifies. Transcribe the definitions instead, into a `$$` block
+between the frontmatter and the H1 — it must precede the first quote that uses
+them — with an HTML comment naming the file and line each was copied from.
+
+- **Copy the definition; do not paraphrase it.** `\newcommand{\lok}[1]{{\mathcal
+  #1}}` lifted from the paper's preamble can be audited against that preamble.
+  An equivalent written from scratch cannot, and a wrong transcription
+  mis-renders a quote that the quote check will still pass — it checks the
+  source bytes, not what they display as.
+- **Only the macros the note actually uses.**
+- **`\renewcommand` where the renderer already defines the name.** `\H` is the
+  Hungarian-umlaut accent in KaTeX's own macro table, so `\newcommand{\H}` is an
+  error; sources redefining it hit the same wall and write `\renewcommand`, so
+  copying them is both correct and faithful.
+- **The definitions are per-note, and that is the point.** Renderers reset the
+  macro table per document, so two notes may transcribe one name differently —
+  which is what the sources do. Defining the macros once in an editor or
+  workspace setting instead would put every note into a single namespace, and
+  the first collision would render one source's quote in another source's
+  notation **without raising an error**. A silently mis-rendered verbatim quote
+  is worse than a visible parse error, which is why this block belongs in the
+  note and not in a configuration file.
+- A renderer that does not share macro state across a document simply ignores
+  the block, and the quotes show as source LaTeX — which is what they are.
+  Nothing downstream depends on it, and no editor configuration is required.
+
+The block is presentation, not mathematics: it carries no claim, so it needs no
+tier and no locator beyond the file:line provenance in the comment.
 
 ### Frontmatter
 
@@ -356,6 +401,10 @@ Matching some other file in the cache proves the sentence exists somewhere,
 which is not the claim the row makes. `source.flat.txt` rather than `source.txt`
 because a quotation crossing a line break matches only there; see
 `ingestion.md`.
+
+A quote that will not *render* is still a quote. Fix it with the macro preamble
+above, never by touching the bytes: normalising a formula so a previewer stops
+complaining destroys the only thing that makes the row checkable.
 
 **Why:** it makes tier (a) mechanically decidable instead of self-reported, at a
 cost of seconds. Converted PDFs are model output, not text, so a quote taken
