@@ -67,12 +67,25 @@ infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**.
 * `VonNeumannAlgebra.exists_isMinimalProjection_boundedLinearOperators` — `B(H)` has a minimal
   projection (rank-one).
 * `VonNeumannAlgebra.isTypeIFactor_boundedLinearOperators` — `B(H)` is a type I factor.
-* `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(K)` for some
-  Hilbert space `K`.
+* `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(ℓ²(ι))` with the
+  implementing isometry `H ≃ₗᵢ ℓ²(ι)`, for `ι` the index set of a Hilbert basis of `H`.
 * `VonNeumannAlgebra.isTypeIInfinite_boundedLinearOperators` — for infinite-dimensional `H`, `B(H)`
   is a type I_∞ factor, packaged as the intrinsic predicate `IsTypeIInfinite 𝓑(H)`.
 * `VonNeumannAlgebra.exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators` — for
-  infinite-dimensional `H`, `B(H) ≃⋆ₐ B(K)` with `K` itself infinite-dimensional.
+  infinite-dimensional `H`, the same with `ι` infinite, hence `ℓ²(ι)` infinite-dimensional.
+
+## Notation
+
+In the prose above `B(H)` names the mathematical object — the algebra of all bounded operators —
+while `𝓑(H)` is the Lean notation for it. The two are used deliberately, not interchangeably:
+`𝓑(H)` resolves to `VonNeumannAlgebra.boundedLinearOperators H` (bundled von Neumann algebra) or
+to `H →L[ℂ] H` (operator type) according to the expected type, an overload tabled in
+`QuantumSystem.Algebra.VonNeumannAlgebra.Basic` and bridged by
+`boundedLinearOperators.starAlgEquiv`.
+
+`⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; that
+convention is stated in full in `QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor`, where the
+algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
 -/
 
 @[expose] public section
@@ -98,9 +111,10 @@ def IsTypeIFactor (N : VonNeumannAlgebra H) : Prop :=
 /-- A factor with a minimal projection is type I: the only nonzero central projection of a factor
 is `1` (`central_projection_eq`), and it dominates the minimal projection, which is abelian and
 nonzero. -/
-lemma IsFactor.isTypeI_of_exists_isMinimalProjection [Nontrivial H] {N : VonNeumannAlgebra H}
+lemma IsFactor.isTypeI_of_exists_isMinimalProjection {N : VonNeumannAlgebra H}
     (hN : IsFactor N) (h : ∃ e : H →L[ℂ] H, IsMinimalProjection N e) : IsTypeI N := by
   obtain ⟨e, he⟩ := h
+  haveI : Nontrivial H := he.nontrivial
   intro z hz hz0
   rcases hN.central_projection_eq hz with h0 | h1
   · exact absurd h0 hz0
@@ -114,12 +128,13 @@ The proof avoids corner-commutant theory and polar decomposition: if `0 ≠ q �
 `IsFactor.exists_mul_ne` produces `a ∈ N` with `z := r a q ≠ 0`. Both `z` and `z⋆` are corner
 elements of `p`, so they commute by abelianness; but `q z = 0` and `q z⋆ = z⋆` force
 `z⋆ z = q (z z⋆) = (q z) z⋆ = 0`, and the C⋆-identity gives `z = 0` — a contradiction. -/
-theorem IsFactor.subprojection_eq_of_isAbelianProjection [Nontrivial H] {N : VonNeumannAlgebra H}
+theorem IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {p : H →L[ℂ] H} (hp : IsAbelianProjection N p)
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hsub : p * q = q) :
     q = 0 ∨ q = p := by
   by_cases hq0 : q = 0
   · exact Or.inl hq0
+  haveI : Nontrivial H := nontrivial_of_ne_zero hq0
   by_cases hqp : q = p
   · exact Or.inr hqp
   exfalso
@@ -574,7 +589,7 @@ theorem isMinimalProjection_of_forall_subprojection {N : VonNeumannAlgebra H}
 /-- **In a factor, a nonzero abelian projection is minimal**: it is order-minimal
 (`subprojection_eq_of_isAbelianProjection`), and order-minimality forces the trivial corner
 (`isMinimalProjection_of_forall_subprojection`). -/
-theorem IsFactor.isMinimalProjection_of_isAbelianProjection [Nontrivial H]
+theorem IsFactor.isMinimalProjection_of_isAbelianProjection
     {N : VonNeumannAlgebra H} (hN : IsFactor N) {p : H →L[ℂ] H}
     (hp : IsAbelianProjection N p) (hp0 : p ≠ 0) : IsMinimalProjection N p :=
   isMinimalProjection_of_forall_subprojection hp.1 hp.2.1 hp0 fun _ hq hqN hsub =>
@@ -582,8 +597,10 @@ theorem IsFactor.isMinimalProjection_of_isAbelianProjection [Nontrivial H]
 
 /-- **The abelian-projection characterisation of type I coincides with the minimal-projection one
 on factors**: a factor is type I iff it has a minimal projection. Nontriviality of `H` is
-essential in both directions (on a subsingleton `H` the type I condition is vacuous while no
-nonzero projection exists). -/
+essential for the forward direction only: on a subsingleton `H` the type I condition is vacuously
+satisfied while no nonzero projection exists, so `IsTypeI N` cannot produce one. The converse
+carries no such hypothesis (`isTypeI_of_exists_isMinimalProjection`) — the minimal projection it
+is handed is nonzero and so supplies the nontriviality itself. -/
 theorem IsFactor.isTypeI_iff_exists_isMinimalProjection [Nontrivial H] {N : VonNeumannAlgebra H}
     (hN : IsFactor N) : IsTypeI N ↔ ∃ e : H →L[ℂ] H, IsMinimalProjection N e := by
   constructor
@@ -599,7 +616,9 @@ theorem IsFactor.isTypeI_iff_exists_isMinimalProjection [Nontrivial H] {N : VonN
   · exact hN.isTypeI_of_exists_isMinimalProjection
 
 /-- The factor-specialised definition `IsTypeIFactor` agrees with the conjunction of the general
-abelian-projection type I property and factor-ness. -/
+abelian-projection type I property and factor-ness. `[Nontrivial H]` is load-bearing here, not
+decoration: on a subsingleton `H` *every* von Neumann algebra satisfies `IsFactor N ∧ IsTypeI N`
+while *none* satisfies `IsTypeIFactor N`, since a minimal projection must be nonzero. -/
 theorem isTypeIFactor_iff_isFactor_and_isTypeI [Nontrivial H] {N : VonNeumannAlgebra H} :
     IsTypeIFactor N ↔ IsFactor N ∧ IsTypeI N := by
   constructor
@@ -652,7 +671,7 @@ lemma IsTypeIInfinite.isTypeIFactor {N : VonNeumannAlgebra H} (hN : IsTypeIInfin
 
 A type I factor is `⋆`-isomorphic to `B(K)` for some Hilbert space `K`. The spatial content — the
 implementing unitary and the multiplicity model `K = ℓ²(F)` — is
-`IsFactor.exists_spatial_tensorDecomposition` in `Algebra.VonNeumannAlgebra.StructureTheorem`;
+`IsFactor.exists_spatial_tensor_decomposition` in `Algebra.VonNeumannAlgebra.StructureTheorem`;
 here it is packaged as an abstract `⋆`-isomorphism. -/
 
 universe u
@@ -663,7 +682,7 @@ bounded operators on *some* complex Hilbert space `K`. This is the model-indepen
 classification of type I factors: `B(K)` for `K = ℓ²(F)` is exactly the type `I_{|F|}` factor, and
 `K = H` recovers the full algebra `B(H)` as the type `I` factor `𝓑(H)`. The spatial content — that the
 isomorphism is implemented by a unitary and that `K` is the multiplicity space of the minimal
-projection — is `IsFactor.exists_spatial_tensorDecomposition`; here it is packaged as an abstract
+projection — is `IsFactor.exists_spatial_tensor_decomposition`; here it is packaged as an abstract
 `⋆`-isomorphism, hiding the specific model `K = ℓ²(F)` behind an existential. -/
 theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
     [InnerProductSpace ℂ H] [CompleteSpace H] {N : VonNeumannAlgebra H}
@@ -671,7 +690,7 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
     ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
       Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
   obtain ⟨hFactor, e, he⟩ := hN
-  obtain ⟨F, U, hU, -⟩ := hFactor.exists_spatial_tensorDecomposition he
+  obtain ⟨F, U, hU, -⟩ := hFactor.exists_spatial_tensor_decomposition he
   haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
   haveI : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
     rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
@@ -727,50 +746,53 @@ theorem isTypeIFactor_boundedLinearOperators [Nontrivial H] :
     IsTypeIFactor 𝓑(H) :=
   ⟨isFactor_boundedLinearOperators, exists_isMinimalProjection_boundedLinearOperators⟩
 
-/-- **`B(H)` is `⋆`-isomorphic to `B(K)`** for some complex Hilbert space `K`. This applies the
-abstract type I factor structure theorem `IsTypeIFactor.exists_starAlgEquiv` to the full algebra;
-`K` is `ℓ²` of an orthonormal basis of `H`. -/
-theorem exists_starAlgEquiv_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
-    [InnerProductSpace ℂ H] [CompleteSpace H] [Nontrivial H] :
-    ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
-      Nonempty (𝓑(H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :=
-  isTypeIFactor_boundedLinearOperators.exists_starAlgEquiv
+/-- **`B(H) ≃⋆ₐ B(ℓ²(ι))` with `H ≃ₗᵢ ℓ²(ι)`.** The full algebra is `⋆`-isomorphic to the bounded
+operators on `ℓ²(ι)` for an index set `ι` — the index set of a Hilbert basis of `H` — and the
+isomorphism is implemented by the corresponding isometry `H ≃ₗᵢ ℓ²(ι)`, which is returned
+alongside it.
 
-/-- **`B(H) ≃⋆ₐ B(K)` with `K` infinite-dimensional, when `H` is infinite-dimensional.** The full
-algebra is `⋆`-isomorphic to `B(K)` for a complex Hilbert space `K` that is itself
-infinite-dimensional. Here `K = ℓ²(F)` for `F` an orthonormal basis of `H`; a finite `F` would,
-through the spatial decomposition `H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` with one-dimensional multiplicity `eH` (the
-range of the rank-one minimal projection), force `H` finite-dimensional. Expressing type I_∞ as
-`¬FiniteDimensional ℂ K` is the standard reading: a type I_n factor is `B(K)` with `dim K = n`, so
-I_∞ is exactly the infinite-dimensional `K`. -/
+The `ℓ²` model is stated rather than hidden behind an unconstrained `∃ K`. With `K` unconstrained
+the statement would be discharged by `K := H` and `boundedLinearOperators.starAlgEquiv`,
+carrying none of the classification content: the content is exactly that `K` may be taken of the
+form `ℓ²(ι)`, which is what `IsTypeIFactor.exists_starAlgEquiv` hides behind its existential and
+what the type `I_{|ι|}` reading of `B(H)` needs. Nonzeroness of `H` is not required: for `H = 0`
+the Hilbert basis is empty and both sides are trivial. -/
+theorem exists_starAlgEquiv_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] :
+    ∃ ι : Type u, Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : ι => ℂ) 2) ∧
+      Nonempty ((𝓑(H) : VonNeumannAlgebra H) ≃⋆ₐ[ℂ]
+        (lp (fun _ : ι => ℂ) 2 →L[ℂ] lp (fun _ : ι => ℂ) 2)) := by
+  obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
+  exact ⟨w, ⟨b.repr⟩, ⟨boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv⟩⟩
+
+/-- **`B(H) ≃⋆ₐ B(ℓ²(ι))` with `ι` infinite, when `H` is infinite-dimensional.** The full algebra
+is `⋆`-isomorphic to the bounded operators on `ℓ²(ι)` for an *infinite* index set `ι`, with the
+implementing isometry `H ≃ₗᵢ ℓ²(ι)` returned alongside; in particular `ℓ²(ι)` is itself
+infinite-dimensional. Expressing type I_∞ this way is the standard reading: a type I_n factor is
+`B(K)` with `dim K = n`, so I_∞ is exactly the infinite index set.
+
+As in `exists_starAlgEquiv_boundedLinearOperators`, the `ℓ²` model is part of the statement: an
+unconstrained `∃ K` with `¬FiniteDimensional ℂ K` would be discharged by `K := H`. -/
 theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type u}
     [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
     (hinf : ¬FiniteDimensional ℂ H) :
-    ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
-      ¬FiniteDimensional ℂ K ∧
-      Nonempty (𝓑(H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
-  haveI : Nontrivial H := by
-    rcases subsingleton_or_nontrivial H with h | h
-    · haveI := h
-      exact absurd (inferInstance : FiniteDimensional ℂ H) hinf
-    · exact h
-  obtain ⟨u, hu⟩ := exists_unit_vector (H := H)
-  have he : IsMinimalProjection 𝓑(H) (rankOne ℂ u u) :=
-    isMinimalProjection_rankOne_boundedLinearOperators hu
-  obtain ⟨F, U, hU, -⟩ := isFactor_boundedLinearOperators.exists_spatial_tensorDecomposition he
-  haveI : CompleteSpace (LinearMap.range ((rankOne ℂ u u : H →L[ℂ] H) : H →ₗ[ℂ] H)) :=
-    he.1.completeSpace_range
-  haveI hfd : FiniteDimensional ℂ (LinearMap.range ((rankOne ℂ u u : H →L[ℂ] H) : H →ₗ[ℂ] H)) :=
-    finiteDimensional_range_rankOne u
-  haveI : Nontrivial (LinearMap.range ((rankOne ℂ u u : H →L[ℂ] H) : H →ₗ[ℂ] H)) := by
-    rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
-    exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
-      (h.trans ContinuousLinearMap.coe_zero.symm))
-  refine ⟨lp (fun _ : F => ℂ) 2, inferInstance, inferInstance, inferInstance, ?_,
-    ⟨(conjEquiv U 𝓑(H)).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
-  intro hK
-  haveI := hK
-  exact hinf U.symm.toLinearEquiv.finiteDimensional
+    ∃ ι : Type u, Infinite ι ∧ ¬FiniteDimensional ℂ (lp (fun _ : ι => ℂ) 2) ∧
+      Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : ι => ℂ) 2) ∧
+      Nonempty ((𝓑(H) : VonNeumannAlgebra H) ≃⋆ₐ[ℂ]
+        (lp (fun _ : ι => ℂ) 2 →L[ℂ] lp (fun _ : ι => ℂ) 2)) := by
+  obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
+  have hwinf : Infinite w := by
+    rw [← not_finite_iff_infinite]
+    intro hfin
+    haveI : Finite w := hfin
+    haveI : Fintype w := Fintype.ofFinite w
+    exact hinf b.toOrthonormalBasis.toBasis.finiteDimensional_of_finite
+  have hnfd : ¬FiniteDimensional ℂ (lp (fun _ : w => ℂ) 2) := by
+    intro hK
+    haveI := hK
+    exact hinf b.repr.symm.toLinearEquiv.finiteDimensional
+  exact ⟨w, hwinf, hnfd, ⟨b.repr⟩,
+    ⟨boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv⟩⟩
 
 /-- **`B(H)` is a type I_∞ factor when `H` is infinite-dimensional.** Packaged as the intrinsic
 predicate `IsTypeIInfinite`: `𝓑(H) = B(H)` is a type I factor (`isTypeIFactor_boundedLinearOperators`)

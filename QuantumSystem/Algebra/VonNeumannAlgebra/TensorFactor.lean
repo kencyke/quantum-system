@@ -24,7 +24,9 @@ definitions above. The tensor notations that *are* declared live in `TensorProdu
 `⊗̂` for the completed Hilbert tensor product and `⊗ₕ` for elementary tensors.
 
 These are the objects in the split-property tensor decomposition `A₁ ⊆ B(H₁)⊗̄1`,
-`A₂ ⊆ 1⊗̄B(H₂)` (paper eq. (39)). The file culminates in the **tensor commutation theorem**
+`A₂ ⊆ 1⊗̄B(H₂)` — equation (39) of J. Yngvason, *Localization and Entanglement in Relativistic
+Quantum Physics*, in *The Message of Quantum Science*, Lecture Notes in Physics 899, Springer 2015,
+pp. 325–348 (arXiv:1401.2652), §5.1. The file culminates in the **tensor commutation theorem**
 `vnTensorLeft.commutant = vnTensorRight` (von Neumann's commutation theorem for a full factor on
 the first leg): the commutant of `B(H₁)⊗̄1` is exactly `1⊗̄B(H₂)`.
 
@@ -102,6 +104,7 @@ noncomputable def tmulRightL (f : H₁) : H₂ →L[ℂ] HilbertTensor H₁ H₂
     (LinearMap.mkContinuous (TensorProduct.mk ℂ H₁ H₂ f) ‖f‖ fun z => by
       rw [TensorProduct.mk_apply, TensorProduct.norm_tmul])
 
+/-- The inclusion `tmulRightL f` sends `z` to the elementary tensor `f ⊗ z`. -/
 @[simp] lemma tmulRightL_apply (f : H₁) (z : H₂) : tmulRightL f z = tmul f z := rfl
 
 /-- The left and right amplifications commute: `(A ⊗̂ 1)(1 ⊗̂ B) = A ⊗̂ B = (1 ⊗̂ B)(A ⊗̂ 1)`. -/

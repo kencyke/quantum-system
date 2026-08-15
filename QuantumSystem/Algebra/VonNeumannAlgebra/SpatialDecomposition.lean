@@ -62,11 +62,17 @@ span of the union of the ranges is the whole space; this is the operator-friendl
   `∃ c, v_p⋆ a v_q = c • e` for `a ∈ N`.
 * `IsPartialIsometry.sourceRangeEquiv` — the isometric equivalence `range (v⋆v) ≃ₗᵢ range (vv⋆)`
   induced by a partial isometry `v`.
-* `VonNeumannAlgebra.IsFactor.exists_tensor_decomposition` — the `ℓ²`-sum form `H ≅ ℓ²(F; eH)` of
+* `VonNeumannAlgebra.IsFactor.exists_lp_decomposition` — the `ℓ²`-sum form `H ≅ ℓ²(F; eH)` of
   the spatial decomposition of a type I factor.
 * `VonNeumannAlgebra.IsFactor.exists_tmul_decomposition` — the literal tensor form
   `H ≅ ℓ²(F) ⊗̂ (eH)`, obtained by composing with the tensor bridge
   `HilbertTensor.lpTensorEquiv`.
+
+## Notation
+
+`⊗̄` in the prose above is documentation shorthand for the von Neumann (spatial) tensor product of
+algebras; that convention is stated in full in `QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor`,
+where the algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
 -/
 
 @[expose] public section
@@ -177,10 +183,11 @@ The proof takes a *maximal* such family `F` (Zorn) and lets `p` be the orthogona
 the closed span `M` of the ranges; `p ∈ N`. If `M ≠ ⊤` then `r = 1 - p` is a nonzero projection in
 `N`, so by the comparison theorem some nonzero `q' ≼ r` is equivalent to `e`; `q'` is orthogonal to
 every `f ∈ F`, contradicting maximality. -/
-theorem IsFactor.exists_orthEquivFam_top [Nontrivial H] {N : VonNeumannAlgebra H}
+theorem IsFactor.exists_orthEquivFam_top {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
       (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ := by
+  haveI : Nontrivial H := he.nontrivial
   obtain ⟨F, hF, hFmax⟩ := exists_maximal_orthEquivFam N e
   refine ⟨F, hF, ?_⟩
   set S : Set H := {y | ∃ f ∈ F, ∃ x, f x = y} with hS
@@ -256,17 +263,21 @@ oriented with source projection `v_p⋆ v_p = e` (`pisom_source`) and range proj
 noncomputable def OrthEquivFam.pisom (hF : OrthEquivFam N e F) (p : F) : H →L[ℂ] H :=
   (hF.1 p.1 p.2).2.2.2.choose
 
+/-- The chosen equivalence partial isometry `v_p` lies in `N`. -/
 lemma OrthEquivFam.pisom_mem (hF : OrthEquivFam N e F) (p : F) : hF.pisom p ∈ N :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.1
 
+/-- The chosen `v_p` is a partial isometry. -/
 lemma OrthEquivFam.pisom_isPI (hF : OrthEquivFam N e F) (p : F) :
     IsPartialIsometry (hF.pisom p) :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.2.1
 
+/-- The source projection of `v_p` is `e`: `v_p⋆ v_p = e`. -/
 lemma OrthEquivFam.pisom_source (hF : OrthEquivFam N e F) (p : F) :
     star (hF.pisom p) * hF.pisom p = e :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.2.2.1
 
+/-- The range projection of `v_p` is `p`: `v_p v_p⋆ = p`. -/
 lemma OrthEquivFam.pisom_range (hF : OrthEquivFam N e F) (p : F) :
     hF.pisom p * star (hF.pisom p) = (p : H →L[ℂ] H) :=
   (hF.1 p.1 p.2).2.2.2.choose_spec.2.2.2
@@ -554,12 +565,14 @@ noncomputable def OrthEquivFam.hilbertSumEquiv {N : VonNeumannAlgebra H} {e : H 
     H ≃ₗᵢ[ℂ] lp (fun i : F => LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) 2 :=
   (hF.isHilbertSum htop).linearIsometryEquiv
 
-/-- **Tensor-product decomposition of the Hilbert space.** A covering orthogonal family of
+/-- **Multiplicity decomposition of the Hilbert space.** A covering orthogonal family of
 projections each Murray–von Neumann equivalent to `e` identifies `H` isometrically with
 `ℓ²(F; eH)` — the `ℓ²` sum, indexed by `F`, of copies of the fibre `range e` (which is the
-*multiplicity space* when `e` is minimal, as in `exists_tensor_decomposition`; minimality is not
-assumed in this lemma). This is the spatial content of the type I factor structure theorem:
-`H ≅ ℓ²(F) ⊗̂ (eH)`. The equivalence
+*multiplicity space* when `e` is minimal, as in `exists_lp_decomposition`; minimality is not
+assumed in this lemma). The codomain is that `ℓ²` sum and nothing else: no tensor product occurs
+here. Composing with the tensor bridge turns it into the literal `H ≅ ℓ²(F) ⊗̂ (eH)` of the type I
+factor structure theorem — that is `OrthEquivFam.spatialEquiv`, and the existence statement is
+`exists_tmul_decomposition`. The equivalence
 is built from the Hilbert-sum decomposition `H ≅ ⊕ᵢ range eᵢ` and the partial-isometry-induced
 isometries `range eᵢ ≅ range e`. -/
 noncomputable def OrthEquivFam.multiplicityEquiv {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
@@ -620,9 +633,9 @@ lemma OrthEquivFam.coe_hilbertSumEquiv_apply {N : VonNeumannAlgebra H} {e : H �
 minimal projection `e` acts on a Hilbert space isometric to the `ℓ²` sum `ℓ²(F; eH)` of copies of
 `eH = range e`, indexed by a covering orthogonal family `F` (`OrthEquivFam`, with densely
 spanning ranges) of minimal projections equivalent to `e`. Composing with the tensor bridge turns
-this `ℓ²` sum into the literal tensor product `H ≅ ℓ²(F) ⊗̂ eH`; see
-`exists_tmul_decomposition`. -/
-theorem IsFactor.exists_tensor_decomposition [Nontrivial H] {N : VonNeumannAlgebra H}
+this `ℓ²` sum into the literal tensor product `H ≅ ℓ²(F) ⊗̂ eH`; that is the statement of
+`exists_tmul_decomposition`, and it — not this one — is the tensor-product form. -/
+theorem IsFactor.exists_lp_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
       (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ ∧
@@ -637,8 +650,8 @@ projection `e` acts on a Hilbert space isometric to the completed Hilbert tensor
 `ℓ²(F) ⊗̂ (eH)`, where `F` is a covering orthogonal family (`OrthEquivFam`, with densely spanning
 ranges) of minimal projections equivalent to `e` and `eH = range e` is the multiplicity space.
 This is the literal `H ≅ ℓ²(F) ⊗̂ eH` form of the type I structure theorem, obtained from
-`exists_tensor_decomposition` by composing with the tensor bridge `HilbertTensor.lpTensorEquiv`. -/
-theorem IsFactor.exists_tmul_decomposition [Nontrivial H] {N : VonNeumannAlgebra H}
+`exists_lp_decomposition` by composing with the tensor bridge `HilbertTensor.lpTensorEquiv`. -/
+theorem IsFactor.exists_tmul_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
       (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ ∧

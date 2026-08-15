@@ -61,6 +61,10 @@ The file is organised in three parts:
   scalar corner `(q a e)⋆(q a e) = c • e`, `c > 0`, yields `e ≼[N] q`.
 * `VonNeumannAlgebra.IsMinimalProjection.mvNSub_of_isFactor` — the comparison theorem for minimal
   projections: in a factor, a minimal projection is subordinate to every nonzero projection.
+* `VonNeumannAlgebra.eq_boundedLinearOperators_complex` — on the one-dimensional Hilbert space
+  `𝓑(ℂ)` is the *only* von Neumann algebra, every bounded operator on `ℂ` being a scalar
+  (`VonNeumannAlgebra.apply_eq_mul_apply_one`, `VonNeumannAlgebra.mul_comm_complex`). This is what
+  makes one-dimensional models of downstream properties both easy and uninformative.
 
 The full comparison theorem (any two projections in a factor are comparable) requires central
 supports and polar decomposition for general projections and is not developed here; the
@@ -109,6 +113,7 @@ algebra* of all operators), and the expected type disambiguates. The two levels 
 canonical `⋆`-isomorphism `boundedLinearOperators.starAlgEquiv`. -/
 scoped notation:max "𝓑(" H ")" => VonNeumannAlgebra.boundedLinearOperators H
 
+/-- The carrier of `𝓑(H)` is all of `H →L[ℂ] H`. -/
 @[simp] lemma coe_boundedLinearOperators :
     ((𝓑(H) : VonNeumannAlgebra H) : Set (H →L[ℂ] H)) = Set.univ := rfl
 
@@ -137,12 +142,46 @@ noncomputable def boundedLinearOperators.starAlgEquiv :
       (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
     (fun _ => rfl) (fun _ => rfl)
 
-/-! ### Factors, minimal projections and Murray–von Neumann equivalence -/
-
 /-- A von Neumann algebra is closed under scalar multiplication. -/
 lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
   rw [Algebra.smul_def]
   exact mul_mem (algebraMap_mem N.toStarSubalgebra c) hx
+
+/-! ### The one-dimensional case
+
+On `ℂ` every bounded operator is a scalar, so there is exactly one von Neumann algebra. This is
+what makes one-dimensional witnesses of net- and inclusion-level properties go through without
+computing any generated algebra — and, read the other way, what makes them evidence of
+inhabitation only: on `ℂ` no algebra, no net and no representation is distinguished from any
+other.
+-/
+
+/-- A bounded operator on `ℂ` is multiplication by its value at `1`. -/
+lemma apply_eq_mul_apply_one (x : ℂ →L[ℂ] ℂ) (w : ℂ) : x w = w * x 1 := by
+  rw [← smul_eq_mul, ← map_smul, smul_eq_mul, mul_one]
+
+/-- **Bounded operators on `ℂ` commute.** Each is multiplication by a scalar
+(`apply_eq_mul_apply_one`), and scalars commute. -/
+lemma mul_comm_complex (x y : ℂ →L[ℂ] ℂ) : x * y = y * x := by
+  refine ContinuousLinearMap.ext fun z => ?_
+  rw [ContinuousLinearMap.mul_apply, ContinuousLinearMap.mul_apply,
+    apply_eq_mul_apply_one x (y z), apply_eq_mul_apply_one y (x z),
+    apply_eq_mul_apply_one y z, apply_eq_mul_apply_one x z]
+  ring
+
+/-- **On `ℂ` there is only one von Neumann algebra.** Every von Neumann algebra on the
+one-dimensional Hilbert space is `𝓑(ℂ)`: it contains `1` and is closed under scalars, while
+every bounded operator on `ℂ` is a scalar multiple of `1` (`apply_eq_mul_apply_one`). -/
+lemma eq_boundedLinearOperators_complex (N : VonNeumannAlgebra ℂ) : N = 𝓑(ℂ) := by
+  refine SetLike.ext fun x => ⟨fun _ => mem_boundedLinearOperators x, fun _ => ?_⟩
+  have hx : x = (x 1) • (1 : ℂ →L[ℂ] ℂ) := by
+    refine ContinuousLinearMap.ext fun z => ?_
+    rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply, smul_eq_mul,
+      apply_eq_mul_apply_one x z, mul_comm]
+  rw [hx]
+  exact smul_mem _ (one_mem N)
+
+/-! ### Factors, minimal projections and Murray–von Neumann equivalence -/
 
 /-- A von Neumann algebra `N` is a **factor** when its centre is trivial: every operator lying in
 both `N` and its commutant is a scalar multiple of the identity. -/
@@ -157,12 +196,22 @@ supports comparison theory without invoking Borel functional calculus. -/
 def IsMinimalProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
   IsStarProjection e ∧ e ∈ N ∧ e ≠ 0 ∧ ∀ a ∈ N, ∃ c : ℂ, e * a * e = c • e
 
+omit [CompleteSpace H] in
+/-- **A nonzero operator witnesses a nonzero space.** On a subsingleton `H` every operator is `0`,
+so exhibiting any `x ≠ 0` already gives `Nontrivial H`. This is why almost none of the results
+below need `[Nontrivial H]` as a hypothesis: they carry a nonzero projection, which supplies it.
+The exceptions are the statements that quantify over projections without asserting one exists
+(`IsFactor.isTypeI_iff_exists_isMinimalProjection`, `isTypeIFactor_iff_isFactor_and_isTypeI`) and
+the ones producing a minimal projection of `𝓑(H)` out of nothing. -/
+lemma nontrivial_of_ne_zero {x : H →L[ℂ] H} (hx : x ≠ 0) : Nontrivial H :=
+  let ⟨y, hy⟩ := ContinuousLinearMap.exists_ne_zero hx
+  ⟨⟨x y, 0, hy⟩⟩
+
 /-- A von Neumann algebra with a minimal projection acts on a nonzero space: the minimal
 projection is nonzero, so it sends some vector to a nonzero vector, witnessing `Nontrivial H`. -/
 lemma IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsMinimalProjection N e) : Nontrivial H :=
-  let ⟨x, hx⟩ := ContinuousLinearMap.exists_ne_zero he.2.2.1
-  ⟨⟨e x, 0, hx⟩⟩
+  nontrivial_of_ne_zero he.2.2.1
 
 /-- A minimal projection has no proper nonzero subprojection in `N`: if a projection `f ∈ N`
 satisfies `f ≤ e` (the Loewner order on projections, equivalently the range inclusion
@@ -267,10 +316,14 @@ lemma isCentralProjection_one (N : VonNeumannAlgebra H) : IsCentralProjection N 
   ⟨IsStarProjection.one _, one_mem _, one_mem _⟩
 
 /-- In a factor, every central projection is trivial: it is `0` or `1`. This is the
-projection-level form of the triviality of the centre. -/
-theorem IsFactor.central_projection_eq [Nontrivial H] {N : VonNeumannAlgebra H}
+projection-level form of the triviality of the centre. On a subsingleton `H` the conclusion is
+vacuous (every operator is `0 = 1`), which is why no nontriviality hypothesis is needed. -/
+theorem IsFactor.central_projection_eq {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsCentralProjection N e) :
     e = 0 ∨ e = 1 := by
+  rcases subsingleton_or_nontrivial H with hH | hH
+  · haveI := hH
+    exact Or.inl (Subsingleton.elim _ _)
   obtain ⟨c, hc⟩ := hN e he.2.1 he.2.2
   have hidem : e * e = e := he.1.isIdempotentElem
   rw [hc] at hidem
@@ -298,8 +351,9 @@ orthogonal projection `P` onto the closed `N`-invariant subspace generated by `e
 both `N` and `N'`, so it is central, hence `0` or `1`; since `P` acts as the identity on `e H`
 (so `P ≠ 0`, as `e ≠ 0`), `P = 1`, so the generated subspace is the whole space and `q` cannot
 annihilate it. This is the geometric input of the comparison theorem. -/
-theorem IsFactor.exists_mul_ne [Nontrivial H] {N : VonNeumannAlgebra H} (hN : IsFactor N)
+theorem IsFactor.exists_mul_ne {N : VonNeumannAlgebra H} (hN : IsFactor N)
     {e q : H →L[ℂ] H} (heN : e ∈ N) (he0 : e ≠ 0) (hq0 : q ≠ 0) : ∃ a ∈ N, q * a * e ≠ 0 := by
+  haveI : Nontrivial H := nontrivial_of_ne_zero he0
   by_contra hcon
   have hcon' : ∀ a ∈ N, q * a * e = 0 := fun a haN => by
     by_contra h; exact hcon ⟨a, haN, h⟩
@@ -534,10 +588,11 @@ scaling lemma (via `mvNSub_of_ne`) with the central-support input
 (`IsFactor.exists_mul_ne`, which supplies an `a ∈ N` with `q a e ≠ 0`). It is the form of
 comparison needed to show a maximal orthogonal family of minimal projections exhausts the
 identity. -/
-theorem IsMinimalProjection.mvNSub_of_isFactor [Nontrivial H] {N : VonNeumannAlgebra H}
+theorem IsMinimalProjection.mvNSub_of_isFactor {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hq0 : q ≠ 0) :
     e ≼[N] q := by
+  haveI : Nontrivial H := he.nontrivial
   obtain ⟨a, haN, hane⟩ := hN.exists_mul_ne he.2.1 he.2.2.1 hq0
   exact he.mvNSub_of_ne hq hqN haN hane
 
