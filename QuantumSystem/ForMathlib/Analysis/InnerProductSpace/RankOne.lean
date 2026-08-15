@@ -12,6 +12,12 @@ A continuous linear operator on an inner product space that commutes with every 
 von Neumann algebras `B(H₁) ⊗̄ 1` and `1 ⊗̄ B(H₂)`. We also record that a rank-one operator has
 finite- (in fact one-) dimensional range, used to see that a rank-one minimal projection of `B(H)`
 has one-dimensional multiplicity space.
+
+## Notation
+
+`⊗̄` in the prose above is documentation shorthand for the von Neumann (spatial) tensor product of
+algebras; that convention is stated in full in `QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor`,
+downstream of this file, where the algebras it names are defined.
 -/
 
 @[expose] public section

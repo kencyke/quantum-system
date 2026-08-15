@@ -35,6 +35,11 @@ noncomputable instance instPreComplexHilbertSpace [ComplexHilbertSpace H] : Comp
 
 end ComplexHilbertSpace
 
+/-- `ℂ` is a complex Hilbert space over itself — the one-dimensional one. It is the smallest
+nondegenerate space on which the bundled `ComplexHilbertSpace` interfaces can be exercised, and
+the class has no instance for it otherwise, since its three parents are found separately. -/
+noncomputable instance : ComplexHilbertSpace ℂ where
+
 section UnitaryMap
 
 variable {H K : Type*} [ComplexHilbertSpace H] [ComplexHilbertSpace K]
