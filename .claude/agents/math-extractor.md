@@ -214,6 +214,13 @@ sources stating genuinely different results under the same name is two rows,
 plus a note for lane 1. Keep each source's own numbering as the locator; never
 renumber and never merge two numbered statements because they look alike.
 
+For a row whose proof status is `proved in source` and that you actually read
+through, add a `Proof route:` line — one reason per step, each step naming the
+(R#)/(A#)/[ext] edge it consumes. Route and `Depends on:` must agree: an edge a
+step consumes belongs in `Depends on:`, and a listed edge no step consumes is
+either an error in the list or a step you skipped. A proof you only skimmed
+gets no route and no `proved in source` — that reading is `sketched`.
+
 Do not classify hypotheses and do not judge degenerate cases. If you notice
 either, put it in `## Handoffs` and let the orchestrator route it.
 
@@ -258,12 +265,15 @@ and splitting the lane would have two agents build it twice.
 
 Run the degeneracy checklist against the adopted general form and record a
 disposition for **every** item, including the ones where nothing happens — "no
-effect" is a result: the zero object (zero algebra, the scalars, an empty
-region); the finite-dimensional case; the commutative case; the non-separable or
-non-σ-finite case; the type III case; the non-unital or degenerate-representation
-case; and a degenerate index set in which everything is orthogonal to everything.
-Then one probe per quantifier — swap it with its neighbour and say whether the
-meaning changes — and one per hypothesis — drop it and say what survives.
+effect" is a result: **nonvacuity of the intended case** (a corpus-named
+instance where the form holds non-trivially, or "none found — <what was
+searched>" — the positive mirror of lane 3's witness rule); the zero object
+(zero algebra, the scalars, an empty region); the finite-dimensional case; the
+commutative case; the non-separable or non-σ-finite case; the type III case;
+the non-unital or degenerate-representation case; and a degenerate index set in
+which everything is orthogonal to everything. Then one probe per quantifier —
+swap it with its neighbour and say whether the meaning changes — and one per
+hypothesis — drop it and say what survives.
 
 This is a coverage requirement, not a quota. Knuth's thirty-one attempts are
 worth having because they were systematic, not because they were thirty-one; a

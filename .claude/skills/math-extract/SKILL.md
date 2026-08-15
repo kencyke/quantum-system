@@ -210,6 +210,10 @@ Three things are **yours**, not any lane's:
    silently claims coverage it does not have.
 3. **`worst-tier`** — the minimum tier over the rows the adopted form and the
    main results rest on. Not the average, and not the best.
+4. **The variant comparison grid.** Lane 1's (D#) rows are its only input, but
+   choosing the axes — the columns along which the variants genuinely differ —
+   needs all the rows at once, which no lane has. The grid is a derived index
+   and carries no tier; when it disagrees with a (D#) block, the grid is wrong.
 
 On a re-extraction, carry `## Rejected formulations and refuted claims` and
 `## Sources` forward verbatim and append to them; replace every other section.
@@ -281,8 +285,13 @@ so read every hit rather than counting them.
    A `model-dependent` row with no witness becomes `open`. A `rejected` row with
    no typed discriminator, or resting on a banned ground, becomes
    `preference-only`. Then check by eye that every degeneracy checklist item has
-   a row, including the ones with no effect, and that `## Not investigated` is
-   present **and** non-empty.
+   a row — including the ones with no effect, and including the
+   `intended case is nonvacuous` row (a named instance or an explicit
+   "none found — <what was searched>") — and that `## Not investigated` is
+   present **and** non-empty. Finally, for each `(R#)` carrying a
+   `Proof route:`, cross-check route against `Depends on:` both ways: an edge a
+   step consumes but the list omits is the exact omission the field exists to
+   catch; a listed edge no step consumes is an error in one of the two.
 
 Then update `sources.md`: one row per source attempted this run, and a `Notes`
 entry for any locator you adjudicated. **This is the only step that writes to

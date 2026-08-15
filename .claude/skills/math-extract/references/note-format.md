@@ -57,6 +57,11 @@ $$
 
 ### Variants as the sources write them
 
+| (D#) | Source | <axis> | <axis> | <axis> | Tier |
+|---|---|---|---|---|---|
+| (D1) | [DL84] | pair of algebras | second algebra arbitrary | no vector | a |
+| (D2) | [BU74] | net-level | second algebra a commutant | vector required | b |
+
 **(D1) [DL84] §1** — tier (a)
 
 > <verbatim quote, in the source's language, unmodified, formulas in the
@@ -85,7 +90,11 @@ $$
  that discriminates — e.g. "This is (D1); (X3) shows (D2) drops the non-σ-finite
  case that [DL84] §1 covers." If no discriminator justifies the choice, write
  "provisional — no discriminator separates (D1) from (D2)" and stop; do not
- manufacture a reason.>
+ manufacture a reason.
+
+ When the literature has a canonical display for the object — an inclusion
+ chain, a commuting diagram — it may follow the written-out statement as
+ display math; it supplements the statement and never replaces it.>
 
 ## Notation and conventions
 
@@ -102,6 +111,8 @@ $$
 - Source: [DL84] Thm 3.2 · tier (a) · **proved in source**
 - Depends on: (R2), (A1), [ext: …]
 - Conventions: (C1)
+- Proof route: <proved-in-source rows only, optional — one reason per step;
+  each step names its justification and the (R#)/(A#)/[ext] edge it consumes>
 - Verbatim:
   > <quote — tier (a) only; must survive the quote check>
 
@@ -119,6 +130,7 @@ $$
 
 | Case | Effect on the adopted form | Tier |
 |---|---|---|
+| intended case is nonvacuous | <named instance, or "none found — <what was searched>"> | — |
 | zero object / scalars | … | — |
 | finite-dimensional | … | — |
 | commutative | … | — |
@@ -236,6 +248,17 @@ mean, and why the generality is the one under discussion. Not a survey.
 - Every variant carries a source, a tier, and a locator where the tier allows
   one. **A variant with no source is not a variant** — it belongs under
   `## Rejected formulations` as a candidate.
+- **The comparison grid is a derived index, not a claim.** The orchestrator
+  writes it at merge from the (D#) blocks below it, choosing as columns the
+  axes along which the corpus actually splits (quantification level, what the
+  second object is, extra data such as a distinguished vector — whatever the
+  variants genuinely differ on). Like the macro preamble it carries no tier and
+  no locator, and when grid and (D#) block disagree, the grid is wrong. The
+  verbatim blocks and `differs from:` lines are unchanged by its presence.
+  **Why:** filling one column per axis is what makes a variant axis visible at
+  merge time — the adopted general form's generality decisions are made along
+  exactly these axes, and an axis nobody wrote down is an axis silently
+  dropped.
 - Never merge two sources' formulations into one row because they look alike,
   and never renumber a source's own labels.
 - `differs from:` states the difference in one sentence. "Slightly different" is
@@ -259,6 +282,12 @@ mean, and why the generality is the one under discussion. Not a survey.
   against, and it is what `math-review` compares an elaborated type to. Both
   need a statement whose quantifier order and hypotheses are unambiguous in
   *one* place; a pointer to a quote in another notation is not that.
+- **A canonical display supplements the statement; it never replaces it.**
+  When the literature writes the object as a standard display — an inclusion
+  chain, a commuting diagram — transcribing it after the written-out statement
+  is welcome, but the written-out sentence remains mandatory: a display-only
+  adopted form is the pointer-only failure the previous rule forbids, in
+  prettier clothes.
 - No proposed notation, no identifiers.
 
 ### Notation and conventions
@@ -276,6 +305,17 @@ the inference came from. That inference is tier (b) at best.
 
 - `proof status` ∈ proved in source / sketched / cited elsewhere / asserted.
   Cheap to record and it tells the implementer where the real work is.
+- **`Proof route:` — one reason per step.** Optional, and only on rows whose
+  proof status is `proved in source`. Each step names its justification — a
+  definition unfolded, a dependency invoked, a substitution, an approximation —
+  and the (R#)/(A#)/[ext] edge it consumes. **Every edge named in the route
+  must appear in `Depends on:`, and every `Depends on:` edge of a routed row
+  must be consumed by some step** — that cross-check is the field's point.
+  **Why:** a hypothesis the proof uses but the row never lists is the most
+  expensive omission a formalization inherits, and per-step naming is the
+  cheapest audit of the dependency list. It also keeps proof status honest: a
+  route cannot be written for a proof that was only skimmed, so a row that
+  claims `proved in source` and cannot state its route was read as a sketch.
 - Every dependency a source does not prove in the corpus is marked `[ext: …]`.
   At tier (c)/(d) it carries no locator and instead carries a one-line statement
   of what the external result says — see the substitution rule below.
@@ -305,6 +345,16 @@ the inference came from. That inference is tier (b) at best.
 Every checklist item gets a row, including the ones where nothing happens: "no
 effect" is a result, and an unlisted case is an unchecked one. One row per
 quantifier swap and per dropped hypothesis. This is coverage, not a quota.
+
+The `intended case is nonvacuous` row is never omitted: it names an instance —
+from the corpus, at that attestation's tier — where the adopted form holds
+non-trivially, or records "none found — <what was searched>". A corpus with no
+non-trivial instance is a finding about the adopted form, in the same
+discipline as `## Prior art`'s "could not find X, having searched …".
+**Why:** the failure witnesses in `## Hypotheses` guard one direction — a
+statement that proves too much — and this row guards the other: a definition
+nothing satisfies formalizes cleanly and says nothing, and vacuity is cheapest
+to catch before the Lean exists.
 
 ### Rejected formulations and refuted claims
 
