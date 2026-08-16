@@ -131,13 +131,16 @@ lemma isPositive_of_norm_eq_one_map_one
 
 
 /-- For any nonzero positive element `b`, there exists a state on the unitization
-whose value on `b` is a strictly positive real number (viewed in `ℂ`).
+whose value on `b` is exactly `‖b‖`, viewed in `ℂ`.
 
-We state this by exhibiting `r : ℝ` with `0 < r` and `ψ (Unitization.inr b) = (r : ℂ)`.
-This avoids using an order on `ℂ` (which does not exist in Lean). -/
-private lemma exists_unitization_state_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
+The value is the norm rather than merely a positive real: the character supplied by Gelfand
+duality is evaluated at the spectral radius, and `‖b‖` lies in the spectrum because `b` is
+positive.  Norming — not just detecting — is what the separable refinement of the
+Gelfand-Naimark theorem needs, so the value is carried in the statement instead of being
+existentially discarded.  Positivity of the value follows from `hb_ne`, since `0 < ‖b‖`. -/
+private lemma exists_unitization_state_norm (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
     ∃ ψ : Unitization ℂ A →L[ℂ] ℂ, ‖ψ‖ = 1 ∧ ψ 1 = 1 ∧
-      ∃ r : ℝ, 0 < r ∧ ψ (Unitization.inr b) = (r : ℂ) := by
+      ψ (Unitization.inr b) = (‖b‖ : ℂ) := by
   let b' : Unitization ℂ A := Unitization.inr b
   have hb' : 0 ≤ b' := Unitization.inr_nonneg_iff.mpr hb
   have hb'_ne : b' ≠ 0 := Unitization.inr_injective.ne hb_ne
@@ -176,20 +179,25 @@ private lemma exists_unitization_state_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b 
     rw [WeakDual.toStrongDual_apply]
     change φ 1 = 1
     rw [map_one φ]
-  · refine ⟨‖b'‖, norm_pos_iff.mpr hb'_ne, ?_⟩
-    have hψb' : ψ b' = (‖b'‖ : ℂ) := by
+  · have hψb' : ψ b' = (‖b'‖ : ℂ) := by
       rw [hψ_ext ⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩]
       change (WeakDual.toStrongDual φ.val) ⟨b', _⟩ = (‖b'‖ : ℂ)
       rw [WeakDual.toStrongDual_apply]
       simpa using hφ
+    have hnorm : ‖b'‖ = ‖b‖ := Unitization.norm_inr b
+    rw [← hnorm]
     simpa [b'] using hψb'
 
 
-private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
-  ∃ φ ∈ QuasiStateSpace A, ∃ r : ℝ, 0 < r ∧ φ b = (r : ℂ) := by
+/-- For any nonzero positive element `b`, some quasi-state takes the value `‖b‖` at `b`.
+
+This is `exists_unitization_state_norm` pulled back along the isometric embedding of `A`
+into its unitization. -/
+private lemma exists_quasiState_norm (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
+  ∃ φ ∈ QuasiStateSpace A, φ b = (‖b‖ : ℂ) := by
   haveI : Nontrivial A := nontrivial_of_ne b 0 hb_ne
-  obtain ⟨ψ, hψ_norm_eq, hψ_one, r, hrpos, hψb_eq⟩ :=
-    exists_unitization_state_pos_re b hb hb_ne
+  obtain ⟨ψ, hψ_norm_eq, hψ_one, hψb_eq⟩ :=
+    exists_unitization_state_norm b hb hb_ne
   have hψ_pos : IsPositive (Unitization ℂ A) ψ :=
     isPositive_of_norm_eq_one_map_one ψ hψ_norm_eq hψ_one
   let inrLM : A →ₗ[ℂ] Unitization ℂ A :=
@@ -221,8 +229,7 @@ private lemma exists_quasiState_pos_re (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) 
   · refine ⟨hφ_pos, ?_⟩
     simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
     exact hφ_norm
-  · refine ⟨r, hrpos, ?_⟩
-    simpa [φ, inrCLM, inrIso, LinearIsometry.coe_toContinuousLinearMap,
+  · simpa [φ, inrCLM, inrIso, LinearIsometry.coe_toContinuousLinearMap,
       LinearIsometry.coe_mk, inrLM, LinearMap.coe_mk, AddHom.coe_mk] using hψb_eq
 
 
@@ -372,14 +379,19 @@ noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State ℂ
       simp [h_opNorm_eq]
 
 
-/-- For any non-zero element `a`, there exists a pure state `φ` such that
-`φ (star a * a)` is a strictly positive real number (viewed in `ℂ`).
+/-- For any non-zero element `a`, there exists a pure state `φ` **norming** `a`:
+`φ (star a * a) = ‖a‖ ^ 2`, viewed in `ℂ`.
 
-Note: `ℂ` itself is not ordered in Lean, so the correct way to express
-“`φ(star a * a) > 0`” is to exhibit a real `r > 0` with
-`φ (star a * a) = (r : ℂ)`. -/
-lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
-  ∃ φ : WeakDual ℂ A, IsPureState φ ∧ ∃ r : ℝ, 0 < r ∧ φ (star a * a) = (r : ℂ) := by
+This is the quantitative form of the existence of pure states.  It says that the pure
+states do not merely detect `a` but recover its norm, which is what lets a *countable*
+family of pure states — one for each member of a dense sequence — separate the points of a
+separable C\*-algebra.  For the weaker detection statement see
+`exists_pos_re_of_ne_zero`, which is a corollary.
+
+Note: `ℂ` is not ordered in Lean, so the value is stated as an equality with the real
+number `‖a‖ ^ 2` coerced into `ℂ`. -/
+lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
+  ∃ φ : WeakDual ℂ A, IsPureState φ ∧ φ (star a * a) = ((‖a‖ ^ 2 : ℝ) : ℂ) := by
   let b := star a * a
   have hb_ne_zero : b ≠ 0 := by
     rw [ne_eq, CStarRing.star_mul_self_eq_zero_iff]
@@ -388,7 +400,10 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
     apply StarOrderedRing.nonneg_iff.mpr
     apply AddSubmonoid.subset_closure
     use a
-  obtain ⟨ω, hω_mem, r, hrpos, hω_eq⟩ := exists_quasiState_pos_re b hb_pos hb_ne_zero
+  have hb_norm : ‖b‖ = ‖a‖ ^ 2 := by
+    simpa [b, sq] using CStarRing.norm_star_mul_self (x := a)
+  have hb_norm_pos : (0 : ℝ) < ‖b‖ := norm_pos_iff.mpr hb_ne_zero
+  obtain ⟨ω, hω_mem, hω_eq⟩ := exists_quasiState_norm b hb_pos hb_ne_zero
   let l : WeakDual ℂ A →L[ℝ] ℝ := {
     toFun := fun φ => (φ b).re
     map_add' := fun φ ψ => by
@@ -409,15 +424,28 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
   let f : WeakDual ℂ A → ℝ := l
   let M := sSup (f '' QuasiStateSpace A)
   have hf : ContinuousOn f (QuasiStateSpace A) := Continuous.continuousOn l.continuous |>.mono (Set.subset_univ _)
-  have h_M_pos : M > 0 := by
-    have hω_re : (ω b).re = r := by
-      have := congrArg Complex.re hω_eq
-      simpa using this
-    apply lt_of_lt_of_le hrpos
+  have hω_re : (ω b).re = ‖b‖ := by
+    have := congrArg Complex.re hω_eq
+    simpa using this
+  -- `M` is bounded below by `‖b‖`, because `ω` attains it.
+  have h_M_ge : ‖b‖ ≤ M := by
     rw [← hω_re]
     apply le_csSup
     · exact ((QuasiStateSpace.compact A).image_of_continuousOn hf).bddAbove
     · exact Set.mem_image_of_mem f hω_mem
+  -- and above by `‖b‖`, because every quasi-state has norm at most one.
+  have h_M_le : M ≤ ‖b‖ := by
+    apply csSup_le
+    · exact ⟨f ω, Set.mem_image_of_mem f hω_mem⟩
+    rintro x ⟨φ, hφ_mem, rfl⟩
+    have hφ_norm : ‖WeakDual.toStrongDual φ‖ ≤ 1 := by
+      simpa [QuasiStateSpace] using hφ_mem.2
+    calc f φ ≤ ‖φ b‖ := Complex.re_le_norm _
+      _ ≤ ‖WeakDual.toStrongDual φ‖ * ‖b‖ := (WeakDual.toStrongDual φ).le_opNorm b
+      _ ≤ 1 * ‖b‖ := by gcongr
+      _ = ‖b‖ := one_mul _
+  have h_M_eq : M = ‖b‖ := le_antisymm h_M_le h_M_ge
+  have h_M_pos : M > 0 := by rw [h_M_eq]; exact hb_norm_pos
   -- Find a maximizer of f on the QuasiStateSpace
   obtain ⟨φ, hφ_mem, hφ_max⟩ := IsCompact.exists_isMaxOn (QuasiStateSpace.compact A) ⟨ω, hω_mem⟩ hf
   have hφ_val : f φ = M := by
@@ -486,31 +514,33 @@ lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
         · intro r ⟨z, hz, hr⟩
           rw [← hr]
           exact hψ_mem_F.2 z hz
-    have hψ_re_pos : (ψ b).re > 0 := by
-      -- `l ψ` is definitionally `(ψ b).re`.
-      have : l ψ > 0 := by
-        rw [hψ_l_eq_M]
-        exact h_M_pos
-      -- Avoid `simp at` (flagged by linter.flexible)
-      have : (ψ b).re > 0 := by
-        -- unfold the linear functional `l` on this specific argument
-        have h' := this
-        dsimp [l, ContinuousLinearMap.comp_apply, Complex.reCLM] at h'
-        exact h'
-      exact this
-    -- Then use positivity (membership in `QuasiStateSpace`) to see the value is real.
+    -- `l ψ` is definitionally `(ψ b).re`, and the maximum is `‖b‖`.
+    have hψ_re_eq : (ψ b).re = ‖b‖ := by
+      have h' : l ψ = ‖b‖ := by rw [hψ_l_eq_M, h_M_eq]
+      dsimp [l, ContinuousLinearMap.comp_apply, Complex.reCLM] at h'
+      exact h'
+    -- Membership in `QuasiStateSpace` makes the value real, so its real part determines it.
     have hψ_mem_S : ψ ∈ QuasiStateSpace A := hψ_mem_F.1
     obtain ⟨r₀, hr₀⟩ := hψ_mem_S.1 a
-    -- `hr₀` is exactly the real-valuedness statement for `ψ (star a * a)`.
-    have hr₀_re : (ψ b).re = (r₀ : ℝ) := by
-      have h : ψ b = (r₀ : ℂ) := by
-        simpa [b] using hr₀
-      have := congrArg Complex.re h
-      simpa using this
-    have hrpos : (0 : ℝ) < (r₀ : ℝ) := by
-      simpa [hr₀_re] using hψ_re_pos
-    refine ⟨(r₀ : ℝ), hrpos, ?_⟩
-    simpa [b] using hr₀
+    have hr₀' : ψ b = ((r₀ : ℝ) : ℂ) := by simpa [b] using hr₀
+    change ψ b = ((‖a‖ ^ 2 : ℝ) : ℂ)
+    rw [← hb_norm, ← hψ_re_eq, hr₀']
+    simp
+
+
+/-- For any non-zero element `a`, there exists a pure state `φ` such that
+`φ (star a * a)` is a strictly positive real number (viewed in `ℂ`).
+
+Note: `ℂ` itself is not ordered in Lean, so the correct way to express
+“`φ(star a * a) > 0`” is to exhibit a real `r > 0` with
+`φ (star a * a) = (r : ℂ)`.
+
+This is the detection form of `exists_norm_sq_of_ne_zero`; the witness it discards is the
+norm itself. -/
+lemma exists_pos_re_of_ne_zero (a : A) (ha : a ≠ 0) :
+    ∃ φ : WeakDual ℂ A, IsPureState φ ∧ ∃ r : ℝ, 0 < r ∧ φ (star a * a) = (r : ℂ) := by
+  obtain ⟨φ, hφ_pure, hφ_eq⟩ := exists_norm_sq_of_ne_zero a ha
+  exact ⟨φ, hφ_pure, ‖a‖ ^ 2, pow_pos (norm_pos_iff.mpr ha) 2, hφ_eq⟩
 
 end IsPureState
 

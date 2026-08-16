@@ -5,6 +5,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
+public import QuantumSystem.Algebra.CStarAlgebra.GNS.Separable
 public import QuantumSystem.Algebra.CStarAlgebra.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
@@ -64,6 +65,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopolo
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
+public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
