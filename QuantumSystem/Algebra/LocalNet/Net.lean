@@ -125,8 +125,8 @@ theorem Orthogonal.mono_right {O₁ O₂ O₃ : K} (h₀ : O₃ ≤ O₂) (h : O
   (h.symm.mono_left h₀).symm
 
 /-- Causal orthogonality is hereditary under shrinking both regions. -/
-theorem Orthogonal.mono {O₁' O₁ O₂' O₂ : K} (h₁ : O₁' ≤ O₁) (h₂ : O₂' ≤ O₂) (h : O₁ ⟂ O₂) :
-    O₁' ⟂ O₂' :=
+theorem Orthogonal.mono {O₁' O₁ O₂' O₂ : K} (h₁ : O₁' ≤ O₁) (h₂ : O₂' ≤ O₂)
+    (h : O₁ ⟂ O₂) : O₁' ⟂ O₂' :=
   (h.mono_left h₁).mono_right h₂
 
 /-! ### The derived relation `⊥̂`

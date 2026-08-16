@@ -279,8 +279,11 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
 
 
 lemma trichotomy_from_purity {ψ : PureState A}
-    (W : Submodule ℂ (PureState.gnsRepresentation ψ).H) (hWinv : (PureState.gnsRepresentation ψ).IsInvariant W) (_hWclosed : IsClosed (W : Set (PureState.gnsRepresentation ψ).H))
-    (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ) (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
+    (W : Submodule ℂ (PureState.gnsRepresentation ψ).H)
+    (hWinv : (PureState.gnsRepresentation ψ).IsInvariant W)
+    (_hWclosed : IsClosed (W : Set (PureState.gnsRepresentation ψ).H))
+    (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
+    (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
   let T := PureState.gnsRepresentation ψ
   by_contra h_contra
@@ -413,10 +416,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
       rw [h_decomp]
       have h1 : (T.π a) v₁ - v₁ ∈ W := Submodule.sub_mem W (hWinv a ⟨v₁, hv₁, rfl⟩) hv₁
       have h2 : (T.π a) v₂ ∈ Wᗮ := isInvariant_orthogonal T W hWinv a ⟨v₂, hv₂, rfl⟩
-      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
+      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
+        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
       exact h_pythag
-    have h_sq_le : ‖(T.π a) v₁ - v₁‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₂‖]
+    have h_sq_le : ‖(T.π a) v₁ - v₁‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by
+      rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₂‖]
     rw [sq_le_sq, abs_of_nonneg (norm_nonneg _), abs_of_nonneg (norm_nonneg _)] at h_sq_le
     exact lt_of_le_of_lt h_sq_le ha
   have h_norm_v2 : ‖(T.π a) v₂‖ < ε := by
@@ -427,10 +432,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
       rw [h_decomp]
       have h1 : (T.π a) v₁ - v₁ ∈ W := Submodule.sub_mem W (hWinv a ⟨v₁, hv₁, rfl⟩) hv₁
       have h2 : (T.π a) v₂ ∈ Wᗮ := isInvariant_orthogonal T W hWinv a ⟨v₂, hv₂, rfl⟩
-      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
+      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
+        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
       exact h_pythag
-    have h_sq_le : ‖(T.π a) v₂‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₁ - v₁‖]
+    have h_sq_le : ‖(T.π a) v₂‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by
+      rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₁ - v₁‖]
     rw [sq_le_sq, abs_of_nonneg (norm_nonneg _), abs_of_nonneg (norm_nonneg _)] at h_sq_le
     exact lt_of_le_of_lt h_sq_le ha
   -- Contradiction
@@ -463,7 +470,9 @@ lemma trichotomy_from_purity {ψ : PureState A}
         · apply mul_lt_mul_of_pos_left h_norm_diff hv₁_norm_pos
         · exact inv_pos.mpr h_pos
       _ = ε * (t⁻¹ * ‖v₁‖) := by ring
-      _ ≤ ε * K := by gcongr; apply le_add_of_nonneg_right; apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
+      _ ≤ ε * K := by
+        gcongr; apply le_add_of_nonneg_right
+        apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
       _ = 1/2 := by
         dsimp [ε]
         have hK_ne : K ≠ 0 := hK_pos.ne'
@@ -479,7 +488,8 @@ lemma trichotomy_from_purity {ψ : PureState A}
     dsimp only [χ]
     change ‖(1 - (t : ℂ))⁻¹ • (T.vectorFunctional v₂) a‖ < 1/2
     rw [vectorFunctional_apply, smul_eq_mul]
-    rw [norm_mul, ← Complex.ofReal_one, ← Complex.ofReal_sub, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_of_pos (by linarith : 0 < 1 - t)]
+    rw [norm_mul, ← Complex.ofReal_one, ← Complex.ofReal_sub, norm_inv, Complex.norm_real,
+      Real.norm_eq_abs, abs_of_pos (by linarith : 0 < 1 - t)]
     calc (1 - t)⁻¹ * ‖⟪v₂, (T.π a) v₂⟫‖
       _ ≤ (1 - t)⁻¹ * (‖v₂‖ * ‖(T.π a) v₂‖) := by
         apply mul_le_mul_of_nonneg_left
@@ -490,7 +500,9 @@ lemma trichotomy_from_purity {ψ : PureState A}
         · apply mul_lt_mul_of_pos_left h_norm_v2 hv₂_norm_pos
         · exact inv_pos.mpr (by linarith)
       _ = ε * ((1 - t)⁻¹ * ‖v₂‖) := by ring
-      _ ≤ ε * K := by gcongr; apply le_add_of_nonneg_left; apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
+      _ ≤ ε * K := by
+        gcongr; apply le_add_of_nonneg_left
+        apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
       _ = 1/2 := by
         dsimp [ε]
         have hK_ne : K ≠ 0 := hK_pos.ne'

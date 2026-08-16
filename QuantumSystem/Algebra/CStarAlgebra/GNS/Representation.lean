@@ -300,7 +300,8 @@ private lemma linear_isometry_equiv_map_cyclic_vector (T₁ T₂ : Representatio
     U T₁.ξ = T₂.ξ := by
   suffices ‖(U : T₁.H →L[ℂ] T₂.H) T₁.ξ - T₂.ξ‖ = 0 by exact eq_of_sub_eq_zero (norm_eq_zero.mp this)
   refine le_antisymm (le_of_forall_pos_le_add fun ε hε => ?_) (norm_nonneg _)
-  obtain ⟨x₁, hx₁_close, hx₁_mem⟩ := Metric.dense_iff.mp (dense_cyclicSet T₁) T₁.ξ (ε / 2) (by linarith : 0 < ε / 2)
+  obtain ⟨x₁, hx₁_close, hx₁_mem⟩ :=
+    Metric.dense_iff.mp (dense_cyclicSet T₁) T₁.ξ (ε / 2) (by linarith : 0 < ε / 2)
   obtain ⟨a, ha⟩ := Set.mem_iUnion.mp hx₁_mem
   simp only [Set.mem_singleton_iff] at ha
   subst ha; rw [Metric.mem_ball, dist_eq_norm] at hx₁_close
@@ -308,8 +309,10 @@ private lemma linear_isometry_equiv_map_cyclic_vector (T₁ T₂ : Representatio
     calc ‖(U : T₁.H →L[ℂ] T₂.H) T₁.ξ - T₂.ξ‖
         ≤ ‖(U : T₁.H →L[ℂ] T₂.H) T₁.ξ - (U : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ)‖ +
           ‖(U : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) - T₂.ξ‖ := by
-          convert norm_add_le ((U : T₁.H →L[ℂ] T₂.H) T₁.ξ - (U : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ))
-                           ((U : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) - T₂.ξ) using 2; abel
+          convert norm_add_le
+                    ((U : T₁.H →L[ℂ] T₂.H) T₁.ξ - (U : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ))
+                    ((U : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) - T₂.ξ) using 2
+          abel
       _ = ‖(U : T₁.H →L[ℂ] T₂.H) (T₁.ξ - T₁.π a T₁.ξ)‖ + ‖T₂.π a T₂.ξ - T₂.ξ‖ := by
           rw [map_sub, h_cyclic]
       _ = ‖T₁.ξ - T₁.π a T₁.ξ‖ + ‖T₂.π a T₂.ξ - T₂.ξ‖ := by
@@ -348,7 +351,8 @@ private lemma linear_isometry_equiv_intertwines (T₁ T₂ : Representation ω)
   simp only [ContinuousLinearMap.coe_comp', Function.comp_apply]
   have h_dense := dense_cyclicSet T₁
   unfold cyclicSet at h_dense
-  have h_on_cyclic : ∀ b : A, (U : T₁.H →L[ℂ] T₂.H) (T₁.π a (T₁.π b T₁.ξ)) = T₂.π a ((U : T₁.H →L[ℂ] T₂.H) (T₁.π b T₁.ξ)) :=
+  have h_on_cyclic : ∀ b : A, (U : T₁.H →L[ℂ] T₂.H) (T₁.π a (T₁.π b T₁.ξ)) =
+      T₂.π a ((U : T₁.H →L[ℂ] T₂.H) (T₁.π b T₁.ξ)) :=
     fun b => linear_isometry_equiv_intertwines_on_cyclic T₁ T₂ U h_cyclic a b
   let f : T₁.H → T₂.H := fun y => (U : T₁.H →L[ℂ] T₂.H) (T₁.π a y)
   let g : T₁.H → T₂.H := fun y => T₂.π a ((U : T₁.H →L[ℂ] T₂.H) y)
@@ -388,7 +392,8 @@ private lemma extendCyclicMap_eq (T₁ T₂ : Representation ω) (x : cyclicSet 
       (cyclicMap T₁ T₂) (cyclicMap_isometry T₁ T₂) x
 
 private lemma extend_cyclic_map_left_inv (T₁ T₂ : Representation ω) :
-    ∀ x : T₁.H, (extendCyclicMap (T₁ := T₂) (T₂ := T₁)) ((extendCyclicMap (T₁ := T₁) (T₂ := T₂)) x) = x := by
+    ∀ x : T₁.H,
+      (extendCyclicMap (T₁ := T₂) (T₂ := T₁)) ((extendCyclicMap (T₁ := T₁) (T₂ := T₂)) x) = x := by
   intro x
   set U_fun := extendCyclicMap (T₁ := T₁) (T₂ := T₂)
   set V_fun := extendCyclicMap (T₁ := T₂) (T₂ := T₁)
@@ -414,7 +419,8 @@ private lemma extend_cyclic_map_left_inv (T₁ T₂ : Representation ω) :
       _ = T₁.π a T₁.ξ := hV
 
 private lemma extend_cyclic_map_right_inv (T₁ T₂ : Representation ω) :
-    ∀ y : T₂.H, (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) ((extendCyclicMap (T₁ := T₂) (T₂ := T₁)) y) = y := by
+    ∀ y : T₂.H,
+      (extendCyclicMap (T₁ := T₁) (T₂ := T₂)) ((extendCyclicMap (T₁ := T₂) (T₂ := T₁)) y) = y := by
   intro y
   set U_fun := extendCyclicMap (T₁ := T₁) (T₂ := T₂)
   set V_fun := extendCyclicMap (T₁ := T₂) (T₂ := T₁)
@@ -460,9 +466,11 @@ private lemma extend_cyclic_map_add (T₁ T₂ : Representation ω) :
       (cyclicMap_well_defined T₁ T₂ ⟨_, mem_cyclicSet (T := T₁) b⟩ b rfl)
   calc U_fun (T₁.π a T₁.ξ + T₁.π b T₁.ξ)
       = U_fun ((T₁.π a + T₁.π b) T₁.ξ) := by rw [ContinuousLinearMap.add_apply]
-    _ = U_fun (T₁.π (a + b) T₁.ξ) := by rw [show T₁.π (a + b) = T₁.π a + T₁.π b from T₁.π.map_add' a b]
+    _ = U_fun (T₁.π (a + b) T₁.ξ) := by
+        rw [show T₁.π (a + b) = T₁.π a + T₁.π b from T₁.π.map_add' a b]
     _ = T₂.π (a + b) T₂.ξ := hUab
-    _ = (T₂.π a + T₂.π b) T₂.ξ := by rw [show T₂.π (a + b) = T₂.π a + T₂.π b from T₂.π.map_add' a b]
+    _ = (T₂.π a + T₂.π b) T₂.ξ := by
+        rw [show T₂.π (a + b) = T₂.π a + T₂.π b from T₂.π.map_add' a b]
     _ = T₂.π a T₂.ξ + T₂.π b T₂.ξ := by rw [ContinuousLinearMap.add_apply]
     _ = U_fun (T₁.π a T₁.ξ) + U_fun (T₁.π b T₁.ξ) := by rw [← hUa, ← hUb]
 
@@ -484,7 +492,8 @@ private lemma extend_cyclic_map_smul (T₁ T₂ : Representation ω) :
   change U_fun (c • T₁.π a T₁.ξ) = c • U_fun (T₁.π a T₁.ξ)
   calc U_fun (c • T₁.π a T₁.ξ)
       = U_fun ((c • T₁.π a) T₁.ξ) := rfl
-    _ = U_fun ((T₁.π (c • a)) T₁.ξ) := by rw [show T₁.π (c • a) = c • T₁.π a from T₁.π.map_smul' c a]
+    _ = U_fun ((T₁.π (c • a)) T₁.ξ) := by
+        rw [show T₁.π (c • a) = c • T₁.π a from T₁.π.map_smul' c a]
     _ = T₂.π (c • a) T₂.ξ := hU1
     _ = (c • T₂.π a) T₂.ξ := by rw [show T₂.π (c • a) = c • T₂.π a from T₂.π.map_smul' c a]
     _ = c • T₂.π a T₂.ξ := rfl

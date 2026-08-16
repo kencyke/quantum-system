@@ -65,8 +65,9 @@ carries the matrix unit `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨
 
 * [Yngvason] J. Yngvason, *Localization and Entanglement in Relativistic Quantum Physics*, in
   *The Message of Quantum Science*, Lecture Notes in Physics 899, Springer 2015, pp. 325–348;
-  arXiv:1401.2652. Its §5.1 ("Causal Independence and Split Property") displays the two equations
-  cited below as `(38)`, `𝒜₁ ⊂ 𝒩 ⊂ 𝒜₂′`, and `(39)`, `𝒜₁ ⊂ ℬ(ℋ₁) ⊗ 𝟏` and `𝒜₂ ⊂ 𝟏 ⊗ ℬ(ℋ₂)`.
+  arXiv:1401.2652. Its §5.1 ("Causal Independence and Split Property") displays the two
+  equations cited below as `(38)`, `𝒜₁ ⊂ 𝒩 ⊂ 𝒜₂′`, and `(39)`, `𝒜₁ ⊂ ℬ(ℋ₁) ⊗ 𝟏` and
+  `𝒜₂ ⊂ 𝟏 ⊗ ℬ(ℋ₂)`.
 * [DL84] S. Doplicher, R. Longo, *Standard and split inclusions of von Neumann algebras*,
   Invent. Math. 75 (1984) 493–536.
 * [dB74] D. Buchholz, *Product states for local algebras*, Comm. Math. Phys. 36 (1974) 287–304.

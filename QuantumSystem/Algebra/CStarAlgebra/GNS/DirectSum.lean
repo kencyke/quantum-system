@@ -73,7 +73,8 @@ lemma componentWiseMap_memℓp (a : A) (x : Hilbert A) :
 
 /-- The norm bound for the component-wise map. -/
 lemma componentWiseMap_norm_bound (a : A) (x : Hilbert A) :
-    ‖(⟨fun ψ => componentWiseMap a ψ (x.val ψ), componentWiseMap_memℓp a x⟩ : Hilbert A)‖ ≤ ‖a‖ * ‖x‖ := by
+    ‖(⟨fun ψ => componentWiseMap a ψ (x.val ψ), componentWiseMap_memℓp a x⟩ : Hilbert A)‖
+      ≤ ‖a‖ * ‖x‖ := by
   have h2pos : (0 : ℝ) < (2 : ℝ≥0∞).toReal := by norm_num
   have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
   rw [lp.norm_eq_tsum_rpow h2pos, lp.norm_eq_tsum_rpow h2pos]
@@ -88,7 +89,9 @@ lemma componentWiseMap_norm_bound (a : A) (x : Hilbert A) :
     rw [memℓp_gen_iff zero_lt_two] at this
     simp only [h2] at this
     exact this
-  have sum_ineq : ∑' ψ, ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) ≤ ‖a‖ ^ 2 * ∑' ψ, ‖x.val ψ‖ ^ (2 : ℝ) := by
+  have sum_ineq :
+      ∑' ψ, ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) ≤
+        ‖a‖ ^ 2 * ∑' ψ, ‖x.val ψ‖ ^ (2 : ℝ) := by
     rw [← tsum_mul_left]
     apply tsum_le_of_sum_le' (by positivity)
     intro s

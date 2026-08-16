@@ -1565,7 +1565,8 @@ private lemma trace_rpow_mul_jointly_concave
     (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     p * (Tr (ρ₁ ^ s * σ₁ ^ (1 - s))).re +
     (1 - p) * (Tr (ρ₂ ^ s * σ₂ ^ (1 - s))).re ≤
-    (Tr ((p • ρ₁.toMatrix + (1 - p) • ρ₂.toMatrix) ^ s * (p • σ₁.toMatrix + (1 - p) • σ₂.toMatrix) ^ (1 - s))).re := by
+    (Tr ((p • ρ₁.toMatrix + (1 - p) • ρ₂.toMatrix) ^ s *
+      (p • σ₁.toMatrix + (1 - p) • σ₂.toMatrix) ^ (1 - s))).re := by
   have hpsd₁ := ρ₁.posSemidef
   have hpsd₂ := ρ₂.posSemidef
   have hpsdσ₁ := σ₁.posSemidef
@@ -1623,7 +1624,8 @@ theorem relativeEntropy_jointly_convex
           push_cast; ring_nf]
         rw [EReal.coe_le_coe_iff]
         -- Step 4: Derivative argument
-        -- Define h(s) = Re[Tr (ρ_mix^s σ_mix^{1-s})] - p Re[Tr (ρ₁^s σ₁^{1-s})] - (1-p) Re[Tr (ρ₂^s σ₂^{1-s})]
+        -- Define h(s) = Re[Tr (ρ_mix^s σ_mix^{1-s})] - p Re[Tr (ρ₁^s σ₁^{1-s})]
+        --   - (1-p) Re[Tr (ρ₂^s σ₂^{1-s})]
         let g : ℝ → ℝ := fun s =>
           (ρ_mix.toMatrix ^ s * σ_mix.toMatrix ^ (1 - s)).trace.re -
           (p * (ρ₁.toMatrix ^ s * σ₁.toMatrix ^ (1 - s)).trace.re +

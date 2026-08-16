@@ -172,18 +172,21 @@ lemma cauchy_schwarz_ineq : ‖ω (star y * x)‖^2 ≤ (ω (star x * x)) * (ω 
     intro t
     obtain ⟨γ, hγ_norm, hγ_phase⟩ := Complex.phase_alignment (ω (star y * x))
     let s : A := ((t : ℂ) * γ) • x + y
-    have hexp2 : (ω (star s * s)).re = (positiveReal ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positiveReal ω y) := by
+    have hexp2 : (ω (star s * s)).re =
+        (positiveReal ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positiveReal ω y) := by
       have hquad := quadratic_expansion (ω := ω) (x := x) (y := y) (z := ((t : ℂ) * γ))
       have h1 : (‖(t : ℂ) * γ‖^2 : ℂ) = (t^2 : ℂ) := by
         rw [Complex.norm_mul, hγ_norm, mul_one, Complex.norm_real, pow_two, pow_two]
         norm_cast
         exact abs_mul_abs_self t
-      have h2 : conj ((t : ℂ) * γ) * ω (star x * y) + ((t : ℂ) * γ) * ω (star y * x) = 2 * t * ‖ω (star y * x)‖ := by
+      have h2 : conj ((t : ℂ) * γ) * ω (star x * y) + ((t : ℂ) * γ) * ω (star y * x) =
+          2 * t * ‖ω (star y * x)‖ := by
         have : ((t : ℂ) * γ) * ω (star y * x) = t * (γ * ω (star y * x)) := by ring
         rw [conj_linear_combination_real, this, hγ_phase]
         norm_cast
         ring_nf
-      have hequiv : ω (star s * s) = (t^2 : ℂ) * ω (star x * x) + 2 * t * ‖ω (star y * x)‖ + ω (star y * y) := by
+      have hequiv :
+          ω (star s * s) = (t^2 : ℂ) * ω (star x * x) + 2 * t * ‖ω (star y * x)‖ + ω (star y * y) := by
         unfold s
         rw [hquad, h1, ← h2]
         ring_nf
@@ -211,7 +214,8 @@ lemma kernel_degenerate_left (a : A) (hx : ω (star x * x) = 0) : ω (star a * x
   exact norm_eq_zero.mp (sq_eq_zero_iff.mp (le_antisymm (by exact_mod_cast this) (sq_nonneg _)))
 
 /-- If `ω(star x * x) = 0` and `ω(star y * y) = 0`, then `ω(star (x + y) * (x + y)) = 0`. -/
-lemma kernel_closed_under_add (hx : ω (star x * x) = 0) (hy : ω (star y * y) = 0) : ω (star (x + y) * (x + y)) = 0 := by
+lemma kernel_closed_under_add (hx : ω (star x * x) = 0) (hy : ω (star y * y) = 0) :
+    ω (star (x + y) * (x + y)) = 0 := by
   calc ω (star (x + y) * (x + y))
       = ω (star x * x + star x * y + star y * x + star y * y) := by
           rw [star_add, add_mul, mul_add, mul_add]
@@ -219,7 +223,8 @@ lemma kernel_closed_under_add (hx : ω (star x * x) = 0) (hy : ω (star y * y) =
     _ = ω (star x * x) + ω (star x * y) + ω (star y * x) + ω (star y * y) := by
           rw [map_add, map_add, map_add]
     _ = 0 := by
-          rw [hx, hy, kernel_degenerate_left (ω := ω) (x := y) (a := x) hy, kernel_degenerate_left (ω := ω) (x := x) (a := y) hx]
+          rw [hx, hy, kernel_degenerate_left (ω := ω) (x := y) (a := x) hy,
+            kernel_degenerate_left (ω := ω) (x := x) (a := y) hx]
           ring
 
 /-- If `ω(star x * x) = 0`, then `ω(star (c • x) * (c • x)) = 0` for any scalar `c`. -/

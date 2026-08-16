@@ -165,7 +165,8 @@ private lemma exists_unitization_state_norm (b : A) (hb : 0 ≤ b) (hb_ne : b �
   haveI : IsStarNormal b' := IsSelfAdjoint.isStarNormal (IsSelfAdjoint.of_nonneg hb')
   haveI : IsClosed (StarAlgebra.elemental ℂ b' : Set (Unitization ℂ A)) :=
     StarAlgebra.elemental.isClosed ℂ b'
-  have h_spec_S : (‖b'‖ : ℂ) ∈ spectrum ℂ (⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩ : StarAlgebra.elemental ℂ b') := by
+  have h_spec_S : (‖b'‖ : ℂ) ∈
+      spectrum ℂ (⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩ : StarAlgebra.elemental ℂ b') := by
     rwa [StarSubalgebra.spectrum_eq]
   obtain ⟨φ, hφ⟩ := WeakDual.CharacterSpace.mem_spectrum_iff_exists.mp h_spec_S
   -- Extend φ to a state ψ on Unitization ℂ A
@@ -345,7 +346,8 @@ noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State ℂ
           simp [h_all_zero a]
         exact h_ne_zero this.symm
       obtain ⟨a₀, ha₀⟩ := h_exists
-      have h_nonempty : { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ }.Nonempty :=
+      have h_nonempty :
+          { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ }.Nonempty :=
         ⟨‖(WeakDual.toStrongDual φ) a₀‖ / ‖a₀‖, a₀, ha₀, rfl⟩
       have h_bdd : BddAbove { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ } := by
         use ‖WeakDual.toStrongDual φ‖
@@ -356,7 +358,8 @@ noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State ℂ
       have h_opNorm_eq : ‖WeakDual.toStrongDual φ‖ =
           sSup { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ } := by
         apply le_antisymm
-        · have h_nonneg : 0 ≤ sSup { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ } := by
+        · have h_nonneg :
+              0 ≤ sSup { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ } := by
             apply Real.sSup_nonneg
             rintro _ ⟨a, _, rfl⟩
             exact div_nonneg (norm_nonneg _) (norm_nonneg _)
@@ -367,7 +370,8 @@ noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State ℂ
           · rw [mul_comm]
             calc ‖(WeakDual.toStrongDual φ) a‖
                 = ‖a‖ * (‖(WeakDual.toStrongDual φ) a‖ / ‖a‖) := by field_simp [norm_pos_iff.mpr ha]
-              _ ≤ ‖a‖ * sSup { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ } := by
+              _ ≤ ‖a‖ *
+                  sSup { r : ℝ | ∃ a : A, a ≠ 0 ∧ r = ‖(WeakDual.toStrongDual φ) a‖ / ‖a‖ } := by
                   apply mul_le_mul_of_nonneg_left _ (norm_nonneg _)
                   apply le_csSup h_bdd
                   exact ⟨a, ha, rfl⟩

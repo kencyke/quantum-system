@@ -46,7 +46,8 @@ with respect to the positive sesquilinear form coming from the state `ω` (ultim
 consequence of the Cauchy–Schwarz inequality for states). -/
 noncomputable def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
   Quotient.liftOn₂' xq yq (fun x y => ω (star x * y))
-    (fun x₁ y₁ x₂ y₂ (hx : CStarAlgebraIdeal.leftRel Nω x₁ x₂) (hy : CStarAlgebraIdeal.leftRel Nω y₁ y₂) => by
+    (fun x₁ y₁ x₂ y₂ (hx : CStarAlgebraIdeal.leftRel Nω x₁ x₂)
+        (hy : CStarAlgebraIdeal.leftRel Nω y₁ y₂) => by
       rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hx hy
       change ω (star x₁ * y₁) = ω (star x₂ * y₂)
       have hx' : ω (star (x₂ - x₁) * (x₂ - x₁)) = 0 := by simp only [sub_eq_neg_add]; exact hx
@@ -305,7 +306,8 @@ lemma πω_sub (a b : A) : πω ω (a - b) = πω ω a - πω ω b := by
 
 /-- Zero element maps to zero operator: `πω(0) = 0`. -/
 lemma πω_zero : πω ω (0 : A) = 0 :=
-  ext_on_completion (ω := ω) (πω ω 0) 0 fun x => by simp [πω_apply_coe, πω'_zero, UniformSpace.Completion.coe_zero]
+  ext_on_completion (ω := ω) (πω ω 0) 0 fun x => by
+    simp [πω_apply_coe, πω'_zero, UniformSpace.Completion.coe_zero]
 
 /-- The bundled non‑unital *-homomorphism `πω : A →⋆ₙₐ[ℂ] 𝓑(Hω)`. -/
 noncomputable def πωStarHom : A →⋆ₙₐ[ℂ] 𝓑(Hω) where
@@ -525,7 +527,8 @@ lemma ξω_norm : ‖ξω ω‖ = 1 := by
     by_contra h_not; push Not at h_not
     -- Expand definition of norm via supremum over ratios ‖ω a‖/‖a‖
     rw [State.norm_def] at h_not
-    obtain ⟨_, ⟨a, ha, rfl⟩, h_r_large⟩ : ∃ r ∈ {s : ℝ | ∃ a : A, a ≠ 0 ∧ s = ‖ω a‖ / ‖a‖}, ‖stateOnQuot ω‖ < r := by
+    obtain ⟨_, ⟨a, ha, rfl⟩, h_r_large⟩ :
+        ∃ r ∈ {s : ℝ | ∃ a : A, a ≠ 0 ∧ s = ‖ω a‖ / ‖a‖}, ‖stateOnQuot ω‖ < r := by
       by_contra h_no; push Not at h_no
       have : sSup {s : ℝ | ∃ a : A, a ≠ 0 ∧ s = ‖ω a‖ / ‖a‖} ≤ ‖stateOnQuot ω‖ := by
         refine csSup_le ?_ h_no

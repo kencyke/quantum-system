@@ -225,7 +225,8 @@ lemma diagonal_star {n : ℕ} (T : H →L[ℂ] H) :
     (ContinuousLinearMap.adjoint_inner_left (A := T) (x := y.ofLp i) (y := x.ofLp i))
 
 /-- `diagonal` as a `StarAlgHom` (so we can map `StarSubalgebra`s). -/
-noncomputable def diagonalStarAlgHom (n : ℕ) : (H →L[ℂ] H) →⋆ₐ[ℂ] (Hn (H := H) n →L[ℂ] Hn (H := H) n) where
+noncomputable def diagonalStarAlgHom (n : ℕ) :
+    (H →L[ℂ] H) →⋆ₐ[ℂ] (Hn (H := H) n →L[ℂ] Hn (H := H) n) where
   toFun := fun T => diagonal (H := H) (n := n) T
   map_one' := by
     ext x i

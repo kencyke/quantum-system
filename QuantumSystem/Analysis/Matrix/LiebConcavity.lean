@@ -156,7 +156,8 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     w₂ * (liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re ≤
     (liebJointFunction K p
       (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.real_smul hw₁).add (hA₂.posSemidef.real_smul hw₂))
-      (w₁ • B₁ + w₂ • B₂) ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
+      (w₁ • B₁ + w₂ • B₂)
+        ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
   classical
   /- Proof by Effros's Matrix Perspective Approach -/
   -- 1. Setup the function f(x) = -x^p, which is Matrix Convex.
@@ -201,12 +202,16 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   simp only [dotProduct_sub, dotProduct_add] at h_vec_nonneg
   -- Connect to Lieb function
   -- Use the spectral identity: ⟨v, matrixPerspective(f, L_A, R_B) v⟩ = -liebJointFunction(K, p, A, B)
-  have h_ident1 : (star v ⬝ᵥ (term1 *ᵥ v)).re = -(liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re := by
+  have h_ident1 : (star v ⬝ᵥ (term1 *ᵥ v)).re =
+      -(liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re := by
     simpa [term1, f] using
-      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₁ B₁ hA₁ hB₁ hL₁_psd hR₁_pd
-  have h_ident2 : (star v ⬝ᵥ (term2 *ᵥ v)).re = -(liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re := by
+      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₁ B₁
+        hA₁ hB₁ hL₁_psd hR₁_pd
+  have h_ident2 : (star v ⬝ᵥ (term2 *ᵥ v)).re =
+      -(liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re := by
     simpa [term2, f] using
-      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₂ B₂ hA₂ hB₂ hL₂_psd hR₂_pd
+      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₂ B₂
+        hA₂ hB₂ hL₂_psd hR₂_pd
   have hA_comb : (w₁ • A₁ + w₂ • A₂).PosDef := PosDef.convex_comb_nonneg hA₁ hA₂ hw₁ hw₂ hw
   have hB_comb : (w₁ • B₁ + w₂ • B₂).PosDef := PosDef.convex_comb_nonneg hB₁ hB₂ hw₁ hw₂ hw
   -- The combined identity follows from matrixPerspective_inner_eq_neg_liebJointFunction
@@ -252,7 +257,8 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     -- After substitution, the goal matches h_apply.
     -- The matrices are definitionally equal after applying hLlin and hRlin.
     -- term_comb = matrixPerspective f L R _ _
-    --           = matrixPerspective f (leftMulMatrix (w₁•A₁+w₂•A₂)) (rightMulMatrix (w₁•B₁+w₂•B₂)) _ _
+    --           = matrixPerspective f (leftMulMatrix (w₁•A₁+w₂•A₂))
+    --               (rightMulMatrix (w₁•B₁+w₂•B₂)) _ _
     -- The proof terms may differ but the matrices are equal by proof irrelevance.
     -- Since both sides compute the same quadratic form value, they are equal.
     -- We establish this by showing the matrixPerspective matrices are equal.
@@ -302,7 +308,8 @@ private lemma lieb_joint_concavity {m : Type*} [Fintype m] [DecidableEq m]
     w₂ * (liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re ≤
     (liebJointFunction K p
       (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.real_smul hw₁).add (hA₂.posSemidef.real_smul hw₂))
-      (w₁ • B₁ + w₂ • B₂) ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
+      (w₁ • B₁ + w₂ • B₂)
+        ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
   -- Handle boundary cases p = 0 and p = 1 separately
   rcases eq_or_lt_of_le hp0 with rfl | hp0'
   · -- p = 0: Tr(K†BK) is linear in B, so equality holds

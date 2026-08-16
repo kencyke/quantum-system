@@ -128,8 +128,8 @@ class ProperContainment (K : Type*) [Preorder K] [CausalOrthogonality K] where
   /-- Proper containment implies containment. -/
   le_of_properlyContained : ∀ ⦃O₁ O₂ : K⦄, ProperlyContained O₁ O₂ → O₁ ≤ O₂
   /-- Proper containment survives shrinking the inner region and enlarging the outer one. -/
-  properlyContained_mono : ∀ ⦃O₀ O₁ O₂ O₃ : K⦄, O₀ ≤ O₁ → ProperlyContained O₁ O₂ → O₂ ≤ O₃ →
-      ProperlyContained O₀ O₃
+  properlyContained_mono : ∀ ⦃O₀ O₁ O₂ O₃ : K⦄, O₀ ≤ O₁ → ProperlyContained O₁ O₂ →
+      O₂ ≤ O₃ → ProperlyContained O₀ O₃
   /-- **Causal collar**: a properly containing region contains a region causally orthogonal to
       the inner one and not contained in it. The last clause is the nondegeneracy that makes the
       collar a genuine buffer rather than a region orthogonal to everything (such as the empty
@@ -157,8 +157,8 @@ theorem ProperlyContained.le {O₁ O₂ : K} (h : O₁ ⋐ O₂) : O₁ ≤ O₂
 
 /-- Proper containment survives shrinking the inner region and enlarging the outer one
     (dot-notation form). -/
-theorem ProperlyContained.mono {O₀ O₁ O₂ O₃ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⋐ O₂) (h₃ : O₂ ≤ O₃) :
-    O₀ ⋐ O₃ :=
+theorem ProperlyContained.mono {O₀ O₁ O₂ O₃ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⋐ O₂)
+    (h₃ : O₂ ≤ O₃) : O₀ ⋐ O₃ :=
   properlyContained_mono h₀ h h₃
 
 /-- The causal collar of a proper containment (dot-notation form). -/
