@@ -29,6 +29,7 @@ the product.
 |---|---|---|
 | Causal index set of a Haag–Kastler net | [causal-index-set.md](causal-index-set.md) | `CausalIndexSet` |
 | Split inclusion of von Neumann algebras | [split-inclusion.md](split-inclusion.md) | `VonNeumannAlgebra.IsSplitInclusion` |
+| Faithful representation of a separable C\*-algebra on a separable Hilbert space | [separable-faithful-representation.md](separable-faithful-representation.md) | `CStarRep.exists_isometric_separable` |
 
 <!-- One row per note. "Implemented as" is a fact recorded after the object is
      formalized — the fully-qualified declaration that ended up carrying it, or
