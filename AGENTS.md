@@ -41,6 +41,23 @@
   follow the literature, even when it forces you to build supporting
   API that Mathlib does not yet provide.
 
+**Do not bridge what should be unified.**
+- When Mathlib already provides an object — a type copy, a topology, a
+  structure — use it. Do not reimplement it locally and then paper over the
+  mismatch with a conversion lemma, an `Equiv`, or a `Homeomorph` between the
+  two copies.
+- If such a local reimplementation already exists, migrate to the Mathlib
+  object and delete the local one. Do not add a bridge to keep both alive.
+- The same applies to two local spellings of one notion (image vs preimage
+  form, bundled vs unbundled): pick one and state every result in it.
+- A conversion lemma is acceptable only when both sides are genuinely outside
+  your control — both already in Mathlib, or the local object carries structure
+  the Mathlib one cannot.
+  **Why:** a bridge makes the duplication permanent. Every later lemma must
+  then pick a side and be transported across, and a `ForMathlib/` copy of
+  something Mathlib already has can never be upstreamed — which is the only
+  reason that directory exists.
+
 **Prove what is provable; do not *defer* it.**
 - Do not introduce a `class` / `structure` field (or a `def … : Prop`
   hypothesis) that stands in for a theorem when that theorem has a known
