@@ -26,6 +26,8 @@ This file provides a minimal API for invariant / reducing subspaces for a set of
   `Kᗮ` is invariant under `T`.
 * `starProjection_mem_centralizer_of_isReducing`: if `K` is reducing for `S`, then
   `K.starProjection ∈ Set.centralizer S`.
+* `ActsNondegenerately S`: no nonzero vector is annihilated by every element of `S`; the
+  hypothesis of the non-unital double commutant theorem.
 -/
 
 @[expose] public section
@@ -174,5 +176,31 @@ lemma starProjection_mem_centralizer_of_isReducing
   exact commutes_starProjection_of_invariant (T := T) (K := K) hInv hInvOrth
 
 end WithComplete
+
+section Nondegenerate
+
+/-- A set of operators `S` *acts non-degenerately* on `H` if the only vector annihilated by
+every element of `S` is `0`.
+
+This is strictly weaker than `1 ∈ S` (see `actsNondegenerately_of_one_mem`): for example the
+compact operators act non-degenerately on an infinite-dimensional `H` without containing `1`.
+It is the hypothesis under which the double commutant theorem holds for a possibly non-unital
+`*`-subalgebra. -/
+def ActsNondegenerately (S : Set (H →L[ℂ] H)) : Prop :=
+  ∀ x : H, (∀ T ∈ S, T x = 0) → x = 0
+
+/-- A set of operators containing the identity acts non-degenerately. -/
+lemma actsNondegenerately_of_one_mem {S : Set (H →L[ℂ] H)}
+    (h : (1 : H →L[ℂ] H) ∈ S) : ActsNondegenerately S := by
+  intro x hx
+  simpa using hx 1 h
+
+/-- Non-degeneracy is monotone: it passes from a set to any superset. -/
+lemma ActsNondegenerately.mono {S S' : Set (H →L[ℂ] H)} (hSS' : S ⊆ S')
+    (hS : ActsNondegenerately S) : ActsNondegenerately S' := by
+  intro x hx
+  exact hS x fun T hT => hx T (hSS' hT)
+
+end Nondegenerate
 
 end InnerProductSpace
