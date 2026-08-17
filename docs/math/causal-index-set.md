@@ -11,60 +11,53 @@ revisions:
 ---
 
 <!--
-Macros used by the verbatim quotes below, transcribed from each source's own
-preamble so that the quotes render as their authors wrote them:
-  \cA \cB \cH \cK \cL \cO \cP \cS \cW \cX  GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
-  \p                                   GLRV99, main.tex:127
-  \2 \7 \al \alg \norm \ol \wt \Om     HM06,   references/arxiv-math-ph-0602036/raw/reconstruction.tex:136,138,143,26,27,141,135,149
-  \A \C \K \O \R                       BGL93,  references/arxiv-funct-an-9302008/raw/main.tex:58,64,72,77,81
-  \calA \calK \frakM \gb \obj          BFV01,  references/arxiv-math-ph-0112041/raw/main.tex:7,26,31,89,82 (FIRST document body)
-  \lok \Seins                          KOE03,  references/arxiv-math-ph-0308031/raw/mathphkoediss.tex:144,135
-  \mc                                  NAA13,  references/arxiv-1311.2717/raw/qlattice.tex:73
-NAME COLLISION, recorded rather than silently resolved: GLRV99 defines
-\p as \pi (main.tex:127) and HM06 defines \p as \psi
-(reconstruction.tex:148). The table below carries GLRV99's, because the only
-quote in this note using \p is GLRV99's (R2). No HM06 quote here uses it.
-\alg is defined identically by HM06 and NAA13, so one definition serves both.
-\2 and \7 are single-digit control sequences; they are TeX-legal via \def and
-are transcribed as their sources write them. A renderer that rejects them
-raises a visible parse error, which is the intended failure mode — editing the
-quote is not, because those bytes are what the quote check verifies.
--->
+No document-level macro preamble: measured through
+@vscode/markdown-it-katex (the plugin VS Code's own Markdown preview uses),
+no macro definition form -- \newcommand, \gdef, \global\def -- survives
+from one math span to the next, so a preamble here would leave every quote
+using it broken (see check_render.py / render_check.js). Instead, every
+verbatim-quote math span that needs a source's own macro carries a local,
+self-contained \gdef of exactly that macro, e.g.
+`$\gdef\lok#1{{\mathcal #1}}\lok{B}$` -- defined and used inside the same
+$...$ pair, so it renders correctly without any state surviving to the next
+span. The \gdef prefix is presentation, not content: strip it before
+comparing a quote's tex against source.flat.txt for the quote check, and
+audit it against the source's own definition below.
 
-$$
-\def\cA{{\cal A}}
-\def\cB{{\cal B}}
-\def\cH{{\cal H}}
-\def\cK{{\cal K}}
-\def\cL{{\cal L}}
-\def\cO{{\cal O}}
-\def\cP{{\cal P}}
-\def\cS{{\cal S}}
-\def\cW{{\cal W}}
-\def\cX{{\cal X}}
-\def\p{\pi}
-\def\2#1{{\mathcal #1}}
-\def\7#1{{\mathbb #1}}
-\def\al#1{{\mathfrak #1}}
-\newcommand{\alg}[1]{\mathfrak{#1}}
-\newcommand{\norm}[1]{\| #1\|}
-\def\ol#1{{\overline #1}}
-\def\wt#1{{\tilde #1}}
-\def\Om{\Omega}
-\def\A{{\cal A}}
-\def\C{{\cal C}}
-\def\K{{\cal K}}
-\def\O{{\cal O}}
-\def\R{{\cal R}}
-\newcommand{\calA}{{\mathcal A}}
-\newcommand{\calK}{{\mathcal K}}
-\newcommand{\frakM}{{\mathfrak{Man}}}
-\newcommand{\gb}{\boldsymbol{g}}
-\newcommand{\obj}{\mbox{\rm Obj}}
-\newcommand{\lok}[1]{{\mathcal #1}}
-\newcommand{\Seins}{\mathsf{S}^1}
-\newcommand{\mc}[1]{\mathcal{#1}}
-$$
+Source macro catalogue (name[arity] = body, source, file:line):
+  \2[1] = {{\mathcal #1}}   (provenance: see prior revision / sources.md)
+  \7[1] = {{\mathbb #1}}   (provenance: see prior revision / sources.md)
+  \A = {{\cal A}}   BGL93,  references/arxiv-funct-an-9302008/raw/main.tex:58,64,72,77,81
+  \C = {{\cal C}}   BGL93,  references/arxiv-funct-an-9302008/raw/main.tex:58,64,72,77,81
+  \K = {{\cal K}}   BGL93,  references/arxiv-funct-an-9302008/raw/main.tex:58,64,72,77,81
+  \O = {{\cal O}}   BGL93,  references/arxiv-funct-an-9302008/raw/main.tex:58,64,72,77,81
+  \Om = {\Omega}   (provenance: see prior revision / sources.md)
+  \R = {{\cal R}}   BGL93,  references/arxiv-funct-an-9302008/raw/main.tex:58,64,72,77,81
+  \Seins = {\mathsf{S}^1}   KOE03,  references/arxiv-math-ph-0308031/raw/mathphkoediss.tex:144,135
+  \al[1] = {{\mathfrak #1}}   (provenance: see prior revision / sources.md)
+  \alg[1] = {\mathfrak{#1}}   (provenance: see prior revision / sources.md)
+  \cA = {{\cal A}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cB = {{\cal B}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cH = {{\cal H}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cK = {{\cal K}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cL = {{\cal L}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cO = {{\cal O}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cP = {{\cal P}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cS = {{\cal S}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cW = {{\cal W}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \cX = {{\cal X}}   GLRV99, references/arxiv-math-ph-9906019/raw/main.tex:69,70,76,79,80,83,85,88,92,93
+  \calA = {{\mathcal A}}   BFV01,  references/arxiv-math-ph-0112041/raw/main.tex:7,26,31,89,82 (FIRST document body)
+  \calK = {{\mathcal K}}   BFV01,  references/arxiv-math-ph-0112041/raw/main.tex:7,26,31,89,82 (FIRST document body)
+  \frakM = {{\mathfrak{Man}}}   BFV01,  references/arxiv-math-ph-0112041/raw/main.tex:7,26,31,89,82 (FIRST document body)
+  \gb = {\boldsymbol{g}}   BFV01,  references/arxiv-math-ph-0112041/raw/main.tex:7,26,31,89,82 (FIRST document body)
+  \lok[1] = {{\mathcal #1}}   KOE03,  references/arxiv-math-ph-0308031/raw/mathphkoediss.tex:144,135
+  \mc[1] = {\mathcal{#1}}   NAA13,  references/arxiv-1311.2717/raw/qlattice.tex:73
+  \norm[1] = {\| #1\|}   (provenance: see prior revision / sources.md)
+  \obj = {\mbox{\rm Obj}}   BFV01,  references/arxiv-math-ph-0112041/raw/main.tex:7,26,31,89,82 (FIRST document body)
+  \ol[1] = {{\overline #1}}   (provenance: see prior revision / sources.md)
+  \p = {\pi}   GLRV99, main.tex:127
+  \wt[1] = {{\tilde #1}}   (provenance: see prior revision / sources.md)
+-->
 
 # Causal index set of a Haag–Kastler net
 
@@ -111,7 +104,7 @@ independence theorem applies to a given pair of regions.
 
 **(D1) [GLRV99] §3.1, `source.txt` 1214–1226** — tier (a) — the abstract form
 
-> The causal structure enters in the form of the relation $\perp$ of causal disjointness, defined in Ch.\ 2, and here to be considered as a relation on the ordered set $\cal{K}$, satisfying \begin{description} \item{$a)$} $\cO_1\perp\cO_2\Rightarrow\cO_2\perp\cO_1$. \item{$b)$} $\cO_1\subset\cO_2$ and $\cO_2\perp\cO_3 \Rightarrow\cO_1\perp\cO_3$. \item{$c)$} Given $\cO_1\in\cK$, there exists an $\cO_2\in\cK$ such that $\cO_1\perp\cO_2$. \end{description} We write $\cO^\perp:=\{\cO_1\in\cK:\cO_1\perp\cO\}$.
+> The causal structure enters in the form of the relation $\perp$ of causal disjointness, defined in Ch.\ 2, and here to be considered as a relation on the ordered set $\cal{K}$, satisfying \begin{description} \item{$a)$} $\gdef\cO{{\cal O}}\cO_1\perp\cO_2\Rightarrow\cO_2\perp\cO_1$. \item{$b)$} $\gdef\cO{{\cal O}}\cO_1\subset\cO_2$ and $\gdef\cO{{\cal O}}\cO_2\perp\cO_3 \Rightarrow\cO_1\perp\cO_3$. \item{$c)$} Given $\gdef\cO{{\cal O}}\gdef\cK{{\cal K}}\cO_1\in\cK$, there exists an $\gdef\cO{{\cal O}}\gdef\cK{{\cal K}}\cO_2\in\cK$ such that $\gdef\cO{{\cal O}}\cO_1\perp\cO_2$. \end{description} We write $\gdef\cO{{\cal O}}\gdef\cK{{\cal K}}\cO^\perp:=\{\cO_1\in\cK:\cO_1\perp\cO\}$.
 
 Restated at the head of the Appendix to Ch. 3 with the gloss that b) says
 `$\cal{O}^\perp$ is a sieve of $\cal{K}$`. Here `𝒪^⊥` is a **subset of 𝒦**, not
@@ -125,16 +118,16 @@ fourth condition appears later in the same chapter and is recorded as (D5′).
 
 **(D2) [GLRV99] §2.1 and §3.1** — tier (a) — regular diamonds
 
-> A set of the form $\cO = {\rm int}\,D(G)$ is a regular diamond provided $\cO^\perp$ is non-void and
+> A set of the form $\gdef\cO{{\cal O}}\cO = {\rm int}\,D(G)$ is a regular diamond provided $\gdef\cO{{\cal O}}\cO^\perp$ is non-void and
 
 with (i) `Ḡ` compact and contractible to a point in `G`, `G` open in an acausal
 Cauchy surface `C`; (ii) `∂G` a locally flat, two-sided topological
 submanifold of `C`, smooth near points of each connected component. Then
-`We let $\cK$ denote the set of regular diamonds in $M$, ordered under inclusion.`
+`We let $\gdef\cK{{\cal K}}\cK$ denote the set of regular diamonds in $M$, ordered under inclusion.`
 Non-void causal complement is **in the definition**, which is how axiom c) is
 secured. GLRV99 declines double cones and says why:
 
-> For these reasons, we have chosen to use the collection $\cK$ of regular diamonds rather than the collection of double cones whose causal complement has non-empty interior as an index set in a globally hyperbolic spacetime.
+> For these reasons, we have chosen to use the collection $\gdef\cK{{\cal K}}\cK$ of regular diamonds rather than the collection of double cones whose causal complement has non-empty interior as an index set in a globally hyperbolic spacetime.
 
 `differs from (D6)/(D10) by:` a Cauchy-surface base with compactness,
 contractibility and a two-sidedness condition, plus `𝒪^⊥ ≠ ∅`. Note the source
@@ -164,7 +157,7 @@ Complement of the **closure** of the causal hull, hence automatically open.
 
 **(D5) [GLRV99] Appendix to Ch. 3** — tier (a) — the two derived relations
 
-> There are two derived binary relations $\tilde\perp$ and $\hat\perp$ defined by supplementing $\cO_1\perp\cO_2$ by requiring that there exists an $\cO_3\in\cal{K}$ such that $$\cO_1\perp\cO_3,\,\,\cO_2\perp\cO_3$$ or such that $$\cO_1,\,\,\cO_2\subset\cO_3,$$ respectively. These relations automatically satisfy a) and b) but c) remains to be checked and will not prove to be a problem in our applications to curved spacetime. The operation of passing from $\perp$ to $\tilde\perp$ or $\hat\perp$ is idempotent and if $\cal{K}$ is directed, all three relations coincide.
+> There are two derived binary relations $\tilde\perp$ and $\hat\perp$ defined by supplementing $\gdef\cO{{\cal O}}\cO_1\perp\cO_2$ by requiring that there exists an $\gdef\cO{{\cal O}}\cO_3\in\cal{K}$ such that $$\gdef\cO{{\cal O}}\cO_1\perp\cO_3,\,\,\cO_2\perp\cO_3$$ or such that $$\gdef\cO{{\cal O}}\cO_1,\,\,\cO_2\subset\cO_3,$$ respectively. These relations automatically satisfy a) and b) but c) remains to be checked and will not prove to be a problem in our applications to curved spacetime. The operation of passing from $\perp$ to $\tilde\perp$ or $\hat\perp$ is idempotent and if $\cal{K}$ is directed, all three relations coincide.
 
 So `O₁ ⊥̃ O₂` demands a common ⊥-partner and `O₁ ⊥̂ O₂` a common upper bound.
 Both are **purely order/⊥-theoretic**: neither mentions closures or distance.
@@ -173,7 +166,7 @@ The whole ⊥/⊥̃/⊥̂ distinction is the price of dropping directedness — 
 **(D5′) [GLRV99] Ch. 3, before Theorem 3.13, `source.txt` 1878–1882** — tier (a)
 — the corpus's only collar-shaped condition on 𝒦 itself
 
-> In fact, the following result is valid for a directed set $\cal{K}$ with a binary relation $\perp$ such that given $\cal{O}\in\cal{K}$, there exists $\cO_1,\cO_2\in\cal{K}$ with $\cO,\cO_1\subset\cO_2$ and $\cO\perp\cO_1$. This condition is related to our use of the Borchers Property.
+> In fact, the following result is valid for a directed set $\cal{K}$ with a binary relation $\perp$ such that given $\cal{O}\in\cal{K}$, there exists $\gdef\cO{{\cal O}}\cO_1,\cO_2\in\cal{K}$ with $\gdef\cO{{\cal O}}\cO,\cO_1\subset\cO_2$ and $\gdef\cO{{\cal O}}\cO\perp\cO_1$. This condition is related to our use of the Borchers Property.
 
 For every `O` there are `O₁, O₂` with `O ⊆ O₂`, `O₁ ⊆ O₂` and `O ⊥ O₁` — in the
 vocabulary of (D5), **every `O` has an `O₁` with `O ⊥̂ O₁`**, i.e. axiom c)
@@ -186,7 +179,7 @@ kind or is topological ((D8), (D9)). **No source compares the two shapes.**
 
 **(D6) [HM06] §2.1** — tier (a) — open double cones in Minkowski
 
-> An open \emph{double cone} in Minkowski spacetime is the intersection of the causal future of a point $x$ with the causal past of a point $y$ to the future of $x$. Let $\2K$ be the set of open double cones in Minkowski spacetime
+> An open \emph{double cone} in Minkowski spacetime is the intersection of the causal future of a point $x$ with the causal past of a point $y$ to the future of $x$. Let $\gdef\2#1{{\mathcal #1}}\2K$ be the set of open double cones in Minkowski spacetime
 
 No poset axioms are stated; the order is inclusion, used silently. **HM06 never
 defines "spacelike separated"** — it is an undefined primitive from the
@@ -204,7 +197,7 @@ A translation-buffer condition; **requires a translation group**.
 
 **(D8) [HM06] §3.3** — tier (a) — strongly spacelike separated
 
-> Two double cones $O_1$ and $O_2$ are said to be \emph{strongly spacelike separated} just in case there are double cones $\wt O_i$ such that $\ol O_i\subseteq \wt O_i$, and $\wt O_1,\wt O_2$ are spacelike.
+> Two double cones $O_1$ and $O_2$ are said to be \emph{strongly spacelike separated} just in case there are double cones $\gdef\wt#1{{\tilde #1}}\wt O_i$ such that $\gdef\ol#1{{\overline #1}}\gdef\wt#1{{\tilde #1}}\ol O_i\subseteq \wt O_i$, and $\gdef\wt#1{{\tilde #1}}\wt O_1,\wt O_2$ are spacelike.
 
 with the ordering claim
 
@@ -220,14 +213,14 @@ relation.
 
 **(D9) [HM06] §2.4** — tier (a) — the separation carrying the split property
 
-> the \emph{funnel property} if for any double cones $O_1,O_2$ with $\ol O_1$ contained in $O_2$, the pair $(\al R(O_1),\al R(O_2))$ is a split inclusion.
+> the \emph{funnel property} if for any double cones $O_1,O_2$ with $\gdef\ol#1{{\overline #1}}\ol O_1$ contained in $O_2$, the pair $\gdef\al#1{{\mathfrak #1}}(\al R(O_1),\al R(O_2))$ is a split inclusion.
 
 The relation is `closure(O₁) ⊆ O₂`. **HM06 gives it no name and no symbol.**
 Purely topological: no causal structure, no metric, no positive distance.
 
 **(D10) [NAA13] §1.2** — tier (a) — double cones, recorded as causally complete
 
-> As the basic regions we consider \emph{double cones}\index{double cone} $\mc{O}$, defined as the intersection of (the interior of) a forward and backward light-cone. Note that a double cone is causally complete: $\mc{O} = \mc{O}''$, where a prime $'$ denotes taking the causal complement.
+> As the basic regions we consider \emph{double cones}\index{double cone} $\gdef\mc#1{\mathcal{#1}}\mc{O}$, defined as the intersection of (the interior of) a forward and backward light-cone. Note that a double cone is causally complete: $\gdef\mc#1{\mathcal{#1}}\mc{O} = \mc{O}''$, where a prime $'$ denotes taking the causal complement.
 
 `differs from (D6) by:` the same family, presented as an intersection of cones
 rather than through two points, **plus the causal-completeness observation HM06
@@ -236,9 +229,9 @@ as an observation, not as a membership condition — contrast (D19).
 
 **(D11) [NAA13] §2.4** — tier (a) — the lattice index set, with `∅` a member
 
-> Let $\Gamma$ be as above. We will write $\mc{P}(\Gamma)$ for the set of all subsets of $\Gamma$. Similarly, $\mc{P}_f(\Gamma)$ is the subset of all \emph{finite} subsets of $\Gamma$.
+> Let $\Gamma$ be as above. We will write $\gdef\mc#1{\mathcal{#1}}\mc{P}(\Gamma)$ for the set of all subsets of $\Gamma$. Similarly, $\gdef\mc#1{\mathcal{#1}}\mc{P}_f(\Gamma)$ is the subset of all \emph{finite} subsets of $\Gamma$.
 
-> For convenience we will set $\alg{A}(\emptyset) = \mathbb{C} I$, since multiples of the identity are contained in $\alg{A}(\Lambda)$ for all $\Lambda \in \mc{P}_f(\Gamma)$.
+> For convenience we will set $\gdef\alg#1{\mathfrak{#1}}\alg{A}(\emptyset) = \mathbb{C} I$, since multiples of the identity are contained in $\gdef\alg#1{\mathfrak{#1}}\alg{A}(\Lambda)$ for all $\gdef\mc#1{\mathcal{#1}}\Lambda \in \mc{P}_f(\Gamma)$.
 
 Finite subsets of a countable Γ, ordered by inclusion, ⊥ = plain disjointness.
 **Directed**, with a **least element ∅**, a distributive lattice, and its
@@ -248,17 +241,17 @@ causal disjointness by "its Euclidean counterpart, disjointness". Because
 
 **(D12) [BGL93] §1, Prop. 1.3** — tier (a) — two index sets in one paper
 
-> In the following we shall consider the family $\tilde\K$ of the subregions of $\tilde M$ which are images of double cones in $M$ under conformal transformations in $\tilde\C$.
+> In the following we shall consider the family $\gdef\K{{\cal K}}\tilde\K$ of the subregions of $\tilde M$ which are images of double cones in $M$ under conformal transformations in $\gdef\C{{\cal C}}\tilde\C$.
 
-> All elements of $\tilde\K$ are open contractible precompact submanifolds of $\tilde M$. They are a fundamental set of neighborhoods for $\tilde M$.
+> All elements of $\gdef\K{{\cal K}}\tilde\K$ are open contractible precompact submanifolds of $\tilde M$. They are a fundamental set of neighborhoods for $\tilde M$.
 
-> The space-like complement $\O'$ of a region $\O\in\tilde\K$ belong to $\tilde\K$.
+> The space-like complement $\gdef\O{{\cal O}}\O'$ of a region $\gdef\O{{\cal O}}\gdef\K{{\cal K}}\O\in\tilde\K$ belong to $\gdef\K{{\cal K}}\tilde\K$.
 
-> The family $\tilde\K$ is not a net, in fact the union of a region and of its causal complement is not contained in any region of $\tilde\K$.
+> The family $\gdef\K{{\cal K}}\tilde\K$ is not a net, in fact the union of a region and of its causal complement is not contained in any region of $\gdef\K{{\cal K}}\tilde\K$.
 
 and, for the same paper's other index set,
 
-> Since the family $\K$ is a direct set, the map $\O\to\A(\O)$ is indeed a net and the quasilocal $C^*$-algebra $\A_0$ is defined as the direct limit of the local algebras.
+> Since the family $\gdef\K{{\cal K}}\K$ is a direct set, the map $\gdef\O{{\cal O}}\gdef\A{{\cal A}}\O\to\A(\O)$ is indeed a net and the quasilocal $C^*$-algebra $\gdef\A{{\cal A}}\A_0$ is defined as the direct limit of the local algebras.
 
 **`𝒦̃` is the corpus's only index set literally closed under the causal
 complement**, so on it `𝒪 ↦ 𝒪′` is an *operation*; on every other index set it
@@ -272,7 +265,7 @@ and neither remarks on it.
 
 **(D14) [KOE03] §2** — tier (a) — proper intervals of the circle
 
-> The localisation regions are open, non-dense intervals contained in the circle, called the {\em proper intervals}. A connected, open subset $I$ of $\Seins$ is a proper interval, denoted by $I\Subset\Seins$, if its {\em causal complement} $I':= \Seins\setminus\overline{I}$ is not the empty set.
+> The localisation regions are open, non-dense intervals contained in the circle, called the {\em proper intervals}. A connected, open subset $I$ of $\gdef\Seins{\mathsf{S}^1}\Seins$ is a proper interval, denoted by $\gdef\Seins{\mathsf{S}^1}I\Subset\Seins$, if its {\em causal complement} $\gdef\Seins{\mathsf{S}^1}I':= \Seins\setminus\overline{I}$ is not the empty set.
 
 Membership requires connected, open, non-dense, and `I′ ≠ ∅` — as in (D2) and
 unlike (D6)/(D10). Locality is stated as `{\em Locality\label{ax:loc}:} For $I_1\subset I_2'$,`
@@ -280,24 +273,24 @@ so **the primitive is the operation `I ↦ I′`** and ⊥ is derived, the rever
 (D1). Interchangeable only because 𝒦 is closed under `′` here. The index set is
 not directed and the source draws the terminological consequence:
 
-> The set of proper intervals in $\Seins$ is not directed with respect to the partial order defined by inclusion and thus is not a net in the proper sense of the word.
+> The set of proper intervals in $\gdef\Seins{\mathsf{S}^1}\Seins$ is not directed with respect to the partial order defined by inclusion and thus is not a net in the proper sense of the word.
 
 **(D15) [KOE03] §1.3** — tier (a) — the chiral split separation
 
-> a chiral net $\lok{B}$ has the split property, if for any pair $I_{1,2}$ of proper intervals satisfying $\overline{I_1}\subset I_2$ there is a type $I$ factor $\lok{M}$ interpolating between $\lok{B}(I_1)$ and $\lok{B}(I_2)$
+> a chiral net $\gdef\lok#1{{\mathcal #1}}\lok{B}$ has the split property, if for any pair $I_{1,2}$ of proper intervals satisfying $\overline{I_1}\subset I_2$ there is a type $I$ factor $\gdef\lok#1{{\mathcal #1}}\lok{M}$ interpolating between $\gdef\lok#1{{\mathcal #1}}\lok{B}(I_1)$ and $\gdef\lok#1{{\mathcal #1}}\lok{B}(I_2)$
 
 `differs from (D9) by:` **nothing mathematical** — two traditions, one relation,
 and neither names it or gives it a symbol. KOE03 also takes the one step in the
 corpus connecting the topological and order-theoretic collar families:
 
-> we conclude that there is $I_3\Subset\Seins$ satisfying $I_1\cup I_2' \subset I_3$
+> we conclude that there is $\gdef\Seins{\mathsf{S}^1}I_3\Subset\Seins$ satisfying $I_1\cup I_2' \subset I_3$
 
 i.e. `Ī₁ ⊂ I₂` yields a common upper bound for `I₁` and `I₂′`, which with
 `I₁ ∩ I₂′ = ∅` says exactly `I₁ ⊥̂ I₂′`.
 
 **(D16) [BFV01] §2.4, first document body** — tier (a) literal / (b) as intended
 
-> We denote by $\calK(M,\gb)$ the set of all subsets in $M$ which are relatively compact and contain with each pair of points $x$ and $y$ also all $\gb$-causal curves in $M$ connecting $x$ and $y$ (cf.\ condition $(ii)$ in the definition of $\frakM$).
+> We denote by $\gdef\calK{{\mathcal K}}\gdef\gb{\boldsymbol{g}}\calK(M,\gb)$ the set of all subsets in $M$ which are relatively compact and contain with each pair of points $x$ and $y$ also all $\gdef\gb{\boldsymbol{g}}\gb$-causal curves in $M$ connecting $x$ and $y$ (cf.\ condition $(ii)$ in the definition of $\gdef\frakM{{\mathfrak{Man}}}\frakM$).
 
 Two conditions only: **relatively compact** and **causally convex**. Read
 literally, `∅`, singletons and spacelike point-pairs are members. The next
@@ -335,7 +328,7 @@ Same buffer idea, two different relations.
 
 **(D19) [GLRV99] Appendix Ch. 3 and §4.2** — tier (a) — an index set that depends on the net
 
-> We choose $\cL$ to be the set of non-empty causally closed subsets $\cS$ of $M$ with non-empty causal complements such that for the given net $\cA$ $\tilde\perp$--duality holds either for $\cS$ or for $\cS^\perp$.
+> We choose $\gdef\cL{{\cal L}}\cL$ to be the set of non-empty causally closed subsets $\gdef\cS{{\cal S}}\cS$ of $M$ with non-empty causal complements such that for the given net $\gdef\cA{{\cal A}}\cA$ $\tilde\perp$--duality holds either for $\gdef\cS{{\cal S}}\cS$ or for $\gdef\cS{{\cal S}}\cS^\perp$.
 
 > This choice has the disadvantage of depending on the theory under consideration but it allows a smooth treatment of endomorphisms.
 
@@ -345,7 +338,7 @@ records it as an observation.
 
 **(D20) [GLRV99] Ch. 5** — tier (a) — diamonds together with wedges
 
-> Now we consider a net $\cO \mapsto\cA(\cO)$ of von~Neumann algebras indexed by elements $\cO \in \cK \cup \cW$ where $\cK$ is the set of regular diamonds and $\cW$ is a set of wedges with the properties discussed in the previous section
+> Now we consider a net $\gdef\cO{{\cal O}}\gdef\cA{{\cal A}}\cO \mapsto\cA(\cO)$ of von~Neumann algebras indexed by elements $\gdef\cO{{\cal O}}\gdef\cK{{\cal K}}\gdef\cW{{\cal W}}\cO \in \cK \cup \cW$ where $\gdef\cK{{\cal K}}\cK$ is the set of regular diamonds and $\gdef\cW{{\cal W}}\cW$ is a set of wedges with the properties discussed in the previous section
 
 The corpus's only index set containing **unbounded** elements as first-class
 members, and the only one that is not a single geometric family. A form that
@@ -462,7 +455,7 @@ empty causal complement. So the two forms are `ordered-under-(T)`, neither
 
 - Source: [GLRV99] §1.1 · tier (a) · **asserted**
 - Verbatim:
-  > If $\cK$ is directed, then one can form the ``quasilocal algebra'', i.e.\ the smallest $C^*$-algebra containing all the local algebras $\cA(\cO)$. It is the norm closure of the union of the local algebras, $\overline{\bigcup_{\cO}\cA(\cO)}$. In the generic case where $\cK$ is not directed, this possibility is denied to us.
+  > If $\gdef\cK{{\cal K}}\cK$ is directed, then one can form the ``quasilocal algebra'', i.e.\ the smallest $C^*$-algebra containing all the local algebras $\gdef\cA{{\cal A}}\gdef\cO{{\cal O}}\cA(\cO)$. It is the norm closure of the union of the local algebras, $\gdef\cO{{\cal O}}\gdef\cA{{\cal A}}\overline{\bigcup_{\cO}\cA(\cO)}$. In the generic case where $\gdef\cK{{\cal K}}\cK$ is not directed, this possibility is denied to us.
 - Depends on: (A1); [ext: the C\*-inductive-limit construction — the norm closure of an upward-directed union of C\*-subalgebras of a common ambient algebra is a C\*-algebra and is the smallest one containing them all. tier (d), not retrieved]
 - This is why GLRV99's superselection apparatus is cohomological rather than algebraic.
 
@@ -474,7 +467,7 @@ For a representation family, the dual net is `𝒜_π^d(𝒪) := ⋂_{𝒪₁ �
 
 - Source: [GLRV99] §1.1 · tier (a) · **asserted**
 - Verbatim:
-  > This property is stronger than locality but not as strong as Haag duality which demands that $\p_{\cO}(\cA(\cO))'' = \cA_{\p}^d(\cO)$ for all $\cO \in \cK$.
+  > This property is stronger than locality but not as strong as Haag duality which demands that $\gdef\p{\pi}\gdef\cO{{\cal O}}\gdef\cA{{\cal A}}\p_{\cO}(\cA(\cO))'' = \cA_{\p}^d(\cO)$ for all $\gdef\cO{{\cal O}}\gdef\cK{{\cal K}}\cO \in \cK$.
 - Depends on: (R7); the availability of `𝒪^⊥` as an index set, i.e. (D1)
 
 ### (R3) [GLRV99] Lemma 2.1 — the regular diamonds absorb any point of the causal complement
@@ -500,7 +493,7 @@ satisfies `𝒪 ∪ {p} ⊂ 𝒪₁`.
 
 - Source: [GLRV99] Lemma 3A.1, Cor. 3A.2 · tier (a) · **proved in source** (3A.1); **asserted** (3A.2)
 - Verbatim:
-  > Let $\cal{P}$ be a base for the topology of a space $M$ and ordered under inclusion and suppose the elements of $\cal{P}$ are open, (non-empty) and path--connected. Then an open subset $X$ of $M$ is path--connected if and only if $\cP_X$:=$\{\cO\in\cP:\cO\subset X\}$ is connected.
+  > Let $\cal{P}$ be a base for the topology of a space $M$ and ordered under inclusion and suppose the elements of $\cal{P}$ are open, (non-empty) and path--connected. Then an open subset $X$ of $M$ is path--connected if and only if $\gdef\cP{{\cal P}}\cP_X$:=$\gdef\cO{{\cal O}}\gdef\cP{{\cal P}}\{\cO\in\cP:\cO\subset X\}$ is connected.
 - Depends on: (A6); (A7)
 - The bridge lemma of the whole apparatus: every connectedness claim GLRV99 makes about the *poset* is obtained by applying this to a topological one.
 
@@ -508,7 +501,7 @@ satisfies `𝒪 ∪ {p} ⊂ 𝒪₁`.
 
 - Source: [GLRV99] §3.1 · tier (a) · **proved in source** as a two-step derivation
 - Verbatim:
-  > By virtue of Lemma 3A.1, we know that $\cal{K}$ is connected and, see Lemma 2.2, that $\cO^\perp$ is connected except when $M$ is two dimensional with a non--compact Cauchy surface.
+  > By virtue of Lemma 3A.1, we know that $\cal{K}$ is connected and, see Lemma 2.2, that $\gdef\cO{{\cal O}}\cO^\perp$ is connected except when $M$ is two dimensional with a non--compact Cauchy surface.
 - Depends on: (R4); (R5); (A6); (A2a)
 
 ### (R7) The dual-net operation is an antitone Galois-type map
@@ -518,7 +511,7 @@ implies `𝒜^dd` local.
 
 - Source: [GLRV99] §3.2 · tier (a) · **proved in source**
 - Verbatim:
-  > is the largest net local relative to $\cA^d$, $\cA\subset\cA^{dd}$. However $\cA\subset\cB$ implies $\cB^d\subset\cA^d$, so that $\cA^d=\cA^{ddd}$. A net $\cA$ is said to be {\it local} if $\cA\subset\cA^d$ and then $\cA^{dd}\subset\cA^d=\cA^{ddd}$ so that $\cA^{dd}$ is local, too.
+  > is the largest net local relative to $\gdef\cA{{\cal A}}\cA^d$, $\gdef\cA{{\cal A}}\cA\subset\cA^{dd}$. However $\gdef\cA{{\cal A}}\gdef\cB{{\cal B}}\cA\subset\cB$ implies $\gdef\cB{{\cal B}}\gdef\cA{{\cal A}}\cB^d\subset\cA^d$, so that $\gdef\cA{{\cal A}}\cA^d=\cA^{ddd}$. A net $\gdef\cA{{\cal A}}\cA$ is said to be {\it local} if $\gdef\cA{{\cal A}}\cA\subset\cA^d$ and then $\gdef\cA{{\cal A}}\cA^{dd}\subset\cA^d=\cA^{ddd}$ so that $\gdef\cA{{\cal A}}\cA^{dd}$ is local, too.
 - Depends on: (D1) a), b), c) — GLRV99 notes relative locality satisfies their analogues
 - Proof route: (1) `𝒜^d` is the largest net relatively local to `𝒜` [the formula]; (2) `𝒜 ⊂ 𝒜^dd` [step 1]; (3) `d` is order reversing, so `𝒜^d = 𝒜^ddd` [steps 1–2]; (4) locality propagates [step 3].
 - The algebra-side shadow of the ⊥-Galois connection on 𝒦; the index-set version is (R9).
@@ -527,7 +520,7 @@ implies `𝒜^dd` local.
 
 - Source: [GLRV99] Thm 3A.7 · tier (a) · **proved in source**
 - Verbatim:
-  > If each $\cal{O}^\perp$ is connected, every object $\pi$ of {\rm Rep}$^\perp\cA$ admits a unique extension to an object of {\rm Rep}$^\perp\cA^{dd}$. Furthermore there is a canonical isomorphism of $W^*$--categories {\rm Rep}$^\perp\cA$ and {\rm Rep}$^\perp\cA^{dd}$.
+  > If each $\cal{O}^\perp$ is connected, every object $\pi$ of {\rm Rep}$\gdef\cA{{\cal A}}^\perp\cA$ admits a unique extension to an object of {\rm Rep}$\gdef\cA{{\cal A}}^\perp\cA^{dd}$. Furthermore there is a canonical isomorphism of $W^*$--categories {\rm Rep}$\gdef\cA{{\cal A}}^\perp\cA$ and {\rm Rep}$\gdef\cA{{\cal A}}^\perp\cA^{dd}$.
 - Depends on: (A3); (R7); [GLRV99] Lemma 3A.5; [GLRV99] Thm 3A.6
 - The printed proof cites "Lemma 3.A.4" where Lemma 3A.5 is needed — see `## Not investigated`.
 
@@ -591,7 +584,7 @@ poset still has two components.
 
 - Source: [GLRV99] §3.1 · tier (a) · **asserted**
 - Verbatim:
-  > may not be directed although it will be in cases of interest. However, when $M$ is globally hyperbolic with a compact Cauchy surface, $\cK$ will never be directed and we shall meet problems akin to those on the circle.
+  > may not be directed although it will be in cases of interest. However, when $M$ is globally hyperbolic with a compact Cauchy surface, $\gdef\cK{{\cal K}}\cK$ will never be directed and we shall meet problems akin to those on the circle.
 - Depends on: (D2)'s `𝒪^⊥ ≠ ∅` clause — the unstated reason is that a diamond over the whole compact Cauchy surface would have empty causal complement
 - This makes (R1)'s negative half bite, and is why (R15)'s compact case is open.
 
@@ -599,7 +592,7 @@ poset still has two components.
 
 - Source: [GLRV99] §5.2 · tier (a) · **proved in source**
 - Verbatim:
-  > Under the above assumptions, the net satisfies duality for the relation $\hat\perp$, namely $$ \cA(\cO)=\cap_{\cO_1\hat\perp\cO}\cA(\cO_1)' $$
+  > Under the above assumptions, the net satisfies duality for the relation $\hat\perp$, namely $$\gdef\cA{{\cal A}}\gdef\cO{{\cal O}} \cA(\cO)=\cap_{\cO_1\hat\perp\cO}\cA(\cO_1)' $$
 - Depends on: (R3); additivity of the net; (A17)
 - Proof route: (1) Lemma 2.1 gives, for each point of `𝒪₁`, regions witnessing `𝒪 ⊥̂ 𝒪_x` [(R3)]; (2) additivity and duality collapse the two intersections [additivity, (A17)].
 - **The only place in the corpus where (R3) does real work in the main line**, and the justification for GLRV99's remark that the two notions of duality coincide for additive nets over regular diamonds.
@@ -629,7 +622,7 @@ non-directedness can in many cases be circumvented.
 
 - Source: [HM06] §2.4 · tier (a) · **asserted**
 - Verbatim:
-  > Then if $O_1,O_2$ are double cones such that the closure $\ol{O}_1$ of $O_1$ is contained in $O_2$, then the pair $(\alg{R}(O_1),\alg{R}(O_2))$ is a standard inclusion of von Neumann algebras.
+  > Then if $O_1,O_2$ are double cones such that the closure $\gdef\ol#1{{\overline #1}}\ol{O}_1$ of $O_1$ is contained in $O_2$, then the pair $\gdef\alg#1{\mathfrak{#1}}(\alg{R}(O_1),\alg{R}(O_2))$ is a standard inclusion of von Neumann algebras.
 - Depends on: (A5); (D9)
 - **The clearest instance in the corpus of a theorem whose only geometric content is a relation on 𝒦.** The unstated intermediate step — that `Ō₁ ⊂ 𝒪₂` makes `𝒪₁′ ∩ 𝒪₂` contain a region — is itself a claim about 𝒦 that no source proves; it is exactly the collar clause, and the Ordering theorem above is its proof under (T).
 
@@ -673,7 +666,7 @@ non-directedness can in many cases be circumvented.
 
 - Source: [HM06] §3.3 · tier (a) · **proved in source**
 - Depends on: `ℛ(W)` and `ℛ(W′)` being type III₁ factors; HM06's remark that a factor and its commutant have the same type
-- HM06's own type III₁ proposition carries the escape clause `Then either $\al R=\7C I$ or $\al R$ is a type III$_1$ factor.`, so every argument of the shape "split for all pairs ⇒ type I ⇒ contradiction" silently assumes the local algebras are not the scalars.
+- HM06's own type III₁ proposition carries the escape clause `Then either $\gdef\al#1{{\mathfrak #1}}\gdef\7#1{{\mathbb #1}}\al R=\7C I$ or $\gdef\al#1{{\mathfrak #1}}\al R$ is a type III$_1$ factor.`, so every argument of the shape "split for all pairs ⇒ type I ⇒ contradiction" silently assumes the local algebras are not the scalars.
 
 ### (R28) The funnel property upgrades to the split property for strictly spacelike separated pairs
 
@@ -723,7 +716,7 @@ non-directedness can in many cases be circumvented.
 
 - Source: [BGL93] §3 assumption (b) · tier (a) · it is an **assumption**, not a result
 - Verbatim:
-  > \item{$(b)$} Distal split property holds, i.e there exist two regions $\O_1\subset \O'_2$ in $M$ such that $\R(\O_1)$ and $\R(\O_2)$ generates a $W^*$-tensor product.
+  > \item{$(b)$} Distal split property holds, i.e there exist two regions $\gdef\O{{\cal O}}\O_1\subset \O'_2$ in $M$ such that $\gdef\R{{\cal R}}\gdef\O{{\cal O}}\R(\O_1)$ and $\gdef\R{{\cal R}}\gdef\O{{\cal O}}\R(\O_2)$ generates a $W^*$-tensor product.
 - **It imposes no relation on 𝒦 at all** — one split pair anywhere suffices — and is therefore strictly weaker than the funnel property, not a metric strengthening of the separation relation. It upgrades to the universal form under a **transitively acting symmetry group and `d > 2`**.
 
 ### (R37) The distal split property forces uniqueness of the covariant representation
@@ -944,14 +937,14 @@ translation.
 |---|---|---|---|---|---|
 | (X15) | the collar clause and the closure form `Ō₁ ⊆ O₂` as *the* separation relation for the split property | rejected (both, as the single adopted relation) | **(X1) separating object**, both directions — collar without closure: internally tangent double cones `O₂ = {|x₀|+\|x⃗\| < 1}`, `O₁ = {|x₀|+\|x⃗−c\| < 1/2}`, `c = (1/2,0,0)`, with collar `O₃ = {|x₀|+\|x⃗+c\| < 1/8}`, using the verified criterion that `D(B(a,r))` and `D(B(b,s))` are spacelike iff `\|a−b\| ≥ r+s`; closure without collar: `Λ₁ = Λ₂ = {0}` in `𝒫_f(ℤ)`, and (non-degenerately) `O = (−ε,ε)×Σ ⊂ O₂ = (−2ε,2ε)×Σ` over a compact Cauchy surface Σ. **(X5) conditional equivalence** — under (T) the closure form is strictly stronger; see the Ordering theorem | a/b | 2026-08-15 |
 | (X18) | the causal complement as an **operation into 𝒦**, `O₁ ⊥ O₂ ⟺ O₂ ≤ O₁^⊥` | rejected | **(X1) separating object** — a double cone in Minkowski: the double cones spacelike to it have no maximum (translate away, then dilate inside `O′`). `𝒦̃` and the proper intervals of `S¹` do support the operation | a | 2026-08-15 |
-| (X18′) | the complement as a **sieve-valued** operation `O ↦ {O₁ : O₁ ⊥ O}` | equivalent | — ([GLRV99] writes exactly this: `We write $\cO^\perp:=\{\cO_1\in\cK:\cO_1\perp\cO\}$.`) | a | 2026-08-15 |
+| (X18′) | the complement as a **sieve-valued** operation `O ↦ {O₁ : O₁ ⊥ O}` | equivalent | — ([GLRV99] writes exactly this: `We write $\gdef\cO{{\cal O}}\gdef\cK{{\cal K}}\cO^\perp:=\{\cO_1\in\cK:\cO_1\perp\cO\}$.`) | a | 2026-08-15 |
 | (X19) | causal completeness `O = O″` as an axiom | rejected | **(X1) separating object** — the 3-element antichain `{A,B,C}` with `⊥ = {(A,B),(B,A),(A,C),(C,A)}` satisfies a), b), c) while `B^⊥⊥ = {B,C} ⊋ ↓B`. Geometric realisation: a spacelike disc and its domain of dependence share a causal complement | — | 2026-08-15 |
 | (X24) | [BGL93]'s *distal split property* as a phrasing of the separation relation | rejected | **(X5) conditional equivalence** — as written it is an existential over one pair of regions and constrains 𝒦 not at all; it upgrades to the universal form only under a transitively acting symmetry group **and** `d > 2` | a | 2026-08-15 |
 | (X25) | c) with the quantifiers swapped | rejected | **(X2) degeneracy** — forces a self-orthogonal element; false on double cones, true on `𝒫_f(Γ)` via `∅` | — | 2026-08-15 |
 | (X26) | "∃ one region ⊥ to all *others*" | rejected | **(X1) separating object** — the 2-element antichain `{A,B}` with `A ⊥ B`: the `≠`-form holds, the `∀`-including-self form fails | — | 2026-08-15 |
 | (X27) | b) with the inclusion reversed (anti-heredity) | rejected | **(X1) separating object** — false in every geometric model. *The parenthetical claim that with a top element it collapses to everything-⊥-everything is itself refuted*: witness `{A, B ≤ T}` with `⊥ = {(A,B),(B,A)} ∪ {(T,X),(X,T)} ∪ {(T,T)}`, where `A ⊥̸ A` | — | 2026-08-15 |
 | (X28) | one collar for all nested pairs | rejected | **(X1) separating object** — double cones: the collar must lie inside arbitrarily small outer regions | — | 2026-08-15 |
-| (X32) | dropping the collar clause, leaving `O₁ ≤ O₂` | rejected | **(X2) degeneracy** — the split property becomes `𝒜(O) ⊆ 𝒩 ⊆ 𝒜(O)`, forcing every local algebra type I, contradicting the type III₁ structure — with [HM06]'s escape clause `Then either $\al R=\7C I$ or $\al R$ is a type III$_1$ factor.` attached | a/c | 2026-08-15 |
+| (X32) | dropping the collar clause, leaving `O₁ ≤ O₂` | rejected | **(X2) degeneracy** — the split property becomes `𝒜(O) ⊆ 𝒩 ⊆ 𝒜(O)`, forcing every local algebra type I, contradicting the type III₁ structure — with [HM06]'s escape clause `Then either $\gdef\al#1{{\mathfrak #1}}\gdef\7#1{{\mathbb #1}}\al R=\7C I$ or $\gdef\al#1{{\mathfrak #1}}\al R$ is a type III$_1$ factor.` attached | a/c | 2026-08-15 |
 | (X9) | *claim*: [BFV01]'s `𝒦(M,ḡ)` is not an instance of the adopted form, witnessed by `∅`, `{x}`, `{x,y}` and a time-slab | refuted as stated | read literally `∅ ∈ 𝒦(M,ḡ)`, and BFV01's ⊥ is vacuously true against `∅`, so **c) holds everywhere via `∅`** and three of the four witnesses show only that BFV01's regions need not be open or connected. What survives: under the reading forced by BFV01's own `obj(𝔐)` sentence, c) fails at a time-slab around a compact Cauchy surface — **one witness, conditional on a reading BFV01 never states** | a | 2026-08-15 |
 | (X7) | *claim*: the lattice index set is excluded by c) | refuted as stated — re-scoped | **[NAA13]'s own `𝒫_f(Γ)` contains `∅`** and fixes `𝒜(∅) = ℂI`, so c) holds even for finite Γ. The claim is about a variant with `∅` removed, not about the corpus's lattice index set | a | 2026-08-15 |
 | (X6) | *claim*: the adopted form excludes chains | refuted as applied | the derivation uses **irreflexivity**, which is independent of a), b), c) — witness (H1)'s bottom-element model. The form is not credited with it | — | 2026-08-15 |

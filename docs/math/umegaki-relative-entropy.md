@@ -10,18 +10,25 @@ revisions:
 ---
 
 <!--
-No macro preamble. Every verbatim quote that carries a source's private macros
-(\S, \U, \A, \a from WIT18; \Tr, \supp from KW20's unavailable Book_KW class)
-is placed inside a fenced code block, so the bytes stay exactly as fetched and no
-renderer tries to typeset them. Everything the note says in its own voice is
-written in plain KaTeX.
+No document-level macro preamble: measured through @vscode/markdown-it-katex
+(the plugin VS Code's own Markdown preview uses), no macro definition form --
+\newcommand, \gdef, \global\def -- survives from one math span to the next, so
+a preamble here would leave every quote using it broken (see
+check_render.py / render_check.js). Instead, every verbatim-quote math span
+that needs a source's own macro (\S, \U, \A, \a from WIT18; \A from HS17,
+whose own \A = \mathfrak{A}, NOT WIT18's \mathcal{A}; \< \> from HIA18; \mbox,
+the LaTeX primitive KaTeX does not implement, reconstructed as \mathrm; \Tr,
+\supp from KW20's unavailable Book_KW class, likewise reconstructed) carries a
+local, self-contained \gdef of exactly that macro, e.g.
+`$\gdef\lok#1{{\mathcal #1}}\lok{B}$` -- defined and used inside the same
+$...$ pair, so it renders correctly without any state surviving to the next
+span. The \gdef prefix is presentation, not content: strip it before
+comparing a quote's tex against source.flat.txt for the quote check, and
+audit it against the source's own definition (or, where marked
+"reconstructed", against ordinary mathematical usage, since the source's own
+macro table is unrecoverable).
 
-Do not reintroduce a `$$\newcommand{...}$$` block here: measured against
-katex 0.18.4, \newcommand does NOT survive from one math span to the next -- not
-even when the renderer passes a shared `macros` object, because \newcommand is a
-local definition. Such a block leaves every later use of the macro throwing
-`Undefined control sequence`. Only \gdef carries, and only into renderers that
-share macro state at all. `scripts/check_render.py` enforces this.
+Everything the note says in its own voice is written in plain KaTeX.
 -->
 # Umegaki relative entropy
 
@@ -121,12 +128,12 @@ the corpus remarks on the finite/semifinite difference.
 **(D2) [HIA18] §1, eq. (F-1.1)** — tier (a) for HIA18's restatement, tier (c) as
 a claim about what [UME62] says
 
-> ```
+> $$
 > D(\rho\|\sigma):=\begin{cases}
 > \tau(d_\rho(\log d_\rho-\log d_\sigma)) & \text{if $s(\rho)\le s(\sigma)$}, \\
 > +\infty & \text{otherwise},
 > \end{cases}
-> ```
+> $$
 
 introduced by
 
@@ -148,14 +155,15 @@ itself, not a transcription of its standing hypothesis.
 **(D3) [HIA18] §1, eq. (F-1.2)** — tier (a) for the restatement, tier (c) for the
 attribution to Araki, whose papers were not obtained
 
-> ```
+> $$
+> \gdef\<{\langle}\gdef\>{\rangle}
 > D(\rho\|\sigma):=\begin{cases}
 > -\<\xi_\rho,(\log\Delta_{\sigma,\rho})\xi_\rho\>
 > =\<\xi_\sigma,(\Delta_{\rho,\sigma}\log\Delta_{\rho,\sigma})\xi_\sigma\>
 > & \text{if $s(\rho)\le s(\sigma)$}, \\
 > +\infty & \text{otherwise},
 > \end{cases}
-> ```
+> $$
 
 preceded by
 
@@ -189,10 +197,11 @@ necessarily states) and $f$ convex on $(0,\infty)$:
 
 > We then introduce the {\it standard $f$-divergence} $S_f(\rho\|\sigma)$ of $\rho,\sigma$ by
 
-> ```
+> $$
+> \gdef\<{\langle}\gdef\>{\rangle}
 > S_f(\rho\|\sigma):=\<\xi_\sigma,f(\Delta_{\rho,\sigma})\xi_\sigma\>
 > +f(0^+)\sigma(1-s_M(\rho))+f'(+\infty)\rho(1-s_M(\sigma)).
-> ```
+> $$
 
 with $f(\Delta_{\rho,\sigma}):=\int_{(0,+\infty)}f(t)\,dE_{\rho,\sigma}(t)$ — the
 spectral integral over the **open** interval, the endpoints carried by the two
@@ -221,9 +230,10 @@ tier (a)
 > {\bf Definition}. {\em The von Neumann relative entropy} between
 > the two states $\sigma$ and $\rho$ is defined as
 
-> ```
+> $$
+> \gdef\mbox#1{\mathrm{#1}}
 > S_N(\sigma ||\rho) = \mbox{Tr} \sigma (\ln \sigma - \ln \rho) \;\; .
-> ```
+> $$
 
 Explicit natural logarithm. **No support condition and no $+\infty$ branch at
 all**; the singular case is not discussed anywhere in the paper. The attribution
@@ -242,16 +252,15 @@ exponent).
 **(D6) [WIT18] §"Relative Entropy In Quantum Field Theory", eq. (onorf)** —
 tier (a) for WIT18's statements, tier (c) as a claim about Araki
 
-> \S_{\Psi|\Phi}(\U)= -\la\Psi|\log \Delta_{\Psi|\Phi}|\Psi\ra.
+> $$\gdef\S{{\mathcal S}}\gdef\U{{\mathcal U}}\gdef\la{\langle}\gdef\ra{\rangle}
+> \S_{\Psi|\Phi}(\U)= -\la\Psi|\log \Delta_{\Psi|\Phi}|\Psi\ra.$$
 
 with $\Delta_{\Psi|\Phi}:=S^\dagger_{\Psi|\Phi}S_{\Psi|\Phi}$ and
 $S_{\Psi|\Phi}\,a|\Psi\rangle=a^\dagger|\Phi\rangle$; $\Psi$ must be cyclic and
 separating for $\mathcal A_{\mathcal U}$, while $\Phi$ may be any state. The singular case is a
 consequence rather than a stipulation:
 
-> ```
-> For example, $\S_{\Psi|\Phi}(\U)$ may be $+\infty$ if $\Delta_{\Psi|\Phi}$ has a zero eigenvalue, which will occur if $\Phi$ is not separating for $\A_\U$.
-> ```
+> For example, $\gdef\S{{\mathcal S}}\gdef\U{{\mathcal U}}\S_{\Psi|\Phi}(\U)$ may be $+\infty$ if $\Delta_{\Psi|\Phi}$ has a zero eigenvalue, which will occur if $\Phi$ is not separating for $\gdef\A{{\mathcal A}}\gdef\U{{\mathcal U}}\A_\U$.
 
 `differs from (D3):` the subscript convention on $S$ and $\Delta$ is reversed
 (C2), and the first argument must carry a cyclic separating vector.
@@ -261,16 +270,14 @@ finite-dimensional case — see (R13).
 **(D7) [HS17], the Definition of the relative entropy, eq. (drel1)** — tier (a)
 for HS17's statements, tier (c) as a claim about Araki
 
-> H(\omega, \omega') = \langle \Omega | \log \Delta_{\omega, \omega'} \ \Omega\rangle
+> $$H(\omega, \omega') = \langle \Omega | \log \Delta_{\omega, \omega'} \ \Omega\rangle$$
 
 together with the Connes-cocycle expression
 $\lim_{t\to0}\omega([D\omega:D\omega']_t-1)/(it)$ as part of the same
 definition — a **third** equivalent expression, present in no other corpus
 source. Standing hypotheses:
 
-> ```
-> One assumes to be given two faithful, normal states $\omega, \omega'$ on a v. Neumann algebra $\A$ in standard form.
-> ```
+> One assumes to be given two faithful, normal states $\omega, \omega'$ on a v. Neumann algebra $\gdef\A{\mathfrak{A}}\A$ in standard form.
 
 and three stipulations the others do not make: an explicit two-parameter
 rescaling rule
@@ -296,9 +303,10 @@ the asymmetry is in the definition's own hypothesis, not a later remark:
 
 > the \textit{quantum relative entropy of $\rho$ and $\sigma$}, denoted by $D(\rho\Vert\sigma)$, is defined as
 
-> ```
+> $$
+> \gdef\Tr{\mathrm{Tr}\,}\gdef\supp{\operatorname{supp}}
 > D(\rho\Vert\sigma)=\left\{\begin{array}{l l} \Tr[\rho(\log_2 \rho-\log_2\sigma)] & \text{if }\supp(\rho)\subseteq\supp(\sigma),\\ +\infty & \text{otherwise}. \end{array}\right.
-> ```
+> $$
 
 with $0\log_2 0=0$, base 2 uniformly, finite dimensions throughout, and the
 asymmetry stated deliberately:
@@ -795,9 +803,7 @@ the same state on $\mathcal A_{\mathcal U}$.
 - **Do not merge this equality case with (R8)(2)'s $\rho=\sigma$.** They agree:
   $\Phi=a'\Psi$ is exactly the condition that the two vectors give the same state.
 - Verbatim:
-  > ```
-  > An important elementary property is that $\S_{\Psi|\Phi}(\U)$ is always non-negative, and vanishes precisely if $\Phi=\a'\Psi$
-  > ```
+  > An important elementary property is that $\gdef\S{{\mathcal S}}\gdef\U{{\mathcal U}}\S_{\Psi|\Phi}(\U)$ is always non-negative, and vanishes precisely if $\gdef\a{{\sf a}}\Phi=\a'\Psi$
 
 ### (R16) Monotonicity under shrinking the region
 

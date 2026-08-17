@@ -13,24 +13,25 @@ revisions:
 ---
 
 <!--
-Macros used by the verbatim quotes below, transcribed from each source's own
-preamble so that the quotes render as their authors wrote them:
-  \lok  KOE03, references/arxiv-math-ph-0308031/raw/mathphkoediss.tex:144
-  \A    HS17,  references/arxiv-1702.04924/raw/main.tex:151
-  \H    HS17,  main.tex:196 — \renewcommand, not \newcommand: \H is the
-        Hungarian-umlaut accent in KaTeX's own macro table, which is why the
-        source redefines it too
-  \bC   HS17,  main.tex:97
-The definitions are scoped to this file: the renderer resets its macro table
-per document, so a later note may transcribe the same names differently.
--->
+No document-level macro preamble: measured through
+@vscode/markdown-it-katex (the plugin VS Code's own Markdown preview uses),
+no macro definition form -- \newcommand, \gdef, \global\def -- survives
+from one math span to the next, so a preamble here would leave every quote
+using it broken (see check_render.py / render_check.js). Instead, every
+verbatim-quote math span that needs a source's own macro carries a local,
+self-contained \gdef of exactly that macro, e.g.
+`$\gdef\lok#1{{\mathcal #1}}\lok{B}$` -- defined and used inside the same
+$...$ pair, so it renders correctly without any state surviving to the next
+span. The \gdef prefix is presentation, not content: strip it before
+comparing a quote's tex against source.flat.txt for the quote check, and
+audit it against the source's own definition below.
 
-$$
-\newcommand{\lok}[1]{{\mathcal #1}}
-\newcommand{\A}{\mathfrak{A}}
-\renewcommand{\H}{\mathcal{H}}
-\def\bC{{\mathbb C}}
-$$
+Source macro catalogue (name[arity] = body, source, file:line):
+  \A = {\mathfrak{A}}   HS17,  references/arxiv-1702.04924/raw/main.tex:151
+  \H = {\mathcal{H}}   HS17,  main.tex:196 — \renewcommand, not \newcommand: \H is the Hungarian-umlaut accent in KaTeX's own macro table, which is why the source redefines it too
+  \bC = {{\mathbb C}}   HS17,  main.tex:97
+  \lok[1] = {{\mathcal #1}}   KOE03, references/arxiv-math-ph-0308031/raw/mathphkoediss.tex:144
+-->
 
 # Split inclusion of von Neumann algebras
 
@@ -63,7 +64,7 @@ level and only then specialises to nets.
 
 **(D1) [KOE03] §2.2 ("Split property for chiral subnets"), eq. `eq:splitprop`, source.txt 1697–1707** — tier (a) — net-level, nested form
 
-> a chiral net $\lok{B}$ has the split property, if for any pair $I_{1,2}$ of proper intervals satisfying $\overline{I_1}\subset I_2$ there is a type $I$ factor $\lok{M}$ interpolating between $\lok{B}(I_1)$ and $\lok{B}(I_2)$
+> a chiral net $\gdef\lok#1{{\mathcal #1}}\lok{B}$ has the split property, if for any pair $I_{1,2}$ of proper intervals satisfying $\overline{I_1}\subset I_2$ there is a type $I$ factor $\gdef\lok#1{{\mathcal #1}}\lok{M}$ interpolating between $\gdef\lok#1{{\mathcal #1}}\lok{B}(I_1)$ and $\gdef\lok#1{{\mathcal #1}}\lok{B}(I_2)$
 
 with the display Λ: 𝔅(I₁) ⊂ 𝔐 ⊂ 𝔅(I₂), Ī₁ ⊂ I₂ ⋐ S¹. A net-level property,
 quantified over all pairs of proper intervals with closure containment,
@@ -76,7 +77,7 @@ property."
 
 **(D2) [HS17] §2, displayed definition, source.txt 985–993** — tier (a) — statistical independence
 
-> The algebras $\A_A$ and $\A_B$ are said to be statistically independent iff there is an isomorphism of the v. Neumann algebras $\A_A\vee\A_B \simeq \A_A\otimes\A_B$.
+> The algebras $\gdef\A{\mathfrak{A}}\A_A$ and $\gdef\A{\mathfrak{A}}\A_B$ are said to be statistically independent iff there is an isomorphism of the v. Neumann algebras $\gdef\A{\mathfrak{A}}\A_A\vee\A_B \simeq \A_A\otimes\A_B$.
 
 For two commuting von Neumann algebras on a common ℋ, with ∨ and ⊗ defined at
 the definition site and the notion pinned as "$W^*$-independence in the product
@@ -92,7 +93,7 @@ separating for 𝔄_A ∨ 𝔄_B (written inside the definitional paragraph as "
 is typically a vector…"), there is a unitary W: ℋ → ℋ⊗ℋ with WaW\* = π_A(a)⊗1,
 WbW\* = 1⊗π_B(b); setting 𝔑 = W\*(𝔅(ℋ_A)⊗1)W gives 𝔄_A ⊂ 𝔑 ⊂ 𝔄_B′,
 
-> which is also called the ``split''. The split and the unitary $W$ are unique (for given $|\Psi \rangle \in\H$) if we require that
+> which is also called the ``split''. The split and the unitary $W$ are unique (for given $\gdef\H{\mathcal{H}}|\Psi \rangle \in\H$) if we require that
 
 W\*(|Ψ⟩⊗|Ψ⟩) lies in the natural cone of |Ψ⟩ for 𝔄_A ⊗ 𝔄_B. 𝔑 depends on the
 chosen |Ψ⟩.
@@ -216,7 +217,7 @@ has the split property (is nuclear).
 
 - Source: [KOE03] `prop:subsplit`, source.txt 1748–1782 · tier (a) · **proved in source**
 - Verbatim:
-  > Let $\lok{A}\subset\lok{B}$ be a chiral subnet. If $\lok{B}$ has the split property (is nuclear), then $\lok{A}$ has the split property (is nuclear).
+  > Let $\gdef\lok#1{{\mathcal #1}}\lok{A}\subset\lok{B}$ be a chiral subnet. If $\gdef\lok#1{{\mathcal #1}}\lok{B}$ has the split property (is nuclear), then $\gdef\lok#1{{\mathcal #1}}\lok{A}$ has the split property (is nuclear).
 - Proof route: restrict 𝔄 to its vacuum subrepresentation; by the dB74
   criterion it suffices to produce a faithful normal product state on
   𝔄(I₁)e_𝔄 ∨ 𝔄(I₂′)e_𝔄; modular covariance (A15) makes A ↦ Ae_𝔄 an
@@ -335,7 +336,7 @@ normalisation, 𝔑 = 𝔑_A ⊗ 𝔑_B an intermediate type I subfactor pair.
 - Source: [HS17] remark after `Thm:dominance` · tier (a) for the assertion ·
   **asserted, no proof, no citation in HS17**
 - Verbatim:
-  > The existence of many such intermediate type I subfactors exhausting $\A$ is guaranteed by the split property.
+  > The existence of many such intermediate type I subfactors exhausting $\gdef\A{\mathfrak{A}}\A$ is guaranteed by the split property.
 - Refutation status: half-grounded. [DL84]'s introduction states
   > the interpolation by a chain of type I factors $N_{d}$ , $d$ a diadic rational
   (Th. 8.3; that section not converted) — "many" in a precise sense, tier (b),
@@ -424,7 +425,7 @@ vectors, hence standard vectors for (A, B) form a dense set.
 
 HS17 asserts (source.txt 991, tier (a)):
 
-> When $\A_A$ and $\A_B$ are finite dimensional and $\A_A\cap\A_B=\bC 1$, then the algebras are always statistically independent.
+> When $\gdef\A{\mathfrak{A}}\A_A$ and $\gdef\A{\mathfrak{A}}\A_B$ are finite dimensional and $\gdef\A{\mathfrak{A}}\gdef\bC{{\mathbb C}}\A_A\cap\A_B=\bC 1$, then the algebras are always statistically independent.
 
 **Refuted as literally stated** — see (X10) in the rejected/refuted table. It
 holds for commuting finite-dimensional *factors* (then the join is naturally
