@@ -37,10 +37,17 @@ revisions:
 ---
 
 <!--
-No macro preamble: quotes carrying a source's private macros go in fenced code
-blocks, and everything the note says in its own voice is plain KaTeX. See
-"Source macros" below before reintroducing one — \newcommand does not survive
-from one math span to the next.
+No document-level macro preamble: no definition form survives from one math
+span to the next in the renderers this note has to work in (see "Source
+macros" below). Everything the note says in its own voice is plain KaTeX. A
+verbatim quote needing a source's own macro carries a local, self-contained
+\gdef of exactly that macro, defined and used inside the same $...$ pair, e.g.
+`$\gdef\lok#1{{\mathcal #1}}\lok{B}$` — audited against the catalogue below,
+which is copied from the source's own preamble (or marked "reconstructed" when
+the source's own macro table is unrecoverable).
+
+Source macro catalogue (name[arity] = body, source, file:line):
+  \lok[1] = {{\mathcal #1}}   DL84, references/<slug-of-source>/raw/<file>.tex:144
 -->
 
 # <Object, as a mathematician names it>
@@ -62,9 +69,10 @@ from one math span to the next.
 **(D1) [DL84] §1** — tier (a)
 
 > <verbatim quote, in the source's language, unmodified, formulas in the
->  source's own notation. If it carries the source's own macros, fence it:
->  a ``` block inside the blockquote keeps the bytes exact and keeps every
->  renderer from trying to typeset them.>
+>  source's own notation. If it carries the source's own macros, give each one
+>  a local \gdef inside the same $...$ it is used in — see "Source macros"
+>  below — so it renders as the source intended; fence it only if a macro
+>  cannot be \gdef'd at all.>
 
 [tr.] <optional translation, outside the quote, tier (b)>
 
@@ -203,23 +211,54 @@ until a reader opens the note:
 > The practical consequence: **a note cannot define macros for itself.** Every
 > occurrence throws `Undefined control sequence`.
 
-So there are exactly two ways to keep a source's macros out of a reader's face:
+**In the note's own voice, always write plain KaTeX** — `\mathcal{A}`,
+`\mathrm{Tr}`, `\operatorname{supp}`, `\varphi`. A source's private macro has no
+business in a sentence the note itself is asserting; the note is not that
+source, and every such import is a rendering failure waiting for a reader.
 
-1. **In the note's own voice, write plain KaTeX.** `\mathcal{A}`, `\mathrm{Tr}`,
-   `\operatorname{supp}`, `\varphi`. A source's private macro has no business in
-   a sentence the note is asserting — the note is not that source, and every such
-   import is a rendering failure waiting for a reader.
-2. **Put anything verbatim that carries source macros into code.** A fenced
-   block inside the blockquote for a displayed quote, backticks for a fragment
-   inlined into a table cell. The bytes stay exactly as fetched, the quote check
-   greps them unchanged, and no renderer tries to typeset them. A quote that will
-   not render is still a quote, and showing it as source LaTeX is showing it as
-   what it is.
+**For a verbatim quote, define the macro where it is used.** A `\gdef` does not
+survive to the *next* span, but it works perfectly *inside the span that
+defines it* — nothing has to survive anywhere. Prepend the definition, copied
+verbatim from the source's own preamble, immediately inside the same `$…$` (or
+`$$…$$`) the quote already uses:
 
-When a source's macros are *unrecoverable* — a private `\documentclass` or
-`\usepackage` absent from the arXiv package, as with KW20's `Book_KW` — that is
-a fact about the source and belongs in `sources.md`, not a rendering problem to
-solve in the note.
+```
+$\gdef\lok#1{{\mathcal #1}}\lok{B}$
+```
+
+This renders exactly as the source intended — `\lok{B}` still reads as
+`\mathcal{B}` — with no cross-span persistence required, so it works in every
+renderer this file has had to distrust: VS Code's preview, bare KaTeX, GitHub's.
+A span using several macros gets one `\gdef` per macro it actually uses, deduped
+in first-use order; a span using none is untouched. Where one macro name means
+different things in different sources — HS17's `\A` is `\mathfrak{A}`, WIT18's
+is `\mathcal{A}` — inject the definition that belongs to *that quote's own
+source*, never the other one, even though the raw name collides.
+
+This changes what "verbatim" certifies: the displayed span is no longer
+byte-identical to the source at that exact point — it carries an audited
+`\gdef` prefix ahead of the unchanged quote. That prefix is presentation, not
+content: **strip it before running the quote check**, and audit the stripped
+definition against the catalogue in the note's own opening comment (see below),
+which in turn must be copied from the source's own preamble, not paraphrased —
+exactly the discipline the old document-level preamble comment required, now
+scoped per macro instead of per document. When a source's macros are
+*unrecoverable* — a private `\documentclass` or `\usepackage` absent from the
+arXiv package, as with KW20's `Book_KW` — inject a **reconstructed** definition
+instead (ordinary mathematical usage, e.g. `\gdef\supp{\operatorname{supp}}`),
+label it `reconstructed` in the catalogue, and record the source's
+unrecoverability in `sources.md`. The same applies to a genuine LaTeX primitive
+KaTeX simply does not implement (`\mbox`, reconstructed as `\mathrm`) — that is
+a gap in the renderer, not a macro belonging to any source, but the fix is the
+same local `\gdef`.
+
+**Fall back to code — a fenced block inside the blockquote, or backticks for a
+fragment — only when a macro cannot be `\gdef`'d at all**: a `\newenvironment`,
+a catcode change, or anything a single substitution macro cannot express. The
+bytes stay exactly as fetched, the quote check greps them unchanged, and no
+renderer tries to typeset them — but the quote then shows as raw source LaTeX
+rather than the intended notation, so this is the fallback, not the first
+move.
 
 Beyond macro names, the other way a note breaks a renderer is an argument that
 looks braced and is not: `\widetilde\mathcal U` and `\Delta_\mathcal U` are both
