@@ -97,9 +97,6 @@ variable (z c : ℂ)
 /-- The star of a complex number equals its conjugate. -/
 lemma star_as_conj : star z = conj z := rfl
 
-/-- The product of a complex number with its conjugate equals the squared norm. -/
-lemma star_mul_self_eq_normSq : star z * z = ‖z‖^2 := Complex.conj_mul' z
-
 /-- Quadratic expansion of `ω(star (z • x + y) * (z • x + y))`. -/
 lemma quadratic_expansion : ω (star (z • x + y) * (z • x + y)) =
   ‖z‖^2 * ω (star x * x) + conj z * ω (star x * y) + z * ω (star y * x) + ω (star y * y) := by
@@ -175,18 +172,21 @@ lemma cauchy_schwarz_ineq : ‖ω (star y * x)‖^2 ≤ (ω (star x * x)) * (ω 
     intro t
     obtain ⟨γ, hγ_norm, hγ_phase⟩ := Complex.phase_alignment (ω (star y * x))
     let s : A := ((t : ℂ) * γ) • x + y
-    have hexp2 : (ω (star s * s)).re = (positiveReal ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positiveReal ω y) := by
+    have hexp2 : (ω (star s * s)).re =
+        (positiveReal ω x) * (t * t) + (2 * ‖ω (star y * x)‖ ) * t + (positiveReal ω y) := by
       have hquad := quadratic_expansion (ω := ω) (x := x) (y := y) (z := ((t : ℂ) * γ))
       have h1 : (‖(t : ℂ) * γ‖^2 : ℂ) = (t^2 : ℂ) := by
         rw [Complex.norm_mul, hγ_norm, mul_one, Complex.norm_real, pow_two, pow_two]
         norm_cast
         exact abs_mul_abs_self t
-      have h2 : conj ((t : ℂ) * γ) * ω (star x * y) + ((t : ℂ) * γ) * ω (star y * x) = 2 * t * ‖ω (star y * x)‖ := by
+      have h2 : conj ((t : ℂ) * γ) * ω (star x * y) + ((t : ℂ) * γ) * ω (star y * x) =
+          2 * t * ‖ω (star y * x)‖ := by
         have : ((t : ℂ) * γ) * ω (star y * x) = t * (γ * ω (star y * x)) := by ring
         rw [conj_linear_combination_real, this, hγ_phase]
         norm_cast
         ring_nf
-      have hequiv : ω (star s * s) = (t^2 : ℂ) * ω (star x * x) + 2 * t * ‖ω (star y * x)‖ + ω (star y * y) := by
+      have hequiv :
+          ω (star s * s) = (t^2 : ℂ) * ω (star x * x) + 2 * t * ‖ω (star y * x)‖ + ω (star y * y) := by
         unfold s
         rw [hquad, h1, ← h2]
         ring_nf
@@ -213,13 +213,9 @@ lemma kernel_degenerate_left (a : A) (hx : ω (star x * x) = 0) : ω (star a * x
   rw [hx, zero_mul] at this
   exact norm_eq_zero.mp (sq_eq_zero_iff.mp (le_antisymm (by exact_mod_cast this) (sq_nonneg _)))
 
-/-- If `ω(star x * x) = 0`, then `ω(star x * a) = 0` for any `a`. -/
-lemma kernel_degenerate_right (a : A) (hx : ω (star x * x) = 0) : ω (star x * a) = 0 := by
-  rw [conj_sym (ω := ω) (x := a) (y := x), kernel_degenerate_left (ω := ω) (x := x) (a := a) hx]
-  simp
-
 /-- If `ω(star x * x) = 0` and `ω(star y * y) = 0`, then `ω(star (x + y) * (x + y)) = 0`. -/
-lemma kernel_closed_under_add (hx : ω (star x * x) = 0) (hy : ω (star y * y) = 0) : ω (star (x + y) * (x + y)) = 0 := by
+lemma kernel_closed_under_add (hx : ω (star x * x) = 0) (hy : ω (star y * y) = 0) :
+    ω (star (x + y) * (x + y)) = 0 := by
   calc ω (star (x + y) * (x + y))
       = ω (star x * x + star x * y + star y * x + star y * y) := by
           rw [star_add, add_mul, mul_add, mul_add]
@@ -227,7 +223,8 @@ lemma kernel_closed_under_add (hx : ω (star x * x) = 0) (hy : ω (star y * y) =
     _ = ω (star x * x) + ω (star x * y) + ω (star y * x) + ω (star y * y) := by
           rw [map_add, map_add, map_add]
     _ = 0 := by
-          rw [hx, hy, kernel_degenerate_left (ω := ω) (x := y) (a := x) hy, kernel_degenerate_left (ω := ω) (x := x) (a := y) hx]
+          rw [hx, hy, kernel_degenerate_left (ω := ω) (x := y) (a := x) hy,
+            kernel_degenerate_left (ω := ω) (x := x) (a := y) hx]
           ring
 
 /-- If `ω(star x * x) = 0`, then `ω(star (c • x) * (c • x)) = 0` for any scalar `c`. -/
@@ -320,23 +317,6 @@ lemma star_mul_bound (a b : A) :
     _ = ω (‖a‖ ^ 2 • (star b * b)) := by norm_cast
     _ = ω (star b * star a * a * b) + RCLike.ofReal (r : ℝ) := hr
 
-/-- Real parts of a state are nonnegative on positive elements. -/
-lemma real_eval_nonneg_of_nonneg {a : A} (ha : 0 ≤ a) : 0 ≤ (ω a).re := by
-  obtain ⟨r, hr⟩ := nonneg_of_nonneg (ω := ω) ha
-  have hr_nonneg : 0 ≤ (r : ℝ) := by exact_mod_cast r.property
-  have hr_rewrite : (ω a).re = (r : ℝ) := by rw [hr]; simp
-  exact hr_rewrite ▸ hr_nonneg
-
-/-- States are monotone on real parts: `a ≤ b` implies `(ω a).re ≤ (ω b).re`. -/
-lemma real_eval_le_of_le {a b : A} (hab : a ≤ b) : (ω a).re ≤ (ω b).re := by
-  obtain ⟨r, hr⟩ := monotone (ω := ω) hab
-  have h_re : (ω b).re = (ω a).re + (r : ℝ) := by
-    have := congrArg Complex.re hr
-    simpa [Complex.add_re, RCLike.ofReal_re] using this
-  have hr_nonneg : 0 ≤ (r : ℝ) := by exact_mod_cast r.property
-  have h_le : (ω a).re ≤ (ω a).re + (r : ℝ) := le_add_of_nonneg_right hr_nonneg
-  exact h_re ▸ h_le
-
 /-- If `ω(star x * x) = 0`, then `ω(x) = 0`. This uses the approximate unit. -/
 lemma kernel_vanish_on_elem (hx : ω (star x * x) = 0) : ω x = 0 := by
   -- Prove by showing ‖ω(x)‖ < ε for all ε > 0
@@ -412,20 +392,5 @@ lemma approx_unit_cauchy_schwarz_bound (a e : A) (he_star : star e = e) (he_norm
         · obtain ⟨s, hs⟩ := ω.positive a; erw [hs]; simp
         · simpa [h_ee_real, RCLike.ofReal_re] using h_ee_bound
     _ = (ω (star a * a)).re := mul_one _
-
-
-/-- For nonzero `a`, the element `star a * a` is also nonzero. -/
-lemma star_mul_self_ne_zero_of_ne_zero {a : A} (ha : a ≠ 0) : star a * a ≠ 0 := by
-  rw [← norm_ne_zero_iff] at ha ⊢
-  rw [CStarRing.norm_star_mul_self]
-  intro h
-  have : ‖a‖ = 0 := by nlinarith [sq_nonneg ‖a‖]
-  exact ha this
-
-
-/-- The norm of `star a * a` equals the square of the norm of `a`. -/
-lemma norm_star_mul_self_eq_sq (a : A) : ‖star a * a‖ = ‖a‖ ^ 2 := by
-  rw [pow_two]
-  exact CStarRing.norm_star_mul_self
 
 end State

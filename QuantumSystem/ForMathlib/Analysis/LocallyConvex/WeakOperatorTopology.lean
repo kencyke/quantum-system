@@ -28,6 +28,9 @@ consequently showing that commutants (`Set.centralizer`) and double commutants a
 * `continuous_leftMulWOT`, `continuous_rightMulWOT`: multiplication by a fixed operator is
   WOT-continuous.
 * `isClosed_commutesWithWOT`: the set of operators commuting with a fixed operator is WOT-closed.
+* `Set.toWOT_eq_image`: `Set.toWOT` is the image of the subset under `toWOTEquiv`.
+* `isWOTClosed_iff_isClosed_image`: WOT-closedness as closedness of the image under the canonical
+  inclusion `ContinuousLinearMap.toWOTCLM`.
 * `isWOTClosed_centralizer`: the commutant of any set is WOT-closed.
 * `isWOTClosed_centralizer_centralizer`: double commutants are WOT-closed.
 * `exists_wotCLM_sep_of_isClosed_submodule`: a finite-coordinate separation lemma for WOT-closed
@@ -104,9 +107,28 @@ lemma Set.mem_toWOT_iff {S : Set B} {T : BWOT} :
     T ∈ Set.toWOT (H := H) S ↔ (toWOTEquiv (H := H)).symm T ∈ S := by
   rfl
 
+/-- `Set.toWOT` is the image of the subset under `toWOTEquiv`. -/
+lemma Set.toWOT_eq_image (S : Set B) :
+    Set.toWOT (H := H) S = (toWOTEquiv (H := H)) '' S := by
+  ext T
+  constructor
+  · intro h
+    exact ⟨_, h, (toWOTEquiv (H := H)).apply_symm_apply T⟩
+  · rintro ⟨x, hx, rfl⟩
+    simpa [Set.mem_toWOT_iff] using hx
+
 /-- A subset of operators is WOT-closed if its image in the WOT type-copy is closed. -/
 def IsWOTClosed (S : Set B) : Prop :=
   IsClosed (Set.toWOT (H := H) S)
+
+/-- WOT-closedness stated as closedness of the image under the canonical inclusion, the form in
+which the weak operator topology is usually phrased. -/
+lemma isWOTClosed_iff_isClosed_image (S : Set B) :
+    IsWOTClosed (H := H) S ↔
+      IsClosed (ContinuousLinearMapWOT.ContinuousLinearMap.toWOTCLM
+        (σ := RingHom.id ℂ) (E := H) (F := H) '' S) := by
+  rw [IsWOTClosed, Set.toWOT_eq_image]
+  rfl
 
 /-- The commutant `Set.centralizer S` is WOT-closed. -/
 lemma isWOTClosed_centralizer (S : Set B) : IsWOTClosed (H := H) (Set.centralizer S) := by

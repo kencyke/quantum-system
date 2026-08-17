@@ -17,9 +17,31 @@
 		},
 		"ghcr.io/thamaji/devcontainer-features/gitleaks:latest": {}
 	},
-	"onCreateCommand": "rm -rf .lake/ && lake exe cache get && npm ci",
+	// Both cache volumes are created root-owned by Docker, so chown them before
+	// anything writes: without this MinerU dies at model download with
+	// "[Errno 13] Permission denied: '/home/vscode/.cache/huggingface/hub'".
+	"onCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.cache/uv /home/vscode/.cache/huggingface && rm -rf .lake/",
+	"postCreateCommand": "lake exe cache get && uv sync && uv run lefthook install",
+	// Pin where MinerU fetches models from. Its default (`auto`) probes
+	// HuggingFace and silently falls back to ModelScope, so the download origin
+	// depends on the network. The env var outranks ~/mineru.json, which MinerU
+	// rewrites itself after every successful download.
+	"containerEnv": {
+		"UV_LINK_MODE": "copy",
+		"UV_CACHE_DIR": "/home/vscode/.cache/uv",
+		"MINERU_MODEL_SOURCE": "huggingface"
+	},
+	// Pass the host GPU through (Docker Desktop bundles the NVIDIA runtime).
+	// If the container fails to start on a machine without a GPU, drop this line.
+	"runArgs": [
+		"--gpus",
+		"all"
+	],
 	"mounts": [
-		"source=lean-project-commandhistory,target=/commandhistory,type=volume"
+		"source=lean-project-commandhistory,target=/commandhistory,type=volume",
+		// MinerU models (~1.5-4GB) and uv's wheel cache (torch ~2GB) survive rebuilds.
+		"source=hf-models,target=/home/vscode/.cache/huggingface,type=volume",
+		"source=uv-cache,target=/home/vscode/.cache/uv,type=volume"
 	],
 	// Configure tool-specific properties.
 	"customizations": {

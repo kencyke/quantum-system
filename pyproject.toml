@@ -1,0 +1,46 @@
+[project]
+name = "quantum-system"
+version = "0.1.0"
+description = "Development environment for quantum system"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "commitizen>=4.17.0",
+  "lefthook>=2.1.10",
+]
+# PDF conversion for the math-extract skill. Its own group so it can be skipped
+# deliberately (`uv sync --no-group mineru`) -- it pulls torch and ~100 packages.
+mineru = [
+  "mineru[pipeline,vlm]>=3.4.5",
+  # mineru 3.4.5's pipeline imports six without declaring it (measured: every
+  # conversion fails with "No module named 'six'" otherwise).
+  "six>=1.17.0",
+  # Capped so the cu128 wheels below stay resolvable: cu128 stops at torch 2.11.
+  # mineru itself asks only for torch<3,>=2.6.0.
+  "torch>=2.6,<2.12",
+  "torchvision",
+]
+
+[tool.uv]
+# Both groups sync by default, so a bare `uv sync` cannot silently uninstall the
+# converter. Skip the heavy one with `uv sync --no-group mineru`.
+default-groups = ["dev", "mineru"]
+
+# torch must match the *host* NVIDIA driver, not the newest CUDA: the default
+# PyPI wheel is built for CUDA 13 and needs driver 580+, while this host runs
+# 573.22 (CUDA 12.8), where it fails with "The NVIDIA driver on your system is
+# too old (found version 12080)" and falls back to CPU. cu128 wheels work there
+# (measured). Bump this index only after the host driver moves past 580.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128" }]
+torchvision = [{ index = "pytorch-cu128" }]
+
+[tool.commitizen]
+name = "cz_conventional_commits"

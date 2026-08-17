@@ -3,8 +3,12 @@ module
 public import Mathlib.Analysis.CStarAlgebra.Hom
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
+public import QuantumSystem.Algebra.CStarAlgebra.Representation
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 @[expose] public section
+
+open scoped Adjoint ComplexHilbertSpace
 
 namespace GNS
 
@@ -69,7 +73,8 @@ lemma componentWiseMap_memℓp (a : A) (x : Hilbert A) :
 
 /-- The norm bound for the component-wise map. -/
 lemma componentWiseMap_norm_bound (a : A) (x : Hilbert A) :
-    ‖(⟨fun ψ => componentWiseMap a ψ (x.val ψ), componentWiseMap_memℓp a x⟩ : Hilbert A)‖ ≤ ‖a‖ * ‖x‖ := by
+    ‖(⟨fun ψ => componentWiseMap a ψ (x.val ψ), componentWiseMap_memℓp a x⟩ : Hilbert A)‖
+      ≤ ‖a‖ * ‖x‖ := by
   have h2pos : (0 : ℝ) < (2 : ℝ≥0∞).toReal := by norm_num
   have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
   rw [lp.norm_eq_tsum_rpow h2pos, lp.norm_eq_tsum_rpow h2pos]
@@ -84,7 +89,9 @@ lemma componentWiseMap_norm_bound (a : A) (x : Hilbert A) :
     rw [memℓp_gen_iff zero_lt_two] at this
     simp only [h2] at this
     exact this
-  have sum_ineq : ∑' ψ, ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) ≤ ‖a‖ ^ 2 * ∑' ψ, ‖x.val ψ‖ ^ (2 : ℝ) := by
+  have sum_ineq :
+      ∑' ψ, ‖componentWiseMap a ψ (x.val ψ)‖ ^ (2 : ℝ) ≤
+        ‖a‖ ^ 2 * ∑' ψ, ‖x.val ψ‖ ^ (2 : ℝ) := by
     rw [← tsum_mul_left]
     apply tsum_le_of_sum_le' (by positivity)
     intro s
@@ -124,10 +131,10 @@ noncomputable def directSumCLM (a : A) : 𝓑(Hilbert A) :=
   LinearMap.mkContinuous (directSumLinearMap a) ‖a‖ (componentWiseMap_norm_bound a)
 
 /-- The adjoint of the direct sum operator equals the direct sum operator of the adjoint:
-`(directSumCLM a)* = directSumCLM (star a)`. This follows from the *-homomorphism property
+`(directSumCLM a)† = directSumCLM (star a)`. This follows from the *-homomorphism property
 of each component GNS representation. -/
 lemma directSumCLM_adjoint (a : A) :
-    ContinuousLinearMap.adjoint (directSumCLM a) = directSumCLM (star a) := by
+    (directSumCLM a)† = directSumCLM (star a) := by
   refine ContinuousLinearMap.ext fun x => ?_
   apply ext_inner_right ℂ
   intro y
@@ -147,8 +154,9 @@ lemma directSumCLM_adjoint (a : A) :
   rw [ContinuousLinearMap.star_eq_adjoint]
 
 /-- The direct sum representation as a non-unital *-algebra homomorphism from `A`
-to bounded operators on the direct sum Hilbert space. This is the universal
-representation used in the Gelfand-Naimark theorem. -/
+to bounded operators on the direct sum Hilbert space. This is the representation
+used in the Gelfand-Naimark theorem; see `rep` for its bundled form, whose docstring
+records why it is an atomic rather than a universal representation. -/
 noncomputable def directSumAlgHom : A →⋆ₙₐ[ℂ] 𝓑(Hilbert A) where
   toFun a := directSumCLM a
   map_mul' a b := by
@@ -305,6 +313,60 @@ This follows from the general fact that injective *-homomorphisms between C*-alg
 theorem directSumAlgHom_isometry (a : A) :
     ‖directSumAlgHom a‖ = ‖a‖ :=
   NonUnitalStarAlgHom.norm_map directSumAlgHom directSumAlgHom_injective a
+
+
+/-- The direct sum of the GNS representations of all pure states, bundled as a `CStarRep A`.
+
+This is the representation that witnesses the Gelfand-Naimark theorem
+(`CStarRep.exists_isometric`).  Summing over *pure* states — rather than over all states —
+makes this a (non-reduced form of the) **atomic representation**: it is not the universal
+representation, which is the direct sum over the whole state space.  The index type is the
+full type `PureState A`, not a set of unitary equivalence classes, so the same equivalence
+class is repeated once per pure state realising it. -/
+noncomputable def rep (A : Type*) [NonUnitalCStarAlgebra A] : CStarRep A where
+  H := Hilbert A
+  π := directSumAlgHom
+
+
+@[simp]
+lemma rep_π : (rep A).π = directSumAlgHom (A := A) := rfl
+
+
+/-- The direct sum representation is isometric, in the bundled form. -/
+theorem rep_isometry : Isometry (rep A).π :=
+  AddMonoidHomClass.isometry_of_norm _ directSumAlgHom_isometry
+
+
+/-- The direct sum representation is faithful, in the bundled form. -/
+theorem rep_injective : Function.Injective (rep A).π :=
+  directSumAlgHom_injective
+
+
+/-- The image of `A` under the direct sum representation is norm closed in `𝓑(H)`.
+
+Together with `rep_isometry` and `rep_injective` this is what makes the image a
+C\*-subalgebra: `NonUnitalStarAlgHom.range` is already a `*`-subalgebra, and closedness
+upgrades it to a C\*-subalgebra.  It holds because `A` is complete and the representation
+is isometric, so it is a closed embedding. -/
+theorem rep_isClosed_range :
+    IsClosed (NonUnitalStarAlgHom.range (rep A).π : Set 𝓑((rep A).H)) := by
+  rw [NonUnitalStarAlgHom.coe_range]
+  exact rep_isometry.isClosedEmbedding.isClosed_range
+
+
+/-- The direct sum representation, corestricted to its image, is a `*`-isomorphism
+of `A` onto the C\*-subalgebra `NonUnitalStarAlgHom.range (rep A).π` of `𝓑(H)`. -/
+noncomputable def repRangeEquiv (A : Type*) [NonUnitalCStarAlgebra A] :
+    A ≃⋆ₐ[ℂ] NonUnitalStarAlgHom.range (rep A).π :=
+  StarAlgEquiv.ofBijective (NonUnitalStarAlgHom.rangeRestrict (rep A).π)
+    ⟨fun _ _ h => rep_injective (congrArg Subtype.val h), by rintro ⟨_, x, rfl⟩; exact ⟨x, rfl⟩⟩
+
+
+/-- The `*`-isomorphism of `A` onto the image of the direct sum representation is
+isometric: it preserves the norm inherited from `𝓑(H)`. -/
+theorem norm_repRangeEquiv (a : A) :
+    ‖((repRangeEquiv A a : NonUnitalStarAlgHom.range (rep A).π) : 𝓑((rep A).H))‖ = ‖a‖ :=
+  directSumAlgHom_isometry a
 
 end DirectSum
 

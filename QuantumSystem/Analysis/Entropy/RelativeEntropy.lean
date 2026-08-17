@@ -13,6 +13,9 @@ This file collects fundamental entropy inequalities for quantum channels.
 
 ## Main Results
 
+* `relativeEntropy_nonneg`: Klein's inequality — relative entropy is non-negative,
+  `0 ≤ D(ρ ‖ σ)`.
+* `relativeEntropy_eq_zero_iff`: faithfulness — `D(ρ ‖ σ) = 0 ↔ ρ = σ`.
 * `relativeEntropy_channel_le`: Monotonicity of relative entropy — quantum channels do not
   increase relative entropy: S(Φ(ρ) ‖ Φ(σ)) ≤ S(ρ ‖ σ).
 * `relativeEntropy_channel_eq_iff_recoverable`: Equality in monotonicity holds when a Petz
@@ -230,8 +233,8 @@ private lemma trace_ρlogρ_eq (ρ : DensityMatrix n) :
   have hρ_spec := spectral_expand ρ.toMatrix ρ.isHermitian
   -- log(ρ) = U * diag(log ev) * Uᴴ
   have hlogρ_spec : log ρ = U * diagonal (fun i => (Real.log (ev_ρ i) : ℂ)) * Uᴴ := by
-    unfold DensityMatrix.log matrixLog matrixFunction
-    rfl
+    unfold DensityMatrix.log
+    exact cfc_log_spectral_eq ρ.isHermitian
   -- ρ * log(ρ) = U * diag(ev) * Uᴴ * U * diag(log ev) * Uᴴ = U * diag(ev * log ev) * Uᴴ
   -- First rewrite log, then ρ
   have h1 : (ρ.toMatrix * log ρ).trace.re =
@@ -276,12 +279,10 @@ private lemma trace_ρlogσ_eq (ρ σ : DensityMatrix n) :
   set W := eigW ρ σ
   set ev_ρ := ρ.isHermitian.eigenvalues
   set ev_σ := σ.isHermitian.eigenvalues
-  have hρ : ρ.toMatrix = U * diagonal (fun i => (ev_ρ i : ℂ)) * Uᴴ := by
-    have h := (matrixFunction_id ρ.isHermitian).symm
-    unfold matrixFunction at h
-    simpa [Function.comp] using h
+  have hρ : ρ.toMatrix = U * diagonal (fun i => (ev_ρ i : ℂ)) * Uᴴ :=
+    spectral_expand ρ.toMatrix ρ.isHermitian
   have hlogσ : log σ = V * diagonal (fun i => (Real.log (ev_σ i) : ℂ)) * Vᴴ := by
-    unfold DensityMatrix.log matrixLog matrixFunction; rfl
+    unfold DensityMatrix.log; exact cfc_log_spectral_eq σ.isHermitian
   have hUHV : Uᴴ * V = Wᴴ := by
     calc Uᴴ * V = Uᴴ * (Vᴴ)ᴴ := by rw [conjTranspose_conjTranspose]
       _ = (Vᴴ * U)ᴴ := by rw [conjTranspose_mul]
@@ -675,9 +676,11 @@ private lemma trace_rpow_mul_double_sum (ρ σ : DensityMatrix n) (s : ℝ) :
   have hpsdρ := ρ.posSemidef
   have hpsdσ := σ.posSemidef
   have hρs : ρ.toMatrix ^ s = U * diagonal (fun i => ((ev_ρ i ^ s : ℝ) : ℂ)) * Uᴴ := by
-    rw [← matrixFunction_rpow_eq hpsdρ]; unfold matrixFunction; rfl
+    rw [CFC.rpow_eq_cfc_real (a := ρ.toMatrix) (ha := by rw [Matrix.le_iff, sub_zero]; exact hpsdρ),
+      cfc_spectral_eq ρ.isHermitian (fun x => x ^ s)]
   have hσs : σ.toMatrix ^ (1 - s) = V * diagonal (fun j => ((ev_σ j ^ (1 - s) : ℝ) : ℂ)) * Vᴴ := by
-    rw [← matrixFunction_rpow_eq hpsdσ]; unfold matrixFunction; rfl
+    rw [CFC.rpow_eq_cfc_real (a := σ.toMatrix) (ha := by rw [Matrix.le_iff, sub_zero]; exact hpsdσ),
+      cfc_spectral_eq σ.isHermitian (fun x => x ^ (1 - s))]
   have hVU : Vᴴ * U = W := rfl
   rw [hρs, hσs]
   -- Use cyclic trace property and W = Vᴴ * U to reduce to W D_ρ Wᴴ D_σ
@@ -1321,8 +1324,8 @@ private lemma trace_rpow_mul_channel_le
 
 /-- **Monotonicity of Relative Entropy**: Quantum channels do not increase relative entropy.
 
-For a quantum channel Φ and positive definite density matrices ρ, σ:
-  S(Φ(ρ) || Φ(σ)) ≤ S(ρ || σ)
+For a quantum channel Φ and density matrices ρ, σ:
+  D(Φ(ρ) ∥ Φ(σ)) ≤ D(ρ ∥ σ)
 
 **Proof**: Uses derivative argument on g(s) = F_s(Φρ, Φσ) - F_s(ρ, σ) where
 F_s(A, B) = Tr (Aˢ B¹⁻ˢ). Since g(s) ≥ 0 on (0,1] and g(1) = 0, we get g'(1) ≤ 0,
@@ -1562,7 +1565,8 @@ private lemma trace_rpow_mul_jointly_concave
     (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     p * (Tr (ρ₁ ^ s * σ₁ ^ (1 - s))).re +
     (1 - p) * (Tr (ρ₂ ^ s * σ₂ ^ (1 - s))).re ≤
-    (Tr ((p • ρ₁.toMatrix + (1 - p) • ρ₂.toMatrix) ^ s * (p • σ₁.toMatrix + (1 - p) • σ₂.toMatrix) ^ (1 - s))).re := by
+    (Tr ((p • ρ₁.toMatrix + (1 - p) • ρ₂.toMatrix) ^ s *
+      (p • σ₁.toMatrix + (1 - p) • σ₂.toMatrix) ^ (1 - s))).re := by
   have hpsd₁ := ρ₁.posSemidef
   have hpsd₂ := ρ₂.posSemidef
   have hpsdσ₁ := σ₁.posSemidef
@@ -1620,7 +1624,8 @@ theorem relativeEntropy_jointly_convex
           push_cast; ring_nf]
         rw [EReal.coe_le_coe_iff]
         -- Step 4: Derivative argument
-        -- Define h(s) = Re[Tr (ρ_mix^s σ_mix^{1-s})] - p Re[Tr (ρ₁^s σ₁^{1-s})] - (1-p) Re[Tr (ρ₂^s σ₂^{1-s})]
+        -- Define h(s) = Re[Tr (ρ_mix^s σ_mix^{1-s})] - p Re[Tr (ρ₁^s σ₁^{1-s})]
+        --   - (1-p) Re[Tr (ρ₂^s σ₂^{1-s})]
         let g : ℝ → ℝ := fun s =>
           (ρ_mix.toMatrix ^ s * σ_mix.toMatrix ^ (1 - s)).trace.re -
           (p * (ρ₁.toMatrix ^ s * σ₁.toMatrix ^ (1 - s)).trace.re +
@@ -1708,7 +1713,7 @@ variable {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- **Quantum relative entropy is invariant under trace-preserving `*-`algebra
 equivalence** (PosDef case). -/
-theorem relativeEntropy_map_starAlgEquiv_posDef
+lemma relativeEntropy_map_starAlgEquiv_posDef
     (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ)
     (hφ : ∀ A, (φ A).trace = A.trace) :
@@ -1733,23 +1738,23 @@ theorem relativeEntropy_map_starAlgEquiv_posDef
   simp only [h_supp_map, h_supp, if_true]
   congr 1
   change (Tr ((ρ.map φ hφ).toMatrix *
-      (matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian -
-        matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian))).re =
+      (cfc Real.log (ρ.map φ hφ).toMatrix -
+        cfc Real.log (σ.map φ hφ).toMatrix))).re =
     (Tr (ρ.toMatrix *
-      (matrixLog ρ.toMatrix ρ.isHermitian -
-        matrixLog σ.toMatrix σ.isHermitian))).re
-  have h_log_ρ : matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian =
-      φ (matrixLog ρ.toMatrix ρ.isHermitian) := by
-    change matrixLog (φ ρ.toMatrix) _ = _
-    exact matrixLog_map_starAlgEquiv hρ φ
-  have h_log_σ : matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian =
-      φ (matrixLog σ.toMatrix σ.isHermitian) := by
-    change matrixLog (φ σ.toMatrix) _ = _
-    exact matrixLog_map_starAlgEquiv hσ φ
+      (cfc Real.log ρ.toMatrix -
+        cfc Real.log σ.toMatrix))).re
+  have h_log_ρ : cfc Real.log (ρ.map φ hφ).toMatrix =
+      φ (cfc Real.log ρ.toMatrix) := by
+    change cfc Real.log (φ ρ.toMatrix) = _
+    exact cfc_log_map_starAlgEquiv hρ φ
+  have h_log_σ : cfc Real.log (σ.map φ hφ).toMatrix =
+      φ (cfc Real.log σ.toMatrix) := by
+    change cfc Real.log (φ σ.toMatrix) = _
+    exact cfc_log_map_starAlgEquiv hσ φ
   rw [h_log_ρ, h_log_σ, DensityMatrix.map_toMatrix, ← map_sub, ← map_mul, hφ]
 
 /-- Specialisation of `relativeEntropy_map_starAlgEquiv_posDef` to reindexing. -/
-theorem relativeEntropy_mapEquiv_posDef
+lemma relativeEntropy_mapEquiv_posDef
     (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef) (e : n ≃ m) :
     D(ρ.mapEquiv e ∥ σ.mapEquiv e) = D(ρ ∥ σ) :=
   relativeEntropy_map_starAlgEquiv_posDef ρ σ hρ hσ _ _

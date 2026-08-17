@@ -83,31 +83,6 @@ namespace QuantumInfo
 scoped notation "⟪" X ", " Y "⟫_HS" => Matrix.hsInnerProduct X Y
 end QuantumInfo
 
-/-- Hilbert-Schmidt inner product is related to liebJointFunction via left/right multiplication.
-For positive semidefinite A, B and real p:
-  ⟨A^p · K† · B^{1-p}, K†⟩_HS = Tr(A^p · K† · B^{1-p} · K)
-This connects the operator-level perspective to the trace-level Lieb function. -/
-private lemma hsInnerProduct_leftMul_rightMul {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
-    (K : Matrix m m ℂ) (p : ℝ) :
-    hsInnerProduct ((A ^ p) * Kᴴ * (B ^ (1 - p))) Kᴴ = liebJointFunction K p A hA B hB := by
-  simp only [hsInnerProduct, liebJointFunction]
-  -- (A^p * K† * B^{1-p})† = B^{1-p}† * K * (A^p)†
-  -- Since A^p and B^{1-p} are Hermitian (rpow of PSD is PSD hence Hermitian):
-  have hAp_herm : (A ^ p)ᴴ = A ^ p := by
-    rw [← matrixFunction_rpow_eq hA p]
-    exact matrixFunction_isHermitian hA.1 (fun x => x ^ p)
-  have hBp_herm : (B ^ (1 - p))ᴴ = B ^ (1 - p) := by
-    rw [← matrixFunction_rpow_eq hB (1 - p)]
-    exact matrixFunction_isHermitian hB.1 (fun x => x ^ (1 - p))
-  simp only [Matrix.conjTranspose_mul, Matrix.conjTranspose_conjTranspose,
-    hAp_herm, hBp_herm, Matrix.mul_assoc]
-  -- LHS: Tr(B^{1-p} * K * A^p * K†), RHS: Tr(A^p * K† * B^{1-p} * K)
-  -- By trace cyclicity (two shifts) these are equal
-  simp only [← Matrix.mul_assoc]
-  rw [trace_mul_cycle, trace_mul_cycle]
-  simp only [Matrix.mul_assoc]
-
 /-- The HS inner product ⟨v, matrixPerspective(f, L_A, R_B) v⟩ for f(t) = -t^p
 and v = vec(K†) equals -Tr(A^p K† B^{1-p} K).
 
@@ -123,8 +98,8 @@ The proof is technical but the key insight is:
 - Combining: ⟨v, (-L^p R^{1-p}) v⟩ = -Tr(A^p K† B^{1-p} K) = -liebJointFunction
 
 For full generality this requires functional calculus on Kronecker products,
-but the result follows from the trace identity hsInnerProduct_leftMul_rightMul
-and the perspective structure. -/
+but the result follows from the underlying trace identity and the perspective
+structure. -/
 private lemma matrixPerspective_inner_eq_neg_liebJointFunction {m : Type*} [Fintype m] [DecidableEq m]
     (K : Matrix m m ℂ) (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
     (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef)
@@ -181,7 +156,8 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     w₂ * (liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re ≤
     (liebJointFunction K p
       (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.real_smul hw₁).add (hA₂.posSemidef.real_smul hw₂))
-      (w₁ • B₁ + w₂ • B₂) ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
+      (w₁ • B₁ + w₂ • B₂)
+        ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
   classical
   /- Proof by Effros's Matrix Perspective Approach -/
   -- 1. Setup the function f(x) = -x^p, which is Matrix Convex.
@@ -226,12 +202,16 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   simp only [dotProduct_sub, dotProduct_add] at h_vec_nonneg
   -- Connect to Lieb function
   -- Use the spectral identity: ⟨v, matrixPerspective(f, L_A, R_B) v⟩ = -liebJointFunction(K, p, A, B)
-  have h_ident1 : (star v ⬝ᵥ (term1 *ᵥ v)).re = -(liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re := by
+  have h_ident1 : (star v ⬝ᵥ (term1 *ᵥ v)).re =
+      -(liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re := by
     simpa [term1, f] using
-      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₁ B₁ hA₁ hB₁ hL₁_psd hR₁_pd
-  have h_ident2 : (star v ⬝ᵥ (term2 *ᵥ v)).re = -(liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re := by
+      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₁ B₁
+        hA₁ hB₁ hL₁_psd hR₁_pd
+  have h_ident2 : (star v ⬝ᵥ (term2 *ᵥ v)).re =
+      -(liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re := by
     simpa [term2, f] using
-      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₂ B₂ hA₂ hB₂ hL₂_psd hR₂_pd
+      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₂ B₂
+        hA₂ hB₂ hL₂_psd hR₂_pd
   have hA_comb : (w₁ • A₁ + w₂ • A₂).PosDef := PosDef.convex_comb_nonneg hA₁ hA₂ hw₁ hw₂ hw
   have hB_comb : (w₁ • B₁ + w₂ • B₂).PosDef := PosDef.convex_comb_nonneg hB₁ hB₂ hw₁ hw₂ hw
   -- The combined identity follows from matrixPerspective_inner_eq_neg_liebJointFunction
@@ -277,7 +257,8 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     -- After substitution, the goal matches h_apply.
     -- The matrices are definitionally equal after applying hLlin and hRlin.
     -- term_comb = matrixPerspective f L R _ _
-    --           = matrixPerspective f (leftMulMatrix (w₁•A₁+w₂•A₂)) (rightMulMatrix (w₁•B₁+w₂•B₂)) _ _
+    --           = matrixPerspective f (leftMulMatrix (w₁•A₁+w₂•A₂))
+    --               (rightMulMatrix (w₁•B₁+w₂•B₂)) _ _
     -- The proof terms may differ but the matrices are equal by proof irrelevance.
     -- Since both sides compute the same quadratic form value, they are equal.
     -- We establish this by showing the matrixPerspective matrices are equal.
@@ -327,7 +308,8 @@ private lemma lieb_joint_concavity {m : Type*} [Fintype m] [DecidableEq m]
     w₂ * (liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re ≤
     (liebJointFunction K p
       (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.real_smul hw₁).add (hA₂.posSemidef.real_smul hw₂))
-      (w₁ • B₁ + w₂ • B₂) ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
+      (w₁ • B₁ + w₂ • B₂)
+        ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
   -- Handle boundary cases p = 0 and p = 1 separately
   rcases eq_or_lt_of_le hp0 with rfl | hp0'
   · -- p = 0: Tr(K†BK) is linear in B, so equality holds
@@ -369,14 +351,14 @@ private lemma rpow_tendsto_smul_one {m : Type*} [Fintype m] [DecidableEq m]
     Filter.Tendsto (fun ε : ℝ => (A + (ε : ℂ) • (1 : Matrix m m ℂ)) ^ p)
       (nhdsWithin 0 (Set.Ioi 0)) (nhds (A ^ p)) := by
   -- Express A^p and (A + ε•1)^p via the continuous functional calculus.
-  -- Using matrixFunction and cfc, reduce to pointwise convergence of x^p as ε → 0+.
-  have hA_eq : A ^ p = cfc (fun x : ℝ => x ^ p) A := by
-    rw [← matrixFunction_rpow_eq hA, matrixFunction_eq_cfc hA.1]
+  -- Using cfc, reduce to pointwise convergence of x^p as ε → 0+.
+  have hA_eq : A ^ p = cfc (fun x : ℝ => x ^ p) A :=
+    CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA)
   have hshift_eq : ∀ ε : ℝ, 0 < ε → (A + (ε : ℂ) • (1 : Matrix m m ℂ)) ^ p =
       cfc (fun x : ℝ => (x + ε) ^ p) A := by
     intro ε hε
-    have hcfc_shift : cfc (fun x : ℝ => x + ε) A = A + (ε : ℂ) • (1 : Matrix m m ℂ) := by
-      rw [← matrixFunction_eq_cfc hA.1]; exact matrixFunction_add_const hA.1 ε
+    have hcfc_shift : cfc (fun x : ℝ => x + ε) A = A + (ε : ℂ) • (1 : Matrix m m ℂ) :=
+      cfc_add_const_eq hA.1 ε
     have hcont_p : ContinuousOn (fun x : ℝ => x ^ p) ((fun x : ℝ => x + ε) '' spectrum ℝ A) := by
       apply ContinuousOn.rpow_const continuousOn_id
       rintro x ⟨_, hy_spec, rfl⟩

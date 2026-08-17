@@ -26,6 +26,8 @@ This file provides a minimal API for invariant / reducing subspaces for a set of
   `Kᗮ` is invariant under `T`.
 * `starProjection_mem_centralizer_of_isReducing`: if `K` is reducing for `S`, then
   `K.starProjection ∈ Set.centralizer S`.
+* `ActsNondegenerately S`: no nonzero vector is annihilated by every element of `S`; the
+  hypothesis of the non-unital double commutant theorem.
 -/
 
 @[expose] public section
@@ -33,6 +35,7 @@ This file provides a minimal API for invariant / reducing subspaces for a set of
 namespace InnerProductSpace
 
 local notation "⟪" x ", " y "⟫" => inner ℂ x y
+local postfix:max "†" => ContinuousLinearMap.adjoint
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 
@@ -137,25 +140,25 @@ variable [CompleteSpace H]
 /-- A subspace `K` is reducing for a set of operators `S` if it is invariant under every operator
 in `S` and also invariant under every adjoint operator. -/
 def IsReducing (S : Set (H →L[ℂ] H)) (K : Submodule ℂ H) : Prop :=
-  ∀ T ∈ S, IsInvariant T K ∧ IsInvariant (ContinuousLinearMap.adjoint T) K
+  ∀ T ∈ S, IsInvariant T K ∧ IsInvariant (T†) K
 
 /-- If `K` is invariant under `T†`, then `Kᗮ` is invariant under `T`. -/
 lemma orthogonalComplement_invariant_of_adjoint_invariant
     {T : H →L[ℂ] H} {K : Submodule ℂ H}
-  (hK : IsInvariant (ContinuousLinearMap.adjoint T) K) : IsInvariant T Kᗮ := by
+  (hK : IsInvariant (T†) K) : IsInvariant T Kᗮ := by
   -- Unfold to the pointwise characterization.
   refine (IsInvariant.iff_forall_mem (T := T) (K := Kᗮ)).2 ?_
   intro y hy
   -- Show `T y ∈ Kᗮ` via the inner-product characterization.
   refine (K.mem_orthogonal (T y)).2 ?_
   intro x hx
-  have hx' : (ContinuousLinearMap.adjoint T) x ∈ K :=
-    (IsInvariant.iff_forall_mem (T := ContinuousLinearMap.adjoint T) (K := K)).1 hK x hx
+  have hx' : (T†) x ∈ K :=
+    (IsInvariant.iff_forall_mem (T := T†) (K := K)).1 hK x hx
   -- `y ∈ Kᗮ` implies `⟪(T†) x, y⟫ = 0`, hence also `⟪x, T y⟫ = 0`.
-  have hy0 : ⟪(ContinuousLinearMap.adjoint T) x, y⟫ = 0 :=
-    (K.mem_orthogonal y).1 hy ((ContinuousLinearMap.adjoint T) x) hx'
+  have hy0 : ⟪(T†) x, y⟫ = 0 :=
+    (K.mem_orthogonal y).1 hy ((T†) x) hx'
   -- Use adjointness: `⟪(T†) x, y⟫ = ⟪x, T y⟫`.
-  have hAdj : ⟪x, T y⟫ = ⟪(ContinuousLinearMap.adjoint T) x, y⟫ := by
+  have hAdj : ⟪x, T y⟫ = ⟪(T†) x, y⟫ := by
     -- `adjoint_inner_left` is: `⟪(T†) y, x⟫ = ⟪y, T x⟫`.
     simpa using (ContinuousLinearMap.adjoint_inner_left (A := T) (x := y) (y := x)).symm
   exact hAdj.trans hy0
@@ -167,11 +170,37 @@ lemma starProjection_mem_centralizer_of_isReducing
     (hK : IsReducing S K) : K.starProjection ∈ Set.centralizer S := by
   intro T hT
   have hInv : IsInvariant T K := (hK T hT).1
-  have hInvAdj : IsInvariant (ContinuousLinearMap.adjoint T) K := (hK T hT).2
+  have hInvAdj : IsInvariant (T†) K := (hK T hT).2
   have hInvOrth : IsInvariant T Kᗮ :=
     orthogonalComplement_invariant_of_adjoint_invariant (T := T) hInvAdj
   exact commutes_starProjection_of_invariant (T := T) (K := K) hInv hInvOrth
 
 end WithComplete
+
+section Nondegenerate
+
+/-- A set of operators `S` *acts non-degenerately* on `H` if the only vector annihilated by
+every element of `S` is `0`.
+
+This is strictly weaker than `1 ∈ S` (see `actsNondegenerately_of_one_mem`): for example the
+compact operators act non-degenerately on an infinite-dimensional `H` without containing `1`.
+It is the hypothesis under which the double commutant theorem holds for a possibly non-unital
+`*`-subalgebra. -/
+def ActsNondegenerately (S : Set (H →L[ℂ] H)) : Prop :=
+  ∀ x : H, (∀ T ∈ S, T x = 0) → x = 0
+
+/-- A set of operators containing the identity acts non-degenerately. -/
+lemma actsNondegenerately_of_one_mem {S : Set (H →L[ℂ] H)}
+    (h : (1 : H →L[ℂ] H) ∈ S) : ActsNondegenerately S := by
+  intro x hx
+  simpa using hx 1 h
+
+/-- Non-degeneracy is monotone: it passes from a set to any superset. -/
+lemma ActsNondegenerately.mono {S S' : Set (H →L[ℂ] H)} (hSS' : S ⊆ S')
+    (hS : ActsNondegenerately S) : ActsNondegenerately S' := by
+  intro x hx
+  exact hS x fun T hT => hx T (hSS' hT)
+
+end Nondegenerate
 
 end InnerProductSpace

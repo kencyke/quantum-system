@@ -10,19 +10,22 @@ public import Mathlib.LinearAlgebra.Matrix.Trace
 
 Notations and abbreviations for quantum information theory.
 
-| Symbol | Expansion | How to activate | Defined in |
-|---|---|---|---|
-| `Tr A` | `Matrix.trace A` | always available (prefix notation) | this file |
-| `log ρ` | `DensityMatrix.log ρ` | `open scoped Matrix.QuantumInfo` | `State.lean` |
-| `S(ρ)` | `Matrix.vonNeumannEntropy ρ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/VonNeumannEntropy.lean` |
-| `D(ρ ∥ σ)` | `Matrix.relativeEntropy ρ σ` | `open scoped Matrix.QuantumInfo` | `Analysis/Entropy/RelativeEntropy.lean` |
-| `⟪X, Y⟫_HS` | `Matrix.hsInnerProduct X Y` | `open scoped Matrix.QuantumInfo` | `Analysis/Matrix/LiebConcavity.lean` |
-| `ρ ↾ Λ` | `DensityMatrix.restrict (by …) ρ` | `open scoped LocalNet.QuantumInfo` | `Algebra/LocalNet.lean` |
-
-`ρ ↾ Λ` is the AQFT-style **restriction of a density matrix to a sub-region** —
-equivalently, the partial trace over the complementary region.
-The subset proof `Λ ⊆ Λ_total` is auto-resolved by `Finset.subset_univ _`, `Finset.Subset.refl _`, or `decide`.
-For complex hypotheses, write `DensityMatrix.restrict h ρ` directly.
+<table>
+<tr><th>Symbol</th><th>Expansion</th><th>How to activate</th><th>Defined in</th></tr>
+<tr><td><code>Tr A</code></td><td><code>Matrix.trace A</code></td>
+  <td>always available (prefix notation)</td><td>this file</td></tr>
+<tr><td><code>log ρ</code></td><td><code>DensityMatrix.log ρ</code></td>
+  <td><code>open scoped Matrix.QuantumInfo</code></td><td><code>State.lean</code></td></tr>
+<tr><td><code>S(ρ)</code></td><td><code>Matrix.vonNeumannEntropy ρ</code></td>
+  <td><code>open scoped Matrix.QuantumInfo</code></td>
+  <td><code>Analysis/Entropy/VonNeumannEntropy.lean</code></td></tr>
+<tr><td><code>D(ρ ∥ σ)</code></td><td><code>Matrix.relativeEntropy ρ σ</code></td>
+  <td><code>open scoped Matrix.QuantumInfo</code></td>
+  <td><code>Analysis/Entropy/RelativeEntropy.lean</code></td></tr>
+<tr><td><code>⟪X, Y⟫_HS</code></td><td><code>Matrix.hsInnerProduct X Y</code></td>
+  <td><code>open scoped Matrix.QuantumInfo</code></td>
+  <td><code>Analysis/Matrix/LiebConcavity.lean</code></td></tr>
+</table>
 
 ## `Tr` syntax
 

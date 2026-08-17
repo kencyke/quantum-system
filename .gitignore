@@ -1,4 +1,5 @@
 /.lake
+.venv/
 node_modules/
 lefthook-local.yml
 
@@ -8,3 +9,5 @@ skill-creator-tests/
 
 # Ignore until https://github.com/microsoft/vscode-remote-release/issues/11616 is fixed.
 devcontainer-lock.json
+
+worktrees/

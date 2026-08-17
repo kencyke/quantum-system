@@ -15,23 +15,24 @@ This file develops the core tools for matrix analysis. Foundational lemmas about
 matrices, positive semidefiniteness, block-matrix identities, and the Löwner order are in
 `QuantumSystem.ForMathlib.Analysis.Matrix.*`.
 
+All functional calculus is expressed directly through Mathlib's continuous functional
+calculus `cfc`; the spectral expansion `cfc f A = U diag(f(λᵢ)) Uᴴ` is `cfc_spectral_eq`.
+
 ## Main results
 
-### Functional Calculus
-- `matrixFunction f A hA`: spectral decomposition f(A) = U diag(f(λᵢ)) U*
-  for Hermitian A with eigendecomposition A = UΛ U*.
-- Algebraic properties: `matrixFunction_id`, `matrixFunction_neg`, `matrixFunction_add`,
-  `matrixFunction_smul`, `matrixFunction_const`, `matrixFunction_add_const`, etc.
-- Complex power instances: `matrixFunction_cpow_zero`, `matrixFunction_cpow_one`.
-- Compatibility with Mathlib's CFC: `matrixFunction_eq_cfc`.
-- Special functions: `matrixExp`, `matrixLog`, `matrixSqrt` (via `matrixFunction`).
+### Continuous Functional Calculus
+- `cfc_spectral_eq`: spectral decomposition `cfc f A = U diag(f(λᵢ)) Uᴴ`
+  for Hermitian A with eigendecomposition A = UΛ Uᴴ.
+- `trace_cfc`, `trace_mul_cfc`: trace formulas `Tr(f(A)) = ∑ f(λᵢ)` and `Tr(A·f(A)) = ∑ λᵢ f(λᵢ)`.
+- `cfc_isHermitian`, `mul_cfc_isHermitian`: `f(A)` and `A·f(A)` are Hermitian for real `f`.
+- `cfc_add_const_eq`, `cfc_inv_add_const`, `cfc_resolvent`: affine / resolvent identities.
+- `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry commuting with `M`.
+- Matrix logarithm `cfc Real.log`: `cfc_spectral_eq`, `cfc_log_spectral_eq`, `cfc_log_map_starAlgEquiv`.
+- Special functions: `matrixSqrt`, `matrixInvSqrt` defined via `CFC.rpow`.
 
 ### Hermitian and PSD Structure
-- `matrixFunction_isHermitian`: f(A) is Hermitian when f maps ℝ to ℝ.
-- `matrixFunction_posSemidef`: f(A) ≥ 0 when f(λᵢ) ≥ 0 on eigenvalues.
-- `matrixFunction_inv_add_const`: (A + tI)⁻¹ from `matrixFunction`.
-- `matrixFunction_rpow_eq`: `matrixFunction` agrees with `CFC.rpow` on PSD matrices.
-- `matrixSqrt`: the matrix square root A¹⁄² for PSD A.
+- `matrixSqrt`: the matrix square root A¹⁄² for PSD A (`= A ^ (1/2 : ℝ)`).
+- `matrixInvSqrt`: the matrix inverse square root A⁻¹⁄² for PD A (`= A ^ (-1/2 : ℝ)`).
 - `matrixInvSqrt_commute_of_commute`: R⁻¹⁄² commutes with L when L and R commute
   (for PSD L, PD R).
 
@@ -53,212 +54,75 @@ namespace Matrix
 
 open scoped MatrixOrder ComplexOrder
 
-/-- Functional calculus for Hermitian matrices via spectral decomposition.
-Given f : ℝ → ℂ and a Hermitian matrix A = U Λ U*, we define f(A) = U f(Λ) U*
-where f(Λ) applies f to each diagonal entry (eigenvalue). -/
-noncomputable def matrixFunction {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℂ) (A : Matrix m m ℂ) (hA : A.IsHermitian) : Matrix m m ℂ :=
-  let U : Matrix m m ℂ := hA.eigenvectorUnitary
-  let Λ := diagonal (fun i => f (hA.eigenvalues i))
-  U * Λ * Uᴴ
+/-- `cfc f A` of a Hermitian matrix expands into the spectral decomposition
+`U · diag(f(λᵢ)) · Uᴴ` attached to the chosen Hermitian proof. -/
+lemma cfc_spectral_eq {m : Type*} [Fintype m] [DecidableEq m]
+    {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) :
+    cfc f A =
+      (hA.eigenvectorUnitary : Matrix m m ℂ) *
+        diagonal (fun i => ((f (hA.eigenvalues i) : ℝ) : ℂ)) *
+        (hA.eigenvectorUnitary : Matrix m m ℂ)ᴴ := by
+  rw [Matrix.IsHermitian.cfc_eq hA f]
+  unfold Matrix.IsHermitian.cfc
+  rw [Unitary.conjStarAlgAut_apply]
+  simp only [Function.comp_def, star_eq_conjTranspose]
+  rfl
 
-/-- Trace of f(A) equals sum of f(λ_i) by cyclicity of trace and unitarity of U. -/
-lemma matrixFunction_trace {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) (f : ℝ → ℂ) :
-    (matrixFunction f A hA).trace = ∑ i, f (hA.eigenvalues i) := by
-  unfold matrixFunction
-  rw [trace_mul_cycle]
+/-- Trace of `cfc f A` equals the sum of `f` over the eigenvalues of `A`. -/
+lemma trace_cfc {m : Type*} [Fintype m] [DecidableEq m]
+    {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) :
+    (cfc f A).trace = ∑ i, (f (hA.eigenvalues i) : ℂ) := by
+  rw [cfc_spectral_eq hA f, trace_mul_cycle]
   have h := Unitary.coe_star_mul_self hA.eigenvectorUnitary
   simp only [star_eq_conjTranspose] at h
   rw [h, Matrix.one_mul]
   exact trace_diagonal _
 
-/-- matrixFunction of a real-valued function produces a Hermitian matrix. -/
-lemma matrixFunction_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
+/-- `f(A)` is Hermitian for Hermitian `A` and real `f` (continuous functional calculus). -/
+lemma cfc_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) :
-    (matrixFunction (fun x => (f x : ℂ)) A hA).IsHermitian := by
-  unfold matrixFunction
-  -- U * D * Uᴴ is Hermitian when D is Hermitian and U is unitary
-  have hD : (diagonal (fun i => (f (hA.eigenvalues i) : ℂ))).IsHermitian := by
+    (cfc f A).IsHermitian := by
+  rw [cfc_spectral_eq hA f]
+  have hD : (diagonal (fun i => ((f (hA.eigenvalues i) : ℝ) : ℂ))).IsHermitian := by
     rw [isHermitian_diagonal_iff]
     intro i
     exact Complex.conj_ofReal _
-  -- (U D Uᴴ)ᴴ = U Dᴴ Uᴴ = U D Uᴴ since D is Hermitian
   rw [IsHermitian]
   simp only [conjTranspose_mul, conjTranspose_conjTranspose]
   conv_rhs => rw [mul_assoc]
   rw [hD]
 
-/-- Spectral lemma: matrixFunction(id) = A. -/
-lemma matrixFunction_id {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) :
-    matrixFunction (fun x => (x : ℂ)) A hA = A := by
-  unfold matrixFunction
-  simp only
-  conv_rhs => rw [hA.spectral_theorem]
-  unfold Unitary.conjStarAlgAut
-  simp only [MonoidHom.coe_mk, OneHom.coe_mk]
-  rfl
-
-/-- Negation distributes through matrixFunction. -/
-lemma matrixFunction_neg {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℂ) :
-    matrixFunction (fun x => -f x) A hA = -matrixFunction f A hA := by
-  unfold matrixFunction
-  simp only
-  have hdiag : diagonal (fun i => -f (hA.eigenvalues i)) =
-               -diagonal (fun i => f (hA.eigenvalues i)) := by
-    ext i j
-    simp only [diagonal_apply, neg_apply]
-    split_ifs <;> ring
-  rw [hdiag, mul_neg, neg_mul]
-
-/-- matrixFunction distributes over addition. -/
-lemma matrixFunction_add {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) (f g : ℝ → ℂ) :
-    matrixFunction (fun x => f x + g x) A hA =
-      matrixFunction f A hA + matrixFunction g A hA := by
-  unfold matrixFunction
-  simp only
-  have hdiag :
-      diagonal (fun i => f (hA.eigenvalues i) + g (hA.eigenvalues i)) =
-        diagonal (fun i => f (hA.eigenvalues i)) +
-        diagonal (fun i => g (hA.eigenvalues i)) := by
-    ext i j
-    by_cases h : i = j
-    · subst h
-      simp
-    · simp [h]
-  rw [hdiag]
-  rw [Matrix.mul_add, Matrix.add_mul]
-
-/-- matrixFunction commutes with scalar multiplication. -/
-lemma matrixFunction_smul {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) (c : ℂ) (f : ℝ → ℂ) :
-    matrixFunction (fun x => c * f x) A hA = c • matrixFunction f A hA := by
-  unfold matrixFunction
-  simp only
-  have hdiag :
-      diagonal (fun i => c * f (hA.eigenvalues i)) =
-        c • diagonal (fun i => f (hA.eigenvalues i)) := by
-    ext i j
-    by_cases h : i = j
-    · subst h
-      simp
-    · simp [h]
-  rw [hdiag]
-  rw [Matrix.mul_smul, Matrix.smul_mul]
-
-/-- matrixFunction of a constant function is a scalar multiple of the identity. -/
-lemma matrixFunction_const {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) (c : ℂ) :
-    matrixFunction (fun _ => c) A hA = c • (1 : Matrix m m ℂ) := by
-  classical
-  unfold matrixFunction
-  simp only
-  have hdiag : diagonal (fun _ => c) = c • (1 : Matrix m m ℂ) := by
-    ext i j
-    by_cases h : i = j
-    · subst h
-      simp
-    · simp [h]
-  rw [hdiag]
-  have hU : (hA.eigenvectorUnitary : Matrix m m ℂ) *
-      (hA.eigenvectorUnitary : Matrix m m ℂ)ᴴ = 1 := by
-    simpa [star_eq_conjTranspose] using Unitary.coe_mul_star_self hA.eigenvectorUnitary
-  simp [hU]
-
-/-- matrixFunction of negation is negation of A. -/
-lemma matrixFunction_neg_id {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) :
-    matrixFunction (fun x => -(x : ℂ)) A hA = -A := by
-  have h : (fun x : ℝ => -(x : ℂ)) = (fun x => -((fun y : ℝ => (y : ℂ)) x)) := rfl
-  rw [h, matrixFunction_neg, matrixFunction_id]
-
-/-- matrixFunction depends only on the matrix value, not on the specific proof term.
-    If two matrices are equal, their matrixFunctions are equal. -/
-lemma matrixFunction_congr {m : Type*} [Fintype m] [DecidableEq m]
-    {A B : Matrix m m ℂ} (f : ℝ → ℂ) (hA : A.IsHermitian) (hB : B.IsHermitian)
-    (hAB : A = B) : matrixFunction f A hA = matrixFunction f B hB := by
-  subst hAB
-  rfl
-
-/-- matrixFunction equals Mathlib's IsHermitian.cfc for real-valued functions.
-This connects our spectral decomposition definition to Mathlib's CFC infrastructure. -/
-lemma matrixFunction_eq_cfc {m : Type*} [Fintype m] [DecidableEq m]
+/-- `Tr(A · f(A)) = ∑ᵢ λᵢ · f(λᵢ)` for the continuous functional calculus. -/
+lemma trace_mul_cfc {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) :
-    matrixFunction (fun x => (f x : ℂ)) A hA = cfc f A := by
-  have h : matrixFunction (fun x => (f x : ℂ)) A hA = hA.cfc f := by
-    unfold matrixFunction Matrix.IsHermitian.cfc
-    rw [Unitary.conjStarAlgAut_apply]
-    simp only [Function.comp_def, star_eq_conjTranspose]
-    rfl
-  calc
-    matrixFunction (fun x => (f x : ℂ)) A hA = hA.cfc f := h
-    _ = cfc f A := by
-      simpa using (Matrix.IsHermitian.cfc_eq (A := A) (hA := hA) (f := f)).symm
+    (A * cfc f A).trace = ∑ i, ((hA.eigenvalues i : ℂ) * (f (hA.eigenvalues i) : ℂ)) := by
+  have hfin : (spectrum ℝ A).Finite := by
+    rw [hA.spectrum_real_eq_range_eigenvalues]; exact Set.finite_range _
+  have hcont_id : ContinuousOn (fun x : ℝ => x) (spectrum ℝ A) := continuousOn_id
+  have hcont_f : ContinuousOn f (spectrum ℝ A) := hfin.continuousOn f
+  have hsa : IsSelfAdjoint A := hA
+  have hmul : A * cfc f A = cfc (fun x => x * f x) A := by
+    rw [cfc_mul (fun x => x) f A hcont_id hcont_f, cfc_id' (R := ℝ) (a := A) hsa]
+  rw [hmul, trace_cfc hA (fun x => x * f x)]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  push_cast
+  ring
 
-/-- `matrixFunction` for the affine function `x ↦ x + t` adds `t • I`. -/
-lemma matrixFunction_add_const {m : Type*} [Fintype m] [DecidableEq m]
+/-- `cfc (· + t) A = A + t • I` for Hermitian `A` via the continuous functional calculus. -/
+lemma cfc_add_const_eq {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.IsHermitian) (t : ℝ) :
-    matrixFunction (fun x => ((x + t : ℝ) : ℂ)) A hA = A + (t : ℂ) • 1 := by
-  classical
-  unfold matrixFunction
-  set U : Matrix m m ℂ := (hA.eigenvectorUnitary : Matrix m m ℂ)
-  have hdiag :
-      diagonal (fun i => ((hA.eigenvalues i + t : ℝ) : ℂ)) =
-        diagonal (fun i => (hA.eigenvalues i : ℂ)) + (t : ℂ) • 1 := by
-    ext i j
-    change (diagonal (fun i => ((hA.eigenvalues i + t : ℝ) : ℂ))) i j =
-        (diagonal (fun i => (hA.eigenvalues i : ℂ))) i j + ((t : ℂ) • (1 : Matrix m m ℂ)) i j
-    by_cases h : i = j
-    · subst h
-      rw [Matrix.diagonal_apply_eq, Matrix.diagonal_apply_eq, Matrix.smul_apply,
-        Matrix.one_apply_eq, smul_eq_mul, mul_one]
-      push_cast; ring
-    · rw [Matrix.diagonal_apply_ne _ h, Matrix.diagonal_apply_ne _ h, Matrix.smul_apply,
-        Matrix.one_apply_ne h, smul_zero, add_zero]
-  rw [hdiag]
-  simp only [Matrix.mul_add, Matrix.add_mul]
-  have hU : U * Uᴴ = 1 := by
-    simpa [U, star_eq_conjTranspose] using Unitary.coe_mul_star_self hA.eigenvectorUnitary
-  have hU1 : U * (1 : Matrix m m ℂ) * Uᴴ = 1 := by
-    simp [hU]
-  have hspec := hA.spectral_theorem
-  rw [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose] at hspec
-  have hspec' : U * diagonal (fun i => (hA.eigenvalues i : ℂ)) * Uᴴ = A := by
-    simpa [U, Function.comp] using hspec.symm
-  -- Rewrite the two diagonal terms using the spectral theorem and unitarity.
-  calc
-    U * diagonal (fun i => (hA.eigenvalues i : ℂ)) * Uᴴ +
-        U * ((t : ℂ) • (1 : Matrix m m ℂ)) * Uᴴ =
-        A + (t : ℂ) • 1 := by
-      rw [hspec']
-      have hUt : U * ((t : ℂ) • (1 : Matrix m m ℂ)) * Uᴴ =
-          (t : ℂ) • (U * (1 : Matrix m m ℂ) * Uᴴ) := by
-        calc
-          U * ((t : ℂ) • (1 : Matrix m m ℂ)) * Uᴴ =
-              ((t : ℂ) • (U * (1 : Matrix m m ℂ))) * Uᴴ := by
-                simp
-          _ = (t : ℂ) • (U * (1 : Matrix m m ℂ) * Uᴴ) := by
-                simp
-      calc
-        A + U * ((t : ℂ) • (1 : Matrix m m ℂ)) * Uᴴ =
-            A + (t : ℂ) • (U * (1 : Matrix m m ℂ) * Uᴴ) := by
-          rw [hUt]
-        _ = A + (t : ℂ) • 1 := by
-          calc
-            A + (t : ℂ) • (U * (1 : Matrix m m ℂ) * Uᴴ) =
-                A + (t : ℂ) • (U * Uᴴ) := by
-              simp
-            _ = A + (t : ℂ) • 1 := by
-              simp [hU]
+    cfc (fun x => x + t) A = A + (t : ℂ) • 1 := by
+  have hsa : IsSelfAdjoint A := hA
+  have hcont_id : ContinuousOn (fun x : ℝ => x) (spectrum ℝ A) := continuousOn_id
+  have hcont_c : ContinuousOn (fun _ : ℝ => t) (spectrum ℝ A) := continuousOn_const
+  rw [cfc_add A (fun x => x) (fun _ => t) hcont_id hcont_c, cfc_id' (R := ℝ) (a := A) hsa,
+      cfc_const t A, Algebra.algebraMap_eq_smul_one]
+  congr 1
 
-/-- `matrixFunction` for `x ↦ (x + t)⁻¹` equals `(A + t•I)⁻¹` when `t > 0` and `A` is PSD. -/
-lemma matrixFunction_inv_add_const {m : Type*} [Fintype m] [DecidableEq m]
+/-- `cfc ((· + t)⁻¹) A = (A + t • I)⁻¹` for PSD `A` and `t > 0`. -/
+lemma cfc_inv_add_const {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) {t : ℝ} (ht : 0 < t) :
-    matrixFunction (fun x => ((x + t : ℝ) : ℂ)⁻¹) A hA.1 =
-      (A + (t : ℂ) • 1)⁻¹ := by
+    cfc (fun x : ℝ => (x + t)⁻¹) A = (A + (t : ℂ) • 1)⁻¹ := by
   classical
   have hA' : A.IsHermitian := hA.1
   have hneq : ∀ x ∈ spectrum ℝ A, (x + t) ≠ 0 := by
@@ -266,188 +130,48 @@ lemma matrixFunction_inv_add_const {m : Type*} [Fintype m] [DecidableEq m]
     have hx' : x ∈ Set.range hA'.eigenvalues := by
       simpa [hA'.spectrum_real_eq_range_eigenvalues] using hx
     rcases hx' with ⟨i, rfl⟩
-    have hx_nonneg : 0 ≤ hA.1.eigenvalues i := hA.eigenvalues_nonneg i
-    linarith
-  have hcfcinv :
-      cfc (fun x : ℝ => (x + t)⁻¹) A = Ring.inverse (cfc (fun x : ℝ => x + t) A) := by
+    linarith [hA.eigenvalues_nonneg i]
+  have hcfcinv : cfc (fun x : ℝ => (x + t)⁻¹) A = Ring.inverse (cfc (fun x : ℝ => x + t) A) := by
     simpa using (cfc_inv (A := Matrix m m ℂ) (f := fun x : ℝ => x + t) (a := A) hneq)
-  have hcfcaff : cfc (fun x : ℝ => x + t) A = A + (t : ℂ) • 1 := by
-    have h := matrixFunction_add_const (m := m) hA' t
-    calc
-      cfc (fun x : ℝ => x + t) A =
-          matrixFunction (fun x => ((x + t : ℝ) : ℂ)) A hA' := by
-        simpa using (matrixFunction_eq_cfc hA' (fun x => x + t)).symm
-      _ = A + (t : ℂ) • 1 := h
+  have hcfcaff : cfc (fun x : ℝ => x + t) A = A + (t : ℂ) • 1 := cfc_add_const_eq hA' t
   have hposdef : (A + (t : ℂ) • 1).PosDef := PosSemidef.add_smul_one_posDef hA ht
   have hunit : IsUnit (A + (t : ℂ) • 1) := hposdef.isUnit
   let _ := hunit.invertible
   have hcfcaff_inv : Ring.inverse (cfc (fun x : ℝ => x + t) A) = (A + (t : ℂ) • 1)⁻¹ := by
     simpa [hcfcaff] using (Ring.inverse_unit hunit.unit)
-  have hmf : matrixFunction (fun x => ((x + t : ℝ) : ℂ)⁻¹) A hA.1 =
-      cfc (fun x : ℝ => (x + t)⁻¹) A := by
-    simpa using (matrixFunction_eq_cfc hA' (fun x => (x + t)⁻¹))
-  rw [hmf, hcfcinv, hcfcaff_inv]
+  rw [hcfcinv, hcfcaff_inv]
 
-/-- `matrixFunction` agrees with `CFC.rpow` for PSD matrices. -/
-lemma matrixFunction_rpow_eq {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) (s : ℝ) :
-    matrixFunction (fun x => ((x ^ s : ℝ) : ℂ)) A hA.1 = A ^ s := by
-  have hA0 : 0 ≤ A := by
-    simpa [Matrix.le_iff] using hA
-  calc
-    matrixFunction (fun x => ((x ^ s : ℝ) : ℂ)) A hA.1 = cfc (fun x : ℝ => x ^ s) A := by
-      simpa using (matrixFunction_eq_cfc hA.1 (fun x => x ^ s))
-    _ = A ^ s := by
-      symm
-      exact CFC.rpow_eq_cfc_real (A := Matrix m m ℂ) (a := A) (y := s) (ha := hA0)
-
-/-- Resolvent form for `matrixFunction` on PSD matrices. -/
-lemma matrixFunction_resolvent {m : Type*} [Fintype m] [DecidableEq m]
+/-- Resolvent form for `cfc` on PSD matrices:
+`cfc (1 - r·(· + r)⁻¹) A = I - r·(A + r·I)⁻¹` for `r > 0`. -/
+lemma cfc_resolvent {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) {r : ℝ} (hr : 0 < r) :
-    matrixFunction (fun x => ((1 - r * (x + r)⁻¹ : ℝ) : ℂ)) A hA.1 =
+    cfc (fun x => 1 - r * (x + r)⁻¹) A =
       (1 : Matrix m m ℂ) - (r : ℂ) • (A + (r : ℂ) • 1)⁻¹ := by
-  have hfun_inv : (fun x : ℝ => ((x : ℂ) + (r : ℂ))⁻¹) =
-      (fun x : ℝ => ((x + r : ℝ) : ℂ)⁻¹) := by
-    funext x
-    simp
-  have hfun : (fun x : ℝ => ((1 - r * (x + r)⁻¹ : ℝ) : ℂ)) =
-      (fun x : ℝ => (1 : ℂ) + -((r : ℂ) * ((x : ℂ) + (r : ℂ))⁻¹)) := by
-    funext x
-    push_cast
-    ring
-  have hconst : matrixFunction (fun _ => (1 : ℂ)) A hA.1 = (1 : Matrix m m ℂ) := by
-    simpa using (matrixFunction_const (m := m) hA.1 (1 : ℂ))
-  have hinv : matrixFunction (fun x => ((x + r : ℝ) : ℂ)⁻¹) A hA.1 =
-      (A + (r : ℂ) • 1)⁻¹ := by
-    exact matrixFunction_inv_add_const (m := m) hA hr
-  calc
-    matrixFunction (fun x => ((1 - r * (x + r)⁻¹ : ℝ) : ℂ)) A hA.1 =
-        matrixFunction (fun x => (1 : ℂ) + -((r : ℂ) * ((x : ℂ) + (r : ℂ))⁻¹)) A hA.1 := by
-          rw [hfun]
-    _ = matrixFunction (fun _ => (1 : ℂ)) A hA.1 +
-        matrixFunction (fun x => -((r : ℂ) * ((x : ℂ) + (r : ℂ))⁻¹)) A hA.1 := by
-          simpa using (matrixFunction_add hA.1 (fun _ => (1 : ℂ))
-            (fun x => -((r : ℂ) * ((x : ℂ) + (r : ℂ))⁻¹)))
-    _ = (1 : Matrix m m ℂ) +
-        -((r : ℂ) • matrixFunction (fun x => ((x : ℂ) + (r : ℂ))⁻¹) A hA.1) := by
-      have hsmul :
-          matrixFunction (fun x => (r : ℂ) * ((x : ℂ) + (r : ℂ))⁻¹) A hA.1 =
-            (r : ℂ) • matrixFunction (fun x => ((x : ℂ) + (r : ℂ))⁻¹) A hA.1 := by
-        simpa using
-          (matrixFunction_smul hA.1 (r : ℂ) (fun x => ((x : ℂ) + (r : ℂ))⁻¹))
-      have hneg :
-          matrixFunction (fun x => -((r : ℂ) * ((x : ℂ) + (r : ℂ))⁻¹)) A hA.1 =
-            -((r : ℂ) • matrixFunction (fun x => ((x : ℂ) + (r : ℂ))⁻¹) A hA.1) := by
-        simpa [hsmul] using
-          (matrixFunction_neg hA.1 (fun x => (r : ℂ) * ((x : ℂ) + (r : ℂ))⁻¹))
-      simp [hconst, hneg]
-    _ = (1 : Matrix m m ℂ) - (r : ℂ) • (A + (r : ℂ) • 1)⁻¹ := by
-      calc
-        (1 : Matrix m m ℂ) +
-            -((r : ℂ) • matrixFunction (fun x => ((x : ℂ) + (r : ℂ))⁻¹) A hA.1) =
-          (1 : Matrix m m ℂ) + -((r : ℂ) • (A + (r : ℂ) • 1)⁻¹) := by
-            have hinv' :
-                matrixFunction (fun x : ℝ => ((x : ℂ) + (r : ℂ))⁻¹) A hA.1 =
-                  (A + (r : ℂ) • 1)⁻¹ := by
-              simpa [hfun_inv] using hinv
-            simp [hinv']
-        _ = (1 : Matrix m m ℂ) - (r : ℂ) • (A + (r : ℂ) • 1)⁻¹ := by
-          simp [sub_eq_add_neg]
-
-/-- matrixFunction preserves positive semidefiniteness when f maps nonneg eigenvalues to nonneg. -/
-lemma matrixFunction_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef)
-    (f : ℝ → ℝ) (hf : ∀ i, 0 ≤ f (hA.1.eigenvalues i)) :
-    (matrixFunction (fun x => (f x : ℂ)) A hA.1).PosSemidef := by
-  unfold matrixFunction
-  have hD : (diagonal (fun i => (f (hA.1.eigenvalues i) : ℂ))).PosSemidef :=
-    PosSemidef.diagonal_ofReal hf
-  have key := hD.conjTranspose_mul_mul_same ((hA.1.eigenvectorUnitary : Matrix m m ℂ)ᴴ)
-  simp only [conjTranspose_conjTranspose] at key
-  exact key
-
-/-- matrixFunction (f - c) = matrixFunction f - c • I -/
-lemma matrixFunction_sub_const {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) (c : ℝ) :
-    matrixFunction (fun x => (f x - c : ℂ)) A hA = matrixFunction (fun x => (f x : ℂ)) A hA - (c : ℂ) • 1 := by
-  classical
-  let U : Matrix m m ℂ := hA.eigenvectorUnitary
-  have hU : U * Uᴴ = 1 := by
-    simpa [U, star_eq_conjTranspose] using Unitary.coe_mul_star_self hA.eigenvectorUnitary
-  have hdiag :
-      diagonal (fun i => (f (hA.eigenvalues i) - c : ℂ)) =
-        diagonal (fun i => (f (hA.eigenvalues i) : ℂ)) - diagonal (fun _ => (c : ℂ)) := by
-    ext i j
-    by_cases h : i = j
-    · subst h
-      simp
-    · simp [h]
-  have hdiagc : diagonal (fun _ => (c : ℂ)) = (c : ℂ) • (1 : Matrix m m ℂ) := by
-    ext i j
-    by_cases h : i = j
-    · subst h
-      simp
-    · simp [h]
-  unfold matrixFunction
-  rw [hdiag]
-  simp only [Matrix.mul_sub, Matrix.sub_mul]
-  rw [hdiagc]
-  simp only [Matrix.mul_smul, Matrix.smul_mul, Matrix.mul_one]
-  rw [hU]
-
-/-- Product of two matrixFunctions is the matrixFunction of the pointwise product.
-Since both share the eigenbasis U, f(A) g(A) = U diag(f(λ) · g(λ)) U*. -/
-lemma matrixFunction_mul {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) (f g : ℝ → ℂ) :
-    matrixFunction f A hA * matrixFunction g A hA =
-      matrixFunction (fun x => f x * g x) A hA := by
-  unfold matrixFunction
-  set U : Matrix m m ℂ := (hA.eigenvectorUnitary : Matrix m m ℂ) with hU_def
-  have hUU : Uᴴ * U = 1 := by
-    simpa [star_eq_conjTranspose] using Unitary.coe_star_mul_self hA.eigenvectorUnitary
-  simp only [hU_def, Matrix.mul_assoc]
+  have hA' : A.IsHermitian := hA.1
+  have hneq : ∀ x ∈ spectrum ℝ A, (x + r) ≠ 0 := by
+    intro x hx
+    have hx' : x ∈ Set.range hA'.eigenvalues := by
+      simpa [hA'.spectrum_real_eq_range_eigenvalues] using hx
+    rcases hx' with ⟨i, rfl⟩
+    linarith [hA.eigenvalues_nonneg i]
+  have hcont_inv : ContinuousOn (fun x : ℝ => (x + r)⁻¹) (spectrum ℝ A) :=
+    ContinuousOn.inv₀ (by fun_prop) hneq
+  have hcontc : ContinuousOn (fun _ : ℝ => (1 : ℝ)) (spectrum ℝ A) := continuousOn_const
+  have hcontri : ContinuousOn (fun x : ℝ => r * (x + r)⁻¹) (spectrum ℝ A) :=
+    continuousOn_const.mul hcont_inv
+  rw [cfc_sub (fun _ : ℝ => (1 : ℝ)) (fun x => r * (x + r)⁻¹) A hcontc hcontri,
+      cfc_const (1 : ℝ) A, map_one,
+      cfc_const_mul r (fun x : ℝ => (x + r)⁻¹) A hcont_inv,
+      cfc_inv_add_const hA hr]
   congr 1
-  rw [← Matrix.mul_assoc Uᴴ U, hUU, Matrix.one_mul, ← Matrix.mul_assoc, diagonal_mul_diagonal]
 
-/-- Tr(A · f(A)) = ∑ᵢ λᵢ · f(λᵢ).
-We first rewrite A as id(A) via `matrixFunction_id`, then apply
-`matrixFunction_mul` and `matrixFunction_trace`. -/
-lemma trace_mul_matrixFunction {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) (f : ℝ → ℂ) :
-    (A * matrixFunction f A hA).trace =
-      ∑ i, ((hA.eigenvalues i : ℂ) * f (hA.eigenvalues i)) := by
-  suffices h : (matrixFunction (fun x => (x : ℂ)) A hA *
-               matrixFunction f A hA).trace =
-               ∑ i, ((hA.eigenvalues i : ℂ) * f (hA.eigenvalues i)) by
-    rwa [matrixFunction_id] at h
-  rw [matrixFunction_mul, matrixFunction_trace]
-
-/-- A Hermitian matrix commutes with any matrixFunction of itself.
-This follows from `matrixFunction_id` (A = id(A)) and `matrixFunction_mul`
-(id(A) · f(A) = f(A) · id(A) by pointwise commutativity of multiplication). -/
-lemma commute_matrixFunction_self {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℂ) :
-    Commute A (matrixFunction f A hA) := by
-  have hlhs : A * matrixFunction f A hA =
-      matrixFunction (fun x => (x : ℂ) * f x) A hA := by
-    have := matrixFunction_mul hA (fun x => (x : ℂ)) f
-    rwa [matrixFunction_id] at this
-  have hrhs : matrixFunction f A hA * A =
-      matrixFunction (fun x => f x * (x : ℂ)) A hA := by
-    have := matrixFunction_mul hA f (fun x => (x : ℂ))
-    rwa [matrixFunction_id] at this
-  change A * matrixFunction f A hA = matrixFunction f A hA * A
-  rw [hlhs, hrhs]
-  congr 1; ext x; ring
-
-/-- The product A · f(A) is Hermitian when A is Hermitian and f : ℝ → ℝ.
-Since A and f(A) share the same eigenbasis, they commute; both are Hermitian,
-so their product is Hermitian by `IsHermitian.commute_iff`. -/
-lemma mul_matrixFunction_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
+/-- The product `A · f(A)` is Hermitian for Hermitian `A` and real `f`. -/
+lemma mul_cfc_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) :
-    (A * matrixFunction (fun x => (f x : ℂ)) A hA).IsHermitian :=
-  (hA.commute_iff (matrixFunction_isHermitian hA f)).mp
-    (commute_matrixFunction_self hA _)
+    (A * cfc f A).IsHermitian := by
+  have hsa : IsSelfAdjoint A := hA
+  have hcomm : Commute A (cfc f A) := (hsa.commute_cfc (Commute.refl A) f).symm
+  exact (hA.commute_iff (cfc_isHermitian hA f)).mp hcomm
 
 /-- The trace of a Hermitian matrix is real: casting its real part back to ℂ recovers the trace.
 Proof: Aᴴ = A implies star(Tr A) = Tr(Aᴴ) = Tr A, so Tr A is self-adjoint,
@@ -460,58 +184,22 @@ lemma IsHermitian.trace_ofReal_re {m : Type*} [Fintype m]
     rw [← trace_conjTranspose, hA.eq]
   exact (RCLike.conj_eq_iff_re (K := ℂ)).mp h
 
-/-- Matrix exponential for Hermitian matrices via spectral decomposition. -/
-noncomputable def matrixExp {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) : Matrix m m ℂ :=
-  matrixFunction (fun x => Real.exp x) A hA
-
-/-- Matrix logarithm for positive definite matrices via spectral decomposition. -/
-noncomputable def matrixLog {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) : Matrix m m ℂ :=
-  matrixFunction (fun x => Real.log x) A hA
-
-/-- `matrixLog` expands into the spectral decomposition attached to the chosen
-Hermitian proof. -/
-lemma matrixLog_spectral_eq {m : Type*} [Fintype m] [DecidableEq m]
+/-- `cfc Real.log` of a Hermitian matrix (the matrix logarithm) expands into the spectral
+decomposition attached to the chosen Hermitian proof. -/
+lemma cfc_log_spectral_eq {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.IsHermitian) :
-    matrixLog A hA =
+    cfc Real.log A =
       (hA.eigenvectorUnitary : Matrix m m ℂ) *
         diagonal (fun i => ((Real.log (hA.eigenvalues i) : ℝ) : ℂ)) *
-        (hA.eigenvectorUnitary : Matrix m m ℂ)ᴴ := by
-  unfold matrixLog matrixFunction
-  rfl
+        (hA.eigenvectorUnitary : Matrix m m ℂ)ᴴ :=
+  cfc_spectral_eq hA Real.log
 
-/-- Trace of matrix exponential equals sum of exp of eigenvalues. -/
-lemma matrixExp_trace {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) :
-    (matrixExp A hA).trace = ∑ i, (Real.exp (hA.eigenvalues i) : ℂ) := by
-  unfold matrixExp
-  rw [matrixFunction_trace]
-
-/-- Trace of matrix logarithm equals sum of log of eigenvalues. -/
-lemma matrixLog_trace {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) :
-    (matrixLog A hA).trace = ∑ i, (Real.log (hA.eigenvalues i) : ℂ) := by
-  unfold matrixLog
-  rw [matrixFunction_trace]
-
-/-- Matrix logarithm of a Hermitian matrix is Hermitian. -/
-lemma matrixLog_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) :
-    (matrixLog A hA).IsHermitian := by
-  unfold matrixLog matrixFunction IsHermitian
-  simp only [conjTranspose_mul, conjTranspose_conjTranspose]
-  have hDiag := IsHermitian.diagonal_real (fun i => Real.log (hA.eigenvalues i))
-  rw [IsHermitian] at hDiag
-  rw [hDiag, Matrix.mul_assoc]
-
-/-- The matrix logarithm commutes with any `*-`algebra equivalence between complex matrix
-algebras on PosDef matrices. Continuity is automatic in finite dimensions. -/
-theorem matrixLog_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
+/-- The matrix logarithm `cfc Real.log` commutes with any `*-`algebra equivalence between
+complex matrix algebras on PosDef matrices. Continuity is automatic in finite dimensions. -/
+theorem cfc_log_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
     [Fintype n] [DecidableEq n] {M : Matrix m m ℂ} (hM : M.PosDef)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
-    matrixLog (φ M) ((hM.posSemidef.map_starAlgEquiv φ).isHermitian) =
-      φ (matrixLog M hM.1) := by
+    cfc Real.log (φ M) = φ (cfc Real.log M) := by
   letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
   letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
@@ -522,8 +210,6 @@ theorem matrixLog_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
   letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
-  unfold matrixLog
-  rw [matrixFunction_eq_cfc, matrixFunction_eq_cfc]
   -- View `φ` as an ℝ-`StarAlgHom` to apply `StarAlgHomClass.map_cfc`.
   let ψ : Matrix m m ℂ →⋆ₐ[ℝ] Matrix n n ℂ :=
     { toAlgHom := (φ.toAlgEquiv.restrictScalars ℝ).toAlgHom
@@ -558,24 +244,30 @@ theorem matrixLog_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
   rw [h_ψ_apply, h_ψ_apply] at h_map
   exact h_map.symm
 
-/-- Matrix inverse square root via functional calculus for PD matrices. -/
+/-- Matrix inverse square root via the continuous functional calculus for PD matrices. -/
 noncomputable def matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.PosDef) : Matrix m m ℂ :=
-  matrixFunction (fun x => (Real.rpow x (-1 / 2 : ℝ) : ℂ)) A hA.1
+    (A : Matrix m m ℂ) (_hA : A.PosDef) : Matrix m m ℂ :=
+  cfc (fun x => Real.rpow x (-1 / 2 : ℝ)) A
+
+/-- `matrixInvSqrt A = A ^ (-1/2)` via `CFC.rpow`. -/
+lemma matrixInvSqrt_eq_rpow {m : Type*} [Fintype m] [DecidableEq m]
+    {A : Matrix m m ℂ} (hA : A.PosDef) :
+    matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) :=
+  (CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA.posSemidef)).symm
 
 /-- The matrix inverse square root of a PD matrix is Hermitian. -/
 lemma matrixInvSqrt_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
     (matrixInvSqrt A hA).IsHermitian := by
-  unfold matrixInvSqrt
-  exact matrixFunction_isHermitian hA.1 (fun x => Real.rpow x (-1 / 2 : ℝ))
+  rw [matrixInvSqrt]
+  exact cfc_isHermitian hA.1 (fun x => Real.rpow x (-1 / 2 : ℝ))
 
 /-- For a positive definite matrix `A`, `A^{-1/2} * A * A^{-1/2} = I`. -/
 lemma matrixInvSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
     matrixInvSqrt A hA * A * matrixInvSqrt A hA = 1 := by
   have hS : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    simpa [matrixInvSqrt] using (matrixFunction_rpow_eq hA.posSemidef (-1 / 2 : ℝ))
+    exact matrixInvSqrt_eq_rpow hA
   have hAunit : IsUnit A := hA.isUnit
   have hnonneg : 0 ≤ A := by
     simpa [Matrix.le_iff] using hA.posSemidef
@@ -599,17 +291,23 @@ lemma matrixInvSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
           ring_nf
           simpa using (CFC.rpow_zero (a := A) hnonneg)
 
-/-- Matrix square root via functional calculus for PSD matrices. -/
+/-- Matrix square root via the continuous functional calculus for PSD matrices. -/
 noncomputable def matrixSqrt {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.PosSemidef) : Matrix m m ℂ :=
-  matrixFunction (fun x => (Real.rpow x (1 / 2 : ℝ) : ℂ)) A hA.1
+    (A : Matrix m m ℂ) (_hA : A.PosSemidef) : Matrix m m ℂ :=
+  cfc (fun x => Real.rpow x (1 / 2 : ℝ)) A
+
+/-- `matrixSqrt A = A ^ (1/2)` via `CFC.rpow`. -/
+lemma matrixSqrt_eq_rpow {m : Type*} [Fintype m] [DecidableEq m]
+    {A : Matrix m m ℂ} (hA : A.PosSemidef) :
+    matrixSqrt A hA = A ^ (1 / 2 : ℝ) :=
+  (CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA)).symm
 
 /-- The matrix square root of a PSD matrix is Hermitian. -/
 lemma matrixSqrt_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) :
     (matrixSqrt A hA).IsHermitian := by
-  unfold matrixSqrt
-  exact matrixFunction_isHermitian hA.1 (fun x => Real.rpow x (1 / 2 : ℝ))
+  rw [matrixSqrt]
+  exact cfc_isHermitian hA.1 (fun x => Real.rpow x (1 / 2 : ℝ))
 
 /-- For a positive semidefinite matrix `A`, `A^{1/2} * A^{1/2} = A`. -/
 lemma matrixSqrt_mul_self_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
@@ -617,7 +315,7 @@ lemma matrixSqrt_mul_self_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
     matrixSqrt A hA * matrixSqrt A hA = A := by
   classical
   -- Use the spectral decomposition and diagonal computation.
-  unfold matrixSqrt matrixFunction
+  rw [matrixSqrt, cfc_spectral_eq hA.1 (fun x => Real.rpow x (1 / 2 : ℝ))]
   set U : Matrix m m ℂ := (hA.1.eigenvectorUnitary : Matrix m m ℂ)
   set D : Matrix m m ℂ :=
     diagonal (fun i => (Real.rpow (hA.1.eigenvalues i) (1 / 2 : ℝ) : ℂ))
@@ -650,7 +348,7 @@ lemma matrixSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
     matrixSqrt A hA.posSemidef * matrixSqrt A hA.posSemidef = A := by
   have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    simpa [matrixSqrt] using (matrixFunction_rpow_eq hA.posSemidef (1 / 2 : ℝ))
+    exact matrixSqrt_eq_rpow hA.posSemidef
   have hAunit : IsUnit A := hA.isUnit
   calc
     matrixSqrt A hA.posSemidef * matrixSqrt A hA.posSemidef =
@@ -670,9 +368,9 @@ lemma matrixSqrt_mul_matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
     matrixSqrt A hA.posSemidef * matrixInvSqrt A hA = 1 := by
   have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    simpa [matrixSqrt] using (matrixFunction_rpow_eq hA.posSemidef (1 / 2 : ℝ))
+    exact matrixSqrt_eq_rpow hA.posSemidef
   have hSi : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    simpa [matrixInvSqrt] using (matrixFunction_rpow_eq hA.posSemidef (-1 / 2 : ℝ))
+    exact matrixInvSqrt_eq_rpow hA
   have hAunit : IsUnit A := hA.isUnit
   have hnonneg : 0 ≤ A := by
     simpa [Matrix.le_iff] using hA.posSemidef
@@ -692,9 +390,9 @@ lemma matrixInvSqrt_mul_matrixSqrt {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
     matrixInvSqrt A hA * matrixSqrt A hA.posSemidef = 1 := by
   have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    simpa [matrixSqrt] using (matrixFunction_rpow_eq hA.posSemidef (1 / 2 : ℝ))
+    exact matrixSqrt_eq_rpow hA.posSemidef
   have hSi : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    simpa [matrixInvSqrt] using (matrixFunction_rpow_eq hA.posSemidef (-1 / 2 : ℝ))
+    exact matrixInvSqrt_eq_rpow hA
   have hAunit : IsUnit A := hA.isUnit
   have hnonneg : 0 ≤ A := by
     simpa [Matrix.le_iff] using hA.posSemidef
@@ -711,7 +409,7 @@ lemma matrixInvSqrt_mul_matrixSqrt {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- For commuting PSD L and PD R, matrixInvSqrt R commutes with L.
 This follows from the fact that L commutes with R, and CFC (hence rpow) preserves
-commutativity. Since matrixInvSqrt R = R^{-1/2} (by matrixFunction_rpow_eq), and
+commutativity. Since matrixInvSqrt R = R^{-1/2} (by CFC.rpow), and
 Commute.cfc_real gives that cfc g R commutes with L when L commutes with R,
 the result follows. -/
 lemma matrixInvSqrt_commute_of_commute {n : Type*} [Fintype n] [DecidableEq n]
@@ -723,53 +421,13 @@ lemma matrixInvSqrt_commute_of_commute {n : Type*} [Fintype n] [DecidableEq n]
   letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
   letI : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
-  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := by
-    simpa [matrixInvSqrt] using matrixFunction_rpow_eq hR.posSemidef (-1 / 2 : ℝ)
+  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
   rw [hRinv_eq]
   -- R^{-1/2} = cfc(x^{-1/2}, R), so it commutes with L since L commutes with R
   have hR0 : (0 : Matrix n n ℂ) ≤ R := by simpa [Matrix.le_iff] using hR.posSemidef
   rw [CFC.rpow_eq_cfc_real (a := R) (ha := hR0)]
   have hcommute : Commute R L := hcomm.symm
   exact Commute.cfc_real hcommute _
-
-/-- For a PSD matrix `A`, `(A^{1/2})ᴴ * A^{1/2} = A` (since the square root is Hermitian). -/
-lemma matrixSqrt_conjTranspose_mul_self_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) :
-    (matrixSqrt A hA)ᴴ * matrixSqrt A hA = A := by
-  have hherm : (matrixSqrt A hA).IsHermitian := matrixSqrt_isHermitian hA
-  calc
-    (matrixSqrt A hA)ᴴ * matrixSqrt A hA = matrixSqrt A hA * matrixSqrt A hA := by
-      simp [hherm.eq]
-    _ = A := matrixSqrt_mul_self_posSemidef hA
-
-/-- At p = 0: `matrixFunction (fun x => x ^ 0) A = I`. -/
-lemma matrixFunction_cpow_zero {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) :
-    matrixFunction (fun x => x ^ (0 : ℂ)) A hA = 1 := by
-  unfold matrixFunction
-  have h_pow : (fun i => ((hA.eigenvalues i : ℝ) : ℂ) ^ (0 : ℂ)) = (fun _ => 1) := by
-    ext i
-    simp [Complex.cpow_zero]
-  simp only [h_pow, Matrix.diagonal_one, Matrix.mul_one]
-  have h := Unitary.coe_mul_star_self hA.eigenvectorUnitary
-  simp only [Unitary.coe_star, star_eq_conjTranspose] at h
-  exact h
-
-/-- `matrixFunction (fun x => x ^ 1) A = A`. -/
-lemma matrixFunction_cpow_one {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : A.IsHermitian) :
-    matrixFunction (fun x => x ^ (1 : ℂ)) A hA = A := by
-  unfold matrixFunction
-  have h_pow : (fun i => ((hA.eigenvalues i : ℝ) : ℂ) ^ (1 : ℂ)) =
-      (fun i => ((hA.eigenvalues i : ℝ) : ℂ)) := by
-    ext i
-    simp [Complex.cpow_one]
-  have h_diag : diagonal (fun i => ((hA.eigenvalues i : ℝ) : ℂ)) =
-      diagonal (RCLike.ofReal ∘ hA.eigenvalues) := rfl
-  simp only [h_pow, h_diag]
-  have h_spec := hA.spectral_theorem
-  rw [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose] at h_spec
-  exact h_spec.symm
 
 /-- CFC commutes with unitary conjugation using `Unitary.conjStarAlgAut`. -/
 lemma cfc_unitary_conjugation' {m : Type*} [Fintype m] [DecidableEq m]
@@ -944,7 +602,7 @@ lemma compression_pow_eq {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [
       _ = Vᴴ * M ^ k * V * (Vᴴ * M * V) := by simp only [Matrix.mul_assoc]
       _ = (Vᴴ * M * V) ^ k * (Vᴴ * M * V) := by rw [ih]
 
--- Helper: matrixFunction f M can be expressed as a polynomial in M
+-- Helper: cfc f M can be expressed as a polynomial in M
 -- (specifically, the Lagrange interpolant at the eigenvalues).
 -- Hence V†f(M)V = f(V†MV) when V†M^kV = (V†MV)^k.
 
@@ -1058,14 +716,15 @@ lemma eigenvalues_compression_subset {n m : Type*}
   use j
   exact Complex.ofReal_injective hr
 
-lemma matrixFunction_compression_of_commuting {n m : Type*}
+/-- Compression commutes with the continuous functional calculus when `Vᴴ V = 1` and `M`
+commutes with `V Vᴴ`: `Vᴴ · f(M) · V = f(Vᴴ M V)`. -/
+lemma cfc_compression_of_commuting {n m : Type*}
     [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
     (V : Matrix n m ℂ) (M : Matrix n n ℂ) (hM : M.IsHermitian)
     (hVV : Vᴴ * V = (1 : Matrix m m ℂ))
     (hcomm : M * (V * Vᴴ) = V * Vᴴ * M) (f : ℝ → ℝ)
     (hVM : (Vᴴ * M * V).IsHermitian) :
-    Vᴴ * matrixFunction (fun x => (f x : ℂ)) M hM * V =
-    matrixFunction (fun x => (f x : ℂ)) (Vᴴ * M * V) hVM := by
+    Vᴴ * cfc f M * V = cfc f (Vᴴ * M * V) := by
   classical
   -- The key insight: eigenvalues of V†MV are among eigenvalues of M
   have h_eig_subset := eigenvalues_compression_subset V M hM hVV hcomm hVM
@@ -1107,11 +766,6 @@ lemma matrixFunction_compression_of_commuting {n m : Type*}
     rw [h1, ← Polynomial.aeval_def, Polynomial.aeval_algebraMap_apply_eq_algebraMap_eval,
         hp_interp_VM i]
     rfl
-  unfold matrixFunction
-  have h_mf_M_eq_cfc : matrixFunction (fun x => (f x : ℂ)) M hM = cfc f M :=
-    matrixFunction_eq_cfc hM f
-  have h_mf_VM_eq_cfc : matrixFunction (fun x => (f x : ℂ)) (Vᴴ * M * V) hVM = cfc f (Vᴴ * M * V) :=
-    matrixFunction_eq_cfc hVM f
   have h_cfc_M : cfc f M = hM.cfc f := Matrix.IsHermitian.cfc_eq hM f
   have h_cfc_VM : cfc f (Vᴴ * M * V) = hVM.cfc f := Matrix.IsHermitian.cfc_eq hVM f
   have h_cfc_f_eq_p_M : hM.cfc f = hM.cfc (fun x => p.eval x) := by
@@ -1147,9 +801,8 @@ lemma matrixFunction_compression_of_commuting {n m : Type*}
       simp only [p_complex, Polynomial.aeval_map_algebraMap]
     rw [h1, h2]
     exact compression_aeval_eq V M hVV hcomm p_complex
-  calc Vᴴ * matrixFunction (fun x => (f x : ℂ)) M hM * V
-      = Vᴴ * cfc f M * V := by rw [h_mf_M_eq_cfc]
-    _ = Vᴴ * hM.cfc f * V := by rw [h_cfc_M]
+  calc Vᴴ * cfc f M * V
+      = Vᴴ * hM.cfc f * V := by rw [h_cfc_M]
     _ = Vᴴ * hM.cfc (fun x => p.eval x) * V := by rw [h_cfc_f_eq_p_M]
     _ = Vᴴ * cfc (fun x => p.eval x) M * V := by rw [← Matrix.IsHermitian.cfc_eq hM]
     _ = Vᴴ * Polynomial.aeval M p * V := by rw [h_cfc_p_eq_aeval_M]
@@ -1158,11 +811,10 @@ lemma matrixFunction_compression_of_commuting {n m : Type*}
     _ = hVM.cfc (fun x => p.eval x) := by rw [Matrix.IsHermitian.cfc_eq hVM]
     _ = hVM.cfc f := by rw [← h_cfc_f_eq_p_VM]
     _ = cfc f (Vᴴ * M * V) := by rw [← h_cfc_VM]
-    _ = matrixFunction (fun x => (f x : ℂ)) (Vᴴ * M * V) hVM := by rw [← h_mf_VM_eq_cfc]
 
 /-- For an isometry V (V†V = I), PSD A, and s > 0: (VAV†)^s = V A^s V†.
 
-**Proof**: Uses `matrixFunction_compression_of_commuting` to get V†(VAV†)^s V = A^s,
+**Proof**: Uses `cfc_compression_of_commuting` to get V†(VAV†)^s V = A^s,
 then shows (VAV†)^s annihilates the complement (1 - VV†) via kernel preservation. -/
 lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
     [DecidableEq n] [DecidableEq m]
@@ -1191,14 +843,11 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
   -- Step 3: V†(M^s)V = A^s
   have hVM_herm : (Vᴴ * M * V).IsHermitian := by rw [hstep1]; exact hA.1
   have hVMA_rpow : Vᴴ * (M ^ s) * V = A ^ s := by
-    have h1 := matrixFunction_rpow_eq hM_psd s
-    have h2 := matrixFunction_compression_of_commuting V M hM_psd.1 hV hcomm (· ^ s) hVM_herm
-    rw [h1] at h2
-    rw [h2]
-    have h3 : matrixFunction (fun x => ((x ^ s : ℝ) : ℂ)) (Vᴴ * M * V) hVM_herm =
-              matrixFunction (fun x => ((x ^ s : ℝ) : ℂ)) A hA.1 := by
-      congr 1
-    rw [h3, matrixFunction_rpow_eq hA]
+    have hM0 : (0 : Matrix m m ℂ) ≤ M := by rw [Matrix.le_iff, sub_zero]; exact hM_psd
+    have hA0 : (0 : Matrix n n ℂ) ≤ A := by rw [Matrix.le_iff, sub_zero]; exact hA
+    rw [CFC.rpow_eq_cfc_real (a := M) (ha := hM0),
+        cfc_compression_of_commuting V M hM_psd.1 hV hcomm (fun x : ℝ => x ^ s) hVM_herm,
+        hstep1, ← CFC.rpow_eq_cfc_real (a := A) (ha := hA0)]
   -- Step 4: M * (1 - P) = 0
   have hM_annihilate : M * (1 - P) = 0 := by
     rw [mul_sub, mul_one, hM_def, hP_def,
@@ -1274,8 +923,8 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
   have hP_herm : Pᴴ = P := by
     simp [hP_def, Matrix.conjTranspose_mul, conjTranspose_conjTranspose]
   have hMs_herm : (M ^ s).IsHermitian := by
-    rw [← matrixFunction_rpow_eq hM_psd]
-    exact matrixFunction_isHermitian hM_psd.1 (· ^ s)
+    rw [CFC.rpow_eq_cfc_real (a := M) (ha := by rw [Matrix.le_iff, sub_zero]; exact hM_psd)]
+    exact cfc_isHermitian hM_psd.1 (fun x : ℝ => x ^ s)
   -- M^s = M^s * P (from M^s*(1-P)=0)
   have hMsP_eq : M ^ s = M ^ s * P := by
     have h := hMs_annihilate
@@ -1327,8 +976,8 @@ lemma spectral_expand (A : Matrix n n ℂ) (hA : A.IsHermitian) :
     A = (hA.eigenvectorUnitary : Matrix n n ℂ) *
         diagonal (fun i => (hA.eigenvalues i : ℂ)) *
         (hA.eigenvectorUnitary : Matrix n n ℂ)ᴴ := by
-  have h := (matrixFunction_id hA).symm
-  unfold matrixFunction at h
+  have h := hA.spectral_theorem
+  rw [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose] at h
   simpa [Function.comp] using h
 
 /-- The j-th column of the eigenvector unitary satisfies the eigenvalue equation:

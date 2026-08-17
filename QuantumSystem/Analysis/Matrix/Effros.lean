@@ -11,7 +11,7 @@ This file formalises the Effros (2008) machinery used to prove Lieb's joint conc
 ## Contents
 
 1. **Compression lemmas** – `compression_pow_eq`, `compression_aeval_eq`,
-   `eigenvalues_compression_subset`, and `matrixFunction_compression_of_commuting`:
+   `eigenvalues_compression_subset`, and `cfc_compression_of_commuting`:
    the map `X ↦ V† X V` (sandwiching) interacts well with polynomial/functional calculus
    when `V†V = I` and `M` commutes with `VV†`.
 2. **Block diagonal** – `compression_of_fromBlocks_cfc` and related CFC lemmas.
@@ -43,16 +43,6 @@ noncomputable def leftMul {m : Type*} [Fintype m]
 noncomputable def rightMul {m : Type*} [Fintype m]
     (B : Matrix m m ℂ) : Matrix m m ℂ →ₗ[ℂ] Matrix m m ℂ :=
   mulRightLinearMap m ℂ B
-
-/-- `leftMul A` applied to a matrix `X` yields `A * X`. -/
-@[simp] lemma leftMul_apply {m : Type*} [Fintype m]
-    (A X : Matrix m m ℂ) : leftMul A X = A * X := by
-  simp [leftMul]
-
-/-- `rightMul B` applied to a matrix `X` yields `X * B`. -/
-@[simp] lemma rightMul_apply {m : Type*} [Fintype m]
-    (B X : Matrix m m ℂ) : rightMul B X = X * B := by
-  simp [rightMul]
 
 /-- Left and right multiplication operators commute as linear maps. -/
 lemma leftMul_rightMul_commute {m : Type*} [Fintype m]
@@ -105,7 +95,7 @@ lemma leftMulMatrix_rightMulMatrix_commute {m : Type*} [Fintype m] [DecidableEq 
   simpa [hcomp_left, hcomp_right] using hcomm
 
 /-- leftMulMatrix is additive: leftMulMatrix (A + B) = leftMulMatrix A + leftMulMatrix B -/
-theorem leftMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐋 (A + B) = 𝐋 A + 𝐋 B := by
   simp only [leftMulMatrix]
@@ -125,7 +115,7 @@ lemma leftMulMatrix_smul {m : Type*} [Fintype m] [DecidableEq m]
   exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_smul c (leftMul A)
 
 /-- rightMulMatrix is additive: rightMulMatrix (A + B) = rightMulMatrix A + rightMulMatrix B -/
-theorem rightMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐑 (A + B) = 𝐑 A + 𝐑 B := by
   simp only [rightMulMatrix]
@@ -145,7 +135,7 @@ lemma rightMulMatrix_smul {m : Type*} [Fintype m] [DecidableEq m]
   exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_smul c (rightMul A)
 
 /-- leftMulMatrix is homogeneous for real scalars -/
-theorem leftMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
     (r : ℝ) (A : Matrix m m ℂ) :
     𝐋 (r • A) = r • 𝐋 A := by
   have h : (r : ℂ) • A = r • A := by
@@ -156,7 +146,7 @@ theorem leftMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
   simp [Complex.real_smul]
 
 /-- rightMulMatrix is homogeneous for real scalars -/
-theorem rightMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
     (r : ℝ) (A : Matrix m m ℂ) :
     𝐑 (r • A) = r • 𝐑 A := by
   have h : (r : ℂ) • A = r • A := by
@@ -165,23 +155,6 @@ theorem rightMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
   rw [← h, rightMulMatrix_smul]
   ext i j
   simp [Complex.real_smul]
-
-/-- leftMulMatrix is multiplicative: leftMulMatrix (A * B) = leftMulMatrix A * leftMulMatrix B -/
-lemma leftMulMatrix_mul {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) :
-    𝐋 (A * B) = 𝐋 A * 𝐋 B := by
-  simp only [leftMulMatrix]
-  have h : leftMul (A * B) = (leftMul A).comp (leftMul B) := by
-    ext X; simp [leftMul]
-  rw [h, LinearMap.toMatrix_comp (matrixBasis m) (matrixBasis m) (matrixBasis m)]
-
-/-- leftMulMatrix maps identity to identity -/
-lemma leftMulMatrix_one {m : Type*} [Fintype m] [DecidableEq m] :
-    𝐋 (1 : Matrix m m ℂ) = (1 : Matrix (m × m) (m × m) ℂ) := by
-  simp only [leftMulMatrix]
-  have h : leftMul (1 : Matrix m m ℂ) = LinearMap.id := by
-    ext X; simp [leftMul]
-  rw [h, LinearMap.toMatrix_id (matrixBasis m)]
 
 /-- rightMulMatrix is anti-multiplicative:
     rightMulMatrix (A * B) = rightMulMatrix B * rightMulMatrix A -/
@@ -200,26 +173,6 @@ lemma rightMulMatrix_one {m : Type*} [Fintype m] [DecidableEq m] :
   have h : rightMul (1 : Matrix m m ℂ) = LinearMap.id := by
     ext X; simp [rightMul]
   rw [h, LinearMap.toMatrix_id (matrixBasis m)]
-
-
-/-- rightMulMatrix preserves powers: rightMulMatrix (B ^ n) = (rightMulMatrix B) ^ n -/
-lemma rightMulMatrix_pow {m : Type*} [Fintype m] [DecidableEq m]
-    (B : Matrix m m ℂ) (n : ℕ) :
-    𝐑 (B ^ n) = (𝐑 B) ^ n := by
-  induction n with
-  | zero => simp [rightMulMatrix_one]
-  | succ n ih =>
-    rw [pow_succ, rightMulMatrix_mul, ih, ← pow_succ']
-
-/-- leftMulMatrix preserves powers: leftMulMatrix (A ^ n) = (leftMulMatrix A) ^ n -/
-lemma leftMulMatrix_pow {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (n : ℕ) :
-    𝐋 (A ^ n) = (𝐋 A) ^ n := by
-  induction n with
-  | zero => simp [leftMulMatrix_one]
-  | succ n ih =>
-    rw [pow_succ, leftMulMatrix_mul, ih]
-    rw [pow_succ]
 
 /-- The standard basis element at index `(i, j)` is the matrix with `1` at `(i, j)` and `0` elsewhere. -/
 lemma matrixBasis_apply_eq_single {m : Type*} [Fintype m] [DecidableEq m] (ij : m × m) :
@@ -273,7 +226,7 @@ lemma matrixBasis_repr_apply {m : Type*} [Fintype m] [DecidableEq m]
     _ = M i j := hsum'
 
 /-- Entry `(i, j), (k, l)` of `leftMulMatrix A` equals `A i k` if `j = l`, else `0`. -/
-theorem leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
     (A : Matrix m m ℂ) (i j k l : m) :
     𝐋 A (i, j) (k, l) = if j = l then A i k else 0 := by
   classical
@@ -287,7 +240,7 @@ theorem leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
   · simp [hjl]
 
 /-- Entry `(i, j), (k, l)` of `rightMulMatrix B` equals `B l j` if `i = k`, else `0`. -/
-theorem rightMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
     (B : Matrix m m ℂ) (i j k l : m) :
     𝐑 B (i, j) (k, l) = if i = k then B l j else 0 := by
   classical
@@ -300,13 +253,6 @@ theorem rightMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
   · subst hik
     simp
   · simp [hik]
-
-/-- Action of `leftMulMatrix A` on the vectorized form of `Kᴴ` yields `(A * Kᴴ) i j`. -/
-lemma leftMulMatrix_mulVec_vecConjTranspose {m : Type*} [Fintype m] [DecidableEq m]
-    (A K : Matrix m m ℂ) (i j : m) :
-    (𝐋 A *ᵥ (fun x : m × m => Kᴴ x.1 x.2)) (i, j) = (A * Kᴴ) i j := by
-  classical
-  simp [Matrix.mulVec, dotProduct, leftMulMatrix_apply, Matrix.mul_apply, Fintype.sum_prod_type]
 
 /-- Action of `rightMulMatrix B` on the vectorized form of `Kᴴ` yields `(Kᴴ * B) i j`. -/
 lemma rightMulMatrix_mulVec_vecConjTranspose {m : Type*} [Fintype m] [DecidableEq m]
@@ -333,7 +279,7 @@ lemma leftRightMul_mulVec_vecConjTranspose {m : Type*} [Fintype m] [DecidableEq 
 
 /-- The quadratic form star(vec(K†)) ⬝ᵥ (leftMulMatrix X * rightMulMatrix Y) *ᵥ vec(K†)
 equals Tr(K * X * K† * Y). -/
-theorem quadForm_leftRightMul_eq_trace {m : Type*} [Fintype m] [DecidableEq m]
+lemma quadForm_leftRightMul_eq_trace {m : Type*} [Fintype m] [DecidableEq m]
     (X Y K : Matrix m m ℂ) :
     let v : (m × m) → ℂ := fun x => Kᴴ x.1 x.2
     star v ⬝ᵥ ((leftMulMatrix X * rightMulMatrix Y) *ᵥ v) =
@@ -368,49 +314,16 @@ lemma rightMulMatrix_eq_one_kronecker_transpose {m : Type*} [Fintype m] [Decidab
     simp [rightMulMatrix_apply, Matrix.kroneckerMap_apply, Matrix.transpose_apply]
   · simp [rightMulMatrix_apply, Matrix.kroneckerMap_apply, Matrix.transpose_apply, hik]
 
-/-- `leftMulMatrix` commutes with conjugate transpose: `leftMulMatrix (Aᴴ) = (leftMulMatrix A)ᴴ`. -/
-lemma leftMulMatrix_conjTranspose {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) :
-    𝐋 (Aᴴ) = (𝐋 A)ᴴ := by
-  classical
-  ext ⟨i, j⟩ ⟨k, l⟩
-  simp only [leftMulMatrix_apply, Matrix.conjTranspose_apply]
-  by_cases hjl : j = l
-  · subst hjl; simp
-  · have hlj : ¬ l = j := Ne.symm hjl
-    simp [hjl, hlj]
-
-/-- `rightMulMatrix` commutes with conjugate transpose: `rightMulMatrix (Bᴴ) = (rightMulMatrix B)ᴴ`. -/
-lemma rightMulMatrix_conjTranspose {m : Type*} [Fintype m] [DecidableEq m]
-    (B : Matrix m m ℂ) :
-    𝐑 (Bᴴ) = (𝐑 B)ᴴ := by
-  classical
-  ext ⟨i, j⟩ ⟨k, l⟩
-  simp only [rightMulMatrix_apply, Matrix.conjTranspose_apply]
-  by_cases hik : i = k
-  · subst hik; simp
-  · have hki : ¬ k = i := Ne.symm hik
-    simp [hik, hki]
-
 /-- `leftMulMatrix` preserves positive semidefiniteness. -/
-theorem leftMulMatrix_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
+lemma leftMulMatrix_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) :
     (𝐋 A).PosSemidef := by
   classical
   simpa [leftMulMatrix_eq_kronecker_one] using
     (Matrix.PosSemidef.kronecker (m := m) (x := A) (y := (1 : Matrix m m ℂ)) hA posSemidef_one)
 
-/-- `rightMulMatrix` preserves positive semidefiniteness. -/
-lemma rightMulMatrix_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
-    {B : Matrix m m ℂ} (hB : B.PosSemidef) :
-    (𝐑 B).PosSemidef := by
-  classical
-  have hB' : Bᵀ.PosSemidef := hB.transpose
-  simpa [rightMulMatrix_eq_one_kronecker_transpose] using
-    (Matrix.PosSemidef.kronecker (m := m) (x := (1 : Matrix m m ℂ)) (y := Bᵀ) posSemidef_one hB')
-
 /-- `rightMulMatrix` preserves positive definiteness. -/
-theorem rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
+lemma rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
     {B : Matrix m m ℂ} (hB : B.PosDef) :
     (𝐑 B).PosDef := by
   classical
@@ -418,244 +331,24 @@ theorem rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
   simpa [rightMulMatrix_eq_one_kronecker_transpose] using
     (Matrix.PosDef.kronecker (m := m) (x := (1 : Matrix m m ℂ)) (y := Bᵀ) posDef_one hB')
 
-/-- leftMulMatrix as a star algebra homomorphism over ℝ.
-    This allows using the CFC infrastructure to relate
-    leftMulMatrix (f(A)) = f(leftMulMatrix(A)) for continuous f. -/
-noncomputable def leftMulStarAlgHom {m : Type*} [Fintype m] [DecidableEq m] :
-    Matrix m m ℂ →⋆ₐ[ℝ] Matrix (m × m) (m × m) ℂ where
-  toFun := leftMulMatrix
-  map_one' := leftMulMatrix_one
-  map_mul' := leftMulMatrix_mul
-  map_zero' := by
-    change 𝐋 0 = 0
-    have h : leftMul (0 : Matrix m m ℂ) = 0 := by ext X; simp [leftMul]
-    simp only [leftMulMatrix, h, map_zero]
-  map_add' := leftMulMatrix_add
-  commutes' r := by
-    simp only [Algebra.algebraMap_eq_smul_one]
-    rw [leftMulMatrix_smul_real, leftMulMatrix_one]
-  map_star' a := by
-    simp only [star_eq_conjTranspose]
-    exact leftMulMatrix_conjTranspose a
-
-/-- The leftMulMatrix homomorphism is continuous (finite dimensional). -/
-lemma leftMulStarAlgHom_continuous {m : Type*} [Fintype m] [DecidableEq m] :
-    Continuous (leftMulStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] Matrix (m × m) (m × m) ℂ) := by
-  -- leftMulMatrix is a linear map between finite-dimensional normed spaces, hence continuous
-  letI : SeminormedAddCommGroup (Matrix m m ℂ) := Matrix.linftyOpSeminormedAddCommGroup
-  letI : NormedSpace ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedSpace
-  letI : IsBoundedSMul ℝ (Matrix m m ℂ) := Matrix.linftyOpIsBoundedSMul
-  letI : SeminormedAddCommGroup (Matrix (m × m) (m × m) ℂ) :=
-    Matrix.linftyOpSeminormedAddCommGroup
-  letI : NormedSpace ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedSpace
-  letI : IsBoundedSMul ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpIsBoundedSMul
-  haveI : FiniteDimensional ℝ (Matrix m m ℂ) := inferInstance
-  let f : Matrix m m ℂ →ₗ[ℝ] Matrix (m × m) (m × m) ℂ :=
-    (leftMulStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] _).toAlgHom.toLinearMap
-  change Continuous (f : Matrix m m ℂ → _)
-  exact f.continuous_of_finiteDimensional
-
-/-- CFC commutes with leftMulMatrix: for self-adjoint A and continuous f,
-    leftMulMatrix (cfc f A) = cfc f (leftMulMatrix A). -/
-lemma leftMulMatrix_cfc {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (hA : IsSelfAdjoint A) (f : ℝ → ℝ)
-    (hf : ContinuousOn f (spectrum ℝ A) := by cfc_cont_tac) :
-    𝐋 (cfc f A) = cfc f (𝐋 A) := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  letI : NormedRing (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix (m × m) (m × m) ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m × m) (A := ℂ)
-  exact StarAlgHom.map_cfc leftMulStarAlgHom f A hf
-    leftMulStarAlgHom_continuous hA
-
-/-- leftMulMatrix preserves rpow: leftMulMatrix (A ^ s) = (leftMulMatrix A) ^ s
-    for positive semidefinite A and real s. -/
-lemma leftMulMatrix_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) {s : ℝ} (hs : 0 ≤ s) :
-    𝐋 (A ^ s) = (𝐋 A) ^ s := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  letI : NormedRing (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix (m × m) (m × m) ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m × m) (A := ℂ)
-  have hA0 : (0 : Matrix m m ℂ) ≤ A := by simpa [Matrix.le_iff] using hA
-  have hLA0 : (0 : Matrix (m × m) (m × m) ℂ) ≤ 𝐋 A := by
-    simpa [Matrix.le_iff] using leftMulMatrix_posSemidef hA
-  have hcont_rpow : ContinuousOn (fun x : ℝ => x ^ s) (spectrum ℝ A) :=
-    (Real.continuous_rpow_const hs).continuousOn
-  rw [CFC.rpow_eq_cfc_real (a := A) (ha := hA0),
-      CFC.rpow_eq_cfc_real (a := 𝐋 A) (ha := hLA0)]
-  exact leftMulMatrix_cfc A hA.1.isSelfAdjoint (· ^ s) hcont_rpow
-
-/-- B ↦ rightMulMatrix(Bᴴ) as a star algebra homomorphism over ℝ.
-This composes the anti-homomorphism `rightMulMatrix` with the anti-involution
-conjTranspose, yielding a genuine homomorphism. -/
-noncomputable def rightMulConjTransposeStarAlgHom {m : Type*} [Fintype m] [DecidableEq m] :
-    Matrix m m ℂ →⋆ₐ[ℝ] Matrix (m × m) (m × m) ℂ where
-  toFun B := 𝐑 (Bᴴ)
-  map_one' := by simp [conjTranspose_one, rightMulMatrix_one]
-  map_mul' A B := by
-    change 𝐑 ((A * B)ᴴ) = 𝐑 (Aᴴ) * 𝐑 (Bᴴ)
-    rw [conjTranspose_mul, rightMulMatrix_mul]
-  map_zero' := by
-    change 𝐑 (0ᴴ) = 0
-    rw [conjTranspose_zero]
-    have h : rightMul (0 : Matrix m m ℂ) = 0 := by ext X; simp [rightMul]
-    simp only [rightMulMatrix, h, map_zero]
-  map_add' A B := by
-    change 𝐑 ((A + B)ᴴ) = 𝐑 (Aᴴ) + 𝐑 (Bᴴ)
-    rw [conjTranspose_add, rightMulMatrix_add]
-  commutes' r := by
-    change 𝐑 ((algebraMap ℝ (Matrix m m ℂ) r)ᴴ) = algebraMap ℝ _ r
-    simp only [Algebra.algebraMap_eq_smul_one]
-    rw [conjTranspose_smul, conjTranspose_one, star_trivial,
-      rightMulMatrix_smul_real, rightMulMatrix_one]
-  map_star' A := by
-    simp only [star_eq_conjTranspose, conjTranspose_conjTranspose,
-      rightMulMatrix_conjTranspose]
-
-/-- The `rightMulConjTransposeStarAlgHom` is continuous (finite dimensional). -/
-lemma rightMulConjTransposeStarAlgHom_continuous {m : Type*} [Fintype m] [DecidableEq m] :
-    Continuous (rightMulConjTransposeStarAlgHom :
-        Matrix m m ℂ →⋆ₐ[ℝ] Matrix (m × m) (m × m) ℂ) := by
-  letI : SeminormedAddCommGroup (Matrix m m ℂ) := Matrix.linftyOpSeminormedAddCommGroup
-  letI : NormedSpace ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedSpace
-  letI : IsBoundedSMul ℝ (Matrix m m ℂ) := Matrix.linftyOpIsBoundedSMul
-  letI : SeminormedAddCommGroup (Matrix (m × m) (m × m) ℂ) :=
-    Matrix.linftyOpSeminormedAddCommGroup
-  letI : NormedSpace ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedSpace
-  letI : IsBoundedSMul ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpIsBoundedSMul
-  haveI : FiniteDimensional ℝ (Matrix m m ℂ) := inferInstance
-  let f : Matrix m m ℂ →ₗ[ℝ] Matrix (m × m) (m × m) ℂ :=
-    (rightMulConjTransposeStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] _).toAlgHom.toLinearMap
-  change Continuous (f : Matrix m m ℂ → _)
-  exact f.continuous_of_finiteDimensional
-
-/-- CFC commutes with rightMulMatrix for self-adjoint (Hermitian) matrices.
-Uses the `rightMulConjTransposeStarAlgHom` to transport CFC via `StarAlgHom.map_cfc`.
-Key insight: For Hermitian B, `Bᴴ = B`, so `Ψ(B) = rightMulMatrix(B)`,
-and for self-adjoint `cfc f B`, `Ψ(cfc f B) = rightMulMatrix(cfc f B)`. -/
-lemma rightMulMatrix_cfc {m : Type*} [Fintype m] [DecidableEq m]
-    (B : Matrix m m ℂ) (hB : IsSelfAdjoint B) (f : ℝ → ℝ)
-    (hf : ContinuousOn f (spectrum ℝ B) := by cfc_cont_tac) :
-    𝐑 (cfc f B) = cfc f (𝐑 B) := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  letI : NormedRing (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix (m × m) (m × m) ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m × m) (A := ℂ)
-  -- Ψ = rightMulConjTransposeStarAlgHom: B ↦ rightMulMatrix(Bᴴ)
-  -- StarAlgHom.map_cfc gives: Ψ(cfc f B) = cfc f (Ψ B)
-  have h_map := StarAlgHom.map_cfc rightMulConjTransposeStarAlgHom f B hf
-    rightMulConjTransposeStarAlgHom_continuous hB
-  -- Ψ(B) = rightMulMatrix(Bᴴ) = rightMulMatrix(B) since B is Hermitian
-  have h_psi_B : (rightMulConjTransposeStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] _) B =
-      𝐑 B := by
-    dsimp [rightMulConjTransposeStarAlgHom]
-    rw [← star_eq_conjTranspose, hB.star_eq]
-  -- Ψ(cfc f B) = rightMulMatrix((cfc f B)ᴴ) = rightMulMatrix(cfc f B)
-  -- since cfc f B is self-adjoint
-  have h_psi_cfc : (rightMulConjTransposeStarAlgHom : Matrix m m ℂ →⋆ₐ[ℝ] _) (cfc f B) =
-      𝐑 (cfc f B) := by
-    dsimp [rightMulConjTransposeStarAlgHom]
-    rw [← star_eq_conjTranspose, (cfc_predicate f B : IsSelfAdjoint (cfc f B)).star_eq]
-  rw [h_psi_B, h_psi_cfc] at h_map
-  exact h_map
-
-/-- `rightMulMatrix` preserves rpow: `rightMulMatrix (B ^ s) = (rightMulMatrix B) ^ s`
-for positive semidefinite `B` and real `s`. -/
-lemma rightMulMatrix_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    {B : Matrix m m ℂ} (hB : B.PosSemidef) {s : ℝ} (hs : 0 ≤ s) :
-    𝐑 (B ^ s) = (𝐑 B) ^ s := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  letI : NormedRing (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix (m × m) (m × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix (m × m) (m × m) ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m × m) (A := ℂ)
-  have hB0 : (0 : Matrix m m ℂ) ≤ B := by simpa [Matrix.le_iff] using hB
-  have hRB0 : (0 : Matrix (m × m) (m × m) ℂ) ≤ 𝐑 B := by
-    simpa [Matrix.le_iff] using rightMulMatrix_posSemidef hB
-  have hcont_rpow : ContinuousOn (fun x : ℝ => x ^ s) (spectrum ℝ B) :=
-    (Real.continuous_rpow_const hs).continuousOn
-  rw [CFC.rpow_eq_cfc_real (a := B) (ha := hB0),
-      CFC.rpow_eq_cfc_real (a := 𝐑 B) (ha := hRB0)]
-  exact rightMulMatrix_cfc B hB.1.isSelfAdjoint (· ^ s) hcont_rpow
-
 /-- Matrix perspective of a function `f` using the Kubo-Ando style formula.
 Defined for PSD `L` and PD `R`. -/
 noncomputable def matrixPerspective {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℝ) (L R : Matrix m m ℂ) (hL : L.PosSemidef) (hR : R.PosDef) : Matrix m m ℂ :=
+    (f : ℝ → ℝ) (L R : Matrix m m ℂ) (_hL : L.PosSemidef) (hR : R.PosDef) : Matrix m m ℂ :=
   let Rinv := matrixInvSqrt R hR
   let inner := Rinvᴴ * L * Rinv
-  let hinner : inner.IsHermitian :=
-    isHermitian_conjTranspose_mul_mul (B := Rinv) (A := L) hL.1
-  let fInner := matrixFunction (fun x => (f x : ℂ)) inner hinner
+  let fInner := cfc f inner
   let Rhalf := matrixSqrt R hR.posSemidef
   Rhalf * fInner * Rhalf
 
-/-- The matrix perspective of a function preserves Hermiticity. -/
-lemma matrixPerspective_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℝ) (L R : Matrix m m ℂ) (hL : L.PosSemidef) (hR : R.PosDef) :
-    (matrixPerspective f L R hL hR).IsHermitian := by
-  classical
-  unfold matrixPerspective
-  dsimp
-  set Rinv := matrixInvSqrt R hR
-  set inner := Rinvᴴ * L * Rinv
-  have hinner : inner.IsHermitian :=
-    isHermitian_conjTranspose_mul_mul (B := Rinv) (A := L) hL.1
-  set fInner := matrixFunction (fun x => (f x : ℂ)) inner hinner
-  set Rhalf := matrixSqrt R hR.posSemidef
-  have hRhalf : Rhalf.IsHermitian := matrixSqrt_isHermitian hR.posSemidef
-  have hfin : fInner.IsHermitian :=
-    matrixFunction_isHermitian hinner (fun x => f x)
-  simpa [hRhalf.eq] using
-    (isHermitian_mul_mul_conjTranspose (B := Rhalf) (A := fInner) hfin)
-
 /-- Congruence lemma for matrixPerspective: equal matrices give equal results
     regardless of the proof terms. -/
-theorem matrixPerspective_congr {m : Type*} [Fintype m] [DecidableEq m]
+lemma matrixPerspective_congr {m : Type*} [Fintype m] [DecidableEq m]
     (f : ℝ → ℝ) (L₁ L₂ R₁ R₂ : Matrix m m ℂ)
     (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef) (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
     (hL : L₁ = L₂) (hR : R₁ = R₂) :
     matrixPerspective f L₁ R₁ hL₁ hR₁ = matrixPerspective f L₂ R₂ hL₂ hR₂ := by
   cases hL; cases hR; rfl
-
-/-- Perspective for left/right multiplication matrices. -/
-noncomputable def leftRightMatrixPerspective {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℝ) (A B : Matrix m m ℂ)
-    (hA : (𝐋 A).PosSemidef) (hB : (𝐑 B).PosDef) :
-    Matrix (m × m) (m × m) ℂ :=
-  matrixPerspective f (𝐋 A) (𝐑 B) hA hB
-
-/-- The left-right matrix perspective preserves Hermiticity. -/
-lemma leftRightMatrixPerspective_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℝ) (A B : Matrix m m ℂ)
-    (hA : (𝐋 A).PosSemidef) (hB : (𝐑 B).PosDef) :
-    (leftRightMatrixPerspective f A B hA hB).IsHermitian := by
-  simpa [leftRightMatrixPerspective] using
-    (matrixPerspective_isHermitian (m := m × m) f (𝐋 A) (𝐑 B) hA hB)
 
 /-- Cancellation for (c · (S · P))† (c · (S · P)) = c² · (P · R · P) when S² = R. -/
 lemma perspective_AA_cancel {n : Type*} [Fintype n]
@@ -790,21 +483,18 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
       (isHermitian_conjTranspose_mul_mul (B := A₁) (A := T₁) hT₁_herm)
       (isHermitian_conjTranspose_mul_mul (B := A₂) (A := T₂) hT₂_herm)
   have hconv' := hconv (m := m) (A := A₁) (B := A₂) (T₁ := T₁) (T₂ := T₂) hT₁ hT₂ hAB hC
+  simp only [] at hconv'
   have hpsd :
-      (A₁ᴴ *
-          matrixFunction (fun x => (f x : ℂ)) T₁ hT₁.1 * A₁ +
-        A₂ᴴ *
-          matrixFunction (fun x => (f x : ℂ)) T₂ hT₂.1 * A₂ -
-          matrixFunction (fun x => (f x : ℂ)) (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) hC
+      (A₁ᴴ * cfc f T₁ * A₁ +
+        A₂ᴴ * cfc f T₂ * A₂ -
+          cfc f (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂)
         ).PosSemidef := by
     simpa [Matrix.le_iff] using hconv'
   have hpsd' :
       (Rhalfᴴ *
-          (A₁ᴴ *
-              matrixFunction (fun x => (f x : ℂ)) T₁ hT₁.1 * A₁ +
-            A₂ᴴ *
-              matrixFunction (fun x => (f x : ℂ)) T₂ hT₂.1 * A₂ -
-              matrixFunction (fun x => (f x : ℂ)) (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) hC) * Rhalf
+          (A₁ᴴ * cfc f T₁ * A₁ +
+            A₂ᴴ * cfc f T₂ * A₂ -
+              cfc f (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂)) * Rhalf
         ).PosSemidef :=
     hpsd.conjTranspose_mul_mul_same Rhalf
   have hRhalf_eq : Rhalfᴴ = Rhalf := hRhalf_herm.eq
@@ -841,13 +531,9 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     rw [hA₂_adj, mul_smul_comm]; congr 1; rw [← mul_assoc, hRhalf_Rinv, one_mul]
   have hA₂_Rhalf : A₂ * Rhalf = (Real.sqrt w₂ : ℂ) • R₂half := by
     simp only [A₂, smul_mul_assoc, mul_assoc, hRinv_Rhalf, mul_one]
-  -- matrixFunction_congr for the f(C) term (precomputed for performance)
-  have hmfC : matrixFunction (fun x => (f x : ℂ))
-      (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) hC =
-      matrixFunction (fun x => (f x : ℂ)) (Rinvᴴ * L * Rinv)
-        (isHermitian_conjTranspose_mul_mul (B := Rinv) (A := L)
-          ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂)).1) :=
-    matrixFunction_congr (fun x => (f x : ℂ)) hC _ hinner
+  -- congruence for the f(C) term (precomputed for performance)
+  have hmfC : cfc f (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂) = cfc f (Rinvᴴ * L * Rinv) :=
+    congrArg (cfc f) hinner
   -- Final step: apply sandwich equation and conclude
   have hfinal :
       matrixPerspective f L R ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂)) hR ≤
@@ -860,46 +546,7 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     exact hpsd'
   simpa [L, R] using hfinal
 
-/-- The sign matrix Σ = I ⊕ (-I) on m ⊕ m is unitary. -/
-lemma signMatrix_mem_unitary {m : Type*} [Fintype m] [DecidableEq m] :
-    fromBlocks (1 : Matrix m m ℂ) 0 0 (-1 : Matrix m m ℂ) ∈
-    unitary (Matrix (m ⊕ m) (m ⊕ m) ℂ) := by
-  rw [Unitary.mem_iff]
-  constructor <;> (simp [star_eq_conjTranspose, fromBlocks_conjTranspose,
-    fromBlocks_multiply, fromBlocks_one])
-
-/-- The sign matrix is self-adjoint: Σ* = Σ. -/
-lemma signMatrix_star_eq {m : Type*} [DecidableEq m] :
-    star (fromBlocks (1 : Matrix m m ℂ) 0 0 (-1 : Matrix m m ℂ)) =
-    fromBlocks (1 : Matrix m m ℂ) 0 0 (-1 : Matrix m m ℂ) := by
-  simp [star_eq_conjTranspose, fromBlocks_conjTranspose]
-
 /-! ### Kronecker Product Powers and Perspective Identity -/
-
-/-- Kronecker product of natural number powers: `(A ⊗ₖ M)^n = A^n ⊗ₖ M^n`. -/
-lemma kronecker_npow {m : Type*} [Fintype m] [DecidableEq m]
-    (A M : Matrix m m ℂ) (n : ℕ) :
-    (A ⊗ₖ M) ^ n = (A ^ n) ⊗ₖ (M ^ n) := by
-  induction n with
-  | zero => simp
-  | succ n ih =>
-    -- Work with the explicit Kronecker product type
-    set K : Matrix (m × m) (m × m) ℂ := A ⊗ₖ M with hK
-    change K ^ (n + 1) = _
-    rw [pow_succ, ih, hK, ← mul_kronecker_mul, ← pow_succ, ← pow_succ]
-
-/-- The matrixFunction `x ↦ x^(p:ℂ)` equals rpow for PosSemidef matrices with non-negative
-    eigenvalues and real exponent p. -/
-lemma matrixFunction_cpow_eq_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) (p : ℝ) :
-    matrixFunction (fun x => x ^ (p : ℂ)) A hA.1 =
-    matrixFunction (fun x => ((x ^ p : ℝ) : ℂ)) A hA.1 := by
-  unfold matrixFunction
-  have h_diag : (fun i => (hA.1.eigenvalues i : ℂ) ^ (p : ℂ)) =
-                (fun i => ((hA.1.eigenvalues i ^ p : ℝ) : ℂ)) := by
-    funext i
-    exact (Complex.ofReal_cpow (hA.eigenvalues_nonneg i) p).symm
-  simp_rw [h_diag]
 
 /-- For commuting PSD L and PD R, the perspective inner matrix simplifies:
 Rinv† * L * Rinv = L * R^{-1}.
@@ -920,8 +567,7 @@ lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
     (hcomm : L * R = R * L) :
     (matrixInvSqrt R hR)ᴴ * L * matrixInvSqrt R hR = L * R⁻¹ := by
   rw [perspective_inner_eq_commuting hL hR hcomm]
-  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := by
-    simpa [matrixInvSqrt] using matrixFunction_rpow_eq hR.posSemidef (-1 / 2 : ℝ)
+  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
   rw [hRinv_eq]
   letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
@@ -1111,9 +757,7 @@ lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [Decida
   have hR_nonneg : (0 : Matrix (m × m) (m × m) ℂ) ≤ R := by
     simpa [Matrix.le_iff] using hR_pd.posSemidef
   have hR_unit : IsUnit R := hR_pd.isUnit
-  have hRhalf_eq : T = R ^ (1 / 2 : ℝ) := by
-    change matrixSqrt R hR_pd.posSemidef = R ^ (1 / 2 : ℝ)
-    simpa [matrixSqrt] using matrixFunction_rpow_eq hR_pd.posSemidef (1 / 2 : ℝ)
+  have hRhalf_eq : T = R ^ (1 / 2 : ℝ) := matrixSqrt_eq_rpow hR_pd.posSemidef
   have hR_det : IsUnit R.det := (Matrix.isUnit_iff_isUnit_det R).mp hR_unit
   have hLRinv_comm_R : Commute R (L * R⁻¹) := by
     rw [Commute, SemiconjBy]
@@ -1138,7 +782,7 @@ lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [Decida
 equals −(L_{Aᵖ} · R_{B¹⁻ᵖ}) for PD matrices A, B and p ≥ 0.
 Here L = L_A, R = R_B, S = R^(⁻¹⁄₂), T = R^(¹⁄₂), and the perspective is
 T · f(S* L S) · T. -/
-theorem matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq m]
+lemma matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p)
     (hL_psd : (𝐋 A).PosSemidef) (hR_pd : (𝐑 B).PosDef) :
     matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) hL_psd hR_pd =
@@ -1149,13 +793,9 @@ theorem matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq 
   set T := matrixSqrt R hR_pd.posSemidef
   have hinner_psd : (Sᴴ * L * S).PosSemidef :=
     hL_psd.conjTranspose_mul_mul_same S
-  have hfun_neg : matrixFunction (fun x => ((-(x ^ p) : ℝ) : ℂ))
-      (Sᴴ * L * S) hinner_psd.1 = -((Sᴴ * L * S) ^ p) := by
-    have h1 : (fun x : ℝ => ((-(x ^ p) : ℝ) : ℂ)) = (fun x : ℝ => -((x ^ p : ℝ) : ℂ)) := by
-      ext x
-      push_cast
-      ring
-    rw [h1, matrixFunction_neg hinner_psd.1, matrixFunction_rpow_eq hinner_psd p]
+  have hfun_neg : cfc (fun x : ℝ => -(x ^ p)) (Sᴴ * L * S) = -((Sᴴ * L * S) ^ p) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := Sᴴ * L * S)
+      (ha := by rw [Matrix.le_iff, sub_zero]; exact hinner_psd)]
   have hRhalf_sq : T * T = R := matrixSqrt_mul_self_posSemidef hR_pd.posSemidef
   have hinnerp_comm_Rhalf : (Sᴴ * L * S) ^ p * T = T * (Sᴴ * L * S) ^ p := by
     simpa [L, R, S, T] using
