@@ -31,6 +31,7 @@ the product.
 | Split inclusion of von Neumann algebras | [split-inclusion.md](split-inclusion.md) | `VonNeumannAlgebra.IsSplitInclusion` |
 | Faithful representation of a separable C\*-algebra on a separable Hilbert space | [separable-faithful-representation.md](separable-faithful-representation.md) | `CStarRep.exists_isometric_separable` |
 | Von Neumann bicommutant theorem | [bicommutant-theorem.md](bicommutant-theorem.md) | `DoubleCommutant.bicommutant_tfae` |
+| Umegaki relative entropy | [umegaki-relative-entropy.md](umegaki-relative-entropy.md) | none |
 
 <!-- One row per note. "Implemented as" is a fact recorded after the object is
      formalized — the fully-qualified declaration that ended up carrying it, or
