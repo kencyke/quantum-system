@@ -37,14 +37,11 @@ revisions:
 ---
 
 <!--
-Macros the quotes below need, copied from each source's own preamble:
-  \lok  DL84, references/<slug-of-source>/raw/<file>.tex:144
-Omit this block and the comment when no quote carries a source macro.
+No macro preamble: quotes carrying a source's private macros go in fenced code
+blocks, and everything the note says in its own voice is plain KaTeX. See
+"Source macros" below before reintroducing one — \newcommand does not survive
+from one math span to the next.
 -->
-
-$$
-\newcommand{\lok}[1]{{\mathcal #1}}
-$$
 
 # <Object, as a mathematician names it>
 
@@ -65,7 +62,9 @@ $$
 **(D1) [DL84] §1** — tier (a)
 
 > <verbatim quote, in the source's language, unmodified, formulas in the
->  source's own notation>
+>  source's own notation. If it carries the source's own macros, fence it:
+>  a ``` block inside the blockquote keeps the bytes exact and keeps every
+>  renderer from trying to typeset them.>
 
 [tr.] <optional translation, outside the quote, tier (b)>
 
@@ -181,41 +180,88 @@ $$
 
 ## Section rules
 
-### Macro preamble
+### Source macros, and why there is no macro preamble
 
 Verbatim quotes carry the source's own LaTeX, and sources define their own
-macros — `\lok`, `\A`, `\bC`. Any renderer that parses `$…$` (KaTeX in VS Code's
-Markdown preview, MathJax elsewhere) raises a parse error on every one of them,
-and **the fix is never to edit the quote**: those bytes are the evidence the
-quote check verifies. Transcribe the definitions instead, into a `$$` block
-between the frontmatter and the H1 — it must precede the first quote that uses
-them — with an HTML comment naming the file and line each was copied from.
+macros — `\lok`, `\A`, `\bC`, `\Tr`. Any renderer that typesets `$…$` (KaTeX in
+VS Code's Markdown preview, MathJax elsewhere) raises a parse error on every one
+of them, and **the fix is never to edit the quote**: those bytes are the evidence
+the quote check verifies.
 
-- **Copy the definition; do not paraphrase it.** `\newcommand{\lok}[1]{{\mathcal
-  #1}}` lifted from the paper's preamble can be audited against that preamble.
-  An equivalent written from scratch cannot, and a wrong transcription
-  mis-renders a quote that the quote check will still pass — it checks the
-  source bytes, not what they display as.
-- **Only the macros the note actually uses.**
-- **`\renewcommand` where the renderer already defines the name.** `\H` is the
-  Hungarian-umlaut accent in KaTeX's own macro table, so `\newcommand{\H}` is an
-  error; sources redefining it hit the same wall and write `\renewcommand`, so
-  copying them is both correct and faithful.
-- **The definitions are per-note, and that is the point.** Renderers reset the
-  macro table per document, so two notes may transcribe one name differently —
-  which is what the sources do. Defining the macros once in an editor or
-  workspace setting instead would put every note into a single namespace, and
-  the first collision would render one source's quote in another source's
-  notation **without raising an error**. A silently mis-rendered verbatim quote
-  is worse than a visible parse error, which is why this block belongs in the
-  note and not in a configuration file.
-- A renderer that does not share macro state across a document simply ignores
-  the block, and the quotes show as source LaTeX — which is what they are.
-  Nothing downstream depends on it, and no editor configuration is required.
+**The fix is also not a macro preamble — in any definition form.** An earlier
+version of this file prescribed one. It does not work, and the failure is silent
+until a reader opens the note:
 
-The block is presentation, not mathematics: it carries no claim, so it needs no
-tier and no locator beyond the file:line provenance in the comment.
+> Measured through `@vscode/markdown-it-katex`, the plugin VS Code's own Markdown
+> preview uses: a `$$` block defining a macro with `\newcommand`, with `\gdef`,
+> or with `\global\def` leaves that macro **undefined in every later math
+> span**. The plugin renders each span with fresh options, so nothing is carried.
+> Bare KaTeX is only slightly better — there `\gdef` survives when the caller
+> passes a shared `macros` object, and `\newcommand`, being a local definition,
+> never does — but no markdown previewer passes one.
+>
+> The practical consequence: **a note cannot define macros for itself.** Every
+> occurrence throws `Undefined control sequence`.
 
+So there are exactly two ways to keep a source's macros out of a reader's face:
+
+1. **In the note's own voice, write plain KaTeX.** `\mathcal{A}`, `\mathrm{Tr}`,
+   `\operatorname{supp}`, `\varphi`. A source's private macro has no business in
+   a sentence the note is asserting — the note is not that source, and every such
+   import is a rendering failure waiting for a reader.
+2. **Put anything verbatim that carries source macros into code.** A fenced
+   block inside the blockquote for a displayed quote, backticks for a fragment
+   inlined into a table cell. The bytes stay exactly as fetched, the quote check
+   greps them unchanged, and no renderer tries to typeset them. A quote that will
+   not render is still a quote, and showing it as source LaTeX is showing it as
+   what it is.
+
+When a source's macros are *unrecoverable* — a private `\documentclass` or
+`\usepackage` absent from the arXiv package, as with KW20's `Book_KW` — that is
+a fact about the source and belongs in `sources.md`, not a rendering problem to
+solve in the note.
+
+Beyond macro names, the other way a note breaks a renderer is an argument that
+looks braced and is not: `\widetilde\mathcal U` and `\Delta_\mathcal U` are both
+parse errors, because `\widetilde` and `_` take a single token and `\mathcal`
+then has no argument. **Brace it**: `\widetilde{\mathcal U}`,
+`\Delta_{\mathcal U}`. No allowlist can catch this — only a parser can, which is
+why the render check runs one.
+
+#### Regenerating the KaTeX allowlist
+
+`references/katex-commands.txt` is what `scripts/check_render.py` calls a known
+command. It was produced by harvesting every `\name` literal from a KaTeX build
+and then **rendering each one to see whether it actually works**, keeping only
+what did — so it contains no guesses, and its misses are conservative rather
+than permissive. Commands that cannot be probed in isolation (`\begin`,
+`\gdef`, `\left`, the `\bigl` family) were verified separately in a syntactic
+context that exercises them.
+
+To regenerate against a newer KaTeX, from the skill directory:
+
+```bash
+npm install --no-save katex
+node -e '
+  const fs=require("fs"), katex=require("katex");
+  const src=fs.readFileSync(require.resolve("katex/dist/katex.mjs"),"utf8");
+  const cand=new Set();
+  for (const m of src.matchAll(/["\x27`]\\\\([A-Za-z]+|[^A-Za-z\s"\x27`\\\\])["\x27`]/g)) cand.add("\\"+m[1]);
+  const ok=[];
+  for (const c of [...cand].sort())
+    for (const f of [c, c+"{x}", c+"{x}{y}", c+" x"])
+      { try { katex.renderToString(f,{throwOnError:true,strict:false}); ok.push(c); break; } catch(e) {} }
+  fs.writeFileSync("references/katex-commands.txt", ok.join("\n")+"\n");
+  console.log(ok.length);
+'
+```
+
+then re-add by hand the contextual commands the standalone probe rejects, each
+verified with a form that exercises it, and re-run the render check on every
+note under `docs/math/` before committing the new list.
+
+None of this is mathematics: it is presentation, carries no claim, and needs no
+tier and no locator. The check that enforces it is step 6.5 of `SKILL.md`.
 ### Frontmatter
 
 - `worst-tier` is the **minimum tier over load-bearing rows** — the rows the
@@ -252,7 +298,7 @@ mean, and why the generality is the one under discussion. Not a survey.
   writes it at merge from the (D#) blocks below it, choosing as columns the
   axes along which the corpus actually splits (quantification level, what the
   second object is, extra data such as a distinguished vector — whatever the
-  variants genuinely differ on). Like the macro preamble it carries no tier and
+  variants genuinely differ on). It is presentation, so it carries no tier and
   no locator, and when grid and (D#) block disagree, the grid is wrong. The
   verbatim blocks and `differs from:` lines are unchanged by its presence.
   **Why:** filling one column per axis is what makes a variant axis visible at
@@ -452,9 +498,11 @@ which is not the claim the row makes. `source.flat.txt` rather than `source.txt`
 because a quotation crossing a line break matches only there; see
 `ingestion.md`.
 
-A quote that will not *render* is still a quote. Fix it with the macro preamble
-above, never by touching the bytes: normalising a formula so a previewer stops
-complaining destroys the only thing that makes the row checkable.
+A quote that will not *render* is still a quote. Put it in a fenced code block,
+as `Source macros` above requires, never touch the bytes: normalising a formula
+so a previewer stops complaining destroys the only thing that makes the row
+checkable — and the quote check greps a fenced block exactly as it greps a
+blockquote.
 
 **Why:** it makes tier (a) mechanically decidable instead of self-reported, at a
 cost of seconds. Converted PDFs are model output, not text, so a quote taken

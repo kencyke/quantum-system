@@ -230,10 +230,11 @@ non-empty, and the append-only tables have lost no rows.
 
 ### 6. Verify, then report
 
-Run all four checks against the note. **They are the acceptance criteria, not a
+Run all five checks against the note. **They are the acceptance criteria, not a
 formality** — this is the one step that costs your own tool calls rather than an
 agent's, and it is worth it, because a fabricated quote or an invented theorem
-number is the worst thing this skill can produce.
+number is the worst thing this skill can produce, and a note that renders as a
+wall of `ParseError` is the worst thing a reader can be handed.
 
 The commands below are the detection half; the judgement is yours. Each was
 measured against a note written to violate all four, and each flagged the bad
@@ -293,6 +294,39 @@ so read every hit rather than counting them.
    step consumes but the list omits is the exact omission the field exists to
    catch; a listed edge no step consumes is an error in one of the two.
 
+5. **Render check.**
+
+   ```bash
+   uv run .claude/skills/math-extract/scripts/check_render.py docs/math/<slug>.md
+   ```
+
+   Every math span must parse **on its own**, because that is how a markdown
+   previewer renders it. The script reports two classes of defect and exits
+   non-zero on either:
+
+   - a command KaTeX does not define — almost always a source's private macro
+     (`\Tr`, `\A`, `\U`) that leaked out of a quote and into the note's own
+     prose, or an in-note macro definition, which never carries;
+   - with the pipeline installed, a **real render of the document** through
+     markdown-it and the plugin VS Code's preview uses, which catches what an
+     allowlist cannot: an unbraced argument (`\widetilde\mathcal U`), a
+     mis-paired delimiter, and *portability hazards* — spans that typeset here
+     but rely on behaviour engines disagree about, such as a subscripted thin
+     space (`\mathrm{Tr}\,_2`).
+
+   Enable the real render once per checkout with
+   `(cd .claude/skills/math-extract && npm install --no-save markdown-it @vscode/markdown-it-katex)`;
+   `node_modules/` is gitignored. Without it the script still runs, says so, and
+   leaves brace and span-boundary errors unchecked — a partial check, not a pass.
+
+   **Do not silence a finding with a macro preamble.** Measured through that
+   plugin, **no** definition form carries to the next math span — not
+   `\newcommand`, not `\gdef`, not `\global\def` — because each span is
+   rendered with fresh options. A note cannot define macros for itself. The two
+   fixes, in `references/note-format.md`, are: plain KaTeX in the note's own
+   voice, and code (a fenced block, or backticks for an inlined fragment) around
+   anything verbatim that carries source macros.
+
 Then update `sources.md`: one row per source attempted this run, and a `Notes`
 entry for any locator you adjudicated. **This is the only step that writes to
 that file.**
@@ -316,6 +350,7 @@ Report to the user in Japanese, in this shape:
 - Quote check: <n>/<n> matched; <n> downgraded; <n> deleted
 - Locator check: <n> tier-(c)/(d) rows, all carrying a statement instead of a number
 - Discipline: <n> model-dependent rows, all with witnesses; <n> rejected rows, all with typed discriminators
+- Render: <n> math spans parsed independently, <n> ParseErrors <| real KaTeX parse not available — brace errors unchecked>
 
 ## Corpus
 | Key | How obtained | Cost |
