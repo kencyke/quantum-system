@@ -1571,11 +1571,12 @@ private lemma trace_rpow_mul_jointly_concave
   have hpsd₂ := ρ₂.posSemidef
   have hpsdσ₁ := σ₁.posSemidef
   have hpsdσ₂ := σ₂.posSemidef
-  -- This is lieb_joint_concavity_semidef with K = 1
-  have key := lieb_joint_concavity_semidef ρ₁.toMatrix ρ₂.toMatrix σ₁.toMatrix σ₂.toMatrix
-    hpsd₁ hpsd₂ hpsdσ₁ hpsdσ₂
-    (1 : Matrix n n ℂ) s hs0 hs1 p (1 - p) hp (by linarith) (by ring)
-  simp only [liebJointFunction, conjTranspose_one, Matrix.mul_one] at key
+  -- This is lieb_joint_concavity_general with K = 1 and exponents (s, 1 - s)
+  have key := lieb_joint_concavity_general ρ₁.toMatrix ρ₂.toMatrix hpsd₁ hpsd₂
+    σ₁.toMatrix σ₂.toMatrix hpsdσ₁ hpsdσ₂
+    (1 : Matrix n n ℂ) s (1 - s) hs0 (by linarith) (by linarith)
+    p (1 - p) hp (by linarith) (by ring)
+  simp only [conjTranspose_one, Matrix.mul_one] at key
   exact key
 
 

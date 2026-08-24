@@ -953,4 +953,49 @@ lemma hpj_affine.{v} {f : ℝ → ℝ}
     simp [hAB]
   exact hconv m A B T₁ T₂ hT₁ hT₂ hAB' hC
 
+/-! ### Consequences for the CFC real power
+
+Positive semidefiniteness of real powers, unfolded operator concavity, and
+monotonicity of the trace pairing. Together with Löwner–Heinz monotonicity
+(`Matrix.rpow_le_rpow` in `LiebConcavity.lean`, a wrapper around Mathlib's
+`CFC.rpow_le_rpow`), they extend Lieb's joint concavity from the boundary case
+`p + q = 1` to the full region `p + q ≤ 1`
+(`Matrix.lieb_joint_concavity_general`). -/
+
+/-- The CFC real power of any matrix is positive semidefinite.
+(`CFC.rpow_nonneg` is unconditional: on non-PSD input the CFC returns a junk
+value that is still `0 ≤ ·`.) -/
+lemma posSemidef_rpow {m : Type*} [Fintype m] [DecidableEq m]
+    (A : Matrix m m ℂ) (s : ℝ) : (A ^ s).PosSemidef := by
+  have h : (0 : Matrix m m ℂ) ≤ A ^ s := CFC.rpow_nonneg
+  rw [Matrix.le_iff, sub_zero] at h
+  exact h
+
+/-- Operator concavity of `x ↦ xˢ` for `0 < s ≤ 1`, in unfolded form:
+`t • Aˢ + (1 - t) • Bˢ ≤ (t • A + (1 - t) • B)ˢ` on positive semidefinite
+matrices. Public form of the integral-representation core lemma. -/
+lemma rpow_concavity_le {m : Type*} [Fintype m] [DecidableEq m]
+    {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1)
+    {A B : Matrix m m ℂ} (hA : A.PosSemidef) (hB : B.PosSemidef)
+    {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    t • A ^ s + (1 - t) • B ^ s ≤ (t • A + (1 - t) • B) ^ s :=
+  rpow_operator_concave_le hs0 hs1 A B hA hB t ht0 ht1
+    ((hA.real_smul ht0).add (hB.real_smul (by linarith))).1
+
+/-- Monotonicity of the trace pairing against a positive semidefinite matrix:
+`X ≤ Y` implies `Re Tr(X·M) ≤ Re Tr(Y·M)` for `M` positive semidefinite.
+Proved by conjugating with `M^{1/2}` and applying `trace_mono`. -/
+lemma trace_mul_mono_of_posSemidef {m : Type*} [Fintype m]
+    {X Y M : Matrix m m ℂ} (hXY : X ≤ Y) (hM : M.PosSemidef) :
+    (X * M).trace.re ≤ (Y * M).trace.re := by
+  classical
+  set S : Matrix m m ℂ := matrixSqrt M hM with hS_def
+  have hSH : Sᴴ = S := matrixSqrt_isHermitian hM
+  have hSS : S * S = M := matrixSqrt_mul_self_posSemidef hM
+  have hkey : ∀ Z : Matrix m m ℂ, (Z * M).trace = (Sᴴ * Z * S).trace := by
+    intro Z
+    rw [hSH, ← hSS, ← Matrix.mul_assoc, Matrix.trace_mul_comm, ← Matrix.mul_assoc]
+  have h := trace_mono (compression_le hXY S)
+  rwa [← hkey X, ← hkey Y] at h
+
 end Matrix

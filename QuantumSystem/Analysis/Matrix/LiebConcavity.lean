@@ -3,6 +3,8 @@ module
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Notation
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
+public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
 
 /-!
 # Lieb's Concavity Theorem via Effros's Matrix Convexity Approach
@@ -15,7 +17,32 @@ via the Effros Löwner convexity approach (2008), which avoids complex interpola
 ### Lieb's Joint Concavity Theorem (1973)
 For 0 ≤ p ≤ 1 and a fixed matrix K, the map
   (A, B) ↦ Tr(A^p K† B^{1-p} K)
-is jointly concave on pairs of positive definite matrices.
+is jointly concave on pairs of positive semidefinite matrices. This is the boundary
+case of Lieb's Theorem 1, whose exponents satisfy only `p + q ≤ 1`.
+
+**`lieb_joint_concavity_general` is the only public form of the theorem** —
+independent exponents `0 ≤ p`, `0 ≤ q` with `p + q ≤ 1`, rectangular `K`,
+positive semidefinite arguments. It subsumes every other statement below, so
+call it.
+
+The four statements form a derivation chain, each step relaxing one axis. The
+first three are `private`: they are subsumed as statements, but **each is the
+proof input to the next**, so none can be deleted — privacy is how they stay
+out of the public namespace without breaking the chain.
+
+| statement | visibility | matrices | `K` | exponents |
+|---|---|---|---|---|
+| `lieb_joint_concavity` | private | positive definite | square | `p`, `1 - p` |
+| `lieb_joint_concavity_semidef` | private | positive semidefinite | square | `p`, `1 - p` |
+| `lieb_joint_concavity_rect_semidef` | private | positive semidefinite | rectangular | `p`, `1 - p` |
+| `lieb_joint_concavity_general` | **public** | positive semidefinite | rectangular | `p`, `q`, `p + q ≤ 1` |
+
+`liebJointFunction` is likewise private: it hard-codes the second exponent as
+`1 - p`, so it can only state the first three rows, and the public theorem is
+phrased with a plain `Tr`.
+
+See `docs/math/lieb-concavity-inequality.md` for the mathematics; that note's
+adopted general form is the last row.
 
 ### Proof Strategy (Effros 2008)
 The proof proceeds via:
@@ -43,7 +70,7 @@ open scoped MatrixOrder ComplexOrder
 /-- The Lieb joint function: Tr(Aᵖ K† B¹⁻ᵖ K)
 for a (possibly rectangular) matrix K : m × n, A : n × n PSD, B : m × m PSD.
 Uses CFC rpow (`A ^ p`) for positive semidefinite matrices. -/
-noncomputable def liebJointFunction {n m : Type*} [Fintype n] [DecidableEq n]
+private noncomputable def liebJointFunction {n m : Type*} [Fintype n] [DecidableEq n]
     [Fintype m] [DecidableEq m]
     (K : Matrix m n ℂ) (p : ℝ)
     (A : Matrix n n ℂ) (_hA : A.PosSemidef)
@@ -51,7 +78,7 @@ noncomputable def liebJointFunction {n m : Type*} [Fintype n] [DecidableEq n]
   Tr ((A ^ p) * Kᴴ * (B ^ (1 - p)) * K)
 
 /-- liebJointFunction at p = 0 equals Tr(K†BK). -/
-lemma liebJointFunction_zero_eq {n m : Type*} [Fintype n] [DecidableEq n]
+private lemma liebJointFunction_zero_eq {n m : Type*} [Fintype n] [DecidableEq n]
     [Fintype m] [DecidableEq m]
     (K : Matrix m n ℂ)
     (A : Matrix n n ℂ) (hA : A.PosSemidef)
@@ -62,7 +89,7 @@ lemma liebJointFunction_zero_eq {n m : Type*} [Fintype n] [DecidableEq n]
       CFC.rpow_one B (by simpa [Matrix.le_iff] using hB), Matrix.one_mul]
 
 /-- liebJointFunction at p = 1 equals Tr(AK†K). -/
-lemma liebJointFunction_one_eq {n m : Type*} [Fintype n] [DecidableEq n]
+private lemma liebJointFunction_one_eq {n m : Type*} [Fintype n] [DecidableEq n]
     [Fintype m] [DecidableEq m]
     (K : Matrix m n ℂ)
     (A : Matrix n n ℂ) (hA : A.PosSemidef)
@@ -421,8 +448,13 @@ For positive semidefinite matrices A₁, A₂, B₁, B₂ and any matrix K, the 
 
 **Proof**: For each ε > 0, apply `lieb_joint_concavity` to (Aᵢ + ε I, Bᵢ + ε I)
 which are positive definite (by `PosSemidef.add_smul_one_posDef`). The inequality is preserved in the
-limit ε → 0⁺ by CFC continuity (`rpow_tendsto_smul_one`). -/
-theorem lieb_joint_concavity_semidef {m : Type*} [Fintype m] [DecidableEq m]
+limit ε → 0⁺ by CFC continuity (`rpow_tendsto_smul_one`).
+
+Subsumed as a statement by `lieb_joint_concavity_general` (take `q := 1 - p`),
+hence `private`, but **kept**: it is the proof input to
+`lieb_joint_concavity_rect_semidef`, so removing it would make the chain
+circular. -/
+private theorem lieb_joint_concavity_semidef {m : Type*} [Fintype m] [DecidableEq m]
     (A₁ A₂ B₁ B₂ : Matrix m m ℂ)
     (hA₁ : A₁.PosSemidef) (hA₂ : A₂.PosSemidef)
     (hB₁ : B₁.PosSemidef) (hB₂ : B₂.PosSemidef)
@@ -640,8 +672,11 @@ is jointly concave:
 K̃ = [0, K†; K, 0],
 Ãᵢ = [Aᵢ, 0; 0, 0],
 B̃ᵢ = [0, 0; 0, Bᵢ],
-and apply `lieb_joint_concavity_semidef`. -/
-theorem lieb_joint_concavity_rect_semidef {n m : Type*} [Fintype n] [DecidableEq n]
+and apply `lieb_joint_concavity_semidef`.
+
+Subsumed as a statement by `lieb_joint_concavity_general` (take `q := 1 - p`),
+hence `private`, but **kept**: it is the proof input to that theorem. -/
+private theorem lieb_joint_concavity_rect_semidef {n m : Type*} [Fintype n] [DecidableEq n]
     [Fintype m] [DecidableEq m]
     (A₁ A₂ : Matrix n n ℂ) (hA₁ : A₁.PosSemidef) (hA₂ : A₂.PosSemidef)
     (B₁ B₂ : Matrix m m ℂ) (hB₁ : B₁.PosSemidef) (hB₂ : B₂.PosSemidef)
@@ -724,6 +759,155 @@ theorem lieb_joint_concavity_rect_semidef {n m : Type*} [Fintype n] [DecidableEq
   -- Rewrite key inequality using the block identities
   rw [← hid₁, ← hid₂, ← hidcomb] at *
   exact key
+
+/-! ### The general exponent region `p + q ≤ 1` (Lieb 1973, Theorem 1 / Corollary 1.1)
+
+Everything above covers the boundary case of exponents summing to one. The full
+region follows by the classical reduction: with `s = p + q`,
+`Tr(Aᵖ K† Bᑫ K) = Tr((Aˢ)^(p/s) K† (Bˢ)^(q/s) K)`, and composing the equal-sum
+case with operator concavity (`rpow_concavity_le`) and operator monotonicity
+(Löwner–Heinz, `rpow_le_rpow`) of `X ↦ Xˢ` preserves joint concavity. -/
+
+/-- **Löwner–Heinz monotonicity** for matrices: for `0 ≤ s ≤ 1`, `A ≤ B` implies
+`Aˢ ≤ Bˢ` in the Löwner order.
+
+Thin wrapper around Mathlib's `CFC.rpow_le_rpow`: the `CStarAlgebra` instance on
+`Matrix α α ℂ` is not global, so it is transported here from
+`CStarMatrix.instCStarAlgebra` and combined with the scoped `MatrixOrder`
+instances. -/
+lemma rpow_le_rpow {α : Type*} [Fintype α] [DecidableEq α]
+    {A B : Matrix α α ℂ} (hAB : A ≤ B)
+    {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    A ^ s ≤ B ^ s := by
+  letI csa : CStarAlgebra (Matrix α α ℂ) := by
+    simpa [CStarMatrix] using (CStarMatrix.instCStarAlgebra (n := α) (A := ℂ))
+  letI sor : StarOrderedRing (Matrix α α ℂ) := Matrix.instStarOrderedRing
+  exact @CFC.rpow_le_rpow (Matrix α α ℂ) csa _ sor s ⟨hs0, hs1⟩ A B hAB
+
+/-- Iterated CFC power on a positive semidefinite matrix: `(Xˢ)^(a/s) = Xᵃ`. -/
+private lemma rpow_rpow_div {α : Type*} [Fintype α] [DecidableEq α]
+    {X : Matrix α α ℂ} (hX : X.PosSemidef) {a s : ℝ} (ha : 0 ≤ a) (hs : 0 < s) :
+    (X ^ s) ^ (a / s) = X ^ a := by
+  have hs_ne : s ≠ 0 := ne_of_gt hs
+  have hX0 : (0 : Matrix α α ℂ) ≤ X := by rw [Matrix.le_iff, sub_zero]; exact hX
+  rw [CFC.rpow_rpow_of_exponent_nonneg X s (a / s) hs.le (by positivity) hX0]
+  congr 1
+  field_simp
+
+/-- **Lieb's Joint Concavity Theorem, general exponent region** (Lieb 1973,
+Theorem 1 and Corollary 1.1, finite-dimensional case).
+
+For exponents `0 ≤ p`, `0 ≤ q` with `p + q ≤ 1`, a rectangular `K : m × n`, and
+positive semidefinite `A₁, A₂ : n × n`, `B₁, B₂ : m × m`, the map
+`(A, B) ↦ Tr(Aᵖ K† Bᑫ K)` is jointly concave:
+  `w₁ · Tr(A₁ᵖ K† B₁ᑫ K) + w₂ · Tr(A₂ᵖ K† B₂ᑫ K)
+    ≤ Tr((w₁A₁ + w₂A₂)ᵖ K† (w₁B₁ + w₂B₂)ᑫ K)`.
+
+This extends `lieb_joint_concavity_rect_semidef` (the boundary case `p + q = 1`)
+to the full exponent region of Lieb's Theorem 1: with `s = p + q`,
+`Tr(Aᵖ K† Bᑫ K) = Tr((Aˢ)^(p/s) K† (Bˢ)^(q/s) K)`, and the equal-sum case
+composes with operator concavity (`rpow_concavity_le`) and Löwner–Heinz
+monotonicity (`rpow_le_rpow`) of `X ↦ Xˢ`.
+
+The endpoints are included: `p = 0` or `q = 0` is covered by the main argument
+(only `s > 0` is needed), and `p = q = 0` is the degenerate case handled first,
+where every power is `1` and both sides equal `Tr (K† K)`. So this statement
+subsumes the three above, and is the one new code should call. -/
+theorem lieb_joint_concavity_general {n m : Type*} [Fintype n] [DecidableEq n]
+    [Fintype m] [DecidableEq m]
+    (A₁ A₂ : Matrix n n ℂ) (hA₁ : A₁.PosSemidef) (hA₂ : A₂.PosSemidef)
+    (B₁ B₂ : Matrix m m ℂ) (hB₁ : B₁.PosSemidef) (hB₂ : B₂.PosSemidef)
+    (K : Matrix m n ℂ) (p q : ℝ) (hp : 0 ≤ p) (hq : 0 ≤ q) (hpq : p + q ≤ 1)
+    (w₁ w₂ : ℝ) (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) (hw : w₁ + w₂ = 1) :
+    w₁ * (Tr (A₁ ^ p * Kᴴ * B₁ ^ q * K)).re +
+    w₂ * (Tr (A₂ ^ p * Kᴴ * B₂ ^ q * K)).re ≤
+    (Tr ((w₁ • A₁ + w₂ • A₂) ^ p * Kᴴ * (w₁ • B₁ + w₂ • B₂) ^ q * K)).re := by
+  have hSumA : (w₁ • A₁ + w₂ • A₂).PosSemidef :=
+    (hA₁.real_smul hw₁).add (hA₂.real_smul hw₂)
+  have hSumB : (w₁ • B₁ + w₂ • B₂).PosSemidef :=
+    (hB₁.real_smul hw₁).add (hB₂.real_smul hw₂)
+  -- Degenerate case `p = q = 0`: every power is `1` and both sides are `Tr (Kᴴ K)`.
+  rcases eq_or_lt_of_le (by positivity : (0 : ℝ) ≤ p + q) with hpq0 | hs0
+  · have hp0 : p = 0 := le_antisymm (by linarith) hp
+    have hq0 : q = 0 := le_antisymm (by linarith) hq
+    subst hp0; subst hq0
+    rw [CFC.rpow_zero A₁ (by rw [Matrix.le_iff, sub_zero]; exact hA₁),
+        CFC.rpow_zero A₂ (by rw [Matrix.le_iff, sub_zero]; exact hA₂),
+        CFC.rpow_zero B₁ (by rw [Matrix.le_iff, sub_zero]; exact hB₁),
+        CFC.rpow_zero B₂ (by rw [Matrix.le_iff, sub_zero]; exact hB₂),
+        CFC.rpow_zero (w₁ • A₁ + w₂ • A₂) (by rw [Matrix.le_iff, sub_zero]; exact hSumA),
+        CFC.rpow_zero (w₁ • B₁ + w₂ • B₂) (by rw [Matrix.le_iff, sub_zero]; exact hSumB)]
+    simp only [Matrix.one_mul, Matrix.mul_one]
+    refine le_of_eq ?_
+    rw [← add_mul, hw, one_mul]
+  set s : ℝ := p + q with hs_def
+  have hs0' : 0 < s := by rw [hs_def]; exact hs0
+  have hs1 : s ≤ 1 := hpq
+  have hps0 : 0 ≤ p / s := by positivity
+  have hps1 : p / s ≤ 1 := by
+    rw [div_le_one hs0', hs_def]; linarith
+  have hqs1 : q / s ≤ 1 := by
+    rw [div_le_one hs0', hs_def]; linarith
+  have hs_ne : s ≠ 0 := ne_of_gt hs0'
+  have hq_exp : (1 : ℝ) - p / s = q / s := by
+    field_simp
+    rw [hs_def]; ring
+  -- real powers are positive semidefinite
+  have hA₁s := posSemidef_rpow A₁ s
+  have hA₂s := posSemidef_rpow A₂ s
+  have hB₁s := posSemidef_rpow B₁ s
+  have hB₂s := posSemidef_rpow B₂ s
+  -- the equal-sum case applied to the `s`-th powers
+  have hmain := lieb_joint_concavity_rect_semidef (A₁ ^ s) (A₂ ^ s) hA₁s hA₂s
+      (B₁ ^ s) (B₂ ^ s) hB₁s hB₂s K (p / s) hps0 hps1 w₁ w₂ hw₁ hw₂ hw
+  simp only [liebJointFunction] at hmain
+  rw [hq_exp, rpow_rpow_div hA₁ hp hs0', rpow_rpow_div hA₂ hp hs0',
+      rpow_rpow_div hB₁ hq hs0', rpow_rpow_div hB₂ hq hs0'] at hmain
+  -- operator concavity of `X ↦ Xˢ` in each block of arguments
+  have hw₁1 : w₁ ≤ 1 := by linarith
+  have hA_le : w₁ • A₁ ^ s + w₂ • A₂ ^ s ≤ (w₁ • A₁ + w₂ • A₂) ^ s := by
+    have h := rpow_concavity_le hs0' hs1 hA₁ hA₂ hw₁ hw₁1
+    rwa [show (1 : ℝ) - w₁ = w₂ by linarith] at h
+  have hB_le : w₁ • B₁ ^ s + w₂ • B₂ ^ s ≤ (w₁ • B₁ + w₂ • B₂) ^ s := by
+    have h := rpow_concavity_le hs0' hs1 hB₁ hB₂ hw₁ hw₁1
+    rwa [show (1 : ℝ) - w₁ = w₂ by linarith] at h
+  -- Löwner–Heinz at the reduced exponents
+  have hApow := rpow_le_rpow hA_le hps0 hps1
+  have hBpow := rpow_le_rpow hB_le (by positivity) hqs1
+  -- trace cyclicity: `Tr(X K† Y K) = Tr(Y (K X K†))`
+  have hcyc : ∀ (Y : Matrix m m ℂ) (X : Matrix n n ℂ),
+      Tr (X * Kᴴ * Y * K) = Tr (Y * (K * X * Kᴴ)) := by
+    intro Y X
+    calc (X * Kᴴ * Y * K).trace
+        = (K * (X * Kᴴ * Y)).trace := Matrix.trace_mul_comm _ K
+      _ = (Y * (K * X * Kᴴ)).trace := by
+          rw [show K * (X * Kᴴ * Y) = K * X * Kᴴ * Y by
+            simp only [Matrix.mul_assoc]]
+          exact Matrix.trace_mul_comm _ Y
+  -- monotone step in the first argument
+  have stepA :
+      (Tr ((w₁ • A₁ ^ s + w₂ • A₂ ^ s) ^ (p / s) * Kᴴ *
+        (w₁ • B₁ ^ s + w₂ • B₂ ^ s) ^ (q / s) * K)).re ≤
+      (Tr (((w₁ • A₁ + w₂ • A₂) ^ s) ^ (p / s) * Kᴴ *
+        (w₁ • B₁ ^ s + w₂ • B₂ ^ s) ^ (q / s) * K)).re := by
+    have hM : (Kᴴ * (w₁ • B₁ ^ s + w₂ • B₂ ^ s) ^ (q / s) * K).PosSemidef :=
+      (posSemidef_rpow _ _).conjTranspose_mul_mul_same K
+    have h := trace_mul_mono_of_posSemidef hApow hM
+    simpa only [Matrix.mul_assoc] using h
+  -- monotone step in the second argument
+  have stepB :
+      (Tr (((w₁ • A₁ + w₂ • A₂) ^ s) ^ (p / s) * Kᴴ *
+        (w₁ • B₁ ^ s + w₂ • B₂ ^ s) ^ (q / s) * K)).re ≤
+      (Tr (((w₁ • A₁ + w₂ • A₂) ^ s) ^ (p / s) * Kᴴ *
+        ((w₁ • B₁ + w₂ • B₂) ^ s) ^ (q / s) * K)).re := by
+    have hM : (K * ((w₁ • A₁ + w₂ • A₂) ^ s) ^ (p / s) * Kᴴ).PosSemidef :=
+      (posSemidef_rpow _ _).mul_mul_conjTranspose_same K
+    have h := trace_mul_mono_of_posSemidef hBpow hM
+    rw [hcyc _ _, hcyc _ _]
+    exact h
+  -- assemble
+  refine le_trans hmain (le_trans stepA (le_trans stepB (le_of_eq ?_)))
+  rw [rpow_rpow_div hSumA hp hs0', rpow_rpow_div hSumB hq hs0']
 
 /-! ### Extensions: homogeneity, weighted, and super-additive Lieb concavity -/
 
@@ -827,7 +1011,7 @@ lemma Fs_homogeneous {α : Type*} [Fintype α] [DecidableEq α]
 /-- Weighted multi-term Lieb concavity (K = I, square matrices):
   ∑ᵢ wᵢ Tr (Aᵢˢ Bᵢ¹⁻ˢ) ≤ Tr ((∑ᵢ wᵢ Aᵢ)ˢ (∑ᵢ wᵢ Bᵢ)¹⁻ˢ)
 for wᵢ ≥ 0 with ∑ᵢ wᵢ = 1, proved by induction using the 2-term
-`lieb_joint_concavity_semidef`. -/
+`lieb_joint_concavity_general`. -/
 lemma lieb_concavity_weighted {r : ℕ} {α : Type*} [Fintype α] [DecidableEq α]
     (A B : Fin r → Matrix α α ℂ) (hA : ∀ i, (A i).PosSemidef) (hB : ∀ i, (B i).PosSemidef)
     (w : Fin r → ℝ) (hw_nn : ∀ i, 0 ≤ w i) (hw_sum : ∑ i, w i = 1)
@@ -860,16 +1044,7 @@ lemma lieb_concavity_weighted {r : ℕ} {α : Type*} [Fintype α] [DecidableEq �
         (hB (Fin.castSucc i)).real_smul (hw_nn (Fin.castSucc i))
     have hAr_psd : Ar.PosSemidef := hA (Fin.last r)
     have hBr_psd : Br.PosSemidef := hB (Fin.last r)
-    -- Use the 2-term Lieb concavity (K = 1) with weights W and wr
-    have h2term := lieb_joint_concavity_semidef
-      (∑ i : Fin r, w' i • A' i) (wr • Ar)
-      (∑ i : Fin r, w' i • B' i) (wr • Br)
-      hSA_psd ((hA (Fin.last r)).real_smul hwr_nn)
-      hSB_psd ((hB (Fin.last r)).real_smul hwr_nn)
-      1 s hs0 hs1 W wr hW_nn hwr_nn hW_eq
-    simp only [liebJointFunction, conjTranspose_one, Matrix.mul_one] at h2term
     -- Case split: W = 0 → trivial; W > 0 → IH with wᵢ/W then 2-term concavity
-    clear h2term
     by_cases hW : W = 0
     · -- All w'ᵢ = 0, wr = 1
       have hw'_zero : ∀ i, w' i = 0 := by
@@ -926,12 +1101,11 @@ lemma lieb_concavity_weighted {r : ℕ} {α : Type*} [Fintype α] [DecidableEq �
         hSA_psd.real_smul (div_nonneg zero_le_one hW_nn)
       have hY_psd : ((1 / W) • ∑ i : Fin r, w' i • B' i).PosSemidef :=
         hSB_psd.real_smul (div_nonneg zero_le_one hW_nn)
-      have h2 := lieb_joint_concavity_semidef
-        ((1 / W) • ∑ i : Fin r, w' i • A' i) Ar
-        ((1 / W) • ∑ i : Fin r, w' i • B' i) Br
-        hX_psd hAr_psd hY_psd hBr_psd
-        1 s hs0 hs1 W wr hW_nn hwr_nn hW_eq
-      simp only [liebJointFunction, conjTranspose_one, Matrix.mul_one] at h2
+      have h2 := lieb_joint_concavity_general
+        ((1 / W) • ∑ i : Fin r, w' i • A' i) Ar hX_psd hAr_psd
+        ((1 / W) • ∑ i : Fin r, w' i • B' i) Br hY_psd hBr_psd
+        1 s (1 - s) hs0 (by linarith) (by linarith) W wr hW_nn hwr_nn hW_eq
+      simp only [conjTranspose_one, Matrix.mul_one] at h2
       -- Simplify W • (1/W • X) = X via the ℂ-coercion (no `PosSMulMono ℝ ℂ`).
       have hWX_A : W • ((1 / W) • ∑ i : Fin r, w' i • A' i) = ∑ i : Fin r, w' i • A' i := by
         ext j k
