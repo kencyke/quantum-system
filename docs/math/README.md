@@ -32,6 +32,7 @@ the product.
 | Faithful representation of a separable C\*-algebra on a separable Hilbert space | [separable-faithful-representation.md](separable-faithful-representation.md) | `CStarRep.exists_isometric_separable` |
 | Von Neumann bicommutant theorem | [bicommutant-theorem.md](bicommutant-theorem.md) | `DoubleCommutant.bicommutant_tfae` |
 | Umegaki relative entropy | [umegaki-relative-entropy.md](umegaki-relative-entropy.md) | none |
+| Lieb's concavity theorems and the triple-matrix trace inequality | [lieb-concavity-inequality.md](lieb-concavity-inequality.md) | `Matrix.lieb_joint_concavity_general` |
 
 <!-- One row per note. "Implemented as" is a fact recorded after the object is
      formalized — the fully-qualified declaration that ended up carrying it, or
