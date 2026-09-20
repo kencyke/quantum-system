@@ -20,10 +20,15 @@ For 0 ≤ p ≤ 1 and a fixed matrix K, the map
 is jointly concave on pairs of positive semidefinite matrices. This is the boundary
 case of Lieb's Theorem 1, whose exponents satisfy only `p + q ≤ 1`.
 
-**`lieb_joint_concavity_general` is the only public form of the theorem** —
+**`lieb_joint_concavity_general` is the public form of the two-term theorem** —
 independent exponents `0 ≤ p`, `0 ≤ q` with `p + q ≤ 1`, rectangular `K`,
-positive semidefinite arguments. It subsumes every other statement below, so
-call it.
+positive semidefinite arguments. It subsumes every other two-term statement
+below, so call it. The remaining public declarations are consequences or
+companions, not alternative forms: `lieb_concavity_weighted` and
+`lieb_concavity_sum` (the `r`-term convex-combination versions at `K = I`,
+proved from it by induction), `Fs_homogeneous` (degree-1 homogeneity of the
+`K = I` functional), `trace_rpow_conj_rpow_nonneg` (the functional is real and
+nonnegative), and the Löwner–Heinz wrapper `rpow_le_rpow`.
 
 The four statements form a derivation chain, each step relaxing one axis. The
 first three are `private`: they are subsumed as statements, but **each is the
@@ -772,15 +777,15 @@ case with operator concavity (`rpow_concavity_le`) and operator monotonicity
 `Aˢ ≤ Bˢ` in the Löwner order.
 
 Thin wrapper around Mathlib's `CFC.rpow_le_rpow`: the `CStarAlgebra` instance on
-`Matrix α α ℂ` is not global, so it is transported here from
-`CStarMatrix.instCStarAlgebra` and combined with the scoped `MatrixOrder`
-instances. -/
+`Matrix α α ℂ` is not global, so `CStarMatrix.instCStarAlgebra` is used directly:
+`CStarMatrix α α ℂ` is a definitional type copy of `Matrix α α ℂ`, so the instance
+term type-checks at the matrix type by unfolding, and it is then combined with the
+scoped `MatrixOrder` instances. -/
 lemma rpow_le_rpow {α : Type*} [Fintype α] [DecidableEq α]
     {A B : Matrix α α ℂ} (hAB : A ≤ B)
     {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     A ^ s ≤ B ^ s := by
-  letI csa : CStarAlgebra (Matrix α α ℂ) := by
-    simpa [CStarMatrix] using (CStarMatrix.instCStarAlgebra (n := α) (A := ℂ))
+  letI csa : CStarAlgebra (Matrix α α ℂ) := CStarMatrix.instCStarAlgebra (n := α) (A := ℂ)
   letI sor : StarOrderedRing (Matrix α α ℂ) := Matrix.instStarOrderedRing
   exact @CFC.rpow_le_rpow (Matrix α α ℂ) csa _ sor s ⟨hs0, hs1⟩ A B hAB
 
@@ -809,10 +814,16 @@ to the full exponent region of Lieb's Theorem 1: with `s = p + q`,
 composes with operator concavity (`rpow_concavity_le`) and Löwner–Heinz
 monotonicity (`rpow_le_rpow`) of `X ↦ Xˢ`.
 
-The endpoints are included: `p = 0` or `q = 0` is covered by the main argument
-(only `s > 0` is needed), and `p = q = 0` is the degenerate case handled first,
-where every power is `1` and both sides equal `Tr (K† K)`. So this statement
-subsumes the three above, and is the one new code should call. -/
+The endpoints are included, by the CFC convention `X ^ (0 : ℝ) = 1` (so `0⁰ = 1`
+on the kernel of `X`): `p = 0` or `q = 0` is covered by the main argument (only
+`s > 0` is needed), and `p = q = 0` is the degenerate case handled first, where
+every power is `1` and both sides equal `Tr (K† K)`. For singular `A` this
+`p = 0` value, `Tr(K† Bᑫ K)`, is *not* the limit `p → 0⁺` of the functional
+(which is `Tr(P_A K† Bᑫ K)` with `P_A` the support projection of `A`); the
+literature (`docs/math/lieb-concavity-inequality.md`) accordingly states the
+theorem for `p, q > 0`, and this statement extends it to the endpoints under
+the stated convention. It subsumes the three above, and is the one new code
+should call. -/
 theorem lieb_joint_concavity_general {n m : Type*} [Fintype n] [DecidableEq n]
     [Fintype m] [DecidableEq m]
     (A₁ A₂ : Matrix n n ℂ) (hA₁ : A₁.PosSemidef) (hA₂ : A₂.PosSemidef)
@@ -912,6 +923,31 @@ theorem lieb_joint_concavity_general {n m : Type*} [Fintype n] [DecidableEq n]
 /-! ### Extensions: homogeneity, weighted, and super-additive Lieb concavity -/
 
 open scoped QuantumInfo
+
+/-- **The Lieb functional is real and nonnegative**: `0 ≤ Tr(Aᵖ K† Bᑫ K)` in the
+`ComplexOrder` sense, i.e. the trace is a real number `≥ 0`. This records that the
+`.re` in `lieb_joint_concavity_general` loses nothing: the functional itself is
+`[0, ∞)`-valued, as in the literature statement.
+
+Proof: `Kᴴ Bᑫ K` is positive semidefinite with square root `S`, and
+`Tr(Aᵖ · S S) = Tr(S Aᵖ S) ≥ 0` since `S Aᵖ S` is positive semidefinite.
+No hypotheses on `A`, `B` are needed because the CFC power of any matrix is
+positive semidefinite (`posSemidef_rpow`). -/
+lemma trace_rpow_conj_rpow_nonneg {n m : Type*} [Fintype n] [DecidableEq n]
+    [Fintype m] [DecidableEq m]
+    (A : Matrix n n ℂ) (B : Matrix m m ℂ) (K : Matrix m n ℂ) (p q : ℝ) :
+    0 ≤ Tr (A ^ p * Kᴴ * B ^ q * K) := by
+  classical
+  have hM : (Kᴴ * B ^ q * K).PosSemidef := (posSemidef_rpow B q).conjTranspose_mul_mul_same K
+  set S : Matrix n n ℂ := matrixSqrt _ hM with hS_def
+  have hSH : Sᴴ = S := matrixSqrt_isHermitian hM
+  have hSS : S * S = Kᴴ * B ^ q * K := matrixSqrt_mul_self_posSemidef hM
+  have h_assoc : A ^ p * Kᴴ * B ^ q * K = A ^ p * (Kᴴ * B ^ q * K) := by
+    simp only [Matrix.mul_assoc]
+  have h_tr : Tr (A ^ p * Kᴴ * B ^ q * K) = Tr (Sᴴ * A ^ p * S) := by
+    rw [h_assoc, ← hSS, ← Matrix.mul_assoc, Matrix.trace_mul_comm, ← Matrix.mul_assoc, hSH]
+  rw [h_tr]
+  exact ((posSemidef_rpow A p).conjTranspose_mul_mul_same S).trace_nonneg
 
 /-- Degree-1 homogeneity of rpow: (c ⋅ A)ˢ = cˢ ⋅ Aˢ for c ≥ 0, A PSD, s ≥ 0.
 Proved via spectral decomposition + `rpow_unitary_conj` + `diagonal_rpow` + `Real.mul_rpow`. -/
