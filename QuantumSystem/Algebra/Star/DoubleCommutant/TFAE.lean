@@ -90,9 +90,10 @@ facts below combine them with declarations from *other* `ForMathlib` files
 
 /-- `S′` denotes the commutant `Set.centralizer S` of a set of operators, the prime notation of the
 operator-algebra literature (see `docs/math/bicommutant-theorem.md`, convention (C8)). Local to this
-file: the file never opens the `VonNeumannAlgebra` scope, so this does not collide with
-`VonNeumannAlgebra.commutant`'s own `′` (`QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant`),
-which is the same notation one level up, for a `VonNeumannAlgebra` rather than a bare `Set`. -/
+file. The same notation exists one level up, scoped to `VonNeumannAlgebra`, for
+`VonNeumannAlgebra.commutant` (`QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant`);
+that scope *is* activated by the `namespace VonNeumannAlgebra` block at the end of this file, so
+`′` is written only above that block, where `Set.centralizer` is the sole reading. -/
 local postfix:max "′" => Set.centralizer
 
 namespace InnerProductSpace
