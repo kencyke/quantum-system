@@ -309,10 +309,10 @@ section IsomorphismInvariance
 
 variable {m : Type*} [Fintype m] [DecidableEq m]
 
-/-- **Von Neumann entropy is invariant under trace-preserving `*-`algebra equivalence**
-(PosDef case). -/
-lemma vonNeumannEntropy_map_starAlgEquiv_posDef
-    (ρ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef)
+/-- **Von Neumann entropy is invariant under trace-preserving `*-`algebra equivalence**,
+for every density matrix (no positive-definiteness required). -/
+lemma vonNeumannEntropy_map_starAlgEquiv
+    (ρ : DensityMatrix m)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ)
     (hφ : ∀ A, (φ A).trace = A.trace) :
     S(ρ.map φ hφ) = S(ρ) := by
@@ -320,7 +320,7 @@ lemma vonNeumannEntropy_map_starAlgEquiv_posDef
   have h_log_eq : cfc Real.log (ρ.map φ hφ).toMatrix =
       φ (cfc Real.log ρ.toMatrix) := by
     change cfc Real.log (φ ρ.toMatrix) = _
-    exact cfc_log_map_starAlgEquiv hρ φ
+    exact cfc_log_map_starAlgEquiv ρ.isHermitian φ
   have h_tr : Tr ((ρ.map φ hφ).toMatrix *
         cfc Real.log (ρ.map φ hφ).toMatrix) =
       Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix) := by
@@ -330,11 +330,12 @@ lemma vonNeumannEntropy_map_starAlgEquiv_posDef
     -(Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix)).re
   rw [h_tr]
 
-/-- Specialisation of `vonNeumannEntropy_map_starAlgEquiv_posDef` to reindexing. -/
-lemma vonNeumannEntropy_mapEquiv_posDef
-    (ρ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (e : n ≃ m) :
+/-- **`vonNeumannEntropy` is invariant under reindex**: `S(ρ.mapEquiv e) = S(ρ)` for every
+density matrix `ρ` and equivalence `e`. Specialisation of
+`vonNeumannEntropy_map_starAlgEquiv` to `Matrix.reindexStarAlgEquiv`. -/
+lemma vonNeumannEntropy_mapEquiv (ρ : DensityMatrix m) (e : n ≃ m) :
     S(ρ.mapEquiv e) = S(ρ) :=
-  vonNeumannEntropy_map_starAlgEquiv_posDef ρ hρ _ _
+  vonNeumannEntropy_map_starAlgEquiv ρ _ _
 
 end IsomorphismInvariance
 
@@ -396,63 +397,6 @@ lemma tendsto_negMulLog_regularize_sum_zero (ρ : DensityMatrix n) :
     ring_nf
   rw [← h_at_zero]
   exact (continuous_negMulLog_regularize_sum ρ).tendsto 0
-
-/-- **`vonNeumannEntropy` is invariant under reindex** (PSD case, no PosDef required).
-
-For any density matrix `ρ` and equivalence `e`, the entropy is preserved:
-`S(ρ.mapEquiv e) = S(ρ)`. Proven via regularization + limit. -/
-lemma vonNeumannEntropy_mapEquiv [Nonempty n] [Nonempty m]
-    (ρ : DensityMatrix m) (e : n ≃ m) :
-    vonNeumannEntropy (DensityMatrix.mapEquiv ρ e) = vonNeumannEntropy ρ := by
-  have h_eq : ∀ ε : ℝ, ∀ (hε_pos : 0 < ε) (hε_le : ε ≤ 1),
-      vonNeumannEntropy (DensityMatrix.regularize
-          (DensityMatrix.mapEquiv ρ e) hε_pos.le hε_le) =
-        vonNeumannEntropy (DensityMatrix.regularize ρ hε_pos.le hε_le) := by
-    intro ε hε_pos hε_le
-    rw [DensityMatrix.regularize_mapEquiv ρ e hε_pos.le hε_le]
-    exact vonNeumannEntropy_mapEquiv_posDef
-      (DensityMatrix.regularize ρ hε_pos.le hε_le)
-      (DensityMatrix.regularize_posDef ρ hε_pos hε_le) e
-  have h_LHS_lim : Filter.Tendsto
-      (fun ε : ℝ =>
-        ∑ i, Real.negMulLog ((1 - ε) *
-            (DensityMatrix.mapEquiv ρ e).isHermitian.eigenvalues i +
-          ε / Fintype.card n))
-      (nhds 0) (nhds (vonNeumannEntropy (DensityMatrix.mapEquiv ρ e))) :=
-    tendsto_negMulLog_regularize_sum_zero (DensityMatrix.mapEquiv ρ e)
-  have h_RHS_lim : Filter.Tendsto
-      (fun ε : ℝ =>
-        ∑ i, Real.negMulLog ((1 - ε) * ρ.isHermitian.eigenvalues i +
-          ε / Fintype.card m))
-      (nhds 0) (nhds (vonNeumannEntropy ρ)) :=
-    tendsto_negMulLog_regularize_sum_zero ρ
-  have h_funeq : ∀ ε : ℝ, 0 < ε → ε ≤ 1 →
-      (∑ i, Real.negMulLog ((1 - ε) *
-          (DensityMatrix.mapEquiv ρ e).isHermitian.eigenvalues i +
-          ε / Fintype.card n)) =
-      (∑ i, Real.negMulLog ((1 - ε) * ρ.isHermitian.eigenvalues i +
-          ε / Fintype.card m)) := by
-    intro ε hε_pos hε_le
-    rw [← vonNeumannEntropy_regularize_eq_negMulLog_sum
-          (DensityMatrix.mapEquiv ρ e) hε_pos.le hε_le,
-        ← vonNeumannEntropy_regularize_eq_negMulLog_sum ρ hε_pos.le hε_le]
-    exact h_eq ε hε_pos hε_le
-  have h_within : ∀ᶠ ε in nhdsWithin (0 : ℝ) (Set.Ioi 0),
-      (∑ i, Real.negMulLog ((1 - ε) *
-          (DensityMatrix.mapEquiv ρ e).isHermitian.eigenvalues i +
-          ε / Fintype.card n)) =
-      (∑ i, Real.negMulLog ((1 - ε) * ρ.isHermitian.eigenvalues i +
-          ε / Fintype.card m)) := by
-    rw [eventually_nhdsWithin_iff]
-    have h_le_one : ∀ᶠ ε in nhds (0 : ℝ), ε ≤ 1 :=
-      Filter.eventually_of_mem (IsOpen.mem_nhds isOpen_Iio (by norm_num : (0 : ℝ) < 1)) <| by
-        intros ε hε
-        exact le_of_lt hε
-    filter_upwards [h_le_one] with ε hε_le_one hε_pos
-    exact h_funeq ε hε_pos hε_le_one
-  have hLHS_within := h_LHS_lim.mono_left (nhdsWithin_le_nhds (s := Set.Ioi (0 : ℝ)))
-  have hRHS_within := h_RHS_lim.mono_left (nhdsWithin_le_nhds (s := Set.Ioi (0 : ℝ)))
-  exact tendsto_nhds_unique (hLHS_within.congr' h_within) hRHS_within
 
 end Regularization
 

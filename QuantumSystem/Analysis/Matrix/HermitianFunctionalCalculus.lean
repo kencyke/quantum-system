@@ -27,6 +27,8 @@ calculus `cfc`; the spectral expansion `cfc f A = U diag(f(λᵢ)) Uᴴ` is `cfc
 - `cfc_isHermitian`, `mul_cfc_isHermitian`: `f(A)` and `A·f(A)` are Hermitian for real `f`.
 - `cfc_add_const_eq`, `cfc_inv_add_const`, `cfc_resolvent`: affine / resolvent identities.
 - `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry commuting with `M`.
+- `cfc_map_starAlgEquiv`: `cfc f` commutes with `*-`algebra equivalences of matrix algebras on
+  Hermitian matrices (any `f`, finite spectrum).
 - Matrix logarithm `cfc Real.log`: `cfc_spectral_eq`, `cfc_log_spectral_eq`, `cfc_log_map_starAlgEquiv`.
 - Special functions: `matrixSqrt`, `matrixInvSqrt` defined via `CFC.rpow`.
 
@@ -194,12 +196,14 @@ lemma cfc_log_spectral_eq {m : Type*} [Fintype m] [DecidableEq m]
         (hA.eigenvectorUnitary : Matrix m m ℂ)ᴴ :=
   cfc_spectral_eq hA Real.log
 
-/-- The matrix logarithm `cfc Real.log` commutes with any `*-`algebra equivalence between
-complex matrix algebras on PosDef matrices. Continuity is automatic in finite dimensions. -/
-theorem cfc_log_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
-    [Fintype n] [DecidableEq n] {M : Matrix m m ℂ} (hM : M.PosDef)
-    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
-    cfc Real.log (φ M) = φ (cfc Real.log M) := by
+/-- The continuous functional calculus commutes with any `*-`algebra equivalence between
+complex matrix algebras on Hermitian matrices, for **any** `f : ℝ → ℝ`: the spectrum is
+finite, so continuity of `f` on it is automatic, and continuity of `φ` is automatic in
+finite dimensions. -/
+theorem cfc_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
+    [Fintype n] [DecidableEq n] {M : Matrix m m ℂ} (hM : M.IsHermitian)
+    (f : ℝ → ℝ) (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
+    cfc f (φ M) = φ (cfc f M) := by
   letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
   letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
   letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
@@ -229,20 +233,26 @@ theorem cfc_log_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
       change Continuous fun A => g A
       exact g.continuous_of_finiteDimensional
     exact hcont_φ
-  have hM_sa : IsSelfAdjoint M := hM.1
+  have hM_sa : IsSelfAdjoint M := hM
   have hψM_sa : IsSelfAdjoint (ψ M) := by
     rw [IsSelfAdjoint, ← map_star ψ]
     exact congr_arg ψ hM_sa.star_eq
-  have h_cont : ContinuousOn Real.log (spectrum ℝ M) := by
-    refine Real.continuousOn_log.mono ?_
-    intro x hx
-    rw [hM.1.spectrum_real_eq_range_eigenvalues] at hx
-    rcases hx with ⟨i, rfl⟩
-    exact ne_of_gt (hM.eigenvalues_pos i)
-  have h_map := StarAlgHomClass.map_cfc (R := ℝ) (S := ℝ) ψ Real.log M
+  have h_cont : ContinuousOn f (spectrum ℝ M) := by
+    refine (Set.Finite.continuousOn ?_ f)
+    rw [hM.spectrum_real_eq_range_eigenvalues]
+    exact Set.finite_range _
+  have h_map := StarAlgHomClass.map_cfc (R := ℝ) (S := ℝ) ψ f M
     h_cont hψ_cont hM_sa hψM_sa
   rw [h_ψ_apply, h_ψ_apply] at h_map
   exact h_map.symm
+
+/-- The matrix logarithm `cfc Real.log` commutes with any `*-`algebra equivalence between
+complex matrix algebras on Hermitian matrices. -/
+theorem cfc_log_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
+    [Fintype n] [DecidableEq n] {M : Matrix m m ℂ} (hM : M.IsHermitian)
+    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
+    cfc Real.log (φ M) = φ (cfc Real.log M) :=
+  cfc_map_starAlgEquiv hM Real.log φ
 
 /-- Matrix inverse square root via the continuous functional calculus for PD matrices. -/
 noncomputable def matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]

@@ -28,42 +28,135 @@ variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
 /-! ### Relative-entropy identity -/
 
-/-- **Mutual-information identity**: for a bipartite density
-matrix `ρ_AB : DensityMatrix (n × m)` whose canonical partial traces coincide with PosDef
-factor states `ρ_A` and `ρ_B`, the relative entropy w.r.t. the product `ρ_A ⊗ ρ_B`
-equals `-S(ρ_AB) + S(ρ_A) + S(ρ_B)`. -/
+/-- **Mutual-information identity**: for a bipartite density matrix `ρ_AB : DensityMatrix (n × m)`
+whose canonical partial traces are `ρ_A` and `ρ_B`, the relative entropy w.r.t. the product
+`ρ_A ⊗ ρ_B` equals `-S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
+
+No positive-definiteness is assumed: the support inclusion `supp ρ_AB ⊆ supp (ρ_A ⊗ ρ_B)` is
+automatic for marginals, and the trace identity holds because `ρ_AB` annihilates every eigenvector
+of `ρ_A ⊗ ρ_B` with zero eigenvalue, where the junk value `Real.log 0 = 0` would otherwise break
+`log (λᵢ μⱼ) = log λᵢ + log μⱼ`. -/
 theorem relativeEntropy_kronecker_marginals
-    (ρ_AB : DensityMatrix (n × m))
-    (ρ_A : DensityMatrix n) (hρ_A : ρ_A.toMatrix.PosDef)
-    (ρ_B : DensityMatrix m) (hρ_B : ρ_B.toMatrix.PosDef)
+    (ρ_AB : DensityMatrix (n × m)) (ρ_A : DensityMatrix n) (ρ_B : DensityMatrix m)
     (h_A_partialTrace : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix)
     (h_B_partialTrace : tr₁(ρ_AB.toMatrix) = ρ_B.toMatrix) :
     D(ρ_AB ∥ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) := by
   classical
-  have hρ_A_kron_pos : (ρ_A ⊗ ρ_B).toMatrix.PosDef := by
-    rw [DensityMatrix.kronecker_toMatrix]; exact hρ_A.kronecker hρ_B
-  -- supp(ρ) ⊆ supp(ρ_A ⊗ ρ_B) holds for PosDef σ.
+  -- Spectral data of the factors.
+  set U_A : Matrix n n ℂ := (ρ_A.isHermitian.eigenvectorUnitary : Matrix n n ℂ) with hU_A
+  set U_B : Matrix m m ℂ := (ρ_B.isHermitian.eigenvectorUnitary : Matrix m m ℂ) with hU_B
+  set lam := ρ_A.isHermitian.eigenvalues with hlam
+  set mu := ρ_B.isHermitian.eigenvalues with hmu
+  have hUA : U_Aᴴ * U_A = 1 := UHU_eq_one _ ρ_A.isHermitian
+  have hUA' : U_A * U_Aᴴ = 1 := UUH_eq_one _ ρ_A.isHermitian
+  have hUB : U_Bᴴ * U_B = 1 := UHU_eq_one _ ρ_B.isHermitian
+  have hUB' : U_B * U_Bᴴ = 1 := UUH_eq_one _ ρ_B.isHermitian
+  have hA_spec : ρ_A.toMatrix = U_A * diagonal (fun i => (lam i : ℂ)) * U_Aᴴ :=
+    spectral_expand _ ρ_A.isHermitian
+  have hB_spec : ρ_B.toMatrix = U_B * diagonal (fun j => (mu j : ℂ)) * U_Bᴴ :=
+    spectral_expand _ ρ_B.isHermitian
+  have hA_diag : U_Aᴴ * ρ_A.toMatrix * U_A = diagonal (fun i => (lam i : ℂ)) := by
+    rw [hA_spec, Matrix.mul_assoc, Matrix.mul_assoc, hUA, Matrix.mul_one, ← Matrix.mul_assoc,
+      hUA, Matrix.one_mul]
+  have hB_diag : U_Bᴴ * ρ_B.toMatrix * U_B = diagonal (fun j => (mu j : ℂ)) := by
+    rw [hB_spec, Matrix.mul_assoc, Matrix.mul_assoc, hUB, Matrix.mul_one, ← Matrix.mul_assoc,
+      hUB, Matrix.one_mul]
+  -- The Kronecker unitary `W = U_A ⊗ U_B` diagonalises `ρ_A ⊗ ρ_B`.
+  let W : unitary (Matrix (n × m) (n × m) ℂ) :=
+    ⟨U_A ⊗ₖ U_B, Matrix.kronecker_mem_unitary
+      ρ_A.isHermitian.eigenvectorUnitary.property ρ_B.isHermitian.eigenvectorUnitary.property⟩
+  have hW : (W : Matrix (n × m) (n × m) ℂ) = U_A ⊗ₖ U_B := rfl
+  set d : n × m → ℝ := fun ij => lam ij.1 * mu ij.2 with hd
+  have hσ : (ρ_A ⊗ ρ_B).toMatrix =
+      (W : Matrix (n × m) (n × m) ℂ) * diagonal (fun ij => ((d ij : ℝ) : ℂ)) *
+        (W : Matrix (n × m) (n × m) ℂ)ᴴ := by
+    rw [DensityMatrix.kronecker_toMatrix, hW, kronecker_eq_unitary_conj_diagonal hA_spec hB_spec]
+    congr 2
+    funext ij
+    simp only [hd]
+    push_cast
+    ring
+  -- The conjugated state `M = Wᴴ ρ_AB W` and its (real, non-negative) diagonal `r`.
+  set M : Matrix (n × m) (n × m) ℂ :=
+    (W : Matrix (n × m) (n × m) ℂ)ᴴ * ρ_AB.toMatrix * (W : Matrix (n × m) (n × m) ℂ) with hM
+  have hM_psd : M.PosSemidef := ρ_AB.posSemidef.conjTranspose_mul_mul_same _
+  set r : n × m → ℝ := fun ij => (M ij ij).re with hr
+  have hr_nonneg : ∀ ij, 0 ≤ r ij := fun ij =>
+    (Complex.nonneg_iff.mp (hM_psd.diag_nonneg (i := ij))).1
+  have hM_diag : ∀ ij, M ij ij = (r ij : ℂ) := by
+    intro ij
+    apply Complex.ext
+    · rfl
+    · exact ((Complex.nonneg_iff.mp (hM_psd.diag_nonneg (i := ij))).2).symm.trans
+        (Complex.ofReal_im _).symm
+  -- Marginal identities: row/column sums of `r` are the eigenvalues of the factors.
+  have hsum_j : ∀ i, ∑ j, r (i, j) = lam i := by
+    intro i
+    have h := sum_diag_conj_kronecker_right ρ_AB.toMatrix U_A hUB' i
+    rw [h_A_partialTrace, hA_diag, diagonal_apply_eq] at h
+    have h' : (∑ j, r (i, j) : ℂ) = (lam i : ℂ) := by
+      rw [← h]
+      exact Finset.sum_congr rfl fun j _ => (hM_diag (i, j)).symm
+    exact_mod_cast h'
+  have hsum_i : ∀ j, ∑ i, r (i, j) = mu j := by
+    intro j
+    have h := sum_diag_conj_kronecker_left ρ_AB.toMatrix U_B hUA' j
+    rw [h_B_partialTrace, hB_diag, diagonal_apply_eq] at h
+    have h' : (∑ i, r (i, j) : ℂ) = (mu j : ℂ) := by
+      rw [← h]
+      exact Finset.sum_congr rfl fun i _ => (hM_diag (i, j)).symm
+    exact_mod_cast h'
+  -- `r` vanishes wherever the product eigenvalue vanishes.
+  have hr_zero : ∀ ij, d ij = 0 → r ij = 0 := by
+    rintro ⟨i, j⟩ hij
+    rcases mul_eq_zero.mp hij with hi | hj
+    · refine le_antisymm ?_ (hr_nonneg _)
+      calc r (i, j) ≤ ∑ j', r (i, j') :=
+            Finset.single_le_sum (fun j' _ => hr_nonneg (i, j')) (Finset.mem_univ j)
+        _ = 0 := by rw [hsum_j, hi]
+    · refine le_antisymm ?_ (hr_nonneg _)
+      calc r (i, j) ≤ ∑ i', r (i', j) :=
+            Finset.single_le_sum (fun i' _ => hr_nonneg (i', j)) (Finset.mem_univ i)
+        _ = 0 := by rw [hsum_i, hj]
+  -- Support inclusion `supp ρ_AB ⊆ supp (ρ_A ⊗ ρ_B)`.
   have h_supp : suppSubset ρ_AB.toMatrix (ρ_A ⊗ ρ_B).toMatrix := by
-    intro v hv
-    have hinj : Function.Injective (ρ_A ⊗ ρ_B).toMatrix.mulVec :=
-      Matrix.mulVec_injective_iff_isUnit.mpr hρ_A_kron_pos.isUnit
-    have h0 : (ρ_A ⊗ ρ_B).toMatrix.mulVec 0 = 0 := by simp
-    have hv_zero : v = 0 := hinj (hv.trans h0.symm)
-    rw [hv_zero]; simp
+    rw [hσ, suppSubset_unitary_conj_diagonal_iff ρ_AB.posSemidef W d]
+    intro ij hij
+    change M ij ij = 0
+    rw [hM_diag, hr_zero ij hij, Complex.ofReal_zero]
   unfold relativeEntropy
   simp only [h_supp, if_true]
-  -- log of ρ_A ⊗ ρ_B decomposes via cfc_log_kronecker_posDef.
-  have h_log_kron : cfc Real.log (ρ_A ⊗ ρ_B).toMatrix =
-      cfc Real.log ρ_A.toMatrix ⊗ₖ (1 : Matrix m m ℂ) +
-        (1 : Matrix n n ℂ) ⊗ₖ cfc Real.log ρ_B.toMatrix :=
-    cfc_log_kronecker_posDef hρ_A hρ_B
-  -- The trace identity after substitution.
+  -- The trace against `log (ρ_A ⊗ ρ_B)` splits into the two marginal traces.
+  have h_real : ∑ ij : n × m, Real.log (d ij) * r ij =
+      ∑ i, lam i * Real.log (lam i) + ∑ j, mu j * Real.log (mu j) := by
+    have hsplit : ∀ ij : n × m, Real.log (d ij) * r ij =
+        Real.log (lam ij.1) * r ij + Real.log (mu ij.2) * r ij := by
+      intro ij
+      by_cases h0 : d ij = 0
+      · rw [hr_zero ij h0]; ring
+      · have h0' : lam ij.1 * mu ij.2 ≠ 0 := h0
+        simp only [hd]
+        rw [Real.log_mul (left_ne_zero_of_mul h0') (right_ne_zero_of_mul h0')]
+        ring
+    rw [Finset.sum_congr rfl (fun ij _ => hsplit ij), Finset.sum_add_distrib]
+    congr 1
+    · rw [Fintype.sum_prod_type]
+      refine Finset.sum_congr rfl fun i _ => ?_
+      change ∑ j, Real.log (lam i) * r (i, j) = lam i * Real.log (lam i)
+      rw [← Finset.mul_sum, hsum_j i, mul_comm]
+    · rw [Fintype.sum_prod_type_right]
+      refine Finset.sum_congr rfl fun j _ => ?_
+      change ∑ i, Real.log (mu j) * r (i, j) = mu j * Real.log (mu j)
+      rw [← Finset.mul_sum, hsum_i j, mul_comm]
   have h_trace_log_kron :
-      Tr (ρ_AB.toMatrix * cfc Real.log (ρ_A ⊗ ρ_B).toMatrix) =
-        Tr (ρ_A.toMatrix * cfc Real.log ρ_A.toMatrix) +
-        Tr (ρ_B.toMatrix * cfc Real.log ρ_B.toMatrix) := by
-    rw [h_log_kron, Matrix.mul_add, Matrix.trace_add, trace_mul_kronecker_one_right,
-      trace_mul_kronecker_one_left, h_A_partialTrace, h_B_partialTrace]
+      (Tr (ρ_AB.toMatrix * cfc Real.log (ρ_A ⊗ ρ_B).toMatrix)).re =
+        (Tr (ρ_A.toMatrix * cfc Real.log ρ_A.toMatrix)).re +
+        (Tr (ρ_B.toMatrix * cfc Real.log ρ_B.toMatrix)).re := by
+    rw [hσ, trace_mul_cfc_unitary_conj_diagonal W Real.log d ρ_AB.toMatrix,
+      trace_mul_cfc ρ_A.isHermitian, trace_mul_cfc ρ_B.isHermitian]
+    change (∑ ij, ((Real.log (d ij) : ℝ) : ℂ) * M ij ij).re = _
+    simp only [hM_diag, ← Complex.ofReal_mul, Complex.re_sum, Complex.ofReal_re]
+    exact h_real
   -- Split (log ρ - log(ρ_A⊗ρ_B)) and reduce trace.
   have h_split : Tr (ρ_AB.toMatrix * (cfc Real.log ρ_AB.toMatrix -
         cfc Real.log (ρ_A ⊗ ρ_B).toMatrix)) =
@@ -74,28 +167,15 @@ theorem relativeEntropy_kronecker_marginals
   change (↑(Tr (ρ_AB.toMatrix * (cfc Real.log ρ_AB.toMatrix -
         cfc Real.log (ρ_A ⊗ ρ_B).toMatrix))).re : EReal) =
       -S(ρ_AB) + S(ρ_A) + S(ρ_B)
-  rw [h_split, Complex.sub_re, h_trace_log_kron, Complex.add_re]
-  -- Now: ↑((Tr(ρ · log ρ)).re - ((Tr(ρ_A · log ρ_A)).re + (Tr(ρ_B · log ρ_B)).re))
-  --      = -S(ρ) + S(ρ_A) + S(ρ_B)
-  -- Express the LHS Real value:
+  rw [h_split, Complex.sub_re, h_trace_log_kron]
   set α : ℝ := (Tr (ρ_AB.toMatrix * cfc Real.log ρ_AB.toMatrix)).re with hα
   set β : ℝ := (Tr (ρ_A.toMatrix * cfc Real.log ρ_A.toMatrix)).re with hβ
   set γ : ℝ := (Tr (ρ_B.toMatrix * cfc Real.log ρ_B.toMatrix)).re with hγ
-  -- And the S values:
-  change (↑(α - (β + γ)) : EReal) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)
-  have hSρ : S(ρ_AB) = -α := by
-    change -(Tr (ρ_AB.toMatrix * DensityMatrix.log ρ_AB)).re = -α
-    rfl
-  have hSρ_A : S(ρ_A) = -β := by
-    change -(Tr (ρ_A.toMatrix * DensityMatrix.log ρ_A)).re = -β
-    rfl
-  have hSρ_B : S(ρ_B) = -γ := by
-    change -(Tr (ρ_B.toMatrix * DensityMatrix.log ρ_B)).re = -γ
-    rfl
+  have hSρ : S(ρ_AB) = -α := rfl
+  have hSρ_A : S(ρ_A) = -β := rfl
+  have hSρ_B : S(ρ_B) = -γ := rfl
   rw [hSρ, hSρ_A, hSρ_B]
-  -- Goal in EReal: ↑(α - (β + γ)) = -↑(-α) + ↑(-β) + ↑(-γ)
-  -- Equivalent Real identity:
-  have h_real : α - (β + γ) = -(-α) + (-β) + (-γ) := by ring
-  exact_mod_cast h_real
+  have h_real' : α - (β + γ) = -(-α) + (-β) + (-γ) := by ring
+  exact_mod_cast h_real'
 
 end Matrix

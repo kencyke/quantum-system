@@ -50,6 +50,8 @@ a unitary).
   `Tr(ρ · (X ⊗ 1)) = Tr((partialTrace (Equiv.refl (n × m)) ρ) · X)`.
 * `Matrix.trace_mul_kronecker_one_left`  —
   `Tr(ρ · (1 ⊗ Y)) = Tr((partialTrace (Equiv.prodComm n m) ρ) · Y)`.
+* `Matrix.sum_diag_conj_kronecker_right` / `Matrix.sum_diag_conj_kronecker_left` — diagonal
+  block sums of `(U_A ⊗ U_B)ᴴ ρ (U_A ⊗ U_B)` are the diagonal entries of the conjugated marginals.
 -/
 
 @[expose] public section
@@ -168,18 +170,14 @@ theorem cfc_log_kronecker_posDef
     rw [h]
     congr 1; congr 1
     funext ij; push_cast; ring
-  -- Positivity of the diagonal product
-  have h_dA_dB_pos : ∀ ij : n × m, 0 < (dA ij.1 * dB ij.2 : ℝ) :=
-    fun ij => mul_pos (hdA_pos ij.1) (hdB_pos ij.2)
-  -- cfc Real.log of A ⊗ B via aux lemma
+  -- cfc Real.log of A ⊗ B via the unitary-conjugation lemma
   have h_cfcLog_AB :
       cfc Real.log (A ⊗ₖ B) =
         (W : Matrix (n × m) (n × m) ℂ) *
           diagonal (fun ij : n × m => ((Real.log (dA ij.1 * dB ij.2) : ℝ) : ℂ)) *
           (W : Matrix (n × m) (n × m) ℂ)ᴴ := by
     rw [hAB_decomp]
-    exact cfc_log_unitary_conj_diagonal W
-      (fun ij : n × m => (dA ij.1 * dB ij.2 : ℝ)) h_dA_dB_pos
+    exact cfc_unitary_conj_diagonal W Real.log (fun ij : n × m => (dA ij.1 * dB ij.2 : ℝ))
   rw [h_cfcLog_AB]
   -- Split log(dA*dB) = log dA + log dB
   have h_log_split :
@@ -319,6 +317,84 @@ lemma trace_mul_kronecker_one_left
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun b' _ => ?_
   rw [Finset.sum_mul]
+
+/-! ### Diagonal block sums of a Kronecker-conjugated matrix
+
+For `W = U_A ⊗ U_B` with `U_B` unitary, the sum of the diagonal entries of `Wᴴ ρ W` over the
+second index at fixed first index `i` is the `(i, i)` entry of `U_Aᴴ · tr₂(ρ) · U_A`, and
+symmetrically for the first index. These are the marginal identities behind the mutual-information
+formula `D(ρ_AB ‖ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)` for singular marginals. -/
+
+/-- `Tr(M · diagonal (Pi.single i 1)) = M i i`. -/
+lemma trace_mul_diagonal_single (M : Matrix n n ℂ) (i : n) :
+    Tr (M * diagonal (Pi.single i 1)) = M i i := by
+  simp only [Matrix.trace, Matrix.diag, mul_diagonal]
+  rw [Finset.sum_eq_single i]
+  · simp
+  · intro b _ hb; simp [hb]
+  · simp
+
+omit [DecidableEq n] in
+/-- Second-index diagonal block sum of `(U_A ⊗ U_B)ᴴ ρ (U_A ⊗ U_B)` at fixed first index. -/
+lemma sum_diag_conj_kronecker_right
+    (ρ : Matrix (n × m) (n × m) ℂ) (U_A : Matrix n n ℂ) {U_B : Matrix m m ℂ}
+    (hU_B : U_B * U_Bᴴ = 1) (i : n) :
+    ∑ j, ((U_A ⊗ₖ U_B)ᴴ * ρ * (U_A ⊗ₖ U_B)) (i, j) (i, j) =
+      (U_Aᴴ * partialTrace (Equiv.refl (n × m)) ρ * U_A) i i := by
+  classical
+  set W := U_A ⊗ₖ U_B with hW
+  set E : Matrix n n ℂ := diagonal (Pi.single i 1) with hE
+  have hL : ∑ j, (Wᴴ * ρ * W) (i, j) (i, j) =
+      Tr ((Wᴴ * ρ * W) * (E ⊗ₖ (1 : Matrix m m ℂ))) := by
+    rw [trace_mul_kronecker_one_right, hE, trace_mul_diagonal_single, partialTrace_refl_apply]
+  have hconj : W * (E ⊗ₖ (1 : Matrix m m ℂ)) * Wᴴ = (U_A * E * U_Aᴴ) ⊗ₖ (1 : Matrix m m ℂ) := by
+    rw [hW, conjTranspose_kronecker, ← mul_kronecker_mul, ← mul_kronecker_mul, Matrix.mul_one,
+      hU_B]
+  rw [hL, ← trace_mul_diagonal_single (U_Aᴴ * partialTrace (Equiv.refl (n × m)) ρ * U_A) i, ← hE]
+  calc Tr ((Wᴴ * ρ * W) * (E ⊗ₖ (1 : Matrix m m ℂ)))
+      = Tr (ρ * (W * (E ⊗ₖ (1 : Matrix m m ℂ)) * Wᴴ)) := by
+        rw [show (Wᴴ * ρ * W) * (E ⊗ₖ (1 : Matrix m m ℂ)) =
+            Wᴴ * (ρ * (W * (E ⊗ₖ (1 : Matrix m m ℂ)))) by simp only [Matrix.mul_assoc],
+          Matrix.trace_mul_comm]
+        simp only [Matrix.mul_assoc]
+    _ = Tr (partialTrace (Equiv.refl (n × m)) ρ * (U_A * E * U_Aᴴ)) := by
+        rw [hconj, trace_mul_kronecker_one_right]
+    _ = Tr ((U_Aᴴ * partialTrace (Equiv.refl (n × m)) ρ * U_A) * E) := by
+        rw [show partialTrace (Equiv.refl (n × m)) ρ * (U_A * E * U_Aᴴ) =
+            (partialTrace (Equiv.refl (n × m)) ρ * U_A * E) * U_Aᴴ by simp only [Matrix.mul_assoc],
+          Matrix.trace_mul_comm]
+        simp only [Matrix.mul_assoc]
+
+omit [DecidableEq m] in
+/-- First-index diagonal block sum of `(U_A ⊗ U_B)ᴴ ρ (U_A ⊗ U_B)` at fixed second index. -/
+lemma sum_diag_conj_kronecker_left
+    (ρ : Matrix (n × m) (n × m) ℂ) {U_A : Matrix n n ℂ} (U_B : Matrix m m ℂ)
+    (hU_A : U_A * U_Aᴴ = 1) (j : m) :
+    ∑ i, ((U_A ⊗ₖ U_B)ᴴ * ρ * (U_A ⊗ₖ U_B)) (i, j) (i, j) =
+      (U_Bᴴ * partialTrace (Equiv.prodComm n m) ρ * U_B) j j := by
+  classical
+  set W := U_A ⊗ₖ U_B with hW
+  set E : Matrix m m ℂ := diagonal (Pi.single j 1) with hE
+  have hL : ∑ i, (Wᴴ * ρ * W) (i, j) (i, j) =
+      Tr ((Wᴴ * ρ * W) * ((1 : Matrix n n ℂ) ⊗ₖ E)) := by
+    rw [trace_mul_kronecker_one_left, hE, trace_mul_diagonal_single, partialTrace_prodComm_apply]
+  have hconj : W * ((1 : Matrix n n ℂ) ⊗ₖ E) * Wᴴ = (1 : Matrix n n ℂ) ⊗ₖ (U_B * E * U_Bᴴ) := by
+    rw [hW, conjTranspose_kronecker, ← mul_kronecker_mul, ← mul_kronecker_mul, Matrix.mul_one,
+      hU_A]
+  rw [hL, ← trace_mul_diagonal_single (U_Bᴴ * partialTrace (Equiv.prodComm n m) ρ * U_B) j, ← hE]
+  calc Tr ((Wᴴ * ρ * W) * ((1 : Matrix n n ℂ) ⊗ₖ E))
+      = Tr (ρ * (W * ((1 : Matrix n n ℂ) ⊗ₖ E) * Wᴴ)) := by
+        rw [show (Wᴴ * ρ * W) * ((1 : Matrix n n ℂ) ⊗ₖ E) =
+            Wᴴ * (ρ * (W * ((1 : Matrix n n ℂ) ⊗ₖ E))) by simp only [Matrix.mul_assoc],
+          Matrix.trace_mul_comm]
+        simp only [Matrix.mul_assoc]
+    _ = Tr (partialTrace (Equiv.prodComm n m) ρ * (U_B * E * U_Bᴴ)) := by
+        rw [hconj, trace_mul_kronecker_one_left]
+    _ = Tr ((U_Bᴴ * partialTrace (Equiv.prodComm n m) ρ * U_B) * E) := by
+        rw [show partialTrace (Equiv.prodComm n m) ρ * (U_B * E * U_Bᴴ) =
+            (partialTrace (Equiv.prodComm n m) ρ * U_B * E) * U_Bᴴ by simp only [Matrix.mul_assoc],
+          Matrix.trace_mul_comm]
+        simp only [Matrix.mul_assoc]
 
 /-! ## Paper notation: `tr₁(ρ)` / `tr₂(ρ)`
 
