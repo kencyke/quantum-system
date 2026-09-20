@@ -558,16 +558,15 @@ namespace PureState
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
-/-- Convert a pure state to a State via the coercion instance. -/
+/-- The state underlying a pure state.
+
+This is the *only* spelling of the map `PureState A → State ℂ A`; there is deliberately no
+coercion instance alongside it, so that every downstream result is stated in the same form. -/
 noncomputable def toState (ψ : PureState A) : State ℂ A :=
   IsPureState.toState ψ.property
 
-end PureState
-
-/-- Coercion from pure states (as a subtype) to `State`. -/
-noncomputable instance : CoeOut (PureState A) (State ℂ A) where
-  coe φ := IsPureState.toState φ.property
-
 @[simp]
-lemma PureState.coe_apply (φ : PureState A) (a : A) :
-    (φ : State ℂ A) a = φ.val a := rfl
+lemma toState_apply (ψ : PureState A) (a : A) :
+    ψ.toState a = ψ.val a := rfl
+
+end PureState

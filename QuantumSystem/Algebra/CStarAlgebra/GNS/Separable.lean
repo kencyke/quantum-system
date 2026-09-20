@@ -133,7 +133,7 @@ noncomputable def normingState [SeparableSpace A] (i : NormingIndex A) : PureSta
     (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.1⟩
 
 lemma normingState_spec [SeparableSpace A] (i : NormingIndex A) :
-    (normingState i : State ℂ A) (star i.elem * i.elem) = ((‖i.elem‖ ^ 2 : ℝ) : ℂ) :=
+    (normingState i).toState (star i.elem * i.elem) = ((‖i.elem‖ ^ 2 : ℝ) : ℂ) :=
   (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.2
 
 variable (A) in

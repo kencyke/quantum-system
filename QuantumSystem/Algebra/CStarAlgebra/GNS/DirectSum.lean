@@ -342,6 +342,31 @@ theorem rep_injective : Function.Injective (rep A).π :=
   directSumAlgHom_injective
 
 
+/-- The direct sum representation acts non-degenerately: the only vector of the direct sum
+Hilbert space annihilated by every `π a` is `0`.
+
+Non-degeneracy is inherited coordinatewise from the components: each `gnsRepresentation ψ` is
+cyclic, hence non-degenerate (`GNS.Representation.actsNondegenerately`), so a vector killed by
+the whole image of `π` has every coordinate zero.
+
+This is not needed for the Gelfand-Naimark theorem itself — `CStarRep` carries no
+non-degeneracy requirement — but it records that the witness of `CStarRep.exists_isometric`
+does satisfy it. -/
+theorem rep_actsNondegenerately :
+    InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → 𝓑((rep A).H))) := by
+  intro x hx
+  have hx' : ∀ a : A, directSumCLM a x = 0 := fun a => hx _ ⟨a, rfl⟩
+  apply Subtype.ext
+  funext ψ
+  have hψ : ∀ a : A, (PureState.gnsRepresentation ψ).π a (x.val ψ) = 0 := by
+    intro a
+    have h := congrArg (fun y : Hilbert A => y.val ψ) (hx' a)
+    simpa [directSumCLM, directSumLinearMap, componentWiseMap] using h
+  have h0 : x.val ψ = 0 :=
+    (PureState.gnsRepresentation ψ).actsNondegenerately _ (by rintro _ ⟨a, rfl⟩; exact hψ a)
+  simpa using h0
+
+
 /-- The image of `A` under the direct sum representation is norm closed in `𝓑(H)`.
 
 Together with `rep_isometry` and `rep_injective` this is what makes the image a

@@ -6,6 +6,7 @@ public import QuantumSystem.ForMathlib.Topology.MetricSpace.Completion
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
 @[expose] public section
 
@@ -77,6 +78,39 @@ def IsIrreducible (T : Representation ω) : Prop :=
 @[simp] lemma isInvariant_top (T : Representation ω) : T.IsInvariant (⊤ : Submodule ℂ T.H) := by
   intro a w hw
   simp
+
+/-- A GNS representation acts non-degenerately: the only vector annihilated by every
+operator in the image of `π` is `0`.
+
+Cyclicity is what makes this work.  If `π a x = 0` for every `a`, then
+`⟪x, π a ξ⟫ = ⟪π (star a) x, ξ⟫ = 0`, so `x` is orthogonal to the linear span of the orbit of
+the cyclic vector; that span is dense, hence its orthogonal complement is trivial. -/
+theorem actsNondegenerately (T : Representation ω) :
+    InnerProductSpace.ActsNondegenerately (Set.range (T.π : A → 𝓑(T.H))) := by
+  intro x hx
+  have hx' : ∀ a : A, T.π a x = 0 := fun a => hx _ ⟨a, rfl⟩
+  have hstar : ∀ a : A, (T.π a).adjoint = T.π (star a) := by
+    intro a
+    have h : T.π (star a) = star (T.π a) := T.π.map_star' a
+    rw [ContinuousLinearMap.star_eq_adjoint] at h
+    exact h.symm
+  set S : Submodule ℂ T.H := Submodule.span ℂ {y | ∃ a : A, T.π a T.ξ = y} with hS
+  have hmem : x ∈ Sᗮ := by
+    rw [Submodule.mem_orthogonal']
+    intro u hu
+    induction hu using Submodule.span_induction with
+    | mem y hy =>
+        obtain ⟨a, rfl⟩ := hy
+        rw [← ContinuousLinearMap.adjoint_inner_left, hstar a, hx' (star a), inner_zero_left]
+    | zero => simp
+    | add y z _ _ hy hz => simp [inner_add_right, hy, hz]
+    | smul c y _ hy => simp [inner_smul_right, hy]
+  have htop : S.topologicalClosure = ⊤ := by
+    ext y
+    simp only [Submodule.mem_top, iff_true]
+    exact T.cyclic y
+  have hbot : Sᗮ = ⊥ := Submodule.topologicalClosure_eq_top_iff.mp htop
+  simpa [hbot] using hmem
 
 /-- A unitary equivalence between two GNS representations for the **same** state `ω`.
 

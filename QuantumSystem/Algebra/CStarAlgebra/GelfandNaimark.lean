@@ -42,11 +42,15 @@ state space.
   usual textbook statement.
 * Closedness of the range uses completeness of `A`; `NonUnitalStarAlgHom.range` supplies the
   `*`-subalgebra structure, so "closed `*`-subalgebra" is exactly "C\*-subalgebra" here.
-* Nondegeneracy of the representation is not asserted.  It would not strengthen the
-  statement: corestricting any isometric `*`-representation to the closure of the span of
-  its image is again isometric and is nondegenerate, so the two existentials are equivalent.
-  (The witness `GNS.DirectSum.rep` is in fact nondegenerate, being a direct sum of cyclic
-  representations.)
+* Nondegeneracy is not part of the statement: `CStarRep` carries no nondegeneracy field.
+  The witness is nevertheless nondegenerate — `GNS.DirectSum.rep_actsNondegenerately`,
+  proved coordinatewise from cyclicity of each GNS summand
+  (`GNS.Representation.actsNondegenerately`) — so the theorem does in fact produce a
+  nondegenerate representation even though it does not demand one.  That the two
+  existentials, with and without nondegeneracy, are *equivalent* — corestrict an isometric
+  `*`-representation to the closure of the span of its image — is standard, but it is not
+  formalised here: this development defines no corestriction of a `CStarRep` to a closed
+  invariant subspace.
 * The witness of `CStarRep.exists_isometric` is itself never separable beyond the trivial
   cases: it is indexed by the whole pure state space, and for `A = C₀(ℝ)` the point
   evaluations already form a continuum.  The separable refinement therefore does not
