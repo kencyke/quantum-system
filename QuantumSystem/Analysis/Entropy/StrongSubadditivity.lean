@@ -34,19 +34,6 @@ namespace Matrix
 
 open scoped Kronecker MatrixOrder ComplexOrder QuantumInfo
 
-/-! ### Bridges between `Matrix.partialTrace` and `Matrix.traceLeft`/`traceRight` -/
-
-/-- `tr₂` (trace out the second factor) is `Matrix.traceRight`. -/
-@[simp] lemma partialTrace_refl_eq_traceRight {X Y : Type*} [Fintype Y] (M : Matrix (X × Y) (X × Y) ℂ) :
-    Matrix.partialTrace (Equiv.refl (X × Y)) M = Matrix.traceRight M := by
-  ext i j; rw [Matrix.partialTrace_refl_apply, traceRight_apply]
-
-/-- `tr₁` (trace out the first factor) is `Matrix.traceLeft`. -/
-@[simp] lemma partialTrace_prodComm_eq_traceLeft {X Y : Type*} [Fintype X]
-    (M : Matrix (X × Y) (X × Y) ℂ) :
-    Matrix.partialTrace (Equiv.prodComm X Y) M = Matrix.traceLeft M := by
-  ext i j; rw [Matrix.partialTrace_prodComm_apply, traceLeft_apply]
-
 /-! ### Associativity of iterated partial traces over `prodAssoc` -/
 
 variable {A B C : Type*} [Fintype A] [Fintype B] [Fintype C]
@@ -134,20 +121,17 @@ theorem vonNeumannEntropy_SSA
   set ρ_AB := (ρ_ABC.mapEquiv (Equiv.prodAssoc A B C)).ptRight with hρ_AB
   set ρ_B := ρ_ABC.ptLeft.ptRight with hρ_B
   -- Mutual-information identity for the `(A : B×C)` split of `ρ_ABC`.
-  have h_tr2 : tr₂(ρ_ABC.toMatrix) = ρ_A.toMatrix := by
-    rw [hρ_A, ptRight_toMatrix]; exact partialTrace_refl_eq_traceRight ρ_ABC.toMatrix
-  have h_tr1 : tr₁(ρ_ABC.toMatrix) = ρ_BC.toMatrix := by
-    rw [hρ_BC, ptLeft_toMatrix]; exact partialTrace_prodComm_eq_traceLeft ρ_ABC.toMatrix
+  have h_tr2 : tr₂(ρ_ABC.toMatrix) = ρ_A.toMatrix := rfl
+  have h_tr1 : tr₁(ρ_ABC.toMatrix) = ρ_BC.toMatrix := rfl
   have h_id1 : D(ρ_ABC ∥ ρ_A ⊗ ρ_BC) = -S(ρ_ABC) + S(ρ_A) + S(ρ_BC) :=
     Matrix.relativeEntropy_kronecker_marginals ρ_ABC ρ_A ρ_BC h_tr2 h_tr1
   -- Mutual-information identity for the `(A : B)` split of `ρ_AB`.
   have h_tr2' : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix := by
-    rw [hρ_AB, hρ_A, ptRight_toMatrix, ptRight_toMatrix, DensityMatrix.mapEquiv_toMatrix,
-      partialTrace_refl_eq_traceRight]
+    rw [hρ_AB, hρ_A, ptRight_toMatrix, ptRight_toMatrix, DensityMatrix.mapEquiv_toMatrix]
     exact traceRight_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
   have h_tr1' : tr₁(ρ_AB.toMatrix) = ρ_B.toMatrix := by
     rw [hρ_AB, hρ_B, ptRight_toMatrix, ptRight_toMatrix, ptLeft_toMatrix,
-      DensityMatrix.mapEquiv_toMatrix, partialTrace_prodComm_eq_traceLeft]
+      DensityMatrix.mapEquiv_toMatrix]
     exact traceLeft_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
   have h_id2 : D(ρ_AB ∥ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) :=
     Matrix.relativeEntropy_kronecker_marginals ρ_AB ρ_A ρ_B h_tr2' h_tr1'

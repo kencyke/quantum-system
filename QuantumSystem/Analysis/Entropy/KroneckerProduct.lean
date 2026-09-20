@@ -2,6 +2,7 @@ module
 
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.State
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 
 /-!
 # Tensor product (Kronecker) of density matrices and bipartite Kronecker calculus
@@ -13,43 +14,26 @@ state (independent-systems product state).
 
 This file is the hub for **Kronecker-product calculus on bipartite matrices**:
 
-* preservation of Hermitian / unitary structure under `⊗ₖ`,
+* preservation of Hermitian structure under `⊗ₖ`,
 * Kronecker spectral decomposition,
-* the **log-tensor identity**
-  `cfc Real.log (A ⊗ₖ B) = cfc Real.log A ⊗ₖ 1 + 1 ⊗ₖ cfc Real.log B` for PosDef `A`, `B`,
-* the **equivalence-indexed partial trace** `partialTrace`
-  (for `e : X ≃ A × B`, retain `A` and sum over `B`),
 * and the **Heisenberg duality at product type**
-  `Tr(ρ · (X ⊗ 1)) = Tr((partialTrace (Equiv.refl (n × m)) ρ) · X)` together with
-  the symmetric `(1 ⊗ Y)` version.
+  `Tr(ρ · (X ⊗ 1)) = Tr(tr₂(ρ) · X)` together with the symmetric `(1 ⊗ Y)` version.
 
-The retained subsystem is determined by the codomain of the chosen equivalence
-`e : X ≃ A × B`. For native product types, `partialTrace (Equiv.refl (n × m))`
-retains the `n` factor, while `partialTrace (Equiv.prodComm n m)` retains the
-`m` factor.
-
-The proof of the log-tensor identity uses the spectral decomposition of `A ⊗ B`
-constructed explicitly from spectral decompositions of `A` and `B`, combined
-with **spectral invariance** of `cfc` (derived from `cfc_spectral_eq` and
-`StarAlgHomClass.map_cfc` on the ⋆-algebra automorphism given by conjugation by
-a unitary).
+Partial traces are the positional `Matrix.traceRight` / `Matrix.traceLeft`
+(`ForMathlib/LinearAlgebra/Matrix/PartialTrace.lean`); this file only adds the paper notation
+`tr₂(ρ) = traceRight ρ` / `tr₁(ρ) = traceLeft ρ` (Nielsen–Chuang §2.4).
 
 ## Main definitions
 
 * `DensityMatrix.kronecker` — tensor product of density matrices.
-* `Matrix.partialTrace` — partial trace specified by an explicit bipartite equivalence.
 
 ## Main results
 
 * `DensityMatrix.kronecker_toMatrix` — underlying-matrix unfolding.
 * `Matrix.IsHermitian.kronecker` — Kronecker of Hermitian matrices is Hermitian.
 * `Matrix.kronecker_eq_unitary_conj_diagonal` — Kronecker spectral decomposition.
-* `Matrix.cfc_log_kronecker_posDef` — the log-tensor identity.
-* `Matrix.partialTrace_apply` — entrywise unfolding of the equivalence-indexed partial trace.
-* `Matrix.trace_mul_kronecker_one_right` —
-  `Tr(ρ · (X ⊗ 1)) = Tr((partialTrace (Equiv.refl (n × m)) ρ) · X)`.
-* `Matrix.trace_mul_kronecker_one_left`  —
-  `Tr(ρ · (1 ⊗ Y)) = Tr((partialTrace (Equiv.prodComm n m) ρ) · Y)`.
+* `Matrix.trace_mul_kronecker_one_right` — `Tr(ρ · (X ⊗ 1)) = Tr(tr₂(ρ) · X)`.
+* `Matrix.trace_mul_kronecker_one_left`  — `Tr(ρ · (1 ⊗ Y)) = Tr(tr₁(ρ) · Y)`.
 * `Matrix.sum_diag_conj_kronecker_right` / `Matrix.sum_diag_conj_kronecker_left` — diagonal
   block sums of `(U_A ⊗ U_B)ᴴ ρ (U_A ⊗ U_B)` are the diagonal entries of the conjugated marginals.
 -/
@@ -62,7 +46,7 @@ open scoped Kronecker MatrixOrder ComplexOrder
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
-/-! ### Kronecker preserves Hermitian / unitary -/
+/-! ### Kronecker preserves Hermitian -/
 
 omit [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m] in
 /-- The Kronecker product of two Hermitian matrices is Hermitian. -/
@@ -70,22 +54,6 @@ lemma IsHermitian.kronecker {A : Matrix n n ℂ} {B : Matrix m m ℂ}
     (hA : A.IsHermitian) (hB : B.IsHermitian) : (A ⊗ₖ B).IsHermitian := by
   unfold IsHermitian
   rw [conjTranspose_kronecker, hA.eq, hB.eq]
-
-/-- If `U` and `V` are unitary (i.e. `Uᴴ * U = 1` and `Vᴴ * V = 1`), then so is
-`U ⊗ₖ V`. This is the statement used internally; the `unitaryGroup`-membership
-version is `Matrix.kronecker_mem_unitary` in Mathlib. -/
-private lemma kronecker_conjTranspose_mul_self
-    {U : Matrix n n ℂ} {V : Matrix m m ℂ}
-    (hU : Uᴴ * U = 1) (hV : Vᴴ * V = 1) :
-    (U ⊗ₖ V)ᴴ * (U ⊗ₖ V) = 1 := by
-  rw [conjTranspose_kronecker, ← mul_kronecker_mul, hU, hV, ← one_kronecker_one]
-
-/-- Dual version: `(U ⊗ V)(U ⊗ V)ᴴ = 1`. -/
-private lemma kronecker_mul_conjTranspose_self
-    {U : Matrix n n ℂ} {V : Matrix m m ℂ}
-    (hU : U * Uᴴ = 1) (hV : V * Vᴴ = 1) :
-    (U ⊗ₖ V) * (U ⊗ₖ V)ᴴ = 1 := by
-  rw [conjTranspose_kronecker, ← mul_kronecker_mul, hU, hV, ← one_kronecker_one]
 
 /-! ### Kronecker spectral decomposition
 
@@ -111,151 +79,31 @@ lemma kronecker_eq_unitary_conj_diagonal
   -- Apply mul_kronecker_mul twice (forward) and diagonal_kronecker_diagonal
   rw [mul_kronecker_mul, mul_kronecker_mul, diagonal_kronecker_diagonal]
 
-/-! ### Log-tensor identity -/
 
-section LogTensor
+/-! ### Paper notation: `tr₁(ρ)` / `tr₂(ρ)`
 
-/-- **Log-tensor identity.** For positive-definite matrices `A` and `B`, the matrix
-logarithm of the Kronecker product decomposes as the sum of tensor-embedded logs:
-`cfc Real.log (A ⊗ₖ B) = cfc Real.log A ⊗ₖ 1 + 1 ⊗ₖ cfc Real.log B`. -/
-theorem cfc_log_kronecker_posDef
-    {A : Matrix n n ℂ} (hA : A.PosDef)
-    {B : Matrix m m ℂ} (hB : B.PosDef) :
-    cfc Real.log (A ⊗ₖ B) =
-      cfc Real.log A ⊗ₖ (1 : Matrix m m ℂ) +
-        (1 : Matrix n n ℂ) ⊗ₖ cfc Real.log B := by
-  -- Spectral data
-  set U_A := (hA.1.eigenvectorUnitary : Matrix n n ℂ) with hU_A_def
-  set U_B := (hB.1.eigenvectorUnitary : Matrix m m ℂ) with hU_B_def
-  set dA := hA.1.eigenvalues with hdA_def
-  set dB := hB.1.eigenvalues with hdB_def
-  -- PosDef → eigenvalues positive
-  have hdA_pos : ∀ i, 0 < dA i := fun i => hA.eigenvalues_pos i
-  have hdB_pos : ∀ j, 0 < dB j := fun j => hB.eigenvalues_pos j
-  -- Unitarity
-  have hUA_self : U_Aᴴ * U_A = 1 := by
-    have := Unitary.coe_star_mul_self hA.1.eigenvectorUnitary
-    simpa [star_eq_conjTranspose, hU_A_def] using this
-  have hUA_self' : U_A * U_Aᴴ = 1 := by
-    have := Unitary.coe_mul_star_self hA.1.eigenvectorUnitary
-    simpa [star_eq_conjTranspose, hU_A_def] using this
-  have hUB_self : U_Bᴴ * U_B = 1 := by
-    have := Unitary.coe_star_mul_self hB.1.eigenvectorUnitary
-    simpa [star_eq_conjTranspose, hU_B_def] using this
-  have hUB_self' : U_B * U_Bᴴ = 1 := by
-    have := Unitary.coe_mul_star_self hB.1.eigenvectorUnitary
-    simpa [star_eq_conjTranspose, hU_B_def] using this
-  -- Spectral decompositions
-  have hA_decomp : A = U_A * diagonal (fun i => (dA i : ℂ)) * U_Aᴴ := by
-    have h := hA.1.spectral_theorem (𝕜 := ℂ)
-    rw [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose] at h
-    exact h
-  have hB_decomp : B = U_B * diagonal (fun j => (dB j : ℂ)) * U_Bᴴ := by
-    have h := hB.1.spectral_theorem (𝕜 := ℂ)
-    rw [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose] at h
-    exact h
-  -- Construct Kronecker unitary
-  let W : unitary (Matrix (n × m) (n × m) ℂ) :=
-    ⟨U_A ⊗ₖ U_B, by
-      rw [Unitary.mem_iff, star_eq_conjTranspose]
-      exact ⟨kronecker_conjTranspose_mul_self hUA_self hUB_self,
-             kronecker_mul_conjTranspose_self hUA_self' hUB_self'⟩⟩
-  have hW_val : (W : Matrix (n × m) (n × m) ℂ) = U_A ⊗ₖ U_B := rfl
-  -- Kronecker spectral decomposition
-  have hAB_decomp : A ⊗ₖ B = (W : Matrix (n × m) (n × m) ℂ) *
-      diagonal (fun ij : n × m => (((dA ij.1 * dB ij.2 : ℝ) : ℂ))) *
-      (W : Matrix (n × m) (n × m) ℂ)ᴴ := by
-    rw [hW_val]
-    have h := kronecker_eq_unitary_conj_diagonal hA_decomp hB_decomp
-    rw [h]
-    congr 1; congr 1
-    funext ij; push_cast; ring
-  -- cfc Real.log of A ⊗ B via the unitary-conjugation lemma
-  have h_cfcLog_AB :
-      cfc Real.log (A ⊗ₖ B) =
-        (W : Matrix (n × m) (n × m) ℂ) *
-          diagonal (fun ij : n × m => ((Real.log (dA ij.1 * dB ij.2) : ℝ) : ℂ)) *
-          (W : Matrix (n × m) (n × m) ℂ)ᴴ := by
-    rw [hAB_decomp]
-    exact cfc_unitary_conj_diagonal W Real.log (fun ij : n × m => (dA ij.1 * dB ij.2 : ℝ))
-  rw [h_cfcLog_AB]
-  -- Split log(dA*dB) = log dA + log dB
-  have h_log_split :
-      diagonal (fun ij : n × m => ((Real.log (dA ij.1 * dB ij.2) : ℝ) : ℂ)) =
-        diagonal (fun ij : n × m => ((Real.log (dA ij.1) : ℝ) : ℂ)) +
-          diagonal (fun ij : n × m => ((Real.log (dB ij.2) : ℝ) : ℂ)) := by
-    ext ij ij'
-    by_cases h : ij = ij'
-    · subst h
-      simp only [diagonal_apply_eq, Matrix.add_apply, diagonal_apply_eq]
-      rw [Real.log_mul (ne_of_gt (hdA_pos ij.1)) (ne_of_gt (hdB_pos ij.2))]
-      push_cast; ring
-    · simp only [Matrix.add_apply, diagonal_apply_ne _ h, add_zero]
-  rw [h_log_split]
-  -- Split each diagonal as Kronecker product
-  have h_left_as_kronecker :
-      diagonal (fun ij : n × m => ((Real.log (dA ij.1) : ℝ) : ℂ)) =
-        diagonal (fun i => ((Real.log (dA i) : ℝ) : ℂ)) ⊗ₖ (1 : Matrix m m ℂ) := by
-    rw [show (1 : Matrix m m ℂ) = diagonal (fun _ : m => (1 : ℂ)) from (diagonal_one).symm,
-        diagonal_kronecker_diagonal]
-    congr 1; funext ij; ring
-  have h_right_as_kronecker :
-      diagonal (fun ij : n × m => ((Real.log (dB ij.2) : ℝ) : ℂ)) =
-        (1 : Matrix n n ℂ) ⊗ₖ diagonal (fun j => ((Real.log (dB j) : ℝ) : ℂ)) := by
-    rw [show (1 : Matrix n n ℂ) = diagonal (fun _ : n => (1 : ℂ)) from (diagonal_one).symm,
-        diagonal_kronecker_diagonal]
-    congr 1; funext ij; ring
-  rw [h_left_as_kronecker, h_right_as_kronecker]
-  -- Distribute the conjugation over the sum
-  rw [Matrix.mul_add, Matrix.add_mul, hW_val, conjTranspose_kronecker]
-  -- Each term: (X ⊗ Y) * (P ⊗ Q) * (X' ⊗ Y') = (X * P * X') ⊗ (Y * Q * Y')
-  -- Using ← mul_kronecker_mul twice per term
-  rw [← mul_kronecker_mul, ← mul_kronecker_mul,
-      ← mul_kronecker_mul, ← mul_kronecker_mul]
-  -- Clean up: U_A * 1 * U_Aᴴ = 1, U_B * 1 * U_Bᴴ = 1
-  rw [Matrix.mul_one U_A, hUA_self', Matrix.mul_one U_B, hUB_self']
-  -- Now unfold cfc Real.log of A and B via their spectral decomposition
-  rw [cfc_log_spectral_eq hA.1, cfc_log_spectral_eq hB.1]
+Subscript convention follows Nielsen–Chuang §2.4: `trᵢ(ρ)` traces *out* factor
+`i` and retains the other. For a bipartite matrix `ρ` on `n × m`:
 
-end LogTensor
+* `tr₂(ρ) = Matrix.traceRight ρ` — traces out the second factor `m`, retaining `n`.
+* `tr₁(ρ) = Matrix.traceLeft ρ` — traces out the first factor `n`, retaining `m`. -/
 
-/-! ### Equivalence-indexed partial trace
+namespace QuantumInfo
 
-For an explicit bipartite decomposition `e : X ≃ A × B`, `partialTrace e ρ`
-retains the `A` factor and sums over the `B` factor. This makes the retained
-subsystem part of the type of the decomposition, rather than something inferred
-from names such as `A/B` or from left/right position. -/
+scoped syntax:max "tr₁(" term ")" : term
+scoped syntax:max "tr₂(" term ")" : term
 
-section PartialTrace
+scoped macro_rules
+  | `(tr₁($ρ)) => `(Matrix.traceLeft $ρ)
+  | `(tr₂($ρ)) => `(Matrix.traceRight $ρ)
 
-variable {X A B : Type*} [Fintype B]
+end QuantumInfo
 
-/-- **Partial trace along an explicit bipartite equivalence.** If `e : X ≃ A × B`, then
-`partialTrace e ρ` is the matrix on the retained subsystem `A` obtained by summing out
-the `B` factor. -/
-noncomputable def partialTrace (e : X ≃ A × B) (ρ : Matrix X X ℂ) : Matrix A A ℂ :=
-  Matrix.of fun a a' => ∑ b : B, ρ (e.symm (a, b)) (e.symm (a', b))
-
-@[simp] lemma partialTrace_apply (e : X ≃ A × B) (ρ : Matrix X X ℂ) (a a' : A) :
-  partialTrace e ρ a a' = ∑ b : B, ρ (e.symm (a, b)) (e.symm (a', b)) := rfl
-
-end PartialTrace
-
-omit [Fintype n] [DecidableEq n] [DecidableEq m] in
-@[simp] lemma partialTrace_refl_apply (ρ : Matrix (n × m) (n × m) ℂ) (a a' : n) :
-  partialTrace (A := n) (B := m) (Equiv.refl (n × m)) ρ a a' =
-    ∑ b : m, ρ (a, b) (a', b) := rfl
-
-omit [Fintype m] [DecidableEq n] [DecidableEq m] in
-@[simp] lemma partialTrace_prodComm_apply (ρ : Matrix (n × m) (n × m) ℂ) (b b' : m) :
-  partialTrace (A := m) (B := n) (Equiv.prodComm n m) ρ b b' =
-    ∑ a : n, ρ (a, b) (a, b') := rfl
-
+open scoped QuantumInfo
 
 /-! ### Heisenberg duality at product type
 
-`Tr(ρ · (X ⊗ 1)) = Tr((partialTrace (Equiv.refl (n × m)) ρ) · X)` and the symmetric
-`(1 ⊗ Y)` version. -/
+`Tr(ρ · (X ⊗ 1)) = Tr(tr₂(ρ) · X)` and the symmetric `(1 ⊗ Y)` version. -/
 
 omit [DecidableEq n] in
 /-- **Right-factor Heisenberg dual**: tracing `ρ` against the embedded observable
@@ -263,10 +111,10 @@ omit [DecidableEq n] in
 lemma trace_mul_kronecker_one_right
     (ρ : Matrix (n × m) (n × m) ℂ) (X : Matrix n n ℂ) :
   Tr (ρ * (X ⊗ₖ (1 : Matrix m m ℂ))) =
-    Tr (partialTrace (A := n) (B := m) (Equiv.refl (n × m)) ρ * X) := by
+    Tr (tr₂(ρ) * X) := by
   classical
   unfold Matrix.trace
-  simp_rw [Matrix.diag_apply, Matrix.mul_apply, partialTrace_refl_apply]
+  simp_rw [Matrix.diag_apply, Matrix.mul_apply, traceRight_apply]
   rw [Fintype.sum_prod_type]
   simp_rw [Fintype.sum_prod_type, Matrix.kronecker_apply, Matrix.one_apply]
   -- Goal: ∑ a, ∑ b, ∑ a', ∑ b', ρ (a, b) (a', b') * (X a' a * (if b' = b then 1 else 0))
@@ -291,10 +139,10 @@ partial trace that retains the second factor. -/
 lemma trace_mul_kronecker_one_left
     (ρ : Matrix (n × m) (n × m) ℂ) (Y : Matrix m m ℂ) :
     Tr (ρ * ((1 : Matrix n n ℂ) ⊗ₖ Y)) =
-      Tr (partialTrace (A := m) (B := n) (Equiv.prodComm n m) ρ * Y) := by
+      Tr (tr₁(ρ) * Y) := by
   classical
   unfold Matrix.trace
-  simp_rw [Matrix.diag_apply, Matrix.mul_apply, partialTrace_prodComm_apply]
+  simp_rw [Matrix.diag_apply, Matrix.mul_apply, traceLeft_apply]
   rw [Fintype.sum_prod_type]
   simp_rw [Fintype.sum_prod_type, Matrix.kronecker_apply, Matrix.one_apply]
   -- Goal: ∑ a, ∑ b, ∑ a', ∑ b', ρ (a, b) (a', b') * ((if a' = a then 1 else 0) * Y b' b)
@@ -340,28 +188,28 @@ lemma sum_diag_conj_kronecker_right
     (ρ : Matrix (n × m) (n × m) ℂ) (U_A : Matrix n n ℂ) {U_B : Matrix m m ℂ}
     (hU_B : U_B * U_Bᴴ = 1) (i : n) :
     ∑ j, ((U_A ⊗ₖ U_B)ᴴ * ρ * (U_A ⊗ₖ U_B)) (i, j) (i, j) =
-      (U_Aᴴ * partialTrace (Equiv.refl (n × m)) ρ * U_A) i i := by
+      (U_Aᴴ * tr₂(ρ) * U_A) i i := by
   classical
   set W := U_A ⊗ₖ U_B with hW
   set E : Matrix n n ℂ := diagonal (Pi.single i 1) with hE
   have hL : ∑ j, (Wᴴ * ρ * W) (i, j) (i, j) =
       Tr ((Wᴴ * ρ * W) * (E ⊗ₖ (1 : Matrix m m ℂ))) := by
-    rw [trace_mul_kronecker_one_right, hE, trace_mul_diagonal_single, partialTrace_refl_apply]
+    rw [trace_mul_kronecker_one_right, hE, trace_mul_diagonal_single, traceRight_apply]
   have hconj : W * (E ⊗ₖ (1 : Matrix m m ℂ)) * Wᴴ = (U_A * E * U_Aᴴ) ⊗ₖ (1 : Matrix m m ℂ) := by
     rw [hW, conjTranspose_kronecker, ← mul_kronecker_mul, ← mul_kronecker_mul, Matrix.mul_one,
       hU_B]
-  rw [hL, ← trace_mul_diagonal_single (U_Aᴴ * partialTrace (Equiv.refl (n × m)) ρ * U_A) i, ← hE]
+  rw [hL, ← trace_mul_diagonal_single (U_Aᴴ * tr₂(ρ) * U_A) i, ← hE]
   calc Tr ((Wᴴ * ρ * W) * (E ⊗ₖ (1 : Matrix m m ℂ)))
       = Tr (ρ * (W * (E ⊗ₖ (1 : Matrix m m ℂ)) * Wᴴ)) := by
         rw [show (Wᴴ * ρ * W) * (E ⊗ₖ (1 : Matrix m m ℂ)) =
             Wᴴ * (ρ * (W * (E ⊗ₖ (1 : Matrix m m ℂ)))) by simp only [Matrix.mul_assoc],
           Matrix.trace_mul_comm]
         simp only [Matrix.mul_assoc]
-    _ = Tr (partialTrace (Equiv.refl (n × m)) ρ * (U_A * E * U_Aᴴ)) := by
+    _ = Tr (tr₂(ρ) * (U_A * E * U_Aᴴ)) := by
         rw [hconj, trace_mul_kronecker_one_right]
-    _ = Tr ((U_Aᴴ * partialTrace (Equiv.refl (n × m)) ρ * U_A) * E) := by
-        rw [show partialTrace (Equiv.refl (n × m)) ρ * (U_A * E * U_Aᴴ) =
-            (partialTrace (Equiv.refl (n × m)) ρ * U_A * E) * U_Aᴴ by simp only [Matrix.mul_assoc],
+    _ = Tr ((U_Aᴴ * tr₂(ρ) * U_A) * E) := by
+        rw [show tr₂(ρ) * (U_A * E * U_Aᴴ) =
+            (tr₂(ρ) * U_A * E) * U_Aᴴ by simp only [Matrix.mul_assoc],
           Matrix.trace_mul_comm]
         simp only [Matrix.mul_assoc]
 
@@ -371,54 +219,30 @@ lemma sum_diag_conj_kronecker_left
     (ρ : Matrix (n × m) (n × m) ℂ) {U_A : Matrix n n ℂ} (U_B : Matrix m m ℂ)
     (hU_A : U_A * U_Aᴴ = 1) (j : m) :
     ∑ i, ((U_A ⊗ₖ U_B)ᴴ * ρ * (U_A ⊗ₖ U_B)) (i, j) (i, j) =
-      (U_Bᴴ * partialTrace (Equiv.prodComm n m) ρ * U_B) j j := by
+      (U_Bᴴ * tr₁(ρ) * U_B) j j := by
   classical
   set W := U_A ⊗ₖ U_B with hW
   set E : Matrix m m ℂ := diagonal (Pi.single j 1) with hE
   have hL : ∑ i, (Wᴴ * ρ * W) (i, j) (i, j) =
       Tr ((Wᴴ * ρ * W) * ((1 : Matrix n n ℂ) ⊗ₖ E)) := by
-    rw [trace_mul_kronecker_one_left, hE, trace_mul_diagonal_single, partialTrace_prodComm_apply]
+    rw [trace_mul_kronecker_one_left, hE, trace_mul_diagonal_single, traceLeft_apply]
   have hconj : W * ((1 : Matrix n n ℂ) ⊗ₖ E) * Wᴴ = (1 : Matrix n n ℂ) ⊗ₖ (U_B * E * U_Bᴴ) := by
     rw [hW, conjTranspose_kronecker, ← mul_kronecker_mul, ← mul_kronecker_mul, Matrix.mul_one,
       hU_A]
-  rw [hL, ← trace_mul_diagonal_single (U_Bᴴ * partialTrace (Equiv.prodComm n m) ρ * U_B) j, ← hE]
+  rw [hL, ← trace_mul_diagonal_single (U_Bᴴ * tr₁(ρ) * U_B) j, ← hE]
   calc Tr ((Wᴴ * ρ * W) * ((1 : Matrix n n ℂ) ⊗ₖ E))
       = Tr (ρ * (W * ((1 : Matrix n n ℂ) ⊗ₖ E) * Wᴴ)) := by
         rw [show (Wᴴ * ρ * W) * ((1 : Matrix n n ℂ) ⊗ₖ E) =
             Wᴴ * (ρ * (W * ((1 : Matrix n n ℂ) ⊗ₖ E))) by simp only [Matrix.mul_assoc],
           Matrix.trace_mul_comm]
         simp only [Matrix.mul_assoc]
-    _ = Tr (partialTrace (Equiv.prodComm n m) ρ * (U_B * E * U_Bᴴ)) := by
+    _ = Tr (tr₁(ρ) * (U_B * E * U_Bᴴ)) := by
         rw [hconj, trace_mul_kronecker_one_left]
-    _ = Tr ((U_Bᴴ * partialTrace (Equiv.prodComm n m) ρ * U_B) * E) := by
-        rw [show partialTrace (Equiv.prodComm n m) ρ * (U_B * E * U_Bᴴ) =
-            (partialTrace (Equiv.prodComm n m) ρ * U_B * E) * U_Bᴴ by simp only [Matrix.mul_assoc],
+    _ = Tr ((U_Bᴴ * tr₁(ρ) * U_B) * E) := by
+        rw [show tr₁(ρ) * (U_B * E * U_Bᴴ) =
+            (tr₁(ρ) * U_B * E) * U_Bᴴ by simp only [Matrix.mul_assoc],
           Matrix.trace_mul_comm]
         simp only [Matrix.mul_assoc]
-
-/-! ## Paper notation: `tr₁(ρ)` / `tr₂(ρ)`
-
-Subscript convention follows Nielsen–Chuang §2.4: `trᵢ(ρ)` traces *out* factor
-`i` and retains the other. For a bipartite density matrix `ρ` on `n × m`:
-
-* `tr₂(ρ) = partialTrace (Equiv.refl (n × m)) ρ` — traces out the second
-  factor `m`, retaining `n`.
-* `tr₁(ρ) = partialTrace (Equiv.prodComm n m) ρ` — traces out the first
-  factor `n`, retaining `m`.
-
-The macros use `Equiv.refl _` / `Equiv.prodComm _ _`; the underscores are
-solved from the matrix-typed argument. -/
-
-namespace QuantumInfo
-
-scoped syntax:max "tr₁(" term ")" : term
-scoped syntax:max "tr₂(" term ")" : term
-
-scoped macro_rules
-  | `(tr₁($ρ)) => `(Matrix.partialTrace (Equiv.prodComm _ _) $ρ)
-  | `(tr₂($ρ)) => `(Matrix.partialTrace (Equiv.refl _) $ρ)
-
-end QuantumInfo
 
 end Matrix
 
