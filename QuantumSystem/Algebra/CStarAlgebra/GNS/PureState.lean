@@ -55,17 +55,19 @@ private lemma pi_adjoint (T : GNS.Representation ω) (a : A) :
   -- `T.π (star a) = star (T.π a) = (T.π a)†`.
   simpa [hstar] using h.symm
 
-lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : W ∈ T.invtSubmodule) (a : A) {w x : T.H} (hw : w ∈ W) (hx : x ∈ Wᗮ) :
+lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω)
+    (W : ClosedSubmodule ℂ T.H) (hW : W ∈ T.closedInvtSubmodule) (a : A) {w x : T.H}
+    (hw : w ∈ W.toSubmodule) (hx : x ∈ W.toSubmoduleᗮ) :
     ⟪w, (T.π a) x⟫ = 0 := by
-  have hx_map : (T.π a) x ∈ Wᗮ :=
-    CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hWinv) a hx
+  have hx_map : (T.π a) x ∈ W.toSubmoduleᗮ :=
+    CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hW) a hx
   exact Submodule.inner_right_of_mem_orthogonal hw hx_map
 
-lemma inner_left_mem_orthogonal_right_pi_mem (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : W ∈ T.invtSubmodule) (a : A) {w x : T.H} (hx : x ∈ Wᗮ) (hw : w ∈ W) :
+lemma inner_left_mem_orthogonal_right_pi_mem (T : GNS.Representation ω)
+    (W : ClosedSubmodule ℂ T.H) (hW : W ∈ T.closedInvtSubmodule) (a : A) {w x : T.H}
+    (hx : x ∈ W.toSubmoduleᗮ) (hw : w ∈ W.toSubmodule) :
     ⟪x, (T.π a) w⟫ = 0 := by
-  have hw_map : (T.π a) w ∈ W := CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hw
+  have hw_map : (T.π a) w ∈ W.toSubmodule := CStarRep.apply_mem_of_mem_invtSubmodule hW a hw
   have h0 : ⟪(T.π a) w, x⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hw_map hx
   exact (inner_eq_zero_symm (x := x) (y := (T.π a) w)).2 h0
 
@@ -146,9 +148,9 @@ lemma opNorm_vectorFunctional_le (T : GNS.Representation ω) (v : T.H) :
   simpa [WeakDual.toStrongDual_apply, vectorFunctional_apply, mul_comm, mul_left_comm, mul_assoc] using this
 
 
-lemma state_decomposition (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : W ∈ T.invtSubmodule) (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
-    (hξ : T.ξ = v₁ + v₂) (a : A) :
+lemma state_decomposition (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H)
+    (hW : W ∈ T.closedInvtSubmodule) (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W.toSubmodule)
+    (hv₂ : v₂ ∈ W.toSubmoduleᗮ) (hξ : T.ξ = v₁ + v₂) (a : A) :
     ω a = T.vectorFunctional v₁ a + T.vectorFunctional v₂ a := by
   rw [T.gns_condition, hξ]
   simp only [vectorFunctional_apply]
@@ -156,9 +158,9 @@ lemma state_decomposition (T : GNS.Representation ω) (W : Submodule ℂ T.H)
     exact ContinuousLinearMap.map_add (T.π a) v₁ v₂
   rw [this, inner_add_left, inner_add_right, inner_add_right]
   have h₁ : ⟪v₁, (T.π a) v₂⟫ = 0 :=
-    inner_left_mem_right_pi_mem_orthogonal T W hWinv a hv₁ hv₂
+    inner_left_mem_right_pi_mem_orthogonal T W hW a hv₁ hv₂
   have h₂ : ⟪v₂, (T.π a) v₁⟫ = 0 :=
-    inner_left_mem_orthogonal_right_pi_mem T W hWinv a hv₂ hv₁
+    inner_left_mem_orthogonal_right_pi_mem T W hW a hv₂ hv₁
   simp [h₁, h₂]
 
 lemma norm_sq_decomposition (T : GNS.Representation ω) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
@@ -220,9 +222,10 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
 
 
 lemma trichotomy_from_purity {ψ : PureState A}
-    (W : Submodule ℂ (PureState.gnsRepresentation ψ).H)
-    (hWinv : W ∈ (PureState.gnsRepresentation ψ).invtSubmodule)
-    (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
+    (W : ClosedSubmodule ℂ (PureState.gnsRepresentation ψ).H)
+    (hW : W ∈ (PureState.gnsRepresentation ψ).closedInvtSubmodule)
+    (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W.toSubmodule)
+    (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
     (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
   let T := PureState.gnsRepresentation ψ
@@ -275,7 +278,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
     have h_sum_c : ψ.val = (t : ℂ) • φ + (1 - (t : ℂ)) • χ := by
       apply ContinuousLinearMap.ext
       intro a
-      have h_state := state_decomposition T W hWinv v₁ v₂ hv₁ hv₂ hξ a
+      have h_state := state_decomposition T W hW v₁ v₂ hv₁ hv₂ hξ a
       change ψ.toState a = _
       rw [h_state]
       -- Now everything is ℂ-linear, so `smul_apply` works and the normalizations cancel.
@@ -332,12 +335,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
         rw [hξ, map_add]
         abel
       rw [h_decomp]
-      have h1 : (T.π a) v₁ - v₁ ∈ W :=
-        Submodule.sub_mem W (CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hv₁) hv₁
-      have h2 : (T.π a) v₂ ∈ Wᗮ :=
-        CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hWinv) a hv₂
+      have h1 : (T.π a) v₁ - v₁ ∈ W.toSubmodule :=
+        Submodule.sub_mem _ (CStarRep.apply_mem_of_mem_invtSubmodule hW a hv₁) hv₁
+      have h2 : (T.π a) v₂ ∈ W.toSubmoduleᗮ :=
+        CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hW) a hv₂
       have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
-        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
+        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal _ _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
       exact h_pythag
     have h_sq_le : ‖(T.π a) v₁ - v₁‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by
@@ -350,12 +353,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
         rw [hξ, map_add]
         abel
       rw [h_decomp]
-      have h1 : (T.π a) v₁ - v₁ ∈ W :=
-        Submodule.sub_mem W (CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hv₁) hv₁
-      have h2 : (T.π a) v₂ ∈ Wᗮ :=
-        CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hWinv) a hv₂
+      have h1 : (T.π a) v₁ - v₁ ∈ W.toSubmodule :=
+        Submodule.sub_mem _ (CStarRep.apply_mem_of_mem_invtSubmodule hW a hv₁) hv₁
+      have h2 : (T.π a) v₂ ∈ W.toSubmoduleᗮ :=
+        CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hW) a hv₂
       have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
-        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
+        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal _ _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
       exact h_pythag
     have h_sq_le : ‖(T.π a) v₂‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by
@@ -502,7 +505,7 @@ theorem pureState_gns_isIrreducible {ψ : PureState A} :
   let T := PureState.gnsRepresentation ψ
   refine ⟨T.π_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
-  rcases trichotomy_from_purity _ hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
+  rcases trichotomy_from_purity W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
   · exact Or.inr (eq_top_of_norm_sq_eq_one T W hW v₁ v₂ hv₁ hξ horth h_one)
 
