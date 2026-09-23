@@ -18,18 +18,19 @@ strong operator topology (SOT).
 The strong operator topology on `B(H) = H →L[ℂ] H` is the topology of pointwise convergence
 in the norm topology: a net `T_α → T` in SOT iff `∀ x, T_α x → T x` in norm. Mathlib already
 provides this topology as `PointwiseConvergenceCLM` (notation `H →SLₚₜ[RingHom.id ℂ] H`), a type
-copy of `H →L[ℂ] H` carrying the topology of uniform convergence on finite sets; this file uses
-that type copy rather than introducing another one.
+copy of `H →L[ℂ] H` carrying the topology of uniform convergence on finite sets, identified with
+`H →L[ℂ] H` by Mathlib's `ContinuousLinearMap.toUniformConvergenceCLM`; this file uses that type
+copy and that identification rather than introducing another one.
 
 ## Main definitions
 
-* `toSOTEquiv`: the linear equivalence from `B(H)` to the SOT type-copy.
 * `Set.toSOT`: view a subset of operators inside the SOT type-copy.
 * `IsSOTClosed`: a predicate for subsets closed in the SOT.
 
 ## Main results
 
-* `Set.toSOT_eq_image`: `Set.toSOT` is the image of the subset under `toSOTEquiv`.
+* `Set.toSOT_eq_image`: `Set.toSOT` is the image of the subset under
+  `ContinuousLinearMap.toUniformConvergenceCLM`.
 * `isSOTClosed_centralizer`: the commutant of any set is SOT-closed.
 * `isSOTClosed_centralizer_centralizer`: double commutants are SOT-closed.
 
@@ -54,30 +55,23 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 local notation "B" => (H →L[ℂ] H)
 local notation "BSOT" => (H →SLₚₜ[RingHom.id ℂ] H)
 
-/-- The linear equivalence from `B(H)` to the SOT type-copy. It is the identity on the underlying
-operators; only the topology differs. -/
-noncomputable def toSOTEquiv : B ≃ₗ[ℂ] BSOT := LinearEquiv.refl ℂ (H →L[ℂ] H)
-
-@[simp] lemma toSOTEquiv_apply (T : B) (x : H) : (toSOTEquiv (H := H) T) x = T x := rfl
-
-@[simp] lemma toSOTEquiv_symm_apply (T : BSOT) (x : H) :
-    ((toSOTEquiv (H := H)).symm T) x = T x := rfl
+open ContinuousLinearMap (toUniformConvergenceCLM)
 
 /-- View a subset of operators inside the SOT type-copy. -/
 def Set.toSOT (S : Set B) : Set BSOT :=
-  {T | (toSOTEquiv (H := H)).symm T ∈ S}
+  {T | (toUniformConvergenceCLM _ _ _).symm T ∈ S}
 
 lemma Set.mem_toSOT_iff {S : Set B} {T : BSOT} :
-    T ∈ Set.toSOT (H := H) S ↔ (toSOTEquiv (H := H)).symm T ∈ S :=
+    T ∈ Set.toSOT (H := H) S ↔ (toUniformConvergenceCLM _ _ _).symm T ∈ S :=
   Iff.rfl
 
-/-- `Set.toSOT` is the image of the subset under `toSOTEquiv`. -/
+/-- `Set.toSOT` is the image of the subset under `ContinuousLinearMap.toUniformConvergenceCLM`. -/
 lemma Set.toSOT_eq_image (S : Set B) :
-    Set.toSOT (H := H) S = (toSOTEquiv (H := H)) '' S := by
+    Set.toSOT (H := H) S = toUniformConvergenceCLM (RingHom.id ℂ) H {s : Set H | Finite s} '' S := by
   ext T
   constructor
   · intro h
-    exact ⟨_, h, (toSOTEquiv (H := H)).apply_symm_apply T⟩
+    exact ⟨_, h, (toUniformConvergenceCLM _ _ _).apply_symm_apply T⟩
   · rintro ⟨x, hx, rfl⟩
     simpa [Set.mem_toSOT_iff] using hx
 

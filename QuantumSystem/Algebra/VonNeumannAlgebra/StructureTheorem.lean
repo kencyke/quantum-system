@@ -229,7 +229,7 @@ theorem OrthEquivFam.mem_sotClosure_adjoin (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     {a : H →L[ℂ] H} (ha : a ∈ N) :
-    (StrongOperatorTopology.toSOTEquiv a : H →SLₚₜ[RingHom.id ℂ] H) ∈ closure (Set.toSOT
+    (ContinuousLinearMap.toUniformConvergenceCLM _ _ _ a : H →SLₚₜ[RingHom.id ℂ] H) ∈ closure (Set.toSOT
       (StarAlgebra.adjoin ℂ (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) :
         Set (H →L[ℂ] H))) := by
   set S := Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2) with hSdef
