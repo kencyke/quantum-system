@@ -89,7 +89,7 @@ facts below combine them with declarations from *other* `ForMathlib` files
 -/
 
 /-- `S′` denotes the commutant `Set.centralizer S` of a set of operators, the prime notation of the
-operator-algebra literature (see `docs/math/bicommutant-theorem.md`, convention (C8)). Local to this
+operator-algebra literature (von Neumann's `M′`, `M″`). Local to this
 file. The same notation exists one level up, scoped to `VonNeumannAlgebra`, for
 `VonNeumannAlgebra.commutant` (`QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant`);
 that scope *is* activated by the `namespace VonNeumannAlgebra` block at the end of this file, so

@@ -39,8 +39,8 @@ quasi-local C⋆-algebra and no faithfulness. That is the level at which the ind
 property's own literature becomes expressible: the proper intervals of `S¹` are *not* directed
 (two intervals covering the circle have no proper upper bound), as Köster's dissertation itself
 notes at its definition of a chiral net. Wedges and spacelike cones are further standard
-non-directed examples from the wider AQFT literature (not from the sources behind the extraction
-note `docs/math/split-inclusion.md`).
+non-directed examples from the wider AQFT literature (Buchholz 1974, Doplicher–Longo 1984 treat
+the split property itself; the non-directed index sets come from the surrounding literature).
 
 The representation-theoretic net above is one instance of that (`LocalNet.vonNeumannNet`), and
 `LocalNet.SplitProperty` is `VonNeumannNet.SplitProperty` at it. The hypotheses
@@ -145,8 +145,8 @@ namespace ProperContainment
     QFT literature writes `Ī₁ ⊂ I₂`. Köster's dissertation uses the same glyph differently: there
     `I ⋐ S¹` is a membership predicate ("`I` is a proper interval of `S¹`"), not a relation
     between two regions of the index set — a reader coming from that source should not carry the
-    predicate reading into this notation (extraction note `docs/math/causal-index-set.md`,
-    convention (C7)). -/
+    predicate reading into this notation (Köster, *Structure of Coset Models*, arXiv
+    math-ph/0308031, writes the separation itself as `Ī₁ ⊂ I₂`). -/
 scoped infixl:50 " ⋐ " => ProperContainment.ProperlyContained
 
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [ProperContainment K]

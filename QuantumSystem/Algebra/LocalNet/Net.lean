@@ -66,8 +66,8 @@ out anyway. The symbols stay in the prose; the code writes the projections.
     (spacelike) disjointness of regions, the relation under which the Haag–Kastler locality axiom
     applies. It is symmetric and hereditary under shrinking regions.
 
-    The literature's axiomatization (Guido–Longo–Roberts–Verch §3.1, the only abstract one in the
-    sources behind `docs/math/causal-index-set.md`) asks for three conditions: symmetry, heredity,
+    The literature's axiomatization (Guido–Longo–Roberts–Verch, arXiv math-ph/9906019, §3.1)
+    asks for three conditions: symmetry, heredity,
     and the existence of causal complements (`∀ O₁, ∃ O₂, O₁ ⟂ O₂`). This class carries the first
     two, which are properties of the relation itself; the third is a property of the *index set*
     and is carried separately, as the mixin `CausalIndexSet` below. Splitting it off keeps this
@@ -235,7 +235,7 @@ open scoped CausalOrthogonality
     symmetry and heredity carried by `CausalOrthogonality`, the third condition of the
     axiomatization — the **existence of causal complements**, every region admitting a causally
     disjoint one. An ordered `K` with `[CausalOrthogonality K]` and this mixin is exactly the
-    adopted general form of the extraction note `docs/math/causal-index-set.md`.
+    causal index set of Guido–Longo–Roberts–Verch, arXiv math-ph/9906019, §3.1.
 
     Carried as a mixin rather than folded into `CausalOrthogonality`, because unlike symmetry and
     heredity this condition is a property of the index set rather than of the relation, and the

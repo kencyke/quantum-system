@@ -185,7 +185,7 @@ every element of `S` is `0`.
 This is the *joint-kernel* form of non-degeneracy. The operator-algebra literature usually states
 it as "the span of `S • H` is dense in `H`"; the two agree when `S` is closed under `star`, and
 only then. Without self-adjointness they come apart: `span {e₁₁, e₁₂} ⊆ M₂(ℂ)` has trivial joint
-kernel but its range `ℂ • e₁` is not dense (see `docs/math/bicommutant-theorem.md`, (X11)). Every
+kernel but its range `ℂ • e₁` is not dense. Every
 use in this development supplies a `NonUnitalStarSubalgebra`, where the readings coincide.
 
 This is strictly weaker than `1 ∈ S` (see `actsNondegenerately_of_one_mem`): for example the

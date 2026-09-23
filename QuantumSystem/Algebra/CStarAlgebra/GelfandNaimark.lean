@@ -13,8 +13,8 @@ Murphy, *C\*-algebras and Operator Theory*, Ch. 3 "Ideals and Positive Functiona
 *C\*-Algebras and Their Automorphism Groups*, Ch. 3 "Functionals and Representations";
 Blackadar, *Operator Algebras*, Ch. II "C\*-Algebras"; Takesaki, *Theory of Operator Algebras
 I*, Ch. I "Fundamentals of Banach Algebras and C\*-Algebras" — chapter-level locators only,
-since none of these four books was independently opened for this file; see the `math-review`
-ledger entry for `GelfandNaimark.lean`), and it is not to be confused with the commutative
+since none of these four books was independently opened for this file), and it is not to be
+confused with the commutative
 Gelfand-Naimark theorem — Gelfand duality — which Mathlib carries as
 `gelfandTransform_isometry`.
 

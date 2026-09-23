@@ -123,9 +123,8 @@ theorem IsSplitInclusion.exists_tensor_decomposition {A B : VonNeumannAlgebra H}
 
 The negative control for `IsSplitInclusion`. Everything above inhabits the *positive* side of the
 predicate; this section keeps the negations of `IsFactor`, `IsTypeIFactor` and `IsSplitInclusion`
-inhabited, realizing the minimal non-split witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ` of the extraction note
-`docs/math/split-inclusion.md` (degeneracy table: a commutative algebra is split in itself only
-when it is `ℂ·1`). Without it nothing built in this repository would distinguish `IsSplitInclusion`
+inhabited, realizing the minimal non-split witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ` (a commutative algebra is split in
+itself only when it is `ℂ·1`). Without it nothing built in this repository would distinguish `IsSplitInclusion`
 from plain inclusion, nor `IsFactor` from `True`.
 
 It lives here, next to the predicate it refutes, rather than among the local-net witnesses: it
@@ -198,7 +197,7 @@ theorem not_isFactor_diagonalAlgebra : ¬ IsFactor diagonalAlgebra := fun h =>
 theorem not_isTypeIFactor_diagonalAlgebra : ¬ IsTypeIFactor diagonalAlgebra := fun h =>
   not_isFactor_diagonalAlgebra h.1
 
-/-- **A non-split inclusion** — the extraction note's minimal witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ`: the identity
+/-- **A non-split inclusion** — the minimal witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ`: the identity
 inclusion of the diagonal algebra on `ℂ²` is not split. An interpolating type I factor squeezed
 between `diagonalAlgebra` and itself would *be* `diagonalAlgebra`
 (`IsSplitInclusion.isTypeIFactor_of_self`), which is not a factor. This keeps the negation of

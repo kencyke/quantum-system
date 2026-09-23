@@ -46,8 +46,8 @@ out of the public namespace without breaking the chain.
 `1 - p`, so it can only state the first three rows, and the public theorem is
 phrased with a plain `Tr`.
 
-See `docs/math/lieb-concavity-inequality.md` for the mathematics; that note's
-adopted general form is the last row.
+The last row is the general two-exponent form of Lieb 1973 (Adv. Math. 11,
+267–288); see also Carlen–Lieb, arXiv:0710.4167.
 
 ### Proof Strategy (Effros 2008)
 The proof proceeds via:
@@ -820,7 +820,7 @@ on the kernel of `X`): `p = 0` or `q = 0` is covered by the main argument (only
 every power is `1` and both sides equal `Tr (K† K)`. For singular `A` this
 `p = 0` value, `Tr(K† Bᑫ K)`, is *not* the limit `p → 0⁺` of the functional
 (which is `Tr(P_A K† Bᑫ K)` with `P_A` the support projection of `A`); the
-literature (`docs/math/lieb-concavity-inequality.md`) accordingly states the
+literature (Lieb 1973; Carlen–Lieb, arXiv:0710.4167) accordingly states the
 theorem for `p, q > 0`, and this statement extends it to the endpoints under
 the stated convention. It subsumes the three above, and is the one new code
 should call. -/
