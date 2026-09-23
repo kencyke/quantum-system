@@ -69,25 +69,18 @@ lemma inner_left_mem_orthogonal_right_pi_mem (T : GNS.Representation ω) (W : Su
   have h0 : ⟪(T.π a) w, x⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hw_map hx
   exact (inner_eq_zero_symm (x := x) (y := (T.π a) w)).2 h0
 
-lemma cyclicVector_decomp_of_isClosed (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWclosed : IsClosed (W : Set T.H)) :
-    ∃ v₁ v₂ : T.H, v₁ ∈ W ∧ v₂ ∈ Wᗮ ∧ T.ξ = v₁ + v₂ ∧ ⟪v₁, v₂⟫ = 0 := by
-  classical
-  -- Use closedness to obtain orthogonal projections onto `W`.
-  let : IsClosed (W : Set T.H) := hWclosed
-  have : CompleteSpace (↥W) := by
-    -- Closed subsets of complete spaces are complete.
-    simpa using (IsClosed.completeSpace_coe (s := (W : Set T.H)))
-  have : W.HasOrthogonalProjection := by
-    -- Uses `HasOrthogonalProjection.ofCompleteSpace`.
-    infer_instance
-  refine ⟨W.starProjection T.ξ, T.ξ - W.starProjection T.ξ, ?_, ?_, ?_, ?_⟩
-  · exact Submodule.starProjection_apply_mem (U := W) (x := T.ξ)
-  · exact Submodule.sub_starProjection_mem_orthogonal (K := W) (v := T.ξ)
+/-- The cyclic vector splits along a closed submodule `W` and its orthogonal complement. -/
+lemma cyclicVector_decomp (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H) :
+    ∃ v₁ v₂ : T.H, v₁ ∈ W.toSubmodule ∧ v₂ ∈ W.toSubmoduleᗮ ∧ T.ξ = v₁ + v₂ ∧ ⟪v₁, v₂⟫ = 0 := by
+  -- A closed subspace of a Hilbert space is complete, so it has an orthogonal projection.
+  have : CompleteSpace W.toSubmodule := W.isClosed.completeSpace_coe
+  refine ⟨W.toSubmodule.starProjection T.ξ, T.ξ - W.toSubmodule.starProjection T.ξ, ?_, ?_, ?_, ?_⟩
+  · exact Submodule.starProjection_apply_mem (U := W.toSubmodule) (x := T.ξ)
+  · exact Submodule.sub_starProjection_mem_orthogonal (K := W.toSubmodule) (v := T.ξ)
   · simp [add_sub_cancel]
   · exact Submodule.inner_right_of_mem_orthogonal
-      (Submodule.starProjection_apply_mem (U := W) (x := T.ξ))
-      (Submodule.sub_starProjection_mem_orthogonal (K := W) (v := T.ξ))
+      (Submodule.starProjection_apply_mem (U := W.toSubmodule) (x := T.ξ))
+      (Submodule.sub_starProjection_mem_orthogonal (K := W.toSubmodule) (v := T.ξ))
 
 
 noncomputable def vectorFunctional (T : GNS.Representation ω) (v : T.H) : WeakDual ℂ A :=
@@ -229,7 +222,6 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
 lemma trichotomy_from_purity {ψ : PureState A}
     (W : Submodule ℂ (PureState.gnsRepresentation ψ).H)
     (hWinv : W ∈ (PureState.gnsRepresentation ψ).invtSubmodule)
-    (_hWclosed : IsClosed (W : Set (PureState.gnsRepresentation ψ).H))
     (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
     (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
@@ -472,54 +464,47 @@ lemma mem_of_norm_sq_eq_zero (T : GNS.Representation ω) (v₁ : T.H)
     nlinarith [sq_nonneg ‖v₁‖]
   exact norm_eq_zero.mp this
 
-lemma eq_top_of_norm_sq_eq_one (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : W ∈ T.invtSubmodule) (hWclosed : IsClosed (W : Set T.H))
-    (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W) (_hv₂ : v₂ ∈ Wᗮ) (hξ : T.ξ = v₁ + v₂)
-    (horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = 1) :
+/-- If the component of `ξ` in a closed invariant submodule `W` has norm one, then `W = ⊤`:
+`ξ ∈ W`, so `W` contains the dense orbit of `ξ`. -/
+lemma eq_top_of_norm_sq_eq_one (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H)
+    (hW : W ∈ T.closedInvtSubmodule) (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W.toSubmodule)
+    (hξ : T.ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = 1) :
     W = ⊤ := by
   have hv₂_zero := mem_of_norm_sq_eq_one T v₁ v₂ hξ horth h
-  have hξ_in_W : T.ξ ∈ W := by rw [hξ, hv₂_zero, add_zero]; exact hv₁
+  have hξ_in_W : T.ξ ∈ W.toSubmodule := by rw [hξ, hv₂_zero, add_zero]; exact hv₁
   -- `W` is closed and contains the dense orbit of `ξ`, so it is everything.
   have h_orbit_le : Set.range (T.orbit T.ξ) ⊆ W := by
     rintro _ ⟨a, rfl⟩
-    exact CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hξ_in_W
-  refine eq_top_iff.mpr fun x _ => ?_
-  exact closure_minimal h_orbit_le hWclosed (T.cyclic x)
+    exact CStarRep.apply_mem_of_mem_invtSubmodule hW a hξ_in_W
+  exact eq_top_iff.mpr fun x _ => closure_minimal h_orbit_le W.isClosed (T.cyclic x)
 
-lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : W ∈ T.invtSubmodule) (_hWclosed : IsClosed (W : Set T.H))
-    (v₁ v₂ : T.H) (_hv₁ : v₁ ∈ W) (_hv₂ : v₂ ∈ Wᗮ) (hξ : T.ξ = v₁ + v₂)
-    (_horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = 0) :
+/-- If the component of `ξ` in a closed invariant submodule `W` vanishes, then `W = ⊥`:
+`ξ ∈ Wᗮ`, so the closed invariant submodule `Wᗮ` contains the dense orbit of `ξ`. -/
+lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H)
+    (hW : W ∈ T.closedInvtSubmodule) (v₁ v₂ : T.H) (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
+    (hξ : T.ξ = v₁ + v₂) (h : ‖v₁‖ ^ 2 = 0) :
     W = ⊥ := by
-  have hv₁_zero : v₁ = 0 := by
-    have : ‖v₁‖ = 0 := by nlinarith [sq_nonneg ‖v₁‖]
-    exact norm_eq_zero.mp this
-  have hξ_in_Wperp : T.ξ ∈ Wᗮ := by rw [hξ, hv₁_zero, zero_add]; exact _hv₂
-  have hWperp_inv := CStarRep.orthogonal_mem_invtSubmodule hWinv
-  have hWperp_closed : IsClosed (Wᗮ : Set T.H) := Submodule.isClosed_orthogonal W
+  have hv₁_zero : v₁ = 0 := mem_of_norm_sq_eq_zero T v₁ h
+  have hξ_in_Wperp : T.ξ ∈ W.toSubmoduleᗮ := by rw [hξ, hv₁_zero, zero_add]; exact hv₂
+  have hWperp_inv := CStarRep.orthogonal_mem_invtSubmodule (R := T.toCStarRep) hW
   -- `Wᗮ` is closed and contains the dense orbit of `ξ`, so it is everything.
-  have h_orbit_le : Set.range (T.orbit T.ξ) ⊆ Wᗮ := by
+  have h_orbit_le : Set.range (T.orbit T.ξ) ⊆ W.toSubmoduleᗮ := by
     rintro _ ⟨a, rfl⟩
     exact CStarRep.apply_mem_of_mem_invtSubmodule hWperp_inv a hξ_in_Wperp
-  have : Wᗮ = ⊤ := eq_top_iff.mpr fun x _ =>
-    closure_minimal h_orbit_le hWperp_closed (T.cyclic x)
-  rw [← Submodule.orthogonal_eq_bot_iff] at this
-  simpa using this
+  have : W.toSubmoduleᗮ = ⊤ := eq_top_iff.mpr fun x _ =>
+    closure_minimal h_orbit_le (Submodule.isClosed_orthogonal _) (T.cyclic x)
+  rw [Submodule.orthogonal_eq_top_iff] at this
+  exact ClosedSubmodule.toSubmodule_injective this
 
 /-- **Main Theorem**: The GNS representation of a pure state is irreducible. -/
 theorem pureState_gns_isIrreducible {ψ : PureState A} :
     (PureState.gnsRepresentation ψ).IsIrreducible := by
   let T := PureState.gnsRepresentation ψ
-  refine ⟨T.π_ne_zero, fun W hWclosed hWinv => ?_⟩
-  obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp_of_isClosed T W hWclosed
-  have h_trichotomy := trichotomy_from_purity W hWinv hWclosed v₁ v₂ hv₁ hv₂ hξ horth
-  cases h_trichotomy with
-  | inl h_zero =>
-    left
-    exact eq_bot_of_norm_sq_eq_zero T W hWinv hWclosed v₁ v₂ hv₁ hv₂ hξ horth h_zero
-  | inr h_one =>
-    right
-    exact eq_top_of_norm_sq_eq_one T W hWinv hWclosed v₁ v₂ hv₁ hv₂ hξ horth h_one
+  refine ⟨T.π_ne_zero, fun W hW => ?_⟩
+  obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
+  rcases trichotomy_from_purity _ hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
+  · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
+  · exact Or.inr (eq_top_of_norm_sq_eq_one T W hW v₁ v₂ hv₁ hξ horth h_one)
 
 end Representation
 

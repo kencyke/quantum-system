@@ -12,7 +12,9 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubsp
 # Irreducibility for `CStarRep`
 
 A `*`-representation `R : CStarRep A` is *(topologically) irreducible*
-when it is non-null and its only closed invariant subspaces are `⊥` and `⊤`.  The predicate
+when it is non-null and the only members of its lattice of closed invariant subspaces
+(`CStarRep.closedInvtSubmodule`, a sublattice of Mathlib's `ClosedSubmodule ℂ R.H`) are `⊥`
+and `⊤`.  The predicate
 is defined here for a general `CStarRep A` (no cyclic vector, no state); since
 `GNS.Representation` extends `CStarRep`, a GNS triplet `T` uses it directly as
 `T.IsIrreducible` (and `T.invtSubmodule`).  The file also proves that
@@ -25,6 +27,8 @@ descend to the quotient).
 
 * `CStarRep.invtSubmodule R` — the sublattice of submodules stable under every `R.π a`, the
   C\*-analogue of Mathlib's `Representation.invtSubmodule`.
+* `CStarRep.closedInvtSubmodule R` — the sublattice of closed submodules stable under every
+  `R.π a`.
 * `CStarRep.IsIrreducible R` — `R` is non-null and the only closed
   `R`-invariant submodules are `⊥` and `⊤`.
 
@@ -82,6 +86,32 @@ lemma orthogonal_mem_invtSubmodule (hW : W ∈ R.invtSubmodule) : Wᗮ ∈ R.inv
 @[simp] protected lemma invtSubmodule.bot_mem : (⊥ : Submodule ℂ R.H) ∈ R.invtSubmodule := by
   simp [invtSubmodule]
 
+/-- The sublattice of *closed* invariant submodules of a representation: the closed submodules
+whose underlying submodule lies in `R.invtSubmodule`.  It is closed under the lattice operations
+of `ClosedSubmodule` because the closure of an invariant submodule is invariant under the
+continuous operators `R.π a` (`Submodule.topologicalClosure_mem_invtSubmodule`). -/
+noncomputable def closedInvtSubmodule (R : CStarRep A) : Sublattice (ClosedSubmodule ℂ R.H) where
+  carrier := {W | W.toSubmodule ∈ R.invtSubmodule}
+  supClosed' _ h₁ _ h₂ := mem_invtSubmodule.mpr fun a =>
+    Submodule.topologicalClosure_mem_invtSubmodule
+      (mem_invtSubmodule.mp (R.invtSubmodule.sup_mem h₁ h₂) a)
+  infClosed' _ h₁ _ h₂ := R.invtSubmodule.inf_mem h₁ h₂
+
+/-- A closed submodule is a closed invariant submodule iff its underlying submodule is
+invariant. -/
+lemma mem_closedInvtSubmodule {W : ClosedSubmodule ℂ R.H} :
+    W ∈ R.closedInvtSubmodule ↔ W.toSubmodule ∈ R.invtSubmodule := Iff.rfl
+
+/-- `⊤` is a closed invariant submodule. -/
+@[simp] protected lemma closedInvtSubmodule.top_mem :
+    (⊤ : ClosedSubmodule ℂ R.H) ∈ R.closedInvtSubmodule := by
+  simp [mem_closedInvtSubmodule]
+
+/-- `⊥` is a closed invariant submodule. -/
+@[simp] protected lemma closedInvtSubmodule.bot_mem :
+    (⊥ : ClosedSubmodule ℂ R.H) ∈ R.closedInvtSubmodule := by
+  simp [mem_closedInvtSubmodule]
+
 /-- A representation is (topologically) irreducible if it is non-null and its only closed
 invariant submodules are `⊥` and `⊤` (Murphy, *C\*-algebras and Operator Theory*, §5.1).
 
@@ -92,8 +122,7 @@ structure IsIrreducible (R : CStarRep A) : Prop where
   /-- The representation is non-null: `π ≠ 0`. -/
   ne_zero : R.π ≠ 0
   /-- The only closed invariant submodules are `⊥` and `⊤`. -/
-  eq_bot_or_eq_top : ∀ W : Submodule ℂ R.H,
-    IsClosed (W : Set R.H) → W ∈ R.invtSubmodule → (W = ⊥ ∨ W = ⊤)
+  eq_bot_or_eq_top : ∀ W ∈ R.closedInvtSubmodule, W = ⊥ ∨ W = ⊤
 
 namespace UnitaryEquiv
 
@@ -101,40 +130,27 @@ namespace UnitaryEquiv
 transports irreducibility. -/
 private lemma isIrreducible_of {R₁ R₂ : CStarRep A}
     (U : UnitaryEquiv R₁ R₂) (h₁ : R₁.IsIrreducible) : R₂.IsIrreducible := by
-  refine ⟨fun h₂ => h₁.ne_zero ?_, fun W hW_closed hW_inv => ?_⟩
+  refine ⟨fun h₂ => h₁.ne_zero ?_, fun W hW => ?_⟩
   · -- If `π₂ = 0`, then `U (π₁ a x) = π₂ a (U x) = 0`, so `π₁ a x = 0` by injectivity of `U`.
     ext a x
     apply U.toLinearIsometryEquiv.injective
     rw [U.intertwines_apply, h₂]
     simp
-  -- Pull `W` back along `U` to obtain a closed invariant submodule `W'` of `R₁.H`.
-  set f : R₁.H →L[ℂ] R₂.H := (U.toLinearIsometryEquiv : R₁.H →L[ℂ] R₂.H) with hf
-  let W' : Submodule ℂ R₁.H := W.comap f.toLinearMap
-  have hW'_closed : IsClosed (W' : Set R₁.H) :=
-    hW_closed.preimage f.continuous
-  have hW'_inv : W' ∈ R₁.invtSubmodule := by
-    refine mem_invtSubmodule_iff_forall_mem.mpr fun a x hx_mem => ?_
-    -- `hx_mem : x ∈ W'` means `f x ∈ W`; the goal is `f (R₁.π a x) ∈ W`.
-    change f ((R₁.π a) x) ∈ W
-    rw [show f ((R₁.π a) x) = (R₂.π a) (f x) from U.intertwines_apply a x]
-    exact apply_mem_of_mem_invtSubmodule hW_inv a hx_mem
-  -- `U` is surjective, with inverse `U.symm`.
-  have hsurj : ∀ w : R₂.H, f (U.toLinearIsometryEquiv.symm w) = w := fun w => by simp [hf]
-  rcases h₁.eq_bot_or_eq_top W' hW'_closed hW'_inv with hbot | htop
-  · -- `W' = ⊥`: every `w ∈ W` is `f x` with `x = U.symm w ∈ W' = ⊥`, hence `w = 0`.
-    refine Or.inl (le_antisymm (fun w hw => ?_) bot_le)
-    have hx_mem : U.toLinearIsometryEquiv.symm w ∈ W' := by
-      change f _ ∈ W
-      rw [hsurj]
-      exact hw
-    have hx_zero : U.toLinearIsometryEquiv.symm w = 0 := by
-      simpa [hbot] using hx_mem
-    have : w = 0 := by rw [← hsurj w, hx_zero, map_zero]
-    simp [this]
-  · -- `W' = ⊤`: every `w` is `f (U.symm w)` with `U.symm w ∈ W' = ⊤`, hence `w ∈ W`.
-    refine Or.inr (le_antisymm le_top fun w _ => ?_)
-    have hx_mem : U.toLinearIsometryEquiv.symm w ∈ W' := htop ▸ Submodule.mem_top
-    simpa [W', hsurj] using hx_mem
+  -- Pull `W` back along `U` to a closed invariant submodule of `R₁.H`; since `U` induces an
+  -- order isomorphism of closed submodules (`ClosedSubmodule.mapEquiv`), `⊥` and `⊤` go back
+  -- to `⊥` and `⊤`.
+  set e : R₁.H ≃L[ℂ] R₂.H := U.toLinearIsometryEquiv.toContinuousLinearEquiv
+  have hW' : W.mapEquiv e.symm ∈ R₁.closedInvtSubmodule := by
+    refine mem_invtSubmodule_iff_forall_mem.mpr fun a x hx => ?_
+    simp only [ClosedSubmodule.mem_toSubmodule_iff, ClosedSubmodule.mem_mapEquiv_iff,
+      ContinuousLinearEquiv.symm_symm] at hx ⊢
+    rw [show e (R₁.π a x) = R₂.π a (e x) from U.intertwines_apply a x]
+    exact apply_mem_of_mem_invtSubmodule hW a hx
+  have hW_eq : (W.mapEquiv e.symm).mapEquiv e = W := by
+    rw [ClosedSubmodule.mapEquiv_symm, Equiv.apply_symm_apply]
+  rcases h₁.eq_bot_or_eq_top _ hW' with h | h
+  · exact Or.inl (by rw [← hW_eq, h, ClosedSubmodule.mapEquiv_bot_eq_bot])
+  · exact Or.inr (by rw [← hW_eq, h, ClosedSubmodule.mapEquiv_top_eq_top])
 
 /-- Irreducibility transfers along unitary equivalence. -/
 lemma isIrreducible_iff {R₁ R₂ : CStarRep A} (U : UnitaryEquiv R₁ R₂) :
