@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition
@@ -159,12 +164,12 @@ theorem OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
         (fun p : F => inner ℂ x (((p : H →L[ℂ] H) * a * (r : H →L[ℂ] H) * b) y))
         (inner ℂ x ((a * (r : H →L[ℂ] H) * b) y)) := by
       have h := (hF.hasSum_resolutionOfIdentity htop ((a * (r : H →L[ℂ] H) * b) y)).mapL (innerSL ℂ x)
-      simpa only [innerSL_apply_apply, ContinuousLinearMap.mul_apply] using h
+      simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
     have hRp : HasSum
         (fun p : F => inner ℂ x ((b * (p : H →L[ℂ] H) * a * (r : H →L[ℂ] H)) y))
         (inner ℂ x ((b * a * (r : H →L[ℂ] H)) y)) := by
       have h := (((hF.hasSum_resolutionOfIdentity htop ((a * (r : H →L[ℂ] H)) y)).mapL b).mapL (innerSL ℂ x))
-      simpa only [innerSL_apply_apply, ContinuousLinearMap.mul_apply] using h
+      simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
     have hfun : (fun p : F => inner ℂ x (((p : H →L[ℂ] H) * a * (r : H →L[ℂ] H) * b) y))
         = (fun p : F => inner ℂ x ((b * (p : H →L[ℂ] H) * a * (r : H →L[ℂ] H)) y)) := by
       funext p
@@ -177,11 +182,11 @@ theorem OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
   have hL : HasSum (fun r : F => inner ℂ x ((a * (r : H →L[ℂ] H) * b) y))
       (inner ℂ x ((a * b) y)) := by
     have h := ((hF.hasSum_resolutionOfIdentity htop (b y)).mapL a).mapL (innerSL ℂ x)
-    simpa only [innerSL_apply_apply, ContinuousLinearMap.mul_apply] using h
+    simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
   have hR : HasSum (fun r : F => inner ℂ x ((b * a * (r : H →L[ℂ] H)) y))
       (inner ℂ x ((b * a) y)) := by
     have h := ((hF.hasSum_resolutionOfIdentity htop y).mapL (b * a)).mapL (innerSL ℂ x)
-    simpa only [innerSL_apply_apply, ContinuousLinearMap.mul_apply] using h
+    simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
   rw [funext step] at hL
   exact hL.unique hR
 
@@ -224,7 +229,7 @@ theorem OrthEquivFam.mem_sotClosure_adjoin (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     {a : H →L[ℂ] H} (ha : a ∈ N) :
-    (StrongOperatorTopology.toSOTEquiv a : H →SLₚₜ[RingHom.id ℂ] H) ∈ closure (Set.toSOT
+    (ContinuousLinearMap.toUniformConvergenceCLM _ _ _ a : H →SLₚₜ[RingHom.id ℂ] H) ∈ closure (Set.toSOT
       (StarAlgebra.adjoin ℂ (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) :
         Set (H →L[ℂ] H))) := by
   set S := Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2) with hSdef
@@ -300,7 +305,7 @@ theorem OrthEquivFam.coe_multiplicityEquiv_apply (hF : OrthEquivFam N e F)
       = star (hF.pisom i)
           ((hF.hilbertSumEquiv htop y i : LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) : H) :=
     (hF.pisom_isPI i).coe_sourceRangeEquiv_symm (hF.pisom_source i) (hF.pisom_range i) _
-  rw [h1, hF.coe_hilbertSumEquiv_apply htop y i, ← ContinuousLinearMap.mul_apply, hop]
+  rw [h1, hF.coe_hilbertSumEquiv_apply htop y i, ← mul_apply_eq_comp, hop]
 
 /-- **The spatial isomorphism.** A covering orthogonal family of `e`-equivalent projections gives a
 linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` of `H` with the completed Hilbert tensor
@@ -344,7 +349,7 @@ lemma OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
     have h0 : star (hF.pisom i) * hF.matrixUnit p q = 0 := by
       rw [OrthEquivFam.matrixUnit_def, ← mul_assoc,
         hF.star_pisom_mul_pisom_of_ne hi, zero_mul]
-    rw [← ContinuousLinearMap.mul_apply, h0, ContinuousLinearMap.zero_apply]
+    rw [← mul_apply_eq_comp, h0, zero_apply]
   rw [show hF.multiplicityEquiv htop (hF.matrixUnit p q y) i = 0 from
     Subtype.ext (by rw [hcoe]; rfl), ← tmulRightL_apply, map_zero]
 
@@ -357,7 +362,7 @@ lemma OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F)
   rw [hF.coe_multiplicityEquiv_apply htop, hF.coe_multiplicityEquiv_apply htop]
   have hpp : star (hF.pisom p) * hF.matrixUnit p q = star (hF.pisom q) := by
     rw [OrthEquivFam.matrixUnit_def, ← mul_assoc, hF.pisom_source p, hF.e_mul_star_pisom q]
-  rw [← ContinuousLinearMap.mul_apply, hpp]
+  rw [← mul_apply_eq_comp, hpp]
 
 /-- The amplified rank-one operator on `U y` collapses to the single term `δ_p ⊗̂ (v_q⋆ y)`: the
 rank-one operator picks out the `q`-th coordinate. -/
@@ -448,7 +453,7 @@ lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
       rw [amplifyLeft_star]
       exact amplifyLeft_comp_amplifyRight
         (star (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) B
-  haveI : Nontrivial (lp (fun _ : F => ℂ) 2) :=
+  have : Nontrivial (lp (fun _ : F => ℂ) 2) :=
     ⟨lpDelta (Classical.arbitrary F), 0, by
       rw [← norm_ne_zero_iff, lpDelta_norm]; norm_num⟩
   exact (congrArg VonNeumannAlgebra.commutant hcomm).trans
@@ -495,7 +500,7 @@ theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_vnTensorRight (hF : OrthEqui
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] :
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) N′ = vnTensorRight := by
-  haveI : Nontrivial (lp (fun _ : F => ℂ) 2) :=
+  have : Nontrivial (lp (fun _ : F => ℂ) 2) :=
     ⟨lpDelta (Classical.arbitrary F), 0, by
       rw [← norm_ne_zero_iff, lpDelta_norm]; norm_num⟩
   rw [← VonNeumannAlgebra.conj_commutant, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
@@ -535,7 +540,7 @@ lemma OrthEquivFam.nonempty_of_top [Nontrivial H] {F : Set (H →L[ℂ] H)}
   intro hempty
   have hset : {y : H | ∃ f ∈ F, ∃ x, f x = y} = (∅ : Set H) := by
     ext y
-    simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+    simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
     rintro ⟨f, hf, x, rfl⟩
     exact hempty.false ⟨f, hf⟩
   obtain ⟨z, hz⟩ := exists_ne (0 : H)
@@ -557,11 +562,11 @@ theorem IsFactor.exists_spatial_tensor_decomposition {N : VonNeumannAlgebra H}
       (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ LinearMap.range (e : H →ₗ[ℂ] H)),
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight := by
-  haveI := he.nontrivial
+  have := he.nontrivial
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  haveI : DecidableEq F := Classical.decEq _
-  haveI : Nonempty F := OrthEquivFam.nonempty_of_top htop
+  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : DecidableEq F := Classical.decEq _
+  have : Nonempty F := OrthEquivFam.nonempty_of_top htop
   exact ⟨F, hF.spatialEquiv htop, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     hF.conj_spatialEquiv_commutant_eq_vnTensorRight he htop⟩
 
@@ -590,11 +595,11 @@ theorem IsFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
       VonNeumannAlgebra.conj U N′ = vnTensorRight ∧
       VonNeumannAlgebra.conj U A ≤ vnTensorLeft ∧
       VonNeumannAlgebra.conj U B′ ≤ vnTensorRight := by
-  haveI := he.nontrivial
+  have := he.nontrivial
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  haveI : DecidableEq F := Classical.decEq _
-  haveI : Nonempty F := OrthEquivFam.nonempty_of_top htop
+  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : DecidableEq F := Classical.decEq _
+  have : Nonempty F := OrthEquivFam.nonempty_of_top htop
   exact ⟨F, hF.spatialEquiv htop, ‹Nonempty F›, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     hF.conj_spatialEquiv_commutant_eq_vnTensorRight he htop,
     hF.conj_spatialEquiv_le_vnTensorLeft he htop h₁,

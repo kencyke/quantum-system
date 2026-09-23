@@ -1,9 +1,15 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Hom
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.InnerProductSpace.l2Space
-public import Mathlib.Data.Real.StarOrdered
+public import Mathlib.Analysis.Real.Sqrt
+public import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Family
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
@@ -110,7 +116,7 @@ noncomputable def sectorEmbed (F : SectorFamily.{u, v, w} A)
 @[simp] lemma sectorEmbed_apply_coord (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H) :
     (sectorEmbed F α v).val α = v := by
-  letI : DecidableEq F.Index := Classical.decEq _
+  let : DecidableEq F.Index := Classical.decEq _
   change (lp.single (E := fun α' : F.Index => (F.rep α').H) 2 α v) α = v
   exact lp.single_apply_self
     (E := fun α' : F.Index => (F.rep α').H) 2 α v
@@ -119,7 +125,7 @@ lemma sectorEmbed_apply_coord_ne (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H)
     {α' : F.Index} (h : α' ≠ α) :
     (sectorEmbed F α v).val α' = 0 := by
-  letI : DecidableEq F.Index := Classical.decEq _
+  let : DecidableEq F.Index := Classical.decEq _
   change (lp.single (E := fun α'' : F.Index => (F.rep α'').H) 2 α v) α' = 0
   exact lp.single_apply_ne
     (E := fun α'' : F.Index => (F.rep α'').H) 2 α v h
@@ -166,7 +172,7 @@ lemma componentWiseMap_norm_le (F : SectorFamily.{u, v, w} A)
 lemma componentWiseMap_memℓp (F : SectorFamily.{u, v, w} A) (a : A)
     (x : F.directSumHilbert) :
     Memℓp (fun α => componentWiseMap F a α (x.val α)) 2 := by
-  have hx : Memℓp x.val 2 := x.property
+  have hx := lp.memℓp x
   rw [memℓp_gen_iff zero_lt_two] at hx ⊢
   have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
   simp only [h2] at hx ⊢
@@ -194,7 +200,7 @@ lemma componentWiseMap_norm_bound (F : SectorFamily.{u, v, w} A) (a : A)
     simp only [h2] at this
     exact this
   have hsum2 : Summable fun α => ‖x.val α‖ ^ (2 : ℝ) := by
-    have : Memℓp x.val 2 := x.property
+    have := lp.memℓp x
     rw [memℓp_gen_iff zero_lt_two] at this
     simp only [h2] at this
     exact this
@@ -268,7 +274,7 @@ noncomputable def directSumRep (F : SectorFamily.{u, v, w} A) :
     apply Subtype.ext
     funext α
     simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, ContinuousLinearMap.mul_apply]
+      LinearMap.coe_mk, AddHom.coe_mk, mul_apply_eq_comp]
     rw [componentWiseMap, componentWiseMap, componentWiseMap]
     conv_lhs => rw [map_mul]
     rfl
@@ -277,7 +283,7 @@ noncomputable def directSumRep (F : SectorFamily.{u, v, w} A) :
     apply Subtype.ext
     funext α
     simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, ContinuousLinearMap.zero_apply]
+      LinearMap.coe_mk, AddHom.coe_mk, zero_apply]
     rw [componentWiseMap]
     rw [map_zero]
     rfl
@@ -286,7 +292,7 @@ noncomputable def directSumRep (F : SectorFamily.{u, v, w} A) :
     apply Subtype.ext
     funext α
     simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, ContinuousLinearMap.add_apply,
+      LinearMap.coe_mk, AddHom.coe_mk, add_apply,
       lp.coeFn_add, Pi.add_apply]
     rw [componentWiseMap, componentWiseMap, componentWiseMap]
     conv_lhs => rw [map_add]
@@ -296,7 +302,7 @@ noncomputable def directSumRep (F : SectorFamily.{u, v, w} A) :
     apply Subtype.ext
     funext α
     simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, ContinuousLinearMap.smul_apply,
+      LinearMap.coe_mk, AddHom.coe_mk, smul_apply,
       lp.coeFn_smul, Pi.smul_apply]
     rw [componentWiseMap, componentWiseMap]
     conv_lhs => rw [map_smul]
@@ -350,7 +356,7 @@ theorem directSumRep_injective_of (F : SectorFamily.{u, v, w} A)
       simp only [f]
       by_cases h : α' = α
       · subst h; simp
-      · simp only [dif_neg h, if_neg h]; simp
+      · simp only [dite_eq_right h, ite_eq_right h]; simp
     rw [h_eq]
     apply summable_of_hasFiniteSupport
     have :

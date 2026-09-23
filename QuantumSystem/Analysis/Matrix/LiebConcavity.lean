@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Analysis.Matrix.Effros
@@ -236,12 +241,12 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   -- Use the spectral identity: ⟨v, matrixPerspective(f, L_A, R_B) v⟩ = -liebJointFunction(K, p, A, B)
   have h_ident1 : (star v ⬝ᵥ (term1 *ᵥ v)).re =
       -(liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re := by
-    simpa [term1, f] using
+    exact
       matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₁ B₁
         hA₁ hB₁ hL₁_psd hR₁_pd
   have h_ident2 : (star v ⬝ᵥ (term2 *ᵥ v)).re =
       -(liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re := by
-    simpa [term2, f] using
+    exact
       matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₂ B₂
         hA₂ hB₂ hL₂_psd hR₂_pd
   have hA_comb : (w₁ • A₁ + w₂ • A₂).PosDef := PosDef.convex_comb_nonneg hA₁ hA₂ hw₁ hw₂ hw
@@ -553,8 +558,8 @@ private theorem lieb_joint_concavity_semidef {m : Type*} [Fintype m] [DecidableE
 private lemma fromBlocks_top_posSemidef {n m : Type*} [Finite n] [Finite m]
     {A : Matrix n n ℂ} (hA : A.PosSemidef) :
     (Matrix.fromBlocks A 0 0 (0 : Matrix m m ℂ)).PosSemidef := by
-  letI := Fintype.ofFinite n
-  letI := Fintype.ofFinite m
+  let := Fintype.ofFinite n
+  let := Fintype.ofFinite m
   refine PosSemidef.of_dotProduct_mulVec_nonneg
       (by simpa using Matrix.IsHermitian.fromBlocks hA.1 (by simp) Matrix.isHermitian_zero) ?_
   intro v
@@ -569,8 +574,8 @@ private lemma fromBlocks_top_posSemidef {n m : Type*} [Finite n] [Finite m]
 private lemma fromBlocks_bot_posSemidef {n m : Type*} [Finite n] [Finite m]
     {B : Matrix m m ℂ} (hB : B.PosSemidef) :
     (Matrix.fromBlocks (0 : Matrix n n ℂ) 0 0 B).PosSemidef := by
-  letI := Fintype.ofFinite n
-  letI := Fintype.ofFinite m
+  let := Fintype.ofFinite n
+  let := Fintype.ofFinite m
   refine PosSemidef.of_dotProduct_mulVec_nonneg
       (by simpa using Matrix.IsHermitian.fromBlocks Matrix.isHermitian_zero (by simp) hB.1) ?_
   intro v
@@ -785,8 +790,8 @@ lemma rpow_le_rpow {α : Type*} [Fintype α] [DecidableEq α]
     {A B : Matrix α α ℂ} (hAB : A ≤ B)
     {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     A ^ s ≤ B ^ s := by
-  letI csa : CStarAlgebra (Matrix α α ℂ) := CStarMatrix.instCStarAlgebra (n := α) (A := ℂ)
-  letI sor : StarOrderedRing (Matrix α α ℂ) := Matrix.instStarOrderedRing
+  let csa : CStarAlgebra (Matrix α α ℂ) := CStarMatrix.instCStarAlgebra (n := α) (A := ℂ)
+  let sor : StarOrderedRing (Matrix α α ℂ) := Matrix.instStarOrderedRing
   exact @CFC.rpow_le_rpow (Matrix α α ℂ) csa _ sor s ⟨hs0, hs1⟩ A B hAB
 
 /-- Iterated CFC power on a positive semidefinite matrix: `(Xˢ)^(a/s) = Xᵃ`. -/
@@ -1010,7 +1015,7 @@ lemma rpow_nonneg_smul {α : Type*} [Fintype α] [DecidableEq α]
   simp only [diagonal, Matrix.of_apply, Matrix.smul_apply]
   by_cases hij : i = j
   · subst hij
-    simp only [if_true, Complex.real_smul]
+    simp only [ite_true, Complex.real_smul]
     rw [Real.mul_rpow hc (hev_nn i)]
     simp only [Complex.ofReal_mul]
   · simp [hij]
@@ -1090,19 +1095,19 @@ lemma lieb_concavity_weighted {r : ℕ} {α : Type*} [Fintype α] [DecidableEq �
       have hwr_one : wr = 1 := by linarith
       have hA_zero : ∑ i : Fin r, w' i • A' i = 0 := by
         apply Finset.sum_eq_zero; intro i _
-        rw [hw'_zero i]; ext; simp [Complex.real_smul]
+        rw [hw'_zero i]; ext; simp
       have hB_zero : ∑ i : Fin r, w' i • B' i = 0 := by
         apply Finset.sum_eq_zero; intro i _
-        rw [hw'_zero i]; ext; simp [Complex.real_smul]
+        rw [hw'_zero i]; ext; simp
       have hF_zero : ∑ i : Fin r, w' i * ((A' i) ^ s * (B' i) ^ (1 - s)).trace.re = 0 := by
         apply Finset.sum_eq_zero; intro i _; simp [hw'_zero i]
       -- Unfold the set definitions so simp can match
       simp only [w', A', B', Ar, Br, wr] at hwr_one hA_zero hB_zero hF_zero ⊢
       rw [hwr_one, hF_zero, hA_zero, hB_zero]
       rw [show (1 : ℝ) • A (Fin.last r) = A (Fin.last r) from by
-        ext; simp [Complex.real_smul]]
+        ext; simp]
       rw [show (1 : ℝ) • B (Fin.last r) = B (Fin.last r) from by
-        ext; simp [Complex.real_smul]]
+        ext; simp]
       simp
     · -- W > 0
       have hW_pos : 0 < W := lt_of_le_of_ne hW_nn (Ne.symm hW)

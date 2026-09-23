@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
@@ -160,8 +165,8 @@ omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 lemma PosSemidef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosSemidef) (e : n ≃ m) :
     (M.submatrix e e).PosSemidef := by
   classical
-  letI := Fintype.ofFinite m
-  letI : Fintype n := Fintype.ofEquiv m e.symm
+  let := Fintype.ofFinite m
+  let : Fintype n := Fintype.ofEquiv m e.symm
   exact Matrix.PosSemidef.map_starAlgEquiv hM
     (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
 
@@ -171,8 +176,8 @@ omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 lemma PosDef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosDef) (e : n ≃ m) :
     (M.submatrix e e).PosDef := by
   classical
-  letI := Fintype.ofFinite m
-  letI : Fintype n := Fintype.ofEquiv m e.symm
+  let := Fintype.ofFinite m
+  let : Fintype n := Fintype.ofEquiv m e.symm
   exact Matrix.PosDef.map_starAlgEquiv hM
     (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
 

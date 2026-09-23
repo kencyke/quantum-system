@@ -1,8 +1,25 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.Normed.Module.WeakDual
-public import Mathlib.Data.Real.StarOrdered
+public import Mathlib.Analysis.Real.Sqrt
+public import Mathlib.Tactic.ContinuousFunctionalCalculus
+
+/-!
+# Norm computations in unital C*-algebras
+
+## Main results
+
+* `UnitalCStarAlgebra.norm_character_eq_one`: a character on a nontrivial unital C*-algebra has
+  operator norm `1`.
+* `UnitalCStarAlgebra.norm_sq_add_imaginary_unit_of_selfAdjoint`: for self-adjoint `a` and real
+  `t`, `‖a + (i t) • 1‖ ^ 2 = ‖a‖ ^ 2 + t ^ 2`.
+-/
 
 @[expose] public section
 
@@ -19,8 +36,10 @@ lemma norm_character_eq_one [Nontrivial B]
     apply ContinuousLinearMap.opNorm_le_bound _ zero_le_one
     intro x
     have h_mem : φ x ∈ spectrum ℂ x := WeakDual.CharacterSpace.apply_mem_spectrum φ x
-    have h_le : (‖φ x‖₊ : ENNReal) ≤ ‖x‖₊ :=
-      (le_iSup₂_of_le (φ x) h_mem le_rfl).trans (spectrum.spectralRadius_le_nnnorm x)
+    have h_rad : (‖φ x‖₊ : ENNReal) ≤ spectralRadius ℂ x := by
+      rw [spectralRadius_eq_of_unital]
+      exact le_iSup₂_of_le (φ x) h_mem le_rfl
+    have h_le : (‖φ x‖₊ : ENNReal) ≤ ‖x‖₊ := h_rad.trans (spectralRadius_le_nnnorm x)
     simp only [one_mul]; exact mod_cast h_le
   · -- ‖φ‖ ≥ 1: since φ(1) = 1 and ‖1‖ = 1
     have h_le := (WeakDual.toStrongDual φ.val).le_opNorm 1
@@ -65,7 +84,7 @@ lemma norm_sq_add_imaginary_unit_of_selfAdjoint [Nontrivial B] (a : B) (ha : IsS
     rw [hb_poly, spectrum.map_polynomial_aeval]; simp [hp_def]
   -- Compute spectral radius
   set ρa := spectralRadius ℂ a with hρa_def
-  have hρa_ne_top : ρa ≠ ⊤ := ne_of_lt (lt_of_le_of_lt (spectrum.spectralRadius_le_nnnorm a) ENNReal.coe_lt_top)
+  have hρa_ne_top : ρa ≠ ⊤ := ne_of_lt (lt_of_le_of_lt (spectralRadius_le_nnnorm a) ENNReal.coe_lt_top)
   set R := ρa.toReal with hR_def
   have hρa_ofReal : ENNReal.ofReal R = ρa := ENNReal.ofReal_toReal hρa_ne_top
   have hR_nonneg : 0 ≤ R := ENNReal.toReal_nonneg
@@ -78,10 +97,13 @@ lemma norm_sq_add_imaginary_unit_of_selfAdjoint [Nontrivial B] (a : B) (ha : IsS
     rw [h_val, Complex.norm_of_nonneg (by positivity), hw_sq]
   -- Upper bound: spectralRadius b ≤ R² + t²
   have h_le : spectralRadius ℂ b ≤ ENNReal.ofReal (R ^ 2 + t ^ 2) := by
+    rw [spectralRadius_eq_of_unital]
     refine iSup₂_le fun z hz => ?_
     obtain ⟨w, hw, rfl⟩ : z ∈ (fun w => w ^ 2 + (t : ℂ) ^ 2) '' spectrum ℂ a := by simpa [h_spec] using hz
     have hw_norm_le : ‖w‖ ≤ R := by
-      have h1 : (‖w‖₊ : ENNReal) ≤ ρa := le_iSup₂_of_le w hw le_rfl
+      have h1 : (‖w‖₊ : ENNReal) ≤ ρa := by
+        rw [hρa_def, spectralRadius_eq_of_unital]
+        exact le_iSup₂_of_le w hw le_rfl
       have h2 : (‖w‖₊ : ENNReal) ≤ ENNReal.ofReal R := by simpa [hρa_ofReal] using h1
       rw [ENNReal.le_ofReal_iff_toReal_le ENNReal.coe_ne_top hR_nonneg] at h2
       simpa using h2
@@ -98,7 +120,9 @@ lemma norm_sq_add_imaginary_unit_of_selfAdjoint [Nontrivial B] (a : B) (ha : IsS
     have hz_mem : w ^ 2 + (t : ℂ) ^ 2 ∈ spectrum ℂ b := by simpa [h_spec] using ⟨w, hw, rfl⟩
     calc ENNReal.ofReal (R ^ 2 + t ^ 2) = ENNReal.ofReal (‖w‖ ^ 2 + t ^ 2) := by rw [hw_norm]
       _ = (‖w ^ 2 + (t : ℂ) ^ 2‖₊ : ENNReal) := by rw [← ENNReal.ofReal_coe_nnreal, coe_nnnorm, norm_image w hw]
-      _ ≤ spectralRadius ℂ b := le_iSup₂_of_le _ hz_mem le_rfl
+      _ ≤ spectralRadius ℂ b := by
+          rw [spectralRadius_eq_of_unital]
+          exact le_iSup₂_of_le _ hz_mem le_rfl
   -- Combine bounds
   have h_rad : spectralRadius ℂ b = ρa ^ 2 + ENNReal.ofReal (t ^ 2) := by
     have h_eq : spectralRadius ℂ b = ENNReal.ofReal (R ^ 2 + t ^ 2) := le_antisymm h_le h_ge

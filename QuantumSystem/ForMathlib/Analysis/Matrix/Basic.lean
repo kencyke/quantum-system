@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
@@ -145,13 +150,13 @@ lemma rpow_unitary_conj {n : Type*} [Fintype n] [DecidableEq n]
     {U M : Matrix n n ℂ} (hU : U ∈ Matrix.unitaryGroup n ℂ)
     {p : ℝ} (hp : 0 ≤ p) (hM : 0 ≤ M) (hM' : 0 ≤ U * M * Uᴴ := by cfc_tac) :
     (U * M * Uᴴ) ^ p = U * (M ^ p) * Uᴴ := by
-  letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedSpace ℝ (Matrix n n ℂ) := NormedAlgebra.toNormedSpace _
-  letI : IsBoundedSMul ℝ (Matrix n n ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
-  letI : ContinuousSMul ℝ (Matrix n n ℂ) := IsBoundedSMul.continuousSMul
-  letI : CStarAlgebra (Matrix n n ℂ) := by
+  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedSpace ℝ (Matrix n n ℂ) := NormedAlgebra.toNormedSpace _
+  let : IsBoundedSMul ℝ (Matrix n n ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
+  let : ContinuousSMul ℝ (Matrix n n ℂ) := IsBoundedSMul.continuousSMul
+  let : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
   -- Convert to unitary element
   have hUmem : U ∈ unitary (Matrix n n ℂ) := by
@@ -201,35 +206,35 @@ Proof outline:
 lemma diagonal_rpow {n : Type*} [Fintype n] [DecidableEq n]
     (d : n → ℝ) (hd : ∀ i, 0 ≤ d i) (p : ℝ) (hp : 0 ≤ p) :
     (diagonal (fun i => (d i : ℂ))) ^ p = diagonal (fun i => ((d i ^ p : ℝ) : ℂ)) := by
-  letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedSpace ℝ (Matrix n n ℂ) := NormedAlgebra.toNormedSpace _
-  letI : IsBoundedSMul ℝ (Matrix n n ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
-  letI : ContinuousSMul ℝ (Matrix n n ℂ) := IsBoundedSMul.continuousSMul
-  haveI : Module.Free ℝ ℂ := Module.Free.of_divisionRing _ _
-  haveI : Module.Finite ℝ ℂ := inferInstance
-  haveI : Module.Finite ℝ (Matrix n n ℂ) := Module.Finite.matrix
-  letI : CStarAlgebra (Matrix n n ℂ) := by
+  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedSpace ℝ (Matrix n n ℂ) := NormedAlgebra.toNormedSpace _
+  let : IsBoundedSMul ℝ (Matrix n n ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
+  let : ContinuousSMul ℝ (Matrix n n ℂ) := IsBoundedSMul.continuousSMul
+  have : Module.Free ℝ ℂ := Module.Free.of_divisionRing _ _
+  have : Module.Finite ℝ ℂ := inferInstance
+  have : Module.Finite ℝ (Matrix n n ℂ) := Module.Finite.matrix
+  let : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
-  letI : NormedSpace ℝ (n → ℂ) := inferInstance
-  letI : IsBoundedSMul ℝ (n → ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
-  letI : ContinuousSMul ℝ (n → ℂ) := IsBoundedSMul.continuousSMul
-  haveI : Module.Free ℝ ℂ := Module.Free.of_divisionRing _ _
-  haveI : Module.Finite ℝ ℂ := inferInstance
-  haveI : Module.Finite ℝ (n → ℂ) := Module.Finite.pi
+  let : NormedSpace ℝ (n → ℂ) := inferInstance
+  let : IsBoundedSMul ℝ (n → ℂ) := NormedSpace.toIsBoundedSMul (𝕜 := ℝ)
+  let : ContinuousSMul ℝ (n → ℂ) := IsBoundedSMul.continuousSMul
+  have : Module.Free ℝ ℂ := Module.Free.of_divisionRing _ _
+  have : Module.Finite ℝ ℂ := inferInstance
+  have : Module.Finite ℝ (n → ℂ) := Module.Finite.pi
   -- Provide CFC instances for the Pi C*-algebra `n → ℂ` and the fiber `ℂ`.  These are not
   -- registered globally in Mathlib (`IsStarNormal.instContinuousFunctionalCalculus` is a
   -- `theorem` with `attribute [local instance]` only), but follow once the appropriate
   -- normed/CStar structure is in scope.
-  letI : ContinuousFunctionalCalculus ℂ ℂ IsStarNormal :=
+  let : ContinuousFunctionalCalculus ℂ ℂ IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℝ ℂ IsSelfAdjoint :=
+  let : ContinuousFunctionalCalculus ℝ ℂ IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
-  letI : CStarAlgebra (n → ℂ) := inferInstance
-  letI : ContinuousFunctionalCalculus ℂ (n → ℂ) IsStarNormal :=
+  let : CStarAlgebra (n → ℂ) := inferInstance
+  let : ContinuousFunctionalCalculus ℂ (n → ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℝ (n → ℂ) IsSelfAdjoint :=
+  let : ContinuousFunctionalCalculus ℝ (n → ℂ) IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
   let dc : n → ℂ := fun i => (d i : ℂ)
   have hD_psd : (diagonal dc).PosSemidef := by
@@ -273,10 +278,10 @@ lemma diagonal_rpow {n : Type*} [Fintype n] [DecidableEq n]
 lemma inv_transpose_rpow_mul_transpose_eq {m : Type*} [Fintype m] [DecidableEq m]
     (B : Matrix m m ℂ) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p) :
     ((B⁻¹)ᵀ) ^ p * Bᵀ = (B ^ (1 - p))ᵀ := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
+  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
   have hB_unit : IsUnit B := hB.isUnit
   have hB_det : IsUnit B.det := (Matrix.isUnit_iff_isUnit_det B).mp hB_unit
@@ -374,7 +379,7 @@ lemma inv_transpose_rpow_mul_transpose_eq {m : Type*} [Fintype m] [DecidableEq m
 lemma posDef_one {m : Type*} [Finite m] [DecidableEq m] :
     (1 : Matrix m m ℂ).PosDef := by
   classical
-  letI := Fintype.ofFinite m
+  let := Fintype.ofFinite m
   refine Matrix.PosDef.of_dotProduct_mulVec_pos ?_ ?_
   · simp [IsHermitian]
   · intro x hx
@@ -431,7 +436,7 @@ the complex coercion. -/
 lemma real_smul {m : Type*} [Finite m]
     {c : ℝ} (hc : 0 ≤ c) {M : Matrix m m ℂ} (hM : M.PosSemidef) :
     (c • M : Matrix m m ℂ).PosSemidef := by
-  letI := Fintype.ofFinite m
+  let := Fintype.ofFinite m
   have hnonneg_C : (0 : ℂ) ≤ ((c : ℝ) : ℂ) := Complex.zero_le_real.mpr hc
   have hsmul : (((c : ℝ) : ℂ) • M).PosSemidef := hM.smul hnonneg_C
   have hreal : ((c : ℝ) : ℂ) • M = (c : ℝ) • M := by
@@ -444,7 +449,7 @@ lemma real_smul {m : Type*} [Finite m]
 lemma smul_nonpos {m : Type*} [Finite m]
     {c : ℝ} (hc : c ≤ 0) {M : Matrix m m ℂ} (hM : M.PosSemidef) :
     c • M ≤ (0 : Matrix m m ℂ) := by
-  letI := Fintype.ofFinite m
+  let := Fintype.ofFinite m
   -- Work via the ℂ-action: `((-c : ℝ) : ℂ) • M` is PSD when `0 ≤ ((-c : ℝ) : ℂ)`.
   have hnonneg_C : (0 : ℂ) ≤ ((-c : ℝ) : ℂ) :=
     Complex.zero_le_real.mpr (by linarith)
@@ -464,7 +469,7 @@ lemma add_smul_one_posDef {m : Type*} [Finite m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) {r : ℝ} (hr : 0 < r) :
     (A + (r : ℂ) • (1 : Matrix m m ℂ)).PosDef := by
   classical
-  letI := Fintype.ofFinite m
+  let := Fintype.ofFinite m
   have h1 : ((r : ℂ) • (1 : Matrix m m ℂ)).IsHermitian := by
     rw [Matrix.IsHermitian, Matrix.conjTranspose_smul, Complex.star_def,
       Complex.conj_ofReal]
@@ -517,8 +522,8 @@ lemma fromBlocks_diag_posSemidef {n₁ n₂ : Type*}
     {A : Matrix n₁ n₁ ℂ} (hA : A.PosSemidef)
     {D : Matrix n₂ n₂ ℂ} (hD : D.PosSemidef) :
     (Matrix.fromBlocks A 0 0 D).PosSemidef := by
-  letI := Fintype.ofFinite n₁
-  letI := Fintype.ofFinite n₂
+  let := Fintype.ofFinite n₁
+  let := Fintype.ofFinite n₂
   refine PosSemidef.of_dotProduct_mulVec_nonneg
     (Matrix.IsHermitian.fromBlocks hA.1 (by simp) hD.1) ?_
   intro v

@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
@@ -7,6 +12,24 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
+
+/-!
+# GNS representations of a state
+
+A GNS triplet `(π, H, ξ)` for a state `ω` on a (possibly non-unital) C*-algebra `A` is a
+C*-representation `π` of `A` on a Hilbert space `H` together with a cyclic vector `ξ` satisfying
+`ω a = ⟪ξ, π a ξ⟫`.
+
+## Main definitions and results
+
+* `GNS.Representation ω`: GNS triplets for `ω`, extending `CStarRep A`.
+* `GNS.Representation.norm_ξ`: the cyclic vector is a unit vector.
+* `GNS.Representation.UnitaryEquiv`: unitary equivalence of GNS triplets, written `T₁ ≃ᵁ T₂`.
+* `GNS.Representation.unique_up_to_unitary_equivalence`: any two GNS triplets for the same state
+  are unitarily equivalent.
+* `GNS.Representation.canonical`: the triplet produced by the GNS construction.
+* `State.tendsto_approximateUnit`: a state evaluated along an approximate unit tends to `1`.
+-/
 
 @[expose] public section
 
@@ -154,7 +177,7 @@ lemma tendsto_π_approximateUnit_of_mem_span {x : T.H}
   | mem y hy =>
     obtain ⟨a, rfl⟩ := hy
     exact T.tendsto_π_approximateUnit_orbit a
-  | zero => simpa using tendsto_const_nhds
+  | zero => simp
   | add y z _ _ hy hz => simpa [map_add] using hy.add hz
   | smul c y _ hy => simpa [map_smul] using hy.const_smul c
 
@@ -194,7 +217,7 @@ lemma tendsto_apply_approximateUnit_norm_sq :
 
 /-- The cyclic vector of a GNS triplet is a unit vector: `‖ξ‖ = 1`. -/
 theorem norm_ξ : ‖T.ξ‖ = 1 := by
-  haveI : (CStarAlgebra.approximateUnit A).NeBot :=
+  have : (CStarAlgebra.approximateUnit A).NeBot :=
     (CStarAlgebra.increasingApproximateUnit (A := A)).toIsApproximateUnit.neBot
   -- Upper bound: `‖ξ‖² = lim ω e_α` and `‖ω e‖ ≤ ‖e‖ ≤ 1`.
   have h_le : ‖T.ξ‖ ^ 2 ≤ 1 := by
@@ -290,7 +313,7 @@ private lemma cyclic_correspondence_well_defined (T₁ T₂ : Representation ω)
   have h_map_sub : T₁.π (a - b) T₁.ξ = 0 := by
     calc T₁.π (a - b) T₁.ξ
         = (T₁.π a - T₁.π b) T₁.ξ := by rw [map_sub]
-      _ = T₁.π a T₁.ξ - T₁.π b T₁.ξ := by simp [ContinuousLinearMap.sub_apply]
+      _ = T₁.π a T₁.ξ - T₁.π b T₁.ξ := by simp [sub_apply]
       _ = 0 := by rw [h]; simp
   -- Transfer vanishing inner product to T₂ using equality of inner forms on cyclic vectors
   have h_inner_zero_T₂ : ⟪T₂.π (a - b) T₂.ξ, T₂.π (a - b) T₂.ξ⟫_ℂ = 0 := by
@@ -304,7 +327,7 @@ private lemma cyclic_correspondence_well_defined (T₁ T₂ : Representation ω)
   calc T₂.π a T₂.ξ
       = T₂.π a T₂.ξ - T₂.π (a - b) T₂.ξ := by rw [h_map_sub_T₂]; simp
     _ = T₂.π a T₂.ξ - (T₂.π a - T₂.π b) T₂.ξ := by rw [map_sub]
-    _ = T₂.π a T₂.ξ - (T₂.π a T₂.ξ - T₂.π b T₂.ξ) := by simp [ContinuousLinearMap.sub_apply]
+    _ = T₂.π a T₂.ξ - (T₂.π a T₂.ξ - T₂.π b T₂.ξ) := by simp [sub_apply]
     _ = T₂.π b T₂.ξ := by abel
 
 /-- The cyclic set: `{ π a ξ | a : A }` as a subset of the Hilbert space. -/
@@ -501,7 +524,7 @@ private lemma linear_isometry_equiv_intertwines (T₁ T₂ : Representation ω)
     ∀ a : A, (U : T₁.H →L[ℂ] T₂.H) ∘L T₁.π a = T₂.π a ∘L (U : T₁.H →L[ℂ] T₂.H) := by
   intro a
   ext x
-  simp only [ContinuousLinearMap.coe_comp', Function.comp_apply]
+  simp only [ContinuousLinearMap.coe_comp, Function.comp_apply]
   have h_dense := dense_cyclicSet T₁
   unfold cyclicSet at h_dense
   have h_on_cyclic : ∀ b : A, (U : T₁.H →L[ℂ] T₂.H) (T₁.π a (T₁.π b T₁.ξ)) =
@@ -618,13 +641,13 @@ private lemma extend_cyclic_map_add (T₁ T₂ : Representation ω) :
     simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclicSet (T := T₁) b⟩).trans
       (cyclicMap_well_defined T₁ T₂ ⟨_, mem_cyclicSet (T := T₁) b⟩ b rfl)
   calc U_fun (T₁.π a T₁.ξ + T₁.π b T₁.ξ)
-      = U_fun ((T₁.π a + T₁.π b) T₁.ξ) := by rw [ContinuousLinearMap.add_apply]
+      = U_fun ((T₁.π a + T₁.π b) T₁.ξ) := by rw [add_apply]
     _ = U_fun (T₁.π (a + b) T₁.ξ) := by
         rw [show T₁.π (a + b) = T₁.π a + T₁.π b from T₁.π.map_add' a b]
     _ = T₂.π (a + b) T₂.ξ := hUab
     _ = (T₂.π a + T₂.π b) T₂.ξ := by
         rw [show T₂.π (a + b) = T₂.π a + T₂.π b from T₂.π.map_add' a b]
-    _ = T₂.π a T₂.ξ + T₂.π b T₂.ξ := by rw [ContinuousLinearMap.add_apply]
+    _ = T₂.π a T₂.ξ + T₂.π b T₂.ξ := by rw [add_apply]
     _ = U_fun (T₁.π a T₁.ξ) + U_fun (T₁.π b T₁.ξ) := by rw [← hUa, ← hUb]
 
 private lemma extend_cyclic_map_smul (T₁ T₂ : Representation ω) :

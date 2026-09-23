@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
@@ -114,7 +119,7 @@ nonzero. -/
 lemma IsFactor.isTypeI_of_exists_isMinimalProjection {N : VonNeumannAlgebra H}
     (hN : IsFactor N) (h : ∃ e : H →L[ℂ] H, IsMinimalProjection N e) : IsTypeI N := by
   obtain ⟨e, he⟩ := h
-  haveI : Nontrivial H := he.nontrivial
+  have : Nontrivial H := he.nontrivial
   intro z hz hz0
   rcases hN.central_projection_eq hz with h0 | h1
   · exact absurd h0 hz0
@@ -134,7 +139,7 @@ theorem IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra 
     q = 0 ∨ q = p := by
   by_cases hq0 : q = 0
   · exact Or.inl hq0
-  haveI : Nontrivial H := nontrivial_of_ne_zero hq0
+  have : Nontrivial H := nontrivial_of_ne_zero hq0
   by_cases hqp : q = p
   · exact Or.inr hqp
   exfalso
@@ -236,9 +241,9 @@ lemma posPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p : H
     (hp : IsStarProjection p) {d : H →L[ℂ] H}
     (hd : d ∈ cornerNonUnitalStarSubalgebra N hp) :
     d⁺ ∈ cornerNonUnitalStarSubalgebra N hp := by
-  haveI : IsClosed ((cornerNonUnitalStarSubalgebra N hp : Set (H →L[ℂ] H))) :=
+  have : IsClosed ((cornerNonUnitalStarSubalgebra N hp : Set (H →L[ℂ] H))) :=
     isClosed_cornerNonUnitalStarSubalgebra N hp
-  haveI : IsScalarTower ℝ ℂ (H →L[ℂ] H) := IsScalarTower.complexToReal
+  have : IsScalarTower ℝ ℂ (H →L[ℂ] H) := IsScalarTower.complexToReal
   rw [CFC.posPart_def]
   exact cfcₙ_mem _ hd
 
@@ -247,9 +252,9 @@ lemma negPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p : H
     (hp : IsStarProjection p) {d : H →L[ℂ] H}
     (hd : d ∈ cornerNonUnitalStarSubalgebra N hp) :
     d⁻ ∈ cornerNonUnitalStarSubalgebra N hp := by
-  haveI : IsClosed ((cornerNonUnitalStarSubalgebra N hp : Set (H →L[ℂ] H))) :=
+  have : IsClosed ((cornerNonUnitalStarSubalgebra N hp : Set (H →L[ℂ] H))) :=
     isClosed_cornerNonUnitalStarSubalgebra N hp
-  haveI : IsScalarTower ℝ ℂ (H →L[ℂ] H) := IsScalarTower.complexToReal
+  have : IsScalarTower ℝ ℂ (H →L[ℂ] H) := IsScalarTower.complexToReal
   rw [CFC.negPart_def]
   exact cfcₙ_mem _ hd
 
@@ -300,14 +305,14 @@ lemma starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
   have hle : M ≤ LinearMap.ker ((p - 1 : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
     refine Submodule.topologicalClosure_minimal _ ?_ (p - 1).isClosed_ker
     rintro z ⟨v, rfl⟩
-    simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, ContinuousLinearMap.sub_apply,
-      ContinuousLinearMap.one_apply]
+    simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, sub_apply,
+      one_apply_eq_self]
     rw [show p (x v) = (p * x) v from rfl, hpx]
     exact sub_self _
   ext w
   have hker := hle (M.starProjection_apply_mem w)
-  simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, ContinuousLinearMap.sub_apply,
-    ContinuousLinearMap.one_apply, sub_eq_zero] at hker
+  simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, sub_apply,
+    one_apply_eq_self, sub_eq_zero] at hker
   exact hker
 
 /-- The range projections of `x₁` and `x₂` with `x₁` self-adjoint and `x₁ * x₂ = 0` are
@@ -404,7 +409,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
   have hcalc : ∀ (c : ℝ) (v : H), RCLike.re (inner ℂ ((x - (c : ℂ) • p) v) v)
       = RCLike.re (inner ℂ (x v) v) - c * RCLike.re (inner ℂ (p v) v) := by
     intro c v
-    rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply, inner_sub_left,
+    rw [sub_apply, smul_apply, inner_sub_left,
       inner_smul_left, Complex.conj_ofReal, map_sub,
       show RCLike.re ((c : ℂ) * inner ℂ (p v) v) = c * RCLike.re (inner ℂ (p v) v) from
         RCLike.re_ofReal_mul c _]
@@ -422,7 +427,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
   have hmemA : ∀ c : ℝ, c ∈ A ↔
       ∀ v, c * ‖p v‖ ^ 2 ≤ RCLike.re (inner ℂ (x v) v) := by
     intro c
-    rw [hA, Set.mem_setOf_eq, hpos_iff _ (hsa_c c)]
+    rw [hA, Set.mem_ofPred_eq, hpos_iff _ (hsa_c c)]
     constructor
     · intro h v
       have := h v
@@ -434,7 +439,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
   -- `x` is supported on the corner: `re ⟪x v, v⟫ = re ⟪x (p v), p v⟫`
   have hxvv : ∀ v, RCLike.re (inner ℂ (x v) v) = RCLike.re (inner ℂ (x (p v)) (p v)) := by
     intro v
-    have h1 : x v = x (p v) := by rw [← ContinuousLinearMap.mul_apply, hxp]
+    have h1 : x v = x (p v) := by rw [← mul_apply_eq_comp, hxp]
     have h2 : x (p v) = p (x (p v)) := by
       rw [show p (x (p v)) = (p * x) (p v) from rfl, hpx]
     calc RCLike.re (inner ℂ (x v) v) = RCLike.re (inner ℂ (p (x (p v))) v) := by
@@ -473,7 +478,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     have hAeq : A = ⋂ v : H,
         {c : ℝ | c * ‖p v‖ ^ 2 ≤ RCLike.re (inner ℂ (x v) v)} := by
       ext c
-      simp only [Set.mem_iInter, Set.mem_setOf_eq, ← hmemA c]
+      simp only [Set.mem_iInter, Set.mem_ofPred_eq, ← hmemA c]
     rw [hAeq]
     exact isClosed_iInter fun v =>
       isClosed_le (continuous_id.mul continuous_const) continuous_const
@@ -505,7 +510,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     have hstep : ∀ v, RCLike.re (inner ℂ (((c : ℂ) • p - x) v) v)
         = c * ‖p v‖ ^ 2 - RCLike.re (inner ℂ (x v) v) := by
       intro v
-      rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply, inner_sub_left,
+      rw [sub_apply, smul_apply, inner_sub_left,
         inner_smul_left, Complex.conj_ofReal, map_sub,
         show RCLike.re ((c : ℂ) * inner ℂ (p v) v) = c * RCLike.re (inner ℂ (p v) v) from
           RCLike.re_ofReal_mul c _, hpvv]
@@ -521,7 +526,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     have hBeq : {c : ℝ | x - (c : ℂ) • p ≤ 0}
         = ⋂ v : H, {c : ℝ | RCLike.re (inner ℂ (x v) v) ≤ c * ‖p v‖ ^ 2} := by
       ext c
-      simp only [Set.mem_setOf_eq, Set.mem_iInter, hnegpos_iff c]
+      simp only [Set.mem_ofPred_eq, Set.mem_iInter, hnegpos_iff c]
     rw [hBeq]
     exact isClosed_iInter fun v =>
       isClosed_le continuous_const (continuous_id.mul continuous_const)
@@ -691,11 +696,11 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
       Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
   obtain ⟨hFactor, e, he⟩ := hN
   obtain ⟨F, U, hU, -⟩ := hFactor.exists_spatial_tensor_decomposition he
-  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  haveI : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
+  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
     rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
     exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
-      (h.trans ContinuousLinearMap.coe_zero.symm))
+      (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
   exact ⟨lp (fun _ : F => ℂ) 2, inferInstance, inferInstance, inferInstance,
     ⟨(conjEquiv U N).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
 
@@ -784,12 +789,12 @@ theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type
   have hwinf : Infinite w := by
     rw [← not_finite_iff_infinite]
     intro hfin
-    haveI : Finite w := hfin
-    haveI : Fintype w := Fintype.ofFinite w
+    have : Finite w := hfin
+    have : Fintype w := Fintype.ofFinite w
     exact hinf b.toOrthonormalBasis.toBasis.finiteDimensional_of_finite
   have hnfd : ¬FiniteDimensional ℂ (lp (fun _ : w => ℂ) 2) := by
     intro hK
-    haveI := hK
+    have := hK
     exact hinf b.repr.symm.toLinearEquiv.finiteDimensional
   exact ⟨w, hwinf, hnfd, ⟨b.repr⟩,
     ⟨boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv⟩⟩
@@ -807,10 +812,10 @@ theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup 
   have hwinf : Infinite w := by
     rw [← not_finite_iff_infinite]
     intro hfin
-    haveI : Finite w := hfin
-    haveI : Fintype w := Fintype.ofFinite w
+    have : Finite w := hfin
+    have : Fintype w := Fintype.ofFinite w
     exact hinf b.toOrthonormalBasis.toBasis.finiteDimensional_of_finite
-  haveI := hwinf
+  have := hwinf
   let g : ℕ ↪ w := Infinite.natEmbedding w
   set u : ℕ → H := fun n => b (g n) with hu_def
   have hon : Orthonormal ℂ u := by
@@ -821,7 +826,7 @@ theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup 
   have horth : ∀ m n, m ≠ n → rankOne ℂ (u m) (u m) * rankOne ℂ (u n) (u n) = 0 := by
     intro m n hmn
     rw [ContinuousLinearMap.mul_def, rankOne_comp_rankOne, hon.2 hmn, zero_smul]
-  haveI : Nontrivial H :=
+  have : Nontrivial H :=
     nontrivial_of_ne (u 0) 0 (by rw [← norm_ne_zero_iff, hnorm 0]; norm_num)
   exact ⟨isTypeIFactor_boundedLinearOperators, fun n => rankOne ℂ (u n) (u n), hmin, horth⟩
 

@@ -1,7 +1,21 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.PureState
+
+/-!
+# Irreducibility of the GNS representation of a pure state
+
+For a pure state `ψ`, the canonical GNS representation `PureState.gnsRepresentation ψ` is
+irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant subspace
+splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity forces
+one of them to vanish.
+-/
 
 @[expose] public section
 
@@ -89,11 +103,11 @@ lemma cyclicVector_decomp_of_isClosed (T : GNS.Representation ω) (W : Submodule
     ∃ v₁ v₂ : T.H, v₁ ∈ W ∧ v₂ ∈ Wᗮ ∧ T.ξ = v₁ + v₂ ∧ ⟪v₁, v₂⟫ = 0 := by
   classical
   -- Use closedness to obtain orthogonal projections onto `W`.
-  letI : IsClosed (W : Set T.H) := hWclosed
-  haveI : CompleteSpace (↥W) := by
+  let : IsClosed (W : Set T.H) := hWclosed
+  have : CompleteSpace (↥W) := by
     -- Closed subsets of complete spaces are complete.
     simpa using (IsClosed.completeSpace_coe (s := (W : Set T.H)))
-  haveI : W.HasOrthogonalProjection := by
+  have : W.HasOrthogonalProjection := by
     -- Uses `HasOrthogonalProjection.ofCompleteSpace`.
     infer_instance
   refine ⟨W.starProjection T.ξ, T.ξ - W.starProjection T.ξ, ?_, ?_, ?_, ?_⟩
@@ -110,10 +124,10 @@ noncomputable def piApply (T : GNS.Representation ω) (v : T.H) : A →L[ℂ] T.
     { toFun := fun a => (T.π a) v
       map_add' := by
         intro a b
-        simp [map_add, ContinuousLinearMap.add_apply]
+        simp [map_add, add_apply]
       map_smul' := by
         intro c a
-        simp [map_smul, ContinuousLinearMap.smul_apply] }
+        simp [map_smul, smul_apply] }
     ‖v‖
     (by
       intro a
@@ -349,13 +363,8 @@ lemma trichotomy_from_purity {ψ : PureState A}
   have h_ext : ψ.val ∈ Set.extremePoints ℝ (QuasiStateSpace A) := ψ.property.1
   have h_t_in_Ioo : t ∈ Set.Ioo (0 : ℝ) 1 := ⟨h_pos, h_lt_one⟩
   -- ψ.val ∈ openSegment ℝ χ φ
-  have h_in_seg : ψ.val ∈ openSegment ℝ χ φ := by
-    rw [openSegment_eq_image, Set.mem_image]
-    use t
-    constructor
-    · exact h_t_in_Ioo
-    · simp only [h_sum, sub_eq_add_neg]
-      rw [add_comm]
+  have h_in_seg : ψ.val ∈ openSegment ℝ χ φ :=
+    ⟨1 - t, t, sub_pos.mpr h_lt_one, h_pos, by ring, by rw [h_sum, add_comm]⟩
   have h_ext_iff := mem_extremePoints.mp h_ext
   obtain ⟨h_eq1, h_eq2⟩ := h_ext_iff.2 χ hχ_mem φ hφ_mem h_in_seg
   -- φ = χ implies contradiction

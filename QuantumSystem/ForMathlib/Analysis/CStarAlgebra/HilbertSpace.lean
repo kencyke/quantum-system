@@ -1,6 +1,20 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+
+/-!
+# Bundled complex (pre-)Hilbert spaces
+
+This file introduces the bundled classes `ComplexPreHilbertSpace` (a complex inner product space)
+and `ComplexHilbertSpace` (a complete one), the abbreviation
+`ComplexHilbertSpace.BoundedLinearOperator` for `H →L[ℂ] H` with the scoped notation `𝓑(H)`, and
+the instance making `ℂ` a complex Hilbert space.
+-/
 
 @[expose] public section
 
@@ -29,7 +43,7 @@ scoped notation:max "𝓑(" H ")" => BoundedLinearOperator H
 noncomputable instance : NonUnitalCStarAlgebra (𝓑(H)) := inferInstance
 
 /-- Any complex Hilbert space is, in particular, a complex pre-Hilbert space. -/
-noncomputable instance instPreComplexHilbertSpace [ComplexHilbertSpace H] : ComplexPreHilbertSpace H where
+noncomputable instance instPreComplexHilbertSpace : ComplexPreHilbertSpace H where
   toNormedAddCommGroup := (inferInstance : NormedAddCommGroup H)
   toInnerProductSpace := (inferInstance : InnerProductSpace ℂ H)
 

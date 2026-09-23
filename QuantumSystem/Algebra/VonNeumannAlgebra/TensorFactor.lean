@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
@@ -114,8 +119,7 @@ theorem amplifyLeft_comp_amplifyRight (A : H₁ →L[ℂ] H₁) (B : H₂ →L[�
   refine ContinuousLinearMap.ext fun w => ?_
   refine UniformSpace.Completion.induction_on w
     (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
-  induction a using TensorProduct.induction_on with
-  | zero => simp only [UniformSpace.Completion.coe_zero, map_zero]
+  induction a using TensorProduct.inductionOn with
   | tmul f y =>
       change amplifyLeft A (amplifyRight B (tmul f y)) = amplifyRight B (amplifyLeft A (tmul f y))
       rw [amplifyRight_tmul, amplifyLeft_tmul, amplifyLeft_tmul, amplifyRight_tmul]
@@ -142,8 +146,7 @@ lemma amplifyLeft_rankOne_eq (e f : H₁) :
   refine ContinuousLinearMap.ext fun w => ?_
   refine UniformSpace.Completion.induction_on w
     (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
-  induction a using TensorProduct.induction_on with
-  | zero => simp only [UniformSpace.Completion.coe_zero, map_zero]
+  induction a using TensorProduct.inductionOn with
   | tmul g z =>
       change amplifyLeft _ (tmul g z)
         = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) (tmul g z)
@@ -190,8 +193,7 @@ lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : S
     refine ContinuousLinearMap.ext fun w => ?_
     refine UniformSpace.Completion.induction_on w
       (isClosed_eq T.continuous (amplifyRight S).continuous) (fun a => ?_)
-    induction a using TensorProduct.induction_on with
-    | zero => simp only [UniformSpace.Completion.coe_zero, map_zero]
+    induction a using TensorProduct.inductionOn with
     | tmul f y =>
         change T (tmul f y) = amplifyRight S (tmul f y)
         rw [key_all, amplifyRight_tmul]

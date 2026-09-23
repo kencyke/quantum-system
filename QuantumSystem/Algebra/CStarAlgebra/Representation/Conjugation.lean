@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
@@ -67,7 +72,7 @@ equivalence `(R.H →L[ℂ] R.H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)` provided by
 noncomputable def conjBy (R : CStarRep A) {K : Type*} [ComplexHilbertSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K) : CStarRep A where
   H := K
-  π := ((U.conjStarAlgEquiv : (R.H →L[ℂ] R.H) →⋆ₙₐ[ℂ] (K →L[ℂ] K))).comp R.π
+  π := U.conjStarAlgEquiv.toStarAlgHom.toNonUnitalStarAlgHom.comp R.π
 
 @[simp] lemma conjBy_H (R : CStarRep A) {K : Type*} [ComplexHilbertSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K) : (R.conjBy U).H = K := rfl
@@ -114,7 +119,8 @@ lemma conjBy_π_eq_of_intertwined {R : CStarRep A}
     {a : A} {T : K →L[ℂ] K}
     (hUa : (U : R.H →L[ℂ] K) ∘L R.π a = T ∘L (U : R.H →L[ℂ] K)) :
     (R.conjBy U).π a = T := by
-  ext y
+  refine ContinuousLinearMap.ext fun y : K => ?_
+  change U (R.π a (U.symm y)) = T y
   simpa using DFunLike.congr_fun hUa (U.symm y)
 
 end CStarRep

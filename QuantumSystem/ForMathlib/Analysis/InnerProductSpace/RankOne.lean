@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.InnerProductSpace.LinearMap
@@ -40,7 +45,7 @@ theorem ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm
   refine ⟨inner ℂ y (S y) / inner ℂ y y, ContinuousLinearMap.ext fun x => ?_⟩
   have h1 := congrArg (fun L : H →L[ℂ] H => L y) (h x y)
   simp only [ContinuousLinearMap.comp_apply, InnerProductSpace.rankOne_apply, map_smul] at h1
-  rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply]
+  rw [smul_apply, one_apply_eq_self]
   calc S x = (inner ℂ y y)⁻¹ • ((inner ℂ y y : ℂ) • S x) := (inv_smul_smul₀ hyy _).symm
     _ = (inner ℂ y y)⁻¹ • (inner ℂ y (S y) • x) := by rw [h1]
     _ = (inner ℂ y (S y) / inner ℂ y y) • x := by rw [smul_smul, div_eq_inv_mul]

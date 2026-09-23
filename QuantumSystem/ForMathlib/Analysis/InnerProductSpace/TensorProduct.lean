@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
@@ -59,33 +64,29 @@ private lemma tensor_tmul (A : H →L[ℂ] H) (B : K →L[ℂ] K) (x : H) (y : K
 @[simp]
 private lemma tensor_one : tensor (1 : H →L[ℂ] H) (1 : K →L[ℂ] K) = 1 := by
   ext z
-  induction z using TensorProduct.induction_on with
-  | zero => simp
+  induction z using TensorProduct.inductionOn with
   | tmul x y => simp
   | add a b ha hb => simp [map_add, ha, hb]
 
 private lemma tensor_mul (A₁ A₂ : H →L[ℂ] H) (B₁ B₂ : K →L[ℂ] K) :
     tensor (A₁ * A₂) (B₁ * B₂) = tensor A₁ B₁ * tensor A₂ B₂ := by
   ext z
-  induction z using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.mul_apply]
+  induction z using TensorProduct.inductionOn with
+  | tmul x y => simp [mul_apply_eq_comp]
   | add a b ha hb => simp [map_add, ha, hb]
 
 private lemma tensor_add_left (A₁ A₂ : H →L[ℂ] H) (B : K →L[ℂ] K) :
     tensor (A₁ + A₂) B = tensor A₁ B + tensor A₂ B := by
   ext z
-  induction z using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.add_apply, TensorProduct.add_tmul]
+  induction z using TensorProduct.inductionOn with
+  | tmul x y => simp [add_apply, TensorProduct.add_tmul]
   | add a b ha hb => simp [map_add, ha, hb]
 
 private lemma tensor_add_right (A : H →L[ℂ] H) (B₁ B₂ : K →L[ℂ] K) :
     tensor A (B₁ + B₂) = tensor A B₁ + tensor A B₂ := by
   ext z
-  induction z using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.add_apply, TensorProduct.tmul_add]
+  induction z using TensorProduct.inductionOn with
+  | tmul x y => simp [add_apply, TensorProduct.tmul_add]
   | add a b ha hb => simp [map_add, ha, hb]
 
 end ContinuousLinearMap

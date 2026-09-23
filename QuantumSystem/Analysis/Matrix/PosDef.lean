@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.InnerProductSpace.Basic
@@ -28,7 +33,7 @@ lemma PosDef.convex_comb {m : Type*} [Finite m]
     {t : ℝ} (ht0 : 0 < t) (ht1 : 0 < 1 - t) :
     (t • A + (1 - t) • B).PosDef := by
   classical
-  letI := Fintype.ofFinite m
+  let := Fintype.ofFinite m
   refine Matrix.PosDef.of_dotProduct_mulVec_pos ?_ ?_
   · exact (hA.1.smul_real t).add (hB.1.smul_real (1 - t))
   · intro x hx

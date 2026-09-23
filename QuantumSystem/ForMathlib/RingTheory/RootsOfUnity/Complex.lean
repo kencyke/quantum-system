@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.RingTheory.RootsOfUnity.Complex
@@ -93,7 +98,7 @@ lemma rootOfUnity_sum_eq_zero (r : ℕ) [NeZero r] (n : ℤ) (hn : n % (r : ℤ)
     apply Finset.sum_congr rfl
     intro i hi
     simp only [Finset.mem_range] at hi
-    simp only [dif_pos hi]
+    simp only [dite_eq_left hi]
     rw [Int.mul_comm]
     exact hpow_eq i
   rw [hsum_eq]

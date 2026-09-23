@@ -1,8 +1,13 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Algebra.Algebra.Subalgebra.Centralizer
 public import Mathlib.Algebra.Central.End
-public import Mathlib.Data.Complex.Basic
+public import Mathlib.Basic.Complex.Basic
 public import Mathlib.LinearAlgebra.Trace
 
 /-!
@@ -95,8 +100,7 @@ block for `LinearMap.partialTrace_ampliate_mul`. -/
 private lemma partialTraceRight_includeLeft_mul (Y : Module.End R M)
     (S : Module.End R M ⊗[R] Module.End R N) :
     partialTraceRight ((Y ⊗ₜ[R] (1 : Module.End R N)) * S) = Y * partialTraceRight S := by
-  induction S using TensorProduct.induction_on with
-  | zero => simp
+  induction S using TensorProduct.inductionOn with
   | tmul Y' Z' =>
     rw [Algebra.TensorProduct.tmul_mul_tmul, one_mul, partialTraceRight_tmul,
       partialTraceRight_tmul, mul_smul_comm]
@@ -179,7 +183,6 @@ theorem exists_includeRight_of_commute_includeLeft
           (AlgHom.id ℂ (Module.End ℂ B)) x = Algebra.TensorProduct.includeRight g := by
     intro x
     induction x with
-    | zero => exact ⟨0, by simp⟩
     | tmul a' g =>
       obtain ⟨c, hc⟩ := Algebra.mem_bot.mp a'.2
       refine ⟨c • g, ?_⟩
@@ -223,7 +226,6 @@ lemma exists_includeLeft_of_commute_includeRight
           (B := Module.End ℂ B) f := by
     intro x
     induction x with
-    | zero => exact ⟨0, by simp⟩
     | tmul a b' =>
       obtain ⟨c, hc⟩ := Algebra.mem_bot.mp b'.2
       refine ⟨c • a, ?_⟩

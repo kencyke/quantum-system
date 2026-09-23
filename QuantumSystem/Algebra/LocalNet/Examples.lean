@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.LocalNet.SplitProperty
@@ -154,7 +159,7 @@ instance : trivialNet.Faithful where
     genuinely moves (`σ_shiftCovariance`), so those statements have content. -/
 noncomputable def shiftCovariance : trivialNet.Covariance :=
   LocalNet.Covariance.ofSitePerm (N := trivialNet) (Equiv.addRight (1 : ℤ))
-    (fun _ => StarAlgEquiv.refl) (fun _ _ => rfl)
+    (fun _ => StarAlgEquiv.refl ℂ _) (fun _ _ => rfl)
 
 /-- **The unit translation moves regions**: it carries the site `0` to the site `1`. So
     `shiftCovariance` is not the identity covariance, and the site permutation recovered from it by
@@ -237,18 +242,18 @@ noncomputable def evalLocal : trivialNet.localObservables →+* ℂ :=
 lemma evalLocal_star (z : trivialNet.localObservables) :
     evalLocal (star z) = star (evalLocal z) := by
   induction z using DirectLimit.induction with
-  | _ O X => rw [LocalNet.star_mk, evalLocal_mk, evalLocal_mk]; rfl
+  | _ O X => rw [LocalNet.star_mk]; rfl
 
 /-- Evaluation is `ℂ`-linear: scalars act componentwise on the limit. -/
 lemma evalLocal_smul (c : ℂ) (z : trivialNet.localObservables) :
     evalLocal (c • z) = c • evalLocal z := by
   induction z using DirectLimit.induction with
-  | _ O X => rw [DirectLimit.smul_def, evalLocal_mk, evalLocal_mk]; rfl
+  | _ O X => rw [DirectLimit.smul_def]; rfl
 
 /-- **Evaluation is isometric**: the C⋆-norm of the limit is the norm of the component. -/
 lemma norm_evalLocal (z : trivialNet.localObservables) : ‖evalLocal z‖ = ‖z‖ := by
   induction z using DirectLimit.induction with
-  | _ O X => rw [evalLocal_mk, LocalNet.norm_mk]; rfl
+  | _ O X => rw [LocalNet.norm_mk]; rfl
 
 /-- Evaluation extended to the quasi-local C⋆-algebra, by continuity from the dense image of the
     local observables. -/

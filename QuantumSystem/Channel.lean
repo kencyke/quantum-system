@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.State
@@ -200,10 +205,8 @@ lemma stinespringIsometry_conjTranspose_mul {r : ℕ} [DecidableEq n]
     Matrix.of_apply, Matrix.one_apply, Fintype.sum_prod_type]
   have heq : ∀ i, ∑ j : m, star (K i j a) * K i j b = ((K i)ᴴ * K i) a b := fun i => by
     simp only [Matrix.mul_apply, Matrix.conjTranspose_apply]
-  simp only [heq, ← Finset.sum_apply]
-  calc (∑ c, (K c)ᴴ * K c) a b
-      = (1 : Matrix n n ℂ) a b := by rw [hK]
-    _ = if a = b then 1 else 0 := Matrix.one_apply
+  simp only [heq]
+  rw [← Matrix.sum_apply, hK, Matrix.one_apply]
 
 /-! ### Partial trace as a quantum channel (product index types) -/
 
@@ -304,12 +307,12 @@ lemma isCompletelyPositive_partialTraceRight {X Y : Type*} [Fintype X] [Fintype 
     · simp [traceRightKraus, Matrix.conjTranspose_apply]
     · intro q _ hq
       simp only [traceRightKraus, Matrix.of_apply]
-      rw [if_neg hq]; ring
+      rw [ite_eq_right hq]; ring
     · simp
   · intro q _ hq
     simp only [traceRightKraus, Matrix.conjTranspose_apply, Matrix.of_apply,
       apply_ite (star · : ℂ → ℂ), star_one, star_zero]
-    rw [if_neg hq]; simp
+    rw [ite_eq_right hq]; simp
   · simp
 
 lemma isTracePreserving_partialTraceRight {X Y : Type*} [Fintype X] [Fintype Y] :
@@ -350,12 +353,12 @@ lemma isCompletelyPositive_reindexₗ {Z W : Type*} [Fintype Z] (e : Z ≃ W) :
     · simp [reindexKraus]
     · intro q _ hq
       simp only [reindexKraus, Matrix.of_apply]
-      rw [if_neg hq]; ring
+      rw [ite_eq_right hq]; ring
     · simp
   · intro z _ hz
     simp only [reindexKraus, Matrix.conjTranspose_apply, Matrix.of_apply,
       apply_ite (star · : ℂ → ℂ), star_one, star_zero]
-    rw [if_neg hz]; simp
+    rw [ite_eq_right hz]; simp
   · simp
 
 lemma isTracePreserving_reindexₗ {Z W : Type*} [Fintype Z] [Fintype W] (e : Z ≃ W) :

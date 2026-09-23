@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
@@ -195,10 +200,10 @@ double-commutant property is inherited from `N` because conjugation commutes wit
 centralizers. -/
 noncomputable def conj (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) : VonNeumannAlgebra H' where
   toStarSubalgebra :=
-    N.toStarSubalgebra.map (U.conjStarAlgEquiv : (H →L[ℂ] H) →⋆ₐ[ℂ] H' →L[ℂ] H')
+    N.toStarSubalgebra.map U.conjStarAlgEquiv.toStarAlgHom
   centralizer_centralizer' := by
     have hcoe : ((N.toStarSubalgebra.map
-        (U.conjStarAlgEquiv : (H →L[ℂ] H) →⋆ₐ[ℂ] H' →L[ℂ] H')).carrier)
+        U.conjStarAlgEquiv.toStarAlgHom).carrier)
         = ⇑U.conjStarAlgEquiv '' (N : Set (H →L[ℂ] H)) :=
       StarSubalgebra.coe_map _ _
     rw [hcoe, ← Set.image_centralizer, ← Set.image_centralizer, N.centralizer_centralizer]

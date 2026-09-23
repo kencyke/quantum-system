@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
@@ -140,7 +145,7 @@ noncomputable def boundedLinearOperators.starAlgEquiv :
        commutes' := fun _ => rfl
        map_star' := fun _ => rfl } :
       (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
-    (fun _ => rfl) (fun _ => rfl)
+    (StarAlgHom.ext fun _ => rfl) (StarAlgHom.ext fun _ => rfl)
 
 /-- A von Neumann algebra is closed under scalar multiplication. -/
 lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
@@ -164,7 +169,7 @@ lemma apply_eq_mul_apply_one (x : ℂ →L[ℂ] ℂ) (w : ℂ) : x w = w * x 1 :
 (`apply_eq_mul_apply_one`), and scalars commute. -/
 lemma mul_comm_complex (x y : ℂ →L[ℂ] ℂ) : x * y = y * x := by
   refine ContinuousLinearMap.ext fun z => ?_
-  rw [ContinuousLinearMap.mul_apply, ContinuousLinearMap.mul_apply,
+  rw [mul_apply_eq_comp, mul_apply_eq_comp,
     apply_eq_mul_apply_one x (y z), apply_eq_mul_apply_one y (x z),
     apply_eq_mul_apply_one y z, apply_eq_mul_apply_one x z]
   ring
@@ -176,7 +181,7 @@ lemma eq_boundedLinearOperators_complex (N : VonNeumannAlgebra ℂ) : N = 𝓑(�
   refine SetLike.ext fun x => ⟨fun _ => mem_boundedLinearOperators x, fun _ => ?_⟩
   have hx : x = (x 1) • (1 : ℂ →L[ℂ] ℂ) := by
     refine ContinuousLinearMap.ext fun z => ?_
-    rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply, smul_eq_mul,
+    rw [smul_apply, one_apply_eq_self, smul_eq_mul,
       apply_eq_mul_apply_one x z, mul_comm]
   rw [hx]
   exact smul_mem _ (one_mem N)
@@ -322,7 +327,7 @@ theorem IsFactor.central_projection_eq {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsCentralProjection N e) :
     e = 0 ∨ e = 1 := by
   rcases subsingleton_or_nontrivial H with hH | hH
-  · haveI := hH
+  · have := hH
     exact Or.inl (Subsingleton.elim _ _)
   obtain ⟨c, hc⟩ := hN e he.2.1 he.2.2
   have hidem : e * e = e := he.1.isIdempotentElem
@@ -353,7 +358,7 @@ both `N` and `N'`, so it is central, hence `0` or `1`; since `P` acts as the ide
 annihilate it. This is the geometric input of the comparison theorem. -/
 theorem IsFactor.exists_mul_ne {N : VonNeumannAlgebra H} (hN : IsFactor N)
     {e q : H →L[ℂ] H} (heN : e ∈ N) (he0 : e ≠ 0) (hq0 : q ≠ 0) : ∃ a ∈ N, q * a * e ≠ 0 := by
-  haveI : Nontrivial H := nontrivial_of_ne_zero he0
+  have : Nontrivial H := nontrivial_of_ne_zero he0
   by_contra hcon
   have hcon' : ∀ a ∈ N, q * a * e = 0 := fun a haN => by
     by_contra h; exact hcon ⟨a, haN, h⟩
@@ -475,11 +480,9 @@ theorem MvNEquiv.exists_subproj_equiv {N : VonNeumannAlgebra H} {q r' q' : H →
       rw [star_mul, hq'.isSelfAdjoint.star_eq]
       simp only [mul_assoc]
       rw [← mul_assoc (star w) w q', hwq, hsub, hq'.isIdempotentElem, hq'.isIdempotentElem]
-    · change star (w * q') * (w * q') = q'
-      rw [star_mul, hq'.isSelfAdjoint.star_eq, mul_assoc, ← mul_assoc (star w) w q', hwq, hsub,
+    · rw [star_mul, hq'.isSelfAdjoint.star_eq, mul_assoc, ← mul_assoc (star w) w q', hwq, hsub,
         hq'.isIdempotentElem]
-    · change (w * q') * star (w * q') = w * q' * star w
-      rw [star_mul, hq'.isSelfAdjoint.star_eq]
+    · rw [star_mul, hq'.isSelfAdjoint.star_eq]
       simp only [mul_assoc]
       rw [← mul_assoc q' q' (star w), hq'.isIdempotentElem]
 
@@ -556,10 +559,10 @@ lemma IsMinimalProjection.posCorner {N : VonNeumannAlgebra H} {e : H →L[ℂ] H
   have hξne : ξ ≠ 0 := fun h => hxξ (by rw [h, map_zero])
   have hinner : ‖x ξ‖ ^ 2 = c'.re * ‖ξ‖ ^ 2 := by
     have e1 : inner ℂ ((star x * x) ξ) ξ = inner ℂ (x ξ) (x ξ) := by
-      rw [ContinuousLinearMap.mul_apply, ContinuousLinearMap.star_eq_adjoint,
+      rw [mul_apply_eq_comp, ContinuousLinearMap.star_eq_adjoint,
         ContinuousLinearMap.adjoint_inner_left]
     have e2 : inner ℂ ((star x * x) ξ) ξ = (starRingEnd ℂ) c' * inner ℂ ξ ξ := by
-      rw [hc', ContinuousLinearMap.smul_apply, heξ, inner_smul_left]
+      rw [hc', smul_apply, heξ, inner_smul_left]
     have e3 : inner ℂ (x ξ) (x ξ) = (starRingEnd ℂ) c' * inner ℂ ξ ξ := e1.symm.trans e2
     have hre := congrArg RCLike.re e3
     rw [inner_self_eq_norm_sq, inner_self_eq_norm_sq_to_K] at hre
@@ -592,7 +595,7 @@ theorem IsMinimalProjection.mvNSub_of_isFactor {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hq0 : q ≠ 0) :
     e ≼[N] q := by
-  haveI : Nontrivial H := he.nontrivial
+  have : Nontrivial H := he.nontrivial
   obtain ⟨a, haN, hane⟩ := hN.exists_mul_ne he.2.1 he.2.2.1 hq0
   exact he.mvNSub_of_ne hq hqN haN hane
 

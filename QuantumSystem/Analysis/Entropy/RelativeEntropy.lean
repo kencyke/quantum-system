@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
@@ -435,17 +440,17 @@ private lemma trace_ρlogσ_eq (ρ σ : DensityMatrix n) :
   have h1 : ∀ x, (∑ x_1, W j x_1 * if x_1 = x then ↑(ev_ρ x_1) else 0) = W j x * ↑(ev_ρ x) := by
     intro x
     rw [Finset.sum_eq_single x]
-    · simp only [if_true]
+    · simp only [ite_true]
     · intro b _ hb
-      simp only [if_neg hb, mul_zero]
+      simp only [ite_eq_right hb, mul_zero]
     · intro h; exact absurd (Finset.mem_univ x) h
   have h2 : ∀ x, (∑ x_1, star (W x_1 x) * if x_1 = j then ↑(Real.log (ev_σ x_1)) else 0) =
       star (W j x) * ↑(Real.log (ev_σ j)) := by
     intro x
     rw [Finset.sum_eq_single j]
-    · simp only [if_true]
+    · simp only [ite_true]
     · intro b _ hb
-      simp only [if_neg hb, mul_zero]
+      simp only [ite_eq_right hb, mul_zero]
     · intro h; exact absurd (Finset.mem_univ j) h
   simp only [h1, h2]
   rw [Complex.re_sum]
@@ -808,7 +813,7 @@ private lemma trace_rpow_mul_double_sum (ρ σ : DensityMatrix n) (s : ℝ) :
   rw [htrace]
   -- Expand trace elementwise and reduce diagonal selections
   simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply, conjTranspose_apply, diagonal_apply,
-    mul_ite, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true,
+    mul_ite, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ite_true,
     Complex.star_def, Complex.normSq_apply, Complex.re_sum, Complex.mul_re,
     Complex.mul_im, Complex.conj_re, Complex.conj_im,
     Complex.ofReal_re, Complex.ofReal_im, Finset.sum_mul]
@@ -902,7 +907,6 @@ private lemma hasDerivAt_trace_rpow_mul (ρ σ : DensityMatrix n) (h : suppSubse
       have := suppSubset_normSq_ev_zero ρ σ h j hμ i
       linarith [mul_nonneg (Complex.normSq_nonneg (W j i)) (ρ.eigenvalues_nonneg i)])
   convert hderiv using 1
-  simp only []  -- beta-reduce lambda in hderiv's derivative form
   -- Relate derivative to D(ρ‖σ) = Tr (ρ(log ρ)) - Tr (ρ(log σ))
   rw [Matrix.mul_sub, trace_sub, Complex.sub_re, trace_ρlogρ_eq ρ, trace_ρlogσ_eq ρ σ]
   -- Rewrite Σᵢ evᵢ log evᵢ as Σᵢⱼ |Wji|² evᵢ log evᵢ (using column sum = 1)
@@ -989,20 +993,20 @@ private lemma rpow_submatrix_fin_one
     (A.submatrix (Prod.mk 0) (Prod.mk 0)) ^ p := by
   classical
   -- Set up normed algebra and C*-algebra instances
-  letI : SeminormedAddCommGroup (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) :=
+  let : SeminormedAddCommGroup (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) :=
     Matrix.linftyOpSeminormedAddCommGroup
-  letI : NormedSpace ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedSpace
-  letI : IsBoundedSMul ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpIsBoundedSMul
-  letI : NormedRing (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := by
+  let : NormedSpace ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedSpace
+  let : IsBoundedSMul ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpIsBoundedSMul
+  let : NormedRing (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := Fin 1 × m) (A := ℂ)
-  letI : SeminormedAddCommGroup (Matrix m m ℂ) := Matrix.linftyOpSeminormedAddCommGroup
-  letI : NormedSpace ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedSpace
-  letI : IsBoundedSMul ℝ (Matrix m m ℂ) := Matrix.linftyOpIsBoundedSMul
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
+  let : SeminormedAddCommGroup (Matrix m m ℂ) := Matrix.linftyOpSeminormedAddCommGroup
+  let : NormedSpace ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedSpace
+  let : IsBoundedSMul ℝ (Matrix m m ℂ) := Matrix.linftyOpIsBoundedSMul
+  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
   -- Equivalence e : Fin 1 × m ≃ m (canonical)
   let e := Equiv.uniqueProd m (Fin 1)
@@ -1011,12 +1015,12 @@ private lemma rpow_submatrix_fin_one
     StarAlgEquiv.ofAlgEquiv (Matrix.reindexAlgEquiv ℝ ℂ e) (fun M => by
       ext i j
       simp only [star_eq_conjTranspose, Matrix.conjTranspose_apply,
-        Matrix.reindexAlgEquiv_apply, Matrix.reindex_apply, Matrix.submatrix_apply])
+        Matrix.coe_reindexAlgEquiv, Matrix.reindex_apply, Matrix.submatrix_apply])
   -- ψ acts as submatrix extraction at block 0
   have hψ_apply : ∀ (M : Matrix (Fin 1 × m) (Fin 1 × m) ℂ),
       ψ M = M.submatrix (Prod.mk (0 : Fin 1)) (Prod.mk 0) := by
     intro M; ext i j
-    simp only [ψ, StarAlgEquiv.ofAlgEquiv_apply, Matrix.reindexAlgEquiv_apply,
+    simp only [ψ, StarAlgEquiv.ofAlgEquiv_apply, Matrix.coe_reindexAlgEquiv,
       Matrix.reindex_apply, Matrix.submatrix_apply, e, Equiv.uniqueProd_symm_apply,
       Fin.default_eq_zero]
   -- Self-adjointness for CFC
@@ -1029,7 +1033,7 @@ private lemma rpow_submatrix_fin_one
   have hψA_le : 0 ≤ ψ A := by
     rw [hψ_apply]; simpa [Matrix.le_iff] using hA.submatrix (Prod.mk (0 : Fin 1))
   -- Continuity of ψ (finite-dimensional)
-  haveI : FiniteDimensional ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) :=
+  have : FiniteDimensional ℝ (Matrix (Fin 1 × m) (Fin 1 × m) ℂ) :=
     Module.Finite.matrix
   let f : Matrix (Fin 1 × m) (Fin 1 × m) ℂ →ₗ[ℝ] Matrix m m ℂ := ψ.toAlgEquiv.toLinearMap
   have hf_cont : Continuous f := f.continuous_of_finiteDimensional
@@ -1108,7 +1112,7 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
       · exact rpow_submatrix_fin_one hω (le_of_lt hs0)
       · exact rpow_submatrix_fin_one hτ (le_of_lt h1s_pos)
     · -- r ≥ 2: use 2-block splitting and induction
-      haveI : NeZero (r + 2) := ⟨by omega⟩
+      have : NeZero (r + 2) := ⟨by omega⟩
       -- Lieb concavity with (r+2)-block pinching gives F_s(ω,τ) ≤ F_s(P(ω),P(τ))
       have hr_pos : (0 : ℝ) < r + 2 := by positivity
       have hw_sum : ∑ k : Fin (r + 2), (1 / (r + 2 : ℝ)) = 1 := by
@@ -1182,33 +1186,33 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
       let τ₀₀ := τ.submatrix (Prod.mk (0 : Fin (r + 2))) (Prod.mk 0)
       -- Reindex via ψ to show P(ω) = fromBlocks ω₀₀ 0 0 Qω
       classical
-      letI : SeminormedAddCommGroup (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+      let : SeminormedAddCommGroup (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Matrix.linftyOpSeminormedAddCommGroup
-      letI : NormedSpace ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+      let : NormedSpace ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Matrix.linftyOpNormedSpace
-      letI : IsBoundedSMul ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+      let : IsBoundedSMul ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Matrix.linftyOpIsBoundedSMul
-      letI : NormedRing (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+      let : NormedRing (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Matrix.linftyOpNormedRing
-      letI : NormedAlgebra ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+      let : NormedAlgebra ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Matrix.linftyOpNormedAlgebra
-      letI : CStarAlgebra (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) := by
+      let : CStarAlgebra (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) := by
         simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := Fin (r + 2) × m) (A := ℂ)
-      letI : SeminormedAddCommGroup (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
+      let : SeminormedAddCommGroup (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
         Matrix.linftyOpSeminormedAddCommGroup
-      letI : NormedSpace ℝ (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
+      let : NormedSpace ℝ (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
         Matrix.linftyOpNormedSpace
-      letI : IsBoundedSMul ℝ (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
+      let : IsBoundedSMul ℝ (Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ) :=
         Matrix.linftyOpIsBoundedSMul
-      letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-      letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-      letI : CStarAlgebra (Matrix m m ℂ) := by
+      let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+      let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+      let : CStarAlgebra (Matrix m m ℂ) := by
         simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-      letI : NormedRing (Matrix (Fin (r + 1) × m) (Fin (r + 1) × m) ℂ) :=
+      let : NormedRing (Matrix (Fin (r + 1) × m) (Fin (r + 1) × m) ℂ) :=
         Matrix.linftyOpNormedRing
-      letI : NormedAlgebra ℝ (Matrix (Fin (r + 1) × m) (Fin (r + 1) × m) ℂ) :=
+      let : NormedAlgebra ℝ (Matrix (Fin (r + 1) × m) (Fin (r + 1) × m) ℂ) :=
         Matrix.linftyOpNormedAlgebra
-      letI : CStarAlgebra (Matrix (Fin (r + 1) × m) (Fin (r + 1) × m) ℂ) := by
+      let : CStarAlgebra (Matrix (Fin (r + 1) × m) (Fin (r + 1) × m) ℂ) := by
         simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := Fin (r + 1) × m) (A := ℂ)
       -- Reindex equivalence
       let e := splitFinSuccProdEquiv (r + 1) m
@@ -1218,7 +1222,7 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
         StarAlgEquiv.ofAlgEquiv (Matrix.reindexAlgEquiv ℝ ℂ e) (fun M => by
           ext i j
           simp only [star_eq_conjTranspose, Matrix.conjTranspose_apply,
-            Matrix.reindexAlgEquiv_apply, Matrix.reindex_apply, Matrix.submatrix_apply])
+            Matrix.coe_reindexAlgEquiv, Matrix.reindex_apply, Matrix.submatrix_apply])
       -- Key: ψ M = M.submatrix e.symm e.symm
       have hψ_eq : ∀ M : Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ,
           ψ M = M.submatrix e.symm e.symm := by
@@ -1232,21 +1236,21 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
       have hψPω : ψ Pω = Matrix.fromBlocks ω₀₀ 0 0 Qω := by
         ext (a | ⟨i, a⟩) (b | ⟨j, b⟩)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, Matrix.fromBlocks_apply₁₁]
-          exact hPω_entry 0 0 a b |>.trans (if_pos rfl)
+          exact hPω_entry 0 0 a b |>.trans (ite_eq_left rfl)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₁₂]
-          exact hPω_entry 0 j.succ a b |>.trans (if_neg (Fin.succ_ne_zero j).symm)
+          exact hPω_entry 0 j.succ a b |>.trans (ite_eq_right (Fin.succ_ne_zero j).symm)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₂₁]
-          exact hPω_entry i.succ 0 a b |>.trans (if_neg (Fin.succ_ne_zero i))
+          exact hPω_entry i.succ 0 a b |>.trans (ite_eq_right (Fin.succ_ne_zero i))
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inr,
             Matrix.fromBlocks_apply₂₂, Qω, embed]
       have hψPτ : ψ Pτ = Matrix.fromBlocks τ₀₀ 0 0 Qτ := by
         ext (a | ⟨i, a⟩) (b | ⟨j, b⟩)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, Matrix.fromBlocks_apply₁₁]
-          exact hPτ_entry 0 0 a b |>.trans (if_pos rfl)
+          exact hPτ_entry 0 0 a b |>.trans (ite_eq_left rfl)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₁₂]
-          exact hPτ_entry 0 j.succ a b |>.trans (if_neg (Fin.succ_ne_zero j).symm)
+          exact hPτ_entry 0 j.succ a b |>.trans (ite_eq_right (Fin.succ_ne_zero j).symm)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₂₁]
-          exact hPτ_entry i.succ 0 a b |>.trans (if_neg (Fin.succ_ne_zero i))
+          exact hPτ_entry i.succ 0 a b |>.trans (ite_eq_right (Fin.succ_ne_zero i))
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inr,
             Matrix.fromBlocks_apply₂₂, Qτ, embed]
       -- ψ preserves trace
@@ -1256,7 +1260,7 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
         simp only [hψ_eq, Matrix.trace, Matrix.diag, Matrix.submatrix_apply]
         exact Fintype.sum_equiv e.symm _ _ (fun i => rfl)
       -- ψ preserves rpow (via CFC)
-      haveI : FiniteDimensional ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
+      have : FiniteDimensional ℝ (Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ) :=
         Module.Finite.matrix
       let ψf : Matrix (Fin (r + 2) × m) (Fin (r + 2) × m) ℂ →ₗ[ℝ]
           Matrix (m ⊕ (Fin (r + 1) × m)) (m ⊕ (Fin (r + 1) × m)) ℂ := ψ.toAlgEquiv.toLinearMap
@@ -1292,7 +1296,7 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
         simp only [Complex.add_re]
         rfl
       -- Apply IH to Q (r+1 blocks)
-      haveI : NeZero (r + 1) := ⟨by omega⟩
+      have : NeZero (r + 1) := ⟨by omega⟩
       have hQ_block_psd_ω : ∀ k : Fin (r + 1),
           (Qω.submatrix (Prod.mk k) (Prod.mk k)).PosSemidef := by
         intro k; rw [hQ_block_ω k]; exact hω_block_psd k.succ
@@ -1376,9 +1380,9 @@ private lemma trace_rpow_mul_channel_le
     rcases r with _ | r
     · -- r = 0: contradicts trace-preservation
       simp only [Finset.univ_eq_empty, Finset.sum_empty] at hKsum
-      haveI : Nonempty n := by
+      have : Nonempty n := by
         by_contra h
-        haveI := not_nonempty_iff.mp h
+        have := not_nonempty_iff.mp h
         have := ρ.trace_eq_one
         rw [Matrix.trace_eq_zero_of_isEmpty] at this
         exact zero_ne_one this
@@ -1387,7 +1391,7 @@ private lemma trace_rpow_mul_channel_le
       simp only [Matrix.zero_apply, Matrix.one_apply_eq] at h01
       exact zero_ne_one h01
     · -- r ≥ 1: Stinespring dilation + pinching
-      haveI : NeZero (r + 1) := ⟨Nat.succ_ne_zero r⟩
+      have : NeZero (r + 1) := ⟨Nat.succ_ne_zero r⟩
       set V := stinespringIsometry K with hV_def
       have hVV : Vᴴ * V = 1 := stinespringIsometry_conjTranspose_mul hKsum
       set ω := V * ρ.toMatrix * Vᴴ with hω_def
@@ -1457,7 +1461,7 @@ theorem relativeEntropy_channel_le
     have hD : relativeEntropy ρ σ =
         ↑(ρ.toMatrix * (log ρ - log σ)).trace.re := by
       unfold relativeEntropy
-      simp only [if_pos hsupp]; rfl
+      simp only [ite_eq_left hsupp]; rfl
     rw [hDch, hD, EReal.coe_le_coe_iff]
     -- Use derivative argument: define g(s) = F_s(Φρ, Φσ) - F_s(ρ, σ)
     let g : ℝ → ℝ := fun s =>
@@ -1828,7 +1832,7 @@ lemma relativeEntropy_map_starAlgEquiv
     suppSubset_map_starAlgEquiv_iff σ.isHermitian φ
   unfold relativeEntropy
   by_cases h : suppSubset ρ.toMatrix σ.toMatrix
-  · simp only [h, h_supp_iff.mpr h, if_true]
+  · simp only [h, h_supp_iff.mpr h, ite_true]
     congr 1
     change (Tr ((ρ.map φ hφ).toMatrix *
         (cfc Real.log (ρ.map φ hφ).toMatrix -
@@ -1845,7 +1849,7 @@ lemma relativeEntropy_map_starAlgEquiv
       change cfc Real.log (φ σ.toMatrix) = _
       exact cfc_log_map_starAlgEquiv σ.isHermitian φ
     rw [h_log_ρ, h_log_σ, DensityMatrix.map_toMatrix, ← map_sub, ← map_mul, hφ]
-  · simp only [h, h_supp_iff.not.mpr h, if_false]
+  · simp only [h, h_supp_iff.not.mpr h, ite_false]
 
 /-- Specialisation of `relativeEntropy_map_starAlgEquiv` to reindexing. -/
 lemma relativeEntropy_mapEquiv (ρ σ : DensityMatrix m) (e : n ≃ m) :

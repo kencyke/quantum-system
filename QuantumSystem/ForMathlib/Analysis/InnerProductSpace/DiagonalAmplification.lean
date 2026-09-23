@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
@@ -96,13 +101,13 @@ lemma diagonal_apply {n : ℕ} (T : H →L[ℂ] H) (x : Hn (H := H) n) (i : Fin 
     (diagonal (H := H) (n := n) T x).ofLp i = T (x.ofLp i) := by
   classical
   unfold diagonal
-  rw [ContinuousLinearMap.coe_sum']
-  simp only [Finset.sum_apply, ContinuousLinearMap.coe_comp', Function.comp_apply, proj_apply]
+  rw [FunLike.coe_sum]
+  simp only [Finset.sum_apply, ContinuousLinearMap.coe_comp, Function.comp_apply, proj_apply]
   simp only [WithLp.ofLp_sum, Finset.sum_apply]
   rw [Finset.sum_eq_single i]
-  · rw [single_apply, if_pos rfl]
+  · rw [single_apply, ite_eq_left rfl]
   · intro j _ hji
-    rw [single_apply, if_neg (Ne.symm hji)]
+    rw [single_apply, ite_eq_right (Ne.symm hji)]
   · intro hi
     exact (hi (Finset.mem_univ i)).elim
 
@@ -133,9 +138,9 @@ lemma single_sum_eq {n : ℕ} (x : Hn (H := H) n) :
   intro l
   simp only [WithLp.ofLp_sum, Finset.sum_apply]
   rw [Finset.sum_eq_single l]
-  · rw [single_apply, if_pos rfl]
+  · rw [single_apply, ite_eq_left rfl]
   · intro j _ hjl
-    rw [single_apply, if_neg (Ne.symm hjl)]
+    rw [single_apply, ite_eq_right (Ne.symm hjl)]
   · intro hl
     exact (hl (Finset.mem_univ l)).elim
 
@@ -147,15 +152,15 @@ lemma commute_diagonal_iff {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n)
   constructor
   · intro h i j
     ext v
-    simp only [ContinuousLinearMap.mul_apply, matrixComponent_apply]
+    simp only [mul_apply_eq_comp, matrixComponent_apply]
     have h_eq := congrArg (fun A => (A (single (H := H) (n := n) j v)).ofLp i) h
-    simp only [ContinuousLinearMap.mul_apply] at h_eq
+    simp only [mul_apply_eq_comp] at h_eq
     rw [diagonal_single] at h_eq
     rw [diagonal_apply] at h_eq
     exact h_eq
   · intro h
     ext x k
-    simp only [ContinuousLinearMap.mul_apply]
+    simp only [mul_apply_eq_comp]
     rw [diagonal_apply]
     conv_lhs => rw [single_sum_eq x]
     conv_rhs => rw [single_sum_eq x]
@@ -163,9 +168,9 @@ lemma commute_diagonal_iff {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n)
     apply Finset.sum_congr rfl
     intro j _
     rw [diagonal_single]
-    simp only [← matrixComponent_apply, ← ContinuousLinearMap.mul_apply]
+    simp only [← matrixComponent_apply, ← mul_apply_eq_comp]
     have := congrArg (fun f => f (x.ofLp j)) (h k j)
-    simp only [ContinuousLinearMap.mul_apply] at this
+    simp only [mul_apply_eq_comp] at this
     exact this
 
 /-- Characterization of the commutant of the diagonal algebra. -/
@@ -234,7 +239,7 @@ noncomputable def diagonalStarAlgHom (n : ℕ) :
   map_mul' := by
     intro T U
     ext x i
-    simp [diagonal_apply, ContinuousLinearMap.mul_apply]
+    simp [diagonal_apply, mul_apply_eq_comp]
   map_zero' := by
     ext x i
     simp [diagonal_apply]

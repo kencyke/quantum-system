@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.Normed.Module.WeakDual
@@ -50,7 +55,7 @@ lemma convex : Convex ℝ (QuasiStateSpace A) := by
 
 /-- Positivity is a weak-\* closed condition. -/
 lemma isClosed_setOf_nonneg : IsClosed { φ : WeakDual ℂ A | ∀ a : A, 0 ≤ a → 0 ≤ φ a } := by
-  simp only [Set.setOf_forall]
+  simp only [Set.ofPred_forall]
   exact isClosed_iInter fun a => isClosed_iInter fun _ =>
     isClosed_le continuous_const (WeakDual.eval_continuous a)
 

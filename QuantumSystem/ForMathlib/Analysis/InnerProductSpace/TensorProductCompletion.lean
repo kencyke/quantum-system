@@ -1,9 +1,15 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.RingTheory.TensorProduct.Finite
+public import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 public import Mathlib.Analysis.Normed.Module.FiniteDimension
 public import Mathlib.Topology.Algebra.LinearMapCompletion
 
@@ -160,7 +166,7 @@ the algebraic tensor product is already finite-dimensional (hence complete), so 
 changes nothing. -/
 instance instFiniteDimensionalHilbertTensor [FiniteDimensional ℂ H₁] [FiniteDimensional ℂ H₂] :
     FiniteDimensional ℂ (HilbertTensor H₁ H₂) := by
-  haveI : FiniteDimensional ℂ (H₁ ⊗[ℂ] H₂) := Module.Finite.tensorProduct ℂ H₁ H₂
+  have : FiniteDimensional ℂ (H₁ ⊗[ℂ] H₂) := Module.Finite.tensorProduct ℂ H₁ H₂
   exact FiniteDimensional.completion
 
 namespace HilbertTensor
@@ -238,7 +244,7 @@ lemma exists_orthonormal_rep (z : H₁ ⊗[ℂ] H₂) :
   obtain ⟨N', hN'fin, hz⟩ :=
     TensorProduct.exists_finite_submodule_right_of_setFinite {z} (Set.finite_singleton z)
   obtain ⟨z₀, hz₀⟩ := hz (Set.mem_singleton z)
-  haveI : FiniteDimensional ℂ N' := hN'fin
+  have : FiniteDimensional ℂ N' := hN'fin
   let b := stdOrthonormalBasis ℂ N'
   set ξ : Fin (Module.finrank ℂ N') → H₁ :=
     fun i => TensorProduct.equivFinsuppOfBasisRight b.toBasis z₀ i with hξ
@@ -286,8 +292,7 @@ tensor product: swapping the factors turns `1 ⊗ B` into `B ⊗ 1`. -/
 lemma commIsometry_map_id (B : H₂ →L[ℂ] H₂) (z : H₁ ⊗[ℂ] H₂) :
     commIsometry ℂ H₁ H₂ (TensorProduct.map LinearMap.id B.toLinearMap z)
       = TensorProduct.map B.toLinearMap LinearMap.id (commIsometry ℂ H₁ H₂ z) := by
-  induction z using TensorProduct.induction_on with
-  | zero => simp
+  induction z using TensorProduct.inductionOn with
   | tmul x y => simp
   | add a b ha hb => simp [map_add, ha, hb]
 
@@ -406,30 +411,26 @@ the identity and turn composition in `B(H₁)` (resp. `B(H₂)`) into compositio
 
 lemma algAmplifyLeft_one_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (H₂ := H₂) (1 : H₁ →L[ℂ] H₁) a = a := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
+  induction a using TensorProduct.inductionOn with
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
 lemma algAmplifyLeft_mul_apply (A B : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (A * B) a = algAmplifyLeft A (algAmplifyLeft B a) := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.mul_apply]
+  induction a using TensorProduct.inductionOn with
+  | tmul x y => simp [mul_apply_eq_comp]
   | add p q hp hq => simp [map_add, hp, hq]
 
 lemma algAmplifyRight_one_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (H₁ := H₁) (1 : H₂ →L[ℂ] H₂) a = a := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
+  induction a using TensorProduct.inductionOn with
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
 lemma algAmplifyRight_mul_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (A * B) a = algAmplifyRight A (algAmplifyRight B a) := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.mul_apply]
+  induction a using TensorProduct.inductionOn with
+  | tmul x y => simp [mul_apply_eq_comp]
   | add p q hp hq => simp [map_add, hp, hq]
 
 @[simp] theorem amplifyLeft_one :
@@ -445,7 +446,7 @@ theorem amplifyLeft_mul (A B : H₁ →L[ℂ] H₁) :
   refine Completion.induction_on z
     (isClosed_eq (amplifyLeft _).continuous
       ((amplifyLeft A).continuous.comp (amplifyLeft B).continuous)) (fun a => ?_)
-  simp [ContinuousLinearMap.mul_apply, algAmplifyLeft_mul_apply]
+  simp [mul_apply_eq_comp, algAmplifyLeft_mul_apply]
 
 @[simp] theorem amplifyRight_one :
     amplifyRight (1 : H₂ →L[ℂ] H₂) = (1 : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂) := by
@@ -460,7 +461,7 @@ theorem amplifyRight_mul (A B : H₂ →L[ℂ] H₂) :
   refine Completion.induction_on z
     (isClosed_eq (amplifyRight _).continuous
       ((amplifyRight A).continuous.comp (amplifyRight B).continuous)) (fun a => ?_)
-  simp [ContinuousLinearMap.mul_apply, algAmplifyRight_mul_apply]
+  simp [mul_apply_eq_comp, algAmplifyRight_mul_apply]
 
 /-! ### Additivity and homogeneity in the amplified operator
 
@@ -469,44 +470,38 @@ being amplified: they preserve `0`, addition, and scalar multiplication. -/
 
 lemma algAmplifyLeft_zero_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (H₂ := H₂) (0 : H₁ →L[ℂ] H₁) a = 0 := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
+  induction a using TensorProduct.inductionOn with
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
 lemma algAmplifyLeft_add_apply (A B : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (A + B) a = algAmplifyLeft A a + algAmplifyLeft B a := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.add_apply, TensorProduct.add_tmul]
+  induction a using TensorProduct.inductionOn with
+  | tmul x y => simp [add_apply, TensorProduct.add_tmul]
   | add p q hp hq => simp only [map_add, hp, hq]; abel
 
 lemma algAmplifyLeft_smul_apply (c : ℂ) (A : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyLeft (c • A) a = c • algAmplifyLeft A a := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.smul_apply, TensorProduct.smul_tmul']
+  induction a using TensorProduct.inductionOn with
+  | tmul x y => simp [smul_apply, TensorProduct.smul_tmul']
   | add p q hp hq => simp only [map_add, hp, hq, smul_add]
 
 lemma algAmplifyRight_zero_apply (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (H₁ := H₁) (0 : H₂ →L[ℂ] H₂) a = 0 := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
+  induction a using TensorProduct.inductionOn with
   | tmul x y => simp
   | add p q hp hq => simp [map_add, hp, hq]
 
 lemma algAmplifyRight_add_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (A + B) a = algAmplifyRight A a + algAmplifyRight B a := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.add_apply, TensorProduct.tmul_add]
+  induction a using TensorProduct.inductionOn with
+  | tmul x y => simp [add_apply, TensorProduct.tmul_add]
   | add p q hp hq => simp only [map_add, hp, hq]; abel
 
 lemma algAmplifyRight_smul_apply (c : ℂ) (B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H₂) :
     algAmplifyRight (c • B) a = c • algAmplifyRight B a := by
-  induction a using TensorProduct.induction_on with
-  | zero => simp
-  | tmul x y => simp [ContinuousLinearMap.smul_apply, TensorProduct.tmul_smul]
+  induction a using TensorProduct.inductionOn with
+  | tmul x y => simp [smul_apply, TensorProduct.tmul_smul]
   | add p q hp hq => simp only [map_add, hp, hq, smul_add]
 
 @[simp] lemma amplifyLeft_zero :
@@ -515,7 +510,7 @@ lemma algAmplifyRight_smul_apply (c : ℂ) (B : H₂ →L[ℂ] H₂) (a : H₁ �
   refine Completion.induction_on z
     (isClosed_eq (amplifyLeft _).continuous (ContinuousLinearMap.continuous 0)) (fun a => ?_)
   rw [amplifyLeft_coe, algAmplifyLeft_zero_apply, UniformSpace.Completion.coe_zero,
-    ContinuousLinearMap.zero_apply]
+    zero_apply]
 
 theorem amplifyLeft_add (A B : H₁ →L[ℂ] H₁) :
     amplifyLeft (H₂ := H₂) (A + B) = amplifyLeft A + amplifyLeft B := by
@@ -524,7 +519,7 @@ theorem amplifyLeft_add (A B : H₁ →L[ℂ] H₁) :
     (isClosed_eq (amplifyLeft _).continuous
       ((amplifyLeft A).continuous.add (amplifyLeft B).continuous)) (fun a => ?_)
   rw [amplifyLeft_coe, algAmplifyLeft_add_apply, UniformSpace.Completion.coe_add,
-    ContinuousLinearMap.add_apply, amplifyLeft_coe, amplifyLeft_coe]
+    add_apply, amplifyLeft_coe, amplifyLeft_coe]
 
 theorem amplifyLeft_smul (c : ℂ) (A : H₁ →L[ℂ] H₁) :
     amplifyLeft (H₂ := H₂) (c • A) = c • amplifyLeft A := by
@@ -533,7 +528,7 @@ theorem amplifyLeft_smul (c : ℂ) (A : H₁ →L[ℂ] H₁) :
     (isClosed_eq (amplifyLeft _).continuous
       ((continuous_const_smul c).comp (amplifyLeft A).continuous)) (fun a => ?_)
   rw [amplifyLeft_coe, algAmplifyLeft_smul_apply, UniformSpace.Completion.coe_smul,
-    ContinuousLinearMap.smul_apply, amplifyLeft_coe]
+    smul_apply, amplifyLeft_coe]
 
 @[simp] lemma amplifyRight_zero :
     amplifyRight (0 : H₂ →L[ℂ] H₂) = (0 : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂) := by
@@ -541,7 +536,7 @@ theorem amplifyLeft_smul (c : ℂ) (A : H₁ →L[ℂ] H₁) :
   refine Completion.induction_on z
     (isClosed_eq (amplifyRight _).continuous (ContinuousLinearMap.continuous 0)) (fun a => ?_)
   rw [amplifyRight_coe, algAmplifyRight_zero_apply, UniformSpace.Completion.coe_zero,
-    ContinuousLinearMap.zero_apply]
+    zero_apply]
 
 theorem amplifyRight_add (A B : H₂ →L[ℂ] H₂) :
     amplifyRight (H₁ := H₁) (A + B) = amplifyRight A + amplifyRight B := by
@@ -550,7 +545,7 @@ theorem amplifyRight_add (A B : H₂ →L[ℂ] H₂) :
     (isClosed_eq (amplifyRight _).continuous
       ((amplifyRight A).continuous.add (amplifyRight B).continuous)) (fun a => ?_)
   rw [amplifyRight_coe, algAmplifyRight_add_apply, UniformSpace.Completion.coe_add,
-    ContinuousLinearMap.add_apply, amplifyRight_coe, amplifyRight_coe]
+    add_apply, amplifyRight_coe, amplifyRight_coe]
 
 theorem amplifyRight_smul (c : ℂ) (B : H₂ →L[ℂ] H₂) :
     amplifyRight (H₁ := H₁) (c • B) = c • amplifyRight B := by
@@ -559,7 +554,7 @@ theorem amplifyRight_smul (c : ℂ) (B : H₂ →L[ℂ] H₂) :
     (isClosed_eq (amplifyRight _).continuous
       ((continuous_const_smul c).comp (amplifyRight B).continuous)) (fun a => ?_)
   rw [amplifyRight_coe, algAmplifyRight_smul_apply, UniformSpace.Completion.coe_smul,
-    ContinuousLinearMap.smul_apply, amplifyRight_coe]
+    smul_apply, amplifyRight_coe]
 
 /-! ### The commutation (swap) equivalence
 
@@ -590,8 +585,7 @@ lemma conjStarAlgEquiv_commEquiv_amplifyRight (B : H₂ →L[ℂ] H₂) :
   rw [LinearIsometryEquiv.conjStarAlgEquiv_apply_apply]
   refine UniformSpace.Completion.induction_on w
     (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
-  induction a using TensorProduct.induction_on with
-  | zero => simp only [UniformSpace.Completion.coe_zero, map_zero]
+  induction a using TensorProduct.inductionOn with
   | tmul y x =>
       change commEquiv (amplifyRight B (commEquiv.symm (y ⊗ₕ x))) = amplifyLeft B (y ⊗ₕ x)
       rw [commEquiv_symm_tmul, amplifyRight_tmul, commEquiv_tmul, amplifyLeft_tmul]
@@ -608,8 +602,7 @@ lemma conjStarAlgEquiv_symm_commEquiv_amplifyRight (S : H₁ →L[ℂ] H₁) :
   rw [LinearIsometryEquiv.symm_conjStarAlgEquiv_apply_apply]
   refine UniformSpace.Completion.induction_on w
     (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
-  induction a using TensorProduct.induction_on with
-  | zero => simp only [UniformSpace.Completion.coe_zero, map_zero]
+  induction a using TensorProduct.inductionOn with
   | tmul x y =>
       change commEquiv.symm (amplifyRight S (commEquiv (x ⊗ₕ y))) = amplifyLeft S (x ⊗ₕ y)
       rw [commEquiv_tmul, amplifyRight_tmul, commEquiv_symm_tmul, amplifyLeft_tmul]
@@ -634,11 +627,9 @@ lemma algAmplifyLeft_inner_adjoint (A : H₁ →L[ℂ] H₁) (a b : H₁ ⊗[ℂ
     inner ℂ (algAmplifyLeft (ContinuousLinearMap.adjoint A) a) b
       = inner ℂ a (algAmplifyLeft A b) := by
   simp only [algAmplifyLeft, LinearMap.mkContinuous_apply]
-  induction a using TensorProduct.induction_on with
-  | zero => simp
+  induction a using TensorProduct.inductionOn with
   | tmul x y =>
-    induction b using TensorProduct.induction_on with
-    | zero => simp
+    induction b using TensorProduct.inductionOn with
     | tmul x' y' =>
         simp only [TensorProduct.map_tmul, LinearMap.id_coe, id_eq, ContinuousLinearMap.coe_coe,
           TensorProduct.inner_tmul]
@@ -651,11 +642,9 @@ lemma algAmplifyRight_inner_adjoint (B : H₂ →L[ℂ] H₂) (a b : H₁ ⊗[�
     inner ℂ (algAmplifyRight (ContinuousLinearMap.adjoint B) a) b
       = inner ℂ a (algAmplifyRight B b) := by
   simp only [algAmplifyRight, LinearMap.mkContinuous_apply]
-  induction a using TensorProduct.induction_on with
-  | zero => simp
+  induction a using TensorProduct.inductionOn with
   | tmul x y =>
-    induction b using TensorProduct.induction_on with
-    | zero => simp
+    induction b using TensorProduct.inductionOn with
     | tmul x' y' =>
         simp only [TensorProduct.map_tmul, LinearMap.id_coe, id_eq, ContinuousLinearMap.coe_coe,
           TensorProduct.inner_tmul]
@@ -788,17 +777,14 @@ Hilbert sum of `ι`-many copies of `K`. Density is proved by approximating a pur
 the range of `tmulSingleₗᵢ i`. -/
 lemma isHilbertSum_tmulSingleₗᵢ [CompleteSpace K] :
     IsHilbertSum ℂ (fun _ : ι => K) (fun i => tmulSingleₗᵢ (K := K) i) := by
-  haveI : ∀ _ : ι, CompleteSpace K := fun _ => inferInstance
+  have : ∀ _ : ι, CompleteSpace K := fun _ => inferInstance
   refine IsHilbertSum.mk orthogonalFamily_tmulSingleₗᵢ ?_
   set M : Submodule ℂ (HilbertTensor (lp (fun _ : ι => ℂ) 2) K) :=
     ⨆ i, LinearMap.range (tmulSingleₗᵢ (K := K) i).toLinearMap with hM
   have key : ∀ z : (lp (fun _ : ι => ℂ) 2) ⊗[ℂ] K,
       ((z : HilbertTensor (lp (fun _ : ι => ℂ) 2) K)) ∈ M.topologicalClosure := by
     intro z
-    induction z using TensorProduct.induction_on with
-    | zero =>
-        rw [UniformSpace.Completion.coe_zero]
-        exact (M.topologicalClosure).zero_mem
+    induction z using TensorProduct.inductionOn with
     | add p q hp hq =>
         rw [UniformSpace.Completion.coe_add]
         exact (M.topologicalClosure).add_mem hp hq

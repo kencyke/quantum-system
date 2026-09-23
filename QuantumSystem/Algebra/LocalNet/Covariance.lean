@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.LocalNet.Net
@@ -107,7 +112,7 @@ variable (N) in
 def id : N.Covariance where
   σ := OrderIso.refl K
   map_orthogonal_iff _ _ := Iff.rfl
-  β _ := StarAlgEquiv.refl
+  β _ := StarAlgEquiv.refl ℂ _
   β_incl _ _ := rfl
 
 /-- **Composition of covariances**: apply `b`, then `a`. The region automorphisms compose, and
@@ -119,7 +124,7 @@ def comp (a b : N.Covariance) : N.Covariance where
       (b.map_orthogonal_iff (O₁ := O₁) (O₂ := O₂))
   β O := (b.β O).trans (a.β (b.σ O))
   β_incl h x := by
-    simp only [StarAlgEquiv.trans_apply]
+    change a.β (b.σ _) (b.β _ (N.incl h x)) = N.incl _ (a.β (b.σ _) (b.β _ x))
     rw [b.β_incl h]
     exact a.β_incl (b.σ.monotone h) ((b.β _) x)
 

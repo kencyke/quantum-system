@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Classes
@@ -221,7 +226,7 @@ theorem isDirectedOrder_iff_forall_orthogonalHat_iff (K : Type*) [Preorder K] :
     exact orthogonalHat_iff
   · intro h
     refine ⟨fun O₁ O₂ => ?_⟩
-    letI : CausalOrthogonality K :=
+    let : CausalOrthogonality K :=
       { Orthogonal := fun _ _ => True
         orthogonal_symm := fun _ _ _ => trivial
         orthogonal_mono_left := fun _ _ _ _ _ => trivial }
@@ -412,7 +417,7 @@ class Faithful {K : Type*} [Preorder K] [CausalOrthogonality K] (N : LocalNet K)
 /-- Transport a local algebra along an equality of regions, as a `*`-isomorphism. Used to identify
     local algebras whose regions are propositionally equal. -/
 def algebraCongr {O O' : K} (h : O = O') : N.algebra O ≃⋆ₐ[ℂ] N.algebra O' := by
-  subst h; exact StarAlgEquiv.refl
+  subst h; exact StarAlgEquiv.refl ℂ _
 
 /-- The isotony embeddings are natural with respect to the region-equality transport. -/
 lemma incl_algebraCongr {O₁ O₂ O₁' O₂' : K} (e₁ : O₁ = O₁') (e₂ : O₂ = O₂')

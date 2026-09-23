@@ -1,6 +1,26 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Topology.Instances.ENNReal.Lemmas
+
+/-!
+# Extending an isometry from a dense subset
+
+An isometry `f : S → Y` defined on a dense subset `S` of a pseudometric space `X`, with values in
+a complete Hausdorff space `Y`, extends (via `Dense.extend`) to a map `X → Y` that is continuous,
+agrees with `f` on `S`, and is itself an isometry.
+
+## Main definitions and results
+
+* `MetricSpaceCompletion.extendDense`: the extension of `f` to `X`.
+* `MetricSpaceCompletion.extended_isometry_is_continuous`
+* `MetricSpaceCompletion.extended_isometry_is_induced`
+* `MetricSpaceCompletion.extended_isometry_is_isometry`
+-/
 
 @[expose] public section
 

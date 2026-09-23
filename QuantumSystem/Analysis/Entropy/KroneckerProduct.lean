@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Analysis.CFC.Diagonal
@@ -125,7 +130,7 @@ lemma trace_mul_kronecker_one_right
     intro a b a'
     rw [Finset.sum_eq_single b]
     · simp
-    · intro b' _ hb'; rw [if_neg hb']; ring
+    · intro b' _ hb'; rw [ite_eq_right hb']; ring
     · simp
   simp_rw [inner]
   refine Finset.sum_congr rfl fun a _ => ?_
@@ -155,7 +160,7 @@ lemma trace_mul_kronecker_one_left
     refine Finset.sum_congr rfl fun b' _ => ?_
     rw [Finset.sum_eq_single a]
     · simp
-    · intro a' _ ha'; rw [if_neg ha']; ring
+    · intro a' _ ha'; rw [ite_eq_right ha']; ring
     · simp
   simp_rw [inner]
   -- Goal: ∑ a, ∑ b, ∑ b', ρ (a, b) (a, b') * Y b' b

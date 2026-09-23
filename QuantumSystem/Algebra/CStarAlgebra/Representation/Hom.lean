@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
@@ -69,7 +74,7 @@ noncomputable def comp (S : Hom R₂ R₃) (T : Hom R₁ R₂) : Hom R₁ R₃ w
     have hT := congrArg (fun (f : R₁.H →L[ℂ] R₂.H) => f x) (T.intertwines a)
     have hS := congrArg (fun (f : R₂.H →L[ℂ] R₃.H) => f (T.toContinuousLinearMap x))
       (S.intertwines a)
-    simp only [ContinuousLinearMap.coe_comp', Function.comp_apply] at hT hS ⊢
+    simp only [ContinuousLinearMap.coe_comp, Function.comp_apply] at hT hS ⊢
     rw [← hT] at hS
     exact hS
 
