@@ -625,7 +625,7 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m]
     have heq : {M : Matrix m m ℂ | M.PosSemidef} =
         {M | M.IsHermitian} ∩ ⋂ y : m → ℂ, {M | 0 ≤ star y ⬝ᵥ M.mulVec y} := by
       ext M
-      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iInter]
+      simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter]
       exact Matrix.posSemidef_iff_dotProduct_mulVec
     rw [heq]
     refine IsClosed.inter ?_ ?_

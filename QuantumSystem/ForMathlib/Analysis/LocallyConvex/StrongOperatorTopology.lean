@@ -101,14 +101,14 @@ lemma isSOTClosed_centralizer (S : Set B) : IsSOTClosed (H := H) (Set.centralize
       ⋂ a ∈ S, {T : BSOT | PointwiseConvergenceCLM.postcomp H a T
         = PointwiseConvergenceCLM.precomp H a T} := by
     ext T
-    simp only [Set.mem_toSOT_iff, Set.mem_centralizer_iff, Set.mem_iInter, Set.mem_setOf_eq]
+    simp only [Set.mem_toSOT_iff, Set.mem_centralizer_iff, Set.mem_iInter, Set.mem_ofPred_eq]
     constructor
     · intro hT a ha
       ext x
-      simpa [ContinuousLinearMap.mul_apply] using congrArg (fun R => R x) (hT a ha)
+      simpa [mul_apply_eq_comp] using congrArg (fun R => R x) (hT a ha)
     · intro hT a ha
       ext x
-      simpa [ContinuousLinearMap.mul_apply] using congrArg (fun R => R x) (hT a ha)
+      simpa [mul_apply_eq_comp] using congrArg (fun R => R x) (hT a ha)
   rw [IsSOTClosed, key]
   exact isClosed_biInter fun a _ =>
     isClosed_eq (PointwiseConvergenceCLM.postcomp H a).continuous

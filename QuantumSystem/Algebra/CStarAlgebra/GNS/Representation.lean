@@ -524,7 +524,7 @@ private lemma linear_isometry_equiv_intertwines (T₁ T₂ : Representation ω)
     ∀ a : A, (U : T₁.H →L[ℂ] T₂.H) ∘L T₁.π a = T₂.π a ∘L (U : T₁.H →L[ℂ] T₂.H) := by
   intro a
   ext x
-  simp only [ContinuousLinearMap.coe_comp', Function.comp_apply]
+  simp only [ContinuousLinearMap.coe_comp, Function.comp_apply]
   have h_dense := dense_cyclicSet T₁
   unfold cyclicSet at h_dense
   have h_on_cyclic : ∀ b : A, (U : T₁.H →L[ℂ] T₂.H) (T₁.π a (T₁.π b T₁.ξ)) =
@@ -641,13 +641,13 @@ private lemma extend_cyclic_map_add (T₁ T₂ : Representation ω) :
     simpa [U_fun] using (extendCyclicMap_eq (T₁ := T₁) (T₂ := T₂) ⟨_, mem_cyclicSet (T := T₁) b⟩).trans
       (cyclicMap_well_defined T₁ T₂ ⟨_, mem_cyclicSet (T := T₁) b⟩ b rfl)
   calc U_fun (T₁.π a T₁.ξ + T₁.π b T₁.ξ)
-      = U_fun ((T₁.π a + T₁.π b) T₁.ξ) := by rw [ContinuousLinearMap.add_apply]
+      = U_fun ((T₁.π a + T₁.π b) T₁.ξ) := by rw [add_apply]
     _ = U_fun (T₁.π (a + b) T₁.ξ) := by
         rw [show T₁.π (a + b) = T₁.π a + T₁.π b from T₁.π.map_add' a b]
     _ = T₂.π (a + b) T₂.ξ := hUab
     _ = (T₂.π a + T₂.π b) T₂.ξ := by
         rw [show T₂.π (a + b) = T₂.π a + T₂.π b from T₂.π.map_add' a b]
-    _ = T₂.π a T₂.ξ + T₂.π b T₂.ξ := by rw [ContinuousLinearMap.add_apply]
+    _ = T₂.π a T₂.ξ + T₂.π b T₂.ξ := by rw [add_apply]
     _ = U_fun (T₁.π a T₁.ξ) + U_fun (T₁.π b T₁.ξ) := by rw [← hUa, ← hUb]
 
 private lemma extend_cyclic_map_smul (T₁ T₂ : Representation ω) :

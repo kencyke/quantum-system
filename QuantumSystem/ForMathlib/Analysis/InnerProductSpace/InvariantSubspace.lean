@@ -70,7 +70,7 @@ lemma commutes_starProjection_of_invariant
   ext x
   -- Unfold multiplication as composition.
   -- After this, the goal is `T (P x) = P (T x)`.
-  simp only [ContinuousLinearMap.mul_apply]
+  simp only [mul_apply_eq_comp]
   have hxK : K.starProjection x ∈ K := Submodule.starProjection_apply_mem (U := K) x
   have hxKorth : x - K.starProjection x ∈ Kᗮ := Submodule.sub_starProjection_mem_orthogonal (K := K) x
   have hTxK : T (K.starProjection x) ∈ K :=
@@ -118,7 +118,7 @@ lemma isInvariant_of_commutes_starProjection
   have hcomm_apply : (K.starProjection * T) x = (T * K.starProjection) x :=
     congrArg (fun f => f x) hcomm
   have hxTx : K.starProjection (T x) = T x := by
-    simpa [ContinuousLinearMap.mul_apply, hxPx] using hcomm_apply
+    simpa [mul_apply_eq_comp, hxPx] using hcomm_apply
   exact (Submodule.starProjection_eq_self_iff (K := K)).1 hxTx
 
 
@@ -133,7 +133,7 @@ lemma isInvariant_orthogonal_of_commutes_starProjection
   have hcomm_apply : (K.starProjection * T) y = (T * K.starProjection) y :=
     congrArg (fun f => f y) hcomm
   have hyTy : K.starProjection (T y) = 0 := by
-    simpa [ContinuousLinearMap.mul_apply, hyPy] using hcomm_apply
+    simpa [mul_apply_eq_comp, hyPy] using hcomm_apply
   exact (Submodule.starProjection_apply_eq_zero_iff (K := K)).1 hyTy
 
 end NonComplete

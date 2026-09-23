@@ -203,7 +203,7 @@ theorem IsFactor.exists_orthEquivFam_top {N : VonNeumannAlgebra H}
   have hpf : ∀ f ∈ F, p * f = f := by
     intro f hf
     ext x
-    simp only [ContinuousLinearMap.mul_apply, hp]
+    simp only [mul_apply_eq_comp, hp]
     rw [Submodule.starProjection_eq_self_iff]
     exact Submodule.le_topologicalClosure _ (Submodule.subset_span ⟨f, hf, x, rfl⟩)
   by_contra hMtop
@@ -432,7 +432,7 @@ lemma norm_apply {v : H →L[ℂ] H} {p : H →L[ℂ] H}
     (hsource : star v * v = p) {x : H} (hx : (p : H →L[ℂ] H) x = x) : ‖v x‖ = ‖x‖ := by
   have hinner : (inner ℂ (v x) (v x) : ℂ) = inner ℂ x x := by
     rw [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.star_eq_adjoint,
-      ← ContinuousLinearMap.mul_apply, hsource, hx]
+      ← mul_apply_eq_comp, hsource, hx]
   have h2 : ‖v x‖ ^ 2 = ‖x‖ ^ 2 := by
     rw [← inner_self_eq_norm_sq (𝕜 := ℂ), ← inner_self_eq_norm_sq (𝕜 := ℂ)]
     exact congrArg RCLike.re hinner
@@ -443,7 +443,7 @@ lemma norm_apply {v : H →L[ℂ] H} {p : H →L[ℂ] H}
 then `q (v x) = v x`. -/
 lemma apply_mem_range {v : H →L[ℂ] H} (hv : IsPartialIsometry v) {q : H →L[ℂ] H}
     (hrange : v * star v = q) (x : H) : (q : H →L[ℂ] H) (v x) = v x := by
-  rw [← ContinuousLinearMap.mul_apply, ← hrange, hv]
+  rw [← mul_apply_eq_comp, ← hrange, hv]
 
 /-- A partial isometry `v` with source projection `star v * v = p` and range projection
 `v * star v = q` restricts to a linear isometric equivalence from the source subspace
@@ -462,7 +462,7 @@ noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v
     rwa [star_star] at h
   have hfix : ∀ {x : H}, x ∈ LinearMap.range (p : H →ₗ[ℂ] H) → (p : H →L[ℂ] H) x = x := by
     rintro x ⟨z, rfl⟩
-    rw [ContinuousLinearMap.coe_coe, ← ContinuousLinearMap.mul_apply, hpidem]
+    rw [ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hpidem]
   refine LinearIsometryEquiv.ofSurjective
     { toFun := fun ξ => ⟨v ξ.1, ⟨v ξ.1, by
         rw [ContinuousLinearMap.coe_coe]; exact hv.apply_mem_range hrange ξ.1⟩⟩
@@ -472,14 +472,14 @@ noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v
   rintro ⟨η, hη⟩
   have hqfix : (q : H →L[ℂ] H) η = η := by
     obtain ⟨z, hz⟩ := hη
-    rw [← hz, ContinuousLinearMap.coe_coe, ← ContinuousLinearMap.mul_apply, hqidem]
+    rw [← hz, ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hqidem]
   have hmem : star v η ∈ LinearMap.range (p : H →ₗ[ℂ] H) := by
     refine ⟨star v η, ?_⟩
     rw [ContinuousLinearMap.coe_coe, show (p : H →L[ℂ] H) (star v η) = (p * star v) η from rfl,
       ← hsource, hsvpi]
   refine ⟨⟨star v η, hmem⟩, Subtype.ext ?_⟩
   change v (star v η) = η
-  rw [← ContinuousLinearMap.mul_apply, hrange, hqfix]
+  rw [← mul_apply_eq_comp, hrange, hqfix]
 
 end IsPartialIsometry
 
@@ -487,7 +487,7 @@ end IsPartialIsometry
 lemma IsStarProjection.apply_eq_self_of_mem_range {p : H →L[ℂ] H} (hp : IsStarProjection p)
     {x : H} (hx : x ∈ LinearMap.range (p : H →ₗ[ℂ] H)) : (p : H →L[ℂ] H) x = x := by
   obtain ⟨z, rfl⟩ := hx
-  rw [ContinuousLinearMap.coe_coe, ← ContinuousLinearMap.mul_apply, hp.isIdempotentElem]
+  rw [ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hp.isIdempotentElem]
 
 /-- The range of a star projection is closed: it equals the kernel of `1 - p`. -/
 lemma IsStarProjection.isClosed_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
@@ -496,10 +496,10 @@ lemma IsStarProjection.isClosed_range {p : H →L[ℂ] H} (hp : IsStarProjection
       = LinearMap.ker ((1 - p : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
     ext x
     simp only [LinearMap.mem_range, LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
-      ContinuousLinearMap.sub_apply, ContinuousLinearMap.one_apply, sub_eq_zero]
+      ContinuousLinearMap.sub_apply, one_apply_eq_self, sub_eq_zero]
     constructor
     · rintro ⟨z, rfl⟩
-      rw [← ContinuousLinearMap.mul_apply, hp.isIdempotentElem]
+      rw [← mul_apply_eq_comp, hp.isIdempotentElem]
     · intro hx
       exact ⟨x, hx.symm⟩
   rw [hker]
@@ -523,11 +523,11 @@ lemma IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPa
   have hqfix : (q : H →L[ℂ] H) (η : H) = (η : H) := hq.apply_eq_self_of_mem_range η.2
   have hmem : star v (η : H) ∈ LinearMap.range (p : H →ₗ[ℂ] H) :=
     ⟨star v (η : H), by
-      rw [ContinuousLinearMap.coe_coe, ← hsource, ← ContinuousLinearMap.mul_apply, hsvpi]⟩
+      rw [ContinuousLinearMap.coe_coe, ← hsource, ← mul_apply_eq_comp, hsvpi]⟩
   have hG : (hv.sourceRangeEquiv hsource hrange) ⟨star v (η : H), hmem⟩ = η := by
     apply Subtype.ext
     change v (star v (η : H)) = (η : H)
-    rw [← ContinuousLinearMap.mul_apply, hrange, hqfix]
+    rw [← mul_apply_eq_comp, hrange, hqfix]
   have hsymm : (hv.sourceRangeEquiv hsource hrange).symm η = ⟨star v (η : H), hmem⟩ :=
     (hv.sourceRangeEquiv hsource hrange).injective (by
       rw [LinearIsometryEquiv.apply_symm_apply]; exact hG.symm)

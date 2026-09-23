@@ -442,7 +442,7 @@ private lemma trace_ρlogσ_eq (ρ σ : DensityMatrix n) :
     rw [Finset.sum_eq_single x]
     · simp only [if_true]
     · intro b _ hb
-      simp only [if_neg hb, mul_zero]
+      simp only [ite_eq_right hb, mul_zero]
     · intro h; exact absurd (Finset.mem_univ x) h
   have h2 : ∀ x, (∑ x_1, star (W x_1 x) * if x_1 = j then ↑(Real.log (ev_σ x_1)) else 0) =
       star (W j x) * ↑(Real.log (ev_σ j)) := by
@@ -450,7 +450,7 @@ private lemma trace_ρlogσ_eq (ρ σ : DensityMatrix n) :
     rw [Finset.sum_eq_single j]
     · simp only [if_true]
     · intro b _ hb
-      simp only [if_neg hb, mul_zero]
+      simp only [ite_eq_right hb, mul_zero]
     · intro h; exact absurd (Finset.mem_univ j) h
   simp only [h1, h2]
   rw [Complex.re_sum]
@@ -1237,21 +1237,21 @@ private lemma pinching_inequality_Fs {r : ℕ} [NeZero r]
       have hψPω : ψ Pω = Matrix.fromBlocks ω₀₀ 0 0 Qω := by
         ext (a | ⟨i, a⟩) (b | ⟨j, b⟩)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, Matrix.fromBlocks_apply₁₁]
-          exact hPω_entry 0 0 a b |>.trans (if_pos rfl)
+          exact hPω_entry 0 0 a b |>.trans (ite_eq_left rfl)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₁₂]
-          exact hPω_entry 0 j.succ a b |>.trans (if_neg (Fin.succ_ne_zero j).symm)
+          exact hPω_entry 0 j.succ a b |>.trans (ite_eq_right (Fin.succ_ne_zero j).symm)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₂₁]
-          exact hPω_entry i.succ 0 a b |>.trans (if_neg (Fin.succ_ne_zero i))
+          exact hPω_entry i.succ 0 a b |>.trans (ite_eq_right (Fin.succ_ne_zero i))
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inr,
             Matrix.fromBlocks_apply₂₂, Qω, embed]
       have hψPτ : ψ Pτ = Matrix.fromBlocks τ₀₀ 0 0 Qτ := by
         ext (a | ⟨i, a⟩) (b | ⟨j, b⟩)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, Matrix.fromBlocks_apply₁₁]
-          exact hPτ_entry 0 0 a b |>.trans (if_pos rfl)
+          exact hPτ_entry 0 0 a b |>.trans (ite_eq_left rfl)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₁₂]
-          exact hPτ_entry 0 j.succ a b |>.trans (if_neg (Fin.succ_ne_zero j).symm)
+          exact hPτ_entry 0 j.succ a b |>.trans (ite_eq_right (Fin.succ_ne_zero j).symm)
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inl, he_inr, Matrix.fromBlocks_apply₂₁]
-          exact hPτ_entry i.succ 0 a b |>.trans (if_neg (Fin.succ_ne_zero i))
+          exact hPτ_entry i.succ 0 a b |>.trans (ite_eq_right (Fin.succ_ne_zero i))
         · simp only [hψ_eq, Matrix.submatrix_apply, he_inr,
             Matrix.fromBlocks_apply₂₂, Qτ, embed]
       -- ψ preserves trace
@@ -1462,7 +1462,7 @@ theorem relativeEntropy_channel_le
     have hD : relativeEntropy ρ σ =
         ↑(ρ.toMatrix * (log ρ - log σ)).trace.re := by
       unfold relativeEntropy
-      simp only [if_pos hsupp]; rfl
+      simp only [ite_eq_left hsupp]; rfl
     rw [hDch, hD, EReal.coe_le_coe_iff]
     -- Use derivative argument: define g(s) = F_s(Φρ, Φσ) - F_s(ρ, σ)
     let g : ℝ → ℝ := fun s =>

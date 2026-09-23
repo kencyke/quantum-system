@@ -124,10 +124,10 @@ noncomputable def piApply (T : GNS.Representation ω) (v : T.H) : A →L[ℂ] T.
     { toFun := fun a => (T.π a) v
       map_add' := by
         intro a b
-        simp [map_add, ContinuousLinearMap.add_apply]
+        simp [map_add, add_apply]
       map_smul' := by
         intro c a
-        simp [map_smul, ContinuousLinearMap.smul_apply] }
+        simp [map_smul, smul_apply] }
     ‖v‖
     (by
       intro a

@@ -37,7 +37,7 @@ lemma norm_character_eq_one [Nontrivial B]
     intro x
     have h_mem : φ x ∈ spectrum ℂ x := WeakDual.CharacterSpace.apply_mem_spectrum φ x
     have h_le : (‖φ x‖₊ : ENNReal) ≤ ‖x‖₊ :=
-      (le_iSup₂_of_le (φ x) h_mem le_rfl).trans (spectrum.spectralRadius_le_nnnorm x)
+      (le_iSup₂_of_le (φ x) h_mem le_rfl).trans (spectralRadius_le_nnnorm x)
     simp only [one_mul]; exact mod_cast h_le
   · -- ‖φ‖ ≥ 1: since φ(1) = 1 and ‖1‖ = 1
     have h_le := (WeakDual.toStrongDual φ.val).le_opNorm 1
@@ -82,7 +82,7 @@ lemma norm_sq_add_imaginary_unit_of_selfAdjoint [Nontrivial B] (a : B) (ha : IsS
     rw [hb_poly, spectrum.map_polynomial_aeval]; simp [hp_def]
   -- Compute spectral radius
   set ρa := spectralRadius ℂ a with hρa_def
-  have hρa_ne_top : ρa ≠ ⊤ := ne_of_lt (lt_of_le_of_lt (spectrum.spectralRadius_le_nnnorm a) ENNReal.coe_lt_top)
+  have hρa_ne_top : ρa ≠ ⊤ := ne_of_lt (lt_of_le_of_lt (spectralRadius_le_nnnorm a) ENNReal.coe_lt_top)
   set R := ρa.toReal with hR_def
   have hρa_ofReal : ENNReal.ofReal R = ρa := ENNReal.ofReal_toReal hρa_ne_top
   have hR_nonneg : 0 ≤ R := ENNReal.toReal_nonneg

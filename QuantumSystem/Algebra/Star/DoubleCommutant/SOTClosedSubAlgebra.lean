@@ -198,7 +198,7 @@ lemma mem_sotClosure_of_mem_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B) 
     have hAamp_orbit : Set.range (fun a : Aamp => (a : Hn (H := H) n →L[ℂ] Hn (H := H) n) x_amp) =
         {y | ∃ S ∈ (A : Set _), y = diagonal (H := H) (n := n) S x_amp} := by
       ext y
-      simp only [Set.mem_range, Set.mem_setOf_eq]
+      simp only [Set.mem_range, Set.mem_ofPred_eq]
       constructor
       · rintro ⟨⟨a, ha⟩, rfl⟩
         simp only [Aamp, NonUnitalStarSubalgebra.mem_map, diagonalStarAlgHom, StarAlgHom.coe_mk',
@@ -221,7 +221,7 @@ lemma mem_sotClosure_of_mem_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B) 
     have hset_is_image : {y | ∃ S ∈ (A : Set _), y = diagonal (H := H) (n := n) S x_amp} =
         A.toSubmodule.map (evalAt.comp diagMap) := by
       ext y
-      simp only [Set.mem_setOf_eq]
+      simp only [Set.mem_ofPred_eq]
       constructor
       · rintro ⟨S, hS, rfl⟩
         exact ⟨S, hS, rfl⟩

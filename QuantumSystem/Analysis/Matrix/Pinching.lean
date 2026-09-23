@@ -71,7 +71,7 @@ lemma pinchingUnitary_isUnitary {r : ℕ} [NeZero r] (k : Fin r) :
       convert Finset.sum_eq_single (i, a) ?_ ?_ using 1
       · simp only [↓reduceIte]
       · intro x _ hne
-        simp only [if_neg hne, star_zero, zero_mul]
+        simp only [ite_eq_right hne, star_zero, zero_mul]
       · intro habs; exact absurd (Finset.mem_univ _) habs
     rw [hsum]
     -- star(z) * z = |z|^2 = 1 for z on unit circle
@@ -225,7 +225,7 @@ lemma pinching_average_eq_blockDiag {r : ℕ} [NeZero r]
       exact hij (Fin.ext hival)
     have hrsum := rootOfUnity_sum_eq_zero r ((i.val : ℤ) - j.val) hdiff
     rw [hrsum]
-    simp only [mul_zero, zero_mul, if_neg hij]
+    simp only [mul_zero, zero_mul, ite_eq_right hij]
 
 /-! ### Fin product equivalence -/
 

@@ -306,13 +306,13 @@ lemma starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
     refine Submodule.topologicalClosure_minimal _ ?_ (p - 1).isClosed_ker
     rintro z ⟨v, rfl⟩
     simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, ContinuousLinearMap.sub_apply,
-      ContinuousLinearMap.one_apply]
+      one_apply_eq_self]
     rw [show p (x v) = (p * x) v from rfl, hpx]
     exact sub_self _
   ext w
   have hker := hle (M.starProjection_apply_mem w)
   simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, ContinuousLinearMap.sub_apply,
-    ContinuousLinearMap.one_apply, sub_eq_zero] at hker
+    one_apply_eq_self, sub_eq_zero] at hker
   exact hker
 
 /-- The range projections of `x₁` and `x₂` with `x₁` self-adjoint and `x₁ * x₂ = 0` are
@@ -409,7 +409,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
   have hcalc : ∀ (c : ℝ) (v : H), RCLike.re (inner ℂ ((x - (c : ℂ) • p) v) v)
       = RCLike.re (inner ℂ (x v) v) - c * RCLike.re (inner ℂ (p v) v) := by
     intro c v
-    rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply, inner_sub_left,
+    rw [ContinuousLinearMap.sub_apply, smul_apply, inner_sub_left,
       inner_smul_left, Complex.conj_ofReal, map_sub,
       show RCLike.re ((c : ℂ) * inner ℂ (p v) v) = c * RCLike.re (inner ℂ (p v) v) from
         RCLike.re_ofReal_mul c _]
@@ -427,7 +427,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
   have hmemA : ∀ c : ℝ, c ∈ A ↔
       ∀ v, c * ‖p v‖ ^ 2 ≤ RCLike.re (inner ℂ (x v) v) := by
     intro c
-    rw [hA, Set.mem_setOf_eq, hpos_iff _ (hsa_c c)]
+    rw [hA, Set.mem_ofPred_eq, hpos_iff _ (hsa_c c)]
     constructor
     · intro h v
       have := h v
@@ -439,7 +439,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
   -- `x` is supported on the corner: `re ⟪x v, v⟫ = re ⟪x (p v), p v⟫`
   have hxvv : ∀ v, RCLike.re (inner ℂ (x v) v) = RCLike.re (inner ℂ (x (p v)) (p v)) := by
     intro v
-    have h1 : x v = x (p v) := by rw [← ContinuousLinearMap.mul_apply, hxp]
+    have h1 : x v = x (p v) := by rw [← mul_apply_eq_comp, hxp]
     have h2 : x (p v) = p (x (p v)) := by
       rw [show p (x (p v)) = (p * x) (p v) from rfl, hpx]
     calc RCLike.re (inner ℂ (x v) v) = RCLike.re (inner ℂ (p (x (p v))) v) := by
@@ -478,7 +478,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     have hAeq : A = ⋂ v : H,
         {c : ℝ | c * ‖p v‖ ^ 2 ≤ RCLike.re (inner ℂ (x v) v)} := by
       ext c
-      simp only [Set.mem_iInter, Set.mem_setOf_eq, ← hmemA c]
+      simp only [Set.mem_iInter, Set.mem_ofPred_eq, ← hmemA c]
     rw [hAeq]
     exact isClosed_iInter fun v =>
       isClosed_le (continuous_id.mul continuous_const) continuous_const
@@ -510,7 +510,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     have hstep : ∀ v, RCLike.re (inner ℂ (((c : ℂ) • p - x) v) v)
         = c * ‖p v‖ ^ 2 - RCLike.re (inner ℂ (x v) v) := by
       intro v
-      rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.smul_apply, inner_sub_left,
+      rw [ContinuousLinearMap.sub_apply, smul_apply, inner_sub_left,
         inner_smul_left, Complex.conj_ofReal, map_sub,
         show RCLike.re ((c : ℂ) * inner ℂ (p v) v) = c * RCLike.re (inner ℂ (p v) v) from
           RCLike.re_ofReal_mul c _, hpvv]
@@ -526,7 +526,7 @@ lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     have hBeq : {c : ℝ | x - (c : ℂ) • p ≤ 0}
         = ⋂ v : H, {c : ℝ | RCLike.re (inner ℂ (x v) v) ≤ c * ‖p v‖ ^ 2} := by
       ext c
-      simp only [Set.mem_setOf_eq, Set.mem_iInter, hnegpos_iff c]
+      simp only [Set.mem_ofPred_eq, Set.mem_iInter, hnegpos_iff c]
     rw [hBeq]
     exact isClosed_iInter fun v =>
       isClosed_le continuous_const (continuous_id.mul continuous_const)

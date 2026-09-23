@@ -309,12 +309,12 @@ lemma isCompletelyPositive_partialTraceRight {X Y : Type*} [Fintype X] [Fintype 
     · simp [traceRightKraus, Matrix.conjTranspose_apply]
     · intro q _ hq
       simp only [traceRightKraus, Matrix.of_apply]
-      rw [if_neg hq]; ring
+      rw [ite_eq_right hq]; ring
     · simp
   · intro q _ hq
     simp only [traceRightKraus, Matrix.conjTranspose_apply, Matrix.of_apply,
       apply_ite (star · : ℂ → ℂ), star_one, star_zero]
-    rw [if_neg hq]; simp
+    rw [ite_eq_right hq]; simp
   · simp
 
 lemma isTracePreserving_partialTraceRight {X Y : Type*} [Fintype X] [Fintype Y] :
@@ -355,12 +355,12 @@ lemma isCompletelyPositive_reindexₗ {Z W : Type*} [Fintype Z] (e : Z ≃ W) :
     · simp [reindexKraus]
     · intro q _ hq
       simp only [reindexKraus, Matrix.of_apply]
-      rw [if_neg hq]; ring
+      rw [ite_eq_right hq]; ring
     · simp
   · intro z _ hz
     simp only [reindexKraus, Matrix.conjTranspose_apply, Matrix.of_apply,
       apply_ite (star · : ℂ → ℂ), star_one, star_zero]
-    rw [if_neg hz]; simp
+    rw [ite_eq_right hz]; simp
   · simp
 
 lemma isTracePreserving_reindexₗ {Z W : Type*} [Fintype Z] [Fintype W] (e : Z ≃ W) :

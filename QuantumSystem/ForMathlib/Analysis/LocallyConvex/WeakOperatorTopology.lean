@@ -352,11 +352,11 @@ lemma exists_wotCLM_sep_of_isClosed_submodule_sum {A : Submodule ℂ BWOT}
   refine And.intro ?_ ?_
   · intro S hSA
     have : (∑ i : ↥I, (coeff i) • (inducingFnRestrictCLM (H := H) I S i)) = 0 := hvan S hSA
-    simpa [ContinuousLinearMap.sum_apply, ContinuousLinearMap.smul_apply,
+    simpa [sum_apply, smul_apply,
       ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply, this]
   · intro hf
     have : (∑ i : ↥I, (coeff i) • (inducingFnRestrictCLM (H := H) I T i)) = 0 := by
-      simpa [ContinuousLinearMap.sum_apply, ContinuousLinearMap.smul_apply,
+      simpa [sum_apply, smul_apply,
         ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply] using hf
     exact hneq (by simpa [mul_comm, mul_left_comm, mul_assoc, Algebra.smul_mul_assoc] using this)
 

@@ -161,7 +161,7 @@ lemma isInvariant_cyclicSubspace_of_mem (A : NonUnitalStarSubalgebra ℂ B) (x :
       refine Submodule.subset_span ?_
       refine ⟨⟨a * (b : B), hab⟩, ?_⟩
       -- Evaluate.
-      simp [ContinuousLinearMap.mul_apply]
+      simp [mul_apply_eq_comp]
     · intro u v hu hv hu' hv'
       simpa [map_add] using S.add_mem hu' hv'
     · intro c u hu hu'
@@ -233,7 +233,7 @@ lemma mem_cyclicSubspace_of_actsNondegenerately (A : NonUnitalStarSubalgebra ℂ
     have hTx : T x ∈ K := (subset_cyclicSubspace (H := H) A x) ⟨⟨T, hT⟩, rfl⟩
     have hcomm : T * K.starProjection = K.starProjection * T := hP T hT
     have h1 : T (K.starProjection x) = K.starProjection (T x) := by
-      simpa [ContinuousLinearMap.mul_apply] using congrArg (fun f => f x) hcomm
+      simpa [mul_apply_eq_comp] using congrArg (fun f => f x) hcomm
     have h2 : K.starProjection (T x) = T x :=
       (Submodule.starProjection_eq_self_iff (K := K)).2 hTx
     simp [map_sub, h1, h2]
@@ -389,7 +389,7 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
         conv_lhs =>
           rw [show f = ∑ i : ↥I,
             (coeff i) • ((ContinuousLinearMap.proj i).comp (inducingFnRestrictCLM (H := H) I)) from rfl]
-        simp only [ContinuousLinearMap.sum_apply, ContinuousLinearMap.smul_apply,
+        simp only [sum_apply, smul_apply,
           ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply]
         rw [show (∑ i : ↥I, coeff i • (inducingFnRestrictCLM (H := H) I) (toWOTEquiv S) i) =
             ∑ i : Fin n, coeff (e i) • (inducingFnRestrictCLM (H := H) I) (toWOTEquiv S) (e i) from hsum]

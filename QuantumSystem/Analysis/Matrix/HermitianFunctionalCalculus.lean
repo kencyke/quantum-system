@@ -145,7 +145,7 @@ lemma cfc_inv_add_const {m : Type*} [Fintype m] [DecidableEq m]
   have hunit : IsUnit (A + (t : ℂ) • 1) := hposdef.isUnit
   let _ := hunit.invertible
   have hcfcaff_inv : Ring.inverse (cfc (fun x : ℝ => x + t) A) = (A + (t : ℂ) • 1)⁻¹ := by
-    simpa [hcfcaff] using (Ring.inverse_unit hunit.unit)
+    simp [hcfcaff]
   rw [hcfcinv, hcfcaff_inv]
 
 /-- Resolvent form for `cfc` on PSD matrices:
@@ -209,15 +209,15 @@ theorem cfc_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
     [Fintype n] [DecidableEq n] {M : Matrix m m ℂ} (hM : M.IsHermitian)
     (f : ℝ → ℝ) (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
     cfc f (φ M) = φ (cfc f M) := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
+  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix n n ℂ) := by
+  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
   -- View `φ` as an ℝ-`StarAlgHom` to apply `StarAlgHomClass.map_cfc`.
   let ψ : Matrix m m ℂ →⋆ₐ[ℝ] Matrix n n ℂ :=
@@ -431,10 +431,10 @@ lemma matrixInvSqrt_commute_of_commute {n : Type*} [Fintype n] [DecidableEq n]
     {L R : Matrix n n ℂ} (_hL : L.PosSemidef) (hR : R.PosDef)
     (hcomm : L * R = R * L) :
     matrixInvSqrt R hR * L = L * matrixInvSqrt R hR := by
-  letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix n n ℂ) := by
+  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
   have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
   rw [hRinv_eq]
@@ -483,17 +483,17 @@ lemma cfc_fromBlocks_diag {m : Type*} [Fintype m] [DecidableEq m]
     (hD : IsSelfAdjoint D) (f : ℝ → ℝ)
     (hf : ContinuousOn f (spectrum ℝ A ∪ spectrum ℝ D)) :
     cfc f (fromBlocks A 0 0 D) = fromBlocks (cfc f A) 0 0 (cfc f D) := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
+  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
+  let : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : CStarAlgebra (Matrix m m ℂ × Matrix m m ℂ) := inferInstance
-  letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ × Matrix m m ℂ) IsStarNormal :=
+  let : CStarAlgebra (Matrix m m ℂ × Matrix m m ℂ) := inferInstance
+  let : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ × Matrix m m ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℝ (Matrix m m ℂ × Matrix m m ℂ) IsSelfAdjoint :=
+  let : ContinuousFunctionalCalculus ℝ (Matrix m m ℂ × Matrix m m ℂ) IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
   have hcont : Continuous (blockDiagEmbed m) := by
     change Continuous fun p : Matrix m m ℂ × Matrix m m ℂ => fromBlocks p.1 0 0 p.2
@@ -529,24 +529,24 @@ lemma cfc_fromBlocks_diag' {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
     (hD : IsSelfAdjoint D) (f : ℝ → ℝ)
     (hf : ContinuousOn f (spectrum ℝ A ∪ spectrum ℝ D)) :
     cfc f (fromBlocks A 0 0 D) = fromBlocks (cfc f A) 0 0 (cfc f D) := by
-  letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix n n ℂ) := by
+  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
+  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  letI : ContinuousFunctionalCalculus ℂ (Matrix n n ℂ) IsStarNormal :=
+  let : ContinuousFunctionalCalculus ℂ (Matrix n n ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
+  let : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : CStarAlgebra (Matrix n n ℂ × Matrix m m ℂ) := inferInstance
-  letI : ContinuousFunctionalCalculus ℂ (Matrix n n ℂ × Matrix m m ℂ) IsStarNormal :=
+  let : CStarAlgebra (Matrix n n ℂ × Matrix m m ℂ) := inferInstance
+  let : ContinuousFunctionalCalculus ℂ (Matrix n n ℂ × Matrix m m ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℝ (Matrix n n ℂ × Matrix m m ℂ) IsSelfAdjoint :=
+  let : ContinuousFunctionalCalculus ℝ (Matrix n n ℂ × Matrix m m ℂ) IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
   have hcont : Continuous (blockDiagEmbed' n m) := by
     change Continuous fun p : Matrix n n ℂ × Matrix m m ℂ => fromBlocks p.1 0 0 p.2

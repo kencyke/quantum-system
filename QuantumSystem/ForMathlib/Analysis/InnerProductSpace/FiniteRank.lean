@@ -55,8 +55,8 @@ lemma isFiniteRank_zero : IsFiniteRank (0 : H →L[ℂ] H) := by
 
 lemma IsFiniteRank.add {S T : H →L[ℂ] H} (hS : IsFiniteRank S) (hT : IsFiniteRank T) :
     IsFiniteRank (S + T) := by
-  haveI : FiniteDimensional ℂ (LinearMap.range (S : H →ₗ[ℂ] H)) := hS
-  haveI : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
+  have : FiniteDimensional ℂ (LinearMap.range (S : H →ₗ[ℂ] H)) := hS
+  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
   refine Submodule.finiteDimensional_of_le (S₂ := LinearMap.range (S : H →ₗ[ℂ] H) ⊔
     LinearMap.range (T : H →ₗ[ℂ] H)) ?_
   rintro _ ⟨x, rfl⟩
@@ -66,7 +66,7 @@ lemma IsFiniteRank.add {S T : H →L[ℂ] H} (hS : IsFiniteRank S) (hT : IsFinit
 under the image. -/
 lemma IsFiniteRank.mul_left {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H →L[ℂ] H) :
     IsFiniteRank (S * T) := by
-  haveI : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
+  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
   refine Submodule.finiteDimensional_of_le
     (S₂ := (LinearMap.range (T : H →ₗ[ℂ] H)).map (S : H →ₗ[ℂ] H)) ?_
   rintro _ ⟨x, rfl⟩
@@ -76,14 +76,14 @@ lemma IsFiniteRank.mul_left {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H →
 or smaller. -/
 lemma IsFiniteRank.mul_right {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H →L[ℂ] H) :
     IsFiniteRank (T * S) := by
-  haveI : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
+  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
   refine Submodule.finiteDimensional_of_le (S₂ := LinearMap.range (T : H →ₗ[ℂ] H)) ?_
   rintro _ ⟨x, rfl⟩
   exact ⟨S x, rfl⟩
 
 lemma IsFiniteRank.smul {T : H →L[ℂ] H} (hT : IsFiniteRank T) (c : ℂ) :
     IsFiniteRank (c • T) := by
-  haveI : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
+  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
   refine Submodule.finiteDimensional_of_le (S₂ := LinearMap.range (T : H →ₗ[ℂ] H)) ?_
   rintro _ ⟨x, rfl⟩
   exact Submodule.smul_mem _ _ ⟨x, rfl⟩
@@ -102,7 +102,7 @@ variable [CompleteSpace H]
 range is the image of the finite-dimensional subspace `ran T`. -/
 lemma IsFiniteRank.adjoint {T : H →L[ℂ] H} (hT : IsFiniteRank T) :
     IsFiniteRank (ContinuousLinearMap.adjoint T) := by
-  haveI : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
+  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
   refine Submodule.finiteDimensional_of_le
     (S₂ := (LinearMap.range (T : H →ₗ[ℂ] H)).map
       ((ContinuousLinearMap.adjoint T : H →L[ℂ] H) : H →ₗ[ℂ] H)) ?_
@@ -148,7 +148,7 @@ theorem one_notMem_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     ext y
     simp only [Submodule.mem_top, iff_true, LinearMap.mem_range]
     exact ⟨y, rfl⟩
-  haveI : FiniteDimensional ℂ (LinearMap.range ((1 : H →L[ℂ] H) : H →ₗ[ℂ] H)) := hmem
+  have : FiniteDimensional ℂ (LinearMap.range ((1 : H →L[ℂ] H) : H →ₗ[ℂ] H)) := hmem
   rw [hr] at this
   exact (Submodule.topEquiv (R := ℂ) (M := H)).finiteDimensional
 

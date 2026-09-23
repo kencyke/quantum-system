@@ -226,7 +226,7 @@ theorem isDirectedOrder_iff_forall_orthogonalHat_iff (K : Type*) [Preorder K] :
     exact orthogonalHat_iff
   · intro h
     refine ⟨fun O₁ O₂ => ?_⟩
-    letI : CausalOrthogonality K :=
+    let : CausalOrthogonality K :=
       { Orthogonal := fun _ _ => True
         orthogonal_symm := fun _ _ _ => trivial
         orthogonal_mono_left := fun _ _ _ _ _ => trivial }

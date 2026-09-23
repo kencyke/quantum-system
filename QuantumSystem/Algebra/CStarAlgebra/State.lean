@@ -107,7 +107,7 @@ lemma norm_apply_le (a : A) : ‖ω a‖ ≤ ‖a‖ := by
 /-- States are `1`-Lipschitz. -/
 lemma lipschitzWith_one : LipschitzWith 1 ω := by
   have h : ‖ω.toContinuousLinearMap‖₊ = 1 := NNReal.eq ω.norm_toContinuousLinearMap
-  simpa [h] using ω.toContinuousLinearMap.lipschitz
+  simpa [h] using ω.toContinuousLinearMap.lipschitzWith
 
 lemma continuous : Continuous ω := map_continuous ω
 
@@ -151,7 +151,7 @@ against the self-adjoint contractions `e` of an approximate unit, `|ω (e a)|² 
 ≤ ω (a* a)`, in the limit `e a → a`. -/
 lemma norm_apply_sq_le (a : A) : ‖ω a‖ ^ 2 ≤ (ω (star a * a)).re := by
   have h_approx := CStarAlgebra.increasingApproximateUnit (A := A)
-  haveI : (CStarAlgebra.approximateUnit A).NeBot := h_approx.toIsApproximateUnit.neBot
+  have : (CStarAlgebra.approximateUnit A).NeBot := h_approx.toIsApproximateUnit.neBot
   -- `ω (e a) → ω a` along the approximate unit, hence `‖ω (e a)‖² → ‖ω a‖²`.
   have h_tendsto : Tendsto (fun e => ‖ω (e * a)‖ ^ 2) (CStarAlgebra.approximateUnit A)
       (𝓝 (‖ω a‖ ^ 2)) :=

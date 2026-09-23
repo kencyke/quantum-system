@@ -43,7 +43,7 @@ scoped notation:max "𝓑(" H ")" => BoundedLinearOperator H
 noncomputable instance : NonUnitalCStarAlgebra (𝓑(H)) := inferInstance
 
 /-- Any complex Hilbert space is, in particular, a complex pre-Hilbert space. -/
-noncomputable instance instPreComplexHilbertSpace [ComplexHilbertSpace H] : ComplexPreHilbertSpace H where
+noncomputable instance instPreComplexHilbertSpace : ComplexPreHilbertSpace H where
   toNormedAddCommGroup := (inferInstance : NormedAddCommGroup H)
   toInnerProductSpace := (inferInstance : InnerProductSpace ℂ H)
 
