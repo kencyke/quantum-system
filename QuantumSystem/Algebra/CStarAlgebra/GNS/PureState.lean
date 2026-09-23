@@ -55,46 +55,17 @@ private lemma pi_adjoint (T : GNS.Representation ω) (a : A) :
   -- `T.π (star a) = star (T.π a) = (T.π a)†`.
   simpa [hstar] using h.symm
 
-/-- For a *-representation, invariance of `W` implies invariance of `Wᗮ`.
-
-This is the standard Hilbert-space argument using adjoints. -/
-lemma isInvariant_orthogonal (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : T.IsInvariant W) :
-    T.IsInvariant Wᗮ := by
-  intro a y hy
-  -- Unfold `Submodule.map` membership: it suffices to show `x ∈ Wᗮ → π(a)x ∈ Wᗮ`.
-  rcases hy with ⟨x, hx, rfl⟩
-  -- Show `π(a) x ∈ Wᗮ` by the defining orthogonality condition.
-  refine (W.mem_orthogonal ((T.π a) x)).2 ?_
-  intro w hw
-  have hw_map : (T.π (star a)) w ∈ W.map (T.π (star a)) :=
-    ⟨w, hw, by rfl⟩
-  have hw' : (T.π (star a)) w ∈ W := (hWinv (star a)) hw_map
-  have hx0 : ⟪(T.π (star a)) w, x⟫ = 0 := by
-    -- `x ∈ Wᗮ` means it is orthogonal to every element of `W`.
-    exact Submodule.inner_right_of_mem_orthogonal hw' hx
-  -- Rewrite `⟪w, π(a) x⟫` using the adjoint.
-  calc
-    ⟪w, (T.π a) x⟫ = ⟪((T.π a)†) w, x⟫ := by
-      -- `⟪(A†) w, x⟫ = ⟪w, A x⟫`
-      simpa using (ContinuousLinearMap.adjoint_inner_left (A := (T.π a)) (x := x) (y := w)).symm
-    _ = ⟪(T.π (star a)) w, x⟫ := by
-      rw [pi_adjoint (T := T) (a := a)]
-    _ = 0 := hx0
-
 lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : T.IsInvariant W) (a : A) {w x : T.H} (hw : w ∈ W) (hx : x ∈ Wᗮ) :
+    (hWinv : W ∈ T.invtSubmodule) (a : A) {w x : T.H} (hw : w ∈ W) (hx : x ∈ Wᗮ) :
     ⟪w, (T.π a) x⟫ = 0 := by
-  have hWperpInv : T.IsInvariant Wᗮ := isInvariant_orthogonal (T := T) (W := W) hWinv
-  have hx_map : (T.π a) x ∈ Wᗮ := by
-    exact (hWperpInv a) ⟨x, hx, rfl⟩
+  have hx_map : (T.π a) x ∈ Wᗮ :=
+    CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hWinv) a hx
   exact Submodule.inner_right_of_mem_orthogonal hw hx_map
 
 lemma inner_left_mem_orthogonal_right_pi_mem (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : T.IsInvariant W) (a : A) {w x : T.H} (hx : x ∈ Wᗮ) (hw : w ∈ W) :
+    (hWinv : W ∈ T.invtSubmodule) (a : A) {w x : T.H} (hx : x ∈ Wᗮ) (hw : w ∈ W) :
     ⟪x, (T.π a) w⟫ = 0 := by
-  have hw_map : (T.π a) w ∈ W := by
-    exact (hWinv a) ⟨w, hw, rfl⟩
+  have hw_map : (T.π a) w ∈ W := CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hw
   have h0 : ⟪(T.π a) w, x⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hw_map hx
   exact (inner_eq_zero_symm (x := x) (y := (T.π a) w)).2 h0
 
@@ -183,7 +154,7 @@ lemma opNorm_vectorFunctional_le (T : GNS.Representation ω) (v : T.H) :
 
 
 lemma state_decomposition (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : T.IsInvariant W) (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
+    (hWinv : W ∈ T.invtSubmodule) (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
     (hξ : T.ξ = v₁ + v₂) (a : A) :
     ω a = T.vectorFunctional v₁ a + T.vectorFunctional v₂ a := by
   rw [T.gns_condition, hξ]
@@ -257,7 +228,7 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
 
 lemma trichotomy_from_purity {ψ : PureState A}
     (W : Submodule ℂ (PureState.gnsRepresentation ψ).H)
-    (hWinv : (PureState.gnsRepresentation ψ).IsInvariant W)
+    (hWinv : W ∈ (PureState.gnsRepresentation ψ).invtSubmodule)
     (_hWclosed : IsClosed (W : Set (PureState.gnsRepresentation ψ).H))
     (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
     (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
@@ -344,8 +315,8 @@ lemma trichotomy_from_purity {ψ : PureState A}
   -- φ = χ implies contradiction
   have h_eq : φ = χ := by rw [h_eq2, ← h_eq1]
   -- Contradiction via density
-  have h_dense : Dense (Set.range (fun a => (T.π a) T.ξ)) := T.cyclic
-  have hv₁_mem_closure : v₁ ∈ closure (Set.range (fun a => (T.π a) T.ξ)) := by
+  have h_dense : Dense (Set.range (T.orbit T.ξ)) := T.cyclic
+  have hv₁_mem_closure : v₁ ∈ closure (Set.range (T.orbit T.ξ)) := by
     rw [h_dense.closure_eq]
     exact Set.mem_univ v₁
   set K : ℝ := t⁻¹ * ‖v₁‖ + (1 - t)⁻¹ * ‖v₂‖ with hKdef
@@ -359,7 +330,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
     simpa [hKdef] using this
   let ε := 1 / (2 * K)
   have h_eps_pos : 0 < ε := div_pos zero_lt_one (mul_pos two_pos hK_pos)
-  obtain ⟨_, ⟨a, rfl⟩, ha⟩ : ∃ b ∈ Set.range (fun a => (T.π a) T.ξ), dist v₁ b < ε :=
+  obtain ⟨_, ⟨a, rfl⟩, ha⟩ : ∃ b ∈ Set.range (T.orbit T.ξ), dist v₁ b < ε :=
     Metric.mem_closure_iff.mp hv₁_mem_closure ε h_eps_pos
   rw [dist_comm, dist_eq_norm] at ha
   -- Analyze φ a and χ a
@@ -369,8 +340,10 @@ lemma trichotomy_from_purity {ψ : PureState A}
         rw [hξ, map_add]
         abel
       rw [h_decomp]
-      have h1 : (T.π a) v₁ - v₁ ∈ W := Submodule.sub_mem W (hWinv a ⟨v₁, hv₁, rfl⟩) hv₁
-      have h2 : (T.π a) v₂ ∈ Wᗮ := isInvariant_orthogonal T W hWinv a ⟨v₂, hv₂, rfl⟩
+      have h1 : (T.π a) v₁ - v₁ ∈ W :=
+        Submodule.sub_mem W (CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hv₁) hv₁
+      have h2 : (T.π a) v₂ ∈ Wᗮ :=
+        CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hWinv) a hv₂
       have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
         ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
@@ -385,8 +358,10 @@ lemma trichotomy_from_purity {ψ : PureState A}
         rw [hξ, map_add]
         abel
       rw [h_decomp]
-      have h1 : (T.π a) v₁ - v₁ ∈ W := Submodule.sub_mem W (hWinv a ⟨v₁, hv₁, rfl⟩) hv₁
-      have h2 : (T.π a) v₂ ∈ Wᗮ := isInvariant_orthogonal T W hWinv a ⟨v₂, hv₂, rfl⟩
+      have h1 : (T.π a) v₁ - v₁ ∈ W :=
+        Submodule.sub_mem W (CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hv₁) hv₁
+      have h2 : (T.π a) v₂ ∈ Wᗮ :=
+        CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hWinv) a hv₂
       have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
         ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
@@ -498,21 +473,21 @@ lemma mem_of_norm_sq_eq_zero (T : GNS.Representation ω) (v₁ : T.H)
   exact norm_eq_zero.mp this
 
 lemma eq_top_of_norm_sq_eq_one (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : T.IsInvariant W) (hWclosed : IsClosed (W : Set T.H))
+    (hWinv : W ∈ T.invtSubmodule) (hWclosed : IsClosed (W : Set T.H))
     (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W) (_hv₂ : v₂ ∈ Wᗮ) (hξ : T.ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = 1) :
     W = ⊤ := by
   have hv₂_zero := mem_of_norm_sq_eq_one T v₁ v₂ hξ horth h
   have hξ_in_W : T.ξ ∈ W := by rw [hξ, hv₂_zero, add_zero]; exact hv₁
   -- `W` is closed and contains the dense orbit of `ξ`, so it is everything.
-  have h_orbit_le : Set.range (fun a => T.π a T.ξ) ⊆ W := by
+  have h_orbit_le : Set.range (T.orbit T.ξ) ⊆ W := by
     rintro _ ⟨a, rfl⟩
-    exact hWinv a ⟨T.ξ, hξ_in_W, rfl⟩
+    exact CStarRep.apply_mem_of_mem_invtSubmodule hWinv a hξ_in_W
   refine eq_top_iff.mpr fun x _ => ?_
   exact closure_minimal h_orbit_le hWclosed (T.cyclic x)
 
 lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T.H)
-    (hWinv : T.IsInvariant W) (_hWclosed : IsClosed (W : Set T.H))
+    (hWinv : W ∈ T.invtSubmodule) (_hWclosed : IsClosed (W : Set T.H))
     (v₁ v₂ : T.H) (_hv₁ : v₁ ∈ W) (_hv₂ : v₂ ∈ Wᗮ) (hξ : T.ξ = v₁ + v₂)
     (_horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = 0) :
     W = ⊥ := by
@@ -520,12 +495,12 @@ lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T
     have : ‖v₁‖ = 0 := by nlinarith [sq_nonneg ‖v₁‖]
     exact norm_eq_zero.mp this
   have hξ_in_Wperp : T.ξ ∈ Wᗮ := by rw [hξ, hv₁_zero, zero_add]; exact _hv₂
-  have hWperp_inv := isInvariant_orthogonal T W hWinv
+  have hWperp_inv := CStarRep.orthogonal_mem_invtSubmodule hWinv
   have hWperp_closed : IsClosed (Wᗮ : Set T.H) := Submodule.isClosed_orthogonal W
   -- `Wᗮ` is closed and contains the dense orbit of `ξ`, so it is everything.
-  have h_orbit_le : Set.range (fun a => T.π a T.ξ) ⊆ Wᗮ := by
+  have h_orbit_le : Set.range (T.orbit T.ξ) ⊆ Wᗮ := by
     rintro _ ⟨a, rfl⟩
-    exact hWperp_inv a ⟨T.ξ, hξ_in_Wperp, rfl⟩
+    exact CStarRep.apply_mem_of_mem_invtSubmodule hWperp_inv a hξ_in_Wperp
   have : Wᗮ = ⊤ := eq_top_iff.mpr fun x _ =>
     closure_minimal h_orbit_le hWperp_closed (T.cyclic x)
   rw [← Submodule.orthogonal_eq_bot_iff] at this
@@ -533,7 +508,7 @@ lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T
 
 /-- **Main Theorem**: The GNS representation of a pure state is irreducible. -/
 theorem pureState_gns_isIrreducible {ψ : PureState A} :
-    IsIrreducible (PureState.gnsRepresentation ψ) := by
+    (PureState.gnsRepresentation ψ).IsIrreducible := by
   let T := PureState.gnsRepresentation ψ
   refine ⟨T.π_ne_zero, fun W hWclosed hWinv => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp_of_isClosed T W hWclosed

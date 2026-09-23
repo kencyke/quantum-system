@@ -8,10 +8,10 @@ module
 public import Mathlib.Analysis.CStarAlgebra.Hom
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.InnerProductSpace.l2Space
+public import Mathlib.Analysis.Normed.Lp.lpHolder
 public import Mathlib.Analysis.Real.Sqrt
 public import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Family
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
 /-!
@@ -65,7 +65,7 @@ this file avoids the over-counting.
 @[expose] public section
 
 open ENNReal
-open scoped Adjoint ComplexHilbertSpace
+open scoped InnerProduct ComplexHilbertSpace
 
 namespace SectorFamily
 
@@ -149,105 +149,17 @@ noncomputable def sectorEmbedOfEquiv (F : SectorFamily.{u, v, w} A)
     H →ₗᵢ[ℂ] F.directSumHilbert :=
   (sectorEmbed F α).comp eq.toLinearIsometry
 
-/-- The component-wise action of `a : A` on a fiber. -/
-noncomputable def componentWiseMap (F : SectorFamily.{u, v, w} A) (a : A) :
-    ∀ α : F.Index, 𝓑((F.rep α).H) :=
-  fun α => (F.rep α).π a
-
-/-- Norm bound on the component-wise action: each fibre is bounded by `‖a‖`. -/
-lemma componentWiseMap_norm_le (F : SectorFamily.{u, v, w} A)
-    (a : A) (α : F.Index) (v : (F.rep α).H) :
-    ‖componentWiseMap F a α v‖ ≤ ‖a‖ * ‖v‖ := by
-  -- `‖π_α(a) v‖ ≤ ‖π_α(a)‖ * ‖v‖ ≤ ‖a‖ * ‖v‖` since `‖π_α(a)‖ ≤ ‖a‖`
-  -- for any C\*-algebra `*`-homomorphism into `𝓑(H)`.
-  calc ‖componentWiseMap F a α v‖
-      _ ≤ ‖componentWiseMap F a α‖ * ‖v‖ :=
-        ContinuousLinearMap.le_opNorm _ _
-      _ ≤ ‖a‖ * ‖v‖ :=
-        mul_le_mul_of_nonneg_right
-          (NonUnitalStarAlgHom.norm_apply_le (φ := (F.rep α).π) a)
-          (norm_nonneg _)
-
-/-- The component-wise image of an `ℓ²` family stays in `ℓ²`. -/
-lemma componentWiseMap_memℓp (F : SectorFamily.{u, v, w} A) (a : A)
-    (x : F.directSumHilbert) :
-    Memℓp (fun α => componentWiseMap F a α (x.val α)) 2 := by
-  have hx := lp.memℓp x
-  rw [memℓp_gen_iff zero_lt_two] at hx ⊢
-  have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
-  simp only [h2] at hx ⊢
-  refine Summable.of_nonneg_of_le (fun α => by positivity) (fun α => ?_)
-    (Summable.mul_left (‖a‖ ^ 2) hx)
-  have h := componentWiseMap_norm_le F a α (x.val α)
-  change ‖componentWiseMap F a α (x.val α)‖ ^ (2 : ℝ) ≤ ‖a‖ ^ 2 * ‖x.val α‖ ^ 2
-  trans (‖a‖ * ‖x.val α‖) ^ (2 : ℝ)
-  · gcongr
-  · rw [Real.mul_rpow (norm_nonneg _) (norm_nonneg _)]
-    norm_cast
-
-/-- The component-wise operator norm bound, summed in `ℓ²`. -/
-lemma componentWiseMap_norm_bound (F : SectorFamily.{u, v, w} A) (a : A)
-    (x : F.directSumHilbert) :
-    ‖(⟨fun α => componentWiseMap F a α (x.val α),
-        componentWiseMap_memℓp F a x⟩ : F.directSumHilbert)‖ ≤ ‖a‖ * ‖x‖ := by
-  have h2pos : (0 : ℝ) < (2 : ℝ≥0∞).toReal := by norm_num
-  have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
-  rw [lp.norm_eq_tsum_rpow h2pos, lp.norm_eq_tsum_rpow h2pos]
-  simp only [h2]
-  have hsum1 : Summable fun α => ‖componentWiseMap F a α (x.val α)‖ ^ (2 : ℝ) := by
-    have := componentWiseMap_memℓp F a x
-    rw [memℓp_gen_iff zero_lt_two] at this
-    simp only [h2] at this
-    exact this
-  have hsum2 : Summable fun α => ‖x.val α‖ ^ (2 : ℝ) := by
-    have := lp.memℓp x
-    rw [memℓp_gen_iff zero_lt_two] at this
-    simp only [h2] at this
-    exact this
-  have sum_ineq :
-      ∑' α, ‖componentWiseMap F a α (x.val α)‖ ^ (2 : ℝ) ≤
-        ‖a‖ ^ 2 * ∑' α, ‖x.val α‖ ^ (2 : ℝ) := by
-    rw [← tsum_mul_left]
-    apply tsum_le_of_sum_le' (by positivity)
-    intro s
-    calc ∑ α ∈ s, ‖componentWiseMap F a α (x.val α)‖ ^ (2 : ℝ)
-        _ ≤ ∑ α ∈ s, ‖a‖ ^ 2 * ‖x.val α‖ ^ (2 : ℝ) := by
-          gcongr with α _
-          have h := componentWiseMap_norm_le F a α (x.val α)
-          trans (‖a‖ * ‖x.val α‖) ^ (2 : ℝ)
-          · gcongr
-          · rw [Real.mul_rpow (norm_nonneg _) (norm_nonneg _)]
-            norm_cast
-        _ ≤ ∑' α, ‖a‖ ^ 2 * ‖x.val α‖ ^ (2 : ℝ) := by
-          refine sum_le_hasSum _ (fun α _ => by positivity)
-            (Summable.hasSum (Summable.mul_left _ hsum2))
-  trans ((‖a‖ ^ 2 * ∑' α, ‖x.val α‖ ^ (2 : ℝ)) ^ ((1 : ℝ) / 2))
-  · gcongr
-  rw [Real.mul_rpow (sq_nonneg _) (tsum_nonneg fun α => by positivity)]
-  gcongr
-  rw [← Real.rpow_natCast ‖a‖ 2, ← Real.rpow_mul (norm_nonneg _)]
-  norm_num
-
-/-- The linear-map version of the block-diagonal action of `a` on the
-direct-sum Hilbert space. -/
-noncomputable def directSumLinearMap (F : SectorFamily.{u, v, w} A) (a : A) :
-    F.directSumHilbert →ₗ[ℂ] F.directSumHilbert where
-  toFun x := ⟨fun α => componentWiseMap F a α (x.val α),
-              componentWiseMap_memℓp F a x⟩
-  map_add' x y := by
-    apply Subtype.ext
-    funext α
-    simp only [lp.coeFn_add, Pi.add_apply, map_add]
-  map_smul' c x := by
-    apply Subtype.ext
-    funext α
-    simp only [lp.coeFn_smul, Pi.smul_apply, map_smul, RingHom.id_apply]
-
-/-- The bounded-operator version of the block-diagonal action of `a`. -/
+/-- The block-diagonal action of `a` on the direct-sum Hilbert space: Mathlib's `lp.mapCLM` of
+the fibrewise operators `π_α a`, each of norm at most `‖a‖`. -/
 noncomputable def directSumCLM (F : SectorFamily.{u, v, w} A) (a : A) :
     𝓑(F.directSumHilbert) :=
-  LinearMap.mkContinuous (F.directSumLinearMap a) ‖a‖
-    (componentWiseMap_norm_bound F a)
+  lp.mapCLM 2 (fun α => (F.rep α).π a) (norm_nonneg a)
+    fun α => NonUnitalStarAlgHom.norm_apply_le (F.rep α).π a
+
+/-- The `α`-th coordinate of the block-diagonal action is the action of `π_α a`. -/
+@[simp] lemma directSumCLM_apply (F : SectorFamily.{u, v, w} A) (a : A)
+    (x : F.directSumHilbert) (α : F.Index) :
+    (F.directSumCLM a x : ∀ α, (F.rep α).H) α = (F.rep α).π a (x α) := rfl
 
 /-- Block-diagonality is compatible with the `*`-structure. -/
 lemma directSumCLM_adjoint (F : SectorFamily.{u, v, w} A) (a : A) :
@@ -258,9 +170,7 @@ lemma directSumCLM_adjoint (F : SectorFamily.{u, v, w} A) (a : A) :
   rw [ContinuousLinearMap.adjoint_inner_left]
   rw [lp.inner_eq_tsum, lp.inner_eq_tsum]
   congr with α
-  simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-    LinearMap.coe_mk, AddHom.coe_mk, componentWiseMap]
-  rw [← ContinuousLinearMap.adjoint_inner_left]
+  rw [directSumCLM_apply, directSumCLM_apply, ← ContinuousLinearMap.adjoint_inner_left]
   rw [map_star]
   rw [ContinuousLinearMap.star_eq_adjoint]
 
@@ -269,53 +179,18 @@ sector family. -/
 noncomputable def directSumRep (F : SectorFamily.{u, v, w} A) :
     A →⋆ₙₐ[ℂ] 𝓑(F.directSumHilbert) where
   toFun a := F.directSumCLM a
-  map_mul' a b := by
-    ext x : 1
-    apply Subtype.ext
-    funext α
-    simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, mul_apply_eq_comp]
-    rw [componentWiseMap, componentWiseMap, componentWiseMap]
-    conv_lhs => rw [map_mul]
-    rfl
-  map_zero' := by
-    ext x : 1
-    apply Subtype.ext
-    funext α
-    simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, zero_apply]
-    rw [componentWiseMap]
-    rw [map_zero]
-    rfl
-  map_add' a b := by
-    ext x : 1
-    apply Subtype.ext
-    funext α
-    simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, add_apply,
-      lp.coeFn_add, Pi.add_apply]
-    rw [componentWiseMap, componentWiseMap, componentWiseMap]
-    conv_lhs => rw [map_add]
-    rfl
-  map_smul' c a := by
-    ext x : 1
-    apply Subtype.ext
-    funext α
-    simp only [directSumCLM, LinearMap.mkContinuous_apply, directSumLinearMap,
-      LinearMap.coe_mk, AddHom.coe_mk, smul_apply,
-      lp.coeFn_smul, Pi.smul_apply]
-    rw [componentWiseMap, componentWiseMap]
-    conv_lhs => rw [map_smul]
-    rfl
+  map_mul' a b := by ext x α; simp
+  map_zero' := by ext x α; simp
+  map_add' a b := by ext x α; simp
+  map_smul' c a := by ext x α; simp
   map_star' a := by
     rw [← directSumCLM_adjoint]
     rfl
 
 /-- The operator-norm bound `‖F.directSumRep a‖ ≤ ‖a‖`. -/
 lemma directSumRep_norm_le (F : SectorFamily.{u, v, w} A) (a : A) :
-    ‖F.directSumRep a‖ ≤ ‖a‖ := by
-  change ‖F.directSumCLM a‖ ≤ ‖a‖
-  exact LinearMap.mkContinuous_norm_le _ (norm_nonneg _) _
+    ‖F.directSumRep a‖ ≤ ‖a‖ :=
+  lp.norm_mapCLM_le _ _ (norm_nonneg a) fun α => NonUnitalStarAlgHom.norm_apply_le (F.rep α).π a
 
 /-- A sector family *separates points* if the family of representations
 separates `A`: whenever every member annihilates `a`, we have `a = 0`. -/
@@ -334,50 +209,14 @@ theorem directSumRep_injective_of (F : SectorFamily.{u, v, w} A)
   -- `F.directSumRep (a - b) = 0` from `hab` by linearity.
   have h_diff_zero : F.directSumRep (a - b) = 0 := by
     rw [map_sub, hab, sub_self]
-  -- `F.directSumCLM (a - b) = 0` (the underlying bounded operator).
-  have h_clm_zero : F.directSumCLM (a - b) = 0 := h_diff_zero
   -- Apply separation: every family member annihilates `a - b`.
   apply h_sep
   intro α
   ext v
-  -- Goal: `(F.rep α).π (a - b) v = 0`.
-  classical
-  -- Construct the `δ_α`-vector in `directSumHilbert` carrying `v` in the
-  -- `α`-th component and `0` elsewhere.
-  let f : ∀ α' : F.Index, (F.rep α').H :=
-    fun α' => if h : α' = α then h ▸ v else 0
-  have hf_mem : Memℓp f 2 := by
-    rw [memℓp_gen_iff zero_lt_two]
-    have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
-    simp only [h2]
-    have h_eq : (fun α' => ‖f α'‖ ^ (2 : ℝ)) =
-        fun α' => if α' = α then ‖v‖ ^ 2 else 0 := by
-      ext α'
-      simp only [f]
-      by_cases h : α' = α
-      · subst h; simp
-      · simp only [dite_eq_right h, ite_eq_right h]; simp
-    rw [h_eq]
-    apply summable_of_hasFiniteSupport
-    have :
-        Function.support (fun α' => if α' = α then ‖v‖ ^ 2 else 0) ⊆ {α} := by
-      intro α' hα'
-      simp only [Function.mem_support, ne_eq, ite_eq_right_iff,
-        Set.mem_singleton_iff] at hα' ⊢
-      by_contra h
-      simp [h] at hα'
-    exact Set.Finite.subset (Set.finite_singleton α) this
-  let x : F.directSumHilbert := ⟨f, hf_mem⟩
-  have hx_α : x.val α = v := by
-    simp only [x, f]; simp
-  -- Apply `h_clm_zero` to `x`.
-  have h0 : F.directSumCLM (a - b) x = 0 := by simp [h_clm_zero]
-  have hα0 : (F.directSumCLM (a - b) x).val α = 0 := by
-    simpa using congrArg (fun y : F.directSumHilbert => y.val α) h0
-  -- Unfold the `α`-coordinate.
-  have hcomp : componentWiseMap F (a - b) α (x.val α) = 0 := by
-    simpa [directSumCLM, directSumLinearMap] using hα0
-  simpa [componentWiseMap, hx_α] using hcomp
+  -- Evaluate `F.directSumRep (a - b) = 0` on the `δ_α`-vector `sectorEmbed F α v`.
+  have h0 := congrArg (fun y : F.directSumHilbert => y.val α)
+    (DFunLike.congr_fun h_diff_zero (sectorEmbed F α v))
+  simpa [directSumRep] using h0
 
 /-- The direct sum of a sector family, bundled as a `CStarRep`: the Hilbert space
 `F.directSumHilbert` with the block-diagonal representation `F.directSumRep`. -/
@@ -416,7 +255,7 @@ theorem directSumRep_actsNondegenerately_of (F : SectorFamily.{u, v, w} A)
   have hα : ∀ a : A, (F.rep α).π a (x.val α) = 0 := by
     intro a
     have h0 := congrArg (fun y : F.directSumHilbert => y.val α) (hx _ ⟨a, rfl⟩)
-    simpa [directSumRep, directSumCLM, directSumLinearMap, componentWiseMap] using h0
+    simpa [directSumRep] using h0
   simpa using h α _ (by rintro _ ⟨a, rfl⟩; exact hα a)
 
 end SectorFamily

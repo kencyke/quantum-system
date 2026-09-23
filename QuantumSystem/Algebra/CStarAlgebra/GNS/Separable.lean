@@ -42,7 +42,7 @@ The theorem these serve is `CStarRep.exists_isometric_separable`, in
 
 open TopologicalSpace
 
-open scoped InnerProductSpace Adjoint ComplexHilbertSpace
+open scoped InnerProductSpace ComplexHilbertSpace
 
 universe u
 
@@ -62,24 +62,13 @@ lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation ω) {x : A
   have h' : ‖T.π x T.ξ‖ ^ 2 = ‖x‖ ^ 2 := by rw [h, Complex.ofReal_re]
   nlinarith [norm_nonneg (T.π x T.ξ), norm_nonneg x, h']
 
-/-- The orbit map `a ↦ T.π a T.ξ` is `1`-Lipschitz.
-
-It is the composition of the contraction `a ↦ T.π a` with evaluation at a unit vector. -/
+/-- The orbit map `a ↦ T.π a T.ξ` is `1`-Lipschitz: its operator norm is at most `‖ξ‖ = 1`
+(`CStarRep.norm_orbit_le`). -/
 lemma lipschitzWith_apply_cyclic {ω : State A} (T : Representation ω) :
-    LipschitzWith 1 (fun a : A => T.π a T.ξ) := by
-  refine LipschitzWith.of_dist_le_mul fun a b => ?_
-  have hsub : T.π a T.ξ - T.π b T.ξ = T.π (a - b) T.ξ := by
-    rw [map_sub]
-    rfl
-  have hbound : dist (T.π a T.ξ) (T.π b T.ξ) ≤ ‖a - b‖ := by
-    calc dist (T.π a T.ξ) (T.π b T.ξ) = ‖T.π (a - b) T.ξ‖ := by rw [dist_eq_norm, hsub]
-      _ ≤ ‖T.π (a - b)‖ * ‖T.ξ‖ := ContinuousLinearMap.le_opNorm _ _
-      _ ≤ ‖a - b‖ * 1 := by
-          gcongr
-          · exact NonUnitalStarAlgHom.norm_apply_le _ _
-          · exact le_of_eq T.norm_ξ
-      _ = ‖a - b‖ := mul_one _
-  simpa [dist_eq_norm] using hbound
+    LipschitzWith 1 (T.orbit T.ξ) :=
+  (T.orbit T.ξ).lipschitzWith.weaken <| by
+    rw [← NNReal.coe_le_coe, coe_nnnorm, NNReal.coe_one, ← T.norm_ξ]
+    exact T.norm_orbit_le T.ξ
 
 /-- The Hilbert space of a GNS triplet over a **separable** C\*-algebra is separable.
 

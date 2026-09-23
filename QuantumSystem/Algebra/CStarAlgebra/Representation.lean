@@ -115,4 +115,8 @@ noncomputable def orbit (R : CStarRep A) (v : R.H) : A →L[ℂ] R.H :=
 /-- The orbit map evaluates as `a ↦ π a v`. -/
 @[simp] lemma orbit_apply (R : CStarRep A) (v : R.H) (a : A) : R.orbit v a = R.π a v := rfl
 
+/-- The orbit map of `v` has operator norm at most `‖v‖`. -/
+lemma norm_orbit_le (R : CStarRep A) (v : R.H) : ‖R.orbit v‖ ≤ ‖v‖ :=
+  LinearMap.mkContinuous_norm_le _ (norm_nonneg v) _
+
 end CStarRep

@@ -9,7 +9,6 @@ public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import Mathlib.Analysis.InnerProductSpace.Dual
 public import Mathlib.Analysis.Normed.Operator.Extend
 public import Mathlib.Analysis.Normed.Module.Completion
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 
@@ -52,7 +51,7 @@ is the inequality `|ω a|² ≤ ω (a* a)` (`State.norm_apply_sq_le`).
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexOrder ComplexHilbertSpace Adjoint
+open scoped InnerProductSpace ComplexOrder ComplexHilbertSpace InnerProduct
 open UniformSpace Completion Filter Topology PositiveLinearMap
 
 namespace State
@@ -163,9 +162,9 @@ lemma norm_gnsFunctional : ‖ω.gnsFunctional‖ = 1 := by
       rw [gnsFunctional_coe, one_mul, norm_coe]
       simpa [gnsFunctional₀_apply] using ω.gnsFunctional₀.le_of_opNorm_le
         (LinearMap.mkContinuous_norm_le _ zero_le_one _) x
-  · rw [← ω.norm_toContinuousLinearMap]
+  · rw [← ω.norm_ofClass]
     refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg ω.gnsFunctional) fun a => ?_
-    calc ‖ω.toContinuousLinearMap a‖
+    calc ‖(PositiveContinuousLinearMap.ofClass ω : A →L[ℂ] ℂ) a‖
         = ‖ω.gnsFunctional (ω.gnsMk a)‖ := by simp
       _ ≤ ‖ω.gnsFunctional‖ * ‖ω.gnsMk a‖ := ω.gnsFunctional.le_opNorm _
       _ ≤ ‖ω.gnsFunctional‖ * ‖a‖ := by gcongr; exact ω.norm_gnsMk_le a

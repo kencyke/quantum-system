@@ -8,7 +8,6 @@ module
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 /-!
 # The double commutant theorem (hard half)
@@ -80,7 +79,7 @@ To prove the hard-half statement `A'' ⊆ A`, we argue by separation:
 namespace WOTClosedSubalgebra
 
 open InnerProductSpace WeakOperatorTopology
-open scoped Adjoint
+open scoped InnerProduct
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -136,9 +135,9 @@ lemma subset_cyclicSubspace (A : NonUnitalStarSubalgebra ℂ B) (x : H) :
   exact (Submodule.le_topologicalClosure S) this
 
 /-- The cyclic subspace is invariant under every element of `A`. -/
-lemma isInvariant_cyclicSubspace_of_mem (A : NonUnitalStarSubalgebra ℂ B) (x : H) (a : B)
+lemma cyclicSubspace_mem_invtSubmodule (A : NonUnitalStarSubalgebra ℂ B) (x : H) (a : B)
     (ha : a ∈ (A : Set B)) :
-    IsInvariant a (cyclicSubspace (H := H) A x) := by
+    cyclicSubspace (H := H) A x ∈ Module.End.invtSubmodule (a : Module.End ℂ H) := by
   -- Work with the dense submodule `span (A • x)`.
   let S : Submodule ℂ H := Submodule.span ℂ (Set.range fun b : A => (b : B) x)
   have hS : S.map (a : H →ₗ[ℂ] H) ≤ S := by
@@ -176,7 +175,7 @@ lemma isInvariant_cyclicSubspace_of_mem (A : NonUnitalStarSubalgebra ℂ B) (x :
     -- Use `S.map a ≤ S`.
     exact le_trans hmap (Submodule.topologicalClosure_mono (R := ℂ) (M := H) hS)
   -- Convert the submodule map statement to pointwise invariance.
-  refine (IsInvariant.iff_forall_mem (T := a) (K := cyclicSubspace (H := H) A x)).2 ?_
+  refine (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).2 ?_
   intro y hy
   -- `a y` lies in the mapped submodule.
   have : a y ∈ (cyclicSubspace (H := H) A x).map (a : H →ₗ[ℂ] H) :=
@@ -189,7 +188,7 @@ lemma isReducing_cyclicSubspace (A : NonUnitalStarSubalgebra ℂ B) (x : H) :
     IsReducing (H := H) (A : Set B) (cyclicSubspace (H := H) A x) := by
   intro a ha
   refine ⟨?_, ?_⟩
-  · exact isInvariant_cyclicSubspace_of_mem (H := H) (A := A) (x := x) (a := a) ha
+  · exact cyclicSubspace_mem_invtSubmodule (H := H) (A := A) (x := x) (a := a) ha
   · -- Use `A` is star-closed.
     have ha' : a† ∈ (A : Set B) := by
       -- `star` on `B` is adjoint.
@@ -197,14 +196,16 @@ lemma isReducing_cyclicSubspace (A : NonUnitalStarSubalgebra ℂ B) (x : H) :
       simpa [ContinuousLinearMap.star_eq_adjoint] using this
     -- Now apply invariance to `a†`.
     simpa using
-      (isInvariant_cyclicSubspace_of_mem (H := H) (A := A) (x := x)
+      (cyclicSubspace_mem_invtSubmodule (H := H) (A := A) (x := x)
         (a := a†) ha')
 
 /-- `T` preserves the reducing subspaces for `S` if it leaves invariant every `S`-reducing subspace
 (and also its orthogonal complement). -/
 def PreservesReducingSubspaces (S : Set (B)) (T : B) : Prop :=
   ∀ (K : Submodule ℂ H) [K.HasOrthogonalProjection],
-    IsReducing (H := H) S K → IsInvariant T K ∧ IsInvariant T Kᗮ
+    IsReducing (H := H) S K →
+      K ∈ Module.End.invtSubmodule (T : Module.End ℂ H) ∧
+        Kᗮ ∈ Module.End.invtSubmodule (T : Module.End ℂ H)
 
 /-- If `A` acts non-degenerately, then `x` lies in its own cyclic subspace.
 
@@ -264,8 +265,8 @@ lemma mem_cyclicSubspace_of_preservesReducingSubspaces (A : NonUnitalStarSubalge
   let : K.HasOrthogonalProjection := by infer_instance
   have hx : x ∈ K := mem_cyclicSubspace_of_actsNondegenerately (H := H) A hA x
   have hRed : IsReducing (H := H) (A : Set B) K := isReducing_cyclicSubspace (H := H) A x
-  have hInv : IsInvariant T K := (hT K hRed).1
-  exact (IsInvariant.iff_forall_mem (T := T) (K := K)).1 hInv x hx
+  have hInv : K ∈ Module.End.invtSubmodule (T : Module.End ℂ H) := (hT K hRed).1
+  exact (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).1 hInv x hx
 
 /-- The (reducing) "AlgLat"-hull of `S`: operators preserving every `S`-reducing subspace.
 
@@ -290,8 +291,8 @@ lemma preservesReducingSubspaces_of_mem_centralizer_centralizer
   have hcomm0 := hT K.starProjection hP
   have hcomm : K.starProjection * T = T * K.starProjection := by
     simpa using hcomm0
-  refine ⟨isInvariant_of_commutes_starProjection (T := T) (K := K) hcomm,
-    isInvariant_orthogonal_of_commutes_starProjection (T := T) (K := K) hcomm⟩
+  refine ⟨mem_invtSubmodule_of_commutes_starProjection (T := T) (K := K) hcomm,
+    orthogonal_mem_invtSubmodule_of_commutes_starProjection (T := T) (K := K) hcomm⟩
 
 /-- Set-level form: the double commutant is contained in the reducing hull. -/
 lemma centralizer_centralizer_subset_reducingHull (S : Set (B)) :
