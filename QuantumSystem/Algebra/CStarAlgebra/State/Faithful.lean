@@ -2,44 +2,32 @@ module
 
 public import QuantumSystem.Algebra.CStarAlgebra.State
 
+/-!
+# Faithful states
+
+A state `ω` is *faithful* if `ω (a* a) = 0` forces `a = 0`.  Equivalently the GNS vector map
+`a ↦ [a]` is injective (`State.isFaithful_iff_injective_gnsMk`).
+-/
+
 @[expose] public section
 
 namespace State
 
-variable {𝕜 : Type*} [RCLike 𝕜]
-variable {A : Type*} [NonUnitalCStarAlgebra A] [Module 𝕜 A]
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-/-- A state ω on a C*-algebra A is faithful if ω(a*a) = 0 implies a = 0.
-
-This is equivalent to saying the GNS kernel Nω is trivial, i.e., the GNS representation
-is injective. -/
-def IsFaithful (ω : State 𝕜 A) : Prop :=
+/-- A state `ω` on a C\*-algebra `A` is faithful if `ω (a* a) = 0` implies `a = 0`. -/
+def IsFaithful (ω : State A) : Prop :=
   ∀ a : A, ω (star a * a) = 0 → a = 0
 
-/-- Alternative characterization: a state is faithful iff a*a is not in the kernel
-unless a = 0. -/
-lemma isFaithful_iff (ω : State 𝕜 A) :
-    ω.IsFaithful ↔ ∀ a : A, a ≠ 0 → ω (star a * a) ≠ 0 := by
-  constructor
-  · intro hf a ha h0
-    exact ha (hf a h0)
-  · intro h a h0
-    by_contra ha
-    exact h a ha h0
+/-- A state is faithful iff `ω (a* a) ≠ 0` for every `a ≠ 0`. -/
+lemma isFaithful_iff (ω : State A) :
+    ω.IsFaithful ↔ ∀ a : A, a ≠ 0 → ω (star a * a) ≠ 0 :=
+  forall_congr' fun _ => not_imp_not.symm
 
-/-- Faithful states are positive definite on positive elements. -/
-lemma IsFaithful.pos_of_nonzero {ω : State ℂ A} (hω : ω.IsFaithful) {a : A} (ha : a ≠ 0) :
+/-- A faithful state is strictly positive on every `a* a` with `a ≠ 0`. -/
+lemma IsFaithful.pos_of_nonzero {ω : State A} (hω : ω.IsFaithful) {a : A} (ha : a ≠ 0) :
     0 < (ω (star a * a)).re := by
-  obtain ⟨r, hr⟩ := ω.positive a
-  have hr' : ω (star a * a) = (r : ℂ) := by
-    simpa [State.toLinearMap_apply] using hr
-  rw [hr']
-  simp only [Complex.ofReal_re]
-  by_contra h_not_pos
-  push Not at h_not_pos
-  have hr_nonneg : (0 : ℝ) ≤ r := r.property
-  have hr_zero : (r : ℝ) = 0 := le_antisymm h_not_pos hr_nonneg
-  have h0 : ω (star a * a) = 0 := by rw [hr', hr_zero]; simp
-  exact ha (hω a h0)
+  refine (ω.re_apply_star_mul_self_nonneg a).lt_of_ne fun h => ha (hω a ?_)
+  rw [← ω.ofReal_re_apply_star_mul_self, ← h, Complex.ofReal_zero]
 
 end State

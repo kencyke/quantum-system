@@ -16,7 +16,6 @@ public import QuantumSystem.Algebra.CStarAlgebra.Representation.Hom
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Algebra.CStarAlgebra.State
-public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Examples
@@ -46,15 +45,13 @@ public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Channel
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
+public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Ideal
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.NonUnital
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank

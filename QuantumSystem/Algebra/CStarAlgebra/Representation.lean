@@ -24,28 +24,33 @@ representation-theoretic layer are built on top of it:
 * `CStarAlgebra/Representation/Irreducible.lean` lifts the irreducibility
   predicate to the general `CStarRep` setting;
 * `CStarAlgebra/Representation/Family.lean` packages indexed families of
-  representatives, on which the superselection sector theory of
-  `QuantumSystem/Algebra/Sector/*` imposes its DHR / topological / KMS criteria.
+  representatives (`SectorFamily`), on which a superselection sector theory
+  imposes its selection criteria (DHR, KMS, ...) as separate predicates;
+* `CStarAlgebra/Representation/DirectSum.lean` forms the `ℓ²`-direct sum of
+  such a family.
 
 ## Relation to Mathlib
 
-Mathlib's `Mathlib.RepresentationTheory.Basic.Representation` is the
+Mathlib's `Representation` (in `Mathlib.RepresentationTheory.Basic`) is the
 group/monoid representation type `G →* (V →ₗ[k] V)` and does not match
 the C\*-algebra / Hilbert-space setting.  The GNS construction in
 `Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal` exposes the Hilbert
-space (`f.GNS`) and the homomorphism (`f.gnsStarAlgHom`) as separate
-artifacts; there is no bundled `(H, π)` structure.  This file introduces
-the bundle for the first time.
+space (`f.GNS`) and the homomorphism (`f.gnsNonUnitalStarAlgHom`, or
+`f.gnsStarAlgHom` in the unital case) as separate artifacts; there is no
+bundled `(H, π)` structure in Mathlib.  The canonical GNS triplet
+`GNS.Representation.canonical` bundles exactly these two Mathlib objects.
 
 ## Relation to `GNS.Representation`
 
 `GNS.Representation ω` (defined in
 `QuantumSystem/Algebra/CStarAlgebra/GNS/Representation.lean`) is the GNS
-triplet `(H, π, ξ)` for a specific state `ω : State ℂ A`, adding a
+triplet `(H, π, ξ)` for a specific state `ω : State A`, adding a
 cyclic unit vector `ξ` and the GNS identity
 `ω a = ⟪ξ, π a ξ⟫` on top of the data of a `CStarRep A`.
-The forgetful projection sending a GNS triplet to its underlying
-`CStarRep` is the canonical bridge between the two layers.
+A GNS triplet is a `CStarRep` with extra data: the structure projection
+`GNS.Representation.toCStarRep` forgets the cyclic vector, so every notion
+defined for `CStarRep` (invariance, irreducibility, unitary equivalence)
+applies to GNS triplets directly.
 
 ## Main definitions
 

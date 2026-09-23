@@ -8,7 +8,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.PureState
 
 namespace PureState
 
-variable {A : Type*} [NonUnitalCStarAlgebra A]
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 /-- For each pure state, we get a canonical GNS representation. -/
 noncomputable def gnsRepresentation (ψ : PureState A) : GNS.Representation (ψ.toState) :=
@@ -20,13 +20,13 @@ namespace GNS
 
 namespace Representation
 
-open scoped ComplexConjugate CStarAlgebra InnerProduct NNReal ComplexHilbertSpace
+open scoped ComplexOrder ComplexConjugate CStarAlgebra InnerProduct NNReal ComplexHilbertSpace
 
 local notation "⟪" x ", " y "⟫" => inner ℂ x y
 
-variable {A : Type*} [NonUnitalCStarAlgebra A]
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-variable {ω : State ℂ A}
+variable {ω : State A}
 
 private lemma pi_adjoint (T : GNS.Representation ω) (a : A) :
     (T.π a)† = T.π (star a) := by
@@ -139,14 +139,14 @@ lemma vectorFunctional_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
     T.vectorFunctional v a = ⟪v, (T.π a) v⟫ := by
   rfl
 
-lemma vectorFunctional_isPositive (T : GNS.Representation ω) (v : T.H) :
-    IsPositive A (T.vectorFunctional v) := by
-  intro a
-  refine ⟨⟨‖(T.π a) v‖ ^ 2, sq_nonneg _⟩, ?_⟩
+/-- A vector functional `a ↦ ⟪v, π a v⟫` is positive: on `a* a` it is `‖π a v‖²`. -/
+lemma vectorFunctional_nonneg (T : GNS.Representation ω) (v : T.H) :
+    ∀ a : A, 0 ≤ a → 0 ≤ T.vectorFunctional v a := by
+  refine fun _ => StarOrderedRing.map_nonneg_of_star_mul_self_nonneg _ fun a => ?_
   -- `⟪v, π(star a * a) v⟫ = ⟪π(a)v, π(a)v⟫ = ‖π(a)v‖^2`.
   have hmul : T.π (star a * a) = (T.π (star a)) * (T.π a) :=
     T.π.map_mul' (star a) a
-  have h : T.vectorFunctional v (star a * a) = RCLike.ofReal (‖(T.π a) v‖ ^ 2) := by
+  have h : T.vectorFunctional v (star a * a) = (‖(T.π a) v‖ : ℂ) ^ 2 := by
     calc
       T.vectorFunctional v (star a * a) = ⟪v, (T.π (star a * a)) v⟫ := by
         simp [vectorFunctional_apply]
@@ -162,12 +162,8 @@ lemma vectorFunctional_isPositive (T : GNS.Representation ω) (v : T.H) :
           (ContinuousLinearMap.adjoint_inner_right (A := (T.π a)) (x := v) (y := (T.π a) v))
       _ = (‖(T.π a) v‖ : ℂ) ^ 2 := by
         simp
-      _ = RCLike.ofReal (‖(T.π a) v‖ ^ 2) := by
-        -- `((r : ℂ)^2) = ofReal (r^2)` for real `r`.
-        rw [RCLike.ofReal_eq_complex_ofReal]
-        exact (Complex.ofReal_pow ‖(T.π a) v‖ 2).symm
-  -- Convert the RHS into the form expected by `IsPositive` (with an `ℝ≥0` witness).
-  rw [h]; rfl
+  rw [h, ← Complex.ofReal_pow]
+  exact Complex.zero_le_real.mpr (sq_nonneg _)
 
 lemma opNorm_vectorFunctional_le (T : GNS.Representation ω) (v : T.H) :
     ‖WeakDual.toStrongDual (T.vectorFunctional v)‖ ≤ ‖v‖ ^ 2 := by
@@ -217,7 +213,7 @@ lemma norm_sq_decomposition (T : GNS.Representation ω) (v₁ v₂ : T.H) (hξ :
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 = 1 := by
   have h₁ : ‖T.ξ‖ ^ 2 = ‖v₁ + v₂‖ ^ 2 := by rw [hξ]
-  rw [T.unit_norm, one_pow] at h₁
+  rw [T.norm_ξ, one_pow] at h₁
   have h₂ : ‖v₁ + v₂‖ ^ 2 = ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 := by
     have eq1 := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (x := v₁ + v₂)
     have eq2 := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (x := v₁)
@@ -245,7 +241,7 @@ lemma vectorFunctional_mem_quasiStateSpace_of_norm_eq_one (T : GNS.Representatio
     (hv : ‖v‖ = 1) :
     T.vectorFunctional v ∈ QuasiStateSpace A := by
   constructor
-  · exact vectorFunctional_isPositive T v
+  · exact vectorFunctional_nonneg T v
   · simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
     calc ‖WeakDual.toStrongDual (T.vectorFunctional v)‖
         ≤ ‖v‖ ^ 2 := opNorm_vectorFunctional_le T v
@@ -257,18 +253,11 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
     (‖v‖ ^ 2 : ℂ)⁻¹ • T.vectorFunctional v ∈ QuasiStateSpace A := by
   constructor
   · -- Positivity
-    have hpos := vectorFunctional_isPositive T v
-    let c : ℝ≥0 := ⟨(‖v‖ ^ 2)⁻¹, inv_nonneg.mpr (sq_nonneg _)⟩
-    have : (‖v‖ ^ 2 : ℂ)⁻¹ = (c : ℂ) := by simp [c]; norm_cast
-    rw [this]
-    change _ ∈ {φ | IsPositive A φ}
-    have h_smul : (c : ℂ) • T.vectorFunctional v = c • T.vectorFunctional v := by
-      apply ContinuousLinearMap.ext
-      intro x
-      simp
-      rfl
-    rw [h_smul]
-    exact IsPositive.smul A hpos
+    intro a ha
+    change 0 ≤ (‖v‖ ^ 2 : ℂ)⁻¹ * T.vectorFunctional v a
+    refine mul_nonneg ?_ (vectorFunctional_nonneg T v a ha)
+    rw [← Complex.ofReal_pow, ← Complex.ofReal_inv]
+    exact Complex.zero_le_real.mpr (by positivity)
   · -- Norm bound
     rw [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
     rw [map_smul, norm_smul]
@@ -594,7 +583,7 @@ lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T
 theorem pureState_gns_isIrreducible {ψ : PureState A} :
     IsIrreducible (PureState.gnsRepresentation ψ) := by
   let T := PureState.gnsRepresentation ψ
-  intro W hWclosed hWinv
+  refine ⟨T.π_ne_zero, fun W hWclosed hWinv => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp_of_isClosed T W hWclosed
   have h_trichotomy := trichotomy_from_purity W hWinv hWclosed v₁ v₂ hv₁ hv₂ hξ horth
   cases h_trichotomy with

@@ -42,7 +42,7 @@ universe u
 
 namespace GNS
 
-variable {A : Type u} [NonUnitalCStarAlgebra A]
+variable {A : Type u} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 namespace Representation
 
@@ -51,7 +51,7 @@ the state at `star x * x`.
 
 This is the bridge between a *norming state* and a *non-vanishing operator*: a state whose
 value at `star x * x` is `‖x‖ ^ 2` yields a representation with `‖T.π x T.ξ‖ = ‖x‖`. -/
-lemma norm_sq_apply_cyclic {ω : State ℂ A} (T : Representation ω) (x : A) :
+lemma norm_sq_apply_cyclic {ω : State A} (T : Representation ω) (x : A) :
     ‖T.π x T.ξ‖ ^ 2 = (ω (star x * x)).re := by
   have hstar : T.π (star x) = (T.π x)† := by
     rw [map_star, ContinuousLinearMap.star_eq_adjoint]
@@ -64,7 +64,7 @@ lemma norm_sq_apply_cyclic {ω : State ℂ A} (T : Representation ω) (x : A) :
 
 /-- A norming state gives an orbit vector of full length: if `ω (star x * x) = ‖x‖ ^ 2`
 then `‖T.π x T.ξ‖ = ‖x‖`. -/
-lemma norm_apply_cyclic_of_norming {ω : State ℂ A} (T : Representation ω) {x : A}
+lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation ω) {x : A}
     (hx : ω (star x * x) = ((‖x‖ ^ 2 : ℝ) : ℂ)) :
     ‖T.π x T.ξ‖ = ‖x‖ := by
   have h := T.norm_sq_apply_cyclic x
@@ -75,7 +75,7 @@ lemma norm_apply_cyclic_of_norming {ω : State ℂ A} (T : Representation ω) {x
 /-- The orbit map `a ↦ T.π a T.ξ` is `1`-Lipschitz.
 
 It is the composition of the contraction `a ↦ T.π a` with evaluation at a unit vector. -/
-lemma lipschitzWith_apply_cyclic {ω : State ℂ A} (T : Representation ω) :
+lemma lipschitzWith_apply_cyclic {ω : State A} (T : Representation ω) :
     LipschitzWith 1 (fun a : A => T.π a T.ξ) := by
   refine LipschitzWith.of_dist_le_mul fun a b => ?_
   have hsub : T.π a T.ξ - T.π b T.ξ = T.π (a - b) T.ξ := by
@@ -87,7 +87,7 @@ lemma lipschitzWith_apply_cyclic {ω : State ℂ A} (T : Representation ω) :
       _ ≤ ‖a - b‖ * 1 := by
           gcongr
           · exact NonUnitalStarAlgHom.norm_apply_le _ _
-          · exact le_of_eq T.unit_norm
+          · exact le_of_eq T.norm_ξ
       _ = ‖a - b‖ := mul_one _
   simpa [dist_eq_norm] using hbound
 
@@ -95,7 +95,7 @@ lemma lipschitzWith_apply_cyclic {ω : State ℂ A} (T : Representation ω) :
 
 The orbit of the cyclic vector is a continuous image of `A`, hence separable; its span is
 separable, and the span is dense by cyclicity. -/
-theorem separableSpace_H [SeparableSpace A] {ω : State ℂ A} (T : Representation ω) :
+theorem separableSpace_H [SeparableSpace A] {ω : State A} (T : Representation ω) :
     SeparableSpace T.H := by
   have hrange : IsSeparable (Set.range fun a : A => T.π a T.ξ) :=
     isSeparable_range T.lipschitzWith_apply_cyclic.continuous
@@ -125,6 +125,7 @@ instance [SeparableSpace A] : Countable (NormingIndex A) :=
 noncomputable def NormingIndex.elem [SeparableSpace A] (i : NormingIndex A) : A :=
   denseSeq A i.1
 
+omit [PartialOrder A] [StarOrderedRing A] in
 lemma NormingIndex.elem_ne_zero [SeparableSpace A] (i : NormingIndex A) : i.elem ≠ 0 := i.2
 
 /-- A pure state norming the element at a norming index. -/
@@ -198,7 +199,7 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
       _ ≤ ‖i.elem - a‖ * 1 := by
           gcongr
           · exact NonUnitalStarAlgHom.norm_apply_le _ _
-          · exact le_of_eq T.unit_norm
+          · exact le_of_eq T.norm_ξ
       _ = ‖i.elem - a‖ := mul_one _
   rw [hnorm, helem] at hle
   linarith
@@ -206,11 +207,11 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
 variable (A) in
 /-- The ℓ²-direct sum of the norming family, bundled as a `CStarRep`.
 
-This is the separable counterpart of `GNS.DirectSum.rep`: same construction, but indexed by
-a dense sequence of the algebra instead of by the whole pure state space. -/
-noncomputable def normingRep [SeparableSpace A] : CStarRep.{u, u} A where
-  H := (normingFamily A).directSumHilbert
-  π := (normingFamily A).directSumRep
+This is the separable counterpart of `GNS.DirectSum.rep`: both are `SectorFamily.toCStarRep`
+of a family of GNS representations, this one indexed by a dense sequence of the algebra instead
+of by the whole pure state space. -/
+noncomputable def normingRep [SeparableSpace A] : CStarRep.{u, u} A :=
+  (normingFamily A).toCStarRep
 
 @[simp]
 lemma normingRep_π [SeparableSpace A] :
@@ -228,16 +229,14 @@ theorem normingRep_injective [SeparableSpace A] :
 variable (A) in
 /-- The norming representation is isometric, by faithfulness. -/
 theorem normingRep_isometry [SeparableSpace A] : Isometry (normingRep A).π :=
-  AddMonoidHomClass.isometry_of_norm _ fun a =>
-    NonUnitalStarAlgHom.norm_map _ (normingRep_injective A) a
+  (normingFamily A).directSumRep_isometry_of (normingFamily_separatesPoints A)
 
 variable (A) in
 /-- The image of the norming representation is norm closed, so it is a C\*-subalgebra of
 the bounded operators on a separable Hilbert space. -/
 theorem normingRep_isClosed_range [SeparableSpace A] :
-    IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set 𝓑((normingRep A).H)) := by
-  rw [NonUnitalStarAlgHom.coe_range]
-  exact (normingRep_isometry A).isClosedEmbedding.isClosed_range
+    IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set 𝓑((normingRep A).H)) :=
+  (normingFamily A).directSumRep_isClosed_range_of (normingFamily_separatesPoints A)
 
 end Norming
 

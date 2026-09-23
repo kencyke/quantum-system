@@ -31,7 +31,7 @@ Gelfand-Naimark theorem — Gelfand duality — which Mathlib carries as
 
 The witness for the first two is `GNS.DirectSum.rep`, the ℓ²-direct sum of the GNS
 representations of all pure states of `A`; faithfulness comes from there being enough pure
-states (`IsPureState.exists_pos_re_of_ne_zero`), and isometry from faithfulness by
+states (`IsPureState.exists_pos_of_ne_zero`), and isometry from faithfulness by
 `NonUnitalStarAlgHom.norm_map`. The separable refinement uses a different witness,
 `GNS.normingRep`, indexed by a dense sequence of the algebra instead of by the whole pure
 state space.
@@ -83,10 +83,11 @@ The Hilbert space is obtained in the same universe as `A`.  The witness is
 `GNS.DirectSum.rep A`, the ℓ²-direct sum of the GNS representations of all pure states. -/
 theorem CStarRep.exists_isometric (A : Type u) [NonUnitalCStarAlgebra A] :
     ∃ R : CStarRep.{u, u} A,
-      Isometry R.π ∧ Function.Injective R.π ∧ IsClosed (NonUnitalStarAlgHom.range R.π : Set 𝓑(R.H)) :=
-  ⟨GNS.DirectSum.rep A, GNS.DirectSum.rep_isometry, GNS.DirectSum.rep_injective,
+      Isometry R.π ∧ Function.Injective R.π ∧ IsClosed (NonUnitalStarAlgHom.range R.π : Set 𝓑(R.H)) := by
+  letI := CStarAlgebra.spectralOrder A
+  haveI := CStarAlgebra.spectralOrderedRing A
+  exact ⟨GNS.DirectSum.rep A, GNS.DirectSum.rep_isometry, GNS.DirectSum.rep_injective,
     GNS.DirectSum.rep_isClosed_range⟩
-
 
 /-- **Gelfand-Naimark theorem**, in the form the classical statement uses: every
 C\*-algebra `A`, not necessarily unital, is isometrically `*`-isomorphic onto a norm closed
@@ -97,10 +98,11 @@ rather than through a norm structure on `S` itself.  See `CStarRep.exists_isomet
 unbundled form. -/
 theorem CStarRep.exists_starAlgEquiv_range (A : Type u) [NonUnitalCStarAlgebra A] :
     ∃ (R : CStarRep.{u, u} A) (S : NonUnitalStarSubalgebra ℂ 𝓑(R.H)) (e : A ≃⋆ₐ[ℂ] S),
-      IsClosed (S : Set 𝓑(R.H)) ∧ ∀ a : A, ‖((e a : S) : 𝓑(R.H))‖ = ‖a‖ :=
-  ⟨GNS.DirectSum.rep A, NonUnitalStarAlgHom.range (GNS.DirectSum.rep A).π, GNS.DirectSum.repRangeEquiv A,
+      IsClosed (S : Set 𝓑(R.H)) ∧ ∀ a : A, ‖((e a : S) : 𝓑(R.H))‖ = ‖a‖ := by
+  letI := CStarAlgebra.spectralOrder A
+  haveI := CStarAlgebra.spectralOrderedRing A
+  exact ⟨GNS.DirectSum.rep A, NonUnitalStarAlgHom.range (GNS.DirectSum.rep A).π, GNS.DirectSum.repRangeEquiv A,
     GNS.DirectSum.rep_isClosed_range, GNS.DirectSum.norm_repRangeEquiv⟩
-
 
 /-- **Gelfand-Naimark theorem, separable refinement**: a *separable* C\*-algebra, not
 necessarily unital, admits a faithful isometric `*`-representation with norm closed image on
@@ -119,6 +121,8 @@ theorem CStarRep.exists_isometric_separable (A : Type u) [NonUnitalCStarAlgebra 
     [TopologicalSpace.SeparableSpace A] :
     ∃ R : CStarRep.{u, u} A, TopologicalSpace.SeparableSpace R.H ∧
       Isometry R.π ∧ Function.Injective R.π ∧
-      IsClosed (NonUnitalStarAlgHom.range R.π : Set 𝓑(R.H)) :=
-  ⟨GNS.normingRep A, inferInstance, GNS.normingRep_isometry A, GNS.normingRep_injective A,
+      IsClosed (NonUnitalStarAlgHom.range R.π : Set 𝓑(R.H)) := by
+  letI := CStarAlgebra.spectralOrder A
+  haveI := CStarAlgebra.spectralOrderedRing A
+  exact ⟨GNS.normingRep A, inferInstance, GNS.normingRep_isometry A, GNS.normingRep_injective A,
     GNS.normingRep_isClosed_range A⟩

@@ -1,10 +1,12 @@
 module
 
+public import Mathlib.Analysis.CStarAlgebra.Hom
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Data.Real.StarOrdered
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Family
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
 /-!
 # Direct sum of a sector family
@@ -25,16 +27,17 @@ indexed family of representations, not on any selection predicate
 the family separates points (`F.SeparatesPoints`); see the
 `directSumRep_injective_of` theorem.
 
-## Comparison with `GNS.DirectSum`
+## Instances
 
-`QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum.Hilbert A` is the
-analogous `ℓ²`-direct sum indexed by *all* `PureState A`, with each
-state contributing its GNS Hilbert space.  Two pure states whose GNS
-representations are unitarily equivalent contribute the "same sector"
-twice (once per state), so this "fat" direct sum is not a true sector
-decomposition.  The skeleton version
-(`PureState.sectorFamily` filtered to a skeleton in
-`Sector/PureState/Family.lean`) avoids the over-counting.
+Both Gelfand–Naimark witnesses are direct sums of sector families:
+`GNS.DirectSum.rep` sums the GNS representations of *all* pure states
+(`GNS.DirectSum.pureStateFamily`), and `GNS.normingRep` a countable
+norming subfamily.  Two pure states whose GNS representations are
+unitarily equivalent contribute the "same sector" twice (once per
+state), so the pure-state direct sum is not a true sector
+decomposition.  Applied to a family satisfying `SectorFamily.IsSkeleton`
+(one representative per unitary-equivalence class), the construction of
+this file avoids the over-counting.
 
 ## Main definitions
 
@@ -42,7 +45,15 @@ decomposition.  The skeleton version
 * `SectorFamily.sectorComponent` / `.sectorEmbed` — coordinate
   projection / embedding.
 * `SectorFamily.directSumRep` — the block-diagonal universal
-  `*`-representation.
+  `*`-representation, and `SectorFamily.toCStarRep` its bundled form.
+
+## Main results
+
+* `SectorFamily.directSumRep_injective_of`, `directSumRep_isometry_of`,
+  `directSumRep_isClosed_range_of` — faithfulness, isometry and closed
+  range for a family that separates points.
+* `SectorFamily.directSumRep_actsNondegenerately_of` — non-degeneracy is
+  inherited from the members.
 -/
 
 @[expose] public section
@@ -361,5 +372,45 @@ theorem directSumRep_injective_of (F : SectorFamily.{u, v, w} A)
   have hcomp : componentWiseMap F (a - b) α (x.val α) = 0 := by
     simpa [directSumCLM, directSumLinearMap] using hα0
   simpa [componentWiseMap, hx_α] using hcomp
+
+/-- The direct sum of a sector family, bundled as a `CStarRep`: the Hilbert space
+`F.directSumHilbert` with the block-diagonal representation `F.directSumRep`. -/
+noncomputable def toCStarRep (F : SectorFamily.{u, v, w} A) : CStarRep A where
+  H := F.directSumHilbert
+  π := F.directSumRep
+
+@[simp] lemma toCStarRep_π (F : SectorFamily.{u, v, w} A) : F.toCStarRep.π = F.directSumRep :=
+  rfl
+
+/-- If the family separates points, the direct-sum representation is isometric: an injective
+`*`-homomorphism between C\*-algebras is isometric. -/
+theorem directSumRep_isometry_of (F : SectorFamily.{u, v, w} A) (h_sep : F.SeparatesPoints) :
+    Isometry F.directSumRep :=
+  AddMonoidHomClass.isometry_of_norm _ fun a =>
+    NonUnitalStarAlgHom.norm_map _ (F.directSumRep_injective_of h_sep) a
+
+/-- If the family separates points, the image of the direct-sum representation is norm closed,
+hence a C\*-subalgebra of `𝓑(F.directSumHilbert)`. -/
+theorem directSumRep_isClosed_range_of (F : SectorFamily.{u, v, w} A)
+    (h_sep : F.SeparatesPoints) :
+    IsClosed (NonUnitalStarAlgHom.range F.directSumRep : Set 𝓑(F.directSumHilbert)) := by
+  rw [NonUnitalStarAlgHom.coe_range]
+  exact (F.directSumRep_isometry_of h_sep).isClosedEmbedding.isClosed_range
+
+/-- A direct sum of non-degenerate representations is non-degenerate: a vector killed by every
+`F.directSumRep a` has every coordinate killed by the whole image of the corresponding member. -/
+theorem directSumRep_actsNondegenerately_of (F : SectorFamily.{u, v, w} A)
+    (h : ∀ α, InnerProductSpace.ActsNondegenerately
+      (Set.range ((F.rep α).π : A → 𝓑((F.rep α).H)))) :
+    InnerProductSpace.ActsNondegenerately
+      (Set.range (F.directSumRep : A → 𝓑(F.directSumHilbert))) := by
+  intro x hx
+  apply Subtype.ext
+  funext α
+  have hα : ∀ a : A, (F.rep α).π a (x.val α) = 0 := by
+    intro a
+    have h0 := congrArg (fun y : F.directSumHilbert => y.val α) (hx _ ⟨a, rfl⟩)
+    simpa [directSumRep, directSumCLM, directSumLinearMap, componentWiseMap] using h0
+  simpa using h α _ (by rintro _ ⟨a, rfl⟩; exact hα a)
 
 end SectorFamily

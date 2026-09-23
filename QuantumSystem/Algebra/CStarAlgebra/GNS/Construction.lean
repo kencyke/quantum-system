@@ -1,846 +1,231 @@
 module
 
-public import Mathlib.Analysis.InnerProductSpace.Completion
+public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
+public import Mathlib.Analysis.InnerProductSpace.Dual
 public import Mathlib.Analysis.Normed.Operator.Extend
+public import Mathlib.Analysis.Normed.Module.Completion
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Ideal
-public import QuantumSystem.Algebra.CStarAlgebra.State.Continuity
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
+
+/-!
+# The GNS construction for a state
+
+For a state `ω` on a (possibly non-unital) C\*-algebra `A`, the Gelfand–Naimark–Segal
+construction produces the *GNS triplet* `(𝓗[ω], π[ω], ξ[ω])`:
+
+* `𝓗[ω]` — the GNS Hilbert space, the completion of `A` for the semi-inner product
+  `⟪a, b⟫ = ω (a* b)`;
+* `π[ω] : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω])` — the GNS representation, induced by left multiplication;
+* `ξ[ω] : 𝓗[ω]` — the cyclic unit vector, characterised by `⟪ξ[ω], [a]⟫ = ω a`.
+
+The Hilbert space and the representation are exactly Mathlib's `PositiveLinearMap.GNS` and
+`PositiveLinearMap.gnsNonUnitalStarAlgHom`, applied to the positive linear functional
+`ω.toPositiveLinearMap` underlying the state; this file only names them for a state and adds the
+cyclic vector, which Mathlib does not construct.  The vector `ξ[ω]` is obtained through the Riesz
+representation of the bounded functional `[a] ↦ ω a` on `𝓗[ω]`; that this functional is bounded
+is the inequality `|ω a|² ≤ ω (a* a)` (`State.norm_apply_sq_le`).
+
+## Main definitions
+
+* `State.gnsSpace`, `State.gnsRep`, `State.gnsVector` — the GNS triplet, with the scoped
+  notations `𝓗[ω]`, `π[ω]`, `ξ[ω]` (activate with `open scoped GNS`).
+* `State.gnsMk` — the canonical linear map `A →ₗ[ℂ] 𝓗[ω]`, `a ↦ [a]`.
+
+## Main results
+
+* `State.gnsRep_apply_gnsVector` — `π[ω] a ξ[ω] = [a]`.
+* `State.gnsVector_cyclic`, `State.norm_gnsVector`, `State.gns_condition` — `ξ[ω]` is a cyclic
+  unit vector realising `ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫`.
+* `State.isFaithful_iff_separating` — `ω` is faithful iff `a ↦ π[ω] a ξ[ω]` is injective.
+
+## References
+
+* Bratteli, Robinson, *Operator Algebras and Quantum Statistical Mechanics I*, Theorem 2.3.16.
+* Murphy, *C\*-algebras and Operator Theory*, §5.1.
+-/
 
 @[expose] public section
 
-namespace GNS
+open scoped InnerProductSpace ComplexOrder ComplexHilbertSpace Adjoint
+open UniformSpace Completion Filter Topology PositiveLinearMap
 
-namespace Construction
+namespace State
 
-open ComplexConjugate NNReal Topology Filter
-open scoped InnerProductSpace Adjoint ComplexHilbertSpace
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] (ω : State A)
 
-variable {A : Type*} [NonUnitalCStarAlgebra A]
-variable (ω : State ℂ A)
+/-! ### The GNS triplet -/
 
-@[reducible] def Nω : CStarAlgebraIdeal A where
-  carrier := { x : A | ω (star x * x) = 0 }
-  zero_mem' := by
-    change ω (star (0 : A) * (0 : A)) = 0
-    simp [star_zero]
-  add_mem' := by
-    intro x y hx hy
-    exact State.kernel_closed_under_add (ω := ω) (x := x) (y := y) hx hy
-  neg_mem' := by
-    intro x hx
-    simpa [star_neg] using hx
-  mul_mem' := by
-    intro a x hx
-    exact State.kernel_closed_under_left_mul (ω := ω) (a := a) (x := x) hx
-  smul_mem' := by
-    intro c x hx
-    exact State.kernel_closed_under_smul (ω := ω) (c := c) (x := x) hx
+/-- The GNS Hilbert space `𝓗[ω]` of a state: Mathlib's `PositiveLinearMap.GNS`, the completion
+of `A` for the semi-inner product `⟪a, b⟫ = ω (a* b)`. -/
+abbrev gnsSpace : Type _ := ω.toPositiveLinearMap.GNS
 
-local notation "Nω" => (Nω ω)
+/-- Notation `𝓗[ω]` for the GNS Hilbert space `State.gnsSpace ω`. -/
+scoped[GNS] notation:max "𝓗[" ω "]" => State.gnsSpace ω
 
-/-- Inner product on the quotient `A ⧸ Nω` defined by
-`⟪[x], [y]⟫ = ω (star x * y)`.  Well-defined because the kernel ideal `Nω` is the null space
-with respect to the positive sesquilinear form coming from the state `ω` (ultimately a
-consequence of the Cauchy–Schwarz inequality for states). -/
-noncomputable def innerQuotient (xq yq : A ⧸ Nω) : ℂ :=
-  Quotient.liftOn₂' xq yq (fun x y => ω (star x * y))
-    (fun x₁ y₁ x₂ y₂ (hx : CStarAlgebraIdeal.leftRel Nω x₁ x₂)
-        (hy : CStarAlgebraIdeal.leftRel Nω y₁ y₂) => by
-      rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hx hy
-      change ω (star x₁ * y₁) = ω (star x₂ * y₂)
-      have hx' : ω (star (x₂ - x₁) * (x₂ - x₁)) = 0 := by simp only [sub_eq_neg_add]; exact hx
-      have hy' : ω (star (y₂ - y₁) * (y₂ - y₁)) = 0 := by simp only [sub_eq_neg_add]; exact hy
-      calc ω (star x₁ * y₁)
-          = ω (star x₂ * y₁) := (State.equiv_left (ω := ω) (x₁ := x₂) (x₂ := x₁) (y := y₁) hx').symm
-        _ = ω (star x₂ * y₂) := (State.equiv_right (ω := ω) (x := x₂) (y₁ := y₂) (y₂ := y₁) hy').symm)
+open scoped GNS
 
-/-- The inner product space core structure on the quotient. -/
-noncomputable abbrev innerProductSpaceCoreQuot : InnerProductSpace.Core ℂ (A ⧸ Nω) where
-  inner := innerQuotient ω
-  conj_inner_symm := fun x y => Quotient.inductionOn₂' x y fun a b => by
-    simp only [innerQuotient, Quotient.liftOn₂'_mk'']
-    rw [State.conj_sym ω (x := b) (y := a)]
-  re_inner_nonneg := fun x => Quotient.inductionOn' x fun a => by
-    simp only [innerQuotient, Quotient.liftOn₂'_mk'']
-    obtain ⟨r, hr⟩ := ω.positive a
-    have hr' : ω (star a * a) = RCLike.ofReal (r : ℝ) := by
-      simpa [State.toLinearMap_apply] using hr
-    rw [hr']
-    exact r.property
-  add_left := fun x y z => Quotient.inductionOn₃' x y z fun a b c => by
-    unfold innerQuotient
-    change Quotient.liftOn₂' (Quotient.mk'' (a + b)) (Quotient.mk'' c) _ _ = _
-    simp only [Quotient.liftOn₂'_mk'']
-    rw [star_add, add_mul]
-    exact ω.map_add (star a * c) (star b * c)
-  smul_left := fun x y c => Quotient.inductionOn₂' x y fun a b => by
-    unfold innerQuotient
-    change Quotient.liftOn₂' (Quotient.mk'' (c • a)) (Quotient.mk'' b) _ _ = _
-    simp only [Quotient.liftOn₂'_mk'']
-    rw [star_smul, smul_mul_assoc]
-    exact ω.map_smul (conj c) (star a * b)
-  definite := fun x hx => Quotient.inductionOn' x (fun a ha => by
-    have ha' : ω (star a * a) = 0 := by
-      simpa [innerQuotient] using ha
-    apply Quotient.sound'
-    rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply]
-    simpa using ha') hx
+noncomputable instance : ComplexHilbertSpace 𝓗[ω] where
+  toNormedAddCommGroup := inferInstance
+  toInnerProductSpace := inferInstance
+  toCompleteSpace := inferInstance
 
--- Pattern from Mathlib's GelfandNaimarkSegal: separate Core abbrev and IPS instances.
-noncomputable instance instNormedAddCommGroupQuot : NormedAddCommGroup (A ⧸ Nω) :=
-  @InnerProductSpace.Core.toNormedAddCommGroup ℂ (A ⧸ Nω) _ _ _ (innerProductSpaceCoreQuot ω)
+/-- The GNS representation `π[ω] : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω])`, induced by left multiplication:
+Mathlib's `PositiveLinearMap.gnsNonUnitalStarAlgHom`. -/
+noncomputable def gnsRep : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω]) := ω.toPositiveLinearMap.gnsNonUnitalStarAlgHom
 
-/-- The pre-inner product structure derived from the InnerProductSpace.Core. -/
-noncomputable instance instPreInnerProductSpaceCoreQuot : PreInnerProductSpace.Core ℂ (A ⧸ Nω) where
-  inner := innerQuotient ω
-  conj_inner_symm := (innerProductSpaceCoreQuot ω).conj_inner_symm
-  re_inner_nonneg := (innerProductSpaceCoreQuot ω).re_inner_nonneg
-  add_left := (innerProductSpaceCoreQuot ω).add_left
-  smul_left := (innerProductSpaceCoreQuot ω).smul_left
+/-- Notation `π[ω]` for the GNS representation `State.gnsRep ω`. -/
+scoped[GNS] notation:max "π[" ω "]" => State.gnsRep ω
 
-noncomputable instance instInnerProductSpaceQuot : InnerProductSpace ℂ (A ⧸ Nω) :=
-  InnerProductSpace.ofCore (instPreInnerProductSpaceCoreQuot ω)
+/-- The canonical map `A →ₗ[ℂ] 𝓗[ω]`, `a ↦ [a]`, sending an element of the algebra to its class
+in the GNS Hilbert space. -/
+noncomputable def gnsMk : A →ₗ[ℂ] 𝓗[ω] :=
+  (toComplₗᵢ : ω.toPositiveLinearMap.PreGNS →ₗᵢ[ℂ] 𝓗[ω]).toLinearMap ∘ₗ
+    ω.toPositiveLinearMap.toPreGNS.toLinearMap
 
-/-- Inner product on the quotient is the `innerQuotient` function. This holds because the
-`InnerProductSpace` instance on the quotient is built reducibly from the corresponding
-`InnerProductSpace.Core`. -/
-private lemma inner_quotient_eq (x y : A ⧸ Nω) :
-    ⟪x, y⟫_ℂ = innerQuotient ω x y := rfl
+lemma gnsMk_apply (a : A) : ω.gnsMk a = (ω.toPositiveLinearMap.toPreGNS a : 𝓗[ω]) := rfl
 
-/-- The squared norm of the class `[x]` equals the real part `Re (ω (star x * x))`. -/
-private lemma norm_sq_eq_inner (x : A) :
-    @norm (A ⧸ Nω) (instNormedAddCommGroupQuot ω).toNorm (Quotient.mk'' x) ^ 2 = (ω (star x * x)).re := by
-  rw [@norm_sq_eq_re_inner ℂ (A ⧸ Nω) _ _]
-  rw [inner_quotient_eq]
-  unfold innerQuotient
-  simp only [Quotient.liftOn₂'_mk'']
+lemma gnsMk_ofPreGNS (x : ω.toPositiveLinearMap.PreGNS) :
+    ω.gnsMk (ω.toPositiveLinearMap.ofPreGNS x) = (x : 𝓗[ω]) := rfl
+
+/-- The classes `[a]` are dense in `𝓗[ω]`. -/
+lemma denseRange_gnsMk : DenseRange ω.gnsMk :=
+  denseRange_coe.comp ω.toPositiveLinearMap.toPreGNS.surjective.denseRange (continuous_coe _)
+
+/-- `⟪[a], [b]⟫ = ω (a* b)`. -/
+lemma inner_gnsMk (a b : A) : ⟪ω.gnsMk a, ω.gnsMk b⟫_ℂ = ω (star a * b) := by
+  rw [gnsMk_apply, gnsMk_apply, inner_coe, preGNS_inner_def]
+  simp
+
+/-- `‖[a]‖² = Re ω (a* a)`. -/
+lemma norm_gnsMk_sq (a : A) : ‖ω.gnsMk a‖ ^ 2 = (ω (star a * a)).re := by
+  rw [← inner_self_eq_norm_sq (𝕜 := ℂ), inner_gnsMk]
   rfl
 
-/-- The GNS Hilbert space `Hω`, defined as the completion of the quotient `A ⧸ Nω`. -/
-abbrev Hω := UniformSpace.Completion (A ⧸ Nω)
-local notation "Hω" => (Hω (ω := ω))
+/-- `‖[a]‖ ≤ ‖a‖`. -/
+lemma norm_gnsMk_le (a : A) : ‖ω.gnsMk a‖ ≤ ‖a‖ := by
+  rw [← pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero, norm_gnsMk_sq]
+  calc (ω (star a * a)).re
+      ≤ ‖ω (star a * a)‖ := Complex.re_le_norm _
+    _ ≤ ‖star a * a‖ := ω.norm_apply_le _
+    _ ≤ ‖a‖ ^ 2 := by simpa [sq, norm_star] using norm_mul_le (star a) a
 
-noncomputable instance instHilbertSpaceCompletion : ComplexHilbertSpace Hω :=
-  { toNormedAddCommGroup := inferInstance
-    toInnerProductSpace := inferInstance
-    toCompleteSpace := inferInstance }
+/-- `π[ω] a [b] = [a b]`. -/
+@[simp] lemma gnsRep_apply_gnsMk (a b : A) : π[ω] a (ω.gnsMk b) = ω.gnsMk (a * b) := by
+  simp [gnsRep, gnsMk_apply]
 
-/-- Left multiplication action on the quotient: `πω'(a)[b] = [a b]`.
-It is bounded (`‖πω'(a)[b]‖ ≤ ‖a‖ · ‖[b]‖`), multiplicative, and *-compatible, and thus
-extends (after completion) to the bounded operator representation `πω : A → 𝓑(Hω)`. -/
-def πω' (a : A) (bq : A ⧸ Nω) : A ⧸ Nω :=
-  Quotient.liftOn' bq (fun b => Quotient.mk'' (a * b))
-    (fun b₁ b₂ (hb : CStarAlgebraIdeal.leftRel Nω b₁ b₂) => by
-      rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hb
-      apply Quotient.sound'
-      rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply]
-      change -(a * b₁) + a * b₂ ∈ (Nω).toAddSubgroup
-      rw [show -(a * b₁) + a * b₂ = a * (-b₁ + b₂) by simp only [mul_neg, mul_add]]
-      exact (Nω).mul_mem' a hb)
+/-- `π[ω] (a*) = (π[ω] a)†`. -/
+lemma gnsRep_star (a : A) : (π[ω] a)† = π[ω] (star a) := by
+  rw [map_star, ContinuousLinearMap.star_eq_adjoint]
 
-/-- Action of `πω'` on a representative. -/
-lemma πω'_mk (a b : A) : πω' ω a (Quotient.mk'' b) = Quotient.mk'' (a * b) := rfl
+/-- The GNS representation is contractive: `‖π[ω] a‖ ≤ ‖a‖`. -/
+lemma norm_gnsRep_le (a : A) : ‖π[ω] a‖ ≤ ‖a‖ :=
+  NonUnitalStarAlgHom.norm_apply_le _ a
 
-/-- `πω'(0)` is the zero map. -/
-lemma πω'_zero (x : A ⧸ Nω) : πω' ω (0 : A) x = 0 := by
-  refine Quotient.inductionOn' x fun b => ?_
-  rw [πω'_mk, zero_mul]
+/-! ### The cyclic vector -/
+
+/-- The bounded functional `[a] ↦ ω a` on the pre-Hilbert space of the GNS construction; its
+operator norm is at most `1`. -/
+noncomputable def gnsFunctional₀ : ω.toPositiveLinearMap.PreGNS →L[ℂ] ℂ :=
+  (ω.toLinearMap ∘ₗ ω.toPositiveLinearMap.ofPreGNS.toLinearMap).mkContinuous 1 fun x => by
+    have hx : ‖x‖ ^ 2 =
+        (ω (star (ω.toPositiveLinearMap.ofPreGNS x) * ω.toPositiveLinearMap.ofPreGNS x)).re := by
+      rw [← inner_self_eq_norm_sq (𝕜 := ℂ), preGNS_inner_def]
+      rfl
+    rw [one_mul, ← pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero, hx]
+    exact ω.norm_apply_sq_le _
+
+lemma gnsFunctional₀_apply (x : ω.toPositiveLinearMap.PreGNS) :
+    ω.gnsFunctional₀ x = ω (ω.toPositiveLinearMap.ofPreGNS x) := rfl
+
+/-- The bounded functional `𝓗[ω] →L[ℂ] ℂ` extending `[a] ↦ ω a` by continuity. -/
+noncomputable def gnsFunctional : 𝓗[ω] →L[ℂ] ℂ :=
+  ω.gnsFunctional₀.extend (toComplL : ω.toPositiveLinearMap.PreGNS →L[ℂ] 𝓗[ω])
+
+lemma gnsFunctional_coe (x : ω.toPositiveLinearMap.PreGNS) :
+    ω.gnsFunctional x = ω (ω.toPositiveLinearMap.ofPreGNS x) :=
+  ContinuousLinearMap.extend_eq _ denseRange_coe (isUniformInducing_coe _) x
+
+@[simp] lemma gnsFunctional_gnsMk (a : A) : ω.gnsFunctional (ω.gnsMk a) = ω a :=
+  ω.gnsFunctional_coe _
+
+/-- The GNS functional has operator norm `1`. -/
+lemma norm_gnsFunctional : ‖ω.gnsFunctional‖ = 1 := by
+  refine le_antisymm (ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => ?_) ?_
+  · induction x using Completion.induction_on with
+    | hp => exact isClosed_le (by fun_prop) (by fun_prop)
+    | ih x =>
+      rw [gnsFunctional_coe, one_mul, norm_coe]
+      simpa [gnsFunctional₀_apply] using ω.gnsFunctional₀.le_of_opNorm_le
+        (LinearMap.mkContinuous_norm_le _ zero_le_one _) x
+  · rw [← ω.norm_toContinuousLinearMap]
+    refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg ω.gnsFunctional) fun a => ?_
+    calc ‖ω.toContinuousLinearMap a‖
+        = ‖ω.gnsFunctional (ω.gnsMk a)‖ := by simp
+      _ ≤ ‖ω.gnsFunctional‖ * ‖ω.gnsMk a‖ := ω.gnsFunctional.le_opNorm _
+      _ ≤ ‖ω.gnsFunctional‖ * ‖a‖ := by gcongr; exact ω.norm_gnsMk_le a
+
+/-- The cyclic vector `ξ[ω] ∈ 𝓗[ω]`: the Riesz representative of the functional `[a] ↦ ω a`. -/
+noncomputable def gnsVector : 𝓗[ω] := (InnerProductSpace.toDual ℂ 𝓗[ω]).symm ω.gnsFunctional
+
+/-- Notation `ξ[ω]` for the cyclic vector `State.gnsVector ω`. -/
+scoped[GNS] notation:max "ξ[" ω "]" => State.gnsVector ω
+
+/-- Riesz identification: `⟪ξ[ω], x⟫` is the GNS functional. -/
+lemma inner_gnsVector (x : 𝓗[ω]) : ⟪ξ[ω], x⟫_ℂ = ω.gnsFunctional x :=
+  InnerProductSpace.toDual_symm_apply
+
+/-- `⟪ξ[ω], [a]⟫ = ω a`. -/
+@[simp] lemma inner_gnsVector_gnsMk (a : A) : ⟪ξ[ω], ω.gnsMk a⟫_ℂ = ω a := by
+  rw [inner_gnsVector, gnsFunctional_gnsMk]
+
+/-- The fundamental identity `π[ω] a ξ[ω] = [a]`. -/
+@[simp] lemma gnsRep_apply_gnsVector (a : A) : π[ω] a ξ[ω] = ω.gnsMk a := by
+  refine ext_inner_right ℂ fun x => ?_
+  induction x using Completion.induction_on with
+  | hp => exact isClosed_eq (by fun_prop) (by fun_prop)
+  | ih x =>
+    rw [← gnsMk_ofPreGNS, ← ContinuousLinearMap.adjoint_inner_right, gnsRep_star,
+      gnsRep_apply_gnsMk, inner_gnsVector_gnsMk, inner_gnsMk]
+
+/-- Cyclicity of `ξ[ω]`: the span of `{π[ω] a ξ[ω] | a : A}` is dense in `𝓗[ω]`. -/
+lemma gnsVector_cyclic : Dense (↑(Submodule.span ℂ {π[ω] a ξ[ω] | a : A}) : Set 𝓗[ω]) :=
+  ω.denseRange_gnsMk.mono <| Set.range_subset_iff.mpr fun a =>
+    Submodule.subset_span ⟨a, ω.gnsRep_apply_gnsVector a⟩
+
+/-- The GNS identity `ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫`. -/
+lemma gns_condition (a : A) : ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫_ℂ := by simp
+
+/-- Normalisation of the cyclic vector: `‖ξ[ω]‖ = 1`. -/
+lemma norm_gnsVector : ‖ξ[ω]‖ = 1 := by
+  rw [gnsVector, LinearIsometryEquiv.norm_map, norm_gnsFunctional]
+
+lemma gnsVector_ne_zero : ξ[ω] ≠ 0 := by
+  rw [← norm_ne_zero_iff, norm_gnsVector]
+  exact one_ne_zero
+
+/-! ### Faithful states -/
+
+/-- `[a] = 0` in `𝓗[ω]` iff `ω (a* a) = 0`. -/
+lemma gnsMk_eq_zero_iff (a : A) : ω.gnsMk a = 0 ↔ ω (star a * a) = 0 := by
+  rw [← norm_eq_zero, ← pow_eq_zero_iff two_ne_zero, norm_gnsMk_sq, ← Complex.ofReal_eq_zero,
+    ω.ofReal_re_apply_star_mul_self]
+
+/-- A state is faithful iff the canonical map `a ↦ [a]` into `𝓗[ω]` is injective. -/
+theorem isFaithful_iff_injective_gnsMk : ω.IsFaithful ↔ Function.Injective ω.gnsMk := by
+  rw [injective_iff_map_eq_zero]
+  simp only [gnsMk_eq_zero_iff]
   rfl
 
-/-- Quadratic norm inequality on the pre-Hilbert quotient: `‖πω'(a)[b]‖^2 ≤ ‖a‖^2 ‖[b]‖^2`. -/
-lemma πω'_norm_sq_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ^ 2 ≤ ‖a‖ ^ 2 * ‖b‖ ^ 2 := by
-  refine Quotient.inductionOn' b fun b' => ?_
-  -- Unfold the definition on a representative and rewrite the norm squared via inner product
-  simp_rw [πω', Quotient.liftOn'_mk'', sq]
-  -- Use inner_self = ‖·‖ * ‖·‖ in a pre-Hilbert setting (core inner product structure)
-  rw [← inner_self_eq_norm_mul_norm (𝕜 := ℂ) (E := A ⧸ Nω) (Quotient.mk'' (a * b'))]
-  rw [← inner_self_eq_norm_mul_norm (𝕜 := ℂ) (E := A ⧸ Nω) (Quotient.mk'' b')]
-  rw [inner_quotient_eq, inner_quotient_eq]
-  unfold innerQuotient; simp only [Quotient.liftOn₂'_mk'']
-  -- Algebraic rearrangement: bring star inside and reassociate to isolate star a * a
-  rw [show star (a * b') * (a * b') = star b' * star a * a * b' by rw [star_mul, mul_assoc, mul_assoc, mul_assoc]]
-  -- Apply the C*-algebraic Cauchy–Schwarz style inequality packaged in star_mul_bound
-  obtain ⟨r, hr⟩ := State.star_mul_bound (ω := ω) (a := a) (b := b')
-  -- Extract the real part inequality from the complex identity hr
-  have h_re : (‖a‖ * ‖a‖ : ℝ) * (ω (star b' * b')).re = (ω (star b' * star a * a * b')).re + (r : ℝ) := by
-    have h := congr_arg Complex.re hr
-    simp only [Complex.mul_re, Complex.add_re] at h
-    norm_cast at h
-    simp only [zero_mul, sub_zero] at h
-    rw [sq] at h
-    exact h
-  have : ‖a‖ * ‖a‖ * (ω (star b' * b')).re = ‖a‖ * (‖a‖ * (ω (star b' * b')).re) := mul_assoc _ _ _
-  have hr_nonneg : (0 : ℝ) ≤ r := r.property
-  -- Finish with linear arithmetic: nonneg remainder r gives desired ≤
-  change (ω (star b' * star a * a * b')).re ≤ ‖a‖ * ‖a‖ * (ω (star b' * b')).re
-  linarith
-
-/-- Multiplicativity: πω'(ab) = πω'(a) ∘ πω'(b). -/
-lemma πω'_mul (a b : A) (c : A ⧸ Nω) : πω' ω (a * b) c = πω' ω a (πω' ω b c) :=
-  Quotient.inductionOn' c fun c' => by unfold πω'; simp [mul_assoc]
-
-/-- Adjoint property of the algebraic action: `⟪πω'(a) b, c⟫ = ⟪b, πω'(a*) c⟫`. -/
-lemma πω'_inner (a : A) (b c : A ⧸ Nω) :
-    ⟪πω' ω a b, c⟫_ℂ = ⟪b, πω' ω (star a) c⟫_ℂ := by
-  refine Quotient.inductionOn₂' b c fun b' c' => ?_
-  unfold πω'
-  simp only [Quotient.liftOn'_mk'']
-  rw [inner_quotient_eq, inner_quotient_eq]
-  unfold innerQuotient
-  simp only [Quotient.liftOn₂'_mk'', star_mul, mul_assoc]
-
-/-- Additivity: πω'(a)(b + c) = πω'(a)b + πω'(a)c. -/
-lemma πω'_add (a : A) (b c : A ⧸ Nω) : πω' ω a (b + c) = πω' ω a b + πω' ω a c := by
-  refine Quotient.inductionOn₂' b c fun b' c' => ?_
-  change πω' ω a (Quotient.mk'' (b' + c')) = πω' ω a (Quotient.mk'' b') + πω' ω a (Quotient.mk'' c')
-  unfold πω'
-  simp only [Quotient.liftOn'_mk'']
-  congr 1
-  exact mul_add a b' c'
-
-/-- Scalar multiplication: πω'(a)(z • b) = z • πω'(a)b. -/
-lemma πω'_smul (a : A) (z : ℂ) (b : A ⧸ Nω) : πω' ω a (z • b) = z • πω' ω a b := by
-  refine Quotient.inductionOn' b fun b' => ?_
-  change πω' ω a (Quotient.mk'' (z • b')) = z • πω' ω a (Quotient.mk'' b')
-  unfold πω'
-  simp only [Quotient.liftOn'_mk'']
-  congr 1
-  exact mul_smul_comm z a b'
-
-/-- Linear norm bound: `‖πω'(a) b‖ ≤ ‖a‖ · ‖b‖`, deduced from the quadratic bound. -/
-lemma πω'_norm_le (a : A) (b : A ⧸ Nω) : ‖πω' ω a b‖ ≤ ‖a‖ * ‖b‖ := by
-  have h_sq := πω'_norm_sq_le ω a b
-  rw [show ‖a‖ ^ 2 * ‖b‖ ^ 2 = (‖a‖ * ‖b‖) ^ 2 by ring] at h_sq
-  simpa [Real.sqrt_sq (norm_nonneg _), mul_nonneg (norm_nonneg a) (norm_nonneg b)] using
-    Real.sqrt_le_sqrt h_sq
-
-/-- Continuous linear map version of the pre-representation: `πω'(a) : A ⧸ Nω →L[ℂ] A ⧸ Nω`. -/
-noncomputable def πω'CLM (a : A) : (A ⧸ Nω) →L[ℂ] (A ⧸ Nω) :=
-  LinearMap.mkContinuous
-    { toFun := πω' ω a
-      map_add' := πω'_add ω a
-      map_smul' := πω'_smul ω a }
-    ‖a‖
-    (fun b => by
-      simpa using πω'_norm_le (ω := ω) a b)
-
-/-- The (completed) GNS representation `πω : A → 𝓑(Hω)` extending the action `πω'` from the
-dense quotient into its Hilbert space completion. -/
-noncomputable def πω (a : A) : 𝓑(Hω) :=
-  ContinuousLinearMap.extend
-    (UniformSpace.Completion.toComplL ∘L (πω'CLM ω a))
-    (UniformSpace.Completion.toComplL (𝕜 := ℂ) (E := A ⧸ Nω))
-
-/-- Agreement on the dense subspace: `πω(a) (↑x) = ↑(πω'(a) x)` for `x : A ⧸ Nω`. -/
-lemma πω_apply_coe (a : A) (x : A ⧸ Nω) :
-    πω ω a (↑x : Hω) = (↑(πω' ω a x) : Hω) := by
-  unfold πω
-  erw [ContinuousLinearMap.extend_eq
-    (h_dense := UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω))
-    (h_e := (UniformSpace.Completion.isUniformEmbedding_coe (α := A ⧸ Nω)).isUniformInducing)]
-  rfl
-
-/-- Extensionality principle for operators on the completion: if they agree on the dense subspace, they are equal. -/
-lemma ext_on_completion (f g : 𝓑(Hω)) (h : ∀ x : A ⧸ Nω, f (↑x : Hω) = g (↑x : Hω)) : f = g := by
-  ext x
-  refine DenseRange.induction_on (p := fun y => f y = g y) UniformSpace.Completion.denseRange_coe x
-    (isClosed_eq f.continuous g.continuous) fun y => by simpa using h y
-
-/-- Multiplicativity of the extended representation: `πω(a b) = πω(a) ∘L πω(b)`. -/
-lemma πω_mul (a b : A) : πω ω (a * b) = πω ω a ∘L πω ω b := by
-  refine ext_on_completion (ω := ω) (πω ω (a * b)) (πω ω a ∘L πω ω b) ?_
-  intro x
-  simp [ContinuousLinearMap.comp_apply, πω_apply_coe, πω'_mul]
-
-/-- *-preservation: `(πω a)† = πω (star a)`. -/
-lemma πω_star (a : A) : (πω ω a)† = πω ω (star a) := by
-  ext x
-  refine DenseRange.induction_on
-    (p := fun x => (πω ω a)† x = πω ω (star a) x)
-    (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) x
-    (isClosed_eq ((πω ω a)†).continuous (πω ω (star a)).continuous)
-    (fun c => by
-      -- Reduce to checking equality of inner products with arbitrary y (Riesz representation)
-      have : ∀ y,
-          ⟪(πω ω a)† (↑c), y⟫_ℂ = ⟪πω ω (star a) (↑c), y⟫_ℂ := by
-        intro y
-        refine DenseRange.induction_on
-          (p := fun y =>
-            ⟪(πω ω a)† (↑c), y⟫_ℂ = ⟪πω ω (star a) (↑c), y⟫_ℂ)
-          (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) y
-          (isClosed_eq (Continuous.inner continuous_const continuous_id)
-            (Continuous.inner continuous_const continuous_id))
-          (fun d => by
-            -- Now both vectors are in the dense subspace; rewrite via the quotient-level identity
-            change ⟪(πω ω a)† (↑c), (↑d)⟫_ℂ = ⟪πω ω (star a) (↑c), (↑d)⟫_ℂ
-            rw [ContinuousLinearMap.adjoint_inner_left]
-            simp only [πω_apply_coe]
-            rw [UniformSpace.Completion.inner_coe, UniformSpace.Completion.inner_coe]
-            rw [πω'_inner, star_star])
-      exact ext_inner_right ℂ this)
-
-/-- Additivity: `πω(a + b) = πω(a) + πω(b)`. -/
-lemma πω_add (a b : A) : πω ω (a + b) = πω ω a + πω ω b := by
-  refine ext_on_completion (ω := ω) (πω ω (a + b)) (πω ω a + πω ω b) ?_
-  intro x
-  have : πω' ω (a + b) x = πω' ω a x + πω' ω b x :=
-    Quotient.inductionOn' x fun c => by unfold πω'; simp only [Quotient.liftOn'_mk'', add_mul]; rfl
-  simp [ContinuousLinearMap.add_apply, πω_apply_coe, this, UniformSpace.Completion.coe_add]
-
-/-- Compatibility with scalar multiplication: `πω(z • a) = z • πω(a)`. -/
-lemma πω_smul (z : ℂ) (a : A) : πω ω (z • a) = z • πω ω a := by
-  refine ext_on_completion (ω := ω) (πω ω (z • a)) (z • πω ω a) ?_
-  intro x
-  have : πω' ω (z • a) x = z • πω' ω a x :=
-    Quotient.inductionOn' x fun c => by unfold πω'; simp only [Quotient.liftOn'_mk'', smul_mul_assoc]; rfl
-  simp [ContinuousLinearMap.smul_apply, πω_apply_coe, this, UniformSpace.Completion.coe_smul]
-
-/-- Subtraction compatibility for the extended representation. -/
-lemma πω_sub (a b : A) : πω ω (a - b) = πω ω a - πω ω b := by
-  have h_add := πω_add (ω := ω) a (-b)
-  have h_neg : πω ω (-b) = -πω ω b := by
-    simpa using πω_smul (ω := ω) (-1 : ℂ) b
-  simpa [sub_eq_add_neg, h_neg] using h_add
-
-/-- Zero element maps to zero operator: `πω(0) = 0`. -/
-lemma πω_zero : πω ω (0 : A) = 0 :=
-  ext_on_completion (ω := ω) (πω ω 0) 0 fun x => by
-    simp [πω_apply_coe, πω'_zero, UniformSpace.Completion.coe_zero]
-
-/-- The bundled non‑unital *-homomorphism `πω : A →⋆ₙₐ[ℂ] 𝓑(Hω)`. -/
-noncomputable def πωStarHom : A →⋆ₙₐ[ℂ] 𝓑(Hω) where
-  toFun := πω ω
-  map_smul' := fun z a => πω_smul ω z a
-  map_zero' := πω_zero ω
-  map_add' := πω_add ω
-  map_mul' := fun a b => by
-    rw [πω_mul ω a b]
-    rfl
-  map_star' := fun a => by
-    rw [ContinuousLinearMap.star_eq_adjoint]
-    exact (πω_star ω a).symm
-
-/-- Operator norm contraction: `‖πω(a)‖ ≤ ‖a‖`. -/
-lemma πω_opNorm_le (a : A) : ‖πω ω a‖ ≤ ‖a‖ := by
-  apply ContinuousLinearMap.opNorm_le_bound
-  · exact norm_nonneg a
-  · intro x
-    refine DenseRange.induction_on (p := fun x => ‖πω ω a x‖ ≤ ‖a‖ * ‖x‖)
-      (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) x ?_ ?_
-    · apply isClosed_le
-      · exact continuous_norm.comp (πω ω a).continuous
-      · exact continuous_const.mul continuous_norm
-    · intro y
-      rw [πω_apply_coe, UniformSpace.Completion.norm_coe, UniformSpace.Completion.norm_coe]
-      exact πω'_norm_le ω a y
-
-/-- The induced linear functional on the quotient: `ω̃([x]) = ω x`, well-defined because
-`ω` vanishes on the ideal `Nω`. -/
-noncomputable def stateOnQuotFun (xq : A ⧸ Nω) : ℂ :=
-  Quotient.liftOn' xq (fun x => ω x)
-    (fun x₁ x₂ hx => by
-      rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at hx
-      have h_mem : x₂ - x₁ ∈ Nω := by simpa [sub_eq_add_neg, add_comm] using hx
-      have : ω (x₂ - x₁) = 0 := State.kernel_vanish_on_elem (ω := ω) (x := x₂ - x₁) h_mem
-      rw [← sub_eq_zero, ← map_sub, ← neg_sub x₂ x₁, map_neg, this, neg_zero])
-
-/-- Additivity of the induced functional: `ω̃(x + y) = ω̃ x + ω̃ y`. -/
-lemma stateOnQuotFun_add (x y : A ⧸ Nω) :
-    stateOnQuotFun ω (x + y) = stateOnQuotFun ω x + stateOnQuotFun ω y :=
-  Quotient.inductionOn₂' x y fun a b => ω.map_add a b
-
-/-- Scalar compatibility: `ω̃(c • x) = c • ω̃ x`. -/
-lemma stateOnQuotFun_smul (c : ℂ) (x : A ⧸ Nω) :
-    stateOnQuotFun ω (c • x) = c • stateOnQuotFun ω x :=
-  Quotient.inductionOn' x fun a => ω.map_smul c a
-
-/-- Bound on the quotient functional: `‖ω̃ x‖ ≤ ‖x‖`. -/
-lemma stateOnQuotFun_bound (x : A ⧸ Nω) : ‖stateOnQuotFun ω x‖ ≤ 1 * ‖x‖ := by
-  refine Quotient.inductionOn' x fun a => ?_
-  -- Use the quotient NormedAddCommGroup instance introduced above
-  -- Provide the NormedAddCommGroup instance explicitly for local typeclass resolution
-  letI : NormedAddCommGroup (A ⧸ Nω) := instNormedAddCommGroupQuot ω
-  simp only [stateOnQuotFun, Quotient.liftOn'_mk'', one_mul]
-  -- Express quotient norm squared via ω to connect functional values to norms
-  have h_sq : ‖(Quotient.mk'' a : A ⧸ Nω)‖ ^ 2 = (ω (star a * a)).re := norm_sq_eq_inner ω a
-  have h_ω_lip : LipschitzWith 1 ω := State.lipschitzWith_one ω
-  have h_approx := CStarAlgebra.increasingApproximateUnit (A := A)
-  -- Convergence: ω(e*a) → ω a, hence norms squared tend to ‖ω a‖^2
-  have h_tendsto : Filter.Tendsto (fun e => ‖ω (e * a)‖ ^ 2) (CStarAlgebra.approximateUnit A)
-      (𝓝 (‖ω a‖ ^ 2)) :=
-    (continuous_norm.pow 2).tendsto _ |>.comp <| h_ω_lip.continuous.tendsto _ |>.comp
-      (h_approx.tendsto_mul_right a)
-  -- Eventually bound: use Cauchy–Schwarz for states to dominate ‖ω(e*a)‖^2 by (ω(star a * a)).re
-  have h_eventually : ∀ᶠ e in CStarAlgebra.approximateUnit A,
-      ‖ω (e * a)‖ ^ 2 ≤ (ω (star a * a)).re :=
-    (h_approx.eventually_star_eq.and h_approx.eventually_nnnorm).mono fun e he =>
-      State.approx_unit_cauchy_schwarz_bound ω a e he.1 (by simpa using he.2)
-  -- Derive global bound by contradiction if limit were strictly larger
-  have : ‖ω a‖ ^ 2 ≤ (ω (star a * a)).re := by
-    haveI : (CStarAlgebra.approximateUnit A).NeBot := h_approx.toIsApproximateUnit.neBot
-    by_contra hlt; push Not at hlt
-    set δ : ℝ := (‖ω a‖ ^ 2 - (ω (star a * a)).re) / 2
-    have hδ_pos : 0 < δ := half_pos (sub_pos.mpr hlt)
-    have h_close := (Metric.tendsto_nhds.mp h_tendsto) δ hδ_pos
-    have h_eventually_gt : ∀ᶠ e in CStarAlgebra.approximateUnit A,
-        (ω (star a * a)).re < ‖ω (e * a)‖ ^ 2 := h_close.mono fun e he => by
-      obtain ⟨h_low, _⟩ := abs_sub_lt_iff.mp he
-      calc (ω (star a * a)).re
-          < (‖ω a‖ ^ 2 + (ω (star a * a)).re) / 2 := by linarith
-        _ = ‖ω a‖ ^ 2 - δ := by unfold δ; field_simp; ring
-        _ < ‖ω (e * a)‖ ^ 2 := by linarith
-    obtain ⟨e, he⟩ := (h_eventually.and h_eventually_gt).exists
-    exact absurd he.2 (not_lt.mpr he.1)
-  -- Turn squared inequality into desired norm inequality using sqrt monotonicity
-  calc ‖ω a‖
-      = Real.sqrt (‖ω a‖ ^ 2) := (Real.sqrt_sq (norm_nonneg _)).symm
-    _ ≤ Real.sqrt ((ω (star a * a)).re) := Real.sqrt_le_sqrt this
-    _ = Real.sqrt (‖(Quotient.mk'' a : A ⧸ Nω)‖ ^ 2) := by rw [h_sq]
-    _ = ‖(Quotient.mk'' a : A ⧸ Nω)‖ := Real.sqrt_sq (norm_nonneg _)
-
-/-- The bounded functional `ω̃ : A ⧸ Nω →L[ℂ] ℂ` with operator norm ≤ 1. -/
-noncomputable def stateOnQuot : (A ⧸ Nω) →L[ℂ] ℂ :=
-  LinearMap.mkContinuous
-    { toFun := stateOnQuotFun ω
-      map_add' := stateOnQuotFun_add ω
-      map_smul' := stateOnQuotFun_smul ω }
-    1
-    (fun x => by simpa using stateOnQuotFun_bound ω x)
-
-
-/-- The continuous extension of `ω̃` to the Hilbert space completion `Hω`. -/
-noncomputable def stateOnHilbert : Hω →L[ℂ] ℂ :=
-  ContinuousLinearMap.extend
-    (stateOnQuot ω)
-    (UniformSpace.Completion.toComplL (𝕜 := ℂ) (E := A ⧸ Nω))
-
-/-- The canonical cyclic vector `ξω ∈ Hω` obtained via the Riesz representation of the
-continuous functional `stateOnHilbert`. -/
-noncomputable def ξω : Hω :=
-  (@InnerProductSpace.toDual ℂ Hω _ _ _ _).symm (stateOnHilbert ω)
-
-/-- Agreement on representatives: `stateOnQuot [x] = ω x`. -/
-lemma stateOnQuot_mk (x : A) : stateOnQuot ω (Quotient.mk'' x) = ω x := rfl
-
-/-- Extension compatibility: on representatives `x`, we have
-`stateOnHilbert (↑x) = stateOnQuot x`. -/
-lemma stateOnHilbert_coe (x : A ⧸ Nω) :
-    stateOnHilbert ω (↑x : Hω) = stateOnQuot ω x := by
-  unfold stateOnHilbert
-  erw [ContinuousLinearMap.extend_eq
-    (h_dense := UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω))
-    (h_e := (UniformSpace.Completion.isUniformEmbedding_coe (α := A ⧸ Nω)).isUniformInducing)]
-
-/-- Riesz identification: `⟪ξω, x⟫ = stateOnHilbert x`. -/
-lemma inner_ξω_eq (x : Hω) : ⟪ξω ω, x⟫_ℂ = stateOnHilbert ω x := by
-  unfold ξω
-  rw [@InnerProductSpace.toDual_symm_apply ℂ Hω _ _ _ _]
-
-/-- Recovery of the original state on the quotient: `ω x = ⟪ξω, [x]⟫`. -/
-lemma state_recovery_quot (x : A) :
-    ω x = ⟪ξω ω, (↑(Quotient.mk'' x : A ⧸ Nω) : Hω)⟫_ℂ := by
-  rw [inner_ξω_eq]
-  rw [stateOnHilbert_coe]
-  rfl
-
-/-- Representation action on a quotient representative: `πω(a) [b] = [a b]`. -/
-lemma πω_apply_quotient_coe (a b : A) :
-    πω ω a (↑(Quotient.mk'' b : A ⧸ Nω) : Hω) = (↑(Quotient.mk'' (a * b) : A ⧸ Nω) : Hω) := by
-  rw [πω_apply_coe]
-  rfl
-
-/-- Fundamental identity: `πω(b) ξω = [b]`.  Proven by comparing inner products with an
-arbitrary dense set of vectors. -/
-lemma πω_cyclic_identity (b : A) :
-    πω ω b (ξω ω) = (↑(Quotient.mk'' b : A ⧸ Nω) : Hω) := by
-  apply ext_inner_right ℂ
-  intro x
-  have h_dense := UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)
-  refine h_dense.induction_on x (isClosed_eq (by fun_prop) (by fun_prop)) ?_
-  intro yq
-  obtain ⟨c, rfl⟩ := Quotient.exists_rep yq
-  -- Typeclass instances are resolved using the renamed quotient instances
-  calc ⟪πω ω b (ξω ω), (↑(Quotient.mk'' c : A ⧸ Nω) : Hω)⟫_ℂ
-      = ⟪ξω ω, (πω ω b)† (↑(Quotient.mk'' c : A ⧸ Nω) : Hω)⟫_ℂ := by
-        rw [ContinuousLinearMap.adjoint_inner_right]
-    _ = ⟪ξω ω, πω ω (star b) (↑(Quotient.mk'' c : A ⧸ Nω) : Hω)⟫_ℂ := by
-        rw [πω_star]
-    _ = ⟪ξω ω, (↑(Quotient.mk'' (star b * c) : A ⧸ Nω) : Hω)⟫_ℂ := by rw [πω_apply_quotient_coe]
-    _ = stateOnHilbert ω (↑(Quotient.mk'' (star b * c) : A ⧸ Nω)) := by rw [inner_ξω_eq]
-    _ = stateOnQuot ω (Quotient.mk'' (star b * c)) := by rw [stateOnHilbert_coe]
-    _ = ω (star b * c) := rfl
-    _ = innerQuotient ω (Quotient.mk'' b) (Quotient.mk'' c) := by
-      unfold innerQuotient; simp
-    -- The bare quotient/completion coercions give the elaborator no type anchor for the
-    -- `⟪·,·⟫_ℂ` instance metavariable, so the inner product is spelled explicitly here.
-    _ = @inner ℂ (A ⧸ Nω) _ (Quotient.mk'' b) (Quotient.mk'' c) := rfl
-    _ = @inner ℂ Hω _ (↑(Quotient.mk'' b : A ⧸ Nω)) (↑(Quotient.mk'' c : A ⧸ Nω)) := by
-      -- Lift inner product from dense subspace into completion
-      simp [UniformSpace.Completion.inner_coe]
-
-/-- Cyclicity of `ξω`: the span of `{πω a ξω | a : A}` is dense in `Hω`. -/
-lemma ξω_is_cyclic : Dense (↑(Submodule.span ℂ {πω ω a (ξω ω) | a : A}) : Set Hω) := by
-  rw [Metric.dense_iff]
-  intro x ε hε
-  obtain ⟨y_quot, hy_dist⟩ := UniformSpace.Completion.denseRange_coe.exists_dist_lt x hε
-  obtain ⟨b, rfl⟩ := Quotient.exists_rep y_quot
-  use πω ω b (ξω ω)
-  constructor
-  · rwa [Metric.mem_ball, πω_cyclic_identity, dist_comm]
-  · apply Submodule.subset_span
-    exact ⟨b, rfl⟩
-
-/-- GNS identity for the constructed triplet: `ω a = ⟪ξω, πω a ξω⟫`. -/
-lemma state_recovery (a : A) :
-    ω a = ⟪ξω ω, πω ω a (ξω ω)⟫_ℂ := by
-  rw [πω_cyclic_identity]
-  exact state_recovery_quot ω a
-
-/-- Normalisation of the cyclic vector: `‖ξω‖ = 1`. -/
-lemma ξω_norm : ‖ξω ω‖ = 1 := by
-  have h_upper : ‖stateOnHilbert ω‖ ≤ 1 := by
-    -- Show operator norm ≤ 1 by bounding on dense subset and extending by continuity
-    refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x ↦ ?_
-    refine DenseRange.induction_on (p := fun x => ‖stateOnHilbert ω x‖ ≤ 1 * ‖x‖)
-      (UniformSpace.Completion.denseRange_coe (α := A ⧸ Nω)) x
-      (isClosed_le ((stateOnHilbert ω).continuous.norm) (continuous_const.mul continuous_norm)) ?_
-    intro y
-    simp only [one_mul]
-    calc ‖stateOnHilbert ω (↑y : Hω)‖
-        = ‖stateOnQuot ω y‖ := by rw [stateOnHilbert_coe]
-      _ ≤ ‖y‖ := by
-          calc ‖stateOnQuot ω y‖
-              = ‖stateOnQuotFun ω y‖ := rfl
-            _ ≤ ‖y‖ := by simpa using stateOnQuotFun_bound ω y
-      _ = ‖(↑y : Hω)‖ := by rw [UniformSpace.Completion.norm_coe]
-  have h_lower : 1 ≤ ‖stateOnHilbert ω‖ := by
-    -- Lower bound: evaluate functional at cyclic vector to show norm ≥ 1
-    have h2 : ‖stateOnQuot ω‖ ≤ ‖stateOnHilbert ω‖ :=
-      ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg (stateOnHilbert ω)) fun x ↦ by
-        simpa [stateOnHilbert_coe, UniformSpace.Completion.norm_coe] using
-          ContinuousLinearMap.le_opNorm (stateOnHilbert ω) (↑x : Hω)
-    suffices 1 ≤ ‖stateOnQuot ω‖ from this.trans h2
-    have h_norm : ‖ω‖ = 1 := ω.norm_eq_one
-    rw [← h_norm]
-    by_contra h_not; push Not at h_not
-    -- Expand definition of norm via supremum over ratios ‖ω a‖/‖a‖
-    rw [State.norm_def] at h_not
-    obtain ⟨_, ⟨a, ha, rfl⟩, h_r_large⟩ :
-        ∃ r ∈ {s : ℝ | ∃ a : A, a ≠ 0 ∧ s = ‖ω a‖ / ‖a‖}, ‖stateOnQuot ω‖ < r := by
-      by_contra h_no; push Not at h_no
-      have : sSup {s : ℝ | ∃ a : A, a ≠ 0 ∧ s = ‖ω a‖ / ‖a‖} ≤ ‖stateOnQuot ω‖ := by
-        refine csSup_le ?_ h_no
-        by_contra h_empty
-        simp only [Set.not_nonempty_iff_eq_empty] at h_empty
-        rw [h_empty, Real.sSup_empty] at h_not
-        linarith [norm_nonneg (stateOnQuot ω)]
-      linarith
-      -- Use the quotient norm instance for subsequent norm computations
-    -- Provide the NormedAddCommGroup instance explicitly for local computations
-    letI : NormedAddCommGroup (A ⧸ Nω) := instNormedAddCommGroupQuot ω
-    -- Bound any ratio by operator norm of stateOnQuot using quotient representative
-    have h_bound : ‖ω a‖ / ‖a‖ ≤ ‖stateOnQuot ω‖ := by
-      have h_pos : 0 < ‖a‖ := by simpa [norm_pos_iff] using ha
-      have h_quot_norm : ‖(Quotient.mk'' a : A ⧸ Nω)‖ ≤ ‖a‖ := by
-        have hsq : ‖(Quotient.mk'' a : A ⧸ Nω)‖ ^ 2 ≤ ‖a‖ ^ 2 := by
-          calc ‖(Quotient.mk'' a : A ⧸ Nω)‖ ^ 2
-              = (ω (star a * a)).re := norm_sq_eq_inner ω a
-            _ ≤ ‖ω (star a * a)‖ := Complex.re_le_norm _
-            _ ≤ ‖star a * a‖ := State.norm_le_norm ω (star a * a)
-            _ ≤ ‖a‖ ^ 2 := by simpa [sq, norm_star] using norm_mul_le (star a) a
-        simpa [abs_of_nonneg (norm_nonneg _)] using abs_le_of_sq_le_sq hsq (norm_nonneg _)
-      calc ‖ω a‖ / ‖a‖
-          = ‖stateOnQuot ω (Quotient.mk'' a)‖ / ‖a‖ := by rw [stateOnQuot_mk]
-        _ ≤ (‖stateOnQuot ω‖ * ‖(Quotient.mk'' a : A ⧸ Nω)‖) / ‖a‖ := by
-            gcongr; exact ContinuousLinearMap.le_opNorm _ _
-        _ ≤ ‖stateOnQuot ω‖ := by
-            calc ‖stateOnQuot ω‖ * ‖(Quotient.mk'' a : A ⧸ Nω)‖ / ‖a‖
-                ≤ ‖stateOnQuot ω‖ * ‖a‖ / ‖a‖ := by gcongr
-              _ = ‖stateOnQuot ω‖ := by field_simp
-    exact (lt_of_le_of_lt h_bound h_r_large).false
-  calc ‖ξω ω‖
-      = ‖(@InnerProductSpace.toDual ℂ Hω _ _ _ _) (ξω ω)‖ := by
-          rw [(@InnerProductSpace.toDual ℂ Hω _ _ _ _).norm_map (ξω ω)]
-    _ = ‖stateOnHilbert ω‖ := by unfold ξω; simp [LinearIsometryEquiv.apply_symm_apply]
-    _ = 1 := le_antisymm h_upper h_lower
-
-/-- Public lemma: The GNS representation π satisfies ‖π(a)‖ ≤ ‖a‖. -/
-lemma πωStarHom_opNorm_le (a : A) : ‖(πωStarHom ω) a‖ ≤ ‖a‖ :=
-  πω_opNorm_le ω a
-
-/-- The orbit vector `πω(a) ξω` has norm at most `‖a‖`. -/
-lemma πω_vector_norm_le (a : A) : ‖πω ω a (ξω ω)‖ ≤ ‖a‖ := by
-  have h_le := ContinuousLinearMap.le_opNorm (πω ω a) (ξω ω)
-  have h_norm : ‖ξω ω‖ = 1 := ξω_norm (ω := ω)
-  have h_le' : ‖πω ω a (ξω ω)‖ ≤ ‖πω ω a‖ := by simpa [h_norm] using h_le
-  exact h_le'.trans (πω_opNorm_le (ω := ω) a)
-
-
-/-- Approximate-unit elements act as contractions under the GNS representation. -/
-lemma eventually_opNorm_le_one :
-    ∀ᶠ e in CStarAlgebra.approximateUnit A, ‖πω ω e‖ ≤ (1 : ℝ) := by
-  have hl : (CStarAlgebra.approximateUnit A).IsIncreasingApproximateUnit :=
-    CStarAlgebra.increasingApproximateUnit (A := A)
-  have hnorm := hl.eventually_norm
-  refine hnorm.mono ?_
-  intro e he
-  exact (πωStarHom_opNorm_le (ω := ω) e).trans he
-
-/-- Approximate units act as the identity on the vectors `πω(a) ξω`. -/
-lemma tendsto_on_generator (a : A) :
-    Tendsto (fun e : A => πω ω e (πω ω a (ξω ω))) (CStarAlgebra.approximateUnit A)
-      (nhds (πω ω a (ξω ω))) := by
-  classical
-  have hl : (CStarAlgebra.approximateUnit A).IsIncreasingApproximateUnit :=
-    CStarAlgebra.increasingApproximateUnit (A := A)
-  have h_mul := hl.tendsto_mul_right a
-  refine Metric.tendsto_nhds.mpr ?_
-  intro ε hε
-  have h_event := (Metric.tendsto_nhds.mp h_mul) ε hε
-  refine h_event.mono ?_
-  intro e he
-  have h_mul_apply : πω ω e (πω ω a (ξω ω)) = πω ω (e * a) (ξω ω) := by
-    simpa [ContinuousLinearMap.comp_apply] using
-      congrArg (fun (T : 𝓑(Hω)) => T (ξω ω)) (πω_mul ω e a).symm
-  have h_sub_op : πω ω ((e * a) - a) = πω ω (e * a) - πω ω a := πω_sub (ω := ω) (e * a) a
-  have h_sub_vec : πω ω ((e * a) - a) (ξω ω)
-      = πω ω (e * a) (ξω ω) - πω ω a (ξω ω) := by
-    simpa [ContinuousLinearMap.sub_apply] using
-      congrArg (fun T : 𝓑(Hω) => T (ξω ω)) h_sub_op
-  have h_diff :
-      πω ω e (πω ω a (ξω ω)) - πω ω a (ξω ω)
-        = πω ω ((e * a) - a) (ξω ω) := by
-    simp [h_mul_apply, h_sub_vec]
-  have h_dist :
-      dist (πω ω e (πω ω a (ξω ω))) (πω ω a (ξω ω))
-        = ‖πω ω ((e * a) - a) (ξω ω)‖ := by
-    simp [dist_eq_norm, h_diff]
-  have h_bound := πω_vector_norm_le (ω := ω) ((e * a) - a)
-  have h_target : ‖πω ω ((e * a) - a) (ξω ω)‖ < ε := by
-    have h_lt : ‖(e * a) - a‖ < ε := by simpa [dist_eq_norm, sub_eq_add_neg]
-        using he
-    exact lt_of_le_of_lt h_bound h_lt
-  simpa [h_dist] using h_target
-
-/-- Approximate units act as the identity on the cyclic span generated by `ξω`. -/
-lemma tendsto_on_cyclic_span {x : Hω}
-    (hx : x ∈ Submodule.span ℂ {πω ω a (ξω ω) | a : A}) :
-    Tendsto (fun e : A => πω ω e x) (CStarAlgebra.approximateUnit A) (nhds x) := by
-  classical
-  set l := CStarAlgebra.approximateUnit A
-  have h_zero : Tendsto (fun _ : A => (0 : Hω)) l (nhds (0 : Hω)) := tendsto_const_nhds
-  refine
-    Submodule.span_induction
-      (p := fun x _ => Tendsto (fun e : A => πω ω e x) l (nhds x))
-      ?h_mem (by simpa [ContinuousLinearMap.map_zero] using h_zero)
-      ?h_add ?h_smul hx
-  · intro y hy
-    rcases hy with ⟨a, rfl⟩
-    simpa using tendsto_on_generator (ω := ω) a
-  · intro x y hx hy hx_t hy_t
-    have h_prod := hx_t.prodMk hy_t
-    have h_add := (continuous_fst.add continuous_snd).tendsto (x, y)
-    have h_add' :
-        Tendsto (fun p : Hω × Hω => p.1 + p.2)
-          (nhds x ×ˢ nhds y) (nhds (x + y)) := by
-      simpa [nhds_prod_eq] using h_add
-    have h_comp :
-        Tendsto (fun e : A => πω ω e x + πω ω e y) l (nhds (x + y)) := by
-      simpa [Function.comp] using h_add'.comp h_prod
-    have h_eq :
-        (fun e : A => πω ω e x + πω ω e y) =
-          fun e : A => πω ω e (x + y) := by
-      funext e; simp [map_add]
-    simpa [h_eq] using h_comp
-  · intro z x hx hx_t
-    have h_map :=
-        ((continuous_const : Continuous fun _ : Hω => z).smul continuous_id).tendsto x
-    have h_comp :
-        Tendsto (fun e : A => z • πω ω e x) l (nhds (z • x)) := by
-      simpa [Function.comp] using h_map.comp hx_t
-    have h_eq :
-        (fun e : A => z • πω ω e x) =
-          fun e : A => πω ω e (z • x) := by
-      funext e; simp [map_smul]
-    simpa [h_eq] using h_comp
-
-/-- Approximate units act as the identity on all of `Hω`. -/
-lemma tendsto_on_vector (x : Hω) :
-    Tendsto (fun e : A => πω ω e x) (CStarAlgebra.approximateUnit A) (nhds x) := by
-  classical
-  set l := CStarAlgebra.approximateUnit A
-  refine Metric.tendsto_nhds.mpr ?_
-  intro ε hε
-  have hε2 : 0 < ε / 2 := half_pos hε
-  have hε4 : 0 < ε / 4 := by
-    have : (0 : ℝ) < 4 := by norm_num
-    exact div_pos hε this
-  have h_dense := ξω_is_cyclic (ω := ω)
-  obtain ⟨y, hy_mem, hy_dist⟩ := h_dense.exists_dist_lt x hε4
-  have hy_span : y ∈ Submodule.span ℂ {πω ω a (ξω ω) | a : A} := hy_mem
-  have hy_norm : ‖x - y‖ < ε / 4 := by
-    have hy_dist' : dist x y < ε / 4 := by simpa [dist_comm] using hy_dist
-    simpa [dist_eq_norm] using hy_dist'
-  have hy_tendsto := tendsto_on_cyclic_span (ω := ω) (x := y) hy_span
-  have hy_event := (Metric.tendsto_nhds.mp hy_tendsto) (ε / 2) hε2
-  have h_contr := eventually_opNorm_le_one (ω := ω)
-  have h_contr_vec :
-      ∀ᶠ e in l, ‖πω ω e (x - y)‖ ≤ ‖x - y‖ := by
-    refine h_contr.mono ?_
-    intro e he
-    have h_le := ContinuousLinearMap.le_opNorm (πω ω e) (x - y)
-    have h_mul := mul_le_mul_of_nonneg_right he (norm_nonneg (x - y))
-    simpa [one_mul] using h_le.trans h_mul
-  have h_event := (h_contr_vec.and hy_event)
-  have h_goal : ∀ᶠ e in l, dist (πω ω e x) x < ε := by
-    refine h_event.mono ?_
-    intro e he
-    have h_bound : ‖πω ω e (x - y)‖ ≤ ‖x - y‖ := he.1
-    have h_y : ‖πω ω e y - y‖ < ε / 2 := by
-      have := he.2
-      simpa [dist_eq_norm] using this
-    have h_first :
-        ‖πω ω e (x - y) - (x - y)‖ ≤ 2 * ‖x - y‖ := by
-      calc
-        ‖πω ω e (x - y) - (x - y)‖
-            ≤ ‖πω ω e (x - y)‖ + ‖x - y‖ := norm_sub_le _ _
-        _ ≤ ‖x - y‖ + ‖x - y‖ := by
-            exact add_le_add h_bound le_rfl
-        _ = 2 * ‖x - y‖ := by ring
-    have h_two : 2 * ‖x - y‖ < ε / 2 := by
-      have h_mul := mul_lt_mul_of_pos_left hy_norm (by norm_num : 0 < (2 : ℝ))
-      have h_half : 2 * (ε / 4) = ε / 2 := by ring
-      simpa [h_half] using h_mul
-    have h_first_lt : ‖πω ω e (x - y) - (x - y)‖ < ε / 2 := lt_of_le_of_lt h_first h_two
-    have h_decomp :
-        πω ω e x - x
-          = (πω ω e (x - y) - (x - y)) + (πω ω e y - y) := by
-      have h_sum : (x - y) + y = x := sub_add_cancel x y
-      calc
-        πω ω e x - x
-            = πω ω e ((x - y) + y) - ((x - y) + y) := by
-                exact congrArg (fun t => πω ω e t - t) h_sum.symm
-        _ = (πω ω e (x - y) + πω ω e y) - ((x - y) + y) := by
-            exact congrArg (fun t => t - ((x - y) + y)) (map_add (πω ω e) (x - y) y)
-        _ = (πω ω e (x - y) - (x - y)) + (πω ω e y - y) := by
-          grind [sub_eq_add_neg]
-    have h_norm_le :
-        ‖πω ω e x - x‖
-          ≤ ‖πω ω e (x - y) - (x - y)‖ + ‖πω ω e y - y‖ := by
-      simpa [h_decomp] using
-        norm_add_le (πω ω e (x - y) - (x - y)) (πω ω e y - y)
-    have h_sum_lt :
-        ‖πω ω e (x - y) - (x - y)‖ + ‖πω ω e y - y‖ < ε := by
-      have := add_lt_add_of_lt_of_lt h_first_lt h_y
-      have h_halves : ε / 2 + ε / 2 = ε := by ring
-      simpa [h_halves] using this
-    have h_total : ‖πω ω e x - x‖ < ε := lt_of_le_of_lt h_norm_le h_sum_lt
-    simpa [dist_eq_norm] using h_total
-  exact h_goal
-
-/-- Evaluation of the state along the approximate unit converges to `1`. -/
-lemma approxUnit_eval_tendsto_one :
-    Tendsto (fun e : A => ω e) (CStarAlgebra.approximateUnit A) (nhds (1 : ℂ)) := by
-  classical
-  have h_vec := tendsto_on_vector (ω := ω) (x := ξω ω)
-  have h_inner : Continuous fun v : Hω => ⟪ξω ω, v⟫_ℂ :=
-    Continuous.inner continuous_const continuous_id
-  have h_comp :
-      Tendsto (fun e : A => ⟪ξω ω, πω ω e (ξω ω)⟫_ℂ)
-        (CStarAlgebra.approximateUnit A)
-        (nhds ⟪ξω ω, ξω ω⟫_ℂ) :=
-    (h_inner.tendsto (ξω ω)).comp h_vec
-  have h_eq :
-      (fun e : A => ⟪ξω ω, πω ω e (ξω ω)⟫_ℂ) =
-        fun e : A => ω e := by
-    funext e
-    simpa using (state_recovery (ω := ω) e).symm
-  have h_norm := ξω_norm (ω := ω)
-  rw [h_eq] at h_comp
-  convert h_comp using 2
-  rw [inner_self_eq_norm_sq_to_K (𝕜 := ℂ), h_norm]
-  norm_num
-
-/-- If ω is faithful, then the GNS kernel Nω is trivial. -/
-lemma IsFaithful.kernel_eq_bot (hω : ω.IsFaithful) : (Nω).carrier = {0} := by
-  ext a
-  simp only [Set.mem_singleton_iff]
-  constructor
-  · intro ha
-    exact hω a ha
-  · intro ha
-    simp [ha]
-
-/-- The GNS cyclic vector ξω is nonzero (has norm 1).
-
-Note: This is a basic property of the GNS construction, not the main theorem about
-faithful states and separating vectors. -/
-lemma ξω_ne_zero : ξω ω ≠ 0 := by
-  have h := ξω_norm (ω := ω)
-  intro h0
-  rw [h0, norm_zero] at h
-  exact one_ne_zero h.symm
-
-/-- If ω is faithful, then πω(a) ξω = 0 implies a = 0 (and hence πω(a) = 0).
-
-This is the key separating property: the cyclic vector ξω separates elements of A
-via the GNS representation when ω is faithful. -/
-lemma IsFaithful.ξω_separating (hω : ω.IsFaithful) (a : A) (h : πω ω a (ξω ω) = 0) : a = 0 := by
-  rw [πω_cyclic_identity] at h
-  -- h : ↑(Quotient.mk'' a : A ⧸ Nω ω) = 0 in Hω
-  have h_inj := UniformSpace.Completion.coe_injective (α := A ⧸ Nω)
-  have h0 : (↑(Quotient.mk'' 0 : A ⧸ Nω) : Hω) = 0 :=
-    UniformSpace.Completion.coe_zero (α := A ⧸ Nω)
-  have h_quot_zero : (Quotient.mk'' a : A ⧸ Nω) = Quotient.mk'' 0 := h_inj (h.trans h0.symm)
-  -- From quotient being zero, a ∈ Nω
-  have h_eq := Quotient.exact' h_quot_zero
-  rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply] at h_eq
-  have h_neg_in : -a ∈ (Nω).toAddSubgroup := by simpa using h_eq
-  have h_neg_neg : - -a ∈ (Nω).carrier := (Nω).neg_mem' h_neg_in
-  have h_in_kernel : a ∈ (Nω).carrier := by simp only [neg_neg] at h_neg_neg; exact h_neg_neg
-  -- Apply faithfulness: Nω = {0}
-  rw [IsFaithful.kernel_eq_bot (ω := ω) hω, Set.mem_singleton_iff] at h_in_kernel
-  exact h_in_kernel
-
-/-- The fundamental equivalence: ω is faithful if and only if the map a ↦ πω(a) ξω
-is injective from A to Hω.
-
-This connects faithfulness (an algebraic property of the state) with the separating
-property (a geometric property of the cyclic vector). -/
+/-- A state is faithful iff the cyclic vector separates the algebra, i.e. `a ↦ π[ω] a ξ[ω]` is
+injective. -/
 theorem isFaithful_iff_separating :
-    ω.IsFaithful ↔ Function.Injective (fun a : A => πω ω a (ξω ω)) := by
-  constructor
-  · intro hω a b hab
-    have h : πω ω (a - b) (ξω ω) = 0 := by
-      simp only [πω_sub, ContinuousLinearMap.sub_apply, hab, sub_self]
-    exact sub_eq_zero.mp (IsFaithful.ξω_separating (ω := ω) hω (a - b) h)
-  · intro h_inj a ha
-    -- ha : ω(a*a) = 0, i.e., a ∈ Nω
-    -- Need to show a = 0
-    have h_cyclic : πω ω a (ξω ω) = 0 := by
-      rw [πω_cyclic_identity]
-      have h_quot : (Quotient.mk'' a : A ⧸ Nω) = Quotient.mk'' 0 := by
-        apply Quotient.sound'
-        rw [CStarAlgebraIdeal.leftRel, QuotientAddGroup.leftRel_apply]
-        simpa using (Nω).neg_mem' ha
-      rw [h_quot]
-      exact UniformSpace.Completion.coe_zero (α := A ⧸ Nω)
-    have h0 : πω ω 0 (ξω ω) = 0 := by rw [πω_zero]; simp
-    exact h_inj (h_cyclic.trans h0.symm)
+    ω.IsFaithful ↔ Function.Injective fun a : A => π[ω] a ξ[ω] := by
+  simp only [gnsRep_apply_gnsVector]
+  exact ω.isFaithful_iff_injective_gnsMk
 
-/-- The GNS representation πω is injective when ω is faithful.
+/-- The GNS representation of a faithful state is injective. -/
+lemma IsFaithful.injective_gnsRep (hω : ω.IsFaithful) : Function.Injective π[ω] :=
+  fun a b hab => ω.isFaithful_iff_separating.mp hω (by simp only [hab])
 
-This is a corollary of the fundamental equivalence `isFaithful_iff_separating`:
-the cyclic vector ξω separates elements via the representation, which implies
-that the representation itself is injective. -/
-lemma IsFaithful.injective_πω (hω : ω.IsFaithful) : Function.Injective (πω ω) := by
-  intro a b hab
-  have h_sep := (isFaithful_iff_separating (ω := ω)).mp hω
-  apply h_sep
-  simp only [hab]
-
-end Construction
-
-end GNS
+end State

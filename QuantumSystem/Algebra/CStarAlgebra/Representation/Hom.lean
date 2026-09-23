@@ -1,7 +1,6 @@
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 
 /-!
 # Intertwiners between `CStarRep`s
@@ -30,8 +29,6 @@ isomorphisms in this category.
 -/
 
 @[expose] public section
-
-open scoped Adjoint
 
 namespace CStarRep
 
@@ -102,15 +99,15 @@ variable {R₁ R₂ : CStarRep A}
 
 /-- A unitary equivalence is in particular an intertwiner. -/
 noncomputable def toHom (U : UnitaryEquiv R₁ R₂) : Hom R₁ R₂ where
-  toContinuousLinearMap := U.unitary_map.toContinuousLinearMap
+  toContinuousLinearMap := U.toLinearIsometryEquiv
   intertwines := U.intertwines
 
 @[simp] lemma toHom_toContinuousLinearMap (U : UnitaryEquiv R₁ R₂) :
-    U.toHom.toContinuousLinearMap = U.unitary_map.toContinuousLinearMap := rfl
+    U.toHom.toContinuousLinearMap = U.toLinearIsometryEquiv := rfl
 
+/-- The intertwiner underlying `U.symm` is the inverse unitary `U.symm`, i.e. the adjoint `U†`. -/
 @[simp] lemma symm_toHom (U : UnitaryEquiv R₁ R₂) :
-    U.symm.toHom.toContinuousLinearMap =
-      U.unitary_map.toContinuousLinearMap† := rfl
+    U.symm.toHom.toContinuousLinearMap = (U.toLinearIsometryEquiv.symm : R₂.H →L[ℂ] R₁.H) := rfl
 
 @[simp] lemma refl_toHom (R : CStarRep A) :
     (UnitaryEquiv.refl R).toHom = Hom.id R := by

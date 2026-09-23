@@ -29,19 +29,16 @@ Inherited fields (from `CStarRep A`):
 * `π : A →⋆ₙₐ[ℂ] 𝓑(H)` : a non‑unital *-representation of `A` on `H`.
 
 GNS-specific fields:
-* `ξ : H` : a cyclic unit vector.
+* `ξ : H` : a cyclic vector; it is automatically a unit vector (`norm_ξ`).
 * `cyclic` : density of the linear span `Submodule.span ℂ { π a ξ | a : A }` in `H`.
-* `unit_norm` : normalisation `‖ξ‖ = 1`.
 * `gns_condition` : the GNS identity `ω a = ⟪ξ, π a ξ⟫` for every `a : A`.
 -/
-structure Representation {A} [NonUnitalCStarAlgebra A] (ω : State ℂ A)
+structure Representation {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] (ω : State A)
     extends CStarRep A where
   /-- The cyclic vector ξ ∈ H -/
   ξ : H
   /-- The cyclic property: the span of {π(a)ξ : a ∈ A} is dense in H -/
   cyclic : Dense (↑(Submodule.span ℂ {π a ξ | a : A}) : Set H)
-  /-- The unit norm property: ‖ξ‖ = 1 -/
-  unit_norm : ‖ξ‖ = 1
   /-- The GNS condition: ω(a) = ⟪ξ, π(a)ξ⟫ for all a ∈ A -/
   gns_condition : ∀ a : A, ω a = ⟪ξ, π a ξ⟫_ℂ
 
@@ -49,8 +46,8 @@ namespace Representation
 
 open ComplexConjugate
 
-variable {A : Type*} [NonUnitalCStarAlgebra A]
-variable {ω : State ℂ A}
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable {ω : State A}
 
 /-- A submodule `W` of the Hilbert space of a GNS representation is invariant if it is
 stable under the action of `π(a)` for every `a : A`.
@@ -61,8 +58,8 @@ while the single source of truth for the notion is `CStarRep.IsInvariant`. -/
 def IsInvariant (T : Representation ω) (W : Submodule ℂ T.H) : Prop :=
   T.toCStarRep.IsInvariant W
 
-/-- A GNS representation is (topologically) irreducible if the only **closed** invariant
-submodules are `⊥` and `⊤`.
+/-- A GNS representation is (topologically) irreducible if it is non-null and the only
+**closed** invariant submodules are `⊥` and `⊤`.
 
 This is the generic `CStarRep.IsIrreducible` of the underlying representation `T.toCStarRep`
 (definitionally, since `T.H`/`T.π` are the inherited fields); the GNS wrapper keeps the
@@ -112,18 +109,140 @@ theorem actsNondegenerately (T : Representation ω) :
   have hbot : Sᗮ = ⊥ := Submodule.topologicalClosure_eq_top_iff.mp htop
   simpa [hbot] using hmem
 
+/-! ### Approximate units act as the identity
+
+Along an approximate unit `(e_α)` of `A`, the operators `π e_α` converge strongly to the identity
+on the Hilbert space of any GNS triplet — a quantitative form of nondegeneracy.  Only finiteness
+of `‖ξ‖` is used, so this yields the normalisation `‖ξ‖ = 1` (`norm_ξ`) as a theorem:
+`‖ξ‖² = lim ω e_α ≤ 1`, while `|ω a| = |⟪ξ, π a ξ⟫| ≤ ‖a‖ ‖ξ‖²` gives `1 = ‖ω‖ ≤ ‖ξ‖²`. -/
+
+section ApproximateUnit
+
+open Filter Topology
+
+variable (T : Representation ω)
+
+/-- The orbit vectors are bounded by the algebra norm: `‖π a ξ‖ ≤ ‖a‖ ‖ξ‖`. -/
+lemma norm_π_ξ_le (a : A) : ‖T.π a T.ξ‖ ≤ ‖a‖ * ‖T.ξ‖ :=
+  ((T.π a).le_opNorm _).trans (by gcongr; exact NonUnitalStarAlgHom.norm_apply_le _ a)
+
+/-- Approximate-unit elements act as contractions. -/
+lemma eventually_norm_π_le_one :
+    ∀ᶠ e in CStarAlgebra.approximateUnit A, ‖T.π e‖ ≤ 1 :=
+  (CStarAlgebra.increasingApproximateUnit (A := A)).eventually_norm.mono fun e he =>
+    (NonUnitalStarAlgHom.norm_apply_le _ e).trans he
+
+/-- Approximate units act as the identity on the orbit vectors `π a ξ`. -/
+lemma tendsto_π_approximateUnit_orbit (a : A) :
+    Tendsto (fun e : A => T.π e (T.π a T.ξ)) (CStarAlgebra.approximateUnit A)
+      (𝓝 (T.π a T.ξ)) := by
+  rw [tendsto_iff_norm_sub_tendsto_zero]
+  have h_eq : (fun e : A => ‖T.π e (T.π a T.ξ) - T.π a T.ξ‖) =
+      fun e : A => ‖T.π (e * a - a) T.ξ‖ := by
+    funext e
+    simp [map_sub, map_mul]
+  rw [h_eq]
+  refine squeeze_zero (fun _ => norm_nonneg _) (fun e => T.norm_π_ξ_le (e * a - a)) ?_
+  simpa using (tendsto_iff_norm_sub_tendsto_zero.mp
+    ((CStarAlgebra.increasingApproximateUnit (A := A)).tendsto_mul_right a)).mul_const ‖T.ξ‖
+
+/-- Approximate units act as the identity on the linear span of the orbit of `ξ`. -/
+lemma tendsto_π_approximateUnit_of_mem_span {x : T.H}
+    (hx : x ∈ Submodule.span ℂ {T.π a T.ξ | a : A}) :
+    Tendsto (fun e : A => T.π e x) (CStarAlgebra.approximateUnit A) (𝓝 x) := by
+  induction hx using Submodule.span_induction with
+  | mem y hy =>
+    obtain ⟨a, rfl⟩ := hy
+    exact T.tendsto_π_approximateUnit_orbit a
+  | zero => simpa using tendsto_const_nhds
+  | add y z _ _ hy hz => simpa [map_add] using hy.add hz
+  | smul c y _ hy => simpa [map_smul] using hy.const_smul c
+
+/-- Approximate units act as the identity on the whole Hilbert space: `π e_α → 1` strongly. -/
+theorem tendsto_π_approximateUnit (x : T.H) :
+    Tendsto (fun e : A => T.π e x) (CStarAlgebra.approximateUnit A) (𝓝 x) := by
+  rw [Metric.tendsto_nhds]
+  intro ε hε
+  -- Approximate `x` within `ε / 4` by a vector `y` of the cyclic span.
+  obtain ⟨y, hy_mem, hy_dist⟩ := T.cyclic.exists_dist_lt x (by positivity : 0 < ε / 4)
+  have hy_norm : ‖x - y‖ < ε / 4 := by rwa [dist_eq_norm] at hy_dist
+  have hy := (Metric.tendsto_nhds.mp (T.tendsto_π_approximateUnit_of_mem_span hy_mem))
+    (ε / 2) (by positivity)
+  filter_upwards [T.eventually_norm_π_le_one, hy] with e he hey
+  rw [dist_eq_norm] at hey ⊢
+  -- `π e x - x = (π e (x - y) - (x - y)) + (π e y - y)`, with the first term at most `2 ‖x - y‖`.
+  have h_decomp : T.π e x - x = (T.π e (x - y) - (x - y)) + (T.π e y - y) := by
+    simp only [map_sub]; abel
+  have h_first : ‖T.π e (x - y) - (x - y)‖ ≤ 2 * ‖x - y‖ :=
+    calc ‖T.π e (x - y) - (x - y)‖
+        ≤ ‖T.π e (x - y)‖ + ‖x - y‖ := norm_sub_le _ _
+      _ ≤ ‖T.π e‖ * ‖x - y‖ + ‖x - y‖ := by gcongr; exact (T.π e).le_opNorm _
+      _ ≤ 1 * ‖x - y‖ + ‖x - y‖ := by gcongr
+      _ = 2 * ‖x - y‖ := by ring
+  calc ‖T.π e x - x‖
+      ≤ ‖T.π e (x - y) - (x - y)‖ + ‖T.π e y - y‖ := by rw [h_decomp]; exact norm_add_le _ _
+    _ < 2 * (ε / 4) + ε / 2 := by gcongr; linarith
+    _ = ε := by ring
+
+/-- `ω e_α → ‖ξ‖²` along an approximate unit. -/
+lemma tendsto_apply_approximateUnit_norm_sq :
+    Tendsto (fun e : A => ω e) (CStarAlgebra.approximateUnit A) (𝓝 ((‖T.ξ‖ ^ 2 : ℝ) : ℂ)) := by
+  have h : Tendsto (fun e : A => ⟪T.ξ, T.π e T.ξ⟫_ℂ) (CStarAlgebra.approximateUnit A)
+      (𝓝 ⟪T.ξ, T.ξ⟫_ℂ) :=
+    (continuous_const.inner continuous_id).tendsto T.ξ |>.comp (T.tendsto_π_approximateUnit T.ξ)
+  simpa [← T.gns_condition, inner_self_eq_norm_sq_to_K (𝕜 := ℂ)] using h
+
+/-- The cyclic vector of a GNS triplet is a unit vector: `‖ξ‖ = 1`. -/
+theorem norm_ξ : ‖T.ξ‖ = 1 := by
+  haveI : (CStarAlgebra.approximateUnit A).NeBot :=
+    (CStarAlgebra.increasingApproximateUnit (A := A)).toIsApproximateUnit.neBot
+  -- Upper bound: `‖ξ‖² = lim ω e_α` and `‖ω e‖ ≤ ‖e‖ ≤ 1`.
+  have h_le : ‖T.ξ‖ ^ 2 ≤ 1 := by
+    have h := (continuous_norm.tendsto _).comp T.tendsto_apply_approximateUnit_norm_sq
+    rw [Complex.norm_real, Real.norm_of_nonneg (by positivity)] at h
+    refine le_of_tendsto h ?_
+    filter_upwards [(CStarAlgebra.increasingApproximateUnit (A := A)).eventually_norm] with e he
+    exact (ω.norm_apply_le e).trans he
+  -- Lower bound: `|ω a| = |⟪ξ, π a ξ⟫| ≤ ‖a‖ ‖ξ‖²`, and `‖ω‖ = 1`.
+  have h_ge : 1 ≤ ‖T.ξ‖ ^ 2 := by
+    rw [← ω.norm_toContinuousLinearMap]
+    refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun a => ?_
+    rw [State.toContinuousLinearMap_apply, T.gns_condition]
+    calc ‖⟪T.ξ, T.π a T.ξ⟫_ℂ‖
+        ≤ ‖T.ξ‖ * ‖T.π a T.ξ‖ := norm_inner_le_norm _ _
+      _ ≤ ‖T.ξ‖ * (‖a‖ * ‖T.ξ‖) := by gcongr; exact T.norm_π_ξ_le a
+      _ = ‖T.ξ‖ ^ 2 * ‖a‖ := by ring
+  exact (pow_eq_one_iff_of_nonneg (norm_nonneg _) two_ne_zero).mp (le_antisymm h_le h_ge)
+
+/-- Evaluation of the state along an approximate unit converges to `1`: `ω e_α → 1`. -/
+theorem tendsto_apply_approximateUnit (T : Representation ω) :
+    Tendsto (fun e : A => ω e) (CStarAlgebra.approximateUnit A) (𝓝 1) := by
+  simpa [T.norm_ξ] using T.tendsto_apply_approximateUnit_norm_sq
+
+end ApproximateUnit
+
+/-- A GNS representation is non-null: `π = 0` would force `ω a = ⟪ξ, π a ξ⟫ = 0` for every `a`,
+contradicting `‖ω‖ = 1`. -/
+theorem π_ne_zero (T : Representation ω) : T.π ≠ 0 := by
+  intro h
+  have h0 : ω.toContinuousLinearMap = 0 := by
+    ext a
+    simp [State.toContinuousLinearMap_apply, T.gns_condition, h]
+  have := ω.norm_toContinuousLinearMap
+  rw [h0, norm_zero] at this
+  exact zero_ne_one this
+
 /-- A unitary equivalence between two GNS representations for the **same** state `ω`.
 
 This **extends** the generic unitary equivalence of the underlying `CStarRep`s
-(`CStarRep.UnitaryEquiv`, which supplies the intertwining unitary `unitary_map` and its
+(`CStarRep.UnitaryEquiv`, which supplies the intertwining unitary `toLinearIsometryEquiv` and its
 `intertwines` property) by the GNS-specific compatibility `map_cyclic_vector`, requiring the
 unitary to identify the two cyclic vectors.  This is exactly the extra data of the GNS
 uniqueness statement, on top of the bare unitary intertwiner shared with sector theory. -/
 structure UnitaryEquiv (T₁ T₂ : Representation ω) extends
     CStarRep.UnitaryEquiv T₁.toCStarRep T₂.toCStarRep where
   /-- The unitary sends the cyclic vector of the first triplet to that of the second. -/
-  map_cyclic_vector :
-    (toUnitaryEquiv.unitary_map.toContinuousLinearMap) T₁.ξ = T₂.ξ
+  map_cyclic_vector : toUnitaryEquiv.toLinearIsometryEquiv T₁.ξ = T₂.ξ
 
 notation:50 T₁ " ≃ᵁ " T₂ => Representation.UnitaryEquiv (ω := _) T₁ T₂
 
@@ -258,7 +377,7 @@ private lemma dist_cyclic (T₁ T₂ : Representation ω) (a : A) :
     calc ⟪T₂.π a T₂.ξ, T₂.ξ⟫_ℂ
         = conj ⟪T₂.ξ, T₂.π a T₂.ξ⟫_ℂ := by rw [@inner_conj_symm ℂ T₂.H]
       _ = conj (ω a) := by rw [T₂.gns_condition a]
-  rw [h_inner₁, h_inner₂, h_norm, T₁.unit_norm, T₂.unit_norm]
+  rw [h_inner₁, h_inner₂, h_norm, T₁.norm_ξ, T₂.norm_ξ]
 
 /-- The set-level map on cyclic orbit vectors: every `x : cyclicSet T₁` is represented by
 some `π₁(a) ξ₁`, and `cyclicMap` sends it to the matching vector `π₂(a) ξ₂`. -/
@@ -558,7 +677,7 @@ private noncomputable def cyclicIsometry (T₁ T₂ : Representation ω) : T₁.
     ({ toLinearMap := U_equiv.toLinearMap, norm_map' := h_norm_map } :
         T₁.H →ₗᵢ[ℂ] T₂.H).inner_map_map x y
 
-/-- On cyclic orbit vectors, `cyclic_isometry` agrees with the expected correspondence. -/
+/-- On cyclic orbit vectors, `cyclicIsometry` agrees with the expected correspondence. -/
 private lemma cyclicIsometry_apply (T₁ T₂ : Representation ω) (a : A) :
   (cyclicIsometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ := by
   -- The underlying linear map of `cyclicIsometry` is constructed from `extendCyclicMap`.
@@ -584,22 +703,29 @@ theorem unique_up_to_unitary_equivalence :
   let Uiso := cyclicIsometry T₁ T₂
   have hU_cyclic_iso : ∀ a : A, (Uiso : T₁.H →L[ℂ] T₂.H) (T₁.π a T₁.ξ) = T₂.π a T₂.ξ :=
   fun a => cyclicIsometry_apply T₁ T₂ a
-  refine ⟨
-    { unitary_map := asUnitary Uiso
-      map_cyclic_vector := linear_isometry_equiv_map_cyclic_vector T₁ T₂ Uiso hU_cyclic_iso
-      intertwines := linear_isometry_equiv_intertwines T₁ T₂ Uiso hU_cyclic_iso
-    }
-  ⟩
+  exact ⟨{ toLinearIsometryEquiv := Uiso
+           map_cyclic_vector := linear_isometry_equiv_map_cyclic_vector T₁ T₂ Uiso hU_cyclic_iso
+           intertwines := linear_isometry_equiv_intertwines T₁ T₂ Uiso hU_cyclic_iso }⟩
 
-/-- The canonical GNS triplet produced by the quotient and completion construction. -/
+/-- The canonical GNS triplet `(𝓗[ω], π[ω], ξ[ω])` produced by the GNS construction
+(`State.gnsSpace`, `State.gnsRep`, `State.gnsVector`). -/
 noncomputable def canonical : Representation ω where
-  H := GNS.Construction.Hω (ω := ω)
-  π := GNS.Construction.πωStarHom ω
-  ξ := GNS.Construction.ξω ω
-  cyclic := GNS.Construction.ξω_is_cyclic ω
-  unit_norm := GNS.Construction.ξω_norm ω
-  gns_condition := GNS.Construction.state_recovery ω
+  H := 𝓗[ω]
+  π := π[ω]
+  ξ := ξ[ω]
+  cyclic := ω.gnsVector_cyclic
+  gns_condition := ω.gns_condition
+
+lemma canonical_H : (canonical (ω := ω)).H = 𝓗[ω] := rfl
+lemma canonical_π : (canonical (ω := ω)).π = π[ω] := rfl
+lemma canonical_ξ : (canonical (ω := ω)).ξ = ξ[ω] := rfl
 
 end Representation
+
+/-- Evaluation of a state along an approximate unit converges to `1`: `ω e_α → 1`. -/
+theorem _root_.State.tendsto_approximateUnit {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    (ω : State A) :
+    Filter.Tendsto (fun e : A => ω e) (CStarAlgebra.approximateUnit A) (nhds 1) :=
+  (Representation.canonical (ω := ω)).tendsto_apply_approximateUnit
 
 end GNS

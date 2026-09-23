@@ -1,18 +1,22 @@
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Unitary equivalence of `CStarRep`s
 
 Two non-unital `*`-representations `R₁ R₂ : CStarRep A` are *unitarily
-equivalent* if there exists a unitary map `U : R₁.H → R₂.H` intertwining
+equivalent* if there exists a unitary `U : R₁.H ≃ₗᵢ[ℂ] R₂.H` intertwining
 the two representations:
 
 ```
 U ∘L R₁.π a = R₂.π a ∘L U   for every  a : A
 ```
+
+A unitary between complex Hilbert spaces is exactly a linear isometric
+equivalence, so the unitary is carried as Mathlib's `R₁.H ≃ₗᵢ[ℂ] R₂.H`; its
+adjoint is its inverse (`LinearIsometryEquiv.adjoint_eq_symm`).
 
 This is the standard notion used in sector theory: representations in
 the same unitary-equivalence class are physically indistinguishable.
@@ -24,7 +28,8 @@ unrelated origin.
 
 ## Main definitions
 
-* `CStarRep.UnitaryEquiv R₁ R₂` — the data of a unitary intertwiner.
+* `CStarRep.UnitaryEquiv R₁ R₂` — a unitary `R₁.H ≃ₗᵢ[ℂ] R₂.H` together
+  with the intertwining property.
 * `CStarRep.UnitaryEquiv.refl` / `.symm` / `.trans` — equivalence
   closure.
 * `CStarRep.unitarySetoid` — the corresponding `Setoid` on `CStarRep A`,
@@ -33,133 +38,58 @@ unrelated origin.
 
 @[expose] public section
 
-open scoped Adjoint
-
 namespace CStarRep
 
 variable {A : Type*} [NonUnitalCStarAlgebra A]
 
 /-- A unitary equivalence between two `CStarRep`s of the same C\*-algebra
-`A`: a unitary map between the underlying Hilbert spaces that intertwines
-the two `*`-representations. -/
-structure UnitaryEquiv (R₁ R₂ : CStarRep A) where
-  /-- The underlying unitary between the Hilbert spaces. -/
-  unitary_map : UnitaryMap R₁.H R₂.H
-  /-- The intertwining property. -/
+`A`: a unitary `U : R₁.H ≃ₗᵢ[ℂ] R₂.H` between the underlying Hilbert spaces
+that intertwines the two `*`-representations, `U ∘L R₁.π a = R₂.π a ∘L U`. -/
+structure UnitaryEquiv (R₁ R₂ : CStarRep A) extends R₁.H ≃ₗᵢ[ℂ] R₂.H where
+  /-- The intertwining property `U ∘L R₁.π a = R₂.π a ∘L U`. -/
   intertwines :
     ∀ a : A,
-      unitary_map.toContinuousLinearMap ∘L R₁.π a =
-        R₂.π a ∘L unitary_map.toContinuousLinearMap
+      (toLinearIsometryEquiv : R₁.H →L[ℂ] R₂.H) ∘L R₁.π a =
+        R₂.π a ∘L (toLinearIsometryEquiv : R₁.H →L[ℂ] R₂.H)
 
 namespace UnitaryEquiv
 
+variable {R₁ R₂ R₃ : CStarRep A}
+
+/-- The intertwining property, pointwise: `U (π₁ a x) = π₂ a (U x)`. -/
+lemma intertwines_apply (U : UnitaryEquiv R₁ R₂) (a : A) (x : R₁.H) :
+    U.toLinearIsometryEquiv (R₁.π a x) = R₂.π a (U.toLinearIsometryEquiv x) := by
+  simpa using DFunLike.congr_fun (U.intertwines a) x
+
 /-- Identity unitary equivalence. -/
 noncomputable def refl (R : CStarRep A) : UnitaryEquiv R R where
-  unitary_map :=
-    { toContinuousLinearMap := ContinuousLinearMap.id ℂ R.H
-      adjoint_comp := by
-        rw [ContinuousLinearMap.adjoint_id]
-        ext x; simp
-      comp_adjoint := by
-        rw [ContinuousLinearMap.adjoint_id]
-        ext x; simp }
+  toLinearIsometryEquiv := LinearIsometryEquiv.refl ℂ R.H
   intertwines a := by ext x; simp
 
-/-- Inverse of a unitary equivalence: take the adjoint of the unitary map. -/
-noncomputable def symm {R₁ R₂ : CStarRep A} (U : UnitaryEquiv R₁ R₂) :
-    UnitaryEquiv R₂ R₁ where
-  unitary_map :=
-    { toContinuousLinearMap := U.unitary_map.toContinuousLinearMap†
-      adjoint_comp := by
-        rw [ContinuousLinearMap.adjoint_adjoint]
-        exact U.unitary_map.comp_adjoint
-      comp_adjoint := by
-        rw [ContinuousLinearMap.adjoint_adjoint]
-        exact U.unitary_map.adjoint_comp }
+/-- Inverse of a unitary equivalence: the inverse unitary `U.symm` (which is the adjoint
+`U†`) intertwines in the other direction. -/
+noncomputable def symm (U : UnitaryEquiv R₁ R₂) : UnitaryEquiv R₂ R₁ where
+  toLinearIsometryEquiv := U.toLinearIsometryEquiv.symm
   intertwines a := by
-    -- From `U ∘L π₁ a = π₂ a ∘L U`, taking adjoints both sides yields
-    -- `(π₁ a)† ∘L U† = U† ∘L (π₂ a)†`; rewriting (πᵢ a)† = πᵢ (star a)
-    -- gives `π₁ (star a) ∘L U† = U† ∘L π₂ (star a)`. Substituting
-    -- `a ↦ star a` (and using `star (star a) = a`) yields the goal.
-    have h := U.intertwines (star a)
-    have h' :
-        (U.unitary_map.toContinuousLinearMap ∘L R₁.π (star a))† =
-          (R₂.π (star a) ∘L U.unitary_map.toContinuousLinearMap)† := by
-      rw [h]
-    rw [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.adjoint_comp] at h'
-    -- Now `h' : (π₁ (star a))† ∘L U† = U† ∘L (π₂ (star a))†`.
-    -- It remains to rewrite `(πᵢ (star a))† = πᵢ a` via `(π a)† = π (star a)` and `star_star`.
-    have hπ₁ : (R₁.π (star a))† = R₁.π a := by
-      have := (R₁.π).map_star' (star a)
-      rw [ContinuousLinearMap.star_eq_adjoint, star_star] at this
-      exact this.symm
-    have hπ₂ : (R₂.π (star a))† = R₂.π a := by
-      have := (R₂.π).map_star' (star a)
-      rw [ContinuousLinearMap.star_eq_adjoint, star_star] at this
-      exact this.symm
-    -- After rewriting:
-    rw [hπ₁, hπ₂] at h'
-    exact h'.symm
+    ext y
+    apply U.toLinearIsometryEquiv.injective
+    simp [U.intertwines_apply]
 
 /-- Composition of unitary equivalences. -/
-noncomputable def trans {R₁ R₂ R₃ : CStarRep A}
-    (U : UnitaryEquiv R₁ R₂) (V : UnitaryEquiv R₂ R₃) :
+noncomputable def trans (U : UnitaryEquiv R₁ R₂) (V : UnitaryEquiv R₂ R₃) :
     UnitaryEquiv R₁ R₃ where
-  unitary_map :=
-    { toContinuousLinearMap :=
-        V.unitary_map.toContinuousLinearMap ∘L U.unitary_map.toContinuousLinearMap
-      adjoint_comp := by
-        ext x
-        -- ((VU)† ∘L (VU)) x = U†(V†(V(Ux))) = U†(Ux) = x
-        simp only [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.coe_comp',
-          Function.comp_apply, ContinuousLinearMap.one_apply]
-        have hV :
-            V.unitary_map.toContinuousLinearMap†
-              (V.unitary_map.toContinuousLinearMap (U.unitary_map.toContinuousLinearMap x)) =
-              U.unitary_map.toContinuousLinearMap x := by
-          have := congrArg
-            (fun (f : R₂.H →L[ℂ] R₂.H) => f (U.unitary_map.toContinuousLinearMap x))
-            V.unitary_map.adjoint_comp
-          simpa using this
-        rw [hV]
-        have hU :
-            U.unitary_map.toContinuousLinearMap†
-              (U.unitary_map.toContinuousLinearMap x) = x := by
-          have := congrArg
-            (fun (f : R₁.H →L[ℂ] R₁.H) => f x) U.unitary_map.adjoint_comp
-          simpa using this
-        exact hU
-      comp_adjoint := by
-        ext y
-        simp only [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.coe_comp',
-          Function.comp_apply, ContinuousLinearMap.one_apply]
-        have hU :
-            U.unitary_map.toContinuousLinearMap
-              (U.unitary_map.toContinuousLinearMap†
-                (V.unitary_map.toContinuousLinearMap† y)) =
-              V.unitary_map.toContinuousLinearMap† y := by
-          have := congrArg
-            (fun (f : R₂.H →L[ℂ] R₂.H) => f (V.unitary_map.toContinuousLinearMap† y))
-            U.unitary_map.comp_adjoint
-          simpa using this
-        rw [hU]
-        have hV :
-            V.unitary_map.toContinuousLinearMap
-              (V.unitary_map.toContinuousLinearMap† y) = y := by
-          have := congrArg
-            (fun (f : R₃.H →L[ℂ] R₃.H) => f y) V.unitary_map.comp_adjoint
-          simpa using this
-        exact hV }
-  intertwines a := by
-    -- (VU) ∘L π₁ a = V ∘L (U ∘L π₁ a) = V ∘L (π₂ a ∘L U) = (V ∘L π₂ a) ∘L U
-    --             = (π₃ a ∘L V) ∘L U = π₃ a ∘L (V ∘L U)
-    ext x
-    have hU := congrArg (fun (f : R₁.H →L[ℂ] R₂.H) => f x) (U.intertwines a)
-    have hV := congrArg (fun (f : R₂.H →L[ℂ] R₃.H) => f (U.unitary_map.toContinuousLinearMap x))
-      (V.intertwines a)
-    simp only [ContinuousLinearMap.coe_comp', Function.comp_apply] at hU hV ⊢
-    rw [← hU] at hV
-    exact hV
+  toLinearIsometryEquiv := U.toLinearIsometryEquiv.trans V.toLinearIsometryEquiv
+  intertwines a := by ext x; simp [U.intertwines_apply, V.intertwines_apply]
+
+@[simp] lemma refl_toLinearIsometryEquiv (R : CStarRep A) :
+    (refl R).toLinearIsometryEquiv = LinearIsometryEquiv.refl ℂ R.H := rfl
+
+@[simp] lemma symm_toLinearIsometryEquiv (U : UnitaryEquiv R₁ R₂) :
+    U.symm.toLinearIsometryEquiv = U.toLinearIsometryEquiv.symm := rfl
+
+@[simp] lemma trans_toLinearIsometryEquiv (U : UnitaryEquiv R₁ R₂) (V : UnitaryEquiv R₂ R₃) :
+    (U.trans V).toLinearIsometryEquiv = U.toLinearIsometryEquiv.trans V.toLinearIsometryEquiv :=
+  rfl
 
 end UnitaryEquiv
 
