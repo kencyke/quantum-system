@@ -11,7 +11,8 @@ public import QuantumSystem.Algebra.CStarAlgebra.PureState
 /-!
 # Irreducibility of the GNS representation of a pure state
 
-For a pure state `ψ`, the canonical GNS representation `GNS.Representation.canonical ψ.toState` is
+For a pure state `ψ`, the canonical GNS representation
+`GNS.Representation.canonical ψ.toState.toPositiveLinearMap` is
 irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant subspace
 splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity forces
 one of them to vanish.
@@ -32,7 +33,7 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing
 
 variable {ω : State A}
 
-lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω)
+lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω.toPositiveLinearMap)
     (W : ClosedSubmodule ℂ T.H) (hW : W ∈ T.closedInvtSubmodule) (a : A) {w x : T.H}
     (hw : w ∈ W.toSubmodule) (hx : x ∈ W.toSubmoduleᗮ) :
     ⟪w, (T.π a) x⟫ = 0 := by
@@ -40,7 +41,7 @@ lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω)
     CStarRep.apply_mem_of_mem_invtSubmodule (CStarRep.orthogonal_mem_invtSubmodule hW) a hx
   exact Submodule.inner_right_of_mem_orthogonal hw hx_map
 
-lemma inner_left_mem_orthogonal_right_pi_mem (T : GNS.Representation ω)
+lemma inner_left_mem_orthogonal_right_pi_mem (T : GNS.Representation ω.toPositiveLinearMap)
     (W : ClosedSubmodule ℂ T.H) (hW : W ∈ T.closedInvtSubmodule) (a : A) {w x : T.H}
     (hx : x ∈ W.toSubmoduleᗮ) (hw : w ∈ W.toSubmodule) :
     ⟪x, (T.π a) w⟫ = 0 := by
@@ -49,7 +50,8 @@ lemma inner_left_mem_orthogonal_right_pi_mem (T : GNS.Representation ω)
   exact (inner_eq_zero_symm (x := x) (y := (T.π a) w)).2 h0
 
 /-- The cyclic vector splits along a closed submodule `W` and its orthogonal complement. -/
-lemma cyclicVector_decomp (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H) :
+lemma cyclicVector_decomp (T : GNS.Representation ω.toPositiveLinearMap)
+    (W : ClosedSubmodule ℂ T.H) :
     ∃ v₁ v₂ : T.H, v₁ ∈ W.toSubmodule ∧ v₂ ∈ W.toSubmoduleᗮ ∧ T.ξ = v₁ + v₂ ∧ ⟪v₁, v₂⟫ = 0 := by
   -- A closed subspace of a Hilbert space is complete, so it has an orthogonal projection.
   have : CompleteSpace W.toSubmodule := W.isClosed.completeSpace_coe
@@ -61,17 +63,19 @@ lemma cyclicVector_decomp (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T
       (Submodule.starProjection_apply_mem (U := W.toSubmodule) (x := T.ξ))
       (Submodule.sub_starProjection_mem_orthogonal (K := W.toSubmodule) (v := T.ξ))
 
-
-noncomputable def vectorFunctional (T : GNS.Representation ω) (v : T.H) : WeakDual ℂ A :=
+/-- The vector functional `a ↦ ⟪v, π a v⟫` of a vector `v` in the GNS space. -/
+noncomputable def vectorFunctional (T : GNS.Representation ω.toPositiveLinearMap) (v : T.H) :
+    WeakDual ℂ A :=
   (innerSL ℂ v).comp (T.orbit v)
 
+/-- `vectorFunctional v a = ⟪v, π a v⟫`. -/
 @[simp]
-lemma vectorFunctional_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
+lemma vectorFunctional_apply (T : GNS.Representation ω.toPositiveLinearMap) (v : T.H) (a : A) :
     T.vectorFunctional v a = ⟪v, (T.π a) v⟫ := by
   rfl
 
 /-- A vector functional `a ↦ ⟪v, π a v⟫` is positive: on `a* a` it is `‖π a v‖²`. -/
-lemma vectorFunctional_nonneg (T : GNS.Representation ω) (v : T.H) :
+lemma vectorFunctional_nonneg (T : GNS.Representation ω.toPositiveLinearMap) (v : T.H) :
     ∀ a : A, 0 ≤ a → 0 ≤ T.vectorFunctional v a := by
   refine fun _ => StarOrderedRing.map_nonneg_of_star_mul_self_nonneg _ fun a => ?_
   -- `⟪v, π(star a * a) v⟫ = ⟪π(a)v, π(a)v⟫ = ‖π(a)v‖^2`.
@@ -96,7 +100,8 @@ lemma vectorFunctional_nonneg (T : GNS.Representation ω) (v : T.H) :
   rw [h, ← Complex.ofReal_pow]
   exact Complex.zero_le_real.mpr (sq_nonneg _)
 
-lemma opNorm_vectorFunctional_le (T : GNS.Representation ω) (v : T.H) :
+/-- The vector functional of `v` has norm at most `‖v‖²`. -/
+lemma opNorm_vectorFunctional_le (T : GNS.Representation ω.toPositiveLinearMap) (v : T.H) :
     ‖WeakDual.toStrongDual (T.vectorFunctional v)‖ ≤ ‖v‖ ^ 2 := by
   -- Prove a pointwise bound and use `opNorm_le_bound`.
   refine ContinuousLinearMap.opNorm_le_bound _ (sq_nonneg ‖v‖) ?_
@@ -125,11 +130,11 @@ lemma opNorm_vectorFunctional_le (T : GNS.Representation ω) (v : T.H) :
   simpa [WeakDual.toStrongDual_apply, vectorFunctional_apply, mul_comm, mul_left_comm, mul_assoc] using this
 
 
-lemma state_decomposition (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H)
+lemma state_decomposition (T : GNS.Representation ω.toPositiveLinearMap) (W : ClosedSubmodule ℂ T.H)
     (hW : W ∈ T.closedInvtSubmodule) (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W.toSubmodule)
     (hv₂ : v₂ ∈ W.toSubmoduleᗮ) (hξ : T.ξ = v₁ + v₂) (a : A) :
     ω a = T.vectorFunctional v₁ a + T.vectorFunctional v₂ a := by
-  rw [T.gns_condition, hξ]
+  rw [← State.coe_toPositiveLinearMap, T.gns_condition, hξ]
   simp only [vectorFunctional_apply]
   have : (T.π a) (v₁ + v₂) = (T.π a) v₁ + (T.π a) v₂ := by
     exact ContinuousLinearMap.map_add (T.π a) v₁ v₂
@@ -140,11 +145,12 @@ lemma state_decomposition (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T
     inner_left_mem_orthogonal_right_pi_mem T W hW a hv₂ hv₁
   simp [h₁, h₂]
 
-lemma norm_sq_decomposition (T : GNS.Representation ω) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
+lemma norm_sq_decomposition (T : GNS.Representation ω.toPositiveLinearMap) (v₁ v₂ : T.H)
+    (hξ : T.ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 = 1 := by
   have h₁ : ‖T.ξ‖ ^ 2 = ‖v₁ + v₂‖ ^ 2 := by rw [hξ]
-  rw [T.norm_ξ, one_pow] at h₁
+  rw [T.norm_ξ_eq_one, one_pow] at h₁
   have h₂ : ‖v₁ + v₂‖ ^ 2 = ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 := by
     have eq1 := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (x := v₁ + v₂)
     have eq2 := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (x := v₁)
@@ -159,7 +165,8 @@ lemma norm_sq_decomposition (T : GNS.Representation ω) (v₁ v₂ : T.H) (hξ :
     exact Complex.ofReal_injective (by simpa [Complex.ofReal_pow] using this)
   linarith
 
-lemma norm_sq_in_Icc (T : GNS.Representation ω) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
+lemma norm_sq_in_Icc (T : GNS.Representation ω.toPositiveLinearMap) (v₁ v₂ : T.H)
+    (hξ : T.ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 ∈ Set.Icc (0 : ℝ) 1 := by
   have h := norm_sq_decomposition T v₁ v₂ hξ horth
@@ -167,8 +174,9 @@ lemma norm_sq_in_Icc (T : GNS.Representation ω) (v₁ v₂ : T.H) (hξ : T.ξ =
   · exact sq_nonneg _
   · linarith [sq_nonneg ‖v₂‖]
 
-
-lemma vectorFunctional_mem_quasiStateSpace_of_norm_eq_one (T : GNS.Representation ω) (v : T.H)
+/-- The vector functional of a unit vector is a quasi-state. -/
+lemma vectorFunctional_mem_quasiStateSpace_of_norm_eq_one
+    (T : GNS.Representation ω.toPositiveLinearMap) (v : T.H)
     (hv : ‖v‖ = 1) :
     T.vectorFunctional v ∈ QuasiStateSpace A := by
   constructor
@@ -179,7 +187,8 @@ lemma vectorFunctional_mem_quasiStateSpace_of_norm_eq_one (T : GNS.Representatio
       _ = 1 ^ 2 := by rw [hv]
       _ = 1 := one_pow 2
 
-lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω) (v : T.H)
+lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω.toPositiveLinearMap)
+    (v : T.H)
     (hv : v ≠ 0) :
     (‖v‖ ^ 2 : ℂ)⁻¹ • T.vectorFunctional v ∈ QuasiStateSpace A := by
   constructor
@@ -199,13 +208,15 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
 
 
 lemma trichotomy_from_purity {ψ : PureState A}
-    (W : ClosedSubmodule ℂ (GNS.Representation.canonical ψ.toState).H)
-    (hW : W ∈ (GNS.Representation.canonical ψ.toState).closedInvtSubmodule)
-    (v₁ v₂ : (GNS.Representation.canonical ψ.toState).H) (hv₁ : v₁ ∈ W.toSubmodule)
+    (W : ClosedSubmodule ℂ (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).H)
+    (hW : W ∈ (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).closedInvtSubmodule)
+    (v₁ v₂ : (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).H)
+    (hv₁ : v₁ ∈ W.toSubmodule)
     (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
-    (hξ : (GNS.Representation.canonical ψ.toState).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
+    (hξ : (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).ξ = v₁ + v₂)
+    (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
-  let T := GNS.Representation.canonical ψ.toState
+  let T := GNS.Representation.canonical ψ.toState.toPositiveLinearMap
   by_contra h_contra
   push Not at h_contra
   have h_in_Icc := norm_sq_in_Icc T v₁ v₂ hξ horth
@@ -427,7 +438,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
   exact lt_irrefl 1 this
 
 
-lemma mem_of_norm_sq_eq_one (T : GNS.Representation ω) (v₁ v₂ : T.H)
+lemma mem_of_norm_sq_eq_one (T : GNS.Representation ω.toPositiveLinearMap) (v₁ v₂ : T.H)
     (hξ : T.ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = 1) :
     v₂ = 0 := by
   have h_sum := norm_sq_decomposition T v₁ v₂ hξ horth
@@ -436,7 +447,7 @@ lemma mem_of_norm_sq_eq_one (T : GNS.Representation ω) (v₁ v₂ : T.H)
   have : ‖v₂‖ = 0 := by nlinarith [sq_nonneg ‖v₂‖]
   exact norm_eq_zero.mp this
 
-lemma mem_of_norm_sq_eq_zero (T : GNS.Representation ω) (v₁ : T.H)
+lemma mem_of_norm_sq_eq_zero (T : GNS.Representation ω.toPositiveLinearMap) (v₁ : T.H)
     (h : ‖v₁‖ ^ 2 = 0) :
     v₁ = 0 := by
   have : ‖v₁‖ = 0 := by
@@ -446,7 +457,8 @@ lemma mem_of_norm_sq_eq_zero (T : GNS.Representation ω) (v₁ : T.H)
 
 /-- If the component of `ξ` in a closed invariant submodule `W` has norm one, then `W = ⊤`:
 `ξ ∈ W`, so `W` contains the dense orbit of `ξ`. -/
-lemma eq_top_of_norm_sq_eq_one (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H)
+lemma eq_top_of_norm_sq_eq_one (T : GNS.Representation ω.toPositiveLinearMap)
+    (W : ClosedSubmodule ℂ T.H)
     (hW : W ∈ T.closedInvtSubmodule) (v₁ v₂ : T.H) (hv₁ : v₁ ∈ W.toSubmodule)
     (hξ : T.ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = 1) :
     W = ⊤ := by
@@ -460,7 +472,8 @@ lemma eq_top_of_norm_sq_eq_one (T : GNS.Representation ω) (W : ClosedSubmodule 
 
 /-- If the component of `ξ` in a closed invariant submodule `W` vanishes, then `W = ⊥`:
 `ξ ∈ Wᗮ`, so the closed invariant submodule `Wᗮ` contains the dense orbit of `ξ`. -/
-lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : ClosedSubmodule ℂ T.H)
+lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω.toPositiveLinearMap)
+    (W : ClosedSubmodule ℂ T.H)
     (hW : W ∈ T.closedInvtSubmodule) (v₁ v₂ : T.H) (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
     (hξ : T.ξ = v₁ + v₂) (h : ‖v₁‖ ^ 2 = 0) :
     W = ⊥ := by
@@ -478,9 +491,9 @@ lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : ClosedSubmodule
 
 /-- **Main Theorem**: The GNS representation of a pure state is irreducible. -/
 theorem pureState_gns_isIrreducible {ψ : PureState A} :
-    (GNS.Representation.canonical ψ.toState).IsIrreducible := by
-  let T := GNS.Representation.canonical ψ.toState
-  refine ⟨T.π_ne_zero, fun W hW => ?_⟩
+    (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).IsIrreducible := by
+  let T := GNS.Representation.canonical ψ.toState.toPositiveLinearMap
+  refine ⟨T.π_ne_zero ψ.toState.toPositiveLinearMap_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
   rcases trichotomy_from_purity W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)

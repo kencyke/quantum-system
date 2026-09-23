@@ -11,7 +11,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 
 /-!
-# The GNS construction for a state
+# The GNS construction for a positive functional and a state
 
 For a state `ω` on a (possibly non-unital) C\*-algebra `A`, the Gelfand–Naimark–Segal
 construction produces the *GNS triplet* `(𝓗[ω], π[ω], ξ[ω])`:
@@ -32,8 +32,9 @@ canonical map `a ↦ [a]` is `ω.toPositiveLinearMap.gnsMk`.
 
 * `State.gnsSpace`, `State.gnsRep`, `State.gnsVector` — the GNS triplet, with the scoped
   notations `𝓗[ω]`, `π[ω]`, `ξ[ω]` (activate with `open scoped GNS`).
-* `State.gnsCStarRep` — the pair `(𝓗[ω], π[ω])` bundled as a `CStarRep`, so that the orbit map
-  `a ↦ π[ω] a ξ[ω]` is `CStarRep.orbit`.
+* `PositiveLinearMap.gnsCStarRep` — Mathlib's GNS representation of a positive functional,
+  bundled as a `CStarRep`; for a state `ω`, the orbit map `a ↦ π[ω] a ξ[ω]` is
+  `ω.toPositiveLinearMap.gnsCStarRep.orbit`.
 
 ## Main results
 
@@ -57,6 +58,23 @@ canonical map `a ↦ [a]` is `ω.toPositiveLinearMap.gnsMk`.
 open scoped InnerProductSpace ComplexOrder ComplexHilbertSpace
 open PositiveLinearMap
 
+/-! ### The GNS representation of a positive functional, bundled -/
+
+namespace PositiveLinearMap
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable (f : A →ₚ[ℂ] ℂ)
+
+noncomputable instance : ComplexHilbertSpace f.GNS where
+  toNormedAddCommGroup := inferInstance
+  toInnerProductSpace := inferInstance
+  toCompleteSpace := inferInstance
+
+/-- Mathlib's GNS representation `(f.GNS, f.gnsNonUnitalStarAlgHom)` bundled as a `CStarRep`. -/
+noncomputable abbrev gnsCStarRep : CStarRep A := ⟨f.GNS, f.gnsNonUnitalStarAlgHom⟩
+
+end PositiveLinearMap
+
 namespace State
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] (ω : State A)
@@ -72,11 +90,6 @@ scoped[GNS] notation:max "𝓗[" ω "]" => State.gnsSpace ω
 
 open scoped GNS
 
-noncomputable instance : ComplexHilbertSpace 𝓗[ω] where
-  toNormedAddCommGroup := inferInstance
-  toInnerProductSpace := inferInstance
-  toCompleteSpace := inferInstance
-
 /-- The GNS representation `π[ω] : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω])`, induced by left multiplication:
 Mathlib's `PositiveLinearMap.gnsNonUnitalStarAlgHom`. -/
 noncomputable abbrev gnsRep : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω]) := ω.toPositiveLinearMap.gnsNonUnitalStarAlgHom
@@ -91,9 +104,6 @@ noncomputable abbrev gnsVector : 𝓗[ω] := ω.toPositiveLinearMap.gnsVector
 /-- Notation `ξ[ω]` for the cyclic vector `State.gnsVector ω`. -/
 scoped[GNS] notation:max "ξ[" ω "]" => State.gnsVector ω
 
-/-- The GNS representation `(𝓗[ω], π[ω])` bundled as a `CStarRep`. -/
-noncomputable abbrev gnsCStarRep : CStarRep A := ⟨𝓗[ω], π[ω]⟩
-
 /-- The GNS representation is contractive: `‖π[ω] a‖ ≤ ‖a‖`. -/
 lemma norm_gnsRep_le (a : A) : ‖π[ω] a‖ ≤ ‖a‖ :=
   NonUnitalStarAlgHom.norm_apply_le _ a
@@ -103,7 +113,7 @@ lemma gnsRep_apply_gnsVector (a : A) : π[ω] a ξ[ω] = ω.toPositiveLinearMap.
   ω.toPositiveLinearMap.gnsNonUnitalStarAlgHom_apply_gnsVector a
 
 /-- Cyclicity of `ξ[ω]`: the orbit `{π[ω] a ξ[ω] | a : A}` is dense in `𝓗[ω]`. -/
-lemma gnsVector_cyclic : DenseRange (ω.gnsCStarRep.orbit ξ[ω]) :=
+lemma gnsVector_cyclic : DenseRange (ω.toPositiveLinearMap.gnsCStarRep.orbit ξ[ω]) :=
   ω.toPositiveLinearMap.denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
 
 /-- The GNS identity `ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫`. -/
@@ -115,7 +125,7 @@ lemma gns_condition (a : A) : ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫_ℂ :=
 lemma norm_gnsVector : ‖ξ[ω]‖ = 1 := by
   rw [gnsVector, PositiveLinearMap.norm_gnsVector, ← Real.sqrt_one]
   congr 1
-  exact ω.norm_ofClass
+  exact ω.norm_eq_one
 
 lemma gnsVector_ne_zero : ξ[ω] ≠ 0 := by
   rw [← norm_ne_zero_iff, norm_gnsVector]
@@ -133,7 +143,7 @@ theorem isFaithful_iff_injective_gnsMk :
 /-- A state is faithful iff the cyclic vector separates the algebra, i.e. the orbit map
 `a ↦ π[ω] a ξ[ω]` is injective. -/
 theorem isFaithful_iff_separating :
-    ω.IsFaithful ↔ Function.Injective (ω.gnsCStarRep.orbit ξ[ω]) := by
+    ω.IsFaithful ↔ Function.Injective (ω.toPositiveLinearMap.gnsCStarRep.orbit ξ[ω]) := by
   rw [ω.isFaithful_iff_injective_gnsMk]
   exact Iff.of_eq (congrArg Function.Injective (funext (gnsRep_apply_gnsVector ω)).symm)
 

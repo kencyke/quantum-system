@@ -94,8 +94,10 @@ in the GNS Hilbert space. -/
 noncomputable def gnsMk : A →ₗ[ℂ] f.GNS :=
   (toComplₗᵢ : f.PreGNS →ₗᵢ[ℂ] f.GNS).toLinearMap ∘ₗ f.toPreGNS.toLinearMap
 
+/-- `[a]` is the image in the completion of the class of `a` in `f.PreGNS`. -/
 lemma gnsMk_apply (a : A) : f.gnsMk a = (f.toPreGNS a : f.GNS) := rfl
 
+/-- `[a]` of a representative of `x : f.PreGNS` is the image of `x` in the completion. -/
 lemma gnsMk_ofPreGNS (x : f.PreGNS) : f.gnsMk (f.ofPreGNS x) = (x : f.GNS) := rfl
 
 /-- The classes `[a]` are dense in `f.GNS`. -/
@@ -142,15 +144,19 @@ noncomputable def gnsFunctional₀ : f.PreGNS →L[ℂ] ℂ :=
       rw [preGNS_norm_def']
       exact (PositiveContinuousLinearMap.ofClass f).norm_map_le_sqrt_opNorm_mul _
 
+/-- `gnsFunctional₀` evaluates `f` on a representative. -/
 lemma gnsFunctional₀_apply (x : f.PreGNS) : f.gnsFunctional₀ x = f (f.ofPreGNS x) := rfl
 
 /-- The bounded functional `f.GNS →L[ℂ] ℂ` extending `[a] ↦ f a` by continuity. -/
 noncomputable def gnsFunctional : f.GNS →L[ℂ] ℂ :=
   f.gnsFunctional₀.extend (toComplL : f.PreGNS →L[ℂ] f.GNS)
 
+/-- On `f.PreGNS`, `gnsFunctional` agrees with `gnsFunctional₀`: it evaluates `f` on a
+representative. -/
 lemma gnsFunctional_coe (x : f.PreGNS) : f.gnsFunctional x = f (f.ofPreGNS x) :=
   ContinuousLinearMap.extend_eq _ denseRange_coe (isUniformInducing_coe _) x
 
+/-- `gnsFunctional [a] = f a`. -/
 @[simp] lemma gnsFunctional_gnsMk (a : A) : f.gnsFunctional (f.gnsMk a) = f a :=
   f.gnsFunctional_coe _
 
@@ -318,13 +324,10 @@ lemma denseRange_gnsStarAlgHom_apply_normalize_gnsVector :
     DenseRange fun a => f.gnsStarAlgHom a (NormedSpace.normalize f.gnsVector) :=
   f.denseRange_gnsNonUnitalStarAlgHom_apply_normalize_gnsVector
 
-/-- `‖f‖ₒₚ = f 1`: Mathlib's `PositiveContinuousLinearMap.ofReal_opNorm_eq_map_one`. -/
-lemma ofReal_opNorm_eq_map_one : (‖f‖ₒₚ : ℂ) = f 1 :=
-  PositiveContinuousLinearMap.ofReal_opNorm_eq_map_one _
-
 /-- `‖ξ_f‖² = f 1`. -/
 lemma ofReal_norm_gnsVector_sq : ((‖f.gnsVector‖ ^ 2 : ℝ) : ℂ) = f 1 := by
-  rw [norm_gnsVector_sq, ofReal_opNorm_eq_map_one]
+  rw [norm_gnsVector_sq]
+  exact PositiveContinuousLinearMap.ofReal_opNorm_eq_map_one _
 
 end Unital
 

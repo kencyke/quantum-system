@@ -18,15 +18,15 @@ the C\*-algebra of bounded linear operators `𝓑(H)`.
 
 `CStarRep A` is a foundational, sector-agnostic notion: it is the generic
 data of a C\*-algebra representation, with no choice of cyclic vector or
-attachment to a state.  Both the GNS construction and the abstract
+attachment to a state or positive functional.  Both the GNS construction and the abstract
 representation-theoretic layer are built on top of it:
 
-* `CStarAlgebra/GNS/Representation.lean` adds a cyclic vector and a state to
-  obtain a GNS triplet (`GNS.Representation` extends `CStarRep`);
+* `CStarAlgebra/GNS/Representation.lean` adds a cyclic vector and a positive
+  functional to obtain a GNS triplet (`GNS.Representation` extends `CStarRep`);
 * `CStarAlgebra/Representation/UnitaryEquiv.lean` defines unitary equivalence
   between two `CStarRep`s as the existence of an intertwining unitary map (no
   cyclic vector compatibility, contrary to `GNS.Representation.UnitaryEquiv`
-  which is the same-state GNS uniqueness statement);
+  which is the same-functional GNS uniqueness statement);
 * `CStarAlgebra/Representation/Irreducible.lean` lifts the irreducibility
   predicate to the general `CStarRep` setting;
 * `CStarAlgebra/Representation/Family.lean` packages indexed families of
@@ -43,16 +43,17 @@ the C\*-algebra / Hilbert-space setting.  The GNS construction in
 `Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal` exposes the Hilbert
 space (`f.GNS`) and the homomorphism (`f.gnsNonUnitalStarAlgHom`, or
 `f.gnsStarAlgHom` in the unital case) as separate artifacts; there is no
-bundled `(H, π)` structure in Mathlib.  `State.gnsCStarRep` bundles exactly these two Mathlib
-objects, and the canonical GNS triplet `GNS.Representation.canonical` extends it.
+bundled `(H, π)` structure in Mathlib.  `PositiveLinearMap.gnsCStarRep` bundles exactly these
+two Mathlib objects, and the canonical GNS triplet `GNS.Representation.canonical` extends it.
 
 ## Relation to `GNS.Representation`
 
-`GNS.Representation ω` (defined in
+`GNS.Representation f` (defined in
 `QuantumSystem/Algebra/CStarAlgebra/GNS/Representation.lean`) is the GNS
-triplet `(H, π, ξ)` for a specific state `ω : State A`, adding a
-cyclic unit vector `ξ` and the GNS identity
-`ω a = ⟪ξ, π a ξ⟫` on top of the data of a `CStarRep A`.
+triplet `(H, π, ξ)` for a specific positive functional `f : A →ₚ[ℂ] ℂ` (a
+state `ω` being the case `f = ω.toPositiveLinearMap`), adding a cyclic
+vector `ξ` and the GNS identity `f a = ⟪ξ, π a ξ⟫` on top of the data of a
+`CStarRep A`.
 A GNS triplet is a `CStarRep` with extra data: the structure projection
 `GNS.Representation.toCStarRep` forgets the cyclic vector, so every notion
 defined for `CStarRep` (invariance, irreducibility, unitary equivalence)
@@ -87,7 +88,7 @@ Fields:
 
 This is the underlying data of a representation without any choice of a
 cyclic vector or attachment to a particular state.  For a GNS triplet
-attached to a fixed state, see `GNS.Representation`. -/
+attached to a fixed positive functional, see `GNS.Representation`. -/
 structure CStarRep (A : Type u) [NonUnitalCStarAlgebra A] where
   /-- The Hilbert space on which the representation acts. -/
   H : Type v
