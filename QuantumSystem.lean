@@ -70,11 +70,8 @@ public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
-public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
-public import QuantumSystem.ForMathlib.Topology.DenseLinear
-public import QuantumSystem.ForMathlib.Topology.MetricSpace.Completion
 public import QuantumSystem.Notation
 public import QuantumSystem.State

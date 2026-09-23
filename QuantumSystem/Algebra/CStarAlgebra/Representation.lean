@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 
 /-!
@@ -62,6 +63,8 @@ applies to GNS triplets directly.
 * `CStarRep A` — a bundled non-unital `*`-representation
   `π : A →⋆ₙₐ[ℂ] 𝓑(H)` together with the carrier `H` and its
   `ComplexHilbertSpace` instance.
+* `CStarRep.orbit R v` — the orbit map `a ↦ π a v` of a vector, as a
+  continuous linear map `A →L[ℂ] H`.
 -/
 
 @[expose] public section
@@ -93,3 +96,23 @@ structure CStarRep (A : Type u) [NonUnitalCStarAlgebra A] where
   π : A →⋆ₙₐ[ℂ] 𝓑(H)
 
 attribute [instance] CStarRep.hilbert
+
+namespace CStarRep
+
+/-- The orbit map `a ↦ π a v` of a vector `v`, as a continuous linear map `A →L[ℂ] H`.
+It is bounded by `‖v‖`, since `*`-homomorphisms of C\*-algebras are contractive. -/
+noncomputable def orbit (R : CStarRep A) (v : R.H) : A →L[ℂ] R.H :=
+  LinearMap.mkContinuous
+    { toFun := fun a => R.π a v
+      map_add' := fun a b => by simp
+      map_smul' := fun c a => by simp }
+    ‖v‖
+    fun a => ((R.π a).le_opNorm v).trans <| by
+      rw [mul_comm]
+      gcongr
+      exact NonUnitalStarAlgHom.norm_apply_le R.π a
+
+/-- The orbit map evaluates as `a ↦ π a v`. -/
+@[simp] lemma orbit_apply (R : CStarRep A) (v : R.H) (a : A) : R.orbit v a = R.π a v := rfl
+
+end CStarRep

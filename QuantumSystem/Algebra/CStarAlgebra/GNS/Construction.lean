@@ -193,10 +193,9 @@ lemma inner_gnsVector (x : 𝓗[ω]) : ⟪ξ[ω], x⟫_ℂ = ω.gnsFunctional x 
     rw [← gnsMk_ofPreGNS, ← ContinuousLinearMap.adjoint_inner_right, gnsRep_star,
       gnsRep_apply_gnsMk, inner_gnsVector_gnsMk, inner_gnsMk]
 
-/-- Cyclicity of `ξ[ω]`: the span of `{π[ω] a ξ[ω] | a : A}` is dense in `𝓗[ω]`. -/
-lemma gnsVector_cyclic : Dense (↑(Submodule.span ℂ {π[ω] a ξ[ω] | a : A}) : Set 𝓗[ω]) :=
-  ω.denseRange_gnsMk.mono <| Set.range_subset_iff.mpr fun a =>
-    Submodule.subset_span ⟨a, ω.gnsRep_apply_gnsVector a⟩
+/-- Cyclicity of `ξ[ω]`: the orbit `{π[ω] a ξ[ω] | a : A}` is dense in `𝓗[ω]`. -/
+lemma gnsVector_cyclic : DenseRange fun a => π[ω] a ξ[ω] := by
+  simpa only [gnsRep_apply_gnsVector] using ω.denseRange_gnsMk
 
 /-- The GNS identity `ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫`. -/
 lemma gns_condition (a : A) : ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫_ℂ := by simp

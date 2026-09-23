@@ -26,8 +26,9 @@ cannot annihilate `a`, because it does not shrink `aₙ`.
 
 ## Main results
 
-* `GNS.Representation.norm_sq_apply_cyclic` — `‖T.π x T.ξ‖ ^ 2 = (ω (star x * x)).re` for any
-  GNS triplet. This is what turns a norming *state* into a non-vanishing *operator*.
+* `GNS.Representation.norm_apply_cyclic_of_norming` — a norming state yields an orbit vector of
+  full length, via `GNS.Representation.norm_sq_apply_cyclic`. This is what turns a norming
+  *state* into a non-vanishing *operator*.
 * `GNS.Representation.separableSpace_H` — the Hilbert space of a GNS triplet over a
   separable algebra is separable.
 * `GNS.normingFamily` — the countable family of GNS representations described above, and
@@ -50,22 +51,6 @@ namespace GNS
 variable {A : Type u} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 namespace Representation
-
-/-- For a GNS triplet, the squared length of the orbit vector `T.π x T.ξ` is the value of
-the state at `star x * x`.
-
-This is the bridge between a *norming state* and a *non-vanishing operator*: a state whose
-value at `star x * x` is `‖x‖ ^ 2` yields a representation with `‖T.π x T.ξ‖ = ‖x‖`. -/
-lemma norm_sq_apply_cyclic {ω : State A} (T : Representation ω) (x : A) :
-    ‖T.π x T.ξ‖ ^ 2 = (ω (star x * x)).re := by
-  have hstar : T.π (star x) = (T.π x)† := by
-    rw [map_star, ContinuousLinearMap.star_eq_adjoint]
-  have hval : T.π (star x * x) T.ξ = (T.π x)† (T.π x T.ξ) := by
-    rw [map_mul, hstar]
-    rfl
-  rw [T.gns_condition (star x * x), hval, ContinuousLinearMap.adjoint_inner_right,
-    inner_self_eq_norm_sq_to_K]
-  simp [← Complex.ofReal_pow]
 
 /-- A norming state gives an orbit vector of full length: if `ω (star x * x) = ‖x‖ ^ 2`
 then `‖T.π x T.ξ‖ = ‖x‖`. -/
@@ -98,17 +83,10 @@ lemma lipschitzWith_apply_cyclic {ω : State A} (T : Representation ω) :
 
 /-- The Hilbert space of a GNS triplet over a **separable** C\*-algebra is separable.
 
-The orbit of the cyclic vector is a continuous image of `A`, hence separable; its span is
-separable, and the span is dense by cyclicity. -/
+The orbit map `a ↦ T.π a T.ξ` is continuous with dense range (cyclicity). -/
 theorem separableSpace_H [SeparableSpace A] {ω : State A} (T : Representation ω) :
-    SeparableSpace T.H := by
-  have hrange : IsSeparable (Set.range fun a : A => T.π a T.ξ) :=
-    isSeparable_range T.lipschitzWith_apply_cyclic.continuous
-  have hspan : IsSeparable
-      ((Submodule.span ℂ {x | ∃ a : A, T.π a T.ξ = x} : Submodule ℂ T.H) : Set T.H) :=
-    hrange.span
-  rw [← isSeparable_univ_iff, ← T.cyclic.closure_eq]
-  exact hspan.closure
+    SeparableSpace T.H :=
+  T.cyclic.separableSpace T.lipschitzWith_apply_cyclic.continuous
 
 end Representation
 

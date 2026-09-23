@@ -119,34 +119,8 @@ lemma cyclicVector_decomp_of_isClosed (T : GNS.Representation ω) (W : Submodule
       (Submodule.sub_starProjection_mem_orthogonal (K := W) (v := T.ξ))
 
 
-noncomputable def piApply (T : GNS.Representation ω) (v : T.H) : A →L[ℂ] T.H :=
-  (LinearMap.mkContinuous
-    { toFun := fun a => (T.π a) v
-      map_add' := by
-        intro a b
-        simp [map_add, add_apply]
-      map_smul' := by
-        intro c a
-        simp [map_smul, smul_apply] }
-    ‖v‖
-    (by
-      intro a
-      -- `‖π(a) v‖ ≤ ‖π(a)‖ ‖v‖ ≤ ‖a‖ ‖v‖`.
-      have h₁ : ‖(T.π a) v‖ ≤ ‖T.π a‖ * ‖v‖ := by
-        exact (T.π a).le_opNorm v
-      have h₂ : ‖T.π a‖ ≤ ‖a‖ := by
-        -- norm-contractivity of *-homomorphisms between C⋆-algebras
-        exact NonUnitalStarAlgHom.norm_apply_le (φ := T.π) a
-      have h₃ : ‖T.π a‖ * ‖v‖ ≤ ‖a‖ * ‖v‖ := by
-        gcongr
-      exact (h₁.trans h₃).trans_eq (by ac_rfl)))
-
-@[simp]
-lemma piApply_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
-  (T.piApply v) a = (T.π a) v := rfl
-
 noncomputable def vectorFunctional (T : GNS.Representation ω) (v : T.H) : WeakDual ℂ A :=
-  (innerSL ℂ v).comp (T.piApply v)
+  (innerSL ℂ v).comp (T.orbit v)
 
 @[simp]
 lemma vectorFunctional_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
@@ -370,24 +344,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
   -- φ = χ implies contradiction
   have h_eq : φ = χ := by rw [h_eq2, ← h_eq1]
   -- Contradiction via density
-  have h_dense : Dense (Set.range (fun a => (T.π a) T.ξ)) := by
-    have h_cyc := T.cyclic
-    -- View `Set.range (fun a => π a ξ)` via `T.piApply T.ξ` as a `LinearMap.range`,
-    -- then identify it with the cyclic span used by `T.cyclic`.
-    have h1 : (Set.range (fun a => (T.π a) T.ξ))
-        = ((LinearMap.range (T.piApply T.ξ).toLinearMap) : Set T.H) := by
-      rw [LinearMap.coe_range]; rfl
-    have h2 : ((LinearMap.range (T.piApply T.ξ).toLinearMap) : Set T.H)
-        = (Submodule.span ℂ (Set.range (fun a => (T.π a) T.ξ)) : Set T.H) := by
-      rw [h1]
-      congr 1
-      exact (Submodule.span_eq _).symm
-    rw [h1, h2]
-    -- Now reduce `Submodule.span ℂ (Set.range _)` to the set-builder form used by `T.cyclic`.
-    have h3 : (Set.range (fun a => (T.π a) T.ξ)) = {T.π a T.ξ | a : A} := by
-      ext y; simp
-    rw [h3]
-    exact h_cyc
+  have h_dense : Dense (Set.range (fun a => (T.π a) T.ξ)) := T.cyclic
   have hv₁_mem_closure : v₁ ∈ closure (Set.range (fun a => (T.π a) T.ξ)) := by
     rw [h_dense.closure_eq]
     exact Set.mem_univ v₁
@@ -547,18 +504,12 @@ lemma eq_top_of_norm_sq_eq_one (T : GNS.Representation ω) (W : Submodule ℂ T.
     W = ⊤ := by
   have hv₂_zero := mem_of_norm_sq_eq_one T v₁ v₂ hξ horth h
   have hξ_in_W : T.ξ ∈ W := by rw [hξ, hv₂_zero, add_zero]; exact hv₁
-  set S := Submodule.span ℂ (Set.range fun a => (T.π a) T.ξ)
-  have h_span_le : S ≤ W := by
-    apply Submodule.span_le.mpr
+  -- `W` is closed and contains the dense orbit of `ξ`, so it is everything.
+  have h_orbit_le : Set.range (fun a => T.π a T.ξ) ⊆ W := by
     rintro _ ⟨a, rfl⟩
     exact hWinv a ⟨T.ξ, hξ_in_W, rfl⟩
-  have h_dense : Dense (S : Set T.H) := T.cyclic
-  have h_closure_le : S.topologicalClosure ≤ W :=
-    S.topologicalClosure_minimal h_span_le hWclosed
-  have h_closure_eq_top : S.topologicalClosure = ⊤ := by
-    ext x; simp only [Submodule.mem_top, iff_true]; exact h_dense x
-  rw [h_closure_eq_top] at h_closure_le
-  exact eq_top_iff.mpr h_closure_le
+  refine eq_top_iff.mpr fun x _ => ?_
+  exact closure_minimal h_orbit_le hWclosed (T.cyclic x)
 
 lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T.H)
     (hWinv : T.IsInvariant W) (_hWclosed : IsClosed (W : Set T.H))
@@ -571,20 +522,12 @@ lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T
   have hξ_in_Wperp : T.ξ ∈ Wᗮ := by rw [hξ, hv₁_zero, zero_add]; exact _hv₂
   have hWperp_inv := isInvariant_orthogonal T W hWinv
   have hWperp_closed : IsClosed (Wᗮ : Set T.H) := Submodule.isClosed_orthogonal W
-  set S := Submodule.span ℂ (Set.range fun a => (T.π a) T.ξ)
-  have h_span_le : S ≤ Wᗮ := by
-    apply Submodule.span_le.mpr
+  -- `Wᗮ` is closed and contains the dense orbit of `ξ`, so it is everything.
+  have h_orbit_le : Set.range (fun a => T.π a T.ξ) ⊆ Wᗮ := by
     rintro _ ⟨a, rfl⟩
     exact hWperp_inv a ⟨T.ξ, hξ_in_Wperp, rfl⟩
-  have h_dense : Dense (S : Set T.H) := T.cyclic
-  have h_closure_le : S.topologicalClosure ≤ Wᗮ :=
-    S.topologicalClosure_minimal h_span_le hWperp_closed
-  have h_closure_eq_top : S.topologicalClosure = ⊤ := by
-    ext x
-    simp only [Submodule.mem_top, iff_true]
-    exact h_dense x
-  rw [h_closure_eq_top] at h_closure_le
-  have : Wᗮ = ⊤ := eq_top_iff.mpr h_closure_le
+  have : Wᗮ = ⊤ := eq_top_iff.mpr fun x _ =>
+    closure_minimal h_orbit_le hWperp_closed (T.cyclic x)
   rw [← Submodule.orthogonal_eq_bot_iff] at this
   simpa using this
 
