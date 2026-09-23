@@ -11,3 +11,5 @@ skill-creator-tests/
 devcontainer-lock.json
 
 worktrees/
+
+.claude/settings.local.json

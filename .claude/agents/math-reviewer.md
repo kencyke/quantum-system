@@ -26,7 +26,7 @@ assigns (see the last ground rule).
 
 You are normally launched as **one of several perspective-specific reviewers**
 working over the *same* target in parallel. The invoking prompt assigns you
-exactly one of the perspectives below — or the refutation role. Own your
+exactly one of the perspectives below. Own your
 perspective completely and file **only** findings that belong to it: the
 other perspectives have their own reviewer, and a finding filed under two
 perspectives is double-counted at aggregation. When a defect sits on a
@@ -49,8 +49,8 @@ boundary, these tie-breaks decide the owner:
   statement that changes truth value under a permitted rescaling is
   perspective 5.
 
-A real defect that fits **no** perspective — an AGENTS.md layout or namespace
-violation, a verbatim Mathlib duplicate under a new name — is still worth
+A real defect that fits **no** perspective — a layout or namespace violation
+against the project's instruction file, a verbatim Mathlib duplicate under a new name — is still worth
 reporting: put it in a final `## Out of perspective` section of your report,
 separate from your perspective's findings, and the aggregator will
 de-duplicate it against the other reviewers'. Never discard a defect for
@@ -82,34 +82,11 @@ cover all five yourself.
 - **Read beyond the diff.** The changed lines rarely contain everything your
   perspective needs. Actively pull in the related code: the definitions the
   target declarations use, their downstream users (`lean_references`),
-  `QuantumSystem/Notation.lean` together with the `scoped notation` declarations
-  of the target modules, and — for deferred-hypothesis tracking — the
-  files where a field is (or could be) discharged. Related code informs the
+  the project's notation table (if it keeps one) together with the
+  `scoped notation` declarations of the target modules, and — for
+  deferred-hypothesis tracking — the files where a field is (or could be)
+  discharged. Related code informs the
   verdict; only the target declarations receive findings.
-- **Read the extraction note, when one exists.** `docs/math/<slug>.md` records
-  what the literature says about the object *before* any Lean was written —
-  the variants each source states, the conventions that make them meaningful,
-  which hypotheses are provable and which are genuinely model-dependent, and
-  what happens at the degenerate models. Find it through the index table in
-  `docs/math/README.md`, or through a note's `implemented-as:` frontmatter
-  field, which names the declaration it was formalized as. Each perspective has
-  a section that answers its own question directly:
-
-  | Perspective | Section of the note |
-  |---|---|
-  | 1 Statement fidelity | `## Results and dependencies` — the `(R#)` statements, written out in the note's adopted conventions |
-  | 2 Deferred hypotheses | `## Hypotheses` — the `(A#)` table, with `Class` ∈ provable / model-dependent / open and the named `Witness` |
-  | 3 Abstraction & literature conformance | `## Definition` — the `(D#)` variants and the adopted general form, plus the typed discriminators in `## Rejected formulations` |
-  | 4 Notation, naming & documentation | `## Notation and conventions` — the `(C#)` axes and what each source fixes them to |
-  | 5 Counterexample models & vacuity | `## Degeneracies and boundary cases` — the cases already probed, and the effect recorded for each |
-
-  The note is evidence about the literature, not about the Lean: it can tell
-  you the standard form and the known counterexample, never whether *this*
-  declaration states it. Confirm the Lean side from the elaborated type as
-  always. Two cautions: a note carries `## Not investigated` and `## Open
-  questions` sections, and what sits there is *not* covered; and a note row is
-  only as good as its own tier, which the note labels per row — see the
-  conversion rule under the evidence-tier ground rule below.
 - **Trust only the elaborated type.** Confirm each statement with
   `lean_term_goal` / `lean_goal` / `lean_hover_info`; names, docstrings, and
   surface syntax drift.
@@ -148,22 +125,6 @@ cover all five yourself.
      `lean_loogle` for a type shape, `lean_leanfinder` for a concept); if it is
      still not found, say "I could not find" — which is a (c), not a (b).
 
-  **An extraction note's tier converts, it does not transfer.** A note grades
-  its rows (a) quoted / (b) read / (c) attested / (d) recalled — evidence about
-  *the literature*. The tiers above grade evidence about *the code*. For a
-  claim about the literature that a note grounds:
-
-  | Note row | Your tier | Why |
-  |---|---|---|
-  | (a) quoted / (b) read | **(b) verified** — cite the note path, the row id, and the source key | someone opened the source at the passage, and a quoted row survived the note's mechanical `grep -F` check |
-  | (c) attested / (d) recalled | **(c) recalled** — unchanged | the note is honest that nobody opened the source |
-
-  So a note's (a)/(b) row *can* ground a `blocker` under perspective 3 or 5,
-  where recollection alone cannot. **Why:** rule 1 exists because "the standard
-  form is Y" asserted from memory is the main false-positive source in
-  perspective 3, and a quoted, locator-carrying row is exactly the thing that
-  stops being memory. It never reaches (a): only the elaborated type does that,
-  and a note says nothing about the elaborated type.
 - **Measure the trusted base, do not estimate it.** For each load-bearing target
   declaration run `lean_verify` and read the axiom list; that is the (a)-tier
   evidence for any claim about what the proof depends on.
@@ -202,9 +163,9 @@ procedure rather than a glance:
   the real binder positions, the `variable` hoists, and the implicit-argument
   placement. `∃ ε > 0, ∀ n, …` and `∀ n, ∃ ε > 0, …` are different theorems —
   one uniform, one pointwise — and `lake build` will never tell you which one was
-  written. This failure sits directly next to AGENTS.md *Hoist shared hypotheses
-  into variable blocks*: a hoisted `ε` that escapes a later `∀ n` converts a
-  uniformity claim into a pointwise one (or the reverse) with no visible edit.
+  written. Hoisting shared hypotheses into `variable` blocks is where this bites:
+  a hoisted `ε` that escapes a later `∀ n` converts a uniformity claim into a
+  pointwise one (or the reverse) with no visible edit.
 - **Bridge the quantifiers of any claim about another statement.** When a
   declaration announces — by name or docstring — that it *refutes*, *generalises*,
   or *strengthens* something, write that referenced statement down in Lean and
@@ -224,8 +185,8 @@ Decide from the elaborated type, never from the surface syntax.
 ### 2. Deferred hypotheses
 
 Is any `class` / `structure` field or `Prop` argument standing in for a
-theorem with a known proof? (AGENTS.md *Prove what is provable; do not defer
-it* — the top-priority rule of this repository.) Distinguish it from a
+theorem with a known proof? (Prove what is provable; do not defer it.)
+Distinguish it from a
 genuinely model-dependent input — false for some objects in the class, with no
 known universal proof — which is acceptable. This perspective is inherently
 cross-file: for each hypothesis field, track where it is introduced, where it
@@ -240,8 +201,7 @@ Three procedures make that judgement decidable rather than impressionistic:
   no construction anywhere in the repository makes every theorem above it
   unfalsifiable — nobody can apply them and no proof can contradict them. That is
   exactly the route by which the trusted base grows in silence, and it gives
-  AGENTS.md *Prove what is provable; do not defer it* a test you can actually
-  run.
+  "prove what is provable; do not defer it" a test you can actually run.
 - **Write the used / not-used ledger.** For each load-bearing target theorem, run
   `lean_verify` (the axioms it actually reaches) and `lean_minimal_hypotheses`
   (the explicit hypotheses it actually needs), then state both halves: what the
@@ -255,7 +215,8 @@ Three procedures make that judgement decidable rather than impressionistic:
 ### 3. Abstraction & literature conformance
 
 Would a mathematician recognize each object as the standard one, stated at the
-standard generality? (AGENTS.md *Abstraction first*.)
+standard generality? (Abstraction first: the general interface before the
+concrete model.)
 
 - a concrete model where the literature works abstractly,
 - hypotheses weakened — or extra hypotheses added — to fit what Mathlib
@@ -268,33 +229,27 @@ standard generality? (AGENTS.md *Abstraction first*.)
 Would the notation or the docs slow a reader down, or mislead them?
 
 - Prefer the established notation over raw Mathlib spellings. Its sources are
-  the table in `QuantumSystem/Notation.lean` **and** the `scoped notation`
-  declarations living in the modules themselves (e.g. `𝓑(H)` in the
-  `VonNeumannAlgebra` scope) — enumerate the latter with
-  `grep -rnE "^(scoped )?(notation|prefix|postfix|infix[lr]?)" QuantumSystem --include='*.lean'`
+  the project's notation table, when it keeps one, **and** the `scoped notation`
+  declarations living in the modules themselves — enumerate the latter with
+  `grep -rnE "^(scoped )?(notation|prefix|postfix|infix[lr]?)" <source root> --include='*.lean'`
   (postfix notations — `†`, `′`, `″` — and unscoped module notations count too).
 - **Where no established notation exists**, ask whether the textbook/paper
   notation for the object would help, and propose introducing it (a
   `notation`/`scoped notation` declaration, or a rename) — name the literature
   convention you are matching. Severity `nit` or `should-fix`.
-- Check naming against AGENTS.md *Style Guidelines*.
+- Check naming against the project's style rules (its `CLAUDE.md` / `AGENTS.md`
+  or linked style file), and otherwise against Mathlib's naming conventions.
 - **Check that conventions are pinned in the module doc.** A statement that is
   not scale-invariant means only what its normalisation says it means, so the
   normalisation has to be written down where a reader meets it. The axes that
-  actually bite in this repository: whether `Tr` is the normalised or the
-  unnormalised trace, the base of `Real.log`, which argument of the inner product
-  is conjugate-linear, whether ℏ = 1 is in force, and what a `∑` ranges over
-  (`Finset.univ` versus a measure). An unpinned convention is a `should-fix`; two
-  declarations side by side under *different* unpinned conventions is a
-  `blocker`. This list is the same axis list
-  `.claude/skills/math-extract/references/note-format.md` pins under
-  `## Notation and conventions`, which is authoritative when the two drift; when
-  a note exists for the object, its `(C#)` table says what each source actually
-  fixes each axis to, so an unpinned axis there is a documented gap rather than
-  your own guess.
+  usually bite: whether `Tr` is the normalised or the unnormalised trace, the
+  base of `Real.log`, which argument of the inner product is conjugate-linear,
+  whether ℏ = 1 is in force, and what a `∑` ranges over (`Finset.univ` versus a
+  measure). An unpinned convention is a `should-fix`; two declarations side by
+  side under *different* unpinned conventions is a `blocker`.
 - Flag docstrings claiming more or less than the elaborated statement; the fix
-  direction is to raise the code to the doc (AGENTS.md *Match the code to the
-  docs*), never to weaken the doc.
+  direction is to raise the code to the doc, never to weaken the doc — the
+  docstring records the intended theorem, and trimming it hides the gap.
 - Flag declaration names that mislead about what is proved — in particular a
   name asserting more quantifier strength than the statement carries (a
   `not_isPure_of_…` that only rules out *some* state, a `_forall_` that is really
@@ -310,12 +265,7 @@ does it wrongly say something in the worlds where it should fail?
 - **Instantiate at the degenerate cases.** Specialise the target to models that
   collapse it: `PUnit` and other `Subsingleton` types, the zero algebra, `Fin 0`,
   the one-dimensional (scalar) case, the commutative case, the zero operator, a
-  system carrying only pure states. This list mirrors the checklist in
-  `.claude/skills/math-extract/references/note-format.md` under
-  `## Degeneracies and boundary cases`, which is authoritative when the two
-  drift; when a note exists, its table already records what the *mathematics*
-  does at each case, so a Lean statement that survives a case the note says it
-  should not is a finding you can state at (b) rather than a hunch. Use
+  system carrying only pure states. Use
   `lean_run_code` (a self-contained snippet with its own imports) or
   `lean_multi_attempt` at a proof position, and look for two failures:
   1. **vacuously true** — the hypotheses are unsatisfiable, so the theorem holds
@@ -335,21 +285,6 @@ does it wrongly say something in the worlds where it should fail?
   vacuous" is only as strong as the degenerate cases you actually instantiated,
   so name them; an unlisted model is an unchecked one.
 
-## Refutation role
-
-When the invoking prompt hands you a list of **tier (c)** findings to attack
-instead of a perspective: for each finding, try to refute it against the
-elaborated types and the search tools. Report exactly one of three outcomes
-per finding:
-
-- **refuted** — with the concrete evidence;
-- **survives, promoted to (a) or (b)** — with the verification that now
-  grounds it, quoting what promoted it;
-- **survives at (c)** — you could neither refute nor ground it. "I could not
-  refute it" is not a promotion.
-
-Do not add new findings.
-
 ## Output
 
 Return a structured report. It summarises your notes file — write there
@@ -358,8 +293,8 @@ first, report second (skip the file only when none was assigned).
 - One entry per finding: a `file_path:line` reference **and the declaration
   name**, the perspective it belongs to, the **evidence tier** (a) / (b) / (c), a
   severity (`blocker` / `should-fix` / `nit`), what is wrong, and the recommended
-  fix. Say who relies on the declaration and what they get instead. Cite an
-  AGENTS.md rule only when you can name it and quote the offending line.
+  fix. Say who relies on the declaration and what they get instead. Cite a
+  project rule only when you can name it and quote the offending line.
 - **Split the confidence in two** for each finding: is *this declaration on its
   own* wrong, and is it wrong *once its unexamined dependencies are included*?
   These come apart sharply — a lemma can be locally airtight while everything

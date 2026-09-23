@@ -42,31 +42,13 @@ explicit file or directory target has no diff; its scope is the entire file.
 Announce the resolved target before dispatching, so a wrong default costs one
 word to correct.
 
-**Then resolve the extraction notes.** `docs/math/<slug>.md` records what the
-literature says about an object, written before its Lean by `/math-extract`;
-`references/note-format.md` in that skill states that checking the declaration
-still matches the note is *this* skill's job. Read `docs/math/README.md` and
-match its index rows to the target: a row's `Implemented as` column names the
-declaration, and each note's `implemented-as:` frontmatter field carries the
-same back-link. When neither names a target declaration, match by object —
-a note on the split inclusion covers `SplitInclusion.lean` whether or not the
-back-link was ever written. Collect the absolute paths of the notes that match.
-
-No note is a normal state, not a violation: most objects here predate the
-skill. Missing notes are recorded in `## Not reviewed` (step 4) and nothing
-else follows from them — never file a finding for the absence of a note, and
-never write one yourself. `/math-extract` owns that file.
-
 ### 2. Spawn one sub-agent per perspective
 
 **Scale to the target first.** When the scope is small — roughly three target
 declarations or fewer, or a small diff in a single file — do not fan out:
 launch a **single** `math-reviewer` with no perspective assigned (its agent
 file then has it cover all five perspectives itself), and continue with
-steps 3 and 4 unchanged. The fan-out below is for real diffs.
-
-Read `ledger.md` (next to this file) first — you have to hand each reviewer its
-own rows.
+step 3 unchanged. The fan-out below is for real diffs.
 
 Launch five `math-reviewer` agents (Agent tool,
 `subagent_type: math-reviewer`) — one per perspective defined in the agent
@@ -81,8 +63,8 @@ file:
 all in a single message. Every agent receives the **same scope**: the full
 list of target files with their changed line ranges (the agent expands them to
 declarations itself). Write each prompt as a research memo, not a task ticket —
-it carries the target, the rows already ruled out, your own guess, and explicit
-permission to prove that guess wrong. Each prompt must state:
+it carries the target, your own guess, and explicit permission to prove that
+guess wrong. Each prompt must state:
 
 - the assigned perspective by number and name, framed as a role: "You are one
   of five perspective-specific reviewers running in parallel over this change;
@@ -90,23 +72,12 @@ permission to prove that guess wrong. Each prompt must state:
   perspective's definition, the agent file owns it;
 - the target files, with the changed line ranges collected in step 1 — or
   *entire file* for an explicit target that has no diff;
-- **the absolute paths of the extraction notes resolved in step 1**, or the
-  explicit statement that none matched. Do not summarise a note into the
-  prompt: the agent file tells each perspective which section answers its own
-  question, and a summary would decide that for it. Say only which object each
-  note covers. When no note matched, say so — silence reads as "nobody
-  looked", and a reviewer that assumes a note exists will hunt for it and
-  spend the sweep on filesystem searches;
 - a reminder to investigate related code beyond the diff, and to sweep the
   whole target rather than stopping at the first finding;
 - **the absolute path of the notes file** it must append confirmed findings to
   as it goes: `<your scratchpad>/math-review/perspective-<N>.md`. Pass *your*
   scratchpad path, not the agent's — a file written where you cannot read it is
   no use when the agent dies;
-- **the ledger rows for that perspective**, verbatim, as a *do-not-re-file*
-  list — together with the expiry rule `ledger.md` defines: a row whose
-  `Depends on` declaration has changed since the row's `Commit` is void, and
-  the claim may be filed again;
 - **your forecast**: which declaration, and which part of it, you expect this
   perspective to catch something in, and why. Require the reviewer to **write
   its own prediction down before opening the LSP** and to report the divergence
@@ -131,71 +102,21 @@ notes file you assigned it, which it appends to as it works. Findings that
 reached disk are usable even when the agent died mid-sweep; mark that perspective
 as partial and record in `## Not reviewed` how far it got.
 
-### 3. Refute the unverified claims
+### 3. Aggregate
 
-Run this once every perspective has either completed or been declared
-dead/partial with its notes file recovered (step 2). Collect the findings at
-evidence tier **(c)** — recalled, not verified — including any recovered from
-a dead reviewer's notes. If there are none, skip this step.
+Wait for every perspective to complete.
 
-Launch one further `math-reviewer` agent in the refutation role, whose only
-job is to attack them. Do not pass it the (a)- and (b)-tier findings — those
-are grounded by definition. It returns one of three outcomes per finding, each
-with a fixed disposition:
-
-- **refuted** — drop the finding from the report (or downgrade it, when part
-  of the claim survives), and write one ledger row;
-- **survives, promoted to (a)/(b)** — report it at its new tier; no ledger row;
-- **survives at (c)** — report it marked `unverified`, capped at should-fix
-  (no blocker rests on (c) alone); no ledger row — it was neither refuted nor
-  grounded, and the ledger records refutations only.
-
-One adversarial pass, not a vote: the evidence tiers already carry the
-reviewer's own confidence, so each extra vote buys nothing but another round of
-LSP round trips.
-
-**Then update `ledger.md`.** Every claim the pass **refuted** gets one row, in
-the format that file defines: target by declaration name (never a line
-number), perspective, the claim, the refuting evidence, the declarations the
-refutation depends on, the commit (`git rev-parse --short HEAD`), and the
-date. One row per claim, not per finding. While you are in the file, delete
-rows that are void under its expiry rule and rows whose claim was re-filed and
-re-adjudicated this run — the new adjudication replaces the old row. This is
-the only step that writes to the ledger, and skipping it is what makes the
-next run repeat this one's dead ends.
-
-### 4. Aggregate
-
-Wait for every perspective (and the refutation pass, if any) to complete.
-
-**First, reconcile each extraction note's back-link.** For every note resolved
-in step 1, check the two facts that go stale on their own: whether
-`implemented-as:` names a declaration that still exists (`lean_local_search`,
-or `lean_declaration_file`), and whether the `docs/math/README.md` index row
-agrees with it. Then:
-
-- **Back-link absent or stale, and a target declaration implements the note's
-  object** — write the fully-qualified declaration name into the note's
-  `implemented-as:` field and into the README index row. These two fields are
-  the *only* thing this skill may write in `docs/math/`; everything else there
-  belongs to `/math-extract`, and a review that edits a `## Hypotheses` row has
-  overwritten an extraction it did not perform.
-- **Back-link names a declaration that no longer exists** — set it back to
-  `none` and say so in the report. A back-link pointing at a deleted
-  declaration is worse than none: it claims a formalization that is gone.
-- **The declaration exists but does not state the note's adopted general
-  form** — do **not** touch the back-link. That is a perspective 3 finding, and
-  it is the finding this whole reconciliation exists to surface; silently
-  rewriting the link would record agreement where there is a divergence.
-
-Skip this entirely when step 1 found no notes.
-
-Then emit one markdown report to the chat, grouped by severity. Do not soften,
+Emit one markdown report to the chat, grouped by severity. Do not soften,
 merge, or drop findings; findings from different perspectives on the same line
 stay separate entries. The one exception: the reviewers' `## Out of
 perspective` sections (defects fitting no perspective — layout violations,
 Mathlib duplicates) may name the same defect several times; de-duplicate those
 and file each once, under the severity it deserves.
+
+**Cap unverified claims.** A finding at evidence tier **(c)** — recalled, not
+verified — is reported marked `unverified` and capped at should-fix: no blocker
+rests on (c) alone. The tier is the reviewer's own confidence statement; do not
+launch further passes to vote on it.
 
 **Verify every blocker yourself before printing it.** Open the declaration and
 confirm the claim with `lean_goal` / `lean_term_goal` from your own seat — so
@@ -217,11 +138,10 @@ Template:
 
 **Scope**: <N> files / <M> declarations   <!-- from the agents' reviewed-declaration lists -->
 **Verdict**: <worst severity present, or ✅ no findings>
-**Extraction notes**: <the notes consulted, with any back-link written or reset — or `none matched`>
 
 ## 🛑 Blocker
 ### 1. <one-line title>
-- `file:line` `declName` — [<perspective>/<a|b|c>]   <!-- note "promoted by refutation" where step 3 upgraded it -->
+- `file:line` `declName` — [<perspective>/<a|b|c>]
 - **Problem**: …
 - **Fix**: …
 - **Verified**: <what you confirmed yourself, or `aggregator-unverified`>
@@ -247,14 +167,8 @@ Template:
 <all five perspectives, every row present; ✅ for a clean perspective;
  forecast is hit / miss / n.a. — the divergence the reviewer reported>
 
-## Refuted findings            <!-- only if step 3 dropped or downgraded any -->
-<one line each: the finding and why it was refuted>
-
 ## Not reviewed
 <deleted files; files no agent could reach; perspectives that returned partial;
- target declarations with no extraction note, and — for the notes that were
- consulted — what their own `## Not investigated` and `## Open questions`
- sections leave uncovered, since a reviewer leaning on a note inherits its gaps;
  and — always — the **unexamined dependencies the verdict rests on**: the
  declarations the reviewers relied upon without opening, taken from each
  reviewer's per-finding confidence split. The risk lives here, not in what was
@@ -282,21 +196,3 @@ file has it prefer `lean_local_search` and spend remote searches per sweep,
 not per declaration. Perspective 5 works almost entirely through
 `lean_run_code` and `lean_multi_attempt` against the local toolchain, so adding
 it costs concurrency but not remote quota.
-
-## Ledger
-
-`ledger.md`, next to this file, is the skill's memory across runs. Without it
-every run re-derives the same dead ends: a reviewer files a plausible claim, the
-refutation pass kills it, the report ships, and the next run files it again.
-
-Step 3 writes it — one row per claim the refutation pass refuted — and is also
-the step that deletes rows voided by expiry or replaced by a re-adjudication.
-Step 2 reads it and hands each reviewer its own rows as a do-not-re-file list.
-Nothing else touches it.
-
-The rows are keyed by **declaration name**, because line numbers move. Each
-carries the declarations its refutation depends on, because a ledger that
-silences a true finding is worse than no ledger: when a `Depends on` declaration
-changes relative to the row's `Commit`, the row expires and the claim is open
-again. Reviewers are told this rule explicitly, and a reviewer that doubts a row
-should re-file rather than stay quiet.
