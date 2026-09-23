@@ -27,7 +27,7 @@ This is the standard notion used in sector theory: representations in
 the same unitary-equivalence class are physically indistinguishable.
 Compared with `GNS.Representation.UnitaryEquiv` (which additionally
 requires the unitary to identify the GNS cyclic vectors of two triplets
-for the *same* state `ω`), this notion drops the cyclic-vector
+for the *same* positive functional `f`), this notion drops the cyclic-vector
 compatibility and applies to two general representations of possibly
 unrelated origin.
 

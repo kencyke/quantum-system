@@ -11,23 +11,22 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 # Reducing subspaces for sets of bounded operators
 
 This file provides a minimal API for invariant / reducing subspaces for a set of operators
-`S : Set (H →L[ℂ] H)` on a Hilbert space `H`.
+`S : Set (H →L[ℂ] H)` on a Hilbert space `H`.  Invariance of `K` under a single operator `T` is
+Mathlib's `K ∈ Module.End.invtSubmodule T`.
 
 ## Main definitions
 
-* `IsInvariant T K`: a subspace `K` is invariant under `T` if `T(K) ⊆ K`.
 * `IsReducing S K`: `K` is reducing for `S` if `K` is invariant under `T` and `T†` for all `T ∈ S`.
 
 ## Main results
 
-* `IsInvariant.iff_forall_mem`: pointwise characterization of invariance.
-* `commutes_starProjection_of_invariant`: if `K` and `Kᗮ` are both invariant under `T`, then
-  `T` commutes with the orthogonal projection onto `K`.
-* `isInvariant_of_commutes_starProjection`: conversely, if `T` commutes with `K.starProjection`,
-  then `K` is invariant under `T`.
-* `isInvariant_orthogonal_of_commutes_starProjection`: if `T` commutes with `K.starProjection`,
-  then `Kᗮ` is invariant under `T`.
-* `orthogonalComplement_invariant_of_adjoint_invariant`: if `K` is invariant under `T†`, then
+* `commutes_starProjection_of_mem_invtSubmodule`: if `K` and `Kᗮ` are both invariant under `T`,
+  then `T` commutes with the orthogonal projection onto `K`.
+* `mem_invtSubmodule_of_commutes_starProjection`: conversely, if `T` commutes with
+  `K.starProjection`, then `K` is invariant under `T`.
+* `orthogonal_mem_invtSubmodule_of_commutes_starProjection`: if `T` commutes with
+  `K.starProjection`, then `Kᗮ` is invariant under `T`.
+* `orthogonal_mem_invtSubmodule_of_adjoint`: if `K` is invariant under `T†`, then
   `Kᗮ` is invariant under `T`.
 * `starProjection_mem_centralizer_of_isReducing`: if `K` is reducing for `S`, then
   `K.starProjection ∈ Set.centralizer S`.
@@ -40,32 +39,18 @@ This file provides a minimal API for invariant / reducing subspaces for a set of
 namespace InnerProductSpace
 
 local notation "⟪" x ", " y "⟫" => inner ℂ x y
-local postfix:max "†" => ContinuousLinearMap.adjoint
+open scoped InnerProduct
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
-
-/-- A subspace `K` is invariant under an operator `T` if `T(K) ⊆ K`. -/
-def IsInvariant (T : H →L[ℂ] H) (K : Submodule ℂ H) : Prop :=
-  K ∈ Module.End.invtSubmodule (T : Module.End ℂ H)
-
-namespace IsInvariant
-
-variable {T : H →L[ℂ] H} {K : Submodule ℂ H}
-
-lemma iff_forall_mem : IsInvariant T K ↔ ∀ x ∈ K, T x ∈ K := by
-  -- `Module.End.mem_invtSubmodule_iff_forall_mem_of_mem` is the pointwise characterization.
-  simpa [IsInvariant] using
-    (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem (f := (T : Module.End ℂ H)) (p := K))
-
-end IsInvariant
 
 section NonComplete
 
 /-- If `K` and `Kᗮ` are both invariant under `T`, then `T` commutes with the orthogonal projection
 onto `K` (as `K.starProjection`). -/
-lemma commutes_starProjection_of_invariant
+lemma commutes_starProjection_of_mem_invtSubmodule
     {T : H →L[ℂ] H} {K : Submodule ℂ H} [K.HasOrthogonalProjection]
-    (hK : IsInvariant T K) (hKorth : IsInvariant T Kᗮ) :
+    (hK : K ∈ Module.End.invtSubmodule (T : Module.End ℂ H))
+    (hKorth : Kᗮ ∈ Module.End.invtSubmodule (T : Module.End ℂ H)) :
     T * K.starProjection = K.starProjection * T := by
   ext x
   -- Unfold multiplication as composition.
@@ -74,9 +59,9 @@ lemma commutes_starProjection_of_invariant
   have hxK : K.starProjection x ∈ K := Submodule.starProjection_apply_mem (U := K) x
   have hxKorth : x - K.starProjection x ∈ Kᗮ := Submodule.sub_starProjection_mem_orthogonal (K := K) x
   have hTxK : T (K.starProjection x) ∈ K :=
-    (IsInvariant.iff_forall_mem (T := T) (K := K)).1 hK _ hxK
+    (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).1 hK _ hxK
   have hTxKorth : T (x - K.starProjection x) ∈ Kᗮ :=
-    (IsInvariant.iff_forall_mem (T := T) (K := Kᗮ)).1 hKorth _ hxKorth
+    (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).1 hKorth _ hxKorth
   have h1 : K.starProjection (T (K.starProjection x)) = T (K.starProjection x) :=
     (Submodule.starProjection_eq_self_iff (K := K)).2 hTxK
   have h2 : K.starProjection (T (x - K.starProjection x)) = 0 :=
@@ -106,12 +91,12 @@ lemma commutes_starProjection_of_invariant
           simp
   exact hproj.symm
 
-
-lemma isInvariant_of_commutes_starProjection
+/-- If `T` commutes with the orthogonal projection onto `K`, then `K` is invariant under `T`. -/
+lemma mem_invtSubmodule_of_commutes_starProjection
     {T : H →L[ℂ] H} {K : Submodule ℂ H} [K.HasOrthogonalProjection]
     (hcomm : K.starProjection * T = T * K.starProjection) :
-    IsInvariant T K := by
-  refine (IsInvariant.iff_forall_mem (T := T) (K := K)).2 ?_
+    K ∈ Module.End.invtSubmodule (T : Module.End ℂ H) := by
+  refine (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).2 ?_
   intro x hx
   have hxPx : K.starProjection x = x :=
     (Submodule.starProjection_eq_self_iff (K := K)).2 hx
@@ -121,12 +106,12 @@ lemma isInvariant_of_commutes_starProjection
     simpa [mul_apply_eq_comp, hxPx] using hcomm_apply
   exact (Submodule.starProjection_eq_self_iff (K := K)).1 hxTx
 
-
-lemma isInvariant_orthogonal_of_commutes_starProjection
+/-- If `T` commutes with the orthogonal projection onto `K`, then `Kᗮ` is invariant under `T`. -/
+lemma orthogonal_mem_invtSubmodule_of_commutes_starProjection
     {T : H →L[ℂ] H} {K : Submodule ℂ H} [K.HasOrthogonalProjection]
     (hcomm : K.starProjection * T = T * K.starProjection) :
-    IsInvariant T Kᗮ := by
-  refine (IsInvariant.iff_forall_mem (T := T) (K := Kᗮ)).2 ?_
+    Kᗮ ∈ Module.End.invtSubmodule (T : Module.End ℂ H) := by
+  refine (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).2 ?_
   intro y hy
   have hyPy : K.starProjection y = 0 :=
     (Submodule.starProjection_apply_eq_zero_iff (K := K)).2 hy
@@ -145,20 +130,22 @@ variable [CompleteSpace H]
 /-- A subspace `K` is reducing for a set of operators `S` if it is invariant under every operator
 in `S` and also invariant under every adjoint operator. -/
 def IsReducing (S : Set (H →L[ℂ] H)) (K : Submodule ℂ H) : Prop :=
-  ∀ T ∈ S, IsInvariant T K ∧ IsInvariant (T†) K
+  ∀ T ∈ S, K ∈ Module.End.invtSubmodule (T : Module.End ℂ H) ∧
+    K ∈ Module.End.invtSubmodule ((T†) : Module.End ℂ H)
 
 /-- If `K` is invariant under `T†`, then `Kᗮ` is invariant under `T`. -/
-lemma orthogonalComplement_invariant_of_adjoint_invariant
+lemma orthogonal_mem_invtSubmodule_of_adjoint
     {T : H →L[ℂ] H} {K : Submodule ℂ H}
-  (hK : IsInvariant (T†) K) : IsInvariant T Kᗮ := by
+    (hK : K ∈ Module.End.invtSubmodule ((T†) : Module.End ℂ H)) :
+    Kᗮ ∈ Module.End.invtSubmodule (T : Module.End ℂ H) := by
   -- Unfold to the pointwise characterization.
-  refine (IsInvariant.iff_forall_mem (T := T) (K := Kᗮ)).2 ?_
+  refine (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).2 ?_
   intro y hy
   -- Show `T y ∈ Kᗮ` via the inner-product characterization.
   refine (K.mem_orthogonal (T y)).2 ?_
   intro x hx
   have hx' : (T†) x ∈ K :=
-    (IsInvariant.iff_forall_mem (T := T†) (K := K)).1 hK x hx
+    (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).1 hK x hx
   -- `y ∈ Kᗮ` implies `⟪(T†) x, y⟫ = 0`, hence also `⟪x, T y⟫ = 0`.
   have hy0 : ⟪(T†) x, y⟫ = 0 :=
     (K.mem_orthogonal y).1 hy ((T†) x) hx'
@@ -174,11 +161,11 @@ lemma starProjection_mem_centralizer_of_isReducing
     (S : Set (H →L[ℂ] H)) (K : Submodule ℂ H) [K.HasOrthogonalProjection]
     (hK : IsReducing S K) : K.starProjection ∈ Set.centralizer S := by
   intro T hT
-  have hInv : IsInvariant T K := (hK T hT).1
-  have hInvAdj : IsInvariant (T†) K := (hK T hT).2
-  have hInvOrth : IsInvariant T Kᗮ :=
-    orthogonalComplement_invariant_of_adjoint_invariant (T := T) hInvAdj
-  exact commutes_starProjection_of_invariant (T := T) (K := K) hInv hInvOrth
+  have hInv : K ∈ Module.End.invtSubmodule (T : Module.End ℂ H) := (hK T hT).1
+  have hInvAdj : K ∈ Module.End.invtSubmodule ((T†) : Module.End ℂ H) := (hK T hT).2
+  have hInvOrth : Kᗮ ∈ Module.End.invtSubmodule (T : Module.End ℂ H) :=
+    orthogonal_mem_invtSubmodule_of_adjoint (T := T) hInvAdj
+  exact commutes_starProjection_of_mem_invtSubmodule (T := T) (K := K) hInv hInvOrth
 
 end WithComplete
 

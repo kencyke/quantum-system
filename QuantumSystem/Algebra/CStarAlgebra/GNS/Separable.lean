@@ -26,8 +26,9 @@ cannot annihilate `a`, because it does not shrink `aₙ`.
 
 ## Main results
 
-* `GNS.Representation.norm_sq_apply_cyclic` — `‖T.π x T.ξ‖ ^ 2 = (ω (star x * x)).re` for any
-  GNS triplet. This is what turns a norming *state* into a non-vanishing *operator*.
+* `GNS.Representation.norm_apply_cyclic_of_norming` — a norming state yields an orbit vector of
+  full length, via `GNS.Representation.norm_apply_cyclic`. This is what turns a norming
+  *state* into a non-vanishing *operator*.
 * `GNS.Representation.separableSpace_H` — the Hilbert space of a GNS triplet over a
   separable algebra is separable.
 * `GNS.normingFamily` — the countable family of GNS representations described above, and
@@ -41,7 +42,7 @@ The theorem these serve is `CStarRep.exists_isometric_separable`, in
 
 open TopologicalSpace
 
-open scoped InnerProductSpace Adjoint ComplexHilbertSpace
+open scoped InnerProductSpace ComplexHilbertSpace ComplexOrder
 
 universe u
 
@@ -51,64 +52,21 @@ variable {A : Type u} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRin
 
 namespace Representation
 
-/-- For a GNS triplet, the squared length of the orbit vector `T.π x T.ξ` is the value of
-the state at `star x * x`.
-
-This is the bridge between a *norming state* and a *non-vanishing operator*: a state whose
-value at `star x * x` is `‖x‖ ^ 2` yields a representation with `‖T.π x T.ξ‖ = ‖x‖`. -/
-lemma norm_sq_apply_cyclic {ω : State A} (T : Representation ω) (x : A) :
-    ‖T.π x T.ξ‖ ^ 2 = (ω (star x * x)).re := by
-  have hstar : T.π (star x) = (T.π x)† := by
-    rw [map_star, ContinuousLinearMap.star_eq_adjoint]
-  have hval : T.π (star x * x) T.ξ = (T.π x)† (T.π x T.ξ) := by
-    rw [map_mul, hstar]
-    rfl
-  rw [T.gns_condition (star x * x), hval, ContinuousLinearMap.adjoint_inner_right,
-    inner_self_eq_norm_sq_to_K]
-  simp [← Complex.ofReal_pow]
-
 /-- A norming state gives an orbit vector of full length: if `ω (star x * x) = ‖x‖ ^ 2`
 then `‖T.π x T.ξ‖ = ‖x‖`. -/
-lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation ω) {x : A}
+lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation ω.toPositiveLinearMap) {x : A}
     (hx : ω (star x * x) = ((‖x‖ ^ 2 : ℝ) : ℂ)) :
     ‖T.π x T.ξ‖ = ‖x‖ := by
-  have h := T.norm_sq_apply_cyclic x
-  rw [hx] at h
-  have h' : ‖T.π x T.ξ‖ ^ 2 = ‖x‖ ^ 2 := by rw [h, Complex.ofReal_re]
-  nlinarith [norm_nonneg (T.π x T.ξ), norm_nonneg x, h']
-
-/-- The orbit map `a ↦ T.π a T.ξ` is `1`-Lipschitz.
-
-It is the composition of the contraction `a ↦ T.π a` with evaluation at a unit vector. -/
-lemma lipschitzWith_apply_cyclic {ω : State A} (T : Representation ω) :
-    LipschitzWith 1 (fun a : A => T.π a T.ξ) := by
-  refine LipschitzWith.of_dist_le_mul fun a b => ?_
-  have hsub : T.π a T.ξ - T.π b T.ξ = T.π (a - b) T.ξ := by
-    rw [map_sub]
-    rfl
-  have hbound : dist (T.π a T.ξ) (T.π b T.ξ) ≤ ‖a - b‖ := by
-    calc dist (T.π a T.ξ) (T.π b T.ξ) = ‖T.π (a - b) T.ξ‖ := by rw [dist_eq_norm, hsub]
-      _ ≤ ‖T.π (a - b)‖ * ‖T.ξ‖ := ContinuousLinearMap.le_opNorm _ _
-      _ ≤ ‖a - b‖ * 1 := by
-          gcongr
-          · exact NonUnitalStarAlgHom.norm_apply_le _ _
-          · exact le_of_eq T.norm_ξ
-      _ = ‖a - b‖ := mul_one _
-  simpa [dist_eq_norm] using hbound
+  rw [T.norm_apply_cyclic, State.coe_toPositiveLinearMap, hx]
+  simp
 
 /-- The Hilbert space of a GNS triplet over a **separable** C\*-algebra is separable.
 
-The orbit of the cyclic vector is a continuous image of `A`, hence separable; its span is
-separable, and the span is dense by cyclicity. -/
-theorem separableSpace_H [SeparableSpace A] {ω : State A} (T : Representation ω) :
-    SeparableSpace T.H := by
-  have hrange : IsSeparable (Set.range fun a : A => T.π a T.ξ) :=
-    isSeparable_range T.lipschitzWith_apply_cyclic.continuous
-  have hspan : IsSeparable
-      ((Submodule.span ℂ {x | ∃ a : A, T.π a T.ξ = x} : Submodule ℂ T.H) : Set T.H) :=
-    hrange.span
-  rw [← isSeparable_univ_iff, ← T.cyclic.closure_eq]
-  exact hspan.closure
+The orbit map `a ↦ T.π a T.ξ` is continuous (`CStarRep.orbit` is a continuous linear map) with
+dense range (cyclicity). -/
+theorem separableSpace_H [SeparableSpace A] {f : A →ₚ[ℂ] ℂ} (T : Representation f) :
+    SeparableSpace T.H :=
+  T.cyclic.separableSpace (T.orbit T.ξ).continuous
 
 end Representation
 
@@ -147,7 +105,7 @@ variable (A) in
 dense sequence of `A`, at a pure state norming that member. -/
 noncomputable def normingFamily [SeparableSpace A] : SectorFamily.{u, u, 0} A where
   Index := NormingIndex A
-  rep i := (PureState.gnsRepresentation (normingState i)).toCStarRep
+  rep i := (GNS.Representation.canonical (normingState i).toState.toPositiveLinearMap).toCStarRep
 
 /-- Each summand of the norming family is separable. -/
 instance [SeparableSpace A] (i : NormingIndex A) :
@@ -190,7 +148,7 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
     linarith
   set i : NormingIndex A := ⟨n, hb_ne⟩ with hi
   have helem : i.elem = denseSeq A n := rfl
-  set T := PureState.gnsRepresentation (normingState i) with hT
+  set T := GNS.Representation.canonical (normingState i).toState.toPositiveLinearMap with hT
   -- The representation at `i` norms `i.elem`.
   have hnorm : ‖T.π i.elem T.ξ‖ = ‖i.elem‖ :=
     T.norm_apply_cyclic_of_norming (normingState_spec i)
@@ -206,7 +164,7 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
       _ ≤ ‖i.elem - a‖ * 1 := by
           gcongr
           · exact NonUnitalStarAlgHom.norm_apply_le _ _
-          · exact le_of_eq T.norm_ξ
+          · exact le_of_eq T.norm_ξ_eq_one
       _ = ‖i.elem - a‖ := mul_one _
   rw [hnorm, helem] at hle
   linarith

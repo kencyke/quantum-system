@@ -39,7 +39,7 @@ private instance smulCommClass_complex_real : SMulCommClass ℂ ℝ ℂ :=
   ⟨fun a b c => by rw [Complex.real_smul, smul_eq_mul, Complex.real_smul]; ring⟩
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-variable {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B] [Nontrivial B]
+variable {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B]
 
 /-- Manual `IsScalarTower ℝ ℂ (A →L[ℂ] ℂ)`.  Avoids `ContinuousLinearMap.isScalarTower`,
 whose side conditions are not synthesizable in module mode. -/
@@ -57,12 +57,6 @@ private instance instWeakDualScalarTower : IsScalarTower ℝ ℂ (WeakDual ℂ A
     intro x
     change (r • c) • f x = r • c • f x
     exact smul_assoc r c (f x)
-
-/-- `IsScalarTower ℝ ℂ B` for a unital C*-algebra `B`. -/
-private instance instCStarBScalarTower : IsScalarTower ℝ ℂ B where
-  smul_assoc r c b := by
-    rw [show (r • c : ℂ) = (r : ℂ) * c from rfl, mul_smul]
-    rfl
 
 /-- `IsScalarTower ℝ ℂ (Unitization ℂ A)`. -/
 private instance instUnitScalarTower : IsScalarTower ℝ ℂ (Unitization ℂ A) where
@@ -97,58 +91,15 @@ def IsPureState (φ : WeakDual ℂ A) : Prop :=
   φ ∈ Set.extremePoints ℝ (QuasiStateSpace A) ∧ φ ≠ 0
 
 
-/-- A linear functional with norm 1 that maps 1 to 1 is necessarily positive. -/
+/-- A linear functional with norm 1 that maps 1 to 1 is necessarily positive: by Mathlib's
+`ContinuousLinearMap.monotone_iff_opNorm_eq_map_one`, `‖φ‖ = φ 1` is equivalent to monotonicity. -/
 lemma nonneg_of_norm_eq_one_map_one
     (φ : WeakDual ℂ B) (h_norm : ‖WeakDual.toStrongDual φ‖ = 1) (h_one : φ 1 = 1) :
     ∀ a : B, 0 ≤ a → 0 ≤ φ a := by
-  refine fun _ => StarOrderedRing.map_nonneg_of_star_mul_self_nonneg φ fun a => ?_
-  -- 1. φ is real on self-adjoint elements.
-  have h_real : ∀ x : B, IsSelfAdjoint x → (φ x).im = 0 := by
-    intro x hx
-    by_contra h
-    let t := (‖x‖^2 - ‖φ x‖^2 + 1) / (2 * (φ x).im)
-    have : ‖φ (x + (Complex.I * t) • 1)‖^2 ≤ ‖x + (Complex.I * t) • 1‖^2 := by
-      rw [sq_le_sq, abs_norm, abs_norm]
-      exact (WeakDual.toStrongDual φ).le_opNorm _ |>.trans_eq (by rw [h_norm, one_mul])
-    rw [UnitalCStarAlgebra.norm_sq_add_imaginary_unit_of_selfAdjoint x hx t] at this
-    simp only [map_add, map_smul, h_one, smul_eq_mul, mul_one] at this
-    rw [← Complex.normSq_eq_norm_sq] at this
-    have h_expand : Complex.normSq (φ x + t * Complex.I) = Complex.normSq (φ x) + 2 * (φ x).im * t + t^2 := by
-      simp [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im]
-      ring
-    rw [mul_comm Complex.I] at this
-    rw [h_expand] at this
-    rw [Complex.normSq_eq_norm_sq] at this
-    simp only [add_le_add_iff_right] at this
-    have h_im_ne : 2 * (φ x).im ≠ 0 := mul_ne_zero two_ne_zero h
-    dsimp [t] at this
-    field_simp [h_im_ne] at this
-    linarith
-  -- 2. Show φ(star a * a) ≥ 0
-  let b := star a * a
-  have hb_sa : IsSelfAdjoint b := IsSelfAdjoint.star_mul_self a
-  obtain ⟨r, hr⟩ : ∃ r : ℝ, φ b = r := ⟨(φ b).re, Complex.ext rfl (h_real b hb_sa)⟩
-  rw [hr]
-  refine Complex.zero_le_real.mpr ?_
-  · by_contra h_neg
-    have : ‖b‖ - r ≤ ‖b‖ := by
-      let y := algebraMap ℝ B ‖b‖
-      have hy : ‖y‖ = ‖b‖ := by simp [y, Algebra.algebraMap_eq_smul_one, norm_smul]
-      have h_phi_y : φ y = ‖b‖ := by
-        simp only [y, IsScalarTower.algebraMap_apply ℝ ℂ B]
-        rw [Algebra.algebraMap_eq_smul_one, map_smul, h_one]
-        simp
-      have h1 : ‖b‖ - r = (φ (y - b)).re := by
-        simp [map_sub, h_phi_y, hr, Complex.sub_re, Complex.ofReal_re]
-      rw [h1]
-      apply (Complex.re_le_norm _).trans
-      apply ((WeakDual.toStrongDual φ).le_opNorm _).trans
-      rw [h_norm, one_mul]
-      rw [← hy]
-      have hb0 : 0 ≤ b := StarOrderedRing.nonneg_iff.mpr (AddSubmonoid.subset_closure ⟨a, rfl⟩)
-      exact CStarAlgebra.norm_le_norm_of_le_of_nonneg (sub_le_self y hb0)
-        (sub_nonneg.mpr (IsSelfAdjoint.le_algebraMap_norm_self b hb_sa))
-    linarith
+  have hmono : Monotone (WeakDual.toStrongDual φ) :=
+    ContinuousLinearMap.monotone_iff_opNorm_eq_map_one.mpr (by simpa [h_norm] using h_one.symm)
+  intro a ha
+  simpa using hmono ha
 
 
 /-- For any nonzero positive element `b`, there exists a state on the unitization

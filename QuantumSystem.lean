@@ -15,6 +15,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.Representation.Family
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Hom
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Algebra.CStarAlgebra.State
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet.Covariance
@@ -50,9 +51,9 @@ public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.AdjointNotation
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
@@ -70,11 +71,8 @@ public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
-public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
-public import QuantumSystem.ForMathlib.Topology.DenseLinear
-public import QuantumSystem.ForMathlib.Topology.MetricSpace.Completion
 public import QuantumSystem.Notation
 public import QuantumSystem.State

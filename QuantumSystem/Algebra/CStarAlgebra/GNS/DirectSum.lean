@@ -47,7 +47,7 @@ variable (A) in
 /-- The sector family of GNS representations of all pure states, indexed by `PureState A`. -/
 noncomputable def pureStateFamily : SectorFamily.{u, u, u} A where
   Index := PureState A
-  rep ψ := (PureState.gnsRepresentation ψ).toCStarRep
+  rep ψ := (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).toCStarRep
 
 variable (A) in
 /-- **The pure states separate points.**  If `a ≠ 0`, some pure state `ψ` has
@@ -57,10 +57,11 @@ theorem pureStateFamily_separatesPoints : (pureStateFamily A).SeparatesPoints :=
   by_contra hne
   obtain ⟨φ, hφ_pure, hφ_pos⟩ := IsPureState.exists_pos_of_ne_zero a hne
   let ψ : PureState A := ⟨φ, hφ_pure⟩
-  have hπ : (PureState.gnsRepresentation ψ).π a = 0 := ha ψ
+  have hπ : (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).π a = 0 := ha ψ
   have hzero : φ (star a * a) = 0 := by
     change ψ.toState (star a * a) = 0
-    rw [(PureState.gnsRepresentation ψ).gns_condition]
+    rw [← State.coe_toPositiveLinearMap,
+      (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).gns_condition]
     simp [hπ]
   exact hφ_pos.ne' hzero
 
@@ -95,7 +96,7 @@ does satisfy it. -/
 theorem rep_actsNondegenerately :
     InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → 𝓑((rep A).H))) :=
   (pureStateFamily A).directSumRep_actsNondegenerately_of fun ψ =>
-    (PureState.gnsRepresentation ψ).actsNondegenerately
+    (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).actsNondegenerately
 
 variable (A) in
 /-- The direct sum representation, corestricted to its image, is a `*`-isomorphism

@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 
 /-!
@@ -17,17 +18,19 @@ the C\*-algebra of bounded linear operators `𝓑(H)`.
 
 `CStarRep A` is a foundational, sector-agnostic notion: it is the generic
 data of a C\*-algebra representation, with no choice of cyclic vector or
-attachment to a state.  Both the GNS construction and the abstract
+attachment to a state or positive functional.  Both the GNS construction and the abstract
 representation-theoretic layer are built on top of it:
 
-* `CStarAlgebra/GNS/Representation.lean` adds a cyclic vector and a state to
-  obtain a GNS triplet (`GNS.Representation` extends `CStarRep`);
+* `CStarAlgebra/GNS/Representation.lean` adds a cyclic vector and a positive
+  functional to obtain a GNS triplet (`GNS.Representation` extends `CStarRep`);
 * `CStarAlgebra/Representation/UnitaryEquiv.lean` defines unitary equivalence
   between two `CStarRep`s as the existence of an intertwining unitary map (no
   cyclic vector compatibility, contrary to `GNS.Representation.UnitaryEquiv`
-  which is the same-state GNS uniqueness statement);
+  which is the same-functional GNS uniqueness statement);
 * `CStarAlgebra/Representation/Irreducible.lean` lifts the irreducibility
   predicate to the general `CStarRep` setting;
+* `CStarAlgebra/Representation/VectorFunctional.lean` defines the vector
+  functionals `a ↦ ⟪v, π a v⟫` of a `CStarRep` and their quasi-state bounds;
 * `CStarAlgebra/Representation/Family.lean` packages indexed families of
   representatives (`SectorFamily`), on which a superselection sector theory
   imposes its selection criteria (DHR, KMS, ...) as separate predicates;
@@ -42,16 +45,17 @@ the C\*-algebra / Hilbert-space setting.  The GNS construction in
 `Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal` exposes the Hilbert
 space (`f.GNS`) and the homomorphism (`f.gnsNonUnitalStarAlgHom`, or
 `f.gnsStarAlgHom` in the unital case) as separate artifacts; there is no
-bundled `(H, π)` structure in Mathlib.  The canonical GNS triplet
-`GNS.Representation.canonical` bundles exactly these two Mathlib objects.
+bundled `(H, π)` structure in Mathlib.  `PositiveLinearMap.gnsCStarRep` bundles exactly these
+two Mathlib objects, and the canonical GNS triplet `GNS.Representation.canonical` extends it.
 
 ## Relation to `GNS.Representation`
 
-`GNS.Representation ω` (defined in
+`GNS.Representation f` (defined in
 `QuantumSystem/Algebra/CStarAlgebra/GNS/Representation.lean`) is the GNS
-triplet `(H, π, ξ)` for a specific state `ω : State A`, adding a
-cyclic unit vector `ξ` and the GNS identity
-`ω a = ⟪ξ, π a ξ⟫` on top of the data of a `CStarRep A`.
+triplet `(H, π, ξ)` for a specific positive functional `f : A →ₚ[ℂ] ℂ` (a
+state `ω` being the case `f = ω.toPositiveLinearMap`), adding a cyclic
+vector `ξ` and the GNS identity `f a = ⟪ξ, π a ξ⟫` on top of the data of a
+`CStarRep A`.
 A GNS triplet is a `CStarRep` with extra data: the structure projection
 `GNS.Representation.toCStarRep` forgets the cyclic vector, so every notion
 defined for `CStarRep` (invariance, irreducibility, unitary equivalence)
@@ -62,11 +66,14 @@ applies to GNS triplets directly.
 * `CStarRep A` — a bundled non-unital `*`-representation
   `π : A →⋆ₙₐ[ℂ] 𝓑(H)` together with the carrier `H` and its
   `ComplexHilbertSpace` instance.
+* `CStarRep.adjoint_π` — `(π a)† = π (a*)`.
+* `CStarRep.orbit R v` — the orbit map `a ↦ π a v` of a vector, as a
+  continuous linear map `A →L[ℂ] H`.
 -/
 
 @[expose] public section
 
-open scoped ComplexHilbertSpace
+open scoped ComplexHilbertSpace InnerProduct
 
 universe u v
 
@@ -83,7 +90,7 @@ Fields:
 
 This is the underlying data of a representation without any choice of a
 cyclic vector or attachment to a particular state.  For a GNS triplet
-attached to a fixed state, see `GNS.Representation`. -/
+attached to a fixed positive functional, see `GNS.Representation`. -/
 structure CStarRep (A : Type u) [NonUnitalCStarAlgebra A] where
   /-- The Hilbert space on which the representation acts. -/
   H : Type v
@@ -93,3 +100,31 @@ structure CStarRep (A : Type u) [NonUnitalCStarAlgebra A] where
   π : A →⋆ₙₐ[ℂ] 𝓑(H)
 
 attribute [instance] CStarRep.hilbert
+
+namespace CStarRep
+
+/-- A `*`-representation sends adjoints to adjoints: `(π a)† = π (a*)`. -/
+lemma adjoint_π (R : CStarRep A) (a : A) : (R.π a)† = R.π (star a) := by
+  rw [map_star, ContinuousLinearMap.star_eq_adjoint]
+
+/-- The orbit map `a ↦ π a v` of a vector `v`, as a continuous linear map `A →L[ℂ] H`.
+It is bounded by `‖v‖`, since `*`-homomorphisms of C\*-algebras are contractive. -/
+noncomputable def orbit (R : CStarRep A) (v : R.H) : A →L[ℂ] R.H :=
+  LinearMap.mkContinuous
+    { toFun := fun a => R.π a v
+      map_add' := fun a b => by simp
+      map_smul' := fun c a => by simp }
+    ‖v‖
+    fun a => ((R.π a).le_opNorm v).trans <| by
+      rw [mul_comm]
+      gcongr
+      exact NonUnitalStarAlgHom.norm_apply_le R.π a
+
+/-- The orbit map evaluates as `a ↦ π a v`. -/
+@[simp] lemma orbit_apply (R : CStarRep A) (v : R.H) (a : A) : R.orbit v a = R.π a v := rfl
+
+/-- The orbit map of `v` has operator norm at most `‖v‖`. -/
+lemma norm_orbit_le (R : CStarRep A) (v : R.H) : ‖R.orbit v‖ ≤ ‖v‖ :=
+  LinearMap.mkContinuous_norm_le _ (norm_nonneg v) _
+
+end CStarRep
