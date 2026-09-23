@@ -13,17 +13,22 @@ This file collects fundamental entropy inequalities for quantum channels.
 
 ## Main Results
 
+* `relativeEntropy_nonneg`: Klein's inequality — relative entropy is non-negative,
+  `0 ≤ D(ρ ‖ σ)`.
+* `relativeEntropy_eq_zero_iff`: faithfulness — `D(ρ ‖ σ) = 0 ↔ ρ = σ`.
 * `relativeEntropy_channel_le`: Monotonicity of relative entropy — quantum channels do not
   increase relative entropy: S(Φ(ρ) ‖ Φ(σ)) ≤ S(ρ ‖ σ).
-* `relativeEntropy_channel_eq_iff_recoverable`: Equality in monotonicity holds when a Petz
+* `relativeEntropy_channel_eq_of_recoverable`: Equality in monotonicity holds when a
   recovery channel exists: if R(Φ(ρ)) = ρ and R(Φ(σ)) = σ, then
   S(Φ(ρ) ‖ Φ(σ)) = S(ρ ‖ σ).
+* `relativeEntropy_map_starAlgEquiv`, `relativeEntropy_mapEquiv`: isometric invariance
+  `D(φ(ρ) ‖ φ(σ)) = D(ρ ‖ σ)` for every pair of density matrices.
 * `relativeEntropy_jointly_convex`: Relative entropy is jointly convex.
 
 ## Mathematical Background
 
 ### Monotonicity of Relative Entropy
-For a quantum channel Φ : Mₙ(ℂ) → Mₘ(ℂ) and positive definite
+For a quantum channel Φ : Mₙ(ℂ) → Mₘ(ℂ) and arbitrary
 density matrices ρ, σ:
   S(Φ(ρ) ‖ Φ(σ)) ≤ S(ρ ‖ σ)
 
@@ -34,11 +39,12 @@ density matrices ρ, σ:
 4. Partial trace only decreases relative entropy
    (monotonicity under partial trace; equivalent to strong subadditivity)
 
-### Petz Recovery Map
-Equality in monotonicity holds iff there exists a recovery channel R such that
-R(Φ(ρ)) = ρ and R(Φ(σ)) = σ. The explicit form is:
+### Recovery and equality
+If a channel R recovers both states, R(Φ(ρ)) = ρ and R(Φ(σ)) = σ, then equality holds in
+monotonicity; this direction is `relativeEntropy_channel_eq_of_recoverable`. Petz's theorem
+gives the converse — equality forces the existence of such an R, explicitly the Petz map
   R(·) = σ^(1/2) Φ*(Φ(σ)^(-1/2) · Φ(σ)^(-1/2)) σ^(1/2)
-where Φ* is the adjoint of Φ with respect to the Hilbert-Schmidt inner product.
+with Φ* the Hilbert–Schmidt adjoint of Φ — but that converse is **not** formalised here.
 
 ## References
 
@@ -61,6 +67,119 @@ variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 i.e., supp(ρ) ⊆ supp(σ). This is the condition for D(ρ‖σ) to be finite. -/
 def suppSubset (ρ σ : Matrix n n ℂ) : Prop :=
   ∀ v : n → ℂ, σ.mulVec v = 0 → ρ.mulVec v = 0
+
+omit [DecidableEq n] in
+/-- For a positive semidefinite matrix `B`, if `Re[v† B v] = 0` then `B v = 0`. -/
+lemma mulVec_eq_zero_of_re_inner_zero
+    {B : Matrix n n ℂ} (hB : B.PosSemidef)
+    (v : n → ℂ) (hv : (star v ⬝ᵥ B.mulVec v).re = 0) :
+    B.mulVec v = 0 := by
+  rw [← hB.dotProduct_mulVec_zero_iff]
+  apply Complex.ext
+  · exact hv
+  · exact hB.1.im_star_dotProduct_mulVec_self v
+
+/-- **Algebraic form of support inclusion.** For Hermitian `σ`, `supp ρ ⊆ supp σ` iff `ρ`
+annihilates the kernel projection `cfc (fun x => if x = 0 then 1 else 0) σ` of `σ`. No
+hypothesis on `ρ` is needed. This is the form that transports along `*`-algebra
+equivalences (`suppSubset_map_starAlgEquiv_iff`). -/
+theorem suppSubset_iff_mul_cfc_eq_zero {ρ σ : Matrix n n ℂ} (hσ : σ.IsHermitian) :
+    suppSubset ρ σ ↔ ρ * cfc (fun x : ℝ => if x = 0 then (1 : ℝ) else 0) σ = 0 := by
+  have hfin : (spectrum ℝ σ).Finite := by
+    rw [hσ.spectrum_real_eq_range_eigenvalues]; exact Set.finite_range _
+  have hsa : IsSelfAdjoint σ := hσ
+  set g : ℝ → ℝ := fun x => if x = 0 then 1 else 0 with hg
+  -- `σ · P = 0` for the kernel projection `P = cfc g σ`.
+  have hσP : σ * cfc g σ = 0 := by
+    have h := cfc_mul (fun x : ℝ => x) g σ continuousOn_id (hfin.continuousOn g)
+    rw [cfc_id' (R := ℝ) (a := σ) hsa] at h
+    rw [← h]
+    have : (fun x : ℝ => x * g x) = (0 : ℝ → ℝ) := by
+      funext x; simp only [hg, Pi.zero_apply]; split_ifs with h0 <;> simp [h0]
+    rw [this, cfc_zero]
+  constructor
+  · intro h
+    rw [Matrix.ext_iff_mulVec]
+    intro v
+    rw [← Matrix.mulVec_mulVec, Matrix.zero_mulVec]
+    apply h
+    rw [Matrix.mulVec_mulVec, hσP, Matrix.zero_mulVec]
+  · intro h v hv
+    -- `P v = v` for `v ∈ ker σ`, since `1 - P = cfc (x ↦ x⁻¹ · [x ≠ 0]) σ · σ`.
+    set h' : ℝ → ℝ := fun x => if x = 0 then 0 else x⁻¹ with hh'
+    have hQ : cfc (fun x => h' x * x) σ = cfc h' σ * σ := by
+      rw [cfc_mul h' (fun x : ℝ => x) σ (hfin.continuousOn h') continuousOn_id,
+        cfc_id' (R := ℝ) (a := σ) hsa]
+    have hPQ : cfc g σ + cfc (fun x => h' x * x) σ = 1 := by
+      rw [← cfc_add g (fun x => h' x * x) (a := σ) (hfin.continuousOn _) (hfin.continuousOn _)]
+      have : (fun x : ℝ => g x + h' x * x) = fun _ => 1 := by
+        funext x; simp only [hg, hh']
+        split_ifs with h0
+        · simp
+        · rw [inv_mul_cancel₀ h0]; ring
+      rw [this, cfc_const_one ℝ σ]
+    have hPv : (cfc g σ).mulVec v = v := by
+      have h1 := congr_arg (fun M : Matrix n n ℂ => M.mulVec v) hPQ
+      simp only [Matrix.add_mulVec, Matrix.one_mulVec, hQ, ← Matrix.mulVec_mulVec, hv,
+        Matrix.mulVec_zero, add_zero] at h1
+      exact h1
+    rw [← hPv, Matrix.mulVec_mulVec, h, Matrix.zero_mulVec]
+
+/-- **Support inclusion along a unitary diagonalisation.** If `σ = W · diag d · Wᴴ` with
+`W` unitary and `ρ` is positive semidefinite, then `supp ρ ⊆ supp σ` iff the conjugated
+matrix `Wᴴ ρ W` has vanishing diagonal entry at every index `k` with `d k = 0`. -/
+theorem suppSubset_unitary_conj_diagonal_iff {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef)
+    (W : unitary (Matrix n n ℂ)) (d : n → ℝ) :
+    suppSubset ρ
+        ((W : Matrix n n ℂ) * diagonal (fun i => ((d i : ℝ) : ℂ)) * (W : Matrix n n ℂ)ᴴ) ↔
+      ∀ k, d k = 0 → ((W : Matrix n n ℂ)ᴴ * ρ * (W : Matrix n n ℂ)) k k = 0 := by
+  set Wm : Matrix n n ℂ := (W : Matrix n n ℂ) with hWm
+  set D : Matrix n n ℂ := diagonal (fun i => ((d i : ℝ) : ℂ)) with hD
+  have hWHW : Wmᴴ * Wm = 1 := by
+    have := Unitary.coe_star_mul_self W; simpa [star_eq_conjTranspose, hWm] using this
+  have hWWH : Wm * Wmᴴ = 1 := by
+    have := Unitary.coe_mul_star_self W; simpa [star_eq_conjTranspose, hWm] using this
+  -- `c k` is column `k` of `W`.
+  set c : n → n → ℂ := fun k j => Wm j k with hc
+  have hρc : ∀ i k, (ρ * Wm) i k = (ρ.mulVec (c k)) i := fun i k => rfl
+  have hdiag : ∀ k, (Wmᴴ * ρ * Wm) k k = star (c k) ⬝ᵥ ρ.mulVec (c k) := by
+    intro k
+    simp only [Matrix.mul_apply, dotProduct, mulVec, conjTranspose_apply, hc, Finset.sum_mul,
+      Finset.mul_sum, mul_assoc, Pi.star_apply]
+    rw [Finset.sum_comm]
+  have hσW : (Wm * D * Wmᴴ) * Wm = Wm * D := by
+    rw [Matrix.mul_assoc, hWHW, Matrix.mul_one]
+  constructor
+  · intro h k hk
+    have hσc : (Wm * D * Wmᴴ).mulVec (c k) = 0 := by
+      ext i
+      change ((Wm * D * Wmᴴ) * Wm) i k = 0
+      rw [hσW, hD, mul_diagonal, hk]
+      simp
+    rw [hdiag, h (c k) hσc, dotProduct_zero]
+  · intro h v hv
+    set w := Wmᴴ.mulVec v with hw
+    have hDw : D.mulVec w = 0 := by
+      have h1 : Wmᴴ.mulVec ((Wm * D * Wmᴴ).mulVec v) = 0 := by rw [hv, mulVec_zero]
+      rwa [mulVec_mulVec, ← Matrix.mul_assoc, ← Matrix.mul_assoc, hWHW, Matrix.one_mul,
+        ← mulVec_mulVec] at h1
+    have hdw : ∀ i, d i ≠ 0 → w i = 0 := by
+      intro i hi
+      have := congr_fun hDw i
+      rw [hD, mulVec_diagonal] at this
+      simpa [hi] using this
+    have hv_eq : v = Wm.mulVec w := by
+      rw [hw, mulVec_mulVec, hWWH, one_mulVec]
+    rw [hv_eq, mulVec_mulVec]
+    ext i
+    change ∑ k, (ρ * Wm) i k * w k = 0
+    refine Finset.sum_eq_zero fun k _ => ?_
+    by_cases hk : d k = 0
+    · have hρck : ρ.mulVec (c k) = 0 := by
+        apply mulVec_eq_zero_of_re_inner_zero hρ
+        rw [← hdiag, h k hk, Complex.zero_re]
+      rw [hρc, hρck, Pi.zero_apply, zero_mul]
+    · rw [hdw k hk, mul_zero]
 
 /-- Quantum relative entropy D(ρ‖σ) = Tr (ρ(log ρ - log σ)) (Umegaki 1962).
 
@@ -230,8 +349,8 @@ private lemma trace_ρlogρ_eq (ρ : DensityMatrix n) :
   have hρ_spec := spectral_expand ρ.toMatrix ρ.isHermitian
   -- log(ρ) = U * diag(log ev) * Uᴴ
   have hlogρ_spec : log ρ = U * diagonal (fun i => (Real.log (ev_ρ i) : ℂ)) * Uᴴ := by
-    unfold DensityMatrix.log matrixLog matrixFunction
-    rfl
+    unfold DensityMatrix.log
+    exact cfc_log_spectral_eq ρ.isHermitian
   -- ρ * log(ρ) = U * diag(ev) * Uᴴ * U * diag(log ev) * Uᴴ = U * diag(ev * log ev) * Uᴴ
   -- First rewrite log, then ρ
   have h1 : (ρ.toMatrix * log ρ).trace.re =
@@ -276,12 +395,10 @@ private lemma trace_ρlogσ_eq (ρ σ : DensityMatrix n) :
   set W := eigW ρ σ
   set ev_ρ := ρ.isHermitian.eigenvalues
   set ev_σ := σ.isHermitian.eigenvalues
-  have hρ : ρ.toMatrix = U * diagonal (fun i => (ev_ρ i : ℂ)) * Uᴴ := by
-    have h := (matrixFunction_id ρ.isHermitian).symm
-    unfold matrixFunction at h
-    simpa [Function.comp] using h
+  have hρ : ρ.toMatrix = U * diagonal (fun i => (ev_ρ i : ℂ)) * Uᴴ :=
+    spectral_expand ρ.toMatrix ρ.isHermitian
   have hlogσ : log σ = V * diagonal (fun i => (Real.log (ev_σ i) : ℂ)) * Vᴴ := by
-    unfold DensityMatrix.log matrixLog matrixFunction; rfl
+    unfold DensityMatrix.log; exact cfc_log_spectral_eq σ.isHermitian
   have hUHV : Uᴴ * V = Wᴴ := by
     calc Uᴴ * V = Uᴴ * (Vᴴ)ᴴ := by rw [conjTranspose_conjTranspose]
       _ = (Vᴴ * U)ᴴ := by rw [conjTranspose_mul]
@@ -421,7 +538,7 @@ theorem relativeEntropy_nonneg (ρ σ : DensityMatrix n) :
           simp [hevρ, hσeq]
   · exact le_top
 
-/-- Quantum relative entropy is zero iff ρ = σ (faithfulness / quantum Pinsker).
+/-- Quantum relative entropy is zero iff ρ = σ (faithfulness).
 D(ρ‖σ) = 0 if and only if ρ = σ.
 
 This is a consequence of Klein's inequality plus the strict convexity of x ↦ x log x.
@@ -573,17 +690,6 @@ theorem relativeEntropy_eq_zero_iff (ρ σ : DensityMatrix n) :
 
 /-! ### Support Subset Preservation for Channels (needed before monotonicity) -/
 
-omit [DecidableEq n] in
-/-- For a positive semidefinite matrix B, if Re[v† B v] = 0 then B v = 0. -/
-private lemma mulVec_eq_zero_of_re_inner_zero'
-    {B : Matrix n n ℂ} (hB : B.PosSemidef)
-    (v : n → ℂ) (hv : (star v ⬝ᵥ B.mulVec v).re = 0) :
-    B.mulVec v = 0 := by
-  rw [← hB.dotProduct_mulVec_zero_iff]
-  apply Complex.ext
-  · exact hv
-  · exact hB.1.im_star_dotProduct_mulVec_self v
-
 omit [DecidableEq n] [DecidableEq m] in
 /-- Support subset is preserved by a single Kraus conjugation K ρ K†. -/
 private lemma suppSubset_kraus_single'
@@ -592,7 +698,7 @@ private lemma suppSubset_kraus_single'
     suppSubset (K * ρ * Kᴴ) (K * σ * Kᴴ) := by
   intro v hv
   have hKHv_ker : σ.mulVec (Kᴴ.mulVec v) = 0 := by
-    apply mulVec_eq_zero_of_re_inner_zero' hσ
+    apply mulVec_eq_zero_of_re_inner_zero hσ
     have h_eq : (star (Kᴴ.mulVec v) ⬝ᵥ σ.mulVec (Kᴴ.mulVec v)).re =
                 (star v ⬝ᵥ (K * σ * Kᴴ).mulVec v).re := by
       congr 1
@@ -675,9 +781,11 @@ private lemma trace_rpow_mul_double_sum (ρ σ : DensityMatrix n) (s : ℝ) :
   have hpsdρ := ρ.posSemidef
   have hpsdσ := σ.posSemidef
   have hρs : ρ.toMatrix ^ s = U * diagonal (fun i => ((ev_ρ i ^ s : ℝ) : ℂ)) * Uᴴ := by
-    rw [← matrixFunction_rpow_eq hpsdρ]; unfold matrixFunction; rfl
+    rw [CFC.rpow_eq_cfc_real (a := ρ.toMatrix) (ha := by rw [Matrix.le_iff, sub_zero]; exact hpsdρ),
+      cfc_spectral_eq ρ.isHermitian (fun x => x ^ s)]
   have hσs : σ.toMatrix ^ (1 - s) = V * diagonal (fun j => ((ev_σ j ^ (1 - s) : ℝ) : ℂ)) * Vᴴ := by
-    rw [← matrixFunction_rpow_eq hpsdσ]; unfold matrixFunction; rfl
+    rw [CFC.rpow_eq_cfc_real (a := σ.toMatrix) (ha := by rw [Matrix.le_iff, sub_zero]; exact hpsdσ),
+      cfc_spectral_eq σ.isHermitian (fun x => x ^ (1 - s))]
   have hVU : Vᴴ * U = W := rfl
   rw [hρs, hσs]
   -- Use cyclic trace property and W = Vᴴ * U to reduce to W D_ρ Wᴴ D_σ
@@ -1321,8 +1429,8 @@ private lemma trace_rpow_mul_channel_le
 
 /-- **Monotonicity of Relative Entropy**: Quantum channels do not increase relative entropy.
 
-For a quantum channel Φ and positive definite density matrices ρ, σ:
-  S(Φ(ρ) || Φ(σ)) ≤ S(ρ || σ)
+For a quantum channel Φ and density matrices ρ, σ:
+  D(Φ(ρ) ∥ Φ(σ)) ≤ D(ρ ∥ σ)
 
 **Proof**: Uses derivative argument on g(s) = F_s(Φρ, Φσ) - F_s(ρ, σ) where
 F_s(A, B) = Tr (Aˢ B¹⁻ˢ). Since g(s) ≥ 0 on (0,1] and g(1) = 0, we get g'(1) ≤ 0,
@@ -1409,7 +1517,7 @@ then equality holds in the data-processing inequality:
 For the reverse, applying DPI to R and using the recovery conditions gives
 S(ρ‖σ) = S(R(Φ(ρ))‖R(Φ(σ))) ≤ S(Φ(ρ)‖Φ(σ)).
 -/
-theorem relativeEntropy_channel_eq_iff_recoverable
+theorem relativeEntropy_channel_eq_of_recoverable
     (Φ : QuantumChannel n m)
     (ρ σ : DensityMatrix n)
     (R : QuantumChannel m n) (hRρ : R (Φ ρ) = ρ) (hRσ : R (Φ σ) = σ) :
@@ -1425,17 +1533,6 @@ theorem relativeEntropy_channel_eq_iff_recoverable
     exact hle
 
 /-! ### Joint Convexity of Relative Entropy -/
-
-omit [DecidableEq n] in
-/-- For a positive semidefinite matrix B, if Re[v† B v] = 0 then B v = 0. -/
-private lemma mulVec_eq_zero_of_re_inner_zero
-    {B : Matrix n n ℂ} (hB : B.PosSemidef)
-    (v : n → ℂ) (hv : (star v ⬝ᵥ B.mulVec v).re = 0) :
-    B.mulVec v = 0 := by
-  rw [← hB.dotProduct_mulVec_zero_iff]
-  apply Complex.ext
-  · exact hv
-  · exact hB.1.im_star_dotProduct_mulVec_self v
 
 omit [DecidableEq n] in
 /-- The support subset condition is preserved under convex combinations of positive semidefinite pairs.
@@ -1562,16 +1659,18 @@ private lemma trace_rpow_mul_jointly_concave
     (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     p * (Tr (ρ₁ ^ s * σ₁ ^ (1 - s))).re +
     (1 - p) * (Tr (ρ₂ ^ s * σ₂ ^ (1 - s))).re ≤
-    (Tr ((p • ρ₁.toMatrix + (1 - p) • ρ₂.toMatrix) ^ s * (p • σ₁.toMatrix + (1 - p) • σ₂.toMatrix) ^ (1 - s))).re := by
+    (Tr ((p • ρ₁.toMatrix + (1 - p) • ρ₂.toMatrix) ^ s *
+      (p • σ₁.toMatrix + (1 - p) • σ₂.toMatrix) ^ (1 - s))).re := by
   have hpsd₁ := ρ₁.posSemidef
   have hpsd₂ := ρ₂.posSemidef
   have hpsdσ₁ := σ₁.posSemidef
   have hpsdσ₂ := σ₂.posSemidef
-  -- This is lieb_joint_concavity_semidef with K = 1
-  have key := lieb_joint_concavity_semidef ρ₁.toMatrix ρ₂.toMatrix σ₁.toMatrix σ₂.toMatrix
-    hpsd₁ hpsd₂ hpsdσ₁ hpsdσ₂
-    (1 : Matrix n n ℂ) s hs0 hs1 p (1 - p) hp (by linarith) (by ring)
-  simp only [liebJointFunction, conjTranspose_one, Matrix.mul_one] at key
+  -- This is lieb_joint_concavity_general with K = 1 and exponents (s, 1 - s)
+  have key := lieb_joint_concavity_general ρ₁.toMatrix ρ₂.toMatrix hpsd₁ hpsd₂
+    σ₁.toMatrix σ₂.toMatrix hpsdσ₁ hpsdσ₂
+    (1 : Matrix n n ℂ) s (1 - s) hs0 (by linarith) (by linarith)
+    p (1 - p) hp (by linarith) (by ring)
+  simp only [conjTranspose_one, Matrix.mul_one] at key
   exact key
 
 
@@ -1620,7 +1719,8 @@ theorem relativeEntropy_jointly_convex
           push_cast; ring_nf]
         rw [EReal.coe_le_coe_iff]
         -- Step 4: Derivative argument
-        -- Define h(s) = Re[Tr (ρ_mix^s σ_mix^{1-s})] - p Re[Tr (ρ₁^s σ₁^{1-s})] - (1-p) Re[Tr (ρ₂^s σ₂^{1-s})]
+        -- Define h(s) = Re[Tr (ρ_mix^s σ_mix^{1-s})] - p Re[Tr (ρ₁^s σ₁^{1-s})]
+        --   - (1-p) Re[Tr (ρ₂^s σ₂^{1-s})]
         let g : ℝ → ℝ := fun s =>
           (ρ_mix.toMatrix ^ s * σ_mix.toMatrix ^ (1 - s)).trace.re -
           (p * (ρ₁.toMatrix ^ s * σ₁.toMatrix ^ (1 - s)).trace.re +
@@ -1706,52 +1806,50 @@ automatically (`Matrix.trace_reindexStarAlgEquiv`). -/
 
 variable {m : Type*} [Fintype m] [DecidableEq m]
 
+omit [DecidableEq n] [DecidableEq m] in
+/-- Support inclusion is invariant under `*-`algebra equivalences of matrix algebras. -/
+theorem suppSubset_map_starAlgEquiv_iff {ρ σ : Matrix m m ℂ} (hσ : σ.IsHermitian)
+    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
+    suppSubset (φ ρ) (φ σ) ↔ suppSubset ρ σ := by
+  classical
+  rw [suppSubset_iff_mul_cfc_eq_zero (hσ.map_starAlgEquiv φ),
+    suppSubset_iff_mul_cfc_eq_zero hσ, cfc_map_starAlgEquiv hσ _ φ, ← map_mul,
+    map_eq_zero_iff φ φ.injective]
+
 /-- **Quantum relative entropy is invariant under trace-preserving `*-`algebra
-equivalence** (PosDef case). -/
-theorem relativeEntropy_map_starAlgEquiv_posDef
-    (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef)
+equivalence**, for every pair of density matrices (the `⊤` case included). -/
+lemma relativeEntropy_map_starAlgEquiv
+    (ρ σ : DensityMatrix m)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ)
     (hφ : ∀ A, (φ A).trace = A.trace) :
     D(ρ.map φ hφ ∥ σ.map φ hφ) = D(ρ ∥ σ) := by
-  have hρ_map : (ρ.map φ hφ).toMatrix.PosDef := hρ.map_starAlgEquiv φ
-  have hσ_map : (σ.map φ hφ).toMatrix.PosDef := hσ.map_starAlgEquiv φ
+  have h_supp_iff : suppSubset (ρ.map φ hφ).toMatrix (σ.map φ hφ).toMatrix ↔
+      suppSubset ρ.toMatrix σ.toMatrix :=
+    suppSubset_map_starAlgEquiv_iff σ.isHermitian φ
   unfold relativeEntropy
-  have h_supp_map : suppSubset (ρ.map φ hφ).toMatrix (σ.map φ hφ).toMatrix := by
-    intro v hv
-    have hinj : Function.Injective (σ.map φ hφ).toMatrix.mulVec :=
-      Matrix.mulVec_injective_iff_isUnit.mpr hσ_map.isUnit
-    have h0 : (σ.map φ hφ).toMatrix.mulVec 0 = 0 := by simp
-    have hv_zero : v = 0 := hinj (hv.trans h0.symm)
-    rw [hv_zero]; simp
-  have h_supp : suppSubset ρ.toMatrix σ.toMatrix := by
-    intro v hv
-    have hinj : Function.Injective σ.toMatrix.mulVec :=
-      Matrix.mulVec_injective_iff_isUnit.mpr hσ.isUnit
-    have h0 : σ.toMatrix.mulVec 0 = 0 := by simp
-    have hv_zero : v = 0 := hinj (hv.trans h0.symm)
-    rw [hv_zero]; simp
-  simp only [h_supp_map, h_supp, if_true]
-  congr 1
-  change (Tr ((ρ.map φ hφ).toMatrix *
-      (matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian -
-        matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian))).re =
-    (Tr (ρ.toMatrix *
-      (matrixLog ρ.toMatrix ρ.isHermitian -
-        matrixLog σ.toMatrix σ.isHermitian))).re
-  have h_log_ρ : matrixLog (ρ.map φ hφ).toMatrix (ρ.map φ hφ).isHermitian =
-      φ (matrixLog ρ.toMatrix ρ.isHermitian) := by
-    change matrixLog (φ ρ.toMatrix) _ = _
-    exact matrixLog_map_starAlgEquiv hρ φ
-  have h_log_σ : matrixLog (σ.map φ hφ).toMatrix (σ.map φ hφ).isHermitian =
-      φ (matrixLog σ.toMatrix σ.isHermitian) := by
-    change matrixLog (φ σ.toMatrix) _ = _
-    exact matrixLog_map_starAlgEquiv hσ φ
-  rw [h_log_ρ, h_log_σ, DensityMatrix.map_toMatrix, ← map_sub, ← map_mul, hφ]
+  by_cases h : suppSubset ρ.toMatrix σ.toMatrix
+  · simp only [h, h_supp_iff.mpr h, if_true]
+    congr 1
+    change (Tr ((ρ.map φ hφ).toMatrix *
+        (cfc Real.log (ρ.map φ hφ).toMatrix -
+          cfc Real.log (σ.map φ hφ).toMatrix))).re =
+      (Tr (ρ.toMatrix *
+        (cfc Real.log ρ.toMatrix -
+          cfc Real.log σ.toMatrix))).re
+    have h_log_ρ : cfc Real.log (ρ.map φ hφ).toMatrix =
+        φ (cfc Real.log ρ.toMatrix) := by
+      change cfc Real.log (φ ρ.toMatrix) = _
+      exact cfc_log_map_starAlgEquiv ρ.isHermitian φ
+    have h_log_σ : cfc Real.log (σ.map φ hφ).toMatrix =
+        φ (cfc Real.log σ.toMatrix) := by
+      change cfc Real.log (φ σ.toMatrix) = _
+      exact cfc_log_map_starAlgEquiv σ.isHermitian φ
+    rw [h_log_ρ, h_log_σ, DensityMatrix.map_toMatrix, ← map_sub, ← map_mul, hφ]
+  · simp only [h, h_supp_iff.not.mpr h, if_false]
 
-/-- Specialisation of `relativeEntropy_map_starAlgEquiv_posDef` to reindexing. -/
-theorem relativeEntropy_mapEquiv_posDef
-    (ρ σ : DensityMatrix m) (hρ : ρ.toMatrix.PosDef) (hσ : σ.toMatrix.PosDef) (e : n ≃ m) :
+/-- Specialisation of `relativeEntropy_map_starAlgEquiv` to reindexing. -/
+lemma relativeEntropy_mapEquiv (ρ σ : DensityMatrix m) (e : n ≃ m) :
     D(ρ.mapEquiv e ∥ σ.mapEquiv e) = D(ρ ∥ σ) :=
-  relativeEntropy_map_starAlgEquiv_posDef ρ σ hρ hσ _ _
+  relativeEntropy_map_starAlgEquiv ρ σ _ _
 
 end Matrix

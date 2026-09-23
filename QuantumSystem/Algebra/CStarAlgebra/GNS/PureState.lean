@@ -8,7 +8,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.PureState
 
 namespace PureState
 
-variable {A : Type*} [NonUnitalCStarAlgebra A]
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 /-- For each pure state, we get a canonical GNS representation. -/
 noncomputable def gnsRepresentation (ψ : PureState A) : GNS.Representation (ψ.toState) :=
@@ -20,13 +20,13 @@ namespace GNS
 
 namespace Representation
 
-open scoped ComplexConjugate CStarAlgebra InnerProduct NNReal
+open scoped ComplexOrder ComplexConjugate CStarAlgebra InnerProduct NNReal ComplexHilbertSpace
 
 local notation "⟪" x ", " y "⟫" => inner ℂ x y
 
-variable {A : Type*} [NonUnitalCStarAlgebra A]
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
-variable {ω : State ℂ A}
+variable {ω : State A}
 
 private lemma pi_adjoint (T : GNS.Representation ω) (a : A) :
     (T.π a)† = T.π (star a) := by
@@ -139,14 +139,14 @@ lemma vectorFunctional_apply (T : GNS.Representation ω) (v : T.H) (a : A) :
     T.vectorFunctional v a = ⟪v, (T.π a) v⟫ := by
   rfl
 
-lemma vectorFunctional_isPositive (T : GNS.Representation ω) (v : T.H) :
-    IsPositive A (T.vectorFunctional v) := by
-  intro a
-  refine ⟨⟨‖(T.π a) v‖ ^ 2, sq_nonneg _⟩, ?_⟩
+/-- A vector functional `a ↦ ⟪v, π a v⟫` is positive: on `a* a` it is `‖π a v‖²`. -/
+lemma vectorFunctional_nonneg (T : GNS.Representation ω) (v : T.H) :
+    ∀ a : A, 0 ≤ a → 0 ≤ T.vectorFunctional v a := by
+  refine fun _ => StarOrderedRing.map_nonneg_of_star_mul_self_nonneg _ fun a => ?_
   -- `⟪v, π(star a * a) v⟫ = ⟪π(a)v, π(a)v⟫ = ‖π(a)v‖^2`.
   have hmul : T.π (star a * a) = (T.π (star a)) * (T.π a) :=
     T.π.map_mul' (star a) a
-  have h : T.vectorFunctional v (star a * a) = RCLike.ofReal (‖(T.π a) v‖ ^ 2) := by
+  have h : T.vectorFunctional v (star a * a) = (‖(T.π a) v‖ : ℂ) ^ 2 := by
     calc
       T.vectorFunctional v (star a * a) = ⟪v, (T.π (star a * a)) v⟫ := by
         simp [vectorFunctional_apply]
@@ -162,12 +162,8 @@ lemma vectorFunctional_isPositive (T : GNS.Representation ω) (v : T.H) :
           (ContinuousLinearMap.adjoint_inner_right (A := (T.π a)) (x := v) (y := (T.π a) v))
       _ = (‖(T.π a) v‖ : ℂ) ^ 2 := by
         simp
-      _ = RCLike.ofReal (‖(T.π a) v‖ ^ 2) := by
-        -- `((r : ℂ)^2) = ofReal (r^2)` for real `r`.
-        rw [RCLike.ofReal_eq_complex_ofReal]
-        exact (Complex.ofReal_pow ‖(T.π a) v‖ 2).symm
-  -- Convert the RHS into the form expected by `IsPositive` (with an `ℝ≥0` witness).
-  rw [h]; rfl
+  rw [h, ← Complex.ofReal_pow]
+  exact Complex.zero_le_real.mpr (sq_nonneg _)
 
 lemma opNorm_vectorFunctional_le (T : GNS.Representation ω) (v : T.H) :
     ‖WeakDual.toStrongDual (T.vectorFunctional v)‖ ≤ ‖v‖ ^ 2 := by
@@ -217,7 +213,7 @@ lemma norm_sq_decomposition (T : GNS.Representation ω) (v₁ v₂ : T.H) (hξ :
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 = 1 := by
   have h₁ : ‖T.ξ‖ ^ 2 = ‖v₁ + v₂‖ ^ 2 := by rw [hξ]
-  rw [T.unit_norm, one_pow] at h₁
+  rw [T.norm_ξ, one_pow] at h₁
   have h₂ : ‖v₁ + v₂‖ ^ 2 = ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 := by
     have eq1 := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (x := v₁ + v₂)
     have eq2 := inner_self_eq_norm_sq_to_K (𝕜 := ℂ) (x := v₁)
@@ -245,7 +241,7 @@ lemma vectorFunctional_mem_quasiStateSpace_of_norm_eq_one (T : GNS.Representatio
     (hv : ‖v‖ = 1) :
     T.vectorFunctional v ∈ QuasiStateSpace A := by
   constructor
-  · exact vectorFunctional_isPositive T v
+  · exact vectorFunctional_nonneg T v
   · simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
     calc ‖WeakDual.toStrongDual (T.vectorFunctional v)‖
         ≤ ‖v‖ ^ 2 := opNorm_vectorFunctional_le T v
@@ -257,18 +253,11 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
     (‖v‖ ^ 2 : ℂ)⁻¹ • T.vectorFunctional v ∈ QuasiStateSpace A := by
   constructor
   · -- Positivity
-    have hpos := vectorFunctional_isPositive T v
-    let c : ℝ≥0 := ⟨(‖v‖ ^ 2)⁻¹, inv_nonneg.mpr (sq_nonneg _)⟩
-    have : (‖v‖ ^ 2 : ℂ)⁻¹ = (c : ℂ) := by simp [c]; norm_cast
-    rw [this]
-    change _ ∈ {φ | IsPositive A φ}
-    have h_smul : (c : ℂ) • T.vectorFunctional v = c • T.vectorFunctional v := by
-      apply ContinuousLinearMap.ext
-      intro x
-      simp
-      rfl
-    rw [h_smul]
-    exact IsPositive.smul A hpos
+    intro a ha
+    change 0 ≤ (‖v‖ ^ 2 : ℂ)⁻¹ * T.vectorFunctional v a
+    refine mul_nonneg ?_ (vectorFunctional_nonneg T v a ha)
+    rw [← Complex.ofReal_pow, ← Complex.ofReal_inv]
+    exact Complex.zero_le_real.mpr (by positivity)
   · -- Norm bound
     rw [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
     rw [map_smul, norm_smul]
@@ -279,8 +268,11 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
 
 
 lemma trichotomy_from_purity {ψ : PureState A}
-    (W : Submodule ℂ (PureState.gnsRepresentation ψ).H) (hWinv : (PureState.gnsRepresentation ψ).IsInvariant W) (_hWclosed : IsClosed (W : Set (PureState.gnsRepresentation ψ).H))
-    (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ) (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
+    (W : Submodule ℂ (PureState.gnsRepresentation ψ).H)
+    (hWinv : (PureState.gnsRepresentation ψ).IsInvariant W)
+    (_hWclosed : IsClosed (W : Set (PureState.gnsRepresentation ψ).H))
+    (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W) (hv₂ : v₂ ∈ Wᗮ)
+    (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
   let T := PureState.gnsRepresentation ψ
   by_contra h_contra
@@ -413,10 +405,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
       rw [h_decomp]
       have h1 : (T.π a) v₁ - v₁ ∈ W := Submodule.sub_mem W (hWinv a ⟨v₁, hv₁, rfl⟩) hv₁
       have h2 : (T.π a) v₂ ∈ Wᗮ := isInvariant_orthogonal T W hWinv a ⟨v₂, hv₂, rfl⟩
-      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
+      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
+        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
       exact h_pythag
-    have h_sq_le : ‖(T.π a) v₁ - v₁‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₂‖]
+    have h_sq_le : ‖(T.π a) v₁ - v₁‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by
+      rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₂‖]
     rw [sq_le_sq, abs_of_nonneg (norm_nonneg _), abs_of_nonneg (norm_nonneg _)] at h_sq_le
     exact lt_of_le_of_lt h_sq_le ha
   have h_norm_v2 : ‖(T.π a) v₂‖ < ε := by
@@ -427,10 +421,12 @@ lemma trichotomy_from_purity {ψ : PureState A}
       rw [h_decomp]
       have h1 : (T.π a) v₁ - v₁ ∈ W := Submodule.sub_mem W (hWinv a ⟨v₁, hv₁, rfl⟩) hv₁
       have h2 : (T.π a) v₂ ∈ Wᗮ := isInvariant_orthogonal T W hWinv a ⟨v₂, hv₂, rfl⟩
-      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
+      have h_pythag := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
+        ((T.π a) v₁ - v₁) ((T.π a) v₂) ((Submodule.mem_orthogonal W _).mp h2 _ h1)
       rw [← sq, ← sq, ← sq] at h_pythag
       exact h_pythag
-    have h_sq_le : ‖(T.π a) v₂‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₁ - v₁‖]
+    have h_sq_le : ‖(T.π a) v₂‖ ^ 2 ≤ ‖(T.π a) T.ξ - v₁‖ ^ 2 := by
+      rw [h_orth]; linarith [sq_nonneg ‖(T.π a) v₁ - v₁‖]
     rw [sq_le_sq, abs_of_nonneg (norm_nonneg _), abs_of_nonneg (norm_nonneg _)] at h_sq_le
     exact lt_of_le_of_lt h_sq_le ha
   -- Contradiction
@@ -463,7 +459,9 @@ lemma trichotomy_from_purity {ψ : PureState A}
         · apply mul_lt_mul_of_pos_left h_norm_diff hv₁_norm_pos
         · exact inv_pos.mpr h_pos
       _ = ε * (t⁻¹ * ‖v₁‖) := by ring
-      _ ≤ ε * K := by gcongr; apply le_add_of_nonneg_right; apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
+      _ ≤ ε * K := by
+        gcongr; apply le_add_of_nonneg_right
+        apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
       _ = 1/2 := by
         dsimp [ε]
         have hK_ne : K ≠ 0 := hK_pos.ne'
@@ -479,7 +477,8 @@ lemma trichotomy_from_purity {ψ : PureState A}
     dsimp only [χ]
     change ‖(1 - (t : ℂ))⁻¹ • (T.vectorFunctional v₂) a‖ < 1/2
     rw [vectorFunctional_apply, smul_eq_mul]
-    rw [norm_mul, ← Complex.ofReal_one, ← Complex.ofReal_sub, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_of_pos (by linarith : 0 < 1 - t)]
+    rw [norm_mul, ← Complex.ofReal_one, ← Complex.ofReal_sub, norm_inv, Complex.norm_real,
+      Real.norm_eq_abs, abs_of_pos (by linarith : 0 < 1 - t)]
     calc (1 - t)⁻¹ * ‖⟪v₂, (T.π a) v₂⟫‖
       _ ≤ (1 - t)⁻¹ * (‖v₂‖ * ‖(T.π a) v₂‖) := by
         apply mul_le_mul_of_nonneg_left
@@ -490,7 +489,9 @@ lemma trichotomy_from_purity {ψ : PureState A}
         · apply mul_lt_mul_of_pos_left h_norm_v2 hv₂_norm_pos
         · exact inv_pos.mpr (by linarith)
       _ = ε * ((1 - t)⁻¹ * ‖v₂‖) := by ring
-      _ ≤ ε * K := by gcongr; apply le_add_of_nonneg_left; apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
+      _ ≤ ε * K := by
+        gcongr; apply le_add_of_nonneg_left
+        apply mul_nonneg (inv_nonneg.mpr (by linarith)) (norm_nonneg _)
       _ = 1/2 := by
         dsimp [ε]
         have hK_ne : K ≠ 0 := hK_pos.ne'
@@ -582,7 +583,7 @@ lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : Submodule ℂ T
 theorem pureState_gns_isIrreducible {ψ : PureState A} :
     IsIrreducible (PureState.gnsRepresentation ψ) := by
   let T := PureState.gnsRepresentation ψ
-  intro W hWclosed hWinv
+  refine ⟨T.π_ne_zero, fun W hWclosed hWinv => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp_of_isClosed T W hWclosed
   have h_trichotomy := trichotomy_from_purity W hWinv hWclosed v₁ v₂ hv₁ hv₂ hξ horth
   cases h_trichotomy with
