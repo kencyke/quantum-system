@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Algebra.Algebra.Subalgebra.Centralizer
 public import Mathlib.Algebra.Central.End
-public import Mathlib.Data.Complex.Basic
+public import Mathlib.Basic.Complex.Basic
 public import Mathlib.LinearAlgebra.Trace
 
 /-!

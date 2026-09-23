@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Data.Matrix.Bilinear
+public import Mathlib.LinearAlgebra.Matrix.Bilinear
 public import QuantumSystem.Analysis.Matrix.Order
 
 /-!
