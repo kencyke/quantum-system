@@ -21,7 +21,7 @@ C*-representation `π` of `A` on a Hilbert space `H` together with a cyclic vect
 
 * `GNS.Representation ω`: GNS triplets for `ω`, extending `CStarRep A`.
 * `GNS.Representation.norm_ξ`: the cyclic vector is a unit vector.
-* `GNS.Representation.norm_sq_apply_cyclic`: `‖π a ξ‖² = Re ω (a* a)`.
+* `GNS.Representation.norm_apply_cyclic`: `‖π a ξ‖ = √‖ω (a* a)‖`.
 * `GNS.Representation.actsNondegenerately`, `GNS.Representation.tendsto_π_approximateUnit`:
   a GNS triplet is non-degenerate, and `π e_α → 1` strongly along an approximate unit.
 * `GNS.Representation.UnitaryEquiv`: unitary equivalence of GNS triplets, written `T₁ ≃ᵁ T₂`.
@@ -33,7 +33,7 @@ C*-representation `π` of `A` on a Hilbert space `H` together with a cyclic vect
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexHilbertSpace
+open scoped InnerProductSpace ComplexHilbertSpace InnerProduct
 
 namespace GNS
 
@@ -85,7 +85,7 @@ theorem actsNondegenerately (T : Representation ω) :
   have h_orbit : Set.EqOn (fun y => ⟪x, y⟫_ℂ) (fun _ => 0) (Set.range (T.orbit T.ξ)) := by
     rintro _ ⟨a, rfl⟩
     have h : T.π (star a) x = 0 := hx _ ⟨star a, rfl⟩
-    rw [map_star, ContinuousLinearMap.star_eq_adjoint] at h
+    rw [← T.adjoint_π] at h
     simp only [CStarRep.orbit_apply]
     rw [← ContinuousLinearMap.adjoint_inner_left, h, inner_zero_left]
   have h_zero := Continuous.ext_on T.cyclic (by fun_prop) continuous_const h_orbit
@@ -196,12 +196,13 @@ structure UnitaryEquiv (T₁ T₂ : Representation ω) extends
 
 notation:50 T₁ " ≃ᵁ " T₂ => Representation.UnitaryEquiv (ω := _) T₁ T₂
 
-/-- For a GNS triplet, the squared length of the orbit vector `T.π x T.ξ` is the value of
-the state at `star x * x`: `‖π x ξ‖² = Re ω (x* x)`. -/
-lemma norm_sq_apply_cyclic (T : Representation ω) (x : A) :
-    ‖T.π x T.ξ‖ ^ 2 = (ω (star x * x)).re := by
-  have hval : T.π (star x * x) T.ξ = (T.π x).adjoint (T.π x T.ξ) := by
-    rw [map_mul, map_star, ContinuousLinearMap.star_eq_adjoint]
+/-- For a GNS triplet, the length of the orbit vector `T.π x T.ξ` is read off from the state:
+`‖π x ξ‖ = √‖ω (x* x)‖`, the same form as `PositiveLinearMap.norm_gnsMk` for the canonical
+triplet. -/
+lemma norm_apply_cyclic (T : Representation ω) (x : A) :
+    ‖T.π x T.ξ‖ = √‖ω (star x * x)‖ := by
+  have hval : T.π (star x * x) T.ξ = ((T.π x)†) (T.π x T.ξ) := by
+    rw [map_mul, ← T.adjoint_π]
     rfl
   rw [T.gns_condition (star x * x), hval, ContinuousLinearMap.adjoint_inner_right,
     inner_self_eq_norm_sq_to_K]
@@ -209,12 +210,11 @@ lemma norm_sq_apply_cyclic (T : Representation ω) (x : A) :
 
 /-- The unitary `π₁ a ξ₁ ↦ π₂ a ξ₂` between two GNS triplets of the same state.  It extends the
 identity of `A` through the two dense orbit maps (`LinearEquiv.extendOfIsometry`); the orbit
-vectors have matching norms since both square to `Re ω (a* a)` (`norm_sq_apply_cyclic`). -/
+vectors have matching norms since both equal `√‖ω (a* a)‖` (`norm_apply_cyclic`). -/
 private noncomputable def cyclicIsometry (T₁ T₂ : Representation ω) : T₁.H ≃ₗᵢ[ℂ] T₂.H :=
   (LinearEquiv.refl ℂ A).extendOfIsometry (T₁.orbit T₁.ξ).toLinearMap
     (T₂.orbit T₂.ξ).toLinearMap T₁.cyclic T₂.cyclic fun a => by
-      rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)]
-      simp [norm_sq_apply_cyclic]
+      simp [norm_apply_cyclic]
 
 private lemma cyclicIsometry_apply_orbit (T₁ T₂ : Representation ω) (a : A) :
     cyclicIsometry T₁ T₂ (T₁.π a T₁.ξ) = T₂.π a T₂.ξ :=
@@ -258,16 +258,16 @@ theorem unique_up_to_unitary_equivalence :
 
 /-- The canonical GNS triplet `(𝓗[ω], π[ω], ξ[ω])` produced by the GNS construction
 (`State.gnsSpace`, `State.gnsRep`, `State.gnsVector`). -/
-noncomputable def canonical : Representation ω where
-  H := 𝓗[ω]
-  π := π[ω]
+noncomputable def canonical (ω : State A) : Representation ω where
+  toCStarRep := ω.gnsCStarRep
   ξ := ξ[ω]
   cyclic := ω.gnsVector_cyclic
   gns_condition := ω.gns_condition
 
-lemma canonical_H : (canonical (ω := ω)).H = 𝓗[ω] := rfl
-lemma canonical_π : (canonical (ω := ω)).π = π[ω] := rfl
-lemma canonical_ξ : (canonical (ω := ω)).ξ = ξ[ω] := rfl
+lemma canonical_toCStarRep : (canonical ω).toCStarRep = ω.gnsCStarRep := rfl
+lemma canonical_H : (canonical ω).H = 𝓗[ω] := rfl
+lemma canonical_π : (canonical ω).π = π[ω] := rfl
+lemma canonical_ξ : (canonical ω).ξ = ξ[ω] := rfl
 
 end Representation
 

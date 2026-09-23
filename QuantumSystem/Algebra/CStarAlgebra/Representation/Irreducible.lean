@@ -75,7 +75,7 @@ lemma apply_mem_of_mem_invtSubmodule (hW : W ∈ R.invtSubmodule) (a : A) {x : R
 (`InnerProductSpace.orthogonal_mem_invtSubmodule_of_adjoint`). -/
 lemma orthogonal_mem_invtSubmodule (hW : W ∈ R.invtSubmodule) : Wᗮ ∈ R.invtSubmodule :=
   mem_invtSubmodule.mpr fun a => InnerProductSpace.orthogonal_mem_invtSubmodule_of_adjoint <| by
-    rw [← ContinuousLinearMap.star_eq_adjoint, ← map_star]
+    rw [R.adjoint_π]
     exact mem_invtSubmodule.mp hW (star a)
 
 /-- `⊤` is invariant. -/

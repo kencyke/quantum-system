@@ -11,7 +11,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.PureState
 /-!
 # Irreducibility of the GNS representation of a pure state
 
-For a pure state `ψ`, the canonical GNS representation `PureState.gnsRepresentation ψ` is
+For a pure state `ψ`, the canonical GNS representation `GNS.Representation.canonical ψ.toState` is
 irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant subspace
 splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity forces
 one of them to vanish.
@@ -19,16 +19,6 @@ one of them to vanish.
 
 @[expose] public section
 
-
-namespace PureState
-
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-/-- For each pure state, we get a canonical GNS representation. -/
-noncomputable def gnsRepresentation (ψ : PureState A) : GNS.Representation (ψ.toState) :=
-  GNS.Representation.canonical
-
-end PureState
 
 namespace GNS
 
@@ -41,19 +31,6 @@ local notation "⟪" x ", " y "⟫" => inner ℂ x y
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 variable {ω : State A}
-
-private lemma pi_adjoint (T : GNS.Representation ω) (a : A) :
-    (T.π a)† = T.π (star a) := by
-  -- `π(star a) = star (π a)` and `star = adjoint` on `𝓑(H)`.
-  have h : T.π (star a) = star (T.π a) := by
-    simpa using (T.π.map_star' a)
-  -- Rewrite `star` as `adjoint`.
-  -- Here `star_eq_adjoint` is expressed using the `†` notation.
-  have hstar : star (T.π a) = (T.π a)† := by
-    simpa using (ContinuousLinearMap.star_eq_adjoint (A := T.π a))
-  -- Combine and flip.
-  -- `T.π (star a) = star (T.π a) = (T.π a)†`.
-  simpa [hstar] using h.symm
 
 lemma inner_left_mem_right_pi_mem_orthogonal (T : GNS.Representation ω)
     (W : ClosedSubmodule ℂ T.H) (hW : W ∈ T.closedInvtSubmodule) (a : A) {w x : T.H}
@@ -109,7 +86,7 @@ lemma vectorFunctional_nonneg (T : GNS.Representation ω) (v : T.H) :
       _ = ⟪v, (T.π (star a)) ((T.π a) v)⟫ := by
         rfl
       _ = ⟪v, ((T.π a)†) ((T.π a) v)⟫ := by
-        rw [← pi_adjoint (T := T) (a := a)]
+        rw [← T.adjoint_π a]
       _ = ⟪(T.π a) v, (T.π a) v⟫ := by
         -- `⟪v, A† (A v)⟫ = ⟪A v, A v⟫`.
         exact
@@ -222,13 +199,13 @@ lemma normalized_vectorFunctional_mem_quasiStateSpace (T : GNS.Representation ω
 
 
 lemma trichotomy_from_purity {ψ : PureState A}
-    (W : ClosedSubmodule ℂ (PureState.gnsRepresentation ψ).H)
-    (hW : W ∈ (PureState.gnsRepresentation ψ).closedInvtSubmodule)
-    (v₁ v₂ : (PureState.gnsRepresentation ψ).H) (hv₁ : v₁ ∈ W.toSubmodule)
+    (W : ClosedSubmodule ℂ (GNS.Representation.canonical ψ.toState).H)
+    (hW : W ∈ (GNS.Representation.canonical ψ.toState).closedInvtSubmodule)
+    (v₁ v₂ : (GNS.Representation.canonical ψ.toState).H) (hv₁ : v₁ ∈ W.toSubmodule)
     (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
-    (hξ : (PureState.gnsRepresentation ψ).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
+    (hξ : (GNS.Representation.canonical ψ.toState).ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
-  let T := PureState.gnsRepresentation ψ
+  let T := GNS.Representation.canonical ψ.toState
   by_contra h_contra
   push Not at h_contra
   have h_in_Icc := norm_sq_in_Icc T v₁ v₂ hξ horth
@@ -501,8 +478,8 @@ lemma eq_bot_of_norm_sq_eq_zero (T : GNS.Representation ω) (W : ClosedSubmodule
 
 /-- **Main Theorem**: The GNS representation of a pure state is irreducible. -/
 theorem pureState_gns_isIrreducible {ψ : PureState A} :
-    (PureState.gnsRepresentation ψ).IsIrreducible := by
-  let T := PureState.gnsRepresentation ψ
+    (GNS.Representation.canonical ψ.toState).IsIrreducible := by
+  let T := GNS.Representation.canonical ψ.toState
   refine ⟨T.π_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
   rcases trichotomy_from_purity W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one

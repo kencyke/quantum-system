@@ -27,7 +27,7 @@ cannot annihilate `a`, because it does not shrink `aₙ`.
 ## Main results
 
 * `GNS.Representation.norm_apply_cyclic_of_norming` — a norming state yields an orbit vector of
-  full length, via `GNS.Representation.norm_sq_apply_cyclic`. This is what turns a norming
+  full length, via `GNS.Representation.norm_apply_cyclic`. This is what turns a norming
   *state* into a non-vanishing *operator*.
 * `GNS.Representation.separableSpace_H` — the Hilbert space of a GNS triplet over a
   separable algebra is separable.
@@ -57,10 +57,8 @@ then `‖T.π x T.ξ‖ = ‖x‖`. -/
 lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation ω) {x : A}
     (hx : ω (star x * x) = ((‖x‖ ^ 2 : ℝ) : ℂ)) :
     ‖T.π x T.ξ‖ = ‖x‖ := by
-  have h := T.norm_sq_apply_cyclic x
-  rw [hx] at h
-  have h' : ‖T.π x T.ξ‖ ^ 2 = ‖x‖ ^ 2 := by rw [h, Complex.ofReal_re]
-  nlinarith [norm_nonneg (T.π x T.ξ), norm_nonneg x, h']
+  rw [T.norm_apply_cyclic, hx]
+  simp
 
 /-- The orbit map `a ↦ T.π a T.ξ` is `1`-Lipschitz: its operator norm is at most `‖ξ‖ = 1`
 (`CStarRep.norm_orbit_le`). -/
@@ -114,7 +112,7 @@ variable (A) in
 dense sequence of `A`, at a pure state norming that member. -/
 noncomputable def normingFamily [SeparableSpace A] : SectorFamily.{u, u, 0} A where
   Index := NormingIndex A
-  rep i := (PureState.gnsRepresentation (normingState i)).toCStarRep
+  rep i := (GNS.Representation.canonical (normingState i).toState).toCStarRep
 
 /-- Each summand of the norming family is separable. -/
 instance [SeparableSpace A] (i : NormingIndex A) :
@@ -157,7 +155,7 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
     linarith
   set i : NormingIndex A := ⟨n, hb_ne⟩ with hi
   have helem : i.elem = denseSeq A n := rfl
-  set T := PureState.gnsRepresentation (normingState i) with hT
+  set T := GNS.Representation.canonical (normingState i).toState with hT
   -- The representation at `i` norms `i.elem`.
   have hnorm : ‖T.π i.elem T.ξ‖ = ‖i.elem‖ :=
     T.norm_apply_cyclic_of_norming (normingState_spec i)

@@ -43,8 +43,8 @@ the C\*-algebra / Hilbert-space setting.  The GNS construction in
 `Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal` exposes the Hilbert
 space (`f.GNS`) and the homomorphism (`f.gnsNonUnitalStarAlgHom`, or
 `f.gnsStarAlgHom` in the unital case) as separate artifacts; there is no
-bundled `(H, π)` structure in Mathlib.  The canonical GNS triplet
-`GNS.Representation.canonical` bundles exactly these two Mathlib objects.
+bundled `(H, π)` structure in Mathlib.  `State.gnsCStarRep` bundles exactly these two Mathlib
+objects, and the canonical GNS triplet `GNS.Representation.canonical` extends it.
 
 ## Relation to `GNS.Representation`
 
@@ -63,13 +63,14 @@ applies to GNS triplets directly.
 * `CStarRep A` — a bundled non-unital `*`-representation
   `π : A →⋆ₙₐ[ℂ] 𝓑(H)` together with the carrier `H` and its
   `ComplexHilbertSpace` instance.
+* `CStarRep.adjoint_π` — `(π a)† = π (a*)`.
 * `CStarRep.orbit R v` — the orbit map `a ↦ π a v` of a vector, as a
   continuous linear map `A →L[ℂ] H`.
 -/
 
 @[expose] public section
 
-open scoped ComplexHilbertSpace
+open scoped ComplexHilbertSpace InnerProduct
 
 universe u v
 
@@ -98,6 +99,10 @@ structure CStarRep (A : Type u) [NonUnitalCStarAlgebra A] where
 attribute [instance] CStarRep.hilbert
 
 namespace CStarRep
+
+/-- A `*`-representation sends adjoints to adjoints: `(π a)† = π (a*)`. -/
+lemma adjoint_π (R : CStarRep A) (a : A) : (R.π a)† = R.π (star a) := by
+  rw [map_star, ContinuousLinearMap.star_eq_adjoint]
 
 /-- The orbit map `a ↦ π a v` of a vector `v`, as a continuous linear map `A →L[ℂ] H`.
 It is bounded by `‖v‖`, since `*`-homomorphisms of C\*-algebras are contractive. -/
