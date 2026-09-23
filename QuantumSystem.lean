@@ -15,6 +15,7 @@ public import QuantumSystem.Algebra.CStarAlgebra.Representation.Family
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Hom
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Algebra.CStarAlgebra.State
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 public import QuantumSystem.Algebra.LocalNet.Covariance

@@ -78,6 +78,17 @@ lemma orthogonal_mem_invtSubmodule (hW : W ∈ R.invtSubmodule) : Wᗮ ∈ R.inv
     rw [R.adjoint_π]
     exact mem_invtSubmodule.mp hW (star a)
 
+/-- `R.π a` maps `Wᗮ` into `Wᗮ`, so `⟪w, π a x⟫ = 0` for `w ∈ W` and `x ∈ Wᗮ`. -/
+lemma inner_apply_eq_zero_of_mem_of_mem_orthogonal (hW : W ∈ R.invtSubmodule) (a : A)
+    {w x : R.H} (hw : w ∈ W) (hx : x ∈ Wᗮ) : inner ℂ w (R.π a x) = 0 :=
+  Submodule.inner_right_of_mem_orthogonal hw
+    (apply_mem_of_mem_invtSubmodule (orthogonal_mem_invtSubmodule hW) a hx)
+
+/-- `R.π a` maps `W` into `W`, so `⟪x, π a w⟫ = 0` for `x ∈ Wᗮ` and `w ∈ W`. -/
+lemma inner_apply_eq_zero_of_mem_orthogonal_of_mem (hW : W ∈ R.invtSubmodule) (a : A)
+    {w x : R.H} (hx : x ∈ Wᗮ) (hw : w ∈ W) : inner ℂ x (R.π a w) = 0 :=
+  Submodule.inner_left_of_mem_orthogonal (apply_mem_of_mem_invtSubmodule hW a hw) hx
+
 /-- `⊤` is invariant. -/
 @[simp] protected lemma invtSubmodule.top_mem : (⊤ : Submodule ℂ R.H) ∈ R.invtSubmodule := by
   simp [invtSubmodule]

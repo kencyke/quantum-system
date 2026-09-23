@@ -29,6 +29,8 @@ representation-theoretic layer are built on top of it:
   which is the same-functional GNS uniqueness statement);
 * `CStarAlgebra/Representation/Irreducible.lean` lifts the irreducibility
   predicate to the general `CStarRep` setting;
+* `CStarAlgebra/Representation/VectorFunctional.lean` defines the vector
+  functionals `a ↦ ⟪v, π a v⟫` of a `CStarRep` and their quasi-state bounds;
 * `CStarAlgebra/Representation/Family.lean` packages indexed families of
   representatives (`SectorFamily`), on which a superselection sector theory
   imposes its selection criteria (DHR, KMS, ...) as separate predicates;
