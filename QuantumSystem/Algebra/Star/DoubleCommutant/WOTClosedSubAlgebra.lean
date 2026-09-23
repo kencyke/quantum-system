@@ -221,9 +221,9 @@ lemma mem_cyclicSubspace_of_actsNondegenerately (A : NonUnitalStarSubalgebra ℂ
     exact
       Submodule.isClosed_topologicalClosure
         (s := Submodule.span ℂ (Set.range fun a : A => (a : B) x))
-  letI : IsClosed (K : Set H) := hKclosed
-  letI : CompleteSpace K := (show CompleteSpace (↥(K : Set H)) from inferInstance)
-  letI : K.HasOrthogonalProjection := by infer_instance
+  let : IsClosed (K : Set H) := hKclosed
+  let : CompleteSpace K := (show CompleteSpace (↥(K : Set H)) from inferInstance)
+  let : K.HasOrthogonalProjection := by infer_instance
   have hRed : IsReducing (H := H) (A : Set B) K := isReducing_cyclicSubspace (H := H) A x
   have hP : K.starProjection ∈ Set.centralizer (A : Set B) :=
     starProjection_mem_centralizer_of_isReducing (S := (A : Set B)) (K := K) hRed
@@ -259,9 +259,9 @@ lemma mem_cyclicSubspace_of_preservesReducingSubspaces (A : NonUnitalStarSubalge
     exact
       Submodule.isClosed_topologicalClosure
         (s := Submodule.span ℂ (Set.range fun a : A => (a : B) x))
-  letI : IsClosed (K : Set H) := hKclosed
-  letI : CompleteSpace K := (show CompleteSpace (↥(K : Set H)) from inferInstance)
-  letI : K.HasOrthogonalProjection := by infer_instance
+  let : IsClosed (K : Set H) := hKclosed
+  let : CompleteSpace K := (show CompleteSpace (↥(K : Set H)) from inferInstance)
+  let : K.HasOrthogonalProjection := by infer_instance
   have hx : x ∈ K := mem_cyclicSubspace_of_actsNondegenerately (H := H) A hA x
   have hRed : IsReducing (H := H) (A : Set B) K := isReducing_cyclicSubspace (H := H) A x
   have hInv : IsInvariant T K := (hT K hRed).1
@@ -316,14 +316,12 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     -- Move to the WOT type-copy.
     let AWOT : Submodule ℂ BWOT := submoduleToWOT (H := H) A.toSubmodule
     have hclosed : IsClosed (AWOT : Set BWOT) := by
-      have : (AWOT : Set BWOT) = Set.toWOT (H := H) (A : Set B) := by
-        ext S
-        simp [AWOT, Set.mem_toWOT_iff, mem_submoduleToWOT_iff (H := H) A.toSubmodule S]
-      simpa [this] using hA
-    let TWOT : BWOT := (toWOTEquiv (H := H)) T
+      rw [coe_submoduleToWOT]
+      exact hA
+    let TWOT : BWOT := ContinuousLinearMapWOT.ofCLM T
     have hTWOT : TWOT ∉ (AWOT : Set BWOT) := by
       intro hmem
-      have : (toWOTEquiv (H := H)).symm TWOT ∈ A.toSubmodule :=
+      have : ContinuousLinearMapWOT.toCLM TWOT ∈ A.toSubmodule :=
         (mem_submoduleToWOT_iff (H := H) A.toSubmodule TWOT).1 hmem
       exact hTA this
     obtain ⟨I, coeff, hvan, hneq⟩ :=
@@ -340,13 +338,13 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
       have hf0 : f TWOT = 0 := by
         simp [f]
       exact hneq hf0
-    haveI : Nonempty (↥I) := ⟨⟨hIne.choose, hIne.choose_spec⟩⟩
+    have : Nonempty (↥I) := ⟨⟨hIne.choose, hIne.choose_spec⟩⟩
     let n : ℕ := Fintype.card (↥I)
     have hnpos : 0 < n := by
       -- `Fintype.card_pos` gives `0 < Fintype.card ↥I`.
       simpa [n] using (Fintype.card_pos : 0 < Fintype.card (↥I))
     -- Avoid typeclass search for `Nonempty (Fin n)`.
-    haveI : Nonempty (Fin n) := ⟨⟨0, hnpos⟩⟩
+    have : Nonempty (Fin n) := ⟨⟨0, hnpos⟩⟩
     let e : Fin n ≃ (↥I) := (Fintype.equivFin (↥I)).symm
     let xFun : Fin n → H := fun i => (e i).1.1
     let uFun : Fin n → H := fun i =>
@@ -354,7 +352,7 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     let x : Hn (H := H) n := (WithLp.equiv _ _).symm xFun
     let u : Hn (H := H) n := (WithLp.equiv _ _).symm uFun
     let Aamp : NonUnitalStarSubalgebra ℂ (Hn (H := H) n →L[ℂ] Hn (H := H) n) :=
-      A.map (diagonalStarAlgHom (H := H) n)
+      A.map (diagonalStarAlgHom (H := H) n).toNonUnitalStarAlgHom
     have hndAmp : ActsNondegenerately (Aamp : Set (Hn (H := H) n →L[ℂ] Hn (H := H) n)) := by
       have hcoe : (Aamp : Set (Hn (H := H) n →L[ℂ] Hn (H := H) n)) =
           diagonal (H := H) (n := n) '' (A : Set B) := by
@@ -364,7 +362,7 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     let g : (Hn (H := H) n) →L[ℂ] ℂ :=
       (InnerProductSpace.toDual ℂ (Hn (H := H) n)) u
     have h_eval (S : B) :
-        f ((toWOTEquiv (H := H)) S) = g (diagonal (H := H) (n := n) S x) := by
+        f (ContinuousLinearMapWOT.ofCLM S) = g (diagonal (H := H) (n := n) S x) := by
       classical
       have hg : g (diagonal (H := H) (n := n) S x) =
           ∑ i : Fin n, ⟪uFun i, S (xFun i)⟫_ℂ := by
@@ -373,33 +371,33 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
         congr 1
         funext i
         simp only [diagonal_apply, uFun, xFun, WithLp.equiv_symm_apply]
-      have hf : f ((toWOTEquiv (H := H)) S) =
+      have hf : f (ContinuousLinearMapWOT.ofCLM S) =
           ∑ i : Fin n, ⟪uFun i, S (xFun i)⟫_ℂ := by
         classical
         have hsum : (∑ j : (↥I),
-            (coeff j) • ((inducingFnRestrictCLM (H := H) I) ((toWOTEquiv (H := H)) S) j)) =
+            (coeff j) • ((inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) j)) =
             ∑ i : Fin n,
               (coeff (e i)) •
-                ((inducingFnRestrictCLM (H := H) I) ((toWOTEquiv (H := H)) S) (e i)) := by
+                ((inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) (e i)) := by
           have :=
             Equiv.sum_comp e
               (fun j : (↥I) =>
-                (coeff j) • ((inducingFnRestrictCLM (H := H) I) ((toWOTEquiv (H := H)) S) j))
+                (coeff j) • ((inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) j))
           simpa using this.symm
         conv_lhs =>
           rw [show f = ∑ i : ↥I,
             (coeff i) • ((ContinuousLinearMap.proj i).comp (inducingFnRestrictCLM (H := H) I)) from rfl]
         simp only [sum_apply, smul_apply,
           ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply]
-        rw [show (∑ i : ↥I, coeff i • (inducingFnRestrictCLM (H := H) I) (toWOTEquiv S) i) =
-            ∑ i : Fin n, coeff (e i) • (inducingFnRestrictCLM (H := H) I) (toWOTEquiv S) (e i) from hsum]
+        rw [show (∑ i : ↥I, coeff i • (inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) i) =
+            ∑ i : Fin n, coeff (e i) • (inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) (e i) from hsum]
         simp only [inducingFnRestrictCLM, inducingFnCLM, restrictPiCLM,
           ContinuousLinearMap.comp_apply, ContinuousLinearMap.coe_mk', LinearMap.coe_mk,
           AddHom.coe_mk]
         congr 1
         funext i
         rw [ContinuousLinearMapWOT.inducingFn_apply]
-        simp only [toWOTEquiv, ContinuousLinearMap.toWOT_apply]
+        simp only [ContinuousLinearMapWOT.ofCLM_apply]
         conv_lhs =>
           rw [show (e i).1.2 (S (e i).1.1) =
             ⟪(InnerProductSpace.toDual ℂ H).symm (e i).1.2, S (e i).1.1⟫_ℂ from
@@ -412,13 +410,14 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
       intro a
       rcases a with ⟨a0, ha0⟩
       rcases ha0 with ⟨S, hSA, rfl⟩
-      have : f ((toWOTEquiv (H := H)) (S : B)) = 0 := by
+      have : f (ContinuousLinearMapWOT.ofCLM (S : B)) = 0 := by
         apply hvan
-        have : (toWOTEquiv (H := H)) (S : B) ∈ (AWOT : Set BWOT) := by
+        have : ContinuousLinearMapWOT.ofCLM (S : B) ∈ (AWOT : Set BWOT) := by
           exact
-            (mem_submoduleToWOT_iff (H := H) A.toSubmodule ((toWOTEquiv (H := H)) (S : B))).2 hSA
+            (mem_submoduleToWOT_iff (H := H) A.toSubmodule (ContinuousLinearMapWOT.ofCLM (S : B))).2 hSA
         exact this
-      simpa [h_eval] using this
+      rw [h_eval] at this
+      exact this
     -- Extend vanishing from generators to the entire cyclic subspace by continuity.
     have hg_on_cyclic : ∀ z : Hn (H := H) n,
         z ∈ cyclicSubspace (H := Hn (H := H) n) (A := Aamp) x →
@@ -478,7 +477,7 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
           (T := diagonal (H := H) (n := n) T)
           hPres x
     -- Conclude: `f(T) = 0` since `g` vanishes on the cyclic subspace containing `diagonal T x`.
-    have : f ((toWOTEquiv (H := H)) T) = 0 := by
+    have : f (ContinuousLinearMapWOT.ofCLM T) = 0 := by
       have : g (diagonal (H := H) (n := n) T x) = 0 := hg_on_cyclic _ hxmem
       simpa [h_eval] using this
     -- Contradiction: `f(T) ≠ 0` was our separation hypothesis.

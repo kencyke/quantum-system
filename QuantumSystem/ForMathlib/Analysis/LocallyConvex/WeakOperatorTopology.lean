@@ -12,13 +12,14 @@ public import Mathlib.Analysis.LocallyConvex.WeakOperatorTopology
 /-!
 # ForMathlib: weak-operator-topology closedness of commutants
 
-This file provides WOT-continuity of left/right multiplication by a fixed bounded operator,
-consequently showing that commutants (`Set.centralizer`) and double commutants are WOT-closed.
+This file shows that commutants (`Set.centralizer`) and double commutants are WOT-closed, and
+provides a finite-coordinate Hahn–Banach separation lemma for WOT-closed submodules. The
+WOT type-copy is Mathlib's `H →WOT[ℂ] H`, with `ContinuousLinearMapWOT.ofCLM` /
+`ContinuousLinearMapWOT.toCLM` as the identifications with `H →L[ℂ] H`; separate continuity of
+multiplication comes from Mathlib's `IsSemitopologicalRing` instance on it.
 
 ## Main definitions
 
-* `toWOTEquiv`: the linear equivalence from `B(H)` to the WOT type-copy.
-* `leftMulWOT`, `rightMulWOT`: left/right multiplication on the WOT type-copy.
 * `Set.toWOT`: view a subset of operators inside the WOT type-copy.
 * `IsWOTClosed`: a predicate for subsets closed in the WOT.
 * `submoduleToWOT`: transport a `Submodule` of bounded operators to the WOT type-copy.
@@ -28,12 +29,10 @@ consequently showing that commutants (`Set.centralizer`) and double commutants a
 
 ## Main results
 
-* `continuous_leftMulWOT`, `continuous_rightMulWOT`: multiplication by a fixed operator is
-  WOT-continuous.
-* `isClosed_commutesWithWOT`: the set of operators commuting with a fixed operator is WOT-closed.
-* `Set.toWOT_eq_image`: `Set.toWOT` is the image of the subset under `toWOTEquiv`.
+* `Set.toWOT_eq_image`: `Set.toWOT` is the image of the subset under `ContinuousLinearMapWOT.ofCLM`.
+* `Set.toWOT_centralizer`: `Set.toWOT` commutes with taking commutants.
 * `isWOTClosed_iff_isClosed_image`: WOT-closedness as closedness of the image under the canonical
-  inclusion `ContinuousLinearMap.toWOTCLM`.
+  inclusion `ContinuousLinearMap.WOTofCLM`.
 * `isWOTClosed_centralizer`: the commutant of any set is WOT-closed.
 * `isWOTClosed_centralizer_centralizer`: double commutants are WOT-closed.
 * `exists_wotCLM_sep_of_isClosed_submodule`: a finite-coordinate separation lemma for WOT-closed
@@ -60,67 +59,33 @@ local notation "B" => (H →L[ℂ] H)
 local notation "BWOT" => (H →WOT[ℂ] H)
 local notation "H⋆" => StrongDual ℂ H
 
-noncomputable def toWOTEquiv : B ≃ₗ[ℂ] BWOT :=
-  ContinuousLinearMap.toWOT (σ := RingHom.id ℂ) H H
-
-/-- Left multiplication on `B(H)` as a map on the WOT type-copy. -/
-noncomputable def leftMulWOT (a : B) : BWOT → BWOT :=
-  fun T => (toWOTEquiv (H := H)) (a * (toWOTEquiv (H := H)).symm T)
-
-/-- Right multiplication on `B(H)` as a map on the WOT type-copy. -/
-noncomputable def rightMulWOT (a : B) : BWOT → BWOT :=
-  fun T => (toWOTEquiv (H := H)) ((toWOTEquiv (H := H)).symm T * a)
-
-@[simp] lemma leftMulWOT_apply (a : B) (T : BWOT) (x : H) :
-    (leftMulWOT (H := H) a T) x = a (((toWOTEquiv (H := H)).symm T) x) := by
-  simp [leftMulWOT, toWOTEquiv, ContinuousLinearMap.toWOT_apply]
-
-@[simp] lemma rightMulWOT_apply (a : B) (T : BWOT) (x : H) :
-    (rightMulWOT (H := H) a T) x = ((toWOTEquiv (H := H)).symm T) (a x) := by
-  simp [rightMulWOT, toWOTEquiv, ContinuousLinearMap.toWOT_apply]
-
-/-- Left multiplication by a fixed operator is WOT-continuous. -/
-lemma continuous_leftMulWOT (a : B) : Continuous (leftMulWOT (H := H) a) := by
-  -- Use the defining property of WOT continuity: continuity of all dual evaluations.
-  refine ContinuousLinearMapWOT.continuous_of_dual_apply_continuous (σ := RingHom.id ℂ)
-    (g := leftMulWOT (H := H) a) (h := ?_)
-  intro x y
-  -- `y (a (T x))` is the WOT-basic functional corresponding to `y ∘ a`.
-  simpa [leftMulWOT_apply] using
-    (ContinuousLinearMapWOT.continuous_dual_apply (σ := RingHom.id ℂ) (E := H) (F := H)
-      (x := x) (y := y ∘L a))
-
-/-- Right multiplication by a fixed operator is WOT-continuous. -/
-lemma continuous_rightMulWOT (a : B) : Continuous (rightMulWOT (H := H) a) := by
-  refine ContinuousLinearMapWOT.continuous_of_dual_apply_continuous (σ := RingHom.id ℂ)
-    (g := rightMulWOT (H := H) a) (h := ?_)
-  intro x y
-  -- `y (T (a x))` is a basic WOT functional.
-  simpa [rightMulWOT_apply] using
-    (ContinuousLinearMapWOT.continuous_dual_apply (σ := RingHom.id ℂ) (E := H) (F := H)
-      (x := a x) (y := y))
-
-/-- The subset of operators commuting with a fixed operator is WOT-closed (in the WOT type-copy). -/
-lemma isClosed_commutesWithWOT (a : B) : IsClosed {T : BWOT | leftMulWOT (H := H) a T = rightMulWOT (H := H) a T} := by
-  exact isClosed_eq (continuous_leftMulWOT (H := H) a) (continuous_rightMulWOT (H := H) a)
+open ContinuousLinearMapWOT (ofCLM toCLM)
 
 /-- View a subset of operators inside the WOT type-copy. -/
 def Set.toWOT (S : Set B) : Set BWOT :=
-  {T | (toWOTEquiv (H := H)).symm T ∈ S}
+  toCLM ⁻¹' S
 
 lemma Set.mem_toWOT_iff {S : Set B} {T : BWOT} :
-    T ∈ Set.toWOT (H := H) S ↔ (toWOTEquiv (H := H)).symm T ∈ S := by
-  rfl
+    T ∈ Set.toWOT (H := H) S ↔ toCLM T ∈ S :=
+  Iff.rfl
 
-/-- `Set.toWOT` is the image of the subset under `toWOTEquiv`. -/
+/-- `Set.toWOT` is the image of the subset under `ContinuousLinearMapWOT.ofCLM`. -/
 lemma Set.toWOT_eq_image (S : Set B) :
-    Set.toWOT (H := H) S = (toWOTEquiv (H := H)) '' S := by
+    Set.toWOT (H := H) S = ofCLM '' S := by
   ext T
+  exact ⟨fun h => ⟨_, h, rfl⟩, by rintro ⟨x, hx, rfl⟩; exact hx⟩
+
+/-- `Set.toWOT` commutes with taking commutants, since `ofCLM` and `toCLM` are mutually inverse
+ring isomorphisms. -/
+lemma Set.toWOT_centralizer (S : Set B) :
+    Set.toWOT (H := H) (Set.centralizer S) = Set.centralizer (Set.toWOT (H := H) S) := by
+  ext T
+  simp only [Set.mem_toWOT_iff, Set.mem_centralizer_iff]
   constructor
-  · intro h
-    exact ⟨_, h, (toWOTEquiv (H := H)).apply_symm_apply T⟩
-  · rintro ⟨x, hx, rfl⟩
-    simpa [Set.mem_toWOT_iff] using hx
+  · intro h a ha
+    exact ContinuousLinearMapWOT.toCLM_injective (by simpa using h (toCLM a) ha)
+  · intro h a ha
+    simpa using congrArg toCLM (h (ofCLM a) ha)
 
 /-- A subset of operators is WOT-closed if its image in the WOT type-copy is closed. -/
 def IsWOTClosed (S : Set B) : Prop :=
@@ -130,88 +95,47 @@ def IsWOTClosed (S : Set B) : Prop :=
 which the weak operator topology is usually phrased. -/
 lemma isWOTClosed_iff_isClosed_image (S : Set B) :
     IsWOTClosed (H := H) S ↔
-      IsClosed (ContinuousLinearMapWOT.ContinuousLinearMap.toWOTCLM
-        (σ := RingHom.id ℂ) (E := H) (F := H) '' S) := by
+      IsClosed (ContinuousLinearMap.WOTofCLM (σ := RingHom.id ℂ) (E := H) (F := H) '' S) := by
   rw [IsWOTClosed, Set.toWOT_eq_image]
   rfl
 
 /-- The commutant `Set.centralizer S` is WOT-closed. -/
 lemma isWOTClosed_centralizer (S : Set B) : IsWOTClosed (H := H) (Set.centralizer S) := by
-  -- Express the commutant as an intersection of commuting constraints.
-  unfold IsWOTClosed
-  -- We show the image set is an intersection of closed sets.
-  have : Set.toWOT (H := H) (Set.centralizer S) =
-      ⋂ a : B, ⋂ _ : a ∈ S,
-        {T : BWOT | leftMulWOT (H := H) a T = rightMulWOT (H := H) a T} := by
-    ext T
-    constructor
-    · intro hT
-      -- Pull back to the underlying operator and use the defining property of `centralizer`.
-      have h0 : (toWOTEquiv (H := H)).symm T ∈ Set.centralizer S :=
-        (Set.mem_toWOT_iff (H := H) (S := Set.centralizer S) (T := T)).1 hT
-      -- Now unpack and repackage as an `iInter`.
-      refine Set.mem_iInter.2 ?_
-      intro a
-      refine Set.mem_iInter.2 ?_
-      intro ha
-      have : a * (toWOTEquiv (H := H)).symm T = (toWOTEquiv (H := H)).symm T * a :=
-        (Set.mem_centralizer_iff.mp h0) a ha
-      simpa [leftMulWOT, rightMulWOT] using congrArg (toWOTEquiv (H := H)) this
-    · intro hT
-      -- Conversely, build membership in the commutant.
-      have h0 : (toWOTEquiv (H := H)).symm T ∈ Set.centralizer S := by
-        -- Unpack the intersection.
-        refine (Set.mem_centralizer_iff).2 ?_
-        intro a ha
-        have hcomm : leftMulWOT (H := H) a T = rightMulWOT (H := H) a T :=
-          (Set.mem_iInter.1 (Set.mem_iInter.1 hT a) ha)
-        -- pull back to an equality in `B`.
-        have : (toWOTEquiv (H := H)).symm (leftMulWOT (H := H) a T) =
-            (toWOTEquiv (H := H)).symm (rightMulWOT (H := H) a T) := by
-          simpa using congrArg (toWOTEquiv (H := H)).symm hcomm
-        -- simplify both sides.
-        simpa [leftMulWOT, rightMulWOT, toWOTEquiv] using this
-      exact (Set.mem_toWOT_iff (H := H) (S := Set.centralizer S) (T := T)).2 h0
-  -- Closedness now follows from closedness of each piece and closure under intersections.
-  rw [this]
-  refine isClosed_iInter ?_
-  intro a
-  refine isClosed_iInter ?_
-  intro ha
-  exact isClosed_commutesWithWOT (H := H) a
+  rw [IsWOTClosed, Set.toWOT_centralizer]
+  exact Set.isClosed_centralizer _
 
 /-- Any double commutant is WOT-closed. -/
 theorem isWOTClosed_centralizer_centralizer (S : Set B) :
     IsWOTClosed (H := H) (Set.centralizer (Set.centralizer S)) :=
   isWOTClosed_centralizer (H := H) (S := Set.centralizer S)
 
-/-- Transport a `Submodule` of bounded operators to the WOT type-copy using `toWOTEquiv`.
+/-- Transport a `Submodule` of bounded operators to the WOT type-copy, as the preimage under the
+linear equivalence `ContinuousLinearMapWOT.linearEquiv`. Its carrier is `Set.toWOT A`.
 
 We deliberately avoid the dot-notation name `Submodule.toWOT` because `.toWOT` is already used
 elsewhere in this development for sets (`Set.toWOT`).
 -/
 noncomputable def submoduleToWOT (A : Submodule ℂ B) : Submodule ℂ BWOT :=
-  A.map (toWOTEquiv (H := H)).toLinearMap
+  A.comap (ContinuousLinearMapWOT.linearEquiv (σ := RingHom.id ℂ) (E := H) (F := H) ℂ).toLinearMap
 
 @[simp]
 lemma mem_submoduleToWOT_iff (A : Submodule ℂ B) (T : BWOT) :
-    T ∈ submoduleToWOT (H := H) A ↔ (toWOTEquiv (H := H)).symm T ∈ A := by
-  constructor
-  · intro hT
-    rcases (Submodule.mem_map).1 hT with ⟨S, hSA, hST⟩
-    have h : (toWOTEquiv (H := H)).symm T = S := by
-      have := congrArg (toWOTEquiv (H := H)).symm hST
-      simpa using this.symm
-    simpa [h] using hSA
-  · intro hT
-    refine (Submodule.mem_map).2 ?_
-    refine ⟨(toWOTEquiv (H := H)).symm T, hT, ?_⟩
-    simp
+    T ∈ submoduleToWOT (H := H) A ↔ toCLM T ∈ A :=
+  Iff.rfl
+
+lemma coe_submoduleToWOT (A : Submodule ℂ B) :
+    (submoduleToWOT (H := H) A : Set BWOT) = Set.toWOT (H := H) (A : Set B) :=
+  rfl
 
 /-- The `inducingFn` defining the weak operator topology, as a continuous linear map. -/
 noncomputable def inducingFnCLM : BWOT →L[ℂ] (H × H⋆ → ℂ) :=
   ⟨ContinuousLinearMapWOT.inducingFn (RingHom.id ℂ) H H,
     ContinuousLinearMapWOT.continuous_inducingFn (σ := RingHom.id ℂ) (E := H) (F := H)⟩
+
+@[simp]
+lemma inducingFnCLM_apply (T : BWOT) :
+    inducingFnCLM (H := H) T = ContinuousLinearMapWOT.inducingFn (RingHom.id ℂ) H H T :=
+  rfl
 
 /-- Restrict a function `ι → ℂ` to a finite subset `I : Finset ι` (as a continuous linear map). -/
 noncomputable def restrictPiCLM {ι : Type*} (I : Finset ι) : (ι → ℂ) →L[ℂ] (↥I → ℂ) := by

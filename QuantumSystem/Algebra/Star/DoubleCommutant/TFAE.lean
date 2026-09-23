@@ -191,7 +191,7 @@ theorem bicommutant_tfae_image (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B)) :
     List.TFAE [
       (A : Set B)′′ = (A : Set B),
-      IsClosed (ContinuousLinearMapWOT.ContinuousLinearMap.toWOTCLM
+      IsClosed (ContinuousLinearMap.WOTofCLM
         (σ := RingHom.id ℂ) (E := H) (F := H) '' (A : Set B)),
       IsClosed (ContinuousLinearMap.toPointwiseConvergenceCLM ℂ (RingHom.id ℂ) H H
         '' (A : Set B))] := by
@@ -204,7 +204,7 @@ closedness of the image of `A` in the WOT resp. pointwise-convergence type-copy 
 theorem bicommutant_tfae_image_starSubalgebra (A : StarSubalgebra ℂ B) :
     List.TFAE [
       (A : Set B)′′ = (A : Set B),
-      IsClosed (ContinuousLinearMapWOT.ContinuousLinearMap.toWOTCLM
+      IsClosed (ContinuousLinearMap.WOTofCLM
         (σ := RingHom.id ℂ) (E := H) (F := H) '' (A : Set B)),
       IsClosed (ContinuousLinearMap.toPointwiseConvergenceCLM ℂ (RingHom.id ℂ) H H
         '' (A : Set B))] :=
