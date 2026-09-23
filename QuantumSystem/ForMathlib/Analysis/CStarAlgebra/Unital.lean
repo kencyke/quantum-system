@@ -1,8 +1,24 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.Normed.Module.WeakDual
 public import Mathlib.Data.Real.StarOrdered
+
+/-!
+# Norm computations in unital C*-algebras
+
+## Main results
+
+* `UnitalCStarAlgebra.norm_character_eq_one`: a character on a nontrivial unital C*-algebra has
+  operator norm `1`.
+* `UnitalCStarAlgebra.norm_sq_add_imaginary_unit_of_selfAdjoint`: for self-adjoint `a` and real
+  `t`, `‖a + (i t) • 1‖ ^ 2 = ‖a‖ ^ 2 + t ^ 2`.
+-/
 
 @[expose] public section
 

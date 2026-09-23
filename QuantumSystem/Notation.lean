@@ -1,9 +1,12 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.LinearAlgebra.Matrix.Trace
-
-@[expose] public section
 
 /-!
 # Quantum Information Notation
@@ -34,6 +37,8 @@ Notations and abbreviations for quantum information theory.
 - `Tr (A * B)` for a complex expression (space before `(`)
 - `(Tr A).re` when chaining dot notation on the result
 -/
+
+@[expose] public section
 
 -- `Tr A` is notation for `Matrix.trace A`.
 

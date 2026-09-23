@@ -1,9 +1,22 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Data.Complex.Basic
 public import Mathlib.LinearAlgebra.Span.Defs
 public import Mathlib.Topology.Algebra.ConstMulAction
 public import Mathlib.Topology.Algebra.Monoid.Defs
+
+/-!
+# The span of a set closed under the linear operations lies in its closure
+
+If a nonempty subset `S` of a topological `ℂ`-module is closed under addition and scalar
+multiplication, then its closure is a submodule, so `Submodule.span ℂ S ⊆ closure S`
+(`Submodule.span_subset_closure`).
+-/
 
 @[expose] public section
 

@@ -1,9 +1,23 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.Analysis.Complex.Exponential
 public import Mathlib.Analysis.Complex.Order
 public import Mathlib.Analysis.SpecialFunctions.Complex.Arg
+
+/-!
+# Auxiliary lemmas on complex numbers
+
+Non-negativity facts in `ComplexOrder` for real-valued complex numbers, and phase-alignment
+lemmas: every `z : ℂ` can be rotated by a complex number of norm at most one onto `‖z‖`
+(`Complex.phase_alignment`, `Complex.exp_neg_I_arg_mul_self`,
+`Complex.exists_unit_mul_eq_norm`).
+-/
 
 @[expose] public section
 

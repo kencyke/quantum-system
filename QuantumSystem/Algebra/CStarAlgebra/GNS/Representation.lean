@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.ForMathlib.LinearAlgebra.Span.Def
@@ -7,6 +12,24 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
+
+/-!
+# GNS representations of a state
+
+A GNS triplet `(π, H, ξ)` for a state `ω` on a (possibly non-unital) C*-algebra `A` is a
+C*-representation `π` of `A` on a Hilbert space `H` together with a cyclic vector `ξ` satisfying
+`ω a = ⟪ξ, π a ξ⟫`.
+
+## Main definitions and results
+
+* `GNS.Representation ω`: GNS triplets for `ω`, extending `CStarRep A`.
+* `GNS.Representation.norm_ξ`: the cyclic vector is a unit vector.
+* `GNS.Representation.UnitaryEquiv`: unitary equivalence of GNS triplets, written `T₁ ≃ᵁ T₂`.
+* `GNS.Representation.unique_up_to_unitary_equivalence`: any two GNS triplets for the same state
+  are unitarily equivalent.
+* `GNS.Representation.canonical`: the triplet produced by the GNS construction.
+* `State.tendsto_approximateUnit`: a state evaluated along an approximate unit tends to `1`.
+-/
 
 @[expose] public section
 

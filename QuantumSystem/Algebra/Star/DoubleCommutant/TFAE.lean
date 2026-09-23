@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
@@ -5,8 +10,6 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import Mathlib.Tactic.TFAE
-
-@[expose] public section
 
 /-!
 # The bicommutant theorem as a list of equivalent conditions
@@ -77,6 +80,8 @@ finer than the WOT (`StrongOperatorTopology.isSOTClosed_of_isWOTClosed`). The pr
 routed as the cycle 1 → 2 → 3 → 1 precisely so that `hnd` is used at that one point and nowhere
 else.
 -/
+
+@[expose] public section
 
 /-!
 ## `F(H)` against the rest of the development

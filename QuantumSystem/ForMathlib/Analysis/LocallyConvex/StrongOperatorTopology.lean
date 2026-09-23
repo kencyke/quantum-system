@@ -1,10 +1,13 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.Analysis.InnerProductSpace.Defs
 public import Mathlib.Topology.Algebra.Module.Spaces.PointwiseConvergenceCLM
-
-@[expose] public section
 
 /-!
 # Strong operator topology closedness of commutants
@@ -39,6 +42,8 @@ is SOT-closed (`continuous_sotToWOT`, `isSOTClosed_of_isWOTClosed`) — lives in
 `QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra`, the first file that may import
 both type copies: this file, like every `ForMathlib` file, imports Mathlib only.
 -/
+
+@[expose] public section
 
 namespace StrongOperatorTopology
 

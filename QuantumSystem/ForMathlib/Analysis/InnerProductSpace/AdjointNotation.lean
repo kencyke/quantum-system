@@ -1,8 +1,11 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
-
-@[expose] public section
 
 /-!
 # Dagger notation for the adjoint of a continuous linear map
@@ -26,6 +29,8 @@ The notation lives in the dedicated `Adjoint` scope, so it is opt-in: activate i
 `†` binds at maximum precedence, so it attaches to the immediately preceding atom:
 write `(f ∘L g)†` and `(R.π a)†` with explicit parentheses, exactly as for `⁻¹`.
 -/
+
+@[expose] public section
 
 namespace Adjoint
 

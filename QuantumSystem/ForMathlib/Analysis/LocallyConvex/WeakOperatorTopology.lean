@@ -1,10 +1,13 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.Analysis.InnerProductSpace.Defs
 public import Mathlib.Analysis.LocallyConvex.WeakOperatorTopology
-
-@[expose] public section
 
 /-!
 # ForMathlib: weak-operator-topology closedness of commutants
@@ -44,6 +47,8 @@ This is the "easy" half of the von Neumann double commutant theorem (double comm
 WOT-closed). The converse implication (WOT-closed *-subalgebra equals its double commutant) is
 substantially harder and is proved in `DoubleCommutant/WOTClosedSubAlgebra.lean`.
 -/
+
+@[expose] public section
 
 namespace WeakOperatorTopology
 

@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.Convex.KreinMilman
@@ -5,6 +10,19 @@ public import Mathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.Algebra.CStarAlgebra.State
 public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
+
+/-!
+# Pure states on a C*-algebra
+
+A pure state on a (possibly non-unital) C*-algebra `A` is a nonzero extreme point of the
+quasi-state space of `A`, viewed inside `WeakDual ℂ A`.
+
+## Main definitions
+
+* `IsPureState φ`: `φ` is a nonzero extreme point of `QuasiStateSpace A`.
+* `IsPureState.toState`: the state underlying a pure state.
+* `PureState A`: the subtype of pure states, with `PureState.toState`.
+-/
 
 @[expose] public section
 

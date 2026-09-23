@@ -1,7 +1,21 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.PureState
+
+/-!
+# Irreducibility of the GNS representation of a pure state
+
+For a pure state `ψ`, the canonical GNS representation `PureState.gnsRepresentation ψ` is
+irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant subspace
+splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity forces
+one of them to vanish.
+-/
 
 @[expose] public section
 

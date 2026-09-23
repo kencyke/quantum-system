@@ -1,6 +1,25 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
 module
 
 public import Mathlib.Analysis.Complex.Norm
+
+/-!
+# Extending algebraic identities from a dense subset
+
+A continuous map into a Hausdorff space that is additive (resp. `ℂ`-homogeneous) on a dense
+subset is additive (resp. `ℂ`-homogeneous) everywhere, because the set where the identity holds
+is closed.
+
+## Main results
+
+* `Continuous.add_dense_subset_to_everywhere`
+* `Continuous.smul_dense_subset_to_everywhere`
+* `Continuous.linear_dense_subset_to_everywhere`
+-/
 
 @[expose] public section
 
