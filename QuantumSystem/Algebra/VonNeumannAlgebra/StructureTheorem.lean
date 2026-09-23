@@ -453,7 +453,7 @@ lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
       rw [amplifyLeft_star]
       exact amplifyLeft_comp_amplifyRight
         (star (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) B
-  haveI : Nontrivial (lp (fun _ : F => ℂ) 2) :=
+  have : Nontrivial (lp (fun _ : F => ℂ) 2) :=
     ⟨lpDelta (Classical.arbitrary F), 0, by
       rw [← norm_ne_zero_iff, lpDelta_norm]; norm_num⟩
   exact (congrArg VonNeumannAlgebra.commutant hcomm).trans
@@ -500,7 +500,7 @@ theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_vnTensorRight (hF : OrthEqui
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] :
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) N′ = vnTensorRight := by
-  haveI : Nontrivial (lp (fun _ : F => ℂ) 2) :=
+  have : Nontrivial (lp (fun _ : F => ℂ) 2) :=
     ⟨lpDelta (Classical.arbitrary F), 0, by
       rw [← norm_ne_zero_iff, lpDelta_norm]; norm_num⟩
   rw [← VonNeumannAlgebra.conj_commutant, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
@@ -562,11 +562,11 @@ theorem IsFactor.exists_spatial_tensor_decomposition {N : VonNeumannAlgebra H}
       (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ LinearMap.range (e : H →ₗ[ℂ] H)),
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight := by
-  haveI := he.nontrivial
+  have := he.nontrivial
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  haveI : DecidableEq F := Classical.decEq _
-  haveI : Nonempty F := OrthEquivFam.nonempty_of_top htop
+  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : DecidableEq F := Classical.decEq _
+  have : Nonempty F := OrthEquivFam.nonempty_of_top htop
   exact ⟨F, hF.spatialEquiv htop, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     hF.conj_spatialEquiv_commutant_eq_vnTensorRight he htop⟩
 
@@ -595,11 +595,11 @@ theorem IsFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
       VonNeumannAlgebra.conj U N′ = vnTensorRight ∧
       VonNeumannAlgebra.conj U A ≤ vnTensorLeft ∧
       VonNeumannAlgebra.conj U B′ ≤ vnTensorRight := by
-  haveI := he.nontrivial
+  have := he.nontrivial
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  haveI : DecidableEq F := Classical.decEq _
-  haveI : Nonempty F := OrthEquivFam.nonempty_of_top htop
+  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : DecidableEq F := Classical.decEq _
+  have : Nonempty F := OrthEquivFam.nonempty_of_top htop
   exact ⟨F, hF.spatialEquiv htop, ‹Nonempty F›, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     hF.conj_spatialEquiv_commutant_eq_vnTensorRight he htop,
     hF.conj_spatialEquiv_le_vnTensorLeft he htop h₁,

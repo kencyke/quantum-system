@@ -130,7 +130,7 @@ theorem relativeEntropy_kronecker_marginals
     change M ij ij = 0
     rw [hM_diag, hr_zero ij hij, Complex.ofReal_zero]
   unfold relativeEntropy
-  simp only [h_supp, if_true]
+  simp only [h_supp, ite_true]
   -- The trace against `log (ρ_A ⊗ ρ_B)` splits into the two marginal traces.
   have h_real : ∑ ij : n × m, Real.log (d ij) * r ij =
       ∑ i, lam i * Real.log (lam i) + ∑ j, mu j * Real.log (mu j) := by

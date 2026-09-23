@@ -103,11 +103,11 @@ lemma cyclicVector_decomp_of_isClosed (T : GNS.Representation ω) (W : Submodule
     ∃ v₁ v₂ : T.H, v₁ ∈ W ∧ v₂ ∈ Wᗮ ∧ T.ξ = v₁ + v₂ ∧ ⟪v₁, v₂⟫ = 0 := by
   classical
   -- Use closedness to obtain orthogonal projections onto `W`.
-  letI : IsClosed (W : Set T.H) := hWclosed
-  haveI : CompleteSpace (↥W) := by
+  let : IsClosed (W : Set T.H) := hWclosed
+  have : CompleteSpace (↥W) := by
     -- Closed subsets of complete spaces are complete.
     simpa using (IsClosed.completeSpace_coe (s := (W : Set T.H)))
-  haveI : W.HasOrthogonalProjection := by
+  have : W.HasOrthogonalProjection := by
     -- Uses `HasOrthogonalProjection.ofCompleteSpace`.
     infer_instance
   refine ⟨W.starProjection T.ξ, T.ξ - W.starProjection T.ξ, ?_, ?_, ?_, ?_⟩
@@ -363,13 +363,8 @@ lemma trichotomy_from_purity {ψ : PureState A}
   have h_ext : ψ.val ∈ Set.extremePoints ℝ (QuasiStateSpace A) := ψ.property.1
   have h_t_in_Ioo : t ∈ Set.Ioo (0 : ℝ) 1 := ⟨h_pos, h_lt_one⟩
   -- ψ.val ∈ openSegment ℝ χ φ
-  have h_in_seg : ψ.val ∈ openSegment ℝ χ φ := by
-    rw [openSegment_eq_image, Set.mem_image]
-    use t
-    constructor
-    · exact h_t_in_Ioo
-    · simp only [h_sum, sub_eq_add_neg]
-      rw [add_comm]
+  have h_in_seg : ψ.val ∈ openSegment ℝ χ φ :=
+    ⟨1 - t, t, sub_pos.mpr h_lt_one, h_pos, by ring, by rw [h_sum, add_comm]⟩
   have h_ext_iff := mem_extremePoints.mp h_ext
   obtain ⟨h_eq1, h_eq2⟩ := h_ext_iff.2 χ hχ_mem φ hφ_mem h_in_seg
   -- φ = χ implies contradiction

@@ -71,7 +71,7 @@ local notation "BWOT" => (H →WOT[ℂ] H)
 
 /-- The identity map on operators, read as a map from the SOT type-copy to the WOT type-copy. -/
 noncomputable def sotToWOT (T : BSOT) : BWOT :=
-  toWOTEquiv (H := H) ((toSOTEquiv (H := H)).symm T)
+  ContinuousLinearMapWOT.ofCLM ((toSOTEquiv (H := H)).symm T)
 
 @[simp] lemma sotToWOT_apply (T : BSOT) (x : H) : (sotToWOT (H := H) T) x = T x := rfl
 
@@ -154,12 +154,12 @@ lemma mem_sotClosure_of_mem_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B) 
     -- The finite set I gives us n points; use amplification to H^n
     let n := I_fin.card
     have hn : 0 < n := Finset.card_pos.mpr hI_fin_ne
-    haveI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
+    have : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
     let e : Fin n ≃ I_fin := Fintype.equivOfCardEq (by simp [n])
     let xVec : Fin n → H := fun i => (e i).val
     let x_amp : Hn (H := H) n := (WithLp.equiv _ _).symm xVec
     let Aamp : NonUnitalStarSubalgebra ℂ (Hn (H := H) n →L[ℂ] Hn (H := H) n) :=
-      A.map (diagonalStarAlgHom (H := H) n)
+      A.map (diagonalStarAlgHom (H := H) n).toNonUnitalStarAlgHom
     have hndAmp : ActsNondegenerately (Aamp : Set (Hn (H := H) n →L[ℂ] Hn (H := H) n)) := by
       have hcoe : (Aamp : Set (Hn (H := H) n →L[ℂ] Hn (H := H) n)) =
           diagonal (H := H) (n := n) '' (A : Set B) := by
@@ -201,14 +201,12 @@ lemma mem_sotClosure_of_mem_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B) 
       simp only [Set.mem_range, Set.mem_ofPred_eq]
       constructor
       · rintro ⟨⟨a, ha⟩, rfl⟩
-        simp only [Aamp, NonUnitalStarSubalgebra.mem_map, diagonalStarAlgHom, StarAlgHom.coe_mk',
-          AlgHom.coe_mk, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk] at ha
+        simp only [Aamp, NonUnitalStarSubalgebra.mem_map, diagonalStarAlgHom] at ha
         rcases ha with ⟨S, hS, rfl⟩
         exact ⟨S, hS, rfl⟩
       · rintro ⟨S, hS, rfl⟩
         refine ⟨⟨diagonal (H := H) (n := n) S, ?_⟩, rfl⟩
-        simp only [Aamp, NonUnitalStarSubalgebra.mem_map, diagonalStarAlgHom, StarAlgHom.coe_mk',
-          AlgHom.coe_mk, RingHom.coe_mk, MonoidHom.coe_mk, OneHom.coe_mk]
+        simp only [Aamp, NonUnitalStarSubalgebra.mem_map, diagonalStarAlgHom]
         exact ⟨S, hS, rfl⟩
     -- The map S ↦ diagonal S x_amp is linear, so the orbit is a submodule
     let evalAt : (Hn (H := H) n →L[ℂ] Hn (H := H) n) →ₗ[ℂ] Hn (H := H) n :=
@@ -328,14 +326,14 @@ theorem wotClosure_eq_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B)
     exact Set.subset_centralizer_centralizer (Set.mem_toWOT_iff.mp hT)
   · intro T hT
     -- Go through the SOT-closure and push it forward along the continuous map `sotToWOT`.
-    have hSOT : (toSOTEquiv ((toWOTEquiv (H := H)).symm T) : BSOT) ∈
+    have hSOT : (toSOTEquiv (ContinuousLinearMapWOT.toCLM T) : BSOT) ∈
         closure (Set.toSOT (H := H) (A : Set B)) :=
       mem_sotClosure_of_mem_doubleCommutant A _ hnd (Set.mem_toWOT_iff.mp hT)
     have hsub : closure (Set.toSOT (H := H) (A : Set B)) ⊆
         sotToWOT (H := H) ⁻¹' closure (Set.toWOT (H := H) (A : Set B)) :=
       closure_minimal (fun S hS => subset_closure (Set.mem_toSOT_iff.mp hS))
         (isClosed_closure.preimage continuous_sotToWOT)
-    simpa using hsub hSOT
+    exact hsub hSOT
 
 /-- A SOT-closed (possibly non-unital) *-subalgebra acting non-degenerately is WOT-closed. -/
 theorem isWOTClosed_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)

@@ -89,8 +89,8 @@ The Hilbert space is obtained in the same universe as `A`.  The witness is
 theorem CStarRep.exists_isometric (A : Type u) [NonUnitalCStarAlgebra A] :
     ∃ R : CStarRep.{u, u} A,
       Isometry R.π ∧ Function.Injective R.π ∧ IsClosed (NonUnitalStarAlgHom.range R.π : Set 𝓑(R.H)) := by
-  letI := CStarAlgebra.spectralOrder A
-  haveI := CStarAlgebra.spectralOrderedRing A
+  let := CStarAlgebra.spectralOrder A
+  have := CStarAlgebra.spectralOrderedRing A
   exact ⟨GNS.DirectSum.rep A, GNS.DirectSum.rep_isometry, GNS.DirectSum.rep_injective,
     GNS.DirectSum.rep_isClosed_range⟩
 
@@ -104,8 +104,8 @@ unbundled form. -/
 theorem CStarRep.exists_starAlgEquiv_range (A : Type u) [NonUnitalCStarAlgebra A] :
     ∃ (R : CStarRep.{u, u} A) (S : NonUnitalStarSubalgebra ℂ 𝓑(R.H)) (e : A ≃⋆ₐ[ℂ] S),
       IsClosed (S : Set 𝓑(R.H)) ∧ ∀ a : A, ‖((e a : S) : 𝓑(R.H))‖ = ‖a‖ := by
-  letI := CStarAlgebra.spectralOrder A
-  haveI := CStarAlgebra.spectralOrderedRing A
+  let := CStarAlgebra.spectralOrder A
+  have := CStarAlgebra.spectralOrderedRing A
   exact ⟨GNS.DirectSum.rep A, NonUnitalStarAlgHom.range (GNS.DirectSum.rep A).π, GNS.DirectSum.repRangeEquiv A,
     GNS.DirectSum.rep_isClosed_range, GNS.DirectSum.norm_repRangeEquiv⟩
 
@@ -127,7 +127,7 @@ theorem CStarRep.exists_isometric_separable (A : Type u) [NonUnitalCStarAlgebra 
     ∃ R : CStarRep.{u, u} A, TopologicalSpace.SeparableSpace R.H ∧
       Isometry R.π ∧ Function.Injective R.π ∧
       IsClosed (NonUnitalStarAlgHom.range R.π : Set 𝓑(R.H)) := by
-  letI := CStarAlgebra.spectralOrder A
-  haveI := CStarAlgebra.spectralOrderedRing A
+  let := CStarAlgebra.spectralOrder A
+  have := CStarAlgebra.spectralOrderedRing A
   exact ⟨GNS.normingRep A, inferInstance, GNS.normingRep_isometry A, GNS.normingRep_injective A,
     GNS.normingRep_isClosed_range A⟩

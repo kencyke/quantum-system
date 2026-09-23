@@ -192,7 +192,7 @@ theorem IsFactor.exists_orthEquivFam_top {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
       (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ := by
-  haveI : Nontrivial H := he.nontrivial
+  have : Nontrivial H := he.nontrivial
   obtain ⟨F, hF, hFmax⟩ := exists_maximal_orthEquivFam N e
   refine ⟨F, hF, ?_⟩
   set S : Set H := {y | ∃ f ∈ F, ∃ x, f x = y} with hS
@@ -496,7 +496,7 @@ lemma IsStarProjection.isClosed_range {p : H →L[ℂ] H} (hp : IsStarProjection
       = LinearMap.ker ((1 - p : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
     ext x
     simp only [LinearMap.mem_range, LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
-      ContinuousLinearMap.sub_apply, one_apply_eq_self, sub_eq_zero]
+      sub_apply, one_apply_eq_self, sub_eq_zero]
     constructor
     · rintro ⟨z, rfl⟩
       rw [← mul_apply_eq_comp, hp.isIdempotentElem]
@@ -542,7 +542,7 @@ lemma OrthEquivFam.isHilbertSum {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
     IsHilbertSum ℂ (fun i : F => LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H))
       (fun i => (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ) := by
-  haveI : ∀ i : F, CompleteSpace (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) :=
+  have : ∀ i : F, CompleteSpace (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) :=
     fun i => (hF.1 i.1 i.2).1.completeSpace_range
   refine IsHilbertSum.mkInternal _ ?_ ?_
   · rintro ⟨pi, hpi⟩ ⟨pj, hpj⟩ hij ⟨v, hv⟩ ⟨w, hw⟩
@@ -664,8 +664,8 @@ theorem IsFactor.exists_tmul_decomposition {N : VonNeumannAlgebra H}
       Nonempty (H ≃ₗᵢ[ℂ]
         HilbertTensor (lp (fun _ : F => ℂ) 2) (LinearMap.range (e : H →ₗ[ℂ] H))) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  haveI : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  haveI : DecidableEq (↥F) := Classical.decEq _
+  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : DecidableEq (↥F) := Classical.decEq _
   exact ⟨F, hF, htop, fun p hp => hF.isMinimalProjection_of_mem he hp,
     ⟨(hF.multiplicityEquiv htop).trans
       (HilbertTensor.lpTensorEquiv (ι := F) (K := LinearMap.range (e : H →ₗ[ℂ] H)))⟩⟩

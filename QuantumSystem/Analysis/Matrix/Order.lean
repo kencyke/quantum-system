@@ -114,8 +114,8 @@ private lemma fromBlocks_posSemidef_diag {m n : Type*} [Finite m] [Finite n]
   {A : Matrix m m ℂ} {D : Matrix n n ℂ}
     (hA : A.PosSemidef) (hD : D.PosSemidef) :
     (Matrix.fromBlocks A 0 0 D).PosSemidef := by
-  letI := Fintype.ofFinite m
-  letI := Fintype.ofFinite n
+  let := Fintype.ofFinite m
+  let := Fintype.ofFinite n
   classical
   refine PosSemidef.of_dotProduct_mulVec_nonneg ?_ ?_
   · -- Hermitian
@@ -198,7 +198,7 @@ lemma lownerConvex_compression_le.{v} {n : Type v} {m : Type v} [Fintype n] [Fin
   have hWfTW : Wᴴ * cfc f T' * W =
       Vᴴ * cfc f T * V + (f 0 : ℂ) • (Dᴴ * D) := by
     have hT_sa : IsSelfAdjoint T := by
-      simpa [IsSelfAdjoint, star_eq_conjTranspose] using hT.1
+      exact hT.1.isSelfAdjoint
     have h0_sa : IsSelfAdjoint (0 : Matrix m m ℂ) := by
       simp [IsSelfAdjoint]
     have hfinite : (spectrum ℝ T ∪ spectrum ℝ (0 : Matrix m m ℂ)).Finite :=
@@ -551,15 +551,6 @@ private lemma resolvent_lowner_concave_le {m : Type*} [Fintype m] [DecidableEq m
 
 section RpowOperatorConcaveAux
 
--- Activate the linfty operator norm tower on `Matrix _ _ ℂ` for the proof of
--- `rpow_operator_concave_le` below.  These instances are defined as `local
--- instance` in Mathlib and need to be re-activated with `attribute [local
--- instance]` here so that `Integrable.smul`, `integral_smul`, `integral_mono_ae`
--- etc. can synthesise the required typeclass tower.
-attribute [local instance] Matrix.linftyOpNormedRing
-  Matrix.linftyOpNormedAlgebra Matrix.linftyOpIsBoundedSMul
-  Matrix.linftyOpNormSMulClass Matrix.linftyOpNormedAddCommGroup
-  Matrix.linftyOpNonUnitalNormedRing
 
 /-- Core operator concavity lemma for matrices.
 Uses the integral representation of xˢ and resolvent operator concavity.
@@ -589,32 +580,27 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m]
       simpa [Matrix.le_iff] using (hA.real_smul ht0).add (hB.real_smul (by linarith))
     simp only [CFC.rpow_one (a := A) hA0, CFC.rpow_one (a := B) hB0,
       CFC.rpow_one (a := t • A + (1 - t) • B) hC0, le_refl]
-  -- The `attribute [local instance]` directives at the top of this
-  -- `RpowOperatorConcaveAux` section activate the linfty operator-norm tower
-  -- on `Matrix _ _ ℂ`.  We additionally need to pin a few non-instance
-  -- theorems and routes that Mathlib v4.30 does not pick up automatically.
-  letI : NonUnitalCStarAlgebra (Matrix m m ℂ) := by
-    simpa [CStarMatrix] using
-      (CStarMatrix.instNonUnitalCStarAlgebra (n := m) (A := ℂ))
-  letI nucfc : NonUnitalContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint := by
-    letI : CStarAlgebra (Matrix m m ℂ) := by
-      simpa [CStarMatrix] using (CStarMatrix.instCStarAlgebra (n := m) (A := ℂ))
-    letI : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
+  -- Equip `Matrix m m ℂ` with the `L²`-operator-norm C⋆-algebra structure for the integral
+  -- representation below. Its topology is (reducibly) the product topology, so the Bochner
+  -- integrals and `ContinuousENorm` agree with the ambient topology on matrices.
+  let : CStarAlgebra (Matrix m m ℂ) := Matrix.instCStarAlgebra
+  let nucfc : NonUnitalContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint := by
+    let : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
       IsStarNormal.instContinuousFunctionalCalculus
-    letI : ContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint :=
+    let : ContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint :=
       IsSelfAdjoint.instContinuousFunctionalCalculus
     exact ContinuousFunctionalCalculus.toNonUnital
-  letI scc : SMulCommClass ℝ (Matrix m m ℂ) (Matrix m m ℂ) :=
+  let scc : SMulCommClass ℝ (Matrix m m ℂ) (Matrix m m ℂ) :=
     Matrix.Semiring.smulCommClass
-  letI ist : IsScalarTower ℝ (Matrix m m ℂ) (Matrix m m ℂ) := inferInstance
-  letI sor : StarOrderedRing (Matrix m m ℂ) := Matrix.instStarOrderedRing
-  letI nsc : NonnegSpectrumClass ℝ (Matrix m m ℂ) := Matrix.instNonnegSpectrumClass
+  let ist : IsScalarTower ℝ (Matrix m m ℂ) (Matrix m m ℂ) := inferInstance
+  let sor : StarOrderedRing (Matrix m m ℂ) := Matrix.instStarOrderedRing
+  let nsc : NonnegSpectrumClass ℝ (Matrix m m ℂ) := Matrix.instNonnegSpectrumClass
   -- `integral_mono_ae` requires `ClosedIciTopology` on the target.  The Löwner
   -- order on `Matrix m m ℂ` makes `Set.Ici a` closed because `PosSemidef` is a
   -- closed condition: it is the intersection of `IsHermitian` (closed under
   -- `star`) and `∀ y, 0 ≤ star y ⬝ᵥ M.mulVec y` (each is a closed condition
   -- since the dot-product map is continuous).
-  letI cit : ClosedIciTopology (Matrix m m ℂ) := by
+  let cit : ClosedIciTopology (Matrix m m ℂ) := by
     refine ⟨fun a => ?_⟩
     have hSet : Set.Ici a = {M : Matrix m m ℂ | (M - a).PosSemidef} := by
       ext M; exact Matrix.le_iff
@@ -680,8 +666,8 @@ private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m]
       have hcont_inv : ContinuousOn (fun x => (u + x)⁻¹) (Ici 0) :=
         ContinuousOn.inv₀ hcont_add hne
       have hcont_sub : ContinuousOn (fun x => u⁻¹ - (u + x)⁻¹) (Ici 0) := by
-        simpa using (ContinuousOn.sub continuousOn_const hcont_inv)
-      simpa [Real.rpowIntegrand₀₁] using (ContinuousOn.mul continuousOn_const hcont_sub)
+        exact ContinuousOn.sub continuousOn_const hcont_inv
+      exact ContinuousOn.mul continuousOn_const hcont_sub
     have hA_spec : quasispectrum ℝ A ⊆ Ici 0 := by
       intro x hx
       exact (StarOrderedRing.nonneg_iff_quasispectrum_nonneg (A := Matrix m m ℂ) A).1 hA0 x hx

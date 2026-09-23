@@ -49,20 +49,20 @@ Proof outline:
 lemma cfc_diagonal (f : ℝ → ℝ) (d : m → ℝ) :
     cfc f (diagonal (fun i => (d i : ℂ)) : Matrix m m ℂ) =
       diagonal (fun i => ((f (d i) : ℝ) : ℂ)) := by
-  letI : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix m m ℂ) := by
+  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix m m ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
   -- Provide CFC instances on `ℂ` and the Pi type `(m → ℂ)`.
-  letI : ContinuousFunctionalCalculus ℂ ℂ IsStarNormal :=
+  let : ContinuousFunctionalCalculus ℂ ℂ IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℝ ℂ IsSelfAdjoint :=
+  let : ContinuousFunctionalCalculus ℝ ℂ IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
-  letI : CStarAlgebra (m → ℂ) := inferInstance
-  letI : ContinuousFunctionalCalculus ℂ (m → ℂ) IsStarNormal :=
+  let : CStarAlgebra (m → ℂ) := inferInstance
+  let : ContinuousFunctionalCalculus ℂ (m → ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℝ (m → ℂ) IsSelfAdjoint :=
+  let : ContinuousFunctionalCalculus ℝ (m → ℂ) IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
   -- Pi self-adjoint
   let dc : m → ℂ := fun i => (d i : ℂ)
@@ -122,14 +122,14 @@ lemma cfc_unitary_conj_diagonal
           diagonal (fun i => ((d i : ℝ) : ℂ)) * (W : Matrix k k ℂ)ᴴ) =
       (W : Matrix k k ℂ) *
         diagonal (fun i => ((f (d i) : ℝ) : ℂ)) * (W : Matrix k k ℂ)ᴴ := by
-  letI : NormedRing (Matrix k k ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix k k ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix k k ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix k k ℂ) := by
+  let : NormedRing (Matrix k k ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix k k ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix k k ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix k k ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := k) (A := ℂ)
-  letI : ContinuousFunctionalCalculus ℂ (Matrix k k ℂ) IsStarNormal :=
+  let : ContinuousFunctionalCalculus ℂ (Matrix k k ℂ) IsStarNormal :=
     IsStarNormal.instContinuousFunctionalCalculus
-  letI : ContinuousFunctionalCalculus ℝ (Matrix k k ℂ) IsSelfAdjoint :=
+  let : ContinuousFunctionalCalculus ℝ (Matrix k k ℂ) IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
   have h_diag_sa : IsSelfAdjoint (diagonal (fun i => ((d i : ℝ) : ℂ))) := by
     rw [IsSelfAdjoint, star_eq_conjTranspose, diagonal_conjTranspose]

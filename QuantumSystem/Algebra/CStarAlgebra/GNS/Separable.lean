@@ -157,9 +157,11 @@ instance [SeparableSpace A] (i : NormingIndex A) :
 /-- The direct-sum Hilbert space of the norming family is separable: it is an ℓ²-sum of
 countably many separable spaces. -/
 instance separableSpace_normingFamily_directSumHilbert [SeparableSpace A] :
-    SeparableSpace (normingFamily A).directSumHilbert :=
-  inferInstanceAs (SeparableSpace (lp (fun i : NormingIndex A =>
-    ((normingFamily A).rep i).H) 2))
+    SeparableSpace (normingFamily A).directSumHilbert := by
+  have : Countable (normingFamily A).Index := inferInstanceAs (Countable (NormingIndex A))
+  have : ∀ i : (normingFamily A).Index, SeparableSpace ((normingFamily A).rep i).H :=
+    fun _ => Representation.separableSpace_H _
+  exact lp.instSeparableSpaceOfCountable
 
 variable (A) in
 /-- **The norming family separates points.**

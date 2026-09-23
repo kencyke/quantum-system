@@ -242,18 +242,18 @@ noncomputable def evalLocal : trivialNet.localObservables →+* ℂ :=
 lemma evalLocal_star (z : trivialNet.localObservables) :
     evalLocal (star z) = star (evalLocal z) := by
   induction z using DirectLimit.induction with
-  | _ O X => rw [LocalNet.star_mk, evalLocal_mk, evalLocal_mk]; rfl
+  | _ O X => rw [LocalNet.star_mk]; rfl
 
 /-- Evaluation is `ℂ`-linear: scalars act componentwise on the limit. -/
 lemma evalLocal_smul (c : ℂ) (z : trivialNet.localObservables) :
     evalLocal (c • z) = c • evalLocal z := by
   induction z using DirectLimit.induction with
-  | _ O X => rw [DirectLimit.smul_def, evalLocal_mk, evalLocal_mk]; rfl
+  | _ O X => rw [DirectLimit.smul_def]; rfl
 
 /-- **Evaluation is isometric**: the C⋆-norm of the limit is the norm of the component. -/
 lemma norm_evalLocal (z : trivialNet.localObservables) : ‖evalLocal z‖ = ‖z‖ := by
   induction z using DirectLimit.induction with
-  | _ O X => rw [evalLocal_mk, LocalNet.norm_mk]; rfl
+  | _ O X => rw [LocalNet.norm_mk]; rfl
 
 /-- Evaluation extended to the quasi-local C⋆-algebra, by continuity from the dense image of the
     local observables. -/

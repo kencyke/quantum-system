@@ -574,10 +574,10 @@ lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
   rw [perspective_inner_eq_commuting hL hR hcomm]
   have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
   rw [hRinv_eq]
-  letI : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  letI : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  letI : CStarAlgebra (Matrix n n ℂ) := by
+  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix n n ℂ) := by
     simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
   have hRunit := hR.isUnit
   have hR0 : (0 : Matrix n n ℂ) ≤ R := by simpa [Matrix.le_iff] using hR.posSemidef
