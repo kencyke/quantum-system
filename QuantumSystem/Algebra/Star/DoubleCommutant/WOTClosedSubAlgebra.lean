@@ -390,7 +390,9 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
         simp only [sum_apply, smul_apply,
           ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply]
         rw [show (∑ i : ↥I, coeff i • (inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) i) =
-            ∑ i : Fin n, coeff (e i) • (inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) (e i) from hsum]
+            ∑ i : Fin n,
+              coeff (e i) • (inducingFnRestrictCLM (H := H) I) (ContinuousLinearMapWOT.ofCLM S) (e i)
+            from hsum]
         simp only [inducingFnRestrictCLM, inducingFnCLM, restrictPiCLM,
           ContinuousLinearMap.comp_apply, ContinuousLinearMap.coe_mk', LinearMap.coe_mk,
           AddHom.coe_mk]

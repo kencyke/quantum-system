@@ -65,6 +65,7 @@ open ContinuousLinearMapWOT (ofCLM toCLM)
 def Set.toWOT (S : Set B) : Set BWOT :=
   toCLM ⁻¹' S
 
+/-- An element of the WOT type-copy lies in `Set.toWOT S` iff the underlying operator lies in `S`. -/
 lemma Set.mem_toWOT_iff {S : Set B} {T : BWOT} :
     T ∈ Set.toWOT (H := H) S ↔ toCLM T ∈ S :=
   Iff.rfl
@@ -105,11 +106,14 @@ elsewhere in this development for sets (`Set.toWOT`).
 noncomputable def submoduleToWOT (A : Submodule ℂ B) : Submodule ℂ BWOT :=
   A.comap (ContinuousLinearMapWOT.linearEquiv (σ := RingHom.id ℂ) (E := H) (F := H) ℂ).toLinearMap
 
+/-- An element of the WOT type-copy lies in `submoduleToWOT A` iff the underlying operator lies
+in `A`. -/
 @[simp]
 lemma mem_submoduleToWOT_iff (A : Submodule ℂ B) (T : BWOT) :
     T ∈ submoduleToWOT (H := H) A ↔ toCLM T ∈ A :=
   Iff.rfl
 
+/-- The carrier of `submoduleToWOT A` is `Set.toWOT A`. -/
 lemma coe_submoduleToWOT (A : Submodule ℂ B) :
     (submoduleToWOT (H := H) A : Set BWOT) = Set.toWOT (H := H) (A : Set B) :=
   rfl
@@ -119,6 +123,7 @@ noncomputable def inducingFnCLM : BWOT →L[ℂ] (H × H⋆ → ℂ) :=
   ⟨ContinuousLinearMapWOT.inducingFn (RingHom.id ℂ) H H,
     ContinuousLinearMapWOT.continuous_inducingFn (σ := RingHom.id ℂ) (E := H) (F := H)⟩
 
+/-- `inducingFnCLM` evaluates as `ContinuousLinearMapWOT.inducingFn`. -/
 @[simp]
 lemma inducingFnCLM_apply (T : BWOT) :
     inducingFnCLM (H := H) T = ContinuousLinearMapWOT.inducingFn (RingHom.id ℂ) H H T :=
