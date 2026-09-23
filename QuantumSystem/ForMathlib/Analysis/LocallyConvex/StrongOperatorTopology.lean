@@ -24,13 +24,13 @@ copy and that identification rather than introducing another one.
 
 ## Main definitions
 
-* `Set.toSOT`: view a subset of operators inside the SOT type-copy.
+* `Set.toSOT`: view a subset of operators inside the SOT type-copy, as its preimage under the
+  inverse of `ContinuousLinearMap.toUniformConvergenceCLM`. Every result about SOT-closedness is
+  stated in this preimage form.
 * `IsSOTClosed`: a predicate for subsets closed in the SOT.
 
 ## Main results
 
-* `Set.toSOT_eq_image`: `Set.toSOT` is the image of the subset under
-  `ContinuousLinearMap.toUniformConvergenceCLM`.
 * `isSOTClosed_centralizer`: the commutant of any set is SOT-closed.
 * `isSOTClosed_centralizer_centralizer`: double commutants are SOT-closed.
 
@@ -57,35 +57,18 @@ local notation "BSOT" => (H →SLₚₜ[RingHom.id ℂ] H)
 
 open ContinuousLinearMap (toUniformConvergenceCLM)
 
-/-- View a subset of operators inside the SOT type-copy. -/
+/-- View a subset of operators inside the SOT type-copy, as its preimage under the inverse of
+`ContinuousLinearMap.toUniformConvergenceCLM`. -/
 def Set.toSOT (S : Set B) : Set BSOT :=
-  {T | (toUniformConvergenceCLM _ _ _).symm T ∈ S}
+  (toUniformConvergenceCLM _ _ _).symm ⁻¹' S
 
 lemma Set.mem_toSOT_iff {S : Set B} {T : BSOT} :
     T ∈ Set.toSOT (H := H) S ↔ (toUniformConvergenceCLM _ _ _).symm T ∈ S :=
   Iff.rfl
 
-/-- `Set.toSOT` is the image of the subset under `ContinuousLinearMap.toUniformConvergenceCLM`. -/
-lemma Set.toSOT_eq_image (S : Set B) :
-    Set.toSOT (H := H) S = toUniformConvergenceCLM (RingHom.id ℂ) H {s : Set H | Finite s} '' S := by
-  ext T
-  constructor
-  · intro h
-    exact ⟨_, h, (toUniformConvergenceCLM _ _ _).apply_symm_apply T⟩
-  · rintro ⟨x, hx, rfl⟩
-    simpa [Set.mem_toSOT_iff] using hx
-
-/-- A subset of `B(H)` is SOT-closed if its image in the SOT type-copy is closed. -/
+/-- A subset of `B(H)` is SOT-closed if its copy `Set.toSOT S` in the SOT type-copy is closed. -/
 def IsSOTClosed (S : Set B) : Prop :=
   IsClosed (Set.toSOT (H := H) S)
-
-/-- SOT-closedness stated as closedness of the image, the form in which the strong operator
-topology is usually phrased. -/
-lemma isSOTClosed_iff_isClosed_image (S : Set B) :
-    IsSOTClosed (H := H) S ↔
-      IsClosed (ContinuousLinearMap.toPointwiseConvergenceCLM ℂ (RingHom.id ℂ) H H '' S) := by
-  rw [IsSOTClosed, Set.toSOT_eq_image]
-  rfl
 
 /-- The commutant `Set.centralizer S` is SOT-closed. -/
 lemma isSOTClosed_centralizer (S : Set B) : IsSOTClosed (H := H) (Set.centralizer S) := by

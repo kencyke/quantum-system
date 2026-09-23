@@ -31,9 +31,6 @@ are equivalent.
   acting non-degenerately.
 * `DoubleCommutant.bicommutant_tfae_starSubalgebra`: the unital special case, where non-degeneracy
   is automatic. This is the form in which the theorem is usually quoted.
-* `DoubleCommutant.bicommutant_tfae_image` (and its unital special case
-  `DoubleCommutant.bicommutant_tfae_image_starSubalgebra`): the two closedness conditions spelled
-  out as closedness of the image of `A` in the corresponding Mathlib type-copy.
 * `DoubleCommutant.one_mem_of_isSOTClosed` (and `WOTClosedSubalgebra.one_mem_of_isWOTClosed`): a
   non-degenerate `*`-subalgebra satisfying any of the three conditions contains `1`. This is what
   the non-unital form adds over the unital one, and it is also what makes the extra scope purely
@@ -182,33 +179,6 @@ theorem bicommutant_tfae_starSubalgebra (A : StarSubalgebra ℂ B) :
       IsWOTClosed (H := H) (A : Set B),
       IsSOTClosed (H := H) (A : Set B)] :=
   bicommutant_tfae A.toNonUnitalStarSubalgebra (actsNondegenerately_of_one_mem A.one_mem)
-
-/-- `DoubleCommutant.bicommutant_tfae` with the two closedness conditions spelled out as closedness
-of the image of `A` in the WOT resp. pointwise-convergence type-copy of `B(H)`. Stated at the same
-generality as `DoubleCommutant.bicommutant_tfae`, since `isWOTClosed_iff_isClosed_image` and
-`isSOTClosed_iff_isClosed_image` hold for an arbitrary set of operators. -/
-theorem bicommutant_tfae_image (A : NonUnitalStarSubalgebra ℂ B)
-    (hnd : ActsNondegenerately (A : Set B)) :
-    List.TFAE [
-      (A : Set B)′′ = (A : Set B),
-      IsClosed (ContinuousLinearMap.WOTofCLM
-        (σ := RingHom.id ℂ) (E := H) (F := H) '' (A : Set B)),
-      IsClosed (ContinuousLinearMap.toPointwiseConvergenceCLM ℂ (RingHom.id ℂ) H H
-        '' (A : Set B))] := by
-  rw [← isWOTClosed_iff_isClosed_image, ← isSOTClosed_iff_isClosed_image]
-  exact bicommutant_tfae A hnd
-
-/-- Unital special case of `DoubleCommutant.bicommutant_tfae_image`; equivalently,
-`DoubleCommutant.bicommutant_tfae_starSubalgebra` with the two closedness conditions spelled out as
-closedness of the image of `A` in the WOT resp. pointwise-convergence type-copy of `B(H)`. -/
-theorem bicommutant_tfae_image_starSubalgebra (A : StarSubalgebra ℂ B) :
-    List.TFAE [
-      (A : Set B)′′ = (A : Set B),
-      IsClosed (ContinuousLinearMap.WOTofCLM
-        (σ := RingHom.id ℂ) (E := H) (F := H) '' (A : Set B)),
-      IsClosed (ContinuousLinearMap.toPointwiseConvergenceCLM ℂ (RingHom.id ℂ) H H
-        '' (A : Set B))] :=
-  bicommutant_tfae_image A.toNonUnitalStarSubalgebra (actsNondegenerately_of_one_mem A.one_mem)
 
 /-- **A non-degenerate `*`-subalgebra satisfying any one of the three conditions contains `1`.**
 Stated for the WOT in `WOTClosedSubalgebra.one_mem_of_isWOTClosed`; this is the SOT companion.

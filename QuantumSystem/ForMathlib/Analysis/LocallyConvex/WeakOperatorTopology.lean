@@ -20,7 +20,9 @@ multiplication comes from Mathlib's `IsSemitopologicalRing` instance on it.
 
 ## Main definitions
 
-* `Set.toWOT`: view a subset of operators inside the WOT type-copy.
+* `Set.toWOT`: view a subset of operators inside the WOT type-copy, as its preimage under
+  `ContinuousLinearMapWOT.toCLM`. Every result about WOT-closedness is stated in this preimage
+  form.
 * `IsWOTClosed`: a predicate for subsets closed in the WOT.
 * `submoduleToWOT`: transport a `Submodule` of bounded operators to the WOT type-copy.
 * `inducingFnCLM`: the `inducingFn` defining the WOT, as a continuous linear map.
@@ -29,10 +31,7 @@ multiplication comes from Mathlib's `IsSemitopologicalRing` instance on it.
 
 ## Main results
 
-* `Set.toWOT_eq_image`: `Set.toWOT` is the image of the subset under `ContinuousLinearMapWOT.ofCLM`.
 * `Set.toWOT_centralizer`: `Set.toWOT` commutes with taking commutants.
-* `isWOTClosed_iff_isClosed_image`: WOT-closedness as closedness of the image under the canonical
-  inclusion `ContinuousLinearMap.WOTofCLM`.
 * `isWOTClosed_centralizer`: the commutant of any set is WOT-closed.
 * `isWOTClosed_centralizer_centralizer`: double commutants are WOT-closed.
 * `exists_wotCLM_sep_of_isClosed_submodule`: a finite-coordinate separation lemma for WOT-closed
@@ -61,19 +60,14 @@ local notation "H⋆" => StrongDual ℂ H
 
 open ContinuousLinearMapWOT (ofCLM toCLM)
 
-/-- View a subset of operators inside the WOT type-copy. -/
+/-- View a subset of operators inside the WOT type-copy, as its preimage under
+`ContinuousLinearMapWOT.toCLM`. -/
 def Set.toWOT (S : Set B) : Set BWOT :=
   toCLM ⁻¹' S
 
 lemma Set.mem_toWOT_iff {S : Set B} {T : BWOT} :
     T ∈ Set.toWOT (H := H) S ↔ toCLM T ∈ S :=
   Iff.rfl
-
-/-- `Set.toWOT` is the image of the subset under `ContinuousLinearMapWOT.ofCLM`. -/
-lemma Set.toWOT_eq_image (S : Set B) :
-    Set.toWOT (H := H) S = ofCLM '' S := by
-  ext T
-  exact ⟨fun h => ⟨_, h, rfl⟩, by rintro ⟨x, hx, rfl⟩; exact hx⟩
 
 /-- `Set.toWOT` commutes with taking commutants, since `ofCLM` and `toCLM` are mutually inverse
 ring isomorphisms. -/
@@ -87,17 +81,10 @@ lemma Set.toWOT_centralizer (S : Set B) :
   · intro h a ha
     simpa using congrArg toCLM (h (ofCLM a) ha)
 
-/-- A subset of operators is WOT-closed if its image in the WOT type-copy is closed. -/
+/-- A subset of operators is WOT-closed if its copy `Set.toWOT S` in the WOT type-copy is
+closed. -/
 def IsWOTClosed (S : Set B) : Prop :=
   IsClosed (Set.toWOT (H := H) S)
-
-/-- WOT-closedness stated as closedness of the image under the canonical inclusion, the form in
-which the weak operator topology is usually phrased. -/
-lemma isWOTClosed_iff_isClosed_image (S : Set B) :
-    IsWOTClosed (H := H) S ↔
-      IsClosed (ContinuousLinearMap.WOTofCLM (σ := RingHom.id ℂ) (E := H) (F := H) '' S) := by
-  rw [IsWOTClosed, Set.toWOT_eq_image]
-  rfl
 
 /-- The commutant `Set.centralizer S` is WOT-closed. -/
 lemma isWOTClosed_centralizer (S : Set B) : IsWOTClosed (H := H) (Set.centralizer S) := by
