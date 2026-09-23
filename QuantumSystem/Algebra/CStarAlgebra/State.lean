@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
+public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 
 /-!
@@ -62,7 +63,7 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing
 
 noncomputable instance : FunLike (State A) A ℂ where
   coe ω := ω.toPositiveLinearMap
-  coe_injective' ω₁ ω₂ h := by
+  coe_injective ω₁ ω₂ h := by
     obtain ⟨f₁, _⟩ := ω₁
     obtain ⟨f₂, _⟩ := ω₂
     congr
@@ -107,7 +108,7 @@ lemma norm_apply_le (a : A) : ‖ω a‖ ≤ ‖a‖ := by
 /-- States are `1`-Lipschitz. -/
 lemma lipschitzWith_one : LipschitzWith 1 ω := by
   have h : ‖ω.toContinuousLinearMap‖₊ = 1 := NNReal.eq ω.norm_toContinuousLinearMap
-  simpa [h] using ω.toContinuousLinearMap.lipschitzWith
+  exact h ▸ ω.toContinuousLinearMap.lipschitzWith
 
 lemma continuous : Continuous ω := map_continuous ω
 
@@ -159,7 +160,7 @@ lemma norm_apply_sq_le (a : A) : ‖ω a‖ ^ 2 ≤ (ω (star a * a)).re := by
       ((ω.continuous.tendsto _).comp (h_approx.tendsto_mul_right a))
   refine le_of_tendsto h_tendsto ?_
   filter_upwards [h_approx.eventually_star_eq, h_approx.eventually_nnnorm] with e he_star he_norm
-  have he : ‖e‖ ≤ 1 := by simpa using he_norm
+  have he : ‖e‖ ≤ 1 := NNReal.coe_le_one.mpr he_norm
   have hee : (ω (star e * e)).re ≤ 1 :=
     calc (ω (star e * e)).re
         ≤ ‖ω (star e * e)‖ := Complex.re_le_norm _

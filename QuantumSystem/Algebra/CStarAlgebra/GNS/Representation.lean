@@ -177,7 +177,7 @@ lemma tendsto_π_approximateUnit_of_mem_span {x : T.H}
   | mem y hy =>
     obtain ⟨a, rfl⟩ := hy
     exact T.tendsto_π_approximateUnit_orbit a
-  | zero => simpa using tendsto_const_nhds
+  | zero => simp
   | add y z _ _ hy hz => simpa [map_add] using hy.add hz
   | smul c y _ hy => simpa [map_smul] using hy.const_smul c
 
@@ -217,7 +217,7 @@ lemma tendsto_apply_approximateUnit_norm_sq :
 
 /-- The cyclic vector of a GNS triplet is a unit vector: `‖ξ‖ = 1`. -/
 theorem norm_ξ : ‖T.ξ‖ = 1 := by
-  haveI : (CStarAlgebra.approximateUnit A).NeBot :=
+  have : (CStarAlgebra.approximateUnit A).NeBot :=
     (CStarAlgebra.increasingApproximateUnit (A := A)).toIsApproximateUnit.neBot
   -- Upper bound: `‖ξ‖² = lim ω e_α` and `‖ω e‖ ≤ ‖e‖ ≤ 1`.
   have h_le : ‖T.ξ‖ ^ 2 ≤ 1 := by
@@ -313,7 +313,7 @@ private lemma cyclic_correspondence_well_defined (T₁ T₂ : Representation ω)
   have h_map_sub : T₁.π (a - b) T₁.ξ = 0 := by
     calc T₁.π (a - b) T₁.ξ
         = (T₁.π a - T₁.π b) T₁.ξ := by rw [map_sub]
-      _ = T₁.π a T₁.ξ - T₁.π b T₁.ξ := by simp [ContinuousLinearMap.sub_apply]
+      _ = T₁.π a T₁.ξ - T₁.π b T₁.ξ := by simp [sub_apply]
       _ = 0 := by rw [h]; simp
   -- Transfer vanishing inner product to T₂ using equality of inner forms on cyclic vectors
   have h_inner_zero_T₂ : ⟪T₂.π (a - b) T₂.ξ, T₂.π (a - b) T₂.ξ⟫_ℂ = 0 := by
@@ -327,7 +327,7 @@ private lemma cyclic_correspondence_well_defined (T₁ T₂ : Representation ω)
   calc T₂.π a T₂.ξ
       = T₂.π a T₂.ξ - T₂.π (a - b) T₂.ξ := by rw [h_map_sub_T₂]; simp
     _ = T₂.π a T₂.ξ - (T₂.π a - T₂.π b) T₂.ξ := by rw [map_sub]
-    _ = T₂.π a T₂.ξ - (T₂.π a T₂.ξ - T₂.π b T₂.ξ) := by simp [ContinuousLinearMap.sub_apply]
+    _ = T₂.π a T₂.ξ - (T₂.π a T₂.ξ - T₂.π b T₂.ξ) := by simp [sub_apply]
     _ = T₂.π b T₂.ξ := by abel
 
 /-- The cyclic set: `{ π a ξ | a : A }` as a subset of the Hilbert space. -/

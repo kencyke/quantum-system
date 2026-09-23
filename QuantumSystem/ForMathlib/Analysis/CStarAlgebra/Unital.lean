@@ -36,8 +36,10 @@ lemma norm_character_eq_one [Nontrivial B]
     apply ContinuousLinearMap.opNorm_le_bound _ zero_le_one
     intro x
     have h_mem : φ x ∈ spectrum ℂ x := WeakDual.CharacterSpace.apply_mem_spectrum φ x
-    have h_le : (‖φ x‖₊ : ENNReal) ≤ ‖x‖₊ :=
-      (le_iSup₂_of_le (φ x) h_mem le_rfl).trans (spectralRadius_le_nnnorm x)
+    have h_rad : (‖φ x‖₊ : ENNReal) ≤ spectralRadius ℂ x := by
+      rw [spectralRadius_eq_of_unital]
+      exact le_iSup₂_of_le (φ x) h_mem le_rfl
+    have h_le : (‖φ x‖₊ : ENNReal) ≤ ‖x‖₊ := h_rad.trans (spectralRadius_le_nnnorm x)
     simp only [one_mul]; exact mod_cast h_le
   · -- ‖φ‖ ≥ 1: since φ(1) = 1 and ‖1‖ = 1
     have h_le := (WeakDual.toStrongDual φ.val).le_opNorm 1
@@ -95,10 +97,13 @@ lemma norm_sq_add_imaginary_unit_of_selfAdjoint [Nontrivial B] (a : B) (ha : IsS
     rw [h_val, Complex.norm_of_nonneg (by positivity), hw_sq]
   -- Upper bound: spectralRadius b ≤ R² + t²
   have h_le : spectralRadius ℂ b ≤ ENNReal.ofReal (R ^ 2 + t ^ 2) := by
+    rw [spectralRadius_eq_of_unital]
     refine iSup₂_le fun z hz => ?_
     obtain ⟨w, hw, rfl⟩ : z ∈ (fun w => w ^ 2 + (t : ℂ) ^ 2) '' spectrum ℂ a := by simpa [h_spec] using hz
     have hw_norm_le : ‖w‖ ≤ R := by
-      have h1 : (‖w‖₊ : ENNReal) ≤ ρa := le_iSup₂_of_le w hw le_rfl
+      have h1 : (‖w‖₊ : ENNReal) ≤ ρa := by
+        rw [hρa_def, spectralRadius_eq_of_unital]
+        exact le_iSup₂_of_le w hw le_rfl
       have h2 : (‖w‖₊ : ENNReal) ≤ ENNReal.ofReal R := by simpa [hρa_ofReal] using h1
       rw [ENNReal.le_ofReal_iff_toReal_le ENNReal.coe_ne_top hR_nonneg] at h2
       simpa using h2
@@ -115,7 +120,9 @@ lemma norm_sq_add_imaginary_unit_of_selfAdjoint [Nontrivial B] (a : B) (ha : IsS
     have hz_mem : w ^ 2 + (t : ℂ) ^ 2 ∈ spectrum ℂ b := by simpa [h_spec] using ⟨w, hw, rfl⟩
     calc ENNReal.ofReal (R ^ 2 + t ^ 2) = ENNReal.ofReal (‖w‖ ^ 2 + t ^ 2) := by rw [hw_norm]
       _ = (‖w ^ 2 + (t : ℂ) ^ 2‖₊ : ENNReal) := by rw [← ENNReal.ofReal_coe_nnreal, coe_nnnorm, norm_image w hw]
-      _ ≤ spectralRadius ℂ b := le_iSup₂_of_le _ hz_mem le_rfl
+      _ ≤ spectralRadius ℂ b := by
+          rw [spectralRadius_eq_of_unital]
+          exact le_iSup₂_of_le _ hz_mem le_rfl
   -- Combine bounds
   have h_rad : spectralRadius ℂ b = ρa ^ 2 + ENNReal.ofReal (t ^ 2) := by
     have h_eq : spectralRadius ℂ b = ENNReal.ofReal (R ^ 2 + t ^ 2) := le_antisymm h_le h_ge

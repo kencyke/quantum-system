@@ -105,10 +105,10 @@ lemma isSOTClosed_centralizer (S : Set B) : IsSOTClosed (H := H) (Set.centralize
     constructor
     · intro hT a ha
       ext x
-      simpa [mul_apply_eq_comp] using congrArg (fun R => R x) (hT a ha)
+      exact congrArg (fun R => R x) (hT a ha)
     · intro hT a ha
       ext x
-      simpa [mul_apply_eq_comp] using congrArg (fun R => R x) (hT a ha)
+      exact congrArg (fun R => R x) (hT a ha)
   rw [IsSOTClosed, key]
   exact isClosed_biInter fun a _ =>
     isClosed_eq (PointwiseConvergenceCLM.postcomp H a).continuous

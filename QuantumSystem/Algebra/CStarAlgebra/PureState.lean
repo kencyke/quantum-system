@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Analysis.Convex.KreinMilman
 public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import Mathlib.Analysis.Normed.Module.HahnBanach
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.Algebra.CStarAlgebra.State
 public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
@@ -144,10 +145,9 @@ lemma nonneg_of_norm_eq_one_map_one
       apply ((WeakDual.toStrongDual φ).le_opNorm _).trans
       rw [h_norm, one_mul]
       rw [← hy]
-      apply CStarAlgebra.norm_le_norm_of_nonneg_of_le
-      · exact sub_nonneg.mpr (IsSelfAdjoint.le_algebraMap_norm_self hb_sa)
-      · have : 0 ≤ b := StarOrderedRing.nonneg_iff.mpr (AddSubmonoid.subset_closure ⟨a, rfl⟩)
-        exact sub_le_self y this
+      have hb0 : 0 ≤ b := StarOrderedRing.nonneg_iff.mpr (AddSubmonoid.subset_closure ⟨a, rfl⟩)
+      exact CStarAlgebra.norm_le_norm_of_le_of_nonneg (sub_le_self y hb0)
+        (sub_nonneg.mpr (IsSelfAdjoint.le_algebraMap_norm_self b hb_sa))
     linarith
 
 
@@ -183,8 +183,8 @@ private lemma exists_unitization_state_norm (b : A) (hb : 0 ≤ b) (hb_ne : b �
     rw [← h_eq, ← hz_real]
     exact hz_mem
   -- By Gelfand duality, there exists a character φ on C*(b') such that φ(b') = ‖b'‖
-  haveI : IsStarNormal b' := IsSelfAdjoint.isStarNormal (IsSelfAdjoint.of_nonneg hb')
-  haveI : IsClosed (StarAlgebra.elemental ℂ b' : Set (Unitization ℂ A)) :=
+  have : IsStarNormal b' := IsSelfAdjoint.isStarNormal (IsSelfAdjoint.of_nonneg hb')
+  have : IsClosed (StarAlgebra.elemental ℂ b' : Set (Unitization ℂ A)) :=
     StarAlgebra.elemental.isClosed ℂ b'
   have h_spec_S : (‖b'‖ : ℂ) ∈
       spectrum ℂ (⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩ : StarAlgebra.elemental ℂ b') := by
@@ -217,7 +217,7 @@ This is `exists_unitization_state_norm` pulled back along the isometric embeddin
 into its unitization. -/
 private lemma exists_quasiState_norm (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
   ∃ φ ∈ QuasiStateSpace A, φ b = (‖b‖ : ℂ) := by
-  haveI : Nontrivial A := nontrivial_of_ne b 0 hb_ne
+  have : Nontrivial A := nontrivial_of_ne b 0 hb_ne
   obtain ⟨ψ, hψ_norm_eq, hψ_one, hψb_eq⟩ :=
     exists_unitization_state_norm b hb hb_ne
   have hψ_pos : ∀ x : Unitization ℂ A, 0 ≤ x → 0 ≤ ψ x :=
@@ -243,10 +243,8 @@ private lemma exists_quasiState_norm (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
       _ = 1 := mul_one _
   refine ⟨φ, ?_, ?_⟩
   · refine ⟨hφ_pos, ?_⟩
-    simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
-    exact hφ_norm
-  · simpa [φ, inrCLM, inrIso, LinearIsometry.coe_toContinuousLinearMap,
-      LinearIsometry.coe_mk, inrLM, LinearMap.coe_mk, AddHom.coe_mk] using hψb_eq
+    exact mem_closedBall_zero_iff.mpr hφ_norm
+  · exact hψb_eq
 
 
 namespace IsPureState
@@ -353,7 +351,6 @@ lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
     map_smul' := fun c φ => by
       change ((c • φ : WeakDual ℂ A) b).re = c • (φ b).re
       have hcsmul : (c • φ : WeakDual ℂ A) b = (c : ℂ) * φ b := by
-        change ((c : ℝ) • φ : WeakDual ℂ A) b = (c : ℂ) * φ b
         change (c : ℝ) • φ b = (c : ℂ) * φ b
         rw [Complex.real_smul]
       rw [hcsmul]
@@ -418,7 +415,7 @@ lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
   let F := {x ∈ S | ∀ z ∈ S, l z ≤ l x}
   have hF_nonempty : F.Nonempty := ⟨φ, hφ_mem, fun z hz => hφ_max hz⟩
   have hF_compact : IsCompact F := h_exposed.isCompact (QuasiStateSpace.compact A)
-  haveI : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
+  have : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
     @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
   obtain ⟨ψ, hψ_mem_F, hψ_ext⟩ := hF_compact.extremePoints_nonempty hF_nonempty
   have hψ_ext_S : IsPureState ψ := by

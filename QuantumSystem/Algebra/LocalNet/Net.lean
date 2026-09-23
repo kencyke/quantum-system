@@ -417,7 +417,7 @@ class Faithful {K : Type*} [Preorder K] [CausalOrthogonality K] (N : LocalNet K)
 /-- Transport a local algebra along an equality of regions, as a `*`-isomorphism. Used to identify
     local algebras whose regions are propositionally equal. -/
 def algebraCongr {O O' : K} (h : O = O') : N.algebra O ≃⋆ₐ[ℂ] N.algebra O' := by
-  subst h; exact StarAlgEquiv.refl
+  subst h; exact StarAlgEquiv.refl ℂ _
 
 /-- The isotony embeddings are natural with respect to the region-equality transport. -/
 lemma incl_algebraCongr {O₁ O₂ O₁' O₂' : K} (e₁ : O₁ = O₁') (e₂ : O₂ = O₂')

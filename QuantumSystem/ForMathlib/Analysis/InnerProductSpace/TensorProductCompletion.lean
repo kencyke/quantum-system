@@ -9,6 +9,7 @@ public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.RingTheory.TensorProduct.Finite
+public import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 public import Mathlib.Analysis.Normed.Module.FiniteDimension
 public import Mathlib.Topology.Algebra.LinearMapCompletion
 
@@ -243,7 +244,7 @@ lemma exists_orthonormal_rep (z : H₁ ⊗[ℂ] H₂) :
   obtain ⟨N', hN'fin, hz⟩ :=
     TensorProduct.exists_finite_submodule_right_of_setFinite {z} (Set.finite_singleton z)
   obtain ⟨z₀, hz₀⟩ := hz (Set.mem_singleton z)
-  haveI : FiniteDimensional ℂ N' := hN'fin
+  have : FiniteDimensional ℂ N' := hN'fin
   let b := stdOrthonormalBasis ℂ N'
   set ξ : Fin (Module.finrank ℂ N') → H₁ :=
     fun i => TensorProduct.equivFinsuppOfBasisRight b.toBasis z₀ i with hξ

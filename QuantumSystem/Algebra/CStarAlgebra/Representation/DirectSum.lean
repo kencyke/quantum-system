@@ -172,7 +172,7 @@ lemma componentWiseMap_norm_le (F : SectorFamily.{u, v, w} A)
 lemma componentWiseMap_memℓp (F : SectorFamily.{u, v, w} A) (a : A)
     (x : F.directSumHilbert) :
     Memℓp (fun α => componentWiseMap F a α (x.val α)) 2 := by
-  have hx : Memℓp x.val 2 := x.property
+  have hx := lp.memℓp x
   rw [memℓp_gen_iff zero_lt_two] at hx ⊢
   have h2 : (2 : ℝ≥0∞).toReal = 2 := by norm_num
   simp only [h2] at hx ⊢
@@ -200,7 +200,7 @@ lemma componentWiseMap_norm_bound (F : SectorFamily.{u, v, w} A) (a : A)
     simp only [h2] at this
     exact this
   have hsum2 : Summable fun α => ‖x.val α‖ ^ (2 : ℝ) := by
-    have : Memℓp x.val 2 := x.property
+    have := lp.memℓp x
     rw [memℓp_gen_iff zero_lt_two] at this
     simp only [h2] at this
     exact this

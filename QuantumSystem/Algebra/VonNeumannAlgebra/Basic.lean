@@ -145,7 +145,7 @@ noncomputable def boundedLinearOperators.starAlgEquiv :
        commutes' := fun _ => rfl
        map_star' := fun _ => rfl } :
       (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
-    (fun _ => rfl) (fun _ => rfl)
+    (StarAlgHom.ext fun _ => rfl) (StarAlgHom.ext fun _ => rfl)
 
 /-- A von Neumann algebra is closed under scalar multiplication. -/
 lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by

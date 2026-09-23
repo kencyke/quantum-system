@@ -356,7 +356,7 @@ lemma matrixSqrt_mul_self_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
     _ = U * diagonal (fun i => (hA.1.eigenvalues i : ℂ)) * Uᴴ := by
             simp [hD_mul]
     _ = A := by
-            simpa [U] using (hA.1.spectral_theorem).symm
+            exact (hA.1.spectral_theorem).symm
 
 /-- For a positive definite matrix `A`, `A^{1/2} * A^{1/2} = A`. -/
 lemma matrixSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
@@ -993,7 +993,7 @@ lemma spectral_expand (A : Matrix n n ℂ) (hA : A.IsHermitian) :
         (hA.eigenvectorUnitary : Matrix n n ℂ)ᴴ := by
   have h := hA.spectral_theorem
   rw [Unitary.conjStarAlgAut_apply, star_eq_conjTranspose] at h
-  simpa [Function.comp] using h
+  exact h
 
 /-- The j-th column of the eigenvector unitary satisfies the eigenvalue equation:
 A · (column j of U) = eigenvalue j · (column j of U). -/

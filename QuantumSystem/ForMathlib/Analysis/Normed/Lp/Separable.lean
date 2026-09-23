@@ -41,19 +41,6 @@ namespace lp
 
 variable {ι : Type*} {G : ι → Type*} [∀ i, NormedAddCommGroup (G i)]
 
-/-- The single-coordinate embedding `G i → lp G p` is continuous.
-
-It is in fact isometric — `lp.norm_single` — but continuity is all that is needed
-downstream. The scalar field is explicit because it occurs only in the proof, which routes
-through the linear map `lp.lsingle` to get additivity. -/
-lemma continuous_single (𝕜 : Type*) [NontriviallyNormedField 𝕜] [∀ i, NormedSpace 𝕜 (G i)]
-    [DecidableEq ι] {p : ℝ≥0∞} [Fact (1 ≤ p)] (i : ι) :
-    Continuous (fun x : G i => lp.single p i x) := by
-  have hp0 : (0 : ℝ≥0∞) < p := lt_of_lt_of_le zero_lt_one Fact.out
-  have h : ∀ x : G i, ‖lp.lsingle (𝕜 := 𝕜) p i x‖ = ‖x‖ := fun x => by
-    simpa using lp.norm_single hp0 i x
-  simpa using (AddMonoidHomClass.isometry_of_norm (lp.lsingle (𝕜 := 𝕜) p i) h).continuous
-
 /-- An `lp` space over a countable index with separable summands is separable, for any
 exponent `p ≠ ⊤`.
 
@@ -66,7 +53,7 @@ theorem separableSpace_of_ne_top (𝕜 : Type*) [NontriviallyNormedField 𝕜] [
   classical
   set S : Set (lp G p) := ⋃ i, Set.range (fun x : G i => lp.single p i x) with hSdef
   have hS : IsSeparable S :=
-    IsSeparable.iUnion fun i => isSeparable_range (continuous_single 𝕜 i)
+    IsSeparable.iUnion fun i => isSeparable_range (lp.isometry_single (E := G) i).continuous
   have hspan : IsSeparable ((Submodule.span 𝕜 S : Submodule 𝕜 (lp G p)) : Set (lp G p)) :=
     hS.span
   -- The singles span a dense subspace: every element is the sum of its coordinates.

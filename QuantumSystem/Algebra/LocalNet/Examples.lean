@@ -159,7 +159,7 @@ instance : trivialNet.Faithful where
     genuinely moves (`σ_shiftCovariance`), so those statements have content. -/
 noncomputable def shiftCovariance : trivialNet.Covariance :=
   LocalNet.Covariance.ofSitePerm (N := trivialNet) (Equiv.addRight (1 : ℤ))
-    (fun _ => StarAlgEquiv.refl) (fun _ _ => rfl)
+    (fun _ => StarAlgEquiv.refl ℂ _) (fun _ _ => rfl)
 
 /-- **The unit translation moves regions**: it carries the site `0` to the site `1`. So
     `shiftCovariance` is not the identity covariance, and the site permutation recovered from it by
