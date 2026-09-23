@@ -74,11 +74,6 @@ lemma inner_gnsMk (a b : A) : ⟪f.gnsMk a, f.gnsMk b⟫_ℂ = f (star a * b) :=
   rw [gnsMk_apply, gnsMk_apply, inner_coe, preGNS_inner_def]
   simp
 
-/-- `‖[a]‖² = Re f (a* a)`. -/
-lemma norm_gnsMk_sq (a : A) : ‖f.gnsMk a‖ ^ 2 = (f (star a * a)).re := by
-  rw [← inner_self_eq_norm_sq (𝕜 := ℂ), inner_gnsMk]
-  rfl
-
 /-- `‖[a]‖ = √‖f (a* a)‖`. -/
 lemma norm_gnsMk (a : A) : ‖f.gnsMk a‖ = √‖f (star a * a)‖ := by
   rw [gnsMk_apply, norm_coe, preGNS_norm_def']
