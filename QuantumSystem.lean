@@ -27,8 +27,13 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.TFAE
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Diagonal
+public import QuantumSystem.Algebra.VonNeumannAlgebra.MinimalProjection
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SplitInclusion
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.Basic
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInformation
@@ -54,6 +59,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
@@ -62,6 +68,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopolo
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
+public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun

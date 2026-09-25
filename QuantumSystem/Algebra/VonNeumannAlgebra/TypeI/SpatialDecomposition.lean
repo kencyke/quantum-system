@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
+public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.l2Space
@@ -36,7 +37,7 @@ This file assembles the proof ingredients of the type I factor structure theorem
 The remaining steps — the strong-operator reconstruction `a = Σ_{pq} c_{pq}(a) e_{pq}` (in its
 double-commutant form: the matrix units generate `N`) and the identification of `N` with
 `B(ℓ²(F)) ⊗̄ 1` under the spatial isomorphism — are carried out in
-`QuantumSystem.Algebra.VonNeumannAlgebra.StructureTheorem`.
+`QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem`.
 
 ## Conventions
 
@@ -65,8 +66,6 @@ span of the union of the ranges is the whole space; this is the operator-friendl
   multiplication law `e_{pq} e_{rs} = δ_{qr} e_{ps}`.
 * `VonNeumannAlgebra.OrthEquivFam.exists_matrixEntry` — multiplicity one:
   `∃ c, v_p⋆ a v_q = c • e` for `a ∈ N`.
-* `IsPartialIsometry.sourceRangeEquiv` — the isometric equivalence `range (v⋆v) ≃ₗᵢ range (vv⋆)`
-  induced by a partial isometry `v`.
 * `VonNeumannAlgebra.IsFactor.exists_lp_decomposition` — the `ℓ²`-sum form `H ≅ ℓ²(F; eH)` of
   the spatial decomposition of a type I factor.
 * `VonNeumannAlgebra.IsFactor.exists_tmul_decomposition` — the literal tensor form
@@ -89,43 +88,6 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-! ### Covering families of `e`-equivalent projections -/
 
 namespace VonNeumannAlgebra
-
-/-- The range projection of a Murray–von Neumann equivalence with nonzero source is nonzero. -/
-lemma MvNEquiv.ne_zero {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
-    (h : p ∼[N] q) (hp : p ≠ 0) : q ≠ 0 := by
-  obtain ⟨v, _, hvpi, hvp, hvq⟩ := h
-  intro hq0
-  apply hp
-  have hv0 : v = 0 := by
-    have hpi : v * star v * v = v := hvpi
-    rw [hvq, hq0, zero_mul] at hpi
-    exact hpi.symm
-  rw [← hvp, hv0]; simp
-
-/-- **Minimality transports along Murray–von Neumann equivalence.** If `e` is a minimal projection
-and `e ∼[N] p`, then `p` is minimal: with `v⋆v = e` and `vv⋆ = p`, the corner computes as
-`p a p = v (e (v⋆ a v) e) v⋆ = c • v e v⋆ = c • p`. -/
-lemma IsMinimalProjection.of_mvNEquiv {N : VonNeumannAlgebra H} {e p : H →L[ℂ] H}
-    (he : IsMinimalProjection N e) (h : e ∼[N] p) : IsMinimalProjection N p := by
-  have hpproj : IsStarProjection p := h.isStarProjection_right
-  have hp0 : p ≠ 0 := h.ne_zero he.2.2.1
-  obtain ⟨v, hvN, hvpi, hvp, hvq⟩ := h
-  have hpN : p ∈ N := by rw [← hvq]; exact mul_mem hvN (star_mem hvN)
-  have hve : v * e = v := by rw [← hvp]; exact IsPartialIsometry.mul_source hvpi
-  have hev : e * star v = star v := by
-    have := congrArg star hve
-    rwa [star_mul, he.1.isSelfAdjoint.star_eq] at this
-  refine ⟨hpproj, hpN, hp0, fun a haN => ?_⟩
-  obtain ⟨c, hc⟩ := he.2.2.2 (star v * a * v) (mul_mem (mul_mem (star_mem hvN) haN) hvN)
-  refine ⟨c, ?_⟩
-  calc p * a * p
-      = (v * star v) * a * (v * star v) := by rw [hvq]
-    _ = (v * e) * (star v * a * v) * (e * star v) := by
-        rw [hve, hev]; simp only [mul_assoc]
-    _ = v * (e * (star v * a * v) * e) * star v := by simp only [mul_assoc]
-    _ = v * (c • e) * star v := by rw [hc]
-    _ = c • (v * e * star v) := by simp only [mul_smul_comm, smul_mul_assoc]
-    _ = c • p := by rw [hve, hvq]
 
 /-- A family of pairwise-orthogonal nonzero projections in `N`, each Murray–von Neumann equivalent
 to `e`. -/
@@ -376,162 +338,11 @@ theorem OrthEquivFam.exists_matrixEntry (hF : OrthEquivFam N e F)
 
 end VonNeumannAlgebra
 
-/-! ### Partial-isometry isometries and the spatial ℓ² decomposition -/
+/-! ### The spatial ℓ² decomposition
 
-section LpCongr
-
-variable {α : Type*} {𝕜 : Type*} [RCLike 𝕜] {G G' : α → Type*}
-  [∀ i, NormedAddCommGroup (G i)] [∀ i, NormedSpace 𝕜 (G i)]
-  [∀ i, NormedAddCommGroup (G' i)] [∀ i, NormedSpace 𝕜 (G' i)]
-
-/-- A family of isometries preserves `Memℓp`: norms are pointwise unchanged. -/
-lemma memℓp_congr_linearIsometryEquiv (e : ∀ i, G i ≃ₗᵢ[𝕜] G' i) {f : ∀ i, G i}
-    (hf : Memℓp f 2) : Memℓp (fun i => e i (f i)) 2 := by
-  apply Memℓp.of_norm
-  have hnorm : (fun i => ‖e i (f i)‖) = fun i => ‖f i‖ := funext fun i => (e i).norm_map (f i)
-  rw [hnorm]
-  exact hf.norm
-
-/-- A family of linear isometric equivalences `G i ≃ₗᵢ G' i` induces a linear isometric
-equivalence between the `ℓ²` sums `lp G 2 ≃ₗᵢ lp G' 2`, applied componentwise. -/
-noncomputable def lpCongr (e : ∀ i, G i ≃ₗᵢ[𝕜] G' i) : lp G 2 ≃ₗᵢ[𝕜] lp G' 2 where
-  toFun f := ⟨fun i => e i (f i), memℓp_congr_linearIsometryEquiv e (lp.memℓp f)⟩
-  invFun g := ⟨fun i => (e i).symm (g i), memℓp_congr_linearIsometryEquiv (fun i => (e i).symm)
-    (lp.memℓp g)⟩
-  left_inv f := by
-    refine Subtype.ext (funext fun i => ?_)
-    change (e i).symm (e i (f i)) = f i
-    rw [LinearIsometryEquiv.symm_apply_apply]
-  right_inv g := by
-    refine Subtype.ext (funext fun i => ?_)
-    change e i ((e i).symm (g i)) = g i
-    rw [LinearIsometryEquiv.apply_symm_apply]
-  map_add' x y := by
-    refine Subtype.ext (funext fun i => ?_)
-    change e i ((x + y) i) = e i (x i) + e i (y i)
-    rw [lp.coeFn_add, Pi.add_apply, map_add]
-  map_smul' c f := by
-    refine Subtype.ext (funext fun i => ?_)
-    change e i ((c • f) i) = c • e i (f i)
-    rw [lp.coeFn_smul, Pi.smul_apply, map_smul]
-  norm_map' f := by
-    have hp : (0 : ℝ) < (2 : ℝ≥0∞).toReal := by norm_num
-    rw [lp.norm_eq_tsum_rpow hp, lp.norm_eq_tsum_rpow hp]
-    congr 1
-    refine tsum_congr fun i => ?_
-    congr 1
-    exact (e i).norm_map (f i)
-
-end LpCongr
-
-namespace IsPartialIsometry
-
-/-- For `x` in the source subspace (`p x = x` where `p = v⋆v`), the map preserves the norm:
-`‖v x‖ = ‖x‖`. -/
-lemma norm_apply {v : H →L[ℂ] H} {p : H →L[ℂ] H}
-    (hsource : star v * v = p) {x : H} (hx : (p : H →L[ℂ] H) x = x) : ‖v x‖ = ‖x‖ := by
-  have hinner : (inner ℂ (v x) (v x) : ℂ) = inner ℂ x x := by
-    rw [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.star_eq_adjoint,
-      ← mul_apply_eq_comp, hsource, hx]
-  have h2 : ‖v x‖ ^ 2 = ‖x‖ ^ 2 := by
-    rw [← inner_self_eq_norm_sq (𝕜 := ℂ), ← inner_self_eq_norm_sq (𝕜 := ℂ)]
-    exact congrArg RCLike.re hinner
-  have h3 := congrArg Real.sqrt h2
-  rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq (norm_nonneg _)] at h3
-
-/-- The image of any vector under a partial isometry lands in the range subspace: if `q = v v⋆`
-then `q (v x) = v x`. -/
-lemma apply_mem_range {v : H →L[ℂ] H} (hv : IsPartialIsometry v) {q : H →L[ℂ] H}
-    (hrange : v * star v = q) (x : H) : (q : H →L[ℂ] H) (v x) = v x := by
-  rw [← mul_apply_eq_comp, ← hrange, hv]
-
-/-- A partial isometry `v` with source projection `star v * v = p` and range projection
-`v * star v = q` restricts to a linear isometric equivalence from the source subspace
-`range p` onto the range subspace `range q`. -/
-noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
-    {p q : H →L[ℂ] H} (hsource : star v * v = p) (hrange : v * star v = q) :
-    LinearMap.range (p : H →ₗ[ℂ] H) ≃ₗᵢ[ℂ] LinearMap.range (q : H →ₗ[ℂ] H) := by
-  have hpidem : (p : H →L[ℂ] H) * p = p := by
-    have := hv.isStarProjection_star_mul_self.isIdempotentElem
-    rwa [hsource] at this
-  have hqidem : (q : H →L[ℂ] H) * q = q := by
-    have := hv.isStarProjection_mul_star_self.isIdempotentElem
-    rwa [hrange] at this
-  have hsvpi : star v * v * star v = star v := by
-    have h : star v * star (star v) * star v = star v := IsPartialIsometry.star hv
-    rwa [star_star] at h
-  have hfix : ∀ {x : H}, x ∈ LinearMap.range (p : H →ₗ[ℂ] H) → (p : H →L[ℂ] H) x = x := by
-    rintro x ⟨z, rfl⟩
-    rw [ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hpidem]
-  refine LinearIsometryEquiv.ofSurjective
-    { toFun := fun ξ => ⟨v ξ.1, ⟨v ξ.1, by
-        rw [ContinuousLinearMap.coe_coe]; exact hv.apply_mem_range hrange ξ.1⟩⟩
-      map_add' := fun a b => by apply Subtype.ext; simp
-      map_smul' := fun c a => by apply Subtype.ext; simp
-      norm_map' := fun ξ => norm_apply hsource (hfix ξ.2) } ?_
-  rintro ⟨η, hη⟩
-  have hqfix : (q : H →L[ℂ] H) η = η := by
-    obtain ⟨z, hz⟩ := hη
-    rw [← hz, ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hqidem]
-  have hmem : star v η ∈ LinearMap.range (p : H →ₗ[ℂ] H) := by
-    refine ⟨star v η, ?_⟩
-    rw [ContinuousLinearMap.coe_coe, show (p : H →L[ℂ] H) (star v η) = (p * star v) η from rfl,
-      ← hsource, hsvpi]
-  refine ⟨⟨star v η, hmem⟩, Subtype.ext ?_⟩
-  change v (star v η) = η
-  rw [← mul_apply_eq_comp, hrange, hqfix]
-
-end IsPartialIsometry
-
-/-- A vector in the range of a star projection is fixed by it: `p x = x`. -/
-lemma IsStarProjection.apply_eq_self_of_mem_range {p : H →L[ℂ] H} (hp : IsStarProjection p)
-    {x : H} (hx : x ∈ LinearMap.range (p : H →ₗ[ℂ] H)) : (p : H →L[ℂ] H) x = x := by
-  obtain ⟨z, rfl⟩ := hx
-  rw [ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hp.isIdempotentElem]
-
-/-- The range of a star projection is closed: it equals the kernel of `1 - p`. -/
-lemma IsStarProjection.isClosed_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
-    IsClosed (LinearMap.range (p : H →ₗ[ℂ] H) : Set H) := by
-  have hker : LinearMap.range (p : H →ₗ[ℂ] H)
-      = LinearMap.ker ((1 - p : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
-    ext x
-    simp only [LinearMap.mem_range, LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
-      sub_apply, one_apply_eq_self, sub_eq_zero]
-    constructor
-    · rintro ⟨z, rfl⟩
-      rw [← mul_apply_eq_comp, hp.isIdempotentElem]
-    · intro hx
-      exact ⟨x, hx.symm⟩
-  rw [hker]
-  exact (1 - p).isClosed_ker
-
-/-- The range of a star projection, as a closed subspace, is complete. -/
-lemma IsStarProjection.completeSpace_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
-    CompleteSpace (LinearMap.range (p : H →ₗ[ℂ] H)) :=
-  completeSpace_coe_iff_isComplete.mpr hp.isClosed_range.isComplete
-
-/-- The inverse of the partial-isometry-induced equivalence acts as `v⋆`: for `η` in the range
-subspace, `(sourceRangeEquiv v).symm η = v⋆ η`. -/
-lemma IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
-    {p q : H →L[ℂ] H} (hsource : star v * v = p) (hrange : v * star v = q)
-    (η : LinearMap.range (q : H →ₗ[ℂ] H)) :
-    ((hv.sourceRangeEquiv hsource hrange).symm η : H) = star v (η : H) := by
-  have hsvpi : star v * v * star v = star v := by
-    have h : star v * star (star v) * star v = star v := IsPartialIsometry.star hv
-    rwa [star_star] at h
-  have hq : IsStarProjection q := by rw [← hrange]; exact hv.isStarProjection_mul_star_self
-  have hqfix : (q : H →L[ℂ] H) (η : H) = (η : H) := hq.apply_eq_self_of_mem_range η.2
-  have hmem : star v (η : H) ∈ LinearMap.range (p : H →ₗ[ℂ] H) :=
-    ⟨star v (η : H), by
-      rw [ContinuousLinearMap.coe_coe, ← hsource, ← mul_apply_eq_comp, hsvpi]⟩
-  have hG : (hv.sourceRangeEquiv hsource hrange) ⟨star v (η : H), hmem⟩ = η := by
-    apply Subtype.ext
-    change v (star v (η : H)) = (η : H)
-    rw [← mul_apply_eq_comp, hrange, hqfix]
-  have hsymm : (hv.sourceRangeEquiv hsource hrange).symm η = ⟨star v (η : H), hmem⟩ :=
-    (hv.sourceRangeEquiv hsource hrange).injective (by
-      rw [LinearIsometryEquiv.apply_symm_apply]; exact hG.symm)
-  rw [hsymm]
+Built from the partial-isometry equivalences `IsPartialIsometry.sourceRangeEquiv`
+(`QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry`) and `lpCongr`
+(`QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace`). -/
 
 namespace VonNeumannAlgebra
 
@@ -548,8 +359,10 @@ lemma OrthEquivFam.isHilbertSum {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
   · rintro ⟨pi, hpi⟩ ⟨pj, hpj⟩ hij ⟨v, hv⟩ ⟨w, hw⟩
     have hne : pi ≠ pj := fun h => hij (Subtype.ext h)
     have h0 : (pi : H →L[ℂ] H) * pj = 0 := hF.2 hpi hpj hne
-    have hvf : (pi : H →L[ℂ] H) v = v := (hF.1 pi hpi).1.apply_eq_self_of_mem_range hv
-    have hwf : (pj : H →L[ℂ] H) w = w := (hF.1 pj hpj).1.apply_eq_self_of_mem_range hw
+    have hvf : (pi : H →L[ℂ] H) v = v := (LinearMap.IsIdempotentElem.mem_range_iff
+      (ContinuousLinearMap.IsIdempotentElem.toLinearMap (hF.1 pi hpi).1.isIdempotentElem)).mp hv
+    have hwf : (pj : H →L[ℂ] H) w = w := (LinearMap.IsIdempotentElem.mem_range_iff
+      (ContinuousLinearMap.IsIdempotentElem.toLinearMap (hF.1 pj hpj).1.isIdempotentElem)).mp hw
     have e1 : (inner ℂ v w : ℂ) = inner ℂ ((pi : H →L[ℂ] H) v) ((pj : H →L[ℂ] H) w) := by
       rw [hvf, hwf]
     change (inner ℂ v w : ℂ) = 0
@@ -609,7 +422,8 @@ lemma OrthEquivFam.coe_hilbertSumEquiv_apply {N : VonNeumannAlgebra H} {e : H �
   have hii : (i : H →L[ℂ] H)
       ((LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i))
       = (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i) :=
-    (hF.1 i.1 i.2).1.apply_eq_self_of_mem_range (Submodule.coe_mem _)
+    (LinearMap.IsIdempotentElem.mem_range_iff
+      (ContinuousLinearMap.IsIdempotentElem.toLinearMap (hF.1 i.1 i.2).1.isIdempotentElem)).mp (Submodule.coe_mem _)
   have hsingle : HasSum
       (fun j : F => (i : H →L[ℂ] H)
         ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j)))
@@ -620,7 +434,8 @@ lemma OrthEquivFam.coe_hilbertSumEquiv_apply {N : VonNeumannAlgebra H} {e : H �
           ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j))
           = (LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
               ((hHS.linearIsometryEquiv y) j) :=
-        (hF.1 j.1 j.2).1.apply_eq_self_of_mem_range (Submodule.coe_mem _)
+        (LinearMap.IsIdempotentElem.mem_range_iff
+      (ContinuousLinearMap.IsIdempotentElem.toLinearMap (hF.1 j.1 j.2).1.isIdempotentElem)).mp (Submodule.coe_mem _)
       have hij0 : (i : H →L[ℂ] H) * (j : H →L[ℂ] H) = 0 :=
         hF.2 i.2 j.2 (fun h => hj (Subtype.ext h).symm)
       calc (i : H →L[ℂ] H)

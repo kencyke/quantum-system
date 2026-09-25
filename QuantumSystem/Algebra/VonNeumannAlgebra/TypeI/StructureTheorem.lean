@@ -5,10 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition
+public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Algebra.Star.Subalgebra
 
 /-!
@@ -19,7 +20,7 @@ projection `e`: there is a linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F
 becomes exactly the tensor factor `B(ℓ²(F)) ⊗̄ 1` and `N'` becomes the right factor `1 ⊗̄ B(eH)`.
 The ingredients — the covering orthogonal family `F` (`OrthEquivFam`), the matrix units
 `e_{pq} = v_p v_q⋆`, and the spatial isomorphism `multiplicityEquiv` — are built in
-`QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition`. The proof here has two halves.
+`QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition`. The proof here has two halves.
 
 **Generation half.** The system of matrix units generates `N` as a von Neumann algebra:
 
@@ -256,41 +257,11 @@ theorem OrthEquivFam.mem_sotClosure_adjoin (hF : OrthEquivFam N e F)
 
 /-! ### Spatial identification with the tensor factor `B(ℓ²(F)) ⊗̄ 1` -/
 
-/-- The `i`-th standard basis vector `δ_i = lp.single 2 i 1` of `ℓ²(F) = lp (fun _ : F => ℂ) 2`.
-This is a thin wrapper whose only purpose is to pin the index family `fun _ : F => ℂ`, so that the
-basis vectors are unambiguous in scalar positions (such as inner products). -/
-noncomputable def lpDelta [DecidableEq F] (i : F) : lp (fun _ : F => ℂ) 2 :=
-  lp.single (E := fun _ : F => ℂ) 2 i (1 : ℂ)
-
-/-- `δ i` abbreviates the standard basis vector `lpDelta i` of `ℓ²(F)`, matching the `δ_i` of the
+/-- `δ i` abbreviates the standard basis vector `lp.single 2 i 1` of `ℓ²(F)`, matching the `δ_i` of the
 informal text. (A Dirac bra-ket `|x⟩⟨y|` notation for the rank-one operator is deliberately not
 introduced here: a leading `|` token collides with the set-builder `{y | … }` used in the `htop`
 hypotheses throughout this file.) -/
-local notation "δ" => lpDelta
-
-omit [CompleteSpace H] in
-/-- `δ_i` unfolds to the `ℓ²` standard basis vector `lp.single 2 i 1`. -/
-lemma lpDelta_apply [DecidableEq F] (i : F) :
-    lpDelta i = lp.single (E := fun _ : F => ℂ) 2 i (1 : ℂ) := rfl
-
-omit [CompleteSpace H] in
-/-- The basis vectors `δ_i` are unit vectors. -/
-lemma lpDelta_norm [DecidableEq F] (i : F) : ‖lpDelta i‖ = 1 := by
-  rw [lpDelta_apply, lp.norm_single (by norm_num), norm_one]
-
-omit [CompleteSpace H] in
-/-- The standard basis vectors `δ_i` span a dense subspace of `ℓ²(F)`. -/
-lemma dense_span_lpDelta [DecidableEq F] :
-    Dense (Submodule.span ℂ (Set.range (lpDelta : F → lp (fun _ : F => ℂ) 2)) :
-      Set (lp (fun _ : F => ℂ) 2)) := by
-  intro g
-  have hsum : HasSum (fun i : F => lp.single (E := fun _ : F => ℂ) 2 i (g i)) g :=
-    lp.hasSum_single (by norm_num) g
-  refine mem_closure_of_tendsto hsum (Filter.Eventually.of_forall (fun s => ?_))
-  refine Submodule.sum_mem _ (fun i _ => ?_)
-  rw [show lp.single (E := fun _ : F => ℂ) 2 i (g i) = (g i) • lpDelta i by
-    rw [lpDelta_apply, ← lp.single_smul, smul_eq_mul, mul_one]]
-  exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨i, rfl⟩)
+local notation "δ " i:max => lp.single (E := fun _ => ℂ) 2 i (1 : ℂ)
 
 /-- **Explicit multiplicity coordinate.** Under the spatial decomposition the `i`-th coordinate of
 `y` in `ℓ²(F; eH)` is `v_i⋆ y`, where `v_i` is the equivalence partial isometry `e ≅ i`. -/
@@ -328,7 +299,7 @@ theorem OrthEquivFam.hasSum_tmul_spatialEquiv (hF : OrthEquivFam N e F)
       (by norm_num) (hF.multiplicityEquiv htop y)).mapL
       (lpTensorEquiv (ι := F)
         (K := LinearMap.range (e : H →ₗ[ℂ] H))).toLinearIsometry.toContinuousLinearMap
-  simpa only [OrthEquivFam.spatialEquiv, lpDelta, LinearIsometryEquiv.coe_toLinearIsometry,
+  simpa only [OrthEquivFam.spatialEquiv, LinearIsometryEquiv.coe_toLinearIsometry,
     LinearIsometry.coe_toContinuousLinearMap, lpTensorEquiv_single,
     LinearIsometryEquiv.trans_apply] using h
 
@@ -376,13 +347,13 @@ lemma OrthEquivFam.amplifyLeft_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
       = (inner ℂ (δ q) (δ i) : ℂ) • tmul (δ p) (hF.multiplicityEquiv htop y i) :=
     fun i => by rw [amplifyLeft_tmul, InnerProductSpace.rankOne_apply, tmul_smul_left]
   have hqq : (inner ℂ (δ q) (δ q) : ℂ) = 1 := by
-    rw [lpDelta_apply, lp.inner_single_left, lp.coeFn_single, Pi.single_eq_same,
+    rw [lp.inner_single_left, lp.coeFn_single, Pi.single_eq_same,
       RCLike.inner_apply, map_one, mul_one]
   have hz : ∀ i : F, i ≠ q → amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
       (tmul (δ i) (hF.multiplicityEquiv htop y i)) = 0 := by
     intro i hi
     have hzero : (inner ℂ (δ q) (δ i) : ℂ) = 0 := by
-      rw [lpDelta_apply, lpDelta_apply, lp.inner_single_left, lp.coeFn_single,
+      rw [lp.inner_single_left, lp.coeFn_single,
         Pi.single_eq_of_ne (Ne.symm hi), inner_zero_right]
     rw [key i, hzero, zero_smul]
   have hval : amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
@@ -437,7 +408,7 @@ lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
   have hcomm : VonNeumannAlgebra.commutantSet T = vnTensorRight := by
     refine le_antisymm (fun x hx => ?_) ?_
     · refine mem_vnTensorRight_of_commutes_dense (δ (Classical.arbitrary F))
-        (lpDelta_norm _) (Set.range lpDelta) dense_span_lpDelta x (fun f hf => ?_)
+        (lp.norm_single_one two_pos _) (Set.range fun i : F => δ i) lp.dense_span_single x (fun f hf => ?_)
       obtain ⟨p, rfl⟩ := hf
       have hg : amplifyLeft (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))
           (InnerProductSpace.rankOne ℂ (δ p) (δ (Classical.arbitrary F))) ∈ T :=
@@ -453,9 +424,6 @@ lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
       rw [amplifyLeft_star]
       exact amplifyLeft_comp_amplifyRight
         (star (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) B
-  have : Nontrivial (lp (fun _ : F => ℂ) 2) :=
-    ⟨lpDelta (Classical.arbitrary F), 0, by
-      rw [← norm_ne_zero_iff, lpDelta_norm]; norm_num⟩
   exact (congrArg VonNeumannAlgebra.commutant hcomm).trans
     (vnTensorRight_commutant (H₁ := lp (fun _ : F => ℂ) 2)
       (H₂ := LinearMap.range (e : H →ₗ[ℂ] H)))
@@ -500,9 +468,6 @@ theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_vnTensorRight (hF : OrthEqui
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] :
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) N′ = vnTensorRight := by
-  have : Nontrivial (lp (fun _ : F => ℂ) 2) :=
-    ⟨lpDelta (Classical.arbitrary F), 0, by
-      rw [← norm_ne_zero_iff, lpDelta_norm]; norm_num⟩
   rw [← VonNeumannAlgebra.conj_commutant, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     vnTensorLeft_commutant]
 
