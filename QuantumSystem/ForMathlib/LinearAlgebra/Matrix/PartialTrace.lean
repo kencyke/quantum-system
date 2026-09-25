@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.Complex.Basic
-public import Mathlib.LinearAlgebra.Matrix.Trace
+public import Mathlib.LinearAlgebra.Matrix.PosDef
 
 /-!
 # Partial trace of a matrix over a tensor factor
@@ -99,5 +99,30 @@ theorem traceLeft_eq_traceRight_prodComm {l c n : Type*} [Fintype n]
   simp only [Matrix.trace, Matrix.diag_apply, traceLeft_apply]
   rw [Finset.sum_comm]
   exact (Fintype.sum_prod_type fun p : n × l => M p p).symm
+
+section PosSemidef
+
+open scoped ComplexOrder
+
+/-- The right partial trace preserves positive semidefiniteness (it is a sum of principal
+submatrices). -/
+lemma traceRight_posSemidef {l n : Type*} [Fintype n]
+    {M : Matrix (l × n) (l × n) ℂ} (hM : M.PosSemidef) : (Matrix.traceRight M).PosSemidef := by
+  have hsum : Matrix.traceRight M
+      = ∑ k : n, M.submatrix (fun i : l => (i, k)) (fun j : l => (j, k)) := by
+    ext i j; simp [Matrix.traceRight_apply, Matrix.sum_apply, Matrix.submatrix_apply]
+  rw [hsum]
+  exact Matrix.posSemidef_sum _ (fun k _ => hM.submatrix _)
+
+/-- The left partial trace preserves positive semidefiniteness. -/
+lemma traceLeft_posSemidef {l n : Type*} [Fintype n]
+    {M : Matrix (n × l) (n × l) ℂ} (hM : M.PosSemidef) : (Matrix.traceLeft M).PosSemidef := by
+  have hsum : Matrix.traceLeft M
+      = ∑ k : n, M.submatrix (fun i : l => (k, i)) (fun j : l => (k, j)) := by
+    ext i j; simp [Matrix.traceLeft_apply, Matrix.sum_apply, Matrix.submatrix_apply]
+  rw [hsum]
+  exact Matrix.posSemidef_sum _ (fun k _ => hM.submatrix _)
+
+end PosSemidef
 
 end Matrix

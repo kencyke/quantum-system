@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.PartialTrace
 
 /-!
 # Strong subadditivity of the von Neumann entropy

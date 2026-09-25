@@ -6,7 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
-public import QuantumSystem.Analysis.Matrix.Channel
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 
 /-!

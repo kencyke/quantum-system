@@ -53,7 +53,6 @@ public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
 public import QuantumSystem.Analysis.Entropy.VonNeumann.StrongSubadditivity
-public import QuantumSystem.Analysis.Matrix.Channel
 public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
 public import QuantumSystem.Analysis.Matrix.DensityMatrix.Kronecker
 public import QuantumSystem.Analysis.Matrix.Effros
@@ -62,6 +61,11 @@ public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.PartialTrace
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
 public import QuantumSystem.Analysis.UnboundedOperator.Resolvent
 public import QuantumSystem.Analysis.UnboundedOperator.ResolventCFC
@@ -107,6 +111,7 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
 public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex

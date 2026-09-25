@@ -10,6 +10,7 @@ public import QuantumSystem.Analysis.Entropy.Araki.Matrix
 public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.Umegaki.ChannelDual
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ProdLp
 
