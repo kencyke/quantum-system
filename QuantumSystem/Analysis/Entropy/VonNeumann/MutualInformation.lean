@@ -6,9 +6,9 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CFC.Diagonal
-public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
-public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
+public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
+public import QuantumSystem.State.Kronecker
 
 /-!
 # Mutual-information identity
@@ -20,9 +20,9 @@ product index type `n × m`:
   `D(ρ_AB ‖ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
 
 It is representation-free; the analytic core reused by the direct proof
-(`Analysis/Entropy/StrongSubadditivity.lean`) and, via transport, by the planned split-net proof
-(`Analysis/Entropy/SplitSSA.lean`, not yet formalised — the split property it rests on is
-`LocalNet.SplitProperty`).
+(`Analysis/Entropy/VonNeumann/StrongSubadditivity.lean`) and, via transport, by the planned
+split-net proof (`Analysis/Entropy/VonNeumann/SplitSSA.lean`, not yet formalised — the split
+property it rests on is `LocalNet.SplitProperty`).
 -/
 
 @[expose] public section

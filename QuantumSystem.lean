@@ -47,13 +47,12 @@ public import QuantumSystem.Analysis.Entropy.Araki.Commutative
 public import QuantumSystem.Analysis.Entropy.Araki.Matrix
 public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.Araki.Vector
-public import QuantumSystem.Analysis.Entropy.KroneckerProduct
-public import QuantumSystem.Analysis.Entropy.MutualInformation
-public import QuantumSystem.Analysis.Entropy.StrongSubadditivity
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
 public import QuantumSystem.Analysis.Entropy.Umegaki.ChannelDual
 public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
-public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
+public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
+public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
+public import QuantumSystem.Analysis.Entropy.VonNeumann.StrongSubadditivity
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
@@ -113,3 +112,4 @@ public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.Notation
 public import QuantumSystem.State
+public import QuantumSystem.State.Kronecker

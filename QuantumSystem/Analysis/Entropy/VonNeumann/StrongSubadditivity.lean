@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.Entropy.MutualInformation
+public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
 
 /-!
 # Strong subadditivity of the von Neumann entropy
