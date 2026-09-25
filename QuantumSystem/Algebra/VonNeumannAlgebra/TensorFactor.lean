@@ -6,11 +6,9 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
-public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
-public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # The tensor von Neumann factors `B(H₁) ⊗̄ 1`, `1 ⊗̄ B(H₂)` and the amplification `1 ⊗ M`
@@ -134,8 +132,10 @@ noncomputable def tmulRightL (f : H₁) : H₂ →L[ℂ] HilbertTensor H₁ H₂
 /-- The inclusion `tmulRightL f` sends `z` to the elementary tensor `f ⊗ z`. -/
 @[simp] lemma tmulRightL_apply (f : H₁) (z : H₂) : tmulRightL f z = tmul f z := rfl
 
-/-- The left and right amplifications commute: `(A ⊗̂ 1)(1 ⊗̂ B) = A ⊗̂ B = (1 ⊗̂ B)(A ⊗̂ 1)`. -/
-theorem amplifyLeft_comp_amplifyRight (A : H₁ →L[ℂ] H₁) (B : H₂ →L[ℂ] H₂) :
+/-- The left and right amplifications commute: `(A ⊗̂ 1)(1 ⊗̂ B) = A ⊗̂ B = (1 ⊗̂ B)(A ⊗̂ 1)`, also
+for `A : H₁ → H₃` between different first factors. -/
+theorem amplifyLeft_comp_amplifyRight {H₃ : Type*} [NormedAddCommGroup H₃] [InnerProductSpace ℂ H₃]
+    (A : H₁ →L[ℂ] H₃) (B : H₂ →L[ℂ] H₂) :
     (amplifyLeft (H₂ := H₂) A).comp (amplifyRight (H₁ := H₁) B)
       = (amplifyRight B).comp (amplifyLeft A) := by
   refine ContinuousLinearMap.ext fun w => ?_
@@ -372,7 +372,7 @@ is a `⋆`-isomorphism `B(H₁) ≃⋆ₐ B(H₁) ⊗̄ 1` (`amplifyLeftStarAlgE
 /-- The left amplification `A ↦ A ⊗̂ 1` is injective (for nontrivial `H₂`): evaluating on pure
 tensors `x ⊗̂ g` with `g ≠ 0` recovers `A x` up to the norm factor `‖g‖`. -/
 lemma amplifyLeft_injective [Nontrivial H₂] :
-    Function.Injective (amplifyLeft (H₁ := H₁) (H₂ := H₂)) := by
+    Function.Injective (amplifyLeft (H₁ := H₁) (H₂ := H₂) (H₃ := H₁)) := by
   intro A₁ A₂ h
   obtain ⟨g, hg⟩ := exists_ne (0 : H₂)
   ext x
