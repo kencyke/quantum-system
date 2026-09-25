@@ -20,6 +20,16 @@ Notable results formalized in this repository include:
 - **Umegaki relative entropy for finite-dimensional density matrices** —
   D(ρ‖σ) = Tr ρ (log ρ − log σ), defined on `EReal` so that
   supp(ρ) ⊄ supp(σ) is admitted as +∞.
+- **Relative Tomita and relative modular operators** — for a von Neumann
+  algebra M and vectors ξ, η, the closable conjugate-linear operator
+  S_{η,ξ} : xξ + ζ ↦ s(ξ) x\* η and Δ_{η,ξ} = S̄†S̄, which is positive
+  self-adjoint (von Neumann's theorem). States need not be faithful:
+  the support theorem gives μ_ξ{0} = 0 ⟺ s(ξ) ≤ s(η), where μ_ξ is the spectral
+  measure of Δ_{η,ξ} at ξ.
+- **Araki relative entropy** — S(ψ‖φ) = −⟨ξ, log Δ_{η,ξ} ξ⟩ = −∫ log λ dμ_ξ(λ)
+  for normal positive functionals on a von Neumann algebra, defined on `EReal`
+  and independent of the representing vectors. Non-negativity for states and
+  S = +∞ when s(ψ) ≰ s(φ) are proved.
 - **Strong subadditivity of the von Neumann entropy** — for density matrices on a
   tripartite finite-dimensional tensor product ℋ_A ⊗ ℋ_B ⊗ ℋ_C,
   S(ρ_AB) + S(ρ_BC) ≥ S(ρ_ABC) + S(ρ_B). The current statement is

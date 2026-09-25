@@ -42,6 +42,11 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.Analysis.CFC.Diagonal
+public import QuantumSystem.Analysis.Entropy.Araki.Basic
+public import QuantumSystem.Analysis.Entropy.Araki.Commutative
+public import QuantumSystem.Analysis.Entropy.Araki.Matrix
+public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
+public import QuantumSystem.Analysis.Entropy.Araki.Vector
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInformation
 public import QuantumSystem.Analysis.Entropy.RelativeEntropy
@@ -71,6 +76,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctiona
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
@@ -98,6 +104,7 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
+public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
 public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap

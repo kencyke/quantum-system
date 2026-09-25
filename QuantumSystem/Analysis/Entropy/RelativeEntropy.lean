@@ -214,7 +214,7 @@ end QuantumInfo
 
 /-- Change-of-basis unitary between eigenvector bases of ρ and σ.
 W = Vᴴ * U where V = eigenvectors of σ, U = eigenvectors of ρ. -/
-private noncomputable def eigW (ρ σ : DensityMatrix n) : Matrix n n ℂ :=
+noncomputable def eigW (ρ σ : DensityMatrix n) : Matrix n n ℂ :=
   (σ.isHermitian.eigenvectorUnitary : Matrix n n ℂ)ᴴ *
   (ρ.isHermitian.eigenvectorUnitary : Matrix n n ℂ)
 
@@ -243,7 +243,7 @@ private lemma eigW_WHW (ρ σ : DensityMatrix n) :
     _ = 1 := UHU_eq_one _ ρ.isHermitian
 
 /-- Column sums of |W_{ji}|² equal 1. Follows from W * Wᴴ = 1 (W is unitary). -/
-private lemma eigW_unitary_colsum (ρ σ : DensityMatrix n) (i : n) :
+lemma sum_normSq_eigW_col (ρ σ : DensityMatrix n) (i : n) :
     ∑ j : n, Complex.normSq (eigW ρ σ j i) = 1 := by
   have h1 := congr_fun (congr_fun (eigW_WHW ρ σ) i) i
   simp only [mul_apply, conjTranspose_apply, one_apply_eq] at h1
@@ -255,7 +255,7 @@ private lemma eigW_unitary_colsum (ρ σ : DensityMatrix n) (i : n) :
   exact_mod_cast h2
 
 /-- Row sums of |W_{ji}|² equal 1. Follows from Wᴴ * W = 1 (W is unitary). -/
-private lemma eigW_unitary_rowsum (ρ σ : DensityMatrix n) (j : n) :
+lemma sum_normSq_eigW_row (ρ σ : DensityMatrix n) (j : n) :
     ∑ i : n, Complex.normSq (eigW ρ σ j i) = 1 := by
   have h1 := congr_fun (congr_fun (eigW_WWH ρ σ) j) j
   simp only [mul_apply, conjTranspose_apply, one_apply_eq] at h1
@@ -270,7 +270,7 @@ private lemma eigW_unitary_rowsum (ρ σ : DensityMatrix n) (j : n) :
 Here ev_ρᵢ are eigenvalues of ρ, ev_σⱼ are eigenvalues of σ.
 Proof: vⱼ = col j of V ∈ ker(σ), suppSubset gives vⱼ ∈ ker(ρ),
 injectivity of U gives diag(ev_ρ) · (Uᴴvⱼ) = 0, and (Uᴴvⱼ)ᵢ = conj(Wji). -/
-private lemma suppSubset_normSq_ev_zero (ρ σ : DensityMatrix n)
+lemma normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset (ρ σ : DensityMatrix n)
     (h : suppSubset ρ.toMatrix σ.toMatrix) (j : n)
     (hev_σj : σ.isHermitian.eigenvalues j = 0) (i : n) :
     Complex.normSq (eigW ρ σ j i) * ρ.isHermitian.eigenvalues i = 0 := by
@@ -343,8 +343,36 @@ private lemma suppSubset_normSq_ev_zero (ρ σ : DensityMatrix n)
     rw [star_eq_zero] at hstar_zero
     simp [hstar_zero]
 
+/-- The entries of `eigW` are overlaps of eigenvectors: `W_{ji} = ⟪e_j, f_i⟫`, where `e_j` is the
+`j`-th eigenvector of `σ` and `f_i` the `i`-th eigenvector of `ρ`. -/
+lemma eigW_apply (ρ σ : DensityMatrix n) (j i : n) :
+    eigW ρ σ j i =
+      inner ℂ (σ.isHermitian.eigenvectorBasis j) (ρ.isHermitian.eigenvectorBasis i) := by
+  simp [eigW, Matrix.mul_apply, PiLp.inner_apply, mul_comm]
+
+/-- **Support inclusion in the eigenbases.** `supp ρ ⊆ supp σ` iff `|W_{ji}|² rᵢ = 0` whenever the
+eigenvalue `s_j` of `σ` vanishes, `rᵢ` being the eigenvalues of `ρ`. -/
+theorem suppSubset_iff_normSq_eigW_mul_eigenvalues_eq_zero (ρ σ : DensityMatrix n) :
+    suppSubset ρ.toMatrix σ.toMatrix ↔
+      ∀ j, σ.isHermitian.eigenvalues j = 0 → ∀ i,
+        Complex.normSq (eigW ρ σ j i) * ρ.isHermitian.eigenvalues i = 0 := by
+  refine ⟨normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset ρ σ, fun h => ?_⟩
+  set V := σ.isHermitian.eigenvectorUnitary
+  have hW : (V : Matrix n n ℂ)ᴴ * ρ.toMatrix * V =
+      eigW ρ σ * diagonal (fun i => (ρ.isHermitian.eigenvalues i : ℂ)) * (eigW ρ σ)ᴴ := by
+    conv_lhs => rw [spectral_expand ρ.toMatrix ρ.isHermitian]
+    simp only [eigW, conjTranspose_mul, conjTranspose_conjTranspose, Matrix.mul_assoc, V]
+  have key := (suppSubset_unitary_conj_diagonal_iff ρ.posSemidef V σ.isHermitian.eigenvalues).mpr
+    fun j hj => by
+      rw [hW, mul_apply]
+      refine Finset.sum_eq_zero fun i _ => ?_
+      have hji := h j hj i
+      rw [mul_diagonal, conjTranspose_apply, RCLike.star_def, mul_comm (eigW ρ σ j i), mul_assoc,
+        Complex.mul_conj, ← Complex.ofReal_mul, mul_comm, hji, Complex.ofReal_zero]
+  rwa [← spectral_expand σ.toMatrix σ.isHermitian] at key
+
 /-- Trace of ρ log ρ equals the eigenvalue sum ∑ᵢ ev_{ρ,i} log ev_{ρ,i}. -/
-private lemma trace_ρlogρ_eq (ρ : DensityMatrix n) :
+lemma re_trace_mul_log_self_eq (ρ : DensityMatrix n) :
     (Tr (ρ.toMatrix * log ρ)).re =
     ∑ i, ρ.isHermitian.eigenvalues i * Real.log (ρ.isHermitian.eigenvalues i) := by
   set U := (ρ.isHermitian.eigenvectorUnitary : Matrix n n ℂ)
@@ -390,7 +418,7 @@ private lemma trace_ρlogρ_eq (ρ : DensityMatrix n) :
   simp only [Complex.ofReal_re, mul_comm]
 
 /-- Trace of ρ log σ expressed as double sum over eigenvalues via eigW. -/
-private lemma trace_ρlogσ_eq (ρ σ : DensityMatrix n) :
+lemma re_trace_mul_log_eq (ρ σ : DensityMatrix n) :
     (Tr (ρ.toMatrix * log σ)).re =
     ∑ i, ∑ j, Complex.normSq (eigW ρ σ j i) *
       ρ.isHermitian.eigenvalues i *
@@ -478,11 +506,11 @@ theorem relativeEntropy_nonneg (ρ σ : DensityMatrix n) :
     set ev_ρ := ρ.isHermitian.eigenvalues
     set ev_σ := σ.isHermitian.eigenvalues
     set W := eigW ρ σ
-    rw [Matrix.mul_sub, trace_sub, Complex.sub_re, trace_ρlogρ_eq ρ, trace_ρlogσ_eq ρ σ]
+    rw [Matrix.mul_sub, trace_sub, Complex.sub_re, re_trace_mul_log_self_eq ρ, re_trace_mul_log_eq ρ σ]
     rw [show ∑ i, ev_ρ i * Real.log (ev_ρ i) =
             ∑ i, ∑ j, Complex.normSq (W j i) * ev_ρ i * Real.log (ev_ρ i) by
           congr 1; ext i
-          rw [← Finset.sum_mul, ← Finset.sum_mul, eigW_unitary_colsum ρ σ, one_mul],
+          rw [← Finset.sum_mul, ← Finset.sum_mul, sum_normSq_eigW_col ρ σ, one_mul],
         ← Finset.sum_sub_distrib]
     apply le_trans (b := ∑ i : n, ∑ j : n, Complex.normSq (W j i) * (ev_ρ i - ev_σ j))
     · -- Lower bound: Σᵢⱼ |Wji|² (ev_ρᵢ - ev_σⱼ) = 0 (by unitarity + trace = 1)
@@ -493,8 +521,8 @@ theorem relativeEntropy_nonneg (ρ σ : DensityMatrix n) :
           show ∑ i : n, ∑ j : n, Complex.normSq (W j i) * ev_σ j =
               ∑ j : n, ev_σ j * ∑ i : n, Complex.normSq (W j i) by
             rw [Finset.sum_comm]; congr 1; ext j; rw [Finset.mul_sum]; congr 1; ext i; ring]
-      simp_rw [show ∀ i, ∑ j : n, Complex.normSq (W j i) = 1 from eigW_unitary_colsum ρ σ,
-               show ∀ j, ∑ i : n, Complex.normSq (W j i) = 1 from eigW_unitary_rowsum ρ σ,
+      simp_rw [show ∀ i, ∑ j : n, Complex.normSq (W j i) = 1 from sum_normSq_eigW_col ρ σ,
+               show ∀ j, ∑ i : n, Complex.normSq (W j i) = 1 from sum_normSq_eigW_row ρ σ,
                mul_one,
                show ∑ i, ev_ρ i = 1 from ρ.sum_eigenvalues,
                show ∑ j, ev_σ j = 1 from σ.sum_eigenvalues, sub_self, le_refl]
@@ -526,7 +554,7 @@ theorem relativeEntropy_nonneg (ρ σ : DensityMatrix n) :
             linarith
         · -- ev_σ j = 0, but normSq ≠ 0
           -- suppSubset implies normSq * ev_ρ = 0, and since normSq ≠ 0, we get ev_ρ = 0
-          have hzero := suppSubset_normSq_ev_zero ρ σ h j hevσzero.symm i
+          have hzero := normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset ρ σ h j hevσzero.symm i
           have hprod : Complex.normSq (W j i) * ev_ρ i = 0 :=
             le_antisymm
               (by nlinarith [Complex.normSq_nonneg (W j i), ρ.eigenvalues_nonneg i,
@@ -574,11 +602,11 @@ theorem relativeEntropy_eq_zero_iff (ρ σ : DensityMatrix n) :
       have hD_sum : ∑ i : n, ∑ j : n, Complex.normSq (W j i) *
           (ev_ρ i * Real.log (ev_ρ i) - ev_ρ i * Real.log (ev_σ j)) = 0 := by
         rw [Matrix.mul_sub, trace_sub, Complex.sub_re] at hD
-        rw [trace_ρlogρ_eq ρ, trace_ρlogσ_eq ρ σ] at hD
+        rw [re_trace_mul_log_self_eq ρ, re_trace_mul_log_eq ρ σ] at hD
         rw [show ∑ i, ev_ρ i * Real.log (ev_ρ i) =
                 ∑ i : n, ∑ j : n, Complex.normSq (W j i) * ev_ρ i * Real.log (ev_ρ i) by
               congr 1; ext i
-              rw [← Finset.sum_mul, ← Finset.sum_mul, eigW_unitary_colsum ρ σ, one_mul]] at hD
+              rw [← Finset.sum_mul, ← Finset.sum_mul, sum_normSq_eigW_col ρ σ, one_mul]] at hD
         linarith [show ∑ i : n, ∑ j : n, Complex.normSq (W j i) * ev_ρ i * Real.log (ev_ρ i) -
                       ∑ i : n, ∑ j : n, Complex.normSq (W j i) * ev_ρ i * Real.log (ev_σ j) =
                       ∑ i : n, ∑ j : n, Complex.normSq (W j i) *
@@ -601,7 +629,7 @@ theorem relativeEntropy_eq_zero_iff (ρ σ : DensityMatrix n) :
               field_simp; rw [Real.log_div hevρne hevσne]; ring
             · have hev_ρ_zero : ev_ρ i = 0 := hevρzero.symm
               simp [hev_ρ_zero, Real.log_zero]
-          · have hsupp' := suppSubset_normSq_ev_zero ρ σ h j hμzero.symm i
+          · have hsupp' := normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset ρ σ h j hμzero.symm i
             rcases mul_eq_zero.mp hsupp' with hw0 | hev0
             · have hW0 : Complex.normSq (W j i) = 0 := hw0
               simp [hW0]
@@ -612,9 +640,9 @@ theorem relativeEntropy_eq_zero_iff (ρ σ : DensityMatrix n) :
         have hzero : ∑ i : n, ∑ j : n, Complex.normSq (W j i) * (ev_ρ i - ev_σ j) = 0 := by
           simp only [mul_sub, Finset.sum_sub_distrib]
           rw [show ∑ i : n, ∑ j : n, Complex.normSq (W j i) * ev_ρ i = ∑ i : n, ev_ρ i by
-                congr 1; ext i; rw [← Finset.sum_mul, eigW_unitary_colsum ρ σ, one_mul],
+                congr 1; ext i; rw [← Finset.sum_mul, sum_normSq_eigW_col ρ σ, one_mul],
               show ∑ i : n, ∑ j : n, Complex.normSq (W j i) * ev_σ j = ∑ j : n, ev_σ j by
-                rw [Finset.sum_comm]; congr 1; ext j; rw [← Finset.sum_mul, eigW_unitary_rowsum ρ σ, one_mul]]
+                rw [Finset.sum_comm]; congr 1; ext j; rw [← Finset.sum_mul, sum_normSq_eigW_row ρ σ, one_mul]]
           linarith [ρ.sum_eigenvalues, σ.sum_eigenvalues]
         linarith
       -- Each KL term = 0
@@ -650,7 +678,7 @@ theorem relativeEntropy_eq_zero_iff (ρ σ : DensityMatrix n) :
             rw [hev_eq, sub_self, mul_zero]
         · have hev_zero : ev_σ j = 0 := hμzero.symm
           rw [hev_zero, sub_zero]
-          exact suppSubset_normSq_ev_zero ρ σ h j hμzero.symm i
+          exact normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset ρ σ h j hμzero.symm i
       -- Derive W_{ji} * ev_ρᵢ = W_{ji} * ev_σⱼ
       have hstep : ∀ (i j : n), W j i * (ev_ρ i : ℂ) = W j i * (ev_σ j : ℂ) := fun i j => by
         rcases mul_eq_zero.mp (hterm_diff i j) with h1 | h2
@@ -904,17 +932,17 @@ private lemma hasDerivAt_trace_rpow_mul (ρ σ : DensityMatrix n) (h : suppSubse
     (fun i j => Complex.normSq (W j i))
     ev_ρ ev_σ ρ.eigenvalues_nonneg σ.eigenvalues_nonneg
     (fun j i hμ => by
-      have := suppSubset_normSq_ev_zero ρ σ h j hμ i
+      have := normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset ρ σ h j hμ i
       linarith [mul_nonneg (Complex.normSq_nonneg (W j i)) (ρ.eigenvalues_nonneg i)])
   convert hderiv using 1
   -- Relate derivative to D(ρ‖σ) = Tr (ρ(log ρ)) - Tr (ρ(log σ))
-  rw [Matrix.mul_sub, trace_sub, Complex.sub_re, trace_ρlogρ_eq ρ, trace_ρlogσ_eq ρ σ]
+  rw [Matrix.mul_sub, trace_sub, Complex.sub_re, re_trace_mul_log_self_eq ρ, re_trace_mul_log_eq ρ σ]
   -- Rewrite Σᵢ evᵢ log evᵢ as Σᵢⱼ |Wji|² evᵢ log evᵢ (using column sum = 1)
   have h1 : ∑ i : n, ev_ρ i * Real.log (ev_ρ i) =
             ∑ i : n, ∑ j : n, Complex.normSq (W j i) * ev_ρ i * Real.log (ev_ρ i) := by
     congr 1; ext i
     rw [← Finset.sum_mul, ← Finset.sum_mul,
-        show ∑ j : n, Complex.normSq (W j i) = 1 from eigW_unitary_colsum ρ σ i]
+        show ∑ j : n, Complex.normSq (W j i) = 1 from sum_normSq_eigW_col ρ σ i]
     ring
   rw [h1, ← Finset.sum_sub_distrib]; congr 1; ext i
   rw [← Finset.sum_sub_distrib]; congr 1; ext j; ring
