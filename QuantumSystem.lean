@@ -52,6 +52,8 @@ public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
@@ -60,6 +62,8 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplif
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
@@ -70,13 +74,17 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
+public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
+public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Resolvent
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
+public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.Notation
 public import QuantumSystem.State
