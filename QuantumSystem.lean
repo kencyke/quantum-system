@@ -41,7 +41,6 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem
-public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.Araki.Basic
 public import QuantumSystem.Analysis.Entropy.Araki.Commutative
 public import QuantumSystem.Analysis.Entropy.Araki.Matrix
@@ -99,6 +98,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopo
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
+public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ProdLp

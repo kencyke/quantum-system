@@ -7,9 +7,6 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.Analysis.Matrix.Order
-public import Mathlib.Analysis.SpecialFunctions.Log.Basic
-public import Mathlib.Topology.Algebra.Module.FiniteDimension
-public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 
 /-!
 # Continuous functional calculus on diagonal matrices

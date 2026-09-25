@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CFC.Diagonal
+public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
 public import QuantumSystem.Analysis.Matrix.DensityMatrix.Kronecker
