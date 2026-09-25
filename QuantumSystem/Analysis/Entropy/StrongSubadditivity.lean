@@ -5,7 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Channel
 public import QuantumSystem.Analysis.Entropy.MutualInformation
 
 /-!
@@ -16,9 +15,9 @@ This file proves strong subadditivity (SSA) directly on plain product index type
 `Matrix.traceRight`. It is representation-free — no net structure — the proof is the bare
 finite-dimensional quantum-information argument
 
-1. the mutual-information identity `Matrix.relativeEntropy_kronecker_marginals`
+1. the mutual-information identity `Matrix.umegakiEntropy_kronecker_marginals`
    (applied to the `(A : B×C)` and `(A : B)` bipartitions), and
-2. the data-processing inequality `Matrix.relativeEntropy_channel_le` for the
+2. the data-processing inequality `DensityMatrix.umegakiEntropy_channel_le` for the
    trace-out-`C` channel `Matrix.QuantumChannel.traceOutC`.
 
 The AQFT companion — the same inequality stated over a local net with nested regions, using the
@@ -111,7 +110,7 @@ variable {A B C : Type*} [Fintype A] [DecidableEq A] [Fintype B] [DecidableEq B]
 
 /-- **Strong subadditivity.** For any density matrix `ρ` on `A × B × C`,
 `S(ρ) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`. Direct proof: the mutual-information identity
-`Matrix.relativeEntropy_kronecker_marginals` for the `(A : B×C)` and `(A : B)` bipartitions,
+`Matrix.umegakiEntropy_kronecker_marginals` for the `(A : B×C)` and `(A : B)` bipartitions,
 followed by the data-processing inequality for the trace-out-`C` channel. -/
 theorem vonNeumannEntropy_SSA
     (ρ_ABC : DensityMatrix (A × B × C))
@@ -128,8 +127,8 @@ theorem vonNeumannEntropy_SSA
   -- Mutual-information identity for the `(A : B×C)` split of `ρ_ABC`.
   have h_tr2 : tr₂(ρ_ABC.toMatrix) = ρ_A.toMatrix := rfl
   have h_tr1 : tr₁(ρ_ABC.toMatrix) = ρ_BC.toMatrix := rfl
-  have h_id1 : D(ρ_ABC ∥ ρ_A ⊗ ρ_BC) = -S(ρ_ABC) + S(ρ_A) + S(ρ_BC) :=
-    Matrix.relativeEntropy_kronecker_marginals ρ_ABC ρ_A ρ_BC h_tr2 h_tr1
+  have h_id1 : D(ρ_ABC.toMatrix ∥ (ρ_A ⊗ ρ_BC).toMatrix) = -S(ρ_ABC) + S(ρ_A) + S(ρ_BC) :=
+    Matrix.umegakiEntropy_kronecker_marginals ρ_ABC ρ_A ρ_BC h_tr2 h_tr1
   -- Mutual-information identity for the `(A : B)` split of `ρ_AB`.
   have h_tr2' : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix := by
     rw [hρ_AB, hρ_A, ptRight_toMatrix, ptRight_toMatrix, DensityMatrix.mapEquiv_toMatrix]
@@ -138,8 +137,8 @@ theorem vonNeumannEntropy_SSA
     rw [hρ_AB, hρ_B, ptRight_toMatrix, ptRight_toMatrix, ptLeft_toMatrix,
       DensityMatrix.mapEquiv_toMatrix]
     exact traceLeft_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
-  have h_id2 : D(ρ_AB ∥ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) :=
-    Matrix.relativeEntropy_kronecker_marginals ρ_AB ρ_A ρ_B h_tr2' h_tr1'
+  have h_id2 : D(ρ_AB.toMatrix ∥ (ρ_A ⊗ ρ_B).toMatrix) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) :=
+    Matrix.umegakiEntropy_kronecker_marginals ρ_AB ρ_A ρ_B h_tr2' h_tr1'
   -- Data-processing inequality for the trace-out-`C` channel.
   set Φ := Matrix.QuantumChannel.traceOutC (A := A) (B := B) (C := C) with hΦ
   have h_Φρ_ABC : Φ ρ_ABC = ρ_AB := by
@@ -154,8 +153,8 @@ theorem vonNeumannEntropy_SSA
       DensityMatrix.kronecker_toMatrix, Matrix.reindex_apply, Equiv.symm_symm,
       Matrix.traceRight_submatrix_prodAssoc_kronecker]
     simp only [hρ_B, hρ_BC, ptRight_toMatrix, ptLeft_toMatrix]
-  have h_dpi : D(Φ ρ_ABC ∥ Φ (ρ_A ⊗ ρ_BC)) ≤ D(ρ_ABC ∥ ρ_A ⊗ ρ_BC) :=
-    Matrix.relativeEntropy_channel_le Φ ρ_ABC (ρ_A ⊗ ρ_BC)
+  have h_dpi : D((Φ ρ_ABC).toMatrix ∥ (Φ (ρ_A ⊗ ρ_BC)).toMatrix) ≤ D(ρ_ABC.toMatrix ∥ (ρ_A ⊗ ρ_BC).toMatrix) :=
+    DensityMatrix.umegakiEntropy_channel_le Φ ρ_ABC (ρ_A ⊗ ρ_BC)
   rw [h_Φρ_ABC, h_Φσ, h_id2, h_id1] at h_dpi
   have h_real : -S(ρ_AB) + S(ρ_A) + S(ρ_B) ≤ -S(ρ_ABC) + S(ρ_A) + S(ρ_BC) := by exact_mod_cast h_dpi
   linarith

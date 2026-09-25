@@ -22,9 +22,9 @@ Notations and abbreviations for quantum information theory.
 <tr><td><code>S(ρ)</code></td><td><code>Matrix.vonNeumannEntropy ρ</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
   <td><code>Analysis/Entropy/VonNeumannEntropy.lean</code></td></tr>
-<tr><td><code>D(ρ ∥ σ)</code></td><td><code>Matrix.relativeEntropy ρ σ</code></td>
+<tr><td><code>D(ρ ∥ σ)</code></td><td><code>Matrix.umegakiEntropy ρ σ</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
-  <td><code>Analysis/Entropy/RelativeEntropy.lean</code></td></tr>
+  <td><code>Analysis/Entropy/Umegaki/Basic.lean</code></td></tr>
 <tr><td><code>S⟦ψ ∥ φ⟧</code></td><td><code>VonNeumannAlgebra.arakiEntropy _ ψ φ</code></td>
   <td><code>open scoped Araki</code></td>
   <td><code>Analysis/Entropy/Araki/Basic.lean</code></td></tr>

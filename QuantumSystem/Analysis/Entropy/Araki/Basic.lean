@@ -6,7 +6,6 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
-public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Analysis.Entropy.Araki.Vector
 
 /-!
@@ -57,8 +56,11 @@ amplification come from `VonNeumannAlgebra.isNormal_iff_exists`.
 
 The **data-processing inequality** `S(ψ ∘ α ‖ φ ∘ α) ≤ S(ψ ‖ φ)` for unital normal Schwarz maps
 is `VonNeumannAlgebra.arakiEntropy_comp_le` (`QuantumSystem.Analysis.Entropy.Araki.Monotonicity`),
-and the identification with Umegaki's `Tr ρ (log ρ - log σ)` is
-`VonNeumannAlgebra.arakiEntropy_normalState` (`QuantumSystem.Analysis.Entropy.Araki.Matrix`).
+and the evaluation by Umegaki's `Tr ρ (log ρ - log σ)` is
+`VonNeumannAlgebra.arakiEntropy_normalFunctional` (`QuantumSystem.Analysis.Entropy.Araki.Matrix`);
+Umegaki's relative entropy `Matrix.umegakiEntropy` is defined as this functional on the normal
+functionals `Tr (ρ ·)` of `B(ℂⁿ)`, and its monotonicity under quantum channels is the
+data-processing inequality for the dual channel.
 
 Not lifted from the vector case: the finite-dimensional characterisation of `S = +∞`, which would
 need a representation of `ψ` by at most `dim H` vectors and a transport between multiplicity

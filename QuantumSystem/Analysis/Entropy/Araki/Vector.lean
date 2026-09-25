@@ -25,11 +25,12 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
   being measured, the second `ω_η` the reference. The relative modular operator takes them in the
   opposite order, `Δ_{η,ξ} = VonNeumannAlgebra.relativeModular M η ξ` (Ohya–Petz's `Δ(η, ξ)`).
 * **Finite dimensions.** For `M = B(ℂⁿ)` acting as `1 ⊗ B(ℂⁿ)` on `K ⊗̂ ℂⁿ` and `ξ`, `η`
-  purifications of density matrices `ρ`, `σ`, this is Umegaki's `Tr ρ (log ρ - log σ)`, in the same
-  slot order as `Matrix.relativeEntropy ρ σ` (`D(ρ ∥ σ)`):
-  `VonNeumannAlgebra.arakiVec_purification` (and, for any representing vectors,
-  `VonNeumannAlgebra.arakiVec_eq_relativeEntropy`); for normal states,
-  `VonNeumannAlgebra.arakiEntropy_normalState`.
+  purifications of positive semidefinite matrices `ρ`, `σ`, this is Umegaki's
+  `Tr ρ (log ρ - log σ)` (natural logarithm, unit nat), in the same
+  slot order as Umegaki's relative entropy `Matrix.umegakiEntropy ρ σ` (`D(ρ ∥ σ)`), which is
+  defined as `S(ω_ρ ‖ ω_σ)`: `VonNeumannAlgebra.arakiVec_purification` (and, for any representing
+  vectors, `VonNeumannAlgebra.arakiVec_eq_umegakiEntropy`); for normal functionals,
+  `VonNeumannAlgebra.arakiEntropy_normalFunctional`.
 * **Commutative algebras.** On the diagonal algebra it is the Kullback–Leibler divergence
   `Σᵢ pᵢ log (pᵢ / qᵢ)` (`VonNeumannAlgebra.arakiVec_diagonalVec`), which pins the order: the
   first argument carries the weights `pᵢ` outside the logarithm.

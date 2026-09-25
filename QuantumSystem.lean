@@ -49,8 +49,10 @@ public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.Araki.Vector
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInformation
-public import QuantumSystem.Analysis.Entropy.RelativeEntropy
 public import QuantumSystem.Analysis.Entropy.StrongSubadditivity
+public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
+public import QuantumSystem.Analysis.Entropy.Umegaki.ChannelDual
+public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
@@ -94,6 +96,7 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
+public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ProdLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Resolvent

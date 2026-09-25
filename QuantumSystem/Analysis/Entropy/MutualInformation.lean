@@ -5,14 +5,16 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
-public import QuantumSystem.Analysis.Entropy.RelativeEntropy
+public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
 
 /-!
 # Mutual-information identity
 
-The relative-entropy form of quantum mutual information for a bipartite density matrix on a plain
+The relative-entropy form of quantum mutual information, with Umegaki's relative entropy
+`D(ρ ‖ σ)` (`Matrix.umegakiEntropy`), for a bipartite density matrix on a plain
 product index type `n × m`:
 
   `D(ρ_AB ‖ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
@@ -41,11 +43,11 @@ No positive-definiteness is assumed: the support inclusion `supp ρ_AB ⊆ supp 
 automatic for marginals, and the trace identity holds because `ρ_AB` annihilates every eigenvector
 of `ρ_A ⊗ ρ_B` with zero eigenvalue, where the junk value `Real.log 0 = 0` would otherwise break
 `log (λᵢ μⱼ) = log λᵢ + log μⱼ`. -/
-theorem relativeEntropy_kronecker_marginals
+theorem umegakiEntropy_kronecker_marginals
     (ρ_AB : DensityMatrix (n × m)) (ρ_A : DensityMatrix n) (ρ_B : DensityMatrix m)
     (h_A_partialTrace : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix)
     (h_B_partialTrace : tr₁(ρ_AB.toMatrix) = ρ_B.toMatrix) :
-    D(ρ_AB ∥ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) := by
+    D(ρ_AB.toMatrix ∥ (ρ_A ⊗ ρ_B).toMatrix) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) := by
   classical
   -- Spectral data of the factors.
   set U_A : Matrix n n ℂ := (ρ_A.isHermitian.eigenvectorUnitary : Matrix n n ℂ) with hU_A
@@ -129,8 +131,7 @@ theorem relativeEntropy_kronecker_marginals
     intro ij hij
     change M ij ij = 0
     rw [hM_diag, hr_zero ij hij, Complex.ofReal_zero]
-  unfold relativeEntropy
-  simp only [h_supp, ite_true]
+  rw [umegakiEntropy_of_suppSubset ρ_AB.posSemidef (ρ_A ⊗ ρ_B).posSemidef h_supp]
   -- The trace against `log (ρ_A ⊗ ρ_B)` splits into the two marginal traces.
   have h_real : ∑ ij : n × m, Real.log (d ij) * r ij =
       ∑ i, lam i * Real.log (lam i) + ∑ j, mu j * Real.log (mu j) := by
