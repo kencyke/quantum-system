@@ -27,11 +27,8 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.TFAE
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
-public import QuantumSystem.Algebra.VonNeumannAlgebra.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SplitInclusion
-public import QuantumSystem.Algebra.VonNeumannAlgebra.StructureTheorem
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
-public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.KroneckerProduct
 public import QuantumSystem.Analysis.Entropy.MutualInformation
