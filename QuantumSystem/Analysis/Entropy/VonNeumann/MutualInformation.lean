@@ -8,7 +8,7 @@ module
 public import QuantumSystem.Analysis.CFC.Diagonal
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
-public import QuantumSystem.DensityMatrix.Kronecker
+public import QuantumSystem.Analysis.Matrix.DensityMatrix.Kronecker
 
 /-!
 # Mutual-information identity

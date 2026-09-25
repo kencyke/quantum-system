@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
-public import QuantumSystem.DensityMatrix.Basic
+public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
 
 /-!
 # Tensor product (Kronecker) of density matrices and bipartite Kronecker calculus

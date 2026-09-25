@@ -8,7 +8,7 @@ module
 public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
-public import QuantumSystem.DensityMatrix.Basic
+public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
 
 /-!
 # Von Neumann Entropy

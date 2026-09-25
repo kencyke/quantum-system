@@ -53,6 +53,9 @@ public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
 public import QuantumSystem.Analysis.Entropy.VonNeumann.StrongSubadditivity
+public import QuantumSystem.Analysis.Matrix.Channel
+public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
+public import QuantumSystem.Analysis.Matrix.DensityMatrix.Kronecker
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
@@ -66,9 +69,6 @@ public import QuantumSystem.Analysis.UnboundedOperator.RestrictScalars
 public import QuantumSystem.Analysis.UnboundedOperator.SpectralCalculus
 public import QuantumSystem.Analysis.UnboundedOperator.SpectralMeasure
 public import QuantumSystem.Analysis.UnboundedOperator.VonNeumann
-public import QuantumSystem.Channel
-public import QuantumSystem.DensityMatrix.Basic
-public import QuantumSystem.DensityMatrix.Kronecker
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry

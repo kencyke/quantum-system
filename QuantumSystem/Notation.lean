@@ -18,7 +18,8 @@ Notations and abbreviations for quantum information theory.
 <tr><td><code>Tr A</code></td><td><code>Matrix.trace A</code></td>
   <td>always available (prefix notation)</td><td>this file</td></tr>
 <tr><td><code>log ρ</code></td><td><code>DensityMatrix.log ρ</code></td>
-  <td><code>open scoped Matrix.QuantumInfo</code></td><td><code>State.lean</code></td></tr>
+  <td><code>open scoped Matrix.QuantumInfo</code></td>
+  <td><code>Analysis/Matrix/DensityMatrix/Basic.lean</code></td></tr>
 <tr><td><code>S(ρ)</code></td><td><code>Matrix.vonNeumannEntropy ρ</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
   <td><code>Analysis/Entropy/VonNeumann/Basic.lean</code></td></tr>
