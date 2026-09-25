@@ -46,6 +46,13 @@ public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
+public import QuantumSystem.Analysis.UnboundedOperator.Resolvent
+public import QuantumSystem.Analysis.UnboundedOperator.ResolventCFC
+public import QuantumSystem.Analysis.UnboundedOperator.RestrictScalars
+public import QuantumSystem.Analysis.UnboundedOperator.SpectralCalculus
+public import QuantumSystem.Analysis.UnboundedOperator.SpectralMeasure
+public import QuantumSystem.Analysis.UnboundedOperator.VonNeumann
 public import QuantumSystem.Channel
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
