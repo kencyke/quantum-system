@@ -298,12 +298,11 @@ theorem vonNeumannEntropy_concave (ρ₁ ρ₂ : DensityMatrix n) (p : ℝ) (hp 
 
 /-! ### Isomorphism invariance
 
-For a `*-`algebra equivalence `φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ` that preserves trace,
-von Neumann entropy is invariant: `S(ρ.map φ) = S(ρ)`. In quantum-information literature
+For a `*-`algebra equivalence `φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ`, von Neumann entropy is
+invariant: `S(ρ.map φ) = S(ρ)`. In quantum-information literature
 this is the **unitary invariance of von Neumann entropy** (Nielsen–Chuang Thm 11.1,
 Wilde §11.1.3): a special case of Lindblad–Uhlmann monotonicity restricted to invertible
-CPTP maps. The reindex specialisation uses `Matrix.reindexStarAlgEquiv e` which preserves
-trace automatically (`Matrix.trace_reindexStarAlgEquiv`).
+CPTP maps. Such a `φ` preserves the trace automatically (`Matrix.trace_map`).
 
 TODO (Mathlib upstream): for matrix algebras over a field,
 `Matrix m m R ≃⋆ₐ[R] Matrix n n R` forces `Fintype.card m = Fintype.card n` (Skolem–Noether
@@ -314,24 +313,23 @@ section IsomorphismInvariance
 
 variable {m : Type*} [Fintype m] [DecidableEq m]
 
-/-- **Von Neumann entropy is invariant under trace-preserving `*-`algebra equivalence**,
+/-- **Von Neumann entropy is invariant under `*-`algebra equivalence**,
 for every density matrix (no positive-definiteness required). -/
 lemma vonNeumannEntropy_map_starAlgEquiv
     (ρ : DensityMatrix m)
-    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ)
-    (hφ : ∀ A, (φ A).trace = A.trace) :
-    S(ρ.map φ hφ) = S(ρ) := by
+    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
+    S(ρ.map φ) = S(ρ) := by
   unfold vonNeumannEntropy
-  have h_log_eq : cfc Real.log (ρ.map φ hφ).toMatrix =
+  have h_log_eq : cfc Real.log (ρ.map φ).toMatrix =
       φ (cfc Real.log ρ.toMatrix) := by
     change cfc Real.log (φ ρ.toMatrix) = _
     exact cfc_log_map_starAlgEquiv ρ.isHermitian φ
-  have h_tr : Tr ((ρ.map φ hφ).toMatrix *
-        cfc Real.log (ρ.map φ hφ).toMatrix) =
+  have h_tr : Tr ((ρ.map φ).toMatrix *
+        cfc Real.log (ρ.map φ).toMatrix) =
       Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix) := by
-    rw [h_log_eq, DensityMatrix.map_toMatrix, ← map_mul, hφ]
-  change -(Tr ((ρ.map φ hφ).toMatrix *
-      cfc Real.log (ρ.map φ hφ).toMatrix)).re =
+    rw [h_log_eq, DensityMatrix.map_toMatrix, ← map_mul, Matrix.trace_map]
+  change -(Tr ((ρ.map φ).toMatrix *
+      cfc Real.log (ρ.map φ).toMatrix)).re =
     -(Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix)).re
   rw [h_tr]
 
@@ -340,7 +338,7 @@ density matrix `ρ` and equivalence `e`. Specialisation of
 `vonNeumannEntropy_map_starAlgEquiv` to `Matrix.reindexStarAlgEquiv`. -/
 lemma vonNeumannEntropy_mapEquiv (ρ : DensityMatrix m) (e : n ≃ m) :
     S(ρ.mapEquiv e) = S(ρ) :=
-  vonNeumannEntropy_map_starAlgEquiv ρ _ _
+  vonNeumannEntropy_map_starAlgEquiv ρ _
 
 end IsomorphismInvariance
 

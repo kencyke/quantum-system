@@ -6,7 +6,6 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.Notation
 
@@ -161,27 +160,25 @@ noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1) :
     ↑(mix ρ₁ ρ₂ p hp hp1) = p • (↑ρ₁ : Matrix n n ℂ) + (1 - p) • ↑ρ₂ := rfl
 
-/-- Transport a density matrix along a trace-preserving `*-`algebra equivalence.
+/-- Transport a density matrix along a `*-`algebra equivalence of matrix algebras, which preserves
+the trace automatically (`Matrix.trace_map`).
 
 This is the abstract notion of "unitary equivalence" of density matrices in the
 quantum-information sense. -/
 noncomputable def map {m : Type*} [Fintype m] [DecidableEq m]
-    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ)
-    (hφ : ∀ A, (φ A).trace = A.trace) : DensityMatrix m where
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ) : DensityMatrix m where
   toMatrix := φ ρ.toMatrix
   posSemidef := ρ.posSemidef.map_starAlgEquiv φ
-  trace_eq_one := by rw [hφ]; exact ρ.trace_eq_one
+  trace_eq_one := by rw [Matrix.trace_map]; exact ρ.trace_eq_one
 
 @[simp] lemma map_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
-    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ)
-    (hφ : ∀ A, (φ A).trace = A.trace) :
-    (ρ.map φ hφ).toMatrix = φ ρ.toMatrix := rfl
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ) :
+    (ρ.map φ).toMatrix = φ ρ.toMatrix := rfl
 
 /-- `DensityMatrix` reindex via an index equivalence — built on `DensityMatrix.map`. -/
 noncomputable def mapEquiv {m : Type*} [Fintype m] [DecidableEq m]
     (ρ : DensityMatrix n) (e : m ≃ n) : DensityMatrix m :=
   ρ.map (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
-    (Matrix.trace_reindexStarAlgEquiv e.symm)
 
 @[simp] lemma mapEquiv_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
     (ρ : DensityMatrix n) (e : m ≃ n) :
