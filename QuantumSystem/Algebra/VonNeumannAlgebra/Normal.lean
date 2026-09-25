@@ -6,13 +6,11 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Projection
-public import Mathlib.Analysis.InnerProductSpace.l2Space
-public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import QuantumSystem.Algebra.VonNeumannAlgebra.RadonNikodym
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Support
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
-public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 
 /-!
@@ -70,6 +68,8 @@ amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 * `VonNeumannAlgebra.isNormalMap_id`, `VonNeumannAlgebra.IsNormal.comp`,
   `VonNeumannAlgebra.IsNormalMap.comp` — the identity is normal, and normality is stable
   under composition with normal maps.
+* `VonNeumannAlgebra.isNormalMap_of_finiteDimensional` — every linear map between von Neumann
+  algebras on finite-dimensional spaces is normal.
 * `VonNeumannAlgebra.NormalFunctional.supportProj_mem`,
   `VonNeumannAlgebra.NormalFunctional.isStarProjection_supportProj` — `s(ψ)` is a projection in `M`.
 * `VonNeumannAlgebra.NormalFunctional.supportProj_le_iff` — `s(ψ) ≤ p ↔ ψ(1 - p) = 0` for
@@ -370,6 +370,18 @@ theorem IsNormal.comp [FunLike F N M] [LinearMapClass F ℂ N M] [OrderHomClass 
 /-- The identity map of a von Neumann algebra is normal. -/
 theorem isNormalMap_id : IsNormalMap (id : N → N) :=
   continuous_id
+
+/-- **Linear maps between finite-dimensional von Neumann algebras are normal**: in finite
+dimensions the σ-weak topology is the unique Hausdorff vector-space topology, so every linear map is
+σ-weakly continuous. -/
+theorem isNormalMap_of_finiteDimensional [FiniteDimensional ℂ H] [FiniteDimensional ℂ K]
+    [FunLike F N M] [LinearMapClass F ℂ N M] (α : F) : IsNormalMap α := by
+  let e : M →ₗ[ℂ] M.sigmaWeak :=
+    { toFun := M.toSigmaWeak
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  exact LinearMap.continuous_of_finiteDimensional
+    (e ∘ₗ (LinearMap.ofClass α) ∘ₗ N.ofSigmaWeak)
 
 /-- The composite of two normal maps is normal. -/
 theorem IsNormalMap.comp {L : Type*} [NormedAddCommGroup L] [InnerProductSpace ℂ L]

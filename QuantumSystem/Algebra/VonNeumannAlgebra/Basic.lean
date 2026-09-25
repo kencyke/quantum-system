@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.Matrix
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
@@ -150,6 +151,21 @@ noncomputable def boundedLinearOperators.starAlgEquiv :
        map_star' := fun _ => rfl } :
       (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
     (StarAlgHom.ext fun _ => rfl) (StarAlgHom.ext fun _ => rfl)
+
+@[simp] lemma boundedLinearOperators.coe_starAlgEquiv_symm_apply (x : H →L[ℂ] H) :
+    ((boundedLinearOperators.starAlgEquiv (H := H)).symm x : H →L[ℂ] H) = x := rfl
+
+/-- `n × n` matrices as elements of `𝓑(ℂⁿ)`: the `⋆`-isomorphism `Matrix.toEuclideanCLM`, landing
+in the bundled von Neumann algebra `𝓑(EuclideanSpace ℂ n)`. For a normal functional `ψ` on
+`𝓑(ℂⁿ)`, `ψ.1 A.toBoundedLinearOperators` is `ψ` evaluated on the matrix `A`. -/
+noncomputable def _root_.Matrix.toBoundedLinearOperators {n : Type*} [Fintype n] [DecidableEq n] :
+    Matrix n n ℂ ≃⋆ₐ[ℂ] (𝓑(EuclideanSpace ℂ n) : VonNeumannAlgebra _).toStarSubalgebra :=
+  Matrix.toEuclideanCLM.trans boundedLinearOperators.starAlgEquiv.symm
+
+@[simp] lemma _root_.Matrix.coe_toBoundedLinearOperators {n : Type*} [Fintype n] [DecidableEq n]
+    (A : Matrix n n ℂ) :
+    ((Matrix.toBoundedLinearOperators A : (𝓑(EuclideanSpace ℂ n) : VonNeumannAlgebra _)) :
+      EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) = Matrix.toEuclideanCLM (𝕜 := ℂ) A := rfl
 
 /-- A von Neumann algebra is closed under scalar multiplication. -/
 lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
