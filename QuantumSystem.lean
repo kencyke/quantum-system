@@ -30,6 +30,9 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Diagonal
 public import QuantumSystem.Algebra.VonNeumannAlgebra.MinimalProjection
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeModular
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeTomita
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
 public import QuantumSystem.Algebra.VonNeumannAlgebra.RadonNikodym
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SplitInclusion
