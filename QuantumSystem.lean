@@ -67,6 +67,8 @@ public import QuantumSystem.Analysis.UnboundedOperator.SpectralCalculus
 public import QuantumSystem.Analysis.UnboundedOperator.SpectralMeasure
 public import QuantumSystem.Analysis.UnboundedOperator.VonNeumann
 public import QuantumSystem.Channel
+public import QuantumSystem.DensityMatrix.Basic
+public import QuantumSystem.DensityMatrix.Kronecker
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
@@ -111,5 +113,3 @@ public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.Notation
-public import QuantumSystem.State
-public import QuantumSystem.State.Kronecker

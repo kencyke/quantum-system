@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.State
+public import QuantumSystem.DensityMatrix.Basic
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 
 /-!

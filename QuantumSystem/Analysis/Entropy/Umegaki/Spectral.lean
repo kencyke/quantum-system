@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.State
+public import QuantumSystem.DensityMatrix.Basic
 
 /-!
 # Supports and relative eigenbases of Hermitian matrices
