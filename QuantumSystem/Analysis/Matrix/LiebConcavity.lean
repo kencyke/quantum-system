@@ -8,7 +8,6 @@ module
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Notation
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
-public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
 
 /-!
