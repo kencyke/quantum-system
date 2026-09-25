@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+public import Mathlib.Analysis.InnerProductSpace.StarOrder
 
 /-!
 # Schwarz maps
@@ -43,6 +43,10 @@ stated for completely positive maps since Mathlib has no notion of `k`-positivit
 * `SchwarzMap.comp`, `SchwarzMap.id`.
 * `CompletelyPositiveMap.toSchwarzMap` — a completely positive map with `φ 1 ≤ 1` as a Schwarz
   map.
+* `SchwarzMap.ofKraus` — the Kraus map `x ↦ Σᵢ Cᵢ† x Cᵢ` between operator algebras, for
+  `Cᵢ : H → K` with `Σᵢ Cᵢ† Cᵢ ≤ 1`, as a Schwarz map. The inequality is proved directly, as
+  `T(x⋆x) - T(x)⋆T(x) = Σᵢ Dᵢ† Dᵢ + T(x)⋆ (1 - Σᵢ Cᵢ† Cᵢ) T(x)` for `Dᵢ = x Cᵢ - Cᵢ T(x)`,
+  without passing through complete positivity.
 
 ## Main results
 
@@ -302,3 +306,59 @@ def toSchwarzMap (φ : A₁ →CP A₂) (hφ : φ 1 ≤ 1) : SchwarzMap A₁ A�
     φ.toSchwarzMap hφ a = φ a := rfl
 
 end CompletelyPositiveMap
+
+namespace SchwarzMap
+
+open ContinuousLinearMap
+
+variable {H K : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+  [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K] {ι : Type*} [Fintype ι]
+
+/-- **Kraus maps are Schwarz maps.** For `Cᵢ : H →L[ℂ] K` with `Σᵢ Cᵢ† Cᵢ ≤ 1`, the map
+`T x = Σᵢ Cᵢ† x Cᵢ` from `B(K)` to `B(H)` satisfies `T(x)⋆ T(x) ≤ T(x⋆ x)`: with `S = T x`,
+`Dᵢ = x Cᵢ - Cᵢ S` and `P = Σᵢ Cᵢ† Cᵢ`, `T(x⋆ x) - S⋆ S = Σᵢ Dᵢ† Dᵢ + S⋆ (1 - P) S ≥ 0`. The map is
+unital exactly when `P = 1` (`SchwarzMap.ofKraus_one`). -/
+noncomputable def ofKraus (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) ∘L C i ≤ 1) :
+    SchwarzMap (K →L[ℂ] K) (H →L[ℂ] H) where
+  toFun x := ∑ i, adjoint (C i) ∘L x ∘L C i
+  map_add' x y := by
+    simp only [add_comp, comp_add, Finset.sum_add_distrib]
+  map_smul' c x := by
+    simp only [smul_comp, comp_smul, Finset.smul_sum, RingHom.id_apply]
+  le_map_star_mul' x := by
+    set S := ∑ i, adjoint (C i) ∘L x ∘L C i with hSdef
+    set P := ∑ i, adjoint (C i) ∘L C i with hPdef
+    have hS : star S = ∑ i, adjoint (C i) ∘L adjoint x ∘L C i := by
+      rw [hSdef, star_sum]
+      refine Finset.sum_congr rfl fun i _ => ?_
+      rw [star_eq_adjoint, adjoint_comp, adjoint_comp, adjoint_adjoint,
+        ContinuousLinearMap.comp_assoc]
+    have key : (∑ i, adjoint (C i) ∘L (star x * x) ∘L C i) - star S * S =
+        ∑ i, adjoint (x ∘L C i - C i ∘L S) ∘L (x ∘L C i - C i ∘L S) + star S * (1 - P) * S := by
+      have e : ∀ i, adjoint (x ∘L C i - C i ∘L S) ∘L (x ∘L C i - C i ∘L S) =
+          adjoint (C i) ∘L (star x * x) ∘L C i - (adjoint (C i) ∘L adjoint x ∘L C i) ∘L S
+            - adjoint S ∘L (adjoint (C i) ∘L x ∘L C i)
+            + adjoint S ∘L (adjoint (C i) ∘L C i) ∘L S := fun i => by
+        rw [map_sub, adjoint_comp, adjoint_comp, sub_comp, comp_sub, comp_sub, star_eq_adjoint,
+          mul_def]
+        simp only [ContinuousLinearMap.comp_assoc]
+        abel
+      simp only [e, Finset.sum_add_distrib, Finset.sum_sub_distrib, ← finsetSum_comp,
+        ← comp_finsetSum, ← hS, ← hSdef, ← hPdef]
+      simp only [← mul_def, ← star_eq_adjoint, mul_sub, sub_mul, mul_one]
+      noncomm_ring
+    rw [← sub_nonneg, key]
+    exact add_nonneg
+      (Finset.sum_nonneg fun i _ => nonneg_iff_isPositive.mpr (isPositive_adjoint_comp_self _))
+      (star_left_conjugate_nonneg (sub_nonneg.mpr hC) S)
+
+@[simp] lemma ofKraus_apply (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) ∘L C i ≤ 1)
+    (x : K →L[ℂ] K) : ofKraus C hC x = ∑ i, adjoint (C i) ∘L x ∘L C i := rfl
+
+/-- `T 1 = Σᵢ Cᵢ† Cᵢ`: the Kraus map is unital iff `Σᵢ Cᵢ† Cᵢ = 1`. -/
+lemma ofKraus_one (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) ∘L C i ≤ 1) :
+    ofKraus C hC 1 = ∑ i, adjoint (C i) ∘L C i := by
+  rw [ofKraus_apply]
+  exact Finset.sum_congr rfl fun i _ => by rw [one_def, ContinuousLinearMap.id_comp]
+
+end SchwarzMap

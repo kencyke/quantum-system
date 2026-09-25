@@ -29,6 +29,9 @@ trace-out-`C` channel `QuantumChannel.traceOutC` realises the `lean-eval` margin
 * `Matrix.QuantumChannel.partialTraceRight` — bundled quantum channel tracing out `Y`.
 * `Matrix.QuantumChannel.reindex` — conjugation by an index equivalence, as a channel.
 * `Matrix.QuantumChannel.traceOutC` — trace out the `C` factor of `A × B × C`.
+* `Matrix.traceDual Φ` — the trace dual (Heisenberg picture), `Tr (Φ A * B) = Tr (A * Φ* B)`
+  (`Matrix.trace_mul_traceDual`); for a Kraus map it is `B ↦ Σᵢ Kᵢᴴ B Kᵢ`
+  (`Matrix.traceDual_eq_of_kraus`), unital for trace-preserving `Φ` (`Matrix.traceDual_one`).
 
 ## Mathematical Background
 
@@ -186,6 +189,74 @@ lemma QuantumChannel.kraus_sum_eq_one [DecidableEq n]
   simp_rw [Matrix.trace_sum, key, ← Matrix.trace_sum]
   have := Φ.property.tracePreserving A
   rwa [hK] at this
+
+omit [Fintype m] in
+/-- A completely positive map sends positive semidefinite matrices to positive semidefinite
+matrices. -/
+lemma IsCompletelyPositive.posSemidef_map [Finite m]
+    {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} (hΦ : IsCompletelyPositive Φ)
+    {A : Matrix n n ℂ} (hA : A.PosSemidef) : (Φ A).PosSemidef := by
+  classical
+  have := Fintype.ofFinite m
+  obtain ⟨r, K, hK⟩ := hΦ
+  rw [hK]
+  exact posSemidef_sum _ fun i _ => hA.mul_mul_conjTranspose_same (K i)
+
+/-! ### Trace dual -/
+
+section TraceDual
+
+variable [DecidableEq n]
+
+/-- The **trace dual** (Heisenberg picture) of a linear map on matrix algebras, characterised by
+`Tr (Φ A * B) = Tr (A * traceDual Φ B)` (`Matrix.trace_mul_traceDual`). Its entries are
+`(traceDual Φ B) j i = Tr (Φ (E_{ij}) B)` for the matrix units `E_{ij} = Matrix.single i j 1`. For
+a Kraus map `A ↦ Σᵢ Kᵢ A Kᵢᴴ` it is `B ↦ Σᵢ Kᵢᴴ B Kᵢ` (`Matrix.traceDual_eq_of_kraus`); it is unital
+exactly when `Φ` is trace preserving (`Matrix.traceDual_one`). -/
+noncomputable def traceDual (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
+    Matrix m m ℂ →ₗ[ℂ] Matrix n n ℂ where
+  toFun B := Matrix.of fun j i => Tr (Φ (Matrix.single i j 1) * B)
+  map_add' B C := by
+    ext j i
+    simp [Matrix.mul_add, Matrix.trace_add]
+  map_smul' c B := by
+    ext j i
+    simp [Matrix.mul_smul, Matrix.trace_smul]
+
+omit [Fintype n] in
+lemma traceDual_apply (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) (B : Matrix m m ℂ) (j i : n) :
+    traceDual Φ B j i = Tr (Φ (Matrix.single i j 1) * B) := rfl
+
+/-- **The defining duality**: `Tr (Φ A * B) = Tr (A * traceDual Φ B)`. -/
+theorem trace_mul_traceDual (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) (A : Matrix n n ℂ)
+    (B : Matrix m m ℂ) : Tr (Φ A * B) = Tr (A * traceDual Φ B) := by
+  conv_lhs => rw [Matrix.matrix_eq_sum_single A]
+  simp only [map_sum, Finset.sum_mul, Matrix.trace_sum]
+  simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply, traceDual_apply]
+  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
+  rw [show Matrix.single i j (A i j) = A i j • Matrix.single i j (1 : ℂ) by
+      rw [Matrix.smul_single, smul_eq_mul, mul_one], map_smul]
+  simp only [Matrix.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc]
+
+/-- The trace dual of a Kraus map `A ↦ Σᵢ Kᵢ A Kᵢᴴ` is `B ↦ Σᵢ Kᵢᴴ B Kᵢ`. -/
+theorem traceDual_eq_of_kraus {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} {r : ℕ}
+    {K : Fin r → Matrix m n ℂ} (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) (B : Matrix m m ℂ) :
+    traceDual Φ B = ∑ i, (K i)ᴴ * B * K i := by
+  refine Matrix.ext_iff_trace_mul_left.mpr fun x => ?_
+  rw [← trace_mul_traceDual, hK, Finset.sum_mul, Matrix.trace_sum, Matrix.mul_sum,
+    Matrix.trace_sum]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [Matrix.mul_assoc, Matrix.trace_mul_comm, ← Matrix.mul_assoc, ← Matrix.mul_assoc,
+    Matrix.mul_assoc x]
+  exact Matrix.trace_mul_comm _ _
+
+/-- The trace dual of a trace-preserving map is unital. -/
+theorem traceDual_one [DecidableEq m] {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    (hΦ : IsTracePreserving Φ) : traceDual Φ 1 = 1 := by
+  refine Matrix.ext_iff_trace_mul_left.mpr fun x => ?_
+  rw [← trace_mul_traceDual, Matrix.mul_one, Matrix.mul_one, hΦ]
+
+end TraceDual
 
 /-! ### Stinespring Isometry -/
 
