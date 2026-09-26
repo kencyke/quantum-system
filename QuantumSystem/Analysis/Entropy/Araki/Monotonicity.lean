@@ -38,6 +38,16 @@ the Schwarz map `1 ⊗ α` (`VonNeumannAlgebra.amplifySchwarzMap`, built from th
 The map `V` is never built as an operator: the comparison of resolvents only needs, for each point
 of the graph of `S_N`, a dominating point of the graph of `S_M`.
 
+## Without Tomita–Takesaki theory
+
+Uhlmann's original proof runs through the interpolation theory of quadratic forms, and Araki's
+through the modular automorphism groups `σ_t` and the KMS condition, i.e. Tomita–Takesaki theory,
+which is not formalised. The route above (Petz) avoids it: the only inputs are the Kadison–Schwarz
+inequality for `α`, the graph inequality `‖S_M V u‖ ≤ ‖S_N u‖`, the variational characterisation
+of `⟪u, (t + Δ)⁻¹ u⟫` for a positive self-adjoint `Δ = S̄†S̄`, and the integral representation of
+`-log`. In particular neither `Δ^{it}` nor `Δ^{1/2}` nor `J` is needed, only the resolvents of
+`Δ_N`, `Δ_M`, which are available for any self-adjoint operator.
+
 ## Main results
 
 * `VonNeumannAlgebra.norm_schwarzMap_apply_apply_le` — the vector bound `‖α(y) ξ‖ ≤ ‖y ζ‖` when

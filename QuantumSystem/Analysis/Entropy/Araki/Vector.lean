@@ -40,7 +40,21 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
 
 The expression `-⟪ξ, log Δ ξ⟫` is *defined* here through the spectral measure; the operator
 `log Δ_{η,ξ}` itself is not constructed (it needs the Borel functional calculus, which is not
-formalised).
+formalised). This is Araki's own formulation, `-∫ log λ d‖E_λ ξ‖²` for the spectral resolution
+`E_λ` of `Δ_{η,ξ}`: the scalar spectral measure `μ_ξ = ‖E_(·) ξ‖²` is built directly from the
+resolvent of `Δ_{η,ξ}` (`IsSelfAdjoint.spectralMeasure`), without the projection-valued measure.
+
+## Without Tomita–Takesaki theory
+
+The literature usually takes `ξ, η` in the natural cone `P♮` of a standard form of `M` (the
+vector representatives of `ω_ξ, ω_η` given by Tomita–Takesaki theory). Here `ξ, η` are
+arbitrary vectors of `H`: the definition needs only the relative modular operator, which exists
+for any pair of vectors (`QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeModular`),
+and the value depends only on the functionals `ω_ξ, ω_η`
+(`VonNeumannAlgebra.arakiVec_eq_of_inner_eq`), proved through the transformation rules of
+`Δ_{η,ξ}` under the commutant rather than through the uniqueness of representatives in `P♮`.
+Non-faithful functionals are handled by the support projection `s(ξ)` in `S_{η,ξ}`, so no
+reduction to the faithful case (which would also go through the standard form) is needed.
 
 ## Main definitions
 

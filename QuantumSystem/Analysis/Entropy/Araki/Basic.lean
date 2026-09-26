@@ -22,6 +22,19 @@ entropy computed on `H` itself (`VonNeumannAlgebra.arakiEntropy_ofVector`).
 Normality is σ-weak continuity (`VonNeumannAlgebra.IsNormal`); the representing vectors on the
 amplification come from `VonNeumannAlgebra.isNormal_iff_exists`.
 
+## Without Tomita–Takesaki theory
+
+Araki defines `S(ψ ‖ φ) = -⟪ξ_ψ, log Δ_{ξ_φ, ξ_ψ} ξ_ψ⟫` with `ξ_ψ, ξ_φ` the representatives of
+`ψ, φ` in the natural cone `P♮` of a standard form of `M`. That every normal positive functional
+has such a representative is a theorem of Tomita–Takesaki theory (through `J M J = M′`), which is
+not formalised. The amplification replaces it: every normal positive functional on `M` is a vector
+functional on `amplify ℓ²(ℕ) M` by the definition of normality alone, the relative modular
+operator exists for arbitrary vectors, and the value is independent of the representing vectors
+(`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`) and of the amplification
+(`VonNeumannAlgebra.arakiVec_amplify_tmul`). When `M` is in standard form and `ξ_ψ, ξ_φ ∈ P♮`,
+`VonNeumannAlgebra.arakiEntropy_ofVector` shows the value is Araki's, but the identification of
+`P♮` itself is not formalised.
+
 ## Main definitions
 
 * `VonNeumannAlgebra.arakiEntropy M ψ φ` — `S(ψ ‖ φ) ∈ EReal`, with notation `S⟦ψ ∥ φ⟧` in
@@ -118,7 +131,10 @@ theorem arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerPro
 local notation "ℓ²" => lp (fun _ : ℕ => ℂ) 2
 
 /-- **Araki's relative entropy** `S(ψ ‖ φ)` of normal positive functionals on `M`: the relative
-entropy of representing vector functionals on the amplification `amplify ℓ²(ℕ) M`. -/
+entropy of representing vector functionals on the amplification `amplify ℓ²(ℕ) M`. The
+representing vectors `ψ.2.vec`, `φ.2.vec` stand in for Araki's natural-cone representatives
+`ξ_ψ, ξ_φ ∈ P♮`, whose existence would need Tomita–Takesaki theory; the value does not depend on
+the choice (`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`). -/
 noncomputable def arakiEntropy (ψ φ : M.NormalFunctional) : EReal :=
   (M.amplify ℓ²).arakiVec ψ.2.vec φ.2.vec
 

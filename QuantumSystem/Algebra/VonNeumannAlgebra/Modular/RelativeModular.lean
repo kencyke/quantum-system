@@ -25,6 +25,18 @@ The spectral measure `μ_ξ` of `Δ_{η,ξ}` at `ξ` is the input of Araki's rel
 `-∫ log λ dμ_ξ` finite: in infinite dimensions the entropy can be `+∞` even when
 `s(ξ) ≤ s(η)`.
 
+## Without Tomita–Takesaki theory
+
+Defining `Δ_{η,ξ}` needs no result of Tomita–Takesaki theory, only general unbounded operator
+theory: `S_{η,ξ}` is well defined, densely defined and closable
+(`QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeTomita`), and for any closed densely
+defined `T` the operator `T†T` is positive self-adjoint (von Neumann's theorem,
+`LinearPMap.isSelfAdjoint_adjoint_compNat_self`). The theorems of Tomita–Takesaki theory —
+the polar decomposition `S̄ = J Δ^{1/2}`, `J M J = M′`, `Δ^{it} M Δ^{-it} = M`, the modular
+automorphism group and the KMS condition — describe *properties* of `Δ` and are not used
+anywhere in the construction of the relative entropy or in its monotonicity
+(`QuantumSystem.Analysis.Entropy.Araki.Monotonicity`); they are not formalised.
+
 ## Main definitions
 
 * `VonNeumannAlgebra.relativeModular M η ξ` — the relative modular operator `Δ_{η,ξ}`.
