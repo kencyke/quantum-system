@@ -47,7 +47,6 @@ public import QuantumSystem.Analysis.Entropy.Araki.Matrix
 public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.Araki.Vector
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
-public import QuantumSystem.Analysis.Entropy.Umegaki.ChannelDual
 public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
@@ -62,6 +61,7 @@ public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Dual
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.PartialTrace
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
@@ -103,9 +103,11 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ProdLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
+public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Resolvent
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.Fintype
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace

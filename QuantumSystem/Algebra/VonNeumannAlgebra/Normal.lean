@@ -491,6 +491,24 @@ theorem apply_star_mul_self_eq_zero_iff (x : M) :
     ← amplifyRight_supportProj, ← HilbertTensor.amplifyRight_mul,
     ← HilbertTensor.amplifyRight_zero (H₁ := ℓ²), HilbertTensor.amplifyRight_injective.eq_iff]
 
+/-- **Support inclusion is null-ideal inclusion.** `s(ψ) ≤ s(φ)` iff `ψ(x⋆x) = 0` whenever
+`φ(x⋆x) = 0`. -/
+theorem supportProj_le_supportProj_iff (φ : M.NormalFunctional) :
+    supportProj ψ ≤ supportProj φ ↔ ∀ x : M, φ.1 (star x * x) = 0 → ψ.1 (star x * x) = 0 := by
+  refine ⟨fun hle x hφ => ?_, fun h => ?_⟩
+  · rw [apply_star_mul_self_eq_zero_iff] at hφ ⊢
+    rw [← ((isStarProjection_supportProj ψ).le_iff_mul_eq_right
+      (isStarProjection_supportProj φ)).mp hle, ← mul_assoc, hφ, zero_mul]
+  · set e : M := ⟨1 - supportProj φ, sub_mem (one_mem M) (supportProj_mem φ)⟩
+    have hee : star e * e = e := by
+      apply Subtype.ext
+      change star (1 - supportProj φ) * (1 - supportProj φ) = 1 - supportProj φ
+      have hp := (isStarProjection_supportProj φ).one_sub
+      rw [hp.isSelfAdjoint.star_eq, hp.isIdempotentElem.eq]
+    have h1 := h e (by rw [hee]; exact apply_one_sub_supportProj φ)
+    rw [hee] at h1
+    exact (supportProj_le_iff ψ (isStarProjection_supportProj φ) (supportProj_mem φ)).mpr h1
+
 end NormalFunctional
 
 end VonNeumannAlgebra

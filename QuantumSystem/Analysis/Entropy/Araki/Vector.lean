@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial
+public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
 
 /-!
@@ -52,7 +53,8 @@ formalised).
 * `VonNeumannAlgebra.arakiVec_eq_top_of_not_supportProj_le` — `S = +∞` unless `s(ξ) ≤ s(η)`.
   The converse fails in infinite dimensions (not formalised here; e.g. on `ℓ^∞(ℕ)` with faithful
   states, `S` is the Kullback–Leibler divergence of two full-support probability sequences, which
-  can be `+∞`); it holds for finite-dimensional `H` (`VonNeumannAlgebra.arakiVec_eq_top_iff`).
+  can be `+∞`); it holds for finite-dimensional `M`, in particular for finite-dimensional `H`
+  (`VonNeumannAlgebra.arakiVec_eq_top_iff`).
   `VonNeumannAlgebra.arakiVec_eq_top_of_supportProj_apply_eq_zero` — `S = +∞` if
   `ξ ≠ 0` and `s(ξ) η = 0`.
 * `VonNeumannAlgebra.arakiVec_eq_of_inner_eq` — `S` depends only on the vector functionals
@@ -71,6 +73,10 @@ formalised).
 * `VonNeumannAlgebra.arakiVec_nonneg` — `0 ≤ S(ω_ξ ‖ ω_η)` when `ω_η(s(ξ)) ≤ ω_ξ(1)`, in
   particular when `ω_η(1) ≤ ω_ξ(1)` (`VonNeumannAlgebra.arakiVec_nonneg_of_norm_le`), e.g. for
   two states.
+* `VonNeumannAlgebra.arakiVec_le_of_norm_sq_le` — the **domination bound**: if `ω_ξ ≤ c ω_η`
+  on `M`, then `S(ω_ξ ‖ ω_η) ≤ ‖ξ‖² log c`.
+* `VonNeumannAlgebra.exists_norm_sq_le_of_supportProj_le` — for finite-dimensional `M`,
+  `s(ξ) ≤ s(η)` gives `ω_ξ ≤ c ω_η` for some `c > 0`.
 
 ## References
 
@@ -235,30 +241,86 @@ variable {M ξ η} in
 theorem arakiVec_nonneg_of_norm_le (h : ‖η‖ ≤ ‖ξ‖) : 0 ≤ M.arakiVec ξ η :=
   arakiVec_nonneg ((Submodule.norm_starProjection_apply_le _ η).trans h)
 
-/-! ### Finite dimensions -/
+/-! ### Domination -/
 
 variable {M ξ η} in
-/-- In finite dimensions, `S(ω_ξ ‖ ω_η) = +∞` exactly when `s(ξ) ≰ s(η)`. -/
-theorem arakiVec_eq_top_iff [FiniteDimensional ℂ H] :
+/-- **Domination bound.** If `ω_ξ ≤ c ω_η` on `M`, in the form `‖x ξ‖² ≤ c ‖x η‖²` for every
+`x ∈ M`, then `S(ω_ξ ‖ ω_η) ≤ ‖ξ‖² log c`, i.e. `ψ ≤ c φ ⇒ S(ψ ‖ φ) ≤ ψ(1) log c`.
+
+With `η' = √c η`, every point `(a ξ + ζ, s(ξ) a⋆ η')` of the graph of `S_{η',ξ}` is dominated by
+the point `(a ξ, s(ξ) a⋆ ξ)` of the graph of `S_{ξ,ξ}`, so the resolvents compare as
+`⟪ξ, (t + Δ_{η',ξ})⁻¹ ξ⟫ ≤ ⟪ξ, (t + Δ_{ξ,ξ})⁻¹ ξ⟫` and `S(ω_ξ ‖ ω_{η'}) ≤ S(ω_ξ ‖ ω_ξ) = 0`. -/
+theorem arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
+    (h : ∀ x ∈ M, ‖x ξ‖ ^ 2 ≤ c * ‖x η‖ ^ 2) :
+    M.arakiVec ξ η ≤ ((‖ξ‖ ^ 2 * Real.log c : ℝ) : EReal) := by
+  set η' : H := (Real.sqrt c : ℂ) • η
+  have h' : ∀ x ∈ M, ‖x ξ‖ ≤ ‖x η'‖ := by
+    intro x hx
+    have hη' : ‖x η'‖ ^ 2 = c * ‖x η‖ ^ 2 := by
+      rw [map_smul, norm_smul, mul_pow, norm_real, Real.norm_of_nonneg (Real.sqrt_nonneg _),
+        Real.sq_sqrt hc.le]
+    exact (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).mp (hη' ▸ h x hx)
+  have hres : ∀ t : ℝ, 0 < t →
+      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M η' ξ).spectralMeasure ξ ≤
+        ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ ξ).spectralMeasure ξ := by
+    intro t ht
+    refine (isSelfAdjoint_relativeModular M ξ ξ).integral_inv_add_spectralMeasure_le_of_forall_mem_graph
+      (restrictScalars_relativeModular M ξ ξ) (isSelfAdjoint_relativeModular M η' ξ)
+      (isClosable_relativeTomita M η' ξ) (restrictScalars_relativeModular M η' ξ) ξ ξ ?_ ht
+    intro w w' hw
+    obtain ⟨a, ha, z, hz, hwz⟩ := mem_graph_relativeTomita.mp hw
+    obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hwz
+    have hK : a ξ ∈ (InnerProductSpace.cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule :=
+      InnerProductSpace.apply_mem_cyclicSubspace ξ ha
+    have hK₁ : ξ ∈ (InnerProductSpace.cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule :=
+      self_mem_cyclicSubspace M ξ
+    refine ⟨a ξ, M.supportProj ξ (star a ξ),
+      mem_graph_closure_relativeTomita (apply_mem_graph_relativeTomita ha), ?_, ?_, ?_⟩
+    · have hpy := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (𝕜 := ℂ) (a ξ) z
+        (Submodule.inner_right_of_mem_orthogonal hK hz)
+      nlinarith [norm_nonneg (a ξ), norm_nonneg (a ξ + z), norm_nonneg z]
+    · exact h' _ (mul_mem (M.supportProj_mem ξ) (star_mem ha))
+    · rw [inner_add_right, Submodule.inner_right_of_mem_orthogonal hK₁ hz, add_zero]
+  have hle := negLogIntegral_le_of_integral_inv_add_le
+    (ae_nonneg_spectralMeasure_relativeModular M ξ η')
+    (by rw [IsSelfAdjoint.spectralMeasure_univ, IsSelfAdjoint.spectralMeasure_univ])
+    (arakiVec_ne_bot M ξ ξ) hres
+  change M.arakiVec ξ η' ≤ M.arakiVec ξ ξ at hle
+  rw [arakiVec_self, arakiVec_sqrt_smul_right M ξ hc] at hle
+  exact EReal.sub_nonpos.mp hle
+
+/-! ### Finite-dimensional algebras -/
+
+variable {M ξ η} in
+/-- If `M` is finite-dimensional and `s(ξ) ≤ s(η)`, then `ω_ξ ≤ c ω_η` for some `c > 0`, in the
+form `‖x ξ‖² ≤ c ‖x η‖²` for every `x ∈ M`: the kernel of `x ↦ x η` lies in that of `x ↦ x ξ`,
+and on the finite-dimensional `M` this is a norm domination. -/
+theorem exists_norm_sq_le_of_supportProj_le [FiniteDimensional ℂ M]
+    (hle : M.supportProj ξ ≤ M.supportProj η) :
+    ∃ c > 0, ∀ x ∈ M, ‖x ξ‖ ^ 2 ≤ c * ‖x η‖ ^ 2 := by
+  have hξ : M.supportProj η ξ = ξ :=
+    (supportProj_le_iff (M.isStarProjection_supportProj η) (M.supportProj_mem η)).mp hle
+  obtain ⟨C, hC⟩ := LinearMap.exists_norm_le_mul_norm_of_ker_le (M.applyₗ ξ) (M.applyₗ η)
+    fun x hx => by
+      change (x : H →L[ℂ] H) η = 0 at hx
+      change (x : H →L[ℂ] H) ξ = 0
+      calc (x : H →L[ℂ] H) ξ = ((x : H →L[ℂ] H) * M.supportProj η) ξ := by
+            rw [mul_apply_eq_comp, hξ]
+        _ = 0 := by rw [(mul_supportProj_eq_zero_iff x.2).mpr hx, zero_apply]
+  refine ⟨C ^ 2 + 1, by positivity, fun x hx => ?_⟩
+  have h1 : ‖x ξ‖ ≤ C * ‖x η‖ := hC ⟨x, hx⟩
+  have h2 : ‖x ξ‖ ^ 2 ≤ (C * ‖x η‖) ^ 2 := pow_le_pow_left₀ (norm_nonneg _) h1 2
+  nlinarith [sq_nonneg ‖x η‖]
+
+variable {M ξ η} in
+/-- **Support characterisation of `+∞`** for a finite-dimensional algebra: `S(ω_ξ ‖ ω_η) = +∞`
+exactly when `s(ξ) ≰ s(η)`. When `s(ξ) ≤ s(η)`, `ω_ξ ≤ c ω_η` for some `c > 0`
+(`VonNeumannAlgebra.exists_norm_sq_le_of_supportProj_le`), so `S ≤ ‖ξ‖² log c < ∞`
+(`VonNeumannAlgebra.arakiVec_le_of_norm_sq_le`). This covers every finite-dimensional `H`. -/
+theorem arakiVec_eq_top_iff [FiniteDimensional ℂ M] :
     M.arakiVec ξ η = ⊤ ↔ ¬ M.supportProj ξ ≤ M.supportProj η := by
   refine ⟨fun htop hle => ?_, arakiVec_eq_top_of_not_supportProj_le⟩
-  set μ := (isSelfAdjoint_relativeModular M η ξ).spectralMeasure ξ
-  obtain ⟨F, hF, hFμ⟩ := (isSelfAdjoint_relativeModular M η ξ).exists_finite_spectralMeasure_compl_eq_zero
-  have h0 : μ {0} = 0 := spectralMeasure_relativeModular_singleton_zero_eq_zero_iff.mpr hle
-  -- `μ` lives on the finite set `F ∩ (0, ∞)`, which has a positive lower bound.
-  set S := F ∩ Set.Ioi 0
-  obtain ⟨δ, hδ, hδS⟩ : ∃ δ > 0, ∀ t ∈ S, δ ≤ t := by
-    rcases S.eq_empty_or_nonempty with hS | hS
-    · exact ⟨1, one_pos, by simp [hS]⟩
-    have hSf : S.Finite := hF.inter_of_left _
-    exact ⟨sInf S, (hS.csInf_mem hSf).2, fun t ht => csInf_le hSf.bddBelow ht⟩
-  refine negLogIntegral_ne_top_of_ae_ge hδ ?_ htop
-  have hS : ∀ᵐ t ∂μ, t ∈ S := by
-    have hF' : ∀ᵐ t ∂μ, t ∈ F := measure_eq_zero_iff_ae_notMem.mp (hFμ ξ) |>.mono fun t ht => by
-      simpa using ht
-    have h0' : ∀ᵐ t ∂μ, t ≠ 0 := measure_eq_zero_iff_ae_notMem.mp h0
-    filter_upwards [hF', h0', ae_nonneg_spectralMeasure_relativeModular M ξ η] with t htF ht0 htn
-    exact ⟨htF, lt_of_le_of_ne htn (Ne.symm ht0)⟩
-  exact hS.mono hδS
+  obtain ⟨c, hc, h⟩ := exists_norm_sq_le_of_supportProj_le hle
+  exact (arakiVec_le_of_norm_sq_le hc h).not_gt (htop ▸ EReal.coe_lt_top _)
 
 end VonNeumannAlgebra

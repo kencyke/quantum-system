@@ -30,6 +30,8 @@ Partial traces are the positional `Matrix.traceRight` / `Matrix.traceLeft`
 ## Main definitions
 
 * `DensityMatrix.kronecker` — tensor product of density matrices.
+* `DensityMatrix.traceRight` / `DensityMatrix.traceLeft` — the marginals `ρ_A = tr₂(ρ)` and
+  `ρ_B = tr₁(ρ)` of a bipartite density matrix.
 
 ## Main results
 
@@ -94,12 +96,11 @@ Subscript convention follows Nielsen–Chuang §2.4: `trᵢ(ρ)` traces *out* fa
 
 namespace QuantumInfo
 
-scoped syntax:max "tr₁(" term ")" : term
-scoped syntax:max "tr₂(" term ")" : term
+/-- `tr₁(ρ)` is the partial trace `Matrix.traceLeft ρ`, tracing out the first factor. -/
+scoped notation:max "tr₁(" ρ ")" => Matrix.traceLeft ρ
 
-scoped macro_rules
-  | `(tr₁($ρ)) => `(Matrix.traceLeft $ρ)
-  | `(tr₂($ρ)) => `(Matrix.traceRight $ρ)
+/-- `tr₂(ρ)` is the partial trace `Matrix.traceRight ρ`, tracing out the second factor. -/
+scoped notation:max "tr₂(" ρ ")" => Matrix.traceRight ρ
 
 end QuantumInfo
 
@@ -271,7 +272,32 @@ noncomputable def kronecker (ρ : DensityMatrix n) (σ : DensityMatrix m) :
 @[inherit_doc DensityMatrix.kronecker]
 scoped[Kronecker] infixl:100 " ⊗ " => DensityMatrix.kronecker
 
+/-- The underlying matrix of `ρ ⊗ σ` is the Kronecker product of the underlying matrices. -/
 @[simp] lemma kronecker_toMatrix (ρ : DensityMatrix n) (σ : DensityMatrix m) :
     (ρ ⊗ σ).toMatrix = ρ.toMatrix ⊗ₖ σ.toMatrix := rfl
+
+/-! ### Marginals -/
+
+/-- The **marginal on the first factor** `ρ_A = tr₂(ρ)` of a bipartite density matrix
+`ρ : DensityMatrix (n × m)`: the partial trace `Matrix.traceRight` over the second factor. -/
+noncomputable def traceRight (ρ : DensityMatrix (n × m)) : DensityMatrix n where
+  toMatrix := Matrix.traceRight ρ.toMatrix
+  posSemidef := Matrix.traceRight_posSemidef ρ.posSemidef
+  trace_eq_one := by rw [Matrix.trace_traceRight]; exact ρ.trace_eq_one
+
+/-- The underlying matrix of the first marginal is `Matrix.traceRight` of the underlying matrix. -/
+@[simp] lemma traceRight_toMatrix (ρ : DensityMatrix (n × m)) :
+    ρ.traceRight.toMatrix = ρ.toMatrix.traceRight := rfl
+
+/-- The **marginal on the second factor** `ρ_B = tr₁(ρ)` of a bipartite density matrix
+`ρ : DensityMatrix (n × m)`: the partial trace `Matrix.traceLeft` over the first factor. -/
+noncomputable def traceLeft (ρ : DensityMatrix (n × m)) : DensityMatrix m where
+  toMatrix := Matrix.traceLeft ρ.toMatrix
+  posSemidef := Matrix.traceLeft_posSemidef ρ.posSemidef
+  trace_eq_one := by rw [Matrix.trace_traceLeft]; exact ρ.trace_eq_one
+
+/-- The underlying matrix of the second marginal is `Matrix.traceLeft` of the underlying matrix. -/
+@[simp] lemma traceLeft_toMatrix (ρ : DensityMatrix (n × m)) :
+    ρ.traceLeft.toMatrix = ρ.toMatrix.traceLeft := rfl
 
 end DensityMatrix

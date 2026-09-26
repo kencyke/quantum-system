@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Trace
 public import QuantumSystem.Analysis.Entropy.Araki.Basic
 public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
+public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 
 /-!
 # Araki's relative entropy on a matrix algebra: Umegaki's formula
@@ -77,22 +78,14 @@ open HilbertTensor (amplifyLeft amplifyRight)
 variable {n : Type*} [Fintype n] [DecidableEq n]
   {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K]
 
-/-- An eigenvector of a Hermitian matrix is an eigenvector of the operator it defines on `ℂⁿ`. -/
-lemma Matrix.IsHermitian.toEuclideanCLM_eigenvectorBasis {A : Matrix n n ℂ} (hA : A.IsHermitian)
-    (i : n) :
-    Matrix.toEuclideanCLM (𝕜 := ℂ) A (hA.eigenvectorBasis i) =
-      ((hA.eigenvalues i : ℝ) : ℂ) • hA.eigenvectorBasis i := by
-  refine PiLp.ext fun k => ?_
-  have := congrFun (hA.mulVec_eigenvectorBasis i) k
-  rw [RCLike.real_smul_eq_coe_smul (K := ℂ)] at this
-  exact this
-
 namespace Matrix.PosSemidef
 
-/-- A **purification** of `ρ` along a family `g` in `K`: the vector `Σᵢ √rᵢ gᵢ ⊗ fᵢ ∈ K ⊗̂ ℂⁿ`, where
-`fᵢ` is the eigenvector basis of `ρ` and `rᵢ` its eigenvalues. For orthonormal `g` it represents
-the state `A ↦ Tr (ρ A)` of `1 ⊗ B(ℂⁿ)` (`Matrix.PosSemidef.inner_purification_amplifyRight`). -/
-noncomputable def purification {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef) (g : n → K) : K ⊗̂ EuclideanSpace ℂ n :=
+/-- The vector `Σᵢ √rᵢ gᵢ ⊗ fᵢ ∈ K ⊗̂ ℂⁿ` built from a positive semidefinite `ρ` and a family `g` in
+`K`, where `fᵢ` is the eigenvector basis of `ρ` and `rᵢ` its eigenvalues. For orthonormal `g` it
+is a **purification** of `ρ`: it represents the positive functional `A ↦ Tr (ρ A)` (a state when
+`Tr ρ = 1`) of `1 ⊗ B(ℂⁿ)` (`Matrix.PosSemidef.inner_purification_amplifyRight`). -/
+noncomputable def purification {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef) (g : n → K) :
+    K ⊗̂ EuclideanSpace ℂ n :=
   ∑ i, ((Real.sqrt (hρ.1.eigenvalues i) : ℝ) : ℂ) • (g i ⊗ₕ hρ.1.eigenvectorBasis i)
 
 variable {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef) {g : n → K}
@@ -119,25 +112,6 @@ lemma amplifyLeft_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : n) 
       rw [hg.2 hk.symm, zero_smul, HilbertTensor.zero_tmul, smul_zero]) (by simp),
     orthonormal_iff_ite.mp hg i i]
   simp
-
-/-- `Tr (ρ A) = Σᵢ rᵢ ⟪fᵢ, A fᵢ⟫` in the eigenvector basis of `ρ`. -/
-lemma trace_mul_eq_sum_inner (A : Matrix n n ℂ) :
-    Tr (ρ * A) = ∑ i, ((hρ.1.eigenvalues i : ℝ) : ℂ) *
-      ⟪hρ.1.eigenvectorBasis i,
-        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ := by
-  have h : Tr (ρ * A) =
-      LinearMap.trace ℂ _ (Matrix.toEuclideanLin (ρ * A)) := by
-    rw [LinearMap.trace_eq_matrix_trace ℂ (EuclideanSpace.basisFun n ℂ).toBasis,
-      Matrix.toEuclideanLin_eq_toLin_orthonormal, LinearMap.toMatrix_toLin]
-  rw [h, LinearMap.trace_eq_sum_inner _ hρ.1.eigenvectorBasis]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  change ⟪_, Matrix.toEuclideanCLM (𝕜 := ℂ) (ρ * A) _⟫_ℂ = _
-  rw [map_mul]
-  calc _ = ⟪Matrix.toEuclideanCLM (𝕜 := ℂ) ρ (hρ.1.eigenvectorBasis i),
-        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ :=
-        (Matrix.isSymmetric_toEuclideanLin_iff.mpr hρ.1 _ _).symm
-    _ = _ := by
-      rw [hρ.1.toEuclideanCLM_eigenvectorBasis, inner_smul_left, Complex.conj_ofReal]
 
 /-- **The purification represents `ρ`**: `⟪Ω_ρ, (1 ⊗ A) Ω_ρ⟫ = Tr (ρ A)` for orthonormal `g`. -/
 theorem inner_purification_amplifyRight (hg : Orthonormal ℂ g) (A : Matrix n n ℂ) :
@@ -314,14 +288,14 @@ theorem spectralMeasure_relativeModular_purification [CompleteSpace K] (hg : Ort
         · rw [hg.2 h₁, zero_mul, mul_zero, mul_zero]
 
 variable (hρ hσ) in
-/-- **Araki's relative entropy of purifications is given by Umegaki's formula.** For density
-matrices `ρ, σ` and their purifications along an orthonormal family `g` in `K`,
-`S_{1 ⊗ B(ℂⁿ)}(ω_{Ω_ρ} ‖ ω_{Ω_σ}) = Tr ρ (cfc Real.log ρ - cfc Real.log σ)` if `supp ρ ⊆ supp σ`, and `+∞`
-otherwise. -/
+/-- **Araki's relative entropy of purifications is given by Umegaki's formula.** For positive
+semidefinite matrices `ρ, σ` (of any trace) and their purifications along an orthonormal family
+`g` in `K`, `S_{1 ⊗ B(ℂⁿ)}(ω_{Ω_ρ} ‖ ω_{Ω_σ}) = Tr ρ (cfc Real.log ρ - cfc Real.log σ)` if
+`supp ρ ⊆ supp σ`, and `+∞` otherwise. -/
 theorem arakiVec_purification [CompleteSpace K] (hg : Orthonormal ℂ g)
-    [Decidable (Matrix.suppSubset ρ σ)] :
+    [Decidable (Matrix.SuppSubset ρ σ)] :
     (𝓜).arakiVec (hρ.purification g) (hσ.purification g) =
-      if Matrix.suppSubset ρ σ then
+      if Matrix.SuppSubset ρ σ then
         (((Tr (ρ * (cfc Real.log ρ - cfc Real.log σ))).re : ℝ) : EReal)
       else ⊤ := by
   have hW : ∀ i j, ‖⟪hσ.1.eigenvectorBasis j, hρ.1.eigenvectorBasis i⟫_ℂ‖ ^ 2 =
@@ -329,7 +303,7 @@ theorem arakiVec_purification [CompleteSpace K] (hg : Orthonormal ℂ g)
     rw [Matrix.eigW_apply, Complex.normSq_eq_norm_sq]
   rw [arakiVec, spectralMeasure_relativeModular_purification hρ hσ hg]
   simp_rw [hW]
-  by_cases hsupp : Matrix.suppSubset ρ σ
+  by_cases hsupp : Matrix.SuppSubset ρ σ
   · have ht : ∀ i j, hρ.1.eigenvalues i * Complex.normSq (Matrix.eigW hρ.1 hσ.1 j i) ≠ 0 →
         hσ.1.eigenvalues j ≠ 0 := fun i j h ht =>
       h (by
@@ -432,9 +406,9 @@ variable {ρ σ : Matrix n n ℂ} (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef)
 /-- **Araki's relative entropy of the normal functionals `Tr (ρ ·)`, `Tr (σ ·)` of `B(ℂⁿ)` is
 given by Umegaki's formula**: `S(ω_ρ ‖ ω_σ) = Tr ρ (log ρ - log σ)` if `supp ρ ⊆ supp σ`, and `+∞`
 otherwise. -/
-theorem arakiEntropy_normalFunctional [Decidable (Matrix.suppSubset ρ σ)] :
+theorem arakiEntropy_normalFunctional [Decidable (Matrix.SuppSubset ρ σ)] :
     S⟦hρ.normalFunctional ∥ hσ.normalFunctional⟧ =
-      if Matrix.suppSubset ρ σ then
+      if Matrix.SuppSubset ρ σ then
         (((Tr (ρ * (cfc Real.log ρ - cfc Real.log σ))).re : ℝ) : EReal)
       else ⊤ :=
   (arakiEntropy_eq_arakiVec (Ξψ := hρ.purification δₙ) (Ξφ := hσ.purification δₙ) (fun _ => rfl)

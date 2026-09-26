@@ -31,8 +31,8 @@ The spectral theorem gives ρ = U diag(λ₁, ..., λₙ) U* where λᵢ ≥ 0 a
 The Von Neumann entropy is:
   S(ρ) = -Tr(ρ log ρ) = -Σᵢ λᵢ log λᵢ
 
-The relative entropy is:
-  S(ρ || σ) = Tr(ρ (log ρ - log σ))
+Umegaki's relative entropy (`Matrix.umegakiEntropy`) is:
+  D(ρ ∥ σ) = Tr(ρ (log ρ - log σ)) if supp ρ ⊆ supp σ, and +∞ otherwise
 
 where log ρ and log σ are matrix logarithms computed via the continuous functional
 calculus (CFC), applied to each matrix's own spectral decomposition. This is the
@@ -65,6 +65,12 @@ variable {n : Type*} [Fintype n] [DecidableEq n]
 /-- Two density matrices are equal iff their underlying matrices are equal. -/
 @[ext] lemma ext {ρ σ : DensityMatrix n} (h : ρ.toMatrix = σ.toMatrix) : ρ = σ := by
   cases ρ; cases σ; congr
+
+/-- Density matrices exist only over a nonempty index type: an empty matrix has trace `0 ≠ 1`. -/
+lemma nonempty (ρ : DensityMatrix n) : Nonempty n := by
+  by_contra h
+  rw [not_nonempty_iff] at h
+  simpa [Matrix.trace] using ρ.trace_eq_one
 
 /-- A density matrix is Hermitian. -/
 lemma isHermitian (ρ : DensityMatrix n) : ρ.toMatrix.IsHermitian := ρ.posSemidef.1
@@ -190,7 +196,7 @@ noncomputable def mapEquiv {m : Type*} [Fintype m] [DecidableEq m]
 /-! ### Maximally mixed state
 
 The uniform state `π = I/d` is the unique state whose entropy attains the
-maximum `log d`. -/
+maximum `log d` (`Matrix.vonNeumannEntropy_eq_log_card_iff`). -/
 
 section MaximallyMixed
 

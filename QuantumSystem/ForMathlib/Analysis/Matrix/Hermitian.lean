@@ -6,7 +6,11 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.CStarAlgebra.Matrix
+public import Mathlib.Analysis.InnerProductSpace.Trace
+public import Mathlib.Analysis.Matrix.Spectrum
 public import Mathlib.LinearAlgebra.Matrix.Hermitian
+public import Mathlib.LinearAlgebra.Matrix.PosDef
 
 /-!
 # Hermitian Matrices
@@ -23,6 +27,10 @@ This file collects basic lemmas about Hermitian matrices over `ℂ`.
 - `IsHermitian.diagonal_real`: a diagonal matrix with real entries is Hermitian.
 - `IsHermitian.smul_complex_real`: multiplication by a real scalar (viewed in `ℂ`) preserves
   Hermiticity.
+- `IsHermitian.toEuclideanCLM_eigenvectorBasis`: an eigenvector of a Hermitian matrix is an
+  eigenvector of the operator it defines on `ℂⁿ`.
+- `PosSemidef.trace_mul_eq_sum_inner`: `Tr (ρ A) = Σᵢ rᵢ ⟪fᵢ, A fᵢ⟫` in the eigenvector basis of a
+  positive semidefinite `ρ`.
 -/
 @[expose] public section
 
@@ -89,5 +97,44 @@ lemma IsHermitian.smul_complex_real {m : Type*}
   unfold IsHermitian at *
   rw [conjTranspose_smul, hA]
   simp only [RCLike.star_def, Complex.conj_ofReal]
+
+section Eigenbasis
+
+open scoped InnerProductSpace ComplexOrder
+
+variable {n : Type*} [Fintype n] [DecidableEq n]
+
+/-- An eigenvector of a Hermitian matrix is an eigenvector of the operator it defines on `ℂⁿ`. -/
+lemma IsHermitian.toEuclideanCLM_eigenvectorBasis {A : Matrix n n ℂ} (hA : A.IsHermitian)
+    (i : n) :
+    Matrix.toEuclideanCLM (𝕜 := ℂ) A (hA.eigenvectorBasis i) =
+      ((hA.eigenvalues i : ℝ) : ℂ) • hA.eigenvectorBasis i := by
+  refine PiLp.ext fun k => ?_
+  have := congrFun (hA.mulVec_eigenvectorBasis i) k
+  rw [RCLike.real_smul_eq_coe_smul (K := ℂ)] at this
+  exact this
+
+variable {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef)
+
+/-- `Tr (ρ A) = Σᵢ rᵢ ⟪fᵢ, A fᵢ⟫` in the eigenvector basis of `ρ`. -/
+lemma PosSemidef.trace_mul_eq_sum_inner (A : Matrix n n ℂ) :
+    Matrix.trace (ρ * A) = ∑ i, ((hρ.1.eigenvalues i : ℝ) : ℂ) *
+      ⟪hρ.1.eigenvectorBasis i,
+        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ := by
+  have h : Matrix.trace (ρ * A) =
+      LinearMap.trace ℂ _ (Matrix.toEuclideanLin (ρ * A)) := by
+    rw [LinearMap.trace_eq_matrix_trace ℂ (EuclideanSpace.basisFun n ℂ).toBasis,
+      Matrix.toEuclideanLin_eq_toLin_orthonormal, LinearMap.toMatrix_toLin]
+  rw [h, LinearMap.trace_eq_sum_inner _ hρ.1.eigenvectorBasis]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  change ⟪_, Matrix.toEuclideanCLM (𝕜 := ℂ) (ρ * A) _⟫_ℂ = _
+  rw [map_mul]
+  calc _ = ⟪Matrix.toEuclideanCLM (𝕜 := ℂ) ρ (hρ.1.eigenvectorBasis i),
+        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ :=
+        (Matrix.isSymmetric_toEuclideanLin_iff.mpr hρ.1 _ _).symm
+    _ = _ := by
+      rw [hρ.1.toEuclideanCLM_eigenvectorBasis, inner_smul_left, Complex.conj_ofReal]
+
+end Eigenbasis
 
 end Matrix

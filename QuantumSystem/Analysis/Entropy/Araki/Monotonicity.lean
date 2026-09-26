@@ -36,7 +36,7 @@ the Schwarz map `1 ⊗ α` (`VonNeumannAlgebra.amplifySchwarzMap`, built from th
 `VonNeumannAlgebra.amplifyEquiv`).
 
 The map `V` is never built as an operator: the comparison of resolvents only needs, for each point
-of the graph of `S_B`, a dominating point of the graph of `S_A`.
+of the graph of `S_N`, a dominating point of the graph of `S_M`.
 
 ## Main results
 

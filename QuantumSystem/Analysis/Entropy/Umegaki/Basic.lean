@@ -8,9 +8,9 @@ module
 public import Mathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.Analysis.Entropy.Araki.Matrix
 public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
-public import QuantumSystem.Analysis.Entropy.Umegaki.ChannelDual
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Dual
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ProdLp
 
@@ -102,7 +102,9 @@ the definition covers density matrices as well as unnormalised references such a
 otherwise — is `Matrix.umegakiEntropy_eq_ite`. Logarithms are natural, so the unit is the nat.
 
 If `ρ` or `σ` is not positive semidefinite the value is the junk value `0`
-(`Matrix.umegakiEntropy_of_not_posSemidef`); every theorem about `D(ρ ‖ σ)` assumes positivity. -/
+(`Matrix.umegakiEntropy_of_not_posSemidef`). Theorems about the value of `D(ρ ‖ σ)` assume
+positivity; the few that hold for all matrices (`Matrix.umegakiEntropy_ne_bot`,
+`Matrix.umegakiEntropy_map_starAlgEquiv`, `Matrix.umegakiEntropy_reindex`) are stated without it. -/
 noncomputable def umegakiEntropy (ρ σ : Matrix n n ℂ) : EReal :=
   letI := Classical.propDecidable (ρ.PosSemidef ∧ σ.PosSemidef)
   if h : ρ.PosSemidef ∧ σ.PosSemidef then S⟦h.1.normalFunctional ∥ h.2.normalFunctional⟧ else 0
@@ -128,25 +130,32 @@ theorem umegakiEntropy_of_not_posSemidef (h : ¬ (ρ.PosSemidef ∧ σ.PosSemide
 otherwise. With Mathlib's `Real.log 0 = 0`, `log σ` vanishes on `ker σ`, which `ρ` annihilates in
 the first case. -/
 theorem umegakiEntropy_eq_ite (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef)
-    [Decidable (suppSubset ρ σ)] :
+    [Decidable (SuppSubset ρ σ)] :
     D(ρ ∥ σ) =
-      if suppSubset ρ σ then (((Tr (ρ * (cfc Real.log ρ - cfc Real.log σ))).re : ℝ) : EReal)
+      if SuppSubset ρ σ then (((Tr (ρ * (cfc Real.log ρ - cfc Real.log σ))).re : ℝ) : EReal)
       else ⊤ := by
   rw [umegakiEntropy_def hρ hσ]
   exact VonNeumannAlgebra.arakiEntropy_normalFunctional hρ hσ
 
 /-- `D(ρ ‖ σ) = Tr ρ (log ρ - log σ)` when `supp ρ ⊆ supp σ`. -/
 theorem umegakiEntropy_of_suppSubset (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef)
-    (h : suppSubset ρ σ) :
+    (h : SuppSubset ρ σ) :
     D(ρ ∥ σ) = (((Tr (ρ * (cfc Real.log ρ - cfc Real.log σ))).re : ℝ) : EReal) := by
   classical
   rw [umegakiEntropy_eq_ite hρ hσ, ite_eq_left h]
 
 /-- `D(ρ ‖ σ) = +∞` when `supp ρ ⊄ supp σ`. -/
 theorem umegakiEntropy_of_not_suppSubset (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef)
-    (h : ¬ suppSubset ρ σ) : D(ρ ∥ σ) = ⊤ := by
+    (h : ¬ SuppSubset ρ σ) : D(ρ ∥ σ) = ⊤ := by
   classical
   rw [umegakiEntropy_eq_ite hρ hσ, ite_eq_right h]
+
+/-- **Finiteness**: `D(ρ ‖ σ) < +∞` exactly when `supp ρ ⊆ supp σ`. -/
+theorem umegakiEntropy_ne_top_iff (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) :
+    D(ρ ∥ σ) ≠ ⊤ ↔ SuppSubset ρ σ := by
+  refine ⟨fun h => by_contra fun hs => h (umegakiEntropy_of_not_suppSubset hρ hσ hs), fun h => ?_⟩
+  rw [umegakiEntropy_of_suppSubset hρ hσ h]
+  exact EReal.coe_ne_top _
 
 end Matrix
 
@@ -342,8 +351,8 @@ theorem umegakiEntropy_eq_zero_iff (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef)
   constructor
   · -- → direction: D(ρ‖σ) = 0 → ρ = σ
     intro hD
-    -- First: D = ⊤ would give ⊤ = 0, contradiction, so we must be in the suppSubset case.
-    by_cases h : suppSubset ρ σ
+    -- First: D = ⊤ would give ⊤ = 0, contradiction, so we must be in the SuppSubset case.
+    by_cases h : SuppSubset ρ σ
     · rw [umegakiEntropy_of_suppSubset hρ hσ h, EReal.coe_eq_zero] at hD
       change (ρ * (cfc Real.log ρ - cfc Real.log σ)).trace.re = 0 at hD
       -- Extract eigenvalue data
@@ -469,7 +478,7 @@ theorem umegakiEntropy_eq_zero_iff (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef)
           = V * (W * diagonal (fun i => (ev_ρ i : ℂ)) * Wᴴ) * Vᴴ := by
             simp only [Matrix.mul_assoc]
         _ = V * diagonal (fun j => (ev_σ j : ℂ)) * Vᴴ := by rw [hWdiag]
-    · -- h : ¬ suppSubset ρ σ, so D(ρ‖σ) = ⊤ ≠ 0, contradiction
+    · -- h : ¬ SuppSubset ρ σ, so D(ρ‖σ) = ⊤ ≠ 0, contradiction
       rw [umegakiEntropy_of_not_suppSubset hρ hσ h] at hD
       exact absurd hD EReal.top_ne_zero
   · -- ← direction: ρ = σ → D(ρ‖σ) = 0
@@ -633,7 +642,7 @@ private lemma hasDerivAt_double_rpow_sum
 When supp(ρ) ⊆ supp(σ):
   (d/ds)|_{s=1} Tr (ρˢ σ¹⁻ˢ) = Tr (ρ(log ρ − log σ)) = D(ρ ‖ σ) -/
 private lemma hasDerivAt_trace_rpow_mul {ρ σ : Matrix n n ℂ} (hρ : ρ.PosSemidef)
-    (hσ : σ.PosSemidef) (h : suppSubset ρ σ) :
+    (hσ : σ.PosSemidef) (h : SuppSubset ρ σ) :
     HasDerivAt (fun s : ℝ => (Tr (ρ ^ s * σ ^ (1 - s))).re)
       ((Tr (ρ * (cfc Real.log ρ - cfc Real.log σ))).re) 1 := by
   set ev_ρ := hρ.1.eigenvalues
@@ -684,7 +693,7 @@ theorem umegakiEntropy_channel_le (Φ : QuantumChannel n m) {ρ σ : Matrix n n 
       (Φ.2.completelyPositive.posSemidef_map hσ), umegakiEntropy_def hρ hσ, key hρ, key hσ]
   exact VonNeumannAlgebra.arakiEntropy_comp_le _ (QuantumChannel.dualSchwarzMap_one Φ) hα _ _
 
-/-! ### Characterization of Equality -/
+/-! ### Equality under recoverable channels -/
 
 /-- **Sufficiency of recovery for equality in DPI.**
 
@@ -715,9 +724,9 @@ supp(p A₁ + (1−p) A₂) ⊆ supp(p B₁ + (1−p) B₂). -/
 private lemma suppSubset_mix
     {A₁ A₂ B₁ B₂ : Matrix n n ℂ}
     (hB₁ : B₁.PosSemidef) (hB₂ : B₂.PosSemidef)
-    (hsup₁ : suppSubset A₁ B₁) (hsup₂ : suppSubset A₂ B₂)
+    (hsup₁ : SuppSubset A₁ B₁) (hsup₂ : SuppSubset A₂ B₂)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : 0 ≤ 1 - p) :
-    suppSubset (p • A₁ + (1 - p) • A₂) (p • B₁ + (1 - p) • B₂) := by
+    SuppSubset (p • A₁ + (1 - p) • A₂) (p • B₁ + (1 - p) • B₂) := by
   intro v hv
   rw [Matrix.add_mulVec, show (p • B₁) *ᵥ v = p • B₁ *ᵥ v from Matrix.smul_mulVec _ _ _,
       show ((1 - p) • B₂) *ᵥ v = (1 - p) • B₂ *ᵥ v from Matrix.smul_mulVec _ _ _] at hv
@@ -813,21 +822,21 @@ theorem umegakiEntropy_jointly_convex {ρ₁ ρ₂ σ₁ σ₂ : Matrix n n ℂ}
     rw [show (1 : EReal) - p = ((1 - p : ℝ) : EReal) by norm_cast]; exact EReal.coe_ne_top _
   have hρmix := posSemidef_mix hρ₁ hρ₂ hp hp1
   have hσmix := posSemidef_mix hσ₁ hσ₂ hp hp1
-  by_cases h₂ : suppSubset ρ₂ σ₂
+  by_cases h₂ : SuppSubset ρ₂ σ₂
   swap
   · -- `D₂ = ⊤`: the right side is `⊤`
     rw [umegakiEntropy_of_not_suppSubset hρ₂ hσ₂ h₂, EReal.mul_top_of_pos hq',
       EReal.add_top_of_ne_bot (mul_ne_bot_of_pos (by exact_mod_cast hp0) (EReal.coe_ne_top p)
         (umegakiEntropy_ne_bot ρ₁ σ₁))]
     exact le_top
-  by_cases h₁ : suppSubset ρ₁ σ₁
+  by_cases h₁ : SuppSubset ρ₁ σ₁
   swap
   · -- `D₁ = ⊤`: the right side is `⊤`
     rw [umegakiEntropy_of_not_suppSubset hρ₁ hσ₁ h₁, EReal.mul_top_of_pos (by exact_mod_cast hp0),
       EReal.top_add_of_ne_bot (mul_ne_bot_of_pos hq' hqt (umegakiEntropy_ne_bot ρ₂ σ₂))]
     exact le_top
   -- Both finite: derivative argument
-  have hsup_mix : suppSubset (p • ρ₁ + (1 - p) • ρ₂) (p • σ₁ + (1 - p) • σ₂) :=
+  have hsup_mix : SuppSubset (p • ρ₁ + (1 - p) • ρ₂) (p • σ₁ + (1 - p) • σ₂) :=
     suppSubset_mix hσ₁ hσ₂ h₁ h₂ p hp hq.le
   set ρm := p • ρ₁ + (1 - p) • ρ₂ with hρm
   set σm := p • σ₁ + (1 - p) • σ₂ with hσm
@@ -890,9 +899,9 @@ lemma umegakiEntropy_map_starAlgEquiv (ρ σ : Matrix m m ℂ)
     ⟨fun h => by simpa using h.map_starAlgEquiv φ.symm, fun h => h.map_starAlgEquiv φ⟩
   by_cases hρσ : ρ.PosSemidef ∧ σ.PosSemidef
   · obtain ⟨hρ, hσ⟩ := hρσ
-    have h_supp_iff : suppSubset (φ ρ) (φ σ) ↔ suppSubset ρ σ :=
+    have h_supp_iff : SuppSubset (φ ρ) (φ σ) ↔ SuppSubset ρ σ :=
       suppSubset_map_starAlgEquiv_iff hσ.1 φ
-    by_cases h : suppSubset ρ σ
+    by_cases h : SuppSubset ρ σ
     · rw [umegakiEntropy_of_suppSubset (hpsd.mpr hρ) (hpsd.mpr hσ) (h_supp_iff.mpr h),
         umegakiEntropy_of_suppSubset hρ hσ h, cfc_log_map_starAlgEquiv hρ.1 φ,
         cfc_log_map_starAlgEquiv hσ.1 φ, ← map_sub, ← map_mul, Matrix.trace_map]

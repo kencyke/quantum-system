@@ -100,6 +100,11 @@ the subtype `↥N` inherits an `Algebra ℂ ↥N` structure (via `SubalgebraClas
 instance instSMulMemClass : SMulMemClass (VonNeumannAlgebra H) ℂ (H →L[ℂ] H) where
   smul_mem {s} c _ hx := s.toStarSubalgebra.smul_mem hx c
 
+/-- A von Neumann algebra on a finite-dimensional Hilbert space is finite-dimensional. -/
+instance instFiniteDimensional [FiniteDimensional ℂ H] (N : VonNeumannAlgebra H) :
+    FiniteDimensional ℂ N :=
+  FiniteDimensional.of_injective (SMulMemClass.subtype N) (SMulMemClass.subtype_injective N)
+
 /-- The commutant `(s ∪ s⋆)′` of the *symmetrized* set of an arbitrary set of bounded operators,
 packaged as a von Neumann algebra. For star-closed `s` — in particular for every self-adjoint
 generating set — this coincides with the commutant `s′` of the operator-algebra literature; for

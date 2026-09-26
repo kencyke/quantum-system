@@ -52,6 +52,7 @@ noncomputable def onBoundedLinearOperators (T : SchwarzMap (K →L[ℂ] K) (H �
     rw [← Subtype.coe_le_coe]
     exact T.le_map_star_mul' (x : K →L[ℂ] K)
 
+/-- `T.onBoundedLinearOperators` acts as `T` on the underlying operators. -/
 @[simp] lemma coe_onBoundedLinearOperators_apply (T : SchwarzMap (K →L[ℂ] K) (H →L[ℂ] H))
     (x : 𝓑(K)) : (T.onBoundedLinearOperators x : H →L[ℂ] H) = T x := rfl
 
@@ -66,6 +67,7 @@ noncomputable def toEuclideanL (K : Matrix m n ℂ) : EuclideanSpace ℂ n →L[
   LinearMap.toContinuousLinearMap (Matrix.toEuclideanLin K)
 
 omit [DecidableEq m] in
+/-- `toEuclideanL K v` is the matrix-vector product `K v`. -/
 @[simp] lemma toEuclideanL_apply (K : Matrix m n ℂ) (v : EuclideanSpace ℂ n) :
     toEuclideanL K v = WithLp.toLp 2 (K *ᵥ WithLp.ofLp v) := rfl
 
@@ -88,14 +90,17 @@ lemma toEuclideanCLM_conjTranspose_mul_mul (K : Matrix m n ℂ) (B : Matrix m m 
 
 namespace QuantumChannel
 
-/-- The Kraus rank chosen for `Φ`. -/
-noncomputable def krausRank (Φ : QuantumChannel n m) : ℕ := Φ.2.completelyPositive.choose
+/-- The number of Kraus operators in the Kraus representation of `Φ` chosen by `kraus`. The
+representation is arbitrary, so this is not the Kraus rank (the minimal number of Kraus
+operators). -/
+noncomputable def numKraus (Φ : QuantumChannel n m) : ℕ := Φ.2.completelyPositive.choose
 
 /-- Kraus operators chosen for `Φ`: `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` (`kraus_spec`). -/
-noncomputable def kraus (Φ : QuantumChannel n m) : Fin (krausRank Φ) → Matrix m n ℂ :=
+noncomputable def kraus (Φ : QuantumChannel n m) : Fin (numKraus Φ) → Matrix m n ℂ :=
   Φ.2.completelyPositive.choose_spec.choose
 
 omit [DecidableEq n] [DecidableEq m] in
+/-- The chosen Kraus operators represent `Φ`: `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ`. -/
 lemma kraus_spec (Φ : QuantumChannel n m) (A : Matrix n n ℂ) :
     Φ.val A = ∑ i, (kraus Φ) i * A * ((kraus Φ) i)ᴴ :=
   Φ.2.completelyPositive.choose_spec.choose_spec A
@@ -105,8 +110,9 @@ omit [DecidableEq m] in
 lemma sum_adjoint_toEuclideanL_kraus (Φ : QuantumChannel n m) :
     ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L toEuclideanL ((kraus Φ) i) = 1 := by
   classical
-  have h (i : Fin (krausRank Φ)) : adjoint (toEuclideanL ((kraus Φ) i)) ∘L toEuclideanL ((kraus Φ) i) =
-      Matrix.toEuclideanCLM (𝕜 := ℂ) (((kraus Φ) i)ᴴ * (1 : Matrix m m ℂ) * (kraus Φ) i) := by
+  have h (i : Fin (numKraus Φ)) :
+      adjoint (toEuclideanL ((kraus Φ) i)) ∘L toEuclideanL ((kraus Φ) i) =
+        Matrix.toEuclideanCLM (𝕜 := ℂ) (((kraus Φ) i)ᴴ * (1 : Matrix m m ℂ) * (kraus Φ) i) := by
     rw [toEuclideanCLM_conjTranspose_mul_mul, map_one, one_def, ContinuousLinearMap.id_comp]
   simp_rw [h, Matrix.mul_one, ← map_sum, QuantumChannel.kraus_sum_eq_one Φ (kraus_spec Φ), map_one]
 
@@ -118,6 +124,7 @@ noncomputable def dualSchwarzMap (Φ : QuantumChannel n m) :
   (SchwarzMap.ofKraus _ (sum_adjoint_toEuclideanL_kraus Φ).le).onBoundedLinearOperators
 
 omit [DecidableEq m] in
+/-- `Φ*(x) = Σᵢ Kᵢ† x Kᵢ` on the underlying operators. -/
 @[simp] lemma coe_dualSchwarzMap (Φ : QuantumChannel n m) (x : 𝓑(EuclideanSpace ℂ m)) :
     ((dualSchwarzMap Φ) x : EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) =
       ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L (x : _ →L[ℂ] _) ∘L toEuclideanL ((kraus Φ) i) :=
@@ -125,7 +132,8 @@ omit [DecidableEq m] in
 
 /-- `Φ*(B) = Matrix.traceDual Φ B` for a matrix `B`. -/
 theorem dualSchwarzMap_apply (Φ : QuantumChannel n m) (B : Matrix m m ℂ) :
-    (dualSchwarzMap Φ) B.toBoundedLinearOperators = (Matrix.traceDual Φ.val B).toBoundedLinearOperators := by
+    (dualSchwarzMap Φ) B.toBoundedLinearOperators =
+      (Matrix.traceDual Φ.val B).toBoundedLinearOperators := by
   apply Subtype.ext
   rw [coe_dualSchwarzMap, coe_toBoundedLinearOperators, coe_toBoundedLinearOperators,
     Matrix.traceDual_eq_of_kraus (kraus_spec Φ), map_sum]
@@ -136,8 +144,8 @@ omit [DecidableEq m] in
 theorem dualSchwarzMap_one (Φ : QuantumChannel n m) : (dualSchwarzMap Φ) 1 = 1 := by
   apply Subtype.ext
   rw [coe_dualSchwarzMap]
-  change ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L (1 : _ →L[ℂ] _) ∘L toEuclideanL ((kraus Φ) i) =
-    (1 : EuclideanSpace ℂ n →L[ℂ] _)
+  change ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L (1 : _ →L[ℂ] _) ∘L
+      toEuclideanL ((kraus Φ) i) = (1 : EuclideanSpace ℂ n →L[ℂ] _)
   simp_rw [one_def, ContinuousLinearMap.id_comp]
   exact (sum_adjoint_toEuclideanL_kraus Φ)
 

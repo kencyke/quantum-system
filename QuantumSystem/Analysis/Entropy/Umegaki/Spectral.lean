@@ -11,13 +11,15 @@ public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
 # Supports and relative eigenbases of Hermitian matrices
 
 Spectral facts about a pair of Hermitian (or positive semidefinite) matrices `ρ, σ` used to
-evaluate Umegaki's relative entropy `Tr ρ (log ρ - log σ)` (`Matrix.umegakiEntropy`, `QuantumSystem.Analysis.Entropy.Umegaki.Basic`).
+evaluate Umegaki's relative entropy `Tr ρ (log ρ - log σ)` (`Matrix.umegakiEntropy`,
+`QuantumSystem.Analysis.Entropy.Umegaki.Basic`).
 Nothing here refers to an entropy: the file records the support inclusion `supp ρ ⊆ supp σ` and
 the expansion of `Tr ρ log ρ` and `Tr ρ log σ` in the eigenbases of `ρ` and `σ`.
 
 ## Main definitions
 
-* `Matrix.suppSubset ρ σ` — support inclusion `supp ρ ⊆ supp σ`, i.e. `ker σ ⊆ ker ρ`.
+* `Matrix.SuppSubset ρ σ` — kernel inclusion `ker σ ⊆ ker ρ`, i.e. support inclusion
+  `supp ρ ⊆ supp σ` for Hermitian `ρ, σ`.
 * `Matrix.eigW hρ hσ` — the change-of-basis unitary `W = Vᴴ U` between the eigenvector bases `U` of
   `ρ` and `V` of `σ`; its entries are the overlaps `W_{ji} = ⟪e_j, f_i⟫` (`Matrix.eigW_apply`).
 
@@ -41,9 +43,11 @@ variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
 /-! ### Support inclusion -/
 
-/-- Support inclusion: the kernel of σ is contained in the kernel of ρ,
-i.e., supp(ρ) ⊆ supp(σ). This is the condition for D(ρ‖σ) to be finite. -/
-def suppSubset (ρ σ : Matrix n n ℂ) : Prop :=
+/-- **Support inclusion**: the kernel of `σ` is contained in the kernel of `ρ`. For Hermitian
+`ρ, σ`, whose supports are the orthogonal complements of their kernels, this is
+`supp ρ ⊆ supp σ`. For positive semidefinite `ρ, σ` it is exactly the condition for `D(ρ ‖ σ)` to
+be finite (`Matrix.umegakiEntropy_ne_top_iff`). -/
+def SuppSubset (ρ σ : Matrix n n ℂ) : Prop :=
   ∀ v : n → ℂ, σ.mulVec v = 0 → ρ.mulVec v = 0
 
 omit [DecidableEq n] in
@@ -62,7 +66,7 @@ annihilates the kernel projection `cfc (fun x => if x = 0 then 1 else 0) σ` of 
 hypothesis on `ρ` is needed. This is the form that transports along `*`-algebra
 equivalences (`suppSubset_map_starAlgEquiv_iff`). -/
 theorem suppSubset_iff_mul_cfc_eq_zero {ρ σ : Matrix n n ℂ} (hσ : σ.IsHermitian) :
-    suppSubset ρ σ ↔ ρ * cfc (fun x : ℝ => if x = 0 then (1 : ℝ) else 0) σ = 0 := by
+    SuppSubset ρ σ ↔ ρ * cfc (fun x : ℝ => if x = 0 then (1 : ℝ) else 0) σ = 0 := by
   have hfin : (spectrum ℝ σ).Finite := by
     rw [hσ.spectrum_real_eq_range_eigenvalues]; exact Set.finite_range _
   have hsa : IsSelfAdjoint σ := hσ
@@ -108,7 +112,7 @@ theorem suppSubset_iff_mul_cfc_eq_zero {ρ σ : Matrix n n ℂ} (hσ : σ.IsHerm
 matrix `Wᴴ ρ W` has vanishing diagonal entry at every index `k` with `d k = 0`. -/
 theorem suppSubset_unitary_conj_diagonal_iff {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef)
     (W : unitary (Matrix n n ℂ)) (d : n → ℝ) :
-    suppSubset ρ
+    SuppSubset ρ
         ((W : Matrix n n ℂ) * diagonal (fun i => ((d i : ℝ) : ℂ)) * (W : Matrix n n ℂ)ᴴ) ↔
       ∀ k, d k = 0 → ((W : Matrix n n ℂ)ᴴ * ρ * (W : Matrix n n ℂ)) k k = 0 := by
   set Wm : Matrix n n ℂ := (W : Matrix n n ℂ) with hWm
@@ -221,10 +225,10 @@ lemma sum_normSq_eigW_row (hρ : ρ.IsHermitian) (hσ : σ.IsHermitian) (j : n) 
 
 /-- Support subset condition implies: |W_{ji}|² · ev_ρᵢ = 0 when ev_σⱼ = 0.
 Here ev_ρᵢ are eigenvalues of ρ, ev_σⱼ are eigenvalues of σ.
-Proof: vⱼ = col j of V ∈ ker(σ), suppSubset gives vⱼ ∈ ker(ρ),
+Proof: vⱼ = col j of V ∈ ker(σ), SuppSubset gives vⱼ ∈ ker(ρ),
 injectivity of U gives diag(ev_ρ) · (Uᴴvⱼ) = 0, and (Uᴴvⱼ)ᵢ = conj(Wji). -/
 lemma normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset (hρ : ρ.IsHermitian) (hσ : σ.IsHermitian)
-    (h : suppSubset ρ σ) (j : n)
+    (h : SuppSubset ρ σ) (j : n)
     (hev_σj : hσ.eigenvalues j = 0) (i : n) :
     Complex.normSq (eigW hρ hσ j i) * hρ.eigenvalues i = 0 := by
   set V := (hσ.eigenvectorUnitary : Matrix n n ℂ) with hV_def
@@ -236,7 +240,7 @@ lemma normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset (hρ : ρ.IsHermitian) (
   have hσcol : σ.mulVec colV_j = 0 := by
     have h1 := mulVec_eigenvector_col σ hσ j
     ext k; rw [congr_fun h1 k, hev_σj, Complex.ofReal_zero, zero_mul, Pi.zero_apply]
-  -- By suppSubset, col j of V is also in ker(ρ)
+  -- By SuppSubset, col j of V is also in ker(ρ)
   have hρcol : ρ.mulVec colV_j = 0 := h colV_j hσcol
   -- Compute Uᴴ · colV_j
   set Uh_colV : n → ℂ := Uᴴ.mulVec colV_j with hUh_colV_def
@@ -306,7 +310,7 @@ lemma eigW_apply (hρ : ρ.IsHermitian) (hσ : σ.IsHermitian) (j i : n) :
 /-- **Support inclusion in the eigenbases.** `supp ρ ⊆ supp σ` iff `|W_{ji}|² rᵢ = 0` whenever the
 eigenvalue `s_j` of `σ` vanishes, `rᵢ` being the eigenvalues of `ρ`. -/
 theorem suppSubset_iff_normSq_eigW_mul_eigenvalues_eq_zero (hρ : ρ.PosSemidef) (hσ : σ.IsHermitian) :
-    suppSubset ρ σ ↔
+    SuppSubset ρ σ ↔
       ∀ j, hσ.eigenvalues j = 0 → ∀ i,
         Complex.normSq (eigW hρ.1 hσ j i) * hρ.1.eigenvalues i = 0 := by
   refine ⟨normSq_eigW_mul_eigenvalues_eq_zero_of_suppSubset hρ.1 hσ, fun h => ?_⟩
@@ -454,7 +458,7 @@ omit [DecidableEq n] [DecidableEq m] in
 /-- Support inclusion is invariant under `*-`algebra equivalences of matrix algebras. -/
 theorem suppSubset_map_starAlgEquiv_iff {ρ σ : Matrix m m ℂ} (hσ : σ.IsHermitian)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
-    suppSubset (φ ρ) (φ σ) ↔ suppSubset ρ σ := by
+    SuppSubset (φ ρ) (φ σ) ↔ SuppSubset ρ σ := by
   classical
   rw [suppSubset_iff_mul_cfc_eq_zero (hσ.map_starAlgEquiv φ),
     suppSubset_iff_mul_cfc_eq_zero hσ, cfc_map_starAlgEquiv hσ _ φ, ← map_mul,
