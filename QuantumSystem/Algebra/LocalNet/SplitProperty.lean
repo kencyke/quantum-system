@@ -5,8 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
+public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SplitInclusion
 
 /-!
@@ -32,7 +32,7 @@ necessary conditions rather than a complete axiomatisation of properness, so the
 always relative to the chosen `⋐`. They do force `⋐` to be strict (`ProperlyContained.lt`), which
 rules out plain containment `⊆`: a reflexive `⋐` would turn the split property into the demand
 that every local algebra be a type I factor. Strict containment `⊂` does satisfy all three axioms on
-lattice regions — `Λ₂ \ Λ₁` is a collar for it (`ProperContainment.ofSSubset`) — so, unlike
+lattice regions — `O₂ \ O₁` is a collar for it (`ProperContainment.ofLT`) — so, unlike
 `CausalOrthogonality (Finset α)`, the absence of a canonical `ProperContainment` instance there is a
 choice, not an impossibility: `⊂` admits *touching* pairs such as `{0} ⋐ {0, 1}`, which the
 literature's closure separation excludes. Separation is what needs a metric or graph structure on
@@ -62,11 +62,13 @@ theorems impose nondegeneracy or cyclicity where they need it.
 
 * `ProperContainment` — the proper-containment relation `O₁ ⋐ O₂` on a causal index set, with
   `ProperlyContained.le` / `.mono` / `.exists_orthogonal`, its strictness
-  (`ProperContainment.irrefl`, `ProperlyContained.lt`), the lattice model
-  `ProperContainment.ofThicken` built from a strictly enlarging thickening operator, the degenerate
-  lattice model `ProperContainment.ofSSubset` the axioms cannot exclude, and
-  `ProperContainment.exists_orthogonal_iff_not_subset`, which measures how much the collar axiom
-  says on a lattice index set (namely: only strictness).
+  (`ProperContainment.irrefl`, `ProperlyContained.lt`), the model `ProperContainment.ofThicken`
+  on lattice regions built from a monotone enlarging thickening operator, the degenerate model
+  `ProperContainment.ofLT` (strict containment) the axioms cannot exclude, and
+  `ProperContainment.exists_disjoint_iff_not_le`, which measures how much the collar axiom says on
+  a lattice index set (namely: only strictness). The metric model on infinite lattice regions,
+  `ProperContainment.ofCThickening`, and the extension of a finite-region net to infinite regions
+  live in `QuantumSystem.Algebra.LocalNet.InfiniteRegion`.
 * `LocalNet.localVonNeumannAlgebra` — the local von Neumann algebra `𝓡(O) = R.π(𝔄(O))″` of a
   region in a representation of the quasi-local algebra, containing the represented local
   observables (`π_ιLocalCStar_mem_localVonNeumannAlgebra`), with isotony
@@ -77,8 +79,10 @@ theorems impose nondegeneracy or cyclicity where they need it.
   `SplitProperty.isSplitInclusion` (the split inclusion of a properly contained pair; its tensor
   splitting follows by applying `VonNeumannAlgebra.IsSplitInclusion.exists_tensor_decomposition`
   to it), `SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le` (stability under
-  enlarging the pair), and `SplitProperty.isSplitInclusion_commutant` (the commutant form,
+  enlarging the pair), and `SplitProperty.isSplitPair` (the commutant form,
   Borchers/Buchholz, `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`, obtained from the nested form via locality).
+  The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`;
+  Matsui's half-chain split property is of that form.
   Its degenerate side is `VonNeumannNet.splitProperty_of_complex`: on a one-dimensional Hilbert
   space *every* net has the property, so no one-dimensional model is evidence about anything else.
 * `LocalNet.vonNeumannNet` — the net of local von Neumann algebras of a representation, as a
@@ -111,22 +115,28 @@ open scoped CausalOrthogonality
     literature's separation condition actually delivers. Köster's chiral index set defines its own
     `I ⋐ S¹` by "its causal complement `I' := S¹ ∖ Ī` is not the empty set", and `Ī₁ ⊂ I₂` with
     `I₂` open forces a nonempty component of `I₂ ∖ Ī₁` that is a proper interval inside `I₂`,
-    disjoint from `I₁` and not contained in it.
+    disjoint from `I₁` and not contained in it. On such an index set, where the difference of two
+    regions need not be a region, the collar is a genuine constraint on `⋐`: with no causally
+    orthogonal regions at all it forces `⋐` to be empty.
 
     The collar makes `⋐` **irreflexive** (`ProperContainment.irrefl`), indeed strict
     (`ProperlyContained.lt`), which is what the literature's typography `Ī₁ ⊂ I₂` is for: without
     it plain containment `⊆` would satisfy the axioms, and a reflexive `⋐` would make the split
     property demand that every local algebra *be* a type I factor
     (`VonNeumannAlgebra.IsSplitInclusion.isTypeIFactor_of_self`) — the opposite of the type III₁
-    structure expected of local algebras. The axioms remain necessary conditions rather than a
-    complete axiomatisation, so the split property is still relative to the chosen `⋐`; what they
-    now exclude is the degenerate choices. In particular they are *not* enough to exclude
-    **touching** regions: on a lattice index set the collar clause is equivalent to plain
-    `¬ Λ₂ ⊆ Λ₁` (`exists_orthogonal_iff_not_subset`), so a model that wants the literature's
-    separation must build it in — which is what `ofThicken`'s strictly enlarging thickening does.
-    Nothing forces `⋐` to be inhabited either: on a finite index set with no room for a collar it
-    is empty and the split property holds vacuously, which is correct — a downstream theorem
-    needing a genuine pair must say so itself. -/
+    structure expected of local algebras.
+
+    The axioms are necessary conditions rather than a complete axiomatisation, so the split
+    property is relative to the chosen `⋐`. In particular they do **not** exclude *touching*
+    regions, which the literature's separation does exclude: on lattice regions, where `⟂` is
+    `Disjoint` and differences are regions, the collar clause is equivalent to plain `¬ O₂ ≤ O₁`
+    (`exists_disjoint_iff_not_le`), so strict containment satisfies the axioms (`ofLT`) and admits
+    `{0} ⋐ {0, 1}`. A model that wants genuine separation must build it in, which is what
+    `ofThicken` with a two-sided neighbourhood operator does: the integer-chain model of
+    `QuantumSystem.Algebra.LocalNet.Examples` on finite regions, and the metric model
+    `ofCThickening` of `QuantumSystem.Algebra.LocalNet.InfiniteRegion` on infinite ones. Nor do
+    the axioms force `⋐` to relate any genuine pair; see `VonNeumannNet.SplitProperty` for what
+    that means for the property. -/
 class ProperContainment (K : Type*) [Preorder K] [CausalOrthogonality K] where
   /-- The proper-containment relation `O₁ ⋐ O₂` on regions. -/
   ProperlyContained : K → K → Prop
@@ -187,19 +197,10 @@ theorem ProperlyContained.not_ge {O₁ O₂ : K} (h : O₁ ⋐ O₂) : ¬ O₂ �
 theorem ProperlyContained.lt {O₁ O₂ : K} (h : O₁ ⋐ O₂) : O₁ < O₂ :=
   lt_of_le_not_ge h.le h.not_ge
 
-/-- A thickening operator that strictly enlarges every nonempty region is enlarging on every
-    region: on the empty region `∅ ⊆ thicken ∅` is automatic. -/
-lemma subset_thicken_of_ssubset {α : Type*} {thicken : Finset α → Finset α}
-    (ssubset_thicken : ∀ Λ : Finset α, Λ.Nonempty → Λ ⊂ thicken Λ) (Λ : Finset α) :
-    Λ ⊆ thicken Λ := by
-  rcases Λ.eq_empty_or_nonempty with rfl | hne
-  · exact Finset.empty_subset _
-  · exact (ssubset_thicken Λ hne).subset
-
-/-- **On lattice regions the collar clause says only that `Λ₂` is not contained in `Λ₁`.** With
-    `⟂ = Disjoint` on `Finset α` the region `Λ₂ \ Λ₁` is automatically orthogonal to `Λ₁`, so it
-    witnesses the collar as soon as it is nonempty; conversely a collar inside `Λ₂` that is not
-    inside `Λ₁` forbids `Λ₂ ⊆ Λ₁`.
+/-- **On lattice regions the collar clause says only that `O₂` is not below `O₁`.** In a
+    generalized Boolean algebra of regions — `Finset α` or `Set α` — the difference `O₂ \ O₁` is a
+    region disjoint from `O₁`, so it witnesses the collar (with `⟂ = Disjoint`) as soon as it is
+    not below `O₁`; conversely a collar inside `O₂` that is not inside `O₁` forbids `O₂ ≤ O₁`.
 
     This is worth stating because it bounds what the `ProperContainment` axioms can be asked to
     do. On a lattice index set they pin down strictness and nothing more: they do **not** by
@@ -209,69 +210,69 @@ lemma subset_thicken_of_ssubset {α : Type*} {thicken : Finset α → Finset α}
     states for touching regions already yields contradictions for the free field, the corpus's one
     statement that the closure separation is *necessary*).
     Genuine separation is therefore the model's job, not the class's — see `ofThicken`,
-    whose thickening operator supplies a buffer layer between `Λ₁` and the collar. -/
-lemma exists_orthogonal_iff_not_subset {α : Type*} {Λ₁ Λ₂ : Finset α} :
-    (∃ Λ₃ : Finset α, Λ₃ ≤ Λ₂ ∧ Λ₁ ⟂ Λ₃ ∧ ¬ Λ₃ ≤ Λ₁) ↔ ¬ Λ₂ ⊆ Λ₁ := by
-  classical
+    whose thickening operator supplies a buffer layer between `O₁` and the collar. -/
+lemma exists_disjoint_iff_not_le {I : Type*} [GeneralizedBooleanAlgebra I] {O₁ O₂ : I} :
+    (∃ O₃, O₃ ≤ O₂ ∧ Disjoint O₁ O₃ ∧ ¬ O₃ ≤ O₁) ↔ ¬ O₂ ≤ O₁ := by
   constructor
-  · rintro ⟨Λ₃, hle, -, hnle⟩ hsub
+  · rintro ⟨O₃, hle, -, hnle⟩ hsub
     exact hnle (hle.trans hsub)
-  · intro hns
-    refine ⟨Λ₂ \ Λ₁, Finset.sdiff_subset, Finset.disjoint_sdiff, ?_⟩
-    obtain ⟨x, hx₂, hx₁⟩ := Finset.not_subset.1 hns
-    exact fun hsub => hx₁ (hsub (Finset.mem_sdiff.2 ⟨hx₂, hx₁⟩))
-
-/-- **Strict containment already satisfies the axioms**, on any lattice index set and with no
-    structure on the sites: containment and monotonicity are immediate, and `Λ₂ \ Λ₁` is a collar
-    (`exists_orthogonal_iff_not_subset`). So nothing in the class *prevents* a canonical lattice
-    instance — what it fails to deliver is separation, and this model is the witness of that
-    failure: it admits the *touching* pair `{0} ⋐ {0, 1}`, whose local algebras the literature
-    records as not statistically independent, hence not split.
-
-    Deliberately a `def` rather than an `instance`, and never activated anywhere: it exists to
-    exhibit the gap, not to be used. A model that wants separation supplies a thickening operator
-    (`ofThicken`). -/
-@[reducible] def ofSSubset (α : Type*) : ProperContainment (Finset α) where
-  ProperlyContained Λ₁ Λ₂ := Λ₁ ⊂ Λ₂
-  le_of_properlyContained _ _ h := le_of_lt h
-  properlyContained_mono _ _ _ _ h₀ h h₃ := (h₀.trans_lt h).trans_le h₃
-  exists_orthogonal_of_properlyContained _ _ h :=
-    exists_orthogonal_iff_not_subset.2 fun hsub => absurd (h.subset.antisymm hsub) (ne_of_lt h)
+  · refine fun hns => ⟨O₂ \ O₁, sdiff_le, disjoint_sdiff_self_right, fun hsub => hns ?_⟩
+    simpa using sdiff_le_iff.1 hsub
 
 /-- Proper containment of lattice regions from a **thickening operator** (e.g. the
-    `r`-neighbourhood for a metric or graph structure on the sites): `Λ₁ ⋐ Λ₂` iff the thickening
-    of `Λ₁` is a *strict* subset of `Λ₂`.
+    `r`-neighbourhood for a metric or graph structure on the sites): `O₁ ⋐ O₂` iff the thickening
+    of `O₁` lies strictly below `O₂`. The regions form a generalized Boolean algebra — `Finset α`
+    or `Set α` — whose disjoint regions are causally orthogonal (`orthogonal_of_disjoint`). The
+    thickening need only be monotone and enlarging (`O ≤ thicken O`); strict enlargement is not
+    asked, since it fails at a top region such as `Set.univ`.
 
-    The thickening is required to be *strictly* enlarging on nonempty regions
-    (`ssubset_thicken`). What that buys is the chain `Λ₁ ⊊ thicken Λ₁ ⊆ Λ₂` under `Λ₁ ⋐ Λ₂`, with
-    the collar `Λ₂ \ thicken Λ₁` disjoint from the whole of `thicken Λ₁` rather than merely from
-    `Λ₁`: the collar is separated from `Λ₁` *by the thickening's own notion of nearness*.
+    What the construction buys is the chain `O₁ ≤ thicken O₁ < O₂` under `O₁ ⋐ O₂`, with the
+    collar `O₂ \ thicken O₁` disjoint from the whole of `thicken O₁` rather than merely from `O₁`:
+    the collar is separated from `O₁` *by the thickening's own notion of nearness*.
 
     Whether that is geometric separation is the thickening's business and is **not** a consequence
-    of the two hypotheses. The one-sided `thicken Λ = Λ ∪ Λ.image (· + 1)` is monotone and strictly
-    enlarging, yet `{0} ⋐ {-1, 0, 1, 2}` has collar `{-1, 2}`, which touches `{0}` from below. A
+    of the two hypotheses. The one-sided `thicken Λ = Λ ∪ Λ.image (· + 1)` on `Finset ℤ` is monotone
+    and enlarging, yet `{0} ⋐ {-1, 0, 1, 2}` has collar `{-1, 2}`, which touches `{0}` from below. A
     thickening that is a genuine neighbourhood operator — enlarging in *every* direction of
     adjacency, as the 1-neighbourhood `ProperContainment.nbhd` of the integer chain is in
-    `QuantumSystem.Algebra.LocalNet.Examples` — does exclude *touching* pairs, which is the
-    exclusion the literature's `Ī₁ ⊂ I₂` typography performs and one the class axioms alone cannot
-    perform on a lattice (`exists_orthogonal_iff_not_subset`). What strictness rules out by itself
-    is `thicken := id`, i.e. the degenerate model `ofSSubset`, in which `{0} ⋐ {0, 1}` is admitted.
-
-    On the empty region no strictness is asked, since a neighbourhood operator has
-    `thicken ∅ = ∅`; `∅ ⊆ thicken ∅` holds regardless and is all the axioms need there. -/
-@[reducible] def ofThicken {α : Type*} [DecidableEq α] (thicken : Finset α → Finset α)
-    (ssubset_thicken : ∀ Λ : Finset α, Λ.Nonempty → Λ ⊂ thicken Λ)
-    (thicken_mono : Monotone thicken) :
-    ProperContainment (Finset α) where
-  ProperlyContained Λ₁ Λ₂ := thicken Λ₁ ⊂ Λ₂
-  le_of_properlyContained _ _ h := (subset_thicken_of_ssubset ssubset_thicken _).trans h.subset
+    `QuantumSystem.Algebra.LocalNet.Examples`, or the metric `Metric.cthickening` of
+    `ProperContainment.ofCThickening` in `QuantumSystem.Algebra.LocalNet.InfiniteRegion` — does
+    exclude *touching* pairs, which is the exclusion the literature's `Ī₁ ⊂ I₂` typography performs
+    and one the class axioms alone cannot perform on a lattice (`exists_disjoint_iff_not_le`). The
+    identity thickening gives back exactly the degenerate model `ofLT`. -/
+@[reducible] def ofThicken {I : Type*} [GeneralizedBooleanAlgebra I] [CausalOrthogonality I]
+    (orthogonal_of_disjoint : ∀ ⦃O₁ O₂ : I⦄, Disjoint O₁ O₂ → O₁ ⟂ O₂) (thicken : I → I)
+    (le_thicken : ∀ O, O ≤ thicken O) (thicken_mono : Monotone thicken) :
+    ProperContainment I where
+  ProperlyContained O₁ O₂ := thicken O₁ < O₂
+  le_of_properlyContained O₁ _ h := (le_thicken O₁).trans h.le
   properlyContained_mono _ _ _ _ h₀ h h₃ := ((thicken_mono h₀).trans_lt h).trans_le h₃
-  exists_orthogonal_of_properlyContained Λ₁ Λ₂ h := by
-    refine ⟨Λ₂ \ thicken Λ₁, Finset.sdiff_subset,
-      Finset.disjoint_sdiff.mono_left (subset_thicken_of_ssubset ssubset_thicken Λ₁), ?_⟩
-    obtain ⟨x, hx₂, hx₁⟩ := Finset.exists_of_ssubset h
-    exact fun hsub =>
-      hx₁ (subset_thicken_of_ssubset ssubset_thicken Λ₁ (hsub (Finset.mem_sdiff.2 ⟨hx₂, hx₁⟩)))
+  exists_orthogonal_of_properlyContained O₁ _ h := by
+    obtain ⟨O₃, hle, hd, hnle⟩ := exists_disjoint_iff_not_le.2 h.not_ge
+    exact ⟨O₃, hle, orthogonal_of_disjoint (hd.mono_left (le_thicken O₁)),
+      fun h₃ => hnle (h₃.trans (le_thicken O₁))⟩
+
+/-- **Strict containment already satisfies the axioms**, on any lattice index set and with no
+    structure on the sites: containment and monotonicity are immediate, and `O₂ \ O₁` is a collar
+    (`exists_disjoint_iff_not_le`). So nothing in the class *prevents* a canonical lattice
+    instance — what it fails to deliver is separation, and this model is the witness of that
+    failure: on `Finset ℤ` it admits the *touching* pair `{0} ⋐ {0, 1}`, whose local algebras the
+    literature records as not statistically independent, hence not split. It is `ofThicken` at the
+    identity thickening.
+
+    The type is explicit (`I`, not the section's `K`) so that the section's `[ProperContainment K]`
+    is not captured. Deliberately a `def` rather than an `instance`, and never activated anywhere:
+    it exists to exhibit the gap, not to be used. A model that wants separation supplies a
+    thickening operator (`ofThicken`). -/
+@[reducible] def ofLT (I : Type*) [GeneralizedBooleanAlgebra I] [CausalOrthogonality I]
+    (orthogonal_of_disjoint : ∀ ⦃O₁ O₂ : I⦄, Disjoint O₁ O₂ → O₁ ⟂ O₂) :
+    ProperContainment I where
+  ProperlyContained O₁ O₂ := O₁ < O₂
+  le_of_properlyContained _ _ h := le_of_lt h
+  properlyContained_mono _ _ _ _ h₀ h h₃ := (h₀.trans_lt h).trans_le h₃
+  exists_orthogonal_of_properlyContained _ _ h := by
+    obtain ⟨O₃, hle, hd, hnle⟩ := exists_disjoint_iff_not_le.2 h.not_ge
+    exact ⟨O₃, hle, orthogonal_of_disjoint hd, hnle⟩
 
 end ProperContainment
 
@@ -321,9 +322,18 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
     nets without the requisite phase-space (nuclearity) behaviour — and it is relative to the
     chosen proper containment `⋐` (see `ProperContainment`).
 
+    That relativity is strong: neither an empty `⋐` nor a merely inhabited one gives the property
+    content. On lattice regions `Λ₁ ⋐ Λ₂ :↔ Λ₁ = ∅ ∧ Λ₂.Nonempty` satisfies every axiom of
+    `ProperContainment` and relates the pair `∅ ⋐ {0}`, yet under it the property only ever asks
+    `𝓡(∅) ≤ 𝓡(Λ)` to split. The property says something about a net only through the genuine
+    pairs the model's `⋐` relates. On the integer chain these include
+    `ProperContainment.properlyContained_singleton`, and there the property is not automatic:
+    `LocalNet.Examples.not_splitProperty_diagonalNet` refutes it for a constant net.
+
     This is the *nested* form. The historically original *commutant* form is
-    `SplitProperty.isSplitInclusion_commutant`, which follows from this one through locality; the
-    converse needs Haag duality and is not available here. -/
+    `SplitProperty.isSplitPair`, which follows from this one through locality; the converse needs
+    Haag duality and is not available here. The gap-free pair form `IsSplitPair` is stated
+    separately, since no properly contained pair can produce it. -/
 def SplitProperty [ProperContainment K] (vnNet : VonNeumannNet K H) : Prop :=
   ∀ ⦃O₁ O₂ : K⦄, O₁ ⋐ O₂ →
     VonNeumannAlgebra.IsSplitInclusion (vnNet.algebra O₁) (vnNet.algebra O₂)
@@ -344,6 +354,34 @@ theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K 
   rw [VonNeumannAlgebra.eq_boundedLinearOperators_complex (vnNet.algebra O₁),
     VonNeumannAlgebra.eq_boundedLinearOperators_complex (vnNet.algebra O₂)]
   exact (VonNeumannAlgebra.isTypeIFactor_boundedLinearOperators (H := ℂ)).isSplitInclusion_self
+
+/-- **A split pair of regions**: a type I factor interpolates between the algebra of `O₁` and the
+    commutant of the algebra of `O₂`,
+
+      `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O₂)′`.
+
+    No proper containment and no gap between the regions is involved. This is the form in which
+    Matsui states the half-chain split property of a spin chain, for the adjacent half-chains
+    `(-∞, 0]` and `[1, ∞)`, and the disjoint-pair form of Buchholz's *Product states for local
+    algebras*. For causally orthogonal regions the inclusion `𝓡(O₁) ≤ 𝓡(O₂)′` itself holds by
+    locality (`algebra_le_commutant_of_orthogonal`), so the content is the interpolating factor.
+
+    The relation is symmetric in the literature, since the commutant of a type I factor is a type
+    I factor. That theorem is not yet proved in this development, so symmetry is not stated here;
+    it is a missing theorem, not an assumption. -/
+def IsSplitPair (vnNet : VonNeumannNet K H) (O₁ O₂ : K) : Prop :=
+  VonNeumannAlgebra.IsSplitInclusion (vnNet.algebra O₁) (vnNet.algebra O₂)′
+
+/-- A split pair is in particular a commuting pair: `𝓡(O₁) ≤ 𝓡(O₂)′`. -/
+lemma IsSplitPair.le {vnNet : VonNeumannNet K H} {O₁ O₂ : K} (h : vnNet.IsSplitPair O₁ O₂) :
+    vnNet.algebra O₁ ≤ (vnNet.algebra O₂)′ :=
+  VonNeumannAlgebra.IsSplitInclusion.le h
+
+/-- Splitness of a pair survives shrinking either region. -/
+lemma IsSplitPair.mono {vnNet : VonNeumannNet K H} {O₁ O₂ O₁' O₂' : K} (h₁ : O₁' ≤ O₁)
+    (h₂ : O₂' ≤ O₂) (h : vnNet.IsSplitPair O₁ O₂) : vnNet.IsSplitPair O₁' O₂' :=
+  VonNeumannAlgebra.IsSplitInclusion.mono (vnNet.algebra_mono h₁)
+    (VonNeumannAlgebra.commutant_le (vnNet.algebra_mono h₂)) h
 
 variable [ProperContainment K] {vnNet : VonNeumannNet K H}
 
@@ -366,8 +404,7 @@ lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : vnNe
 
 /-- **The commutant form of the split property** (Borchers' conjecture as displayed in Buchholz,
     *Product states for local algebras*): for a properly contained pair `O₁ ⋐ O₂` and any region
-    `O_B` causally orthogonal to `O₂`, a type I factor interpolates between `𝓡(O₁)` and the
-    commutant `𝓡(O_B)′`,
+    `O_B` causally orthogonal to `O₂`, the pair `(O₁, O_B)` is split (`IsSplitPair`),
 
       `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`.
 
@@ -376,10 +413,13 @@ lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : vnNe
     (`algebra_le_commutant_of_orthogonal`); the converse needs Haag duality, which is not assumed
     anywhere here. Buchholz displays the symmetric four-term chain `𝓡(O₁) ⊂ M₁ ⊂ M₂′ ⊂ 𝓡(O₂)′`
     with two interpolating type I factors; this is its one-sided compression, which is the form
-    the adopted definition of a split inclusion carries. -/
-theorem SplitProperty.isSplitInclusion_commutant (hs : vnNet.SplitProperty) {O₁ O₂ O_B : K}
-    (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) :
-    VonNeumannAlgebra.IsSplitInclusion (vnNet.algebra O₁) (vnNet.algebra O_B)′ :=
+    the adopted definition of a split inclusion carries.
+
+    The pair obtained this way always has the gap `O₂` between `O₁` and `O_B`. Since `⋐` is
+    irreflexive, adjacent pairs such as Matsui's half-chains are out of its reach; for them
+    `IsSplitPair` is the property itself, not a consequence. -/
+theorem SplitProperty.isSplitPair (hs : vnNet.SplitProperty) {O₁ O₂ O_B : K}
+    (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) : vnNet.IsSplitPair O₁ O_B :=
   (hs h).mono le_rfl (vnNet.algebra_le_commutant_of_orthogonal hd)
 
 end VonNeumannNet
@@ -471,7 +511,9 @@ noncomputable def vonNeumannNet (R : CStarRep N.quasiLocalCStarAlgebra) :
 /-- **The split property** of a local net in a representation `π` of the quasi-local C⋆-algebra
     (Buchholz; Doplicher–Longo): the split property of the associated net of local von Neumann
     algebras (`VonNeumannNet.SplitProperty`) — for every properly contained pair of regions
-    `O₁ ⋐ O₂`, some type I factor interpolates, `𝓡(O₁) ≤ M ≤ 𝓡(O₂)`.
+    `O₁ ⋐ O₂`, some type I factor interpolates, `𝓡(O₁) ≤ M ≤ 𝓡(O₂)`. It is relative to the chosen
+    `⋐` exactly as the von-Neumann-net property is; an inhabited `⋐` alone does not give it
+    content (see `VonNeumannNet.SplitProperty`).
 
     The property itself is defined at the von-Neumann-net level, where it needs neither a
     directed index set nor a quasi-local C⋆-algebra; the hypotheses `[IsDirectedOrder K]`,
@@ -513,14 +555,12 @@ theorem SplitProperty.isSplitInclusion (hs : N.SplitProperty R) {O₁ O₂ : K} 
     *Product states for local algebras*): for a properly contained pair `O₁ ⋐ O₂` and any region
     `O_B` causally orthogonal to `O₂`, a type I factor interpolates between `𝓡(O₁)` and the
     commutant `𝓡(O_B)′`. Specialisation of
-    `VonNeumannNet.SplitProperty.isSplitInclusion_commutant`, whose docstring records what the
+    `VonNeumannNet.SplitProperty.isSplitPair`, whose docstring records what the
     converse would need (Haag duality) and how this one-sided form relates to Buchholz's
     symmetric four-term chain. -/
-theorem SplitProperty.isSplitInclusion_commutant (hs : N.SplitProperty R) {O₁ O₂ O_B : K}
-    (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) :
-    VonNeumannAlgebra.IsSplitInclusion
-      (N.localVonNeumannAlgebra R O₁) (N.localVonNeumannAlgebra R O_B)′ :=
-  VonNeumannNet.SplitProperty.isSplitInclusion_commutant hs h hd
+theorem SplitProperty.isSplitPair (hs : N.SplitProperty R) {O₁ O₂ O_B : K}
+    (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) : (N.vonNeumannNet R).IsSplitPair O₁ O_B :=
+  VonNeumannNet.SplitProperty.isSplitPair hs h hd
 
 end SplitConsequences
 

@@ -57,6 +57,8 @@ infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**.
 * `VonNeumannAlgebra.IsTypeIFactor.exists_starAlgEquiv` — a type I factor is `⋆`-isomorphic to
   `B(K)` for some complex Hilbert space `K`.
 * `VonNeumannAlgebra.isTypeIFactor_boundedLinearOperators` — `B(H)` is a type I factor.
+* `VonNeumannAlgebra.isTypeIFactor_commutant_boundedLinearOperators` — the scalar algebra
+  `ℂ1 = B(H)′` is a type I factor on a nonzero space.
 * `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(ℓ²(ι))` with the
   implementing isometry `H ≃ₗᵢ ℓ²(ι)`, for `ι` the index set of a Hilbert basis of `H`.
 * `VonNeumannAlgebra.isTypeIInfinite_boundedLinearOperators` — for infinite-dimensional `H`, `B(H)`
@@ -260,6 +262,21 @@ open InnerProductSpace
 theorem isTypeIFactor_boundedLinearOperators [Nontrivial H] :
     IsTypeIFactor 𝓑(H) :=
   ⟨isFactor_boundedLinearOperators, exists_isMinimalProjection_boundedLinearOperators⟩
+
+/-- The commutant of `B(H)` consists of scalars: it is the centre of the factor `B(H)`. -/
+lemma exists_eq_smul_one_of_mem_commutant_boundedLinearOperators {x : H →L[ℂ] H}
+    (hx : x ∈ (𝓑(H))′) : ∃ c : ℂ, x = c • 1 :=
+  isFactor_boundedLinearOperators x (mem_boundedLinearOperators x) hx
+
+/-- **The scalar algebra `ℂ1 = B(H)′` is a type I factor** on a nonzero space: its only elements
+    are scalars, so it is a factor, and `1` is a minimal projection. This is the degenerate
+    type I factor of the escape clause "either `𝓡 = ℂ1` or …" of the type III₁ literature. -/
+theorem isTypeIFactor_commutant_boundedLinearOperators [Nontrivial H] :
+    IsTypeIFactor (𝓑(H))′ := by
+  refine ⟨fun x hx _ => exists_eq_smul_one_of_mem_commutant_boundedLinearOperators hx,
+    1, ⟨IsStarProjection.one _, one_mem _, one_ne_zero, fun a ha => ?_⟩⟩
+  obtain ⟨c, rfl⟩ := exists_eq_smul_one_of_mem_commutant_boundedLinearOperators ha
+  exact ⟨c, by simp⟩
 
 /-- **`B(H) ≃⋆ₐ B(ℓ²(ι))` with `H ≃ₗᵢ ℓ²(ι)`.** The full algebra is `⋆`-isomorphic to the bounded
 operators on `ℓ²(ι)` for an index set `ι` — the index set of a Hilbert basis of `H` — and the
