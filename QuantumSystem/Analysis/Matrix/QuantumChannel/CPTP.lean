@@ -5,7 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.LinearAlgebra.Matrix.PosDef
+public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
+public import Mathlib.Analysis.Matrix.Order
 public import QuantumSystem.Notation
 
 /-!
@@ -13,28 +14,40 @@ public import QuantumSystem.Notation
 
 This file defines quantum channels on finite-dimensional matrix algebras. A quantum channel is a
 linear map `Φ : M_n(ℂ) → M_m(ℂ)` that is
-1. completely positive (CP): it has a Kraus representation `Φ(ρ) = Σᵢ Kᵢ ρ Kᵢᴴ`;
+1. completely positive (CP): `id_k ⊗ Φ` is positive for every `k`;
 2. trace preserving (TP): `Tr (Φ A) = Tr A` for all `A`.
 
 ## Main definitions
 
 * `Matrix.IsTracePreserving`: a linear map preserves trace.
-* `Matrix.IsCompletelyPositive`: a linear map has a Kraus representation.
+* `Matrix.IsCompletelyPositive`: a linear map is completely positive.
+* `Matrix.IsCompletelyPositive.toCompletelyPositiveMap`: a CP map as Mathlib's bundled
+  `CompletelyPositiveMap`.
 * `Matrix.IsQuantumChannel`: a linear map is both CP and TP.
 * `Matrix.QuantumChannel n m`: the subtype of CPTP maps `M_n(ℂ) → M_m(ℂ)`.
 
 ## Main statements
 
+* `Matrix.isCompletelyPositive_id`, `Matrix.IsCompletelyPositive.comp`: the identity is CP, and
+  CP maps compose.
 * `Matrix.isQuantumChannel_id`, `Matrix.QuantumChannel.comp`: identity and composition.
-* `Matrix.IsCompletelyPositive.map_isHermitian`, `Matrix.IsCompletelyPositive.posSemidef_map`:
+* `Matrix.IsCompletelyPositive.isHermitian_map`, `Matrix.IsCompletelyPositive.posSemidef_map`:
   CP maps preserve Hermitian and positive semidefinite matrices.
 
 ## Mathematical Background
 
-By the Choi–Kraus theorem, a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive iff it has a
-Kraus representation `Φ(ρ) = Σᵢ Kᵢ ρ Kᵢᴴ`; complete positivity is *defined* here by the Kraus
-form. The completeness relation `Σᵢ Kᵢᴴ Kᵢ = I` for trace-preserving maps is in
-`QuantumSystem/Analysis/Matrix/QuantumChannel/Kraus.lean`.
+Complete positivity is Mathlib's `CompletelyPositiveMap` condition: applying `Φ` entrywise to a
+`k × k` block matrix `M` with entries in `M_n(ℂ)` preserves nonnegativity, for every `k`. Here
+`M_n(ℂ)` is the C⋆-algebra of `Matrix.Norms.L2Operator`, ordered by `MatrixOrder`, and the block
+matrices form the C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)`; by
+`CStarMatrix.nonneg_iff_posSemidef_comp` its order is positive semidefiniteness of the flattened
+`kn × kn` matrix, which is the physicists' condition that `id_k ⊗ Φ` be positive
+(`Matrix.isCompletelyPositive_iff_posSemidef_comp_map` in `Choi.lean`).
+
+By the Choi–Kraus theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Choi.lean`) complete
+positivity is equivalent to positive semidefiniteness of the Choi matrix and to the existence of a
+Kraus representation `Φ(ρ) = Σᵢ Kᵢ ρ Kᵢᴴ`. The completeness relation `Σᵢ Kᵢᴴ Kᵢ = I` for
+trace-preserving maps is in `QuantumSystem/Analysis/Matrix/QuantumChannel/Kraus.lean`.
 
 ## References
 
@@ -47,7 +60,7 @@ namespace Matrix
 
 variable {n m k : Type*} [Fintype n] [Fintype m] [Fintype k]
 
-open scoped ComplexOrder
+open scoped ComplexOrder CStarAlgebra
 
 /-! ### Trace-Preserving Maps -/
 
@@ -57,14 +70,55 @@ def IsTracePreserving (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) : Prop :=
 
 /-! ### Completely Positive Maps -/
 
-/-- A linear map is completely positive if it has a Kraus representation.
+variable [DecidableEq n] [DecidableEq m] [DecidableEq k]
 
-TODO: This is a surrogate for the genuine definition "`Φ ⊗ id_n` is positive for every `n`". The
-two are equivalent by the Choi–Kraus theorem; when the forward direction is formalised, this
-definition should be replaced and the Kraus form kept only as a characterisation. -/
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- A linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive if applying it entrywise to a
+nonnegative `r × r` block matrix with entries in `M_n(ℂ)` gives a nonnegative block matrix, for
+every `r`; that is, `id_r ⊗ Φ` is positive for every `r`
+(`Matrix.isCompletelyPositive_iff_posSemidef_comp_map`).
+
+This is verbatim the field of Mathlib's `CompletelyPositiveMap`, for the C⋆-algebra structure
+`Matrix.Norms.L2Operator` and the order `MatrixOrder` on `M_n(ℂ)`
+(`IsCompletelyPositive.toCompletelyPositiveMap`). -/
 def IsCompletelyPositive (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) : Prop :=
-  ∃ (r : ℕ) (K : Fin r → Matrix m n ℂ),
-    ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ
+  ∀ (r : ℕ) (M : CStarMatrix (Fin r) (Fin r) (Matrix n n ℂ)), 0 ≤ M → 0 ≤ M.map Φ
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- A completely positive map on matrix algebras as Mathlib's bundled `CompletelyPositiveMap`. -/
+def IsCompletelyPositive.toCompletelyPositiveMap {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    (hΦ : IsCompletelyPositive Φ) : Matrix n n ℂ →CP Matrix m m ℂ :=
+  ⟨Φ, hΦ⟩
+
+@[simp]
+lemma IsCompletelyPositive.coe_toCompletelyPositiveMap {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    (hΦ : IsCompletelyPositive Φ) : ⇑hΦ.toCompletelyPositiveMap = Φ :=
+  rfl
+
+/-- The identity map is completely positive. -/
+lemma isCompletelyPositive_id :
+    IsCompletelyPositive (LinearMap.id : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) :=
+  fun _ M hM => by simpa using hM
+
+/-- A composition of completely positive maps is completely positive. -/
+lemma IsCompletelyPositive.comp {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    {Ψ : Matrix m m ℂ →ₗ[ℂ] Matrix k k ℂ} (hΨ : IsCompletelyPositive Ψ)
+    (hΦ : IsCompletelyPositive Φ) : IsCompletelyPositive (Ψ ∘ₗ Φ) :=
+  fun r M hM => hΨ r _ (hΦ r M hM)
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- A completely positive map sends positive semidefinite matrices to positive semidefinite
+matrices. -/
+lemma IsCompletelyPositive.posSemidef_map {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    (hΦ : IsCompletelyPositive Φ) {A : Matrix n n ℂ} (hA : A.PosSemidef) : (Φ A).PosSemidef :=
+  Matrix.nonneg_iff_posSemidef.mp (map_nonneg hΦ.toCompletelyPositiveMap hA.nonneg)
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- A completely positive map preserves Hermitianity of matrices: it is positive, and positive
+ℂ-linear maps between C⋆-algebras preserve `⋆`. -/
+lemma IsCompletelyPositive.isHermitian_map {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    (hΦ : IsCompletelyPositive Φ) {A : Matrix n n ℂ} (hA : A.IsHermitian) : (Φ A).IsHermitian :=
+  (map_star hΦ.toCompletelyPositiveMap A).symm.trans (congrArg _ hA)
 
 /-! ### Quantum Channels -/
 
@@ -77,82 +131,24 @@ structure IsQuantumChannel (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) : Pr
   tracePreserving : IsTracePreserving Φ
 
 /-- Quantum channel as a subtype for cleaner API. -/
-abbrev QuantumChannel (n : Type*) (m : Type*) [Fintype n] [Fintype m] :=
+abbrev QuantumChannel (n : Type*) (m : Type*) [Fintype n] [Fintype m] [DecidableEq n]
+    [DecidableEq m] :=
   { Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ // IsQuantumChannel Φ }
 
 /-- The identity map is a quantum channel. -/
 lemma isQuantumChannel_id : IsQuantumChannel (LinearMap.id : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) where
-  completelyPositive := by
-    classical
-    -- id has Kraus representation with single operator K = I
-    use 1, fun _ => 1
-    intro A
-    simp only [Finset.univ_unique, Fin.default_eq_zero, Finset.sum_singleton]
-    simp [Matrix.conjTranspose_one]
+  completelyPositive := isCompletelyPositive_id
   tracePreserving := fun _ => rfl
 
-/-- Composition of quantum channels is a quantum channel. -/
+/-- Composition of quantum channels is a quantum channel: `Ψ.comp Φ` is `Ψ ∘ Φ`, applying `Φ`
+first. -/
 noncomputable def QuantumChannel.comp
-    (Φ : QuantumChannel n m) (Ψ : QuantumChannel m k) : QuantumChannel n k where
+    (Ψ : QuantumChannel m k) (Φ : QuantumChannel n m) : QuantumChannel n k where
   val := Ψ.val.comp Φ.val
-  property.completelyPositive := by
-    classical
-    -- Composition of CP maps is CP
-    -- If Φ(A) = Σᵢ Kᵢ A Kᵢ† and Ψ(B) = Σⱼ Lⱼ B Lⱼ†
-    -- Then (Ψ∘Φ)(A) = Σⱼ Lⱼ (Σᵢ Kᵢ A Kᵢ†) Lⱼ† = Σᵢⱼ (Lⱼ Kᵢ) A (Lⱼ Kᵢ)†
-    obtain ⟨r, K, hK⟩ := Φ.property.completelyPositive
-    obtain ⟨s, L, hL⟩ := Ψ.property.completelyPositive
-    -- Use product Kraus operators indexed by Fin s × Fin r
-    use s * r
-    -- Define the combined Kraus operators via equivalence Fin (s * r) ≃ Fin s × Fin r
-    let e : Fin (s * r) ≃ Fin s × Fin r := finProdFinEquiv.symm
-    use fun p => L (e p).1 * K (e p).2
-    intro A
-    simp only [LinearMap.comp_apply, hK, hL]
-    -- Ψ(Σᵢ Kᵢ A Kᵢ†) = Σⱼ Lⱼ (Σᵢ Kᵢ A Kᵢ†) Lⱼ†
-    simp_rw [Matrix.mul_sum, Matrix.sum_mul]
-    -- Reindex: ∑_{j,i} = ∑_p via Equiv.sum_comp
-    rw [← Fintype.sum_prod_type']
-    rw [(Equiv.sum_comp e (fun x => L x.1 * (K x.2 * A * (K x.2)ᴴ) * (L x.1)ᴴ)).symm]
-    apply Finset.sum_congr rfl
-    intro p _
-    -- Need to show: L (e p).1 * (K (e p).2 * A * (K (e p).2)†) * (L (e p).1)†
-    --             = L (e p).1 * K (e p).2 * A * (L (e p).1 * K (e p).2)†
-    rw [Matrix.conjTranspose_mul]
-    -- Now use matrix associativity
-    simp only [Matrix.mul_assoc]
+  property.completelyPositive := Ψ.property.completelyPositive.comp Φ.property.completelyPositive
   property.tracePreserving := by
     intro A
     simp only [LinearMap.comp_apply]
     rw [Ψ.property.tracePreserving, Φ.property.tracePreserving]
-
-omit [Fintype m] in
-/-- A completely positive map preserves Hermitianity of matrices.
-If Φ(A) = Σᵢ Kᵢ A Kᵢ† and A is Hermitian, then Φ(A) is Hermitian. -/
-lemma IsCompletelyPositive.map_isHermitian
-    {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} (hΦ : IsCompletelyPositive Φ)
-    {A : Matrix n n ℂ} (hA : A.IsHermitian) : (Φ A).IsHermitian := by
-  classical
-  obtain ⟨r, K, hK⟩ := hΦ
-  rw [hK]
-  rw [Matrix.IsHermitian, Matrix.conjTranspose_sum]
-  apply Finset.sum_congr rfl
-  intro i _
-  rw [Matrix.conjTranspose_mul, Matrix.conjTranspose_mul, Matrix.conjTranspose_conjTranspose]
-  rw [Matrix.mul_assoc]
-  congr 1
-  rw [hA.eq]
-
-omit [Fintype m] in
-/-- A completely positive map sends positive semidefinite matrices to positive semidefinite
-matrices. -/
-lemma IsCompletelyPositive.posSemidef_map [Finite m]
-    {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} (hΦ : IsCompletelyPositive Φ)
-    {A : Matrix n n ℂ} (hA : A.PosSemidef) : (Φ A).PosSemidef := by
-  classical
-  have := Fintype.ofFinite m
-  obtain ⟨r, K, hK⟩ := hΦ
-  rw [hK]
-  exact posSemidef_sum _ fun i _ => hA.mul_mul_conjTranspose_same (K i)
 
 end Matrix

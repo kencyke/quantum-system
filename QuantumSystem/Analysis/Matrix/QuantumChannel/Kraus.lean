@@ -38,13 +38,13 @@ private lemma matrix_eq_one_of_trace_mul [DecidableEq n]
   Matrix.ext_iff_trace_mul_right.mpr fun A => by rw [one_mul]; exact h A
 
 /-- Trace-preserving Kraus channels satisfy the completeness relation: ∑ₖ Kₖ† Kₖ = I. -/
-lemma QuantumChannel.kraus_sum_eq_one [DecidableEq n]
+lemma QuantumChannel.kraus_sum_eq_one [DecidableEq n] [DecidableEq m]
     (Φ : QuantumChannel n m)
-    {r : ℕ} {K : Fin r → Matrix m n ℂ} (hK : ∀ A, Φ.val A = ∑ i, K i * A * (K i)ᴴ) :
+    {ι : Type*} [Fintype ι] {K : ι → Matrix m n ℂ} (hK : ∀ A, Φ.val A = ∑ i, K i * A * (K i)ᴴ) :
     ∑ i, (K i)ᴴ * K i = 1 := by
   apply matrix_eq_one_of_trace_mul
   intro A
-  have key : ∀ i : Fin r, ((K i)ᴴ * K i * A).trace = (K i * A * (K i)ᴴ).trace := fun i => by
+  have key : ∀ i, ((K i)ᴴ * K i * A).trace = (K i * A * (K i)ᴴ).trace := fun i => by
     rw [Matrix.mul_assoc, Matrix.trace_mul_comm (K i)ᴴ]
   rw [Finset.sum_mul]
   simp_rw [Matrix.trace_sum, key, ← Matrix.trace_sum]

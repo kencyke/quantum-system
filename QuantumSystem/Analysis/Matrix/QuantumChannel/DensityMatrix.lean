@@ -38,13 +38,7 @@ noncomputable def QuantumChannel.apply [DecidableEq n] [DecidableEq m]
     (Φ : QuantumChannel n m) (ρ : DensityMatrix n) :
     DensityMatrix m where
   toMatrix := Φ.val ↑ρ
-  posSemidef := by
-    classical
-    obtain ⟨r, K, hK⟩ := Φ.property.completelyPositive
-    rw [hK]
-    apply posSemidef_sum
-    intro i _
-    exact ρ.posSemidef.mul_mul_conjTranspose_same (K i)
+  posSemidef := Φ.property.completelyPositive.posSemidef_map ρ.posSemidef
   trace_eq_one := by
     rw [Φ.property.tracePreserving]
     exact ρ.trace_eq_one

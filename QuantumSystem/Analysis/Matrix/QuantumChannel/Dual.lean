@@ -6,9 +6,10 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 
 /-!
 # The dual of a quantum channel as a Schwarz map
@@ -17,7 +18,8 @@ For a quantum channel `Φ : Mₙ(ℂ) → Mₘ(ℂ)` with Kraus operators `Kᵢ`
 `Φ* B = Σᵢ Kᵢᴴ B Kᵢ` (`Matrix.traceDual`) is, as a map `B(ℂᵐ) → B(ℂⁿ)`, a unital normal Schwarz
 map. It is the Heisenberg-picture channel along which the data-processing inequality for Araki's
 relative entropy (`VonNeumannAlgebra.arakiEntropy_comp_le`) applies, and it transports the normal
-functional `Tr (ρ ·)` to `Tr (Φ(ρ) ·)`: `Tr (ρ Φ*(B)) = Tr (Φ(ρ) B)`.
+functional `Tr (ρ ·)` to `Tr (Φ(ρ) ·)`: `Tr (ρ Φ*(B)) = Tr (Φ(ρ) B)`
+(`Matrix.trace_mul_traceDual`).
 
 ## Main definitions
 
@@ -90,22 +92,28 @@ lemma toEuclideanCLM_conjTranspose_mul_mul (K : Matrix m n ℂ) (B : Matrix m m 
 
 namespace QuantumChannel
 
-/-- The number of Kraus operators in the Kraus representation of `Φ` chosen by `kraus`. The
-representation is arbitrary, so this is not the Kraus rank (the minimal number of Kraus
-operators). -/
-noncomputable def numKraus (Φ : QuantumChannel n m) : ℕ := Φ.2.completelyPositive.choose
+/-- The **Kraus rank** of `Φ`: the rank of its Choi matrix, which is the number of Kraus operators
+in `kraus Φ` and the minimal number in any Kraus representation
+(`Matrix.rank_choiMatrix_le_card_of_kraus`). -/
+noncomputable def numKraus (Φ : QuantumChannel n m) : ℕ :=
+  (choiMatrix Φ.val).rank
 
-/-- Kraus operators chosen for `Φ`: `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` (`kraus_spec`). -/
+/-- A minimal Kraus representation of `Φ`, with `numKraus Φ` operators:
+`Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` (`kraus_spec`). -/
 noncomputable def kraus (Φ : QuantumChannel n m) : Fin (numKraus Φ) → Matrix m n ℂ :=
-  Φ.2.completelyPositive.choose_spec.choose
+  Φ.2.completelyPositive.exists_kraus_rank.choose
 
-omit [DecidableEq n] [DecidableEq m] in
 /-- The chosen Kraus operators represent `Φ`: `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ`. -/
 lemma kraus_spec (Φ : QuantumChannel n m) (A : Matrix n n ℂ) :
     Φ.val A = ∑ i, (kraus Φ) i * A * ((kraus Φ) i)ᴴ :=
-  Φ.2.completelyPositive.choose_spec.choose_spec A
+  Φ.2.completelyPositive.exists_kraus_rank.choose_spec A
 
-omit [DecidableEq m] in
+/-- Every Kraus representation of `Φ` has at least `numKraus Φ` operators. -/
+lemma numKraus_le_card_of_kraus (Φ : QuantumChannel n m) {ι : Type*} [Fintype ι]
+    (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ.val A = ∑ i, K i * A * (K i)ᴴ) :
+    numKraus Φ ≤ Fintype.card ι :=
+  rank_choiMatrix_le_card_of_kraus K hK
+
 /-- The Kraus operators as bounded operators satisfy `Σᵢ Kᵢ† Kᵢ = 1`. -/
 lemma sum_adjoint_toEuclideanL_kraus (Φ : QuantumChannel n m) :
     ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L toEuclideanL ((kraus Φ) i) = 1 := by
@@ -123,7 +131,6 @@ noncomputable def dualSchwarzMap (Φ : QuantumChannel n m) :
     SchwarzMap 𝓑(EuclideanSpace ℂ m) 𝓑(EuclideanSpace ℂ n) :=
   (SchwarzMap.ofKraus _ (sum_adjoint_toEuclideanL_kraus Φ).le).onBoundedLinearOperators
 
-omit [DecidableEq m] in
 /-- `Φ*(x) = Σᵢ Kᵢ† x Kᵢ` on the underlying operators. -/
 @[simp] lemma coe_dualSchwarzMap (Φ : QuantumChannel n m) (x : 𝓑(EuclideanSpace ℂ m)) :
     ((dualSchwarzMap Φ) x : EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) =
@@ -139,7 +146,6 @@ theorem dualSchwarzMap_apply (Φ : QuantumChannel n m) (B : Matrix m m ℂ) :
     Matrix.traceDual_eq_of_kraus (kraus_spec Φ), map_sum]
   simp_rw [toEuclideanCLM_conjTranspose_mul_mul]
 
-omit [DecidableEq m] in
 /-- The dual of a (trace-preserving) channel is unital. -/
 theorem dualSchwarzMap_one (Φ : QuantumChannel n m) : (dualSchwarzMap Φ) 1 = 1 := by
   apply Subtype.ext
@@ -149,7 +155,6 @@ theorem dualSchwarzMap_one (Φ : QuantumChannel n m) : (dualSchwarzMap Φ) 1 = 1
   simp_rw [one_def, ContinuousLinearMap.id_comp]
   exact (sum_adjoint_toEuclideanL_kraus Φ)
 
-omit [DecidableEq m] in
 /-- The dual of a channel is normal (finite dimensions). -/
 theorem isNormalMap_dualSchwarzMap (Φ : QuantumChannel n m) :
     VonNeumannAlgebra.IsNormalMap (dualSchwarzMap Φ) :=

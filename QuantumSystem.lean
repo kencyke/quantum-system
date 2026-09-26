@@ -59,6 +59,7 @@ public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Dual
@@ -79,6 +80,7 @@ public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
