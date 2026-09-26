@@ -6,12 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
-public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Pi
-public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.LinearAlgebra.Lagrange
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
-public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 
 /-!
 # Matrix Functional Calculus and Foundational Inequalities

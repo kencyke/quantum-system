@@ -17,14 +17,33 @@ Notations and abbreviations for quantum information theory.
 <tr><th>Symbol</th><th>Expansion</th><th>How to activate</th><th>Defined in</th></tr>
 <tr><td><code>Tr A</code></td><td><code>Matrix.trace A</code></td>
   <td>always available (prefix notation)</td><td>this file</td></tr>
+<tr><td><code>reTr A</code></td><td><code>Matrix.reTr A</code> (<code>(Tr A).re</code>)</td>
+  <td>always available (prefix notation)</td><td>this file</td></tr>
 <tr><td><code>log ρ</code></td><td><code>DensityMatrix.log ρ</code></td>
-  <td><code>open scoped Matrix.QuantumInfo</code></td><td><code>State.lean</code></td></tr>
+  <td><code>open scoped Matrix.QuantumInfo</code></td>
+  <td><code>Analysis/Matrix/DensityMatrix/Basic.lean</code></td></tr>
+<tr><td><code>tr₁(ρ)</code>, <code>tr₂(ρ)</code></td>
+  <td><code>Matrix.traceLeft ρ</code>, <code>Matrix.traceRight ρ</code></td>
+  <td><code>open scoped Matrix.QuantumInfo</code></td>
+  <td><code>Analysis/Matrix/DensityMatrix/Kronecker.lean</code></td></tr>
+<tr><td><code>ρ ⊗ σ</code></td><td><code>DensityMatrix.kronecker ρ σ</code></td>
+  <td><code>open scoped Kronecker</code></td>
+  <td><code>Analysis/Matrix/DensityMatrix/Kronecker.lean</code></td></tr>
 <tr><td><code>S(ρ)</code></td><td><code>Matrix.vonNeumannEntropy ρ</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
-  <td><code>Analysis/Entropy/VonNeumannEntropy.lean</code></td></tr>
-<tr><td><code>D(ρ ∥ σ)</code></td><td><code>Matrix.relativeEntropy ρ σ</code></td>
+  <td><code>Analysis/Entropy/VonNeumann/Basic.lean</code></td></tr>
+<tr><td><code>D(ρ ∥ σ)</code></td><td><code>Matrix.umegakiEntropy ρ σ</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
-  <td><code>Analysis/Entropy/RelativeEntropy.lean</code></td></tr>
+  <td><code>Analysis/Entropy/Umegaki/Basic.lean</code></td></tr>
+<tr><td><code>S⟦ψ ∥ φ⟧</code></td><td><code>VonNeumannAlgebra.arakiEntropy M ψ φ</code></td>
+  <td><code>open scoped Araki</code></td>
+  <td><code>Analysis/Entropy/Araki/Basic.lean</code></td></tr>
+<tr><td><code>M′</code></td><td><code>VonNeumannAlgebra.commutant M</code></td>
+  <td><code>open scoped VonNeumannAlgebra</code></td>
+  <td><code>ForMathlib/Analysis/VonNeumannAlgebra/Commutant.lean</code></td></tr>
+<tr><td><code>E →σw[𝕜] F</code></td><td><code>ContinuousLinearMapSigmaWeak 𝕜 E F</code></td>
+  <td>always available</td>
+  <td><code>ForMathlib/Analysis/LocallyConvex/SigmaWeakOperatorTopology.lean</code></td></tr>
 <tr><td><code>⟪X, Y⟫_HS</code></td><td><code>Matrix.hsInnerProduct X Y</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
   <td><code>Analysis/Matrix/LiebConcavity.lean</code></td></tr>

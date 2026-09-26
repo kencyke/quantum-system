@@ -193,7 +193,7 @@ lemma mem_sotClosure_of_mem_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B) 
         (H := Hn (H := H) n) _ hTn
     -- T^(n) x ∈ cyclicSubspace A^(n) x
     have hxmem : diagonal (H := H) (n := n) T x_amp ∈
-        WOTClosedSubalgebra.cyclicSubspace (H := Hn (H := H) n) Aamp x_amp :=
+        InnerProductSpace.cyclicSubspace (Aamp : Set (Hn (H := H) n →L[ℂ] Hn (H := H) n)) x_amp :=
       WOTClosedSubalgebra.mem_cyclicSubspace_of_preservesReducingSubspaces
         (H := Hn (H := H) n) Aamp hndAmp hPres x_amp
     -- The set {a x | a ∈ Aamp} equals {diagonal S x | S ∈ A}
@@ -210,35 +210,16 @@ lemma mem_sotClosure_of_mem_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B) 
         refine ⟨⟨diagonal (H := H) (n := n) S, ?_⟩, rfl⟩
         simp only [Aamp, NonUnitalStarSubalgebra.mem_map, diagonalStarAlgHom]
         exact ⟨S, hS, rfl⟩
-    -- The map S ↦ diagonal S x_amp is linear, so the orbit is a submodule
-    let evalAt : (Hn (H := H) n →L[ℂ] Hn (H := H) n) →ₗ[ℂ] Hn (H := H) n :=
-      { toFun := fun S => S x_amp
-        map_add' := fun _ _ => rfl
-        map_smul' := fun _ _ => rfl }
-    let diagMap : (H →L[ℂ] H) →ₗ[ℂ] Hn (H := H) n →L[ℂ] Hn (H := H) n :=
-      (diagonalStarAlgHom (H := H) n).toLinearMap
-    -- The orbit set equals the image of A.toSubmodule under the composed linear map
-    have hset_is_image : {y | ∃ S ∈ (A : Set _), y = diagonal (H := H) (n := n) S x_amp} =
-        A.toSubmodule.map (evalAt.comp diagMap) := by
-      ext y
-      simp only [Set.mem_ofPred_eq]
-      constructor
-      · rintro ⟨S, hS, rfl⟩
-        exact ⟨S, hS, rfl⟩
-      · rintro ⟨S, hS, rfl⟩
-        exact ⟨S, hS, rfl⟩
-    -- The image of a submodule under a linear map is a submodule, so span of it equals itself
-    have hspan_eq : Submodule.span ℂ {y | ∃ S ∈ (A : Set _), y = diagonal (H := H) (n := n) S x_amp} =
-        A.toSubmodule.map (evalAt.comp diagMap) := by
-      rw [hset_is_image, Submodule.span_eq]
-    -- cyclicSubspace uses range of Aamp elements, rewrite using our orbit equality
-    rw [WOTClosedSubalgebra.cyclicSubspace, hAamp_orbit, hspan_eq] at hxmem
-    -- hxmem : diagonal T x_amp ∈ (A.toSubmodule.map (evalAt ∘ₗ diagMap)).topologicalClosure
-    -- Since we're in the topological closure, we can approximate
+    -- `[Aamp x_amp]` is the closure of the orbit itself, since `Aamp` is a linear subspace.
     have hxmem' : diagonal (H := H) (n := n) T x_amp ∈ closure {y | ∃ S ∈ (A : Set _),
         y = diagonal (H := H) (n := n) S x_amp} := by
-      rw [hset_is_image, ← Submodule.topologicalClosure_coe]
-      exact hxmem
+      have h : diagonal (H := H) (n := n) T x_amp ∈
+          closure (Set.range fun a : Aamp => (a : Hn (H := H) n →L[ℂ] Hn (H := H) n) x_amp) := by
+        have := InnerProductSpace.coe_cyclicSubspace_of_submodule
+          Aamp.toNonUnitalSubalgebra.toSubmodule x_amp
+        rw [← SetLike.mem_coe] at hxmem
+        exact this ▸ hxmem
+      rwa [hAamp_orbit] at h
     rw [Metric.mem_closure_iff] at hxmem'
     obtain ⟨y, hy, hdist⟩ := hxmem' ε hε_pos'
     obtain ⟨S, hS, rfl⟩ := hy

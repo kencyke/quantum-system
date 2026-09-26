@@ -5,47 +5,73 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.Entropy.KroneckerProduct
-public import QuantumSystem.Analysis.Entropy.RelativeEntropy
-public import QuantumSystem.Analysis.Entropy.VonNeumannEntropy
+public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
+public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
+public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
+public import QuantumSystem.Analysis.Matrix.DensityMatrix.Kronecker
 
 /-!
-# Mutual-information identity
+# Quantum mutual information
 
-The relative-entropy form of quantum mutual information for a bipartite density matrix on a plain
-product index type `n × m`:
+The **quantum mutual information** of a bipartite density matrix `ρ : DensityMatrix (n × m)` on a
+plain product index type,
 
-  `D(ρ_AB ‖ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
+  `I(A : B) = S(ρ_A) + S(ρ_B) - S(ρ)`,
 
-It is representation-free; the analytic core reused by the direct proof
-(`Analysis/Entropy/StrongSubadditivity.lean`) and, via transport, by the planned split-net proof
-(`Analysis/Entropy/SplitSSA.lean`, not yet formalised — the split property it rests on is
-`LocalNet.SplitProperty`).
+with marginals `ρ_A = tr₂(ρ)` and `ρ_B = tr₁(ρ)` (`DensityMatrix.traceRight` /
+`DensityMatrix.traceLeft`), and its relative-entropy form with Umegaki's relative entropy
+`D(ρ ‖ σ)` (`Matrix.umegakiEntropy`):
+
+  `D(ρ ‖ ρ_A ⊗ ρ_B) = I(A : B)`.
+
+The identity is representation-free. It is the analytic core of the direct proof of strong
+subadditivity (`Analysis/Entropy/VonNeumann/StrongSubadditivity.lean`), and, via transport, of the
+planned split-net proof (`Analysis/Entropy/VonNeumann/SplitSSA.lean`, not yet formalised; the
+split property it rests on is `LocalNet.SplitProperty`).
+
+## Main definitions
+
+* `DensityMatrix.mutualInformation` — `I(A : B) = S(ρ_A) + S(ρ_B) - S(ρ)`.
+
+## Main results
+
+* `DensityMatrix.umegakiEntropy_eq_mutualInformation` — `D(ρ ‖ ρ_A ⊗ ρ_B) = I(A : B)`, with no
+  positive-definiteness assumption.
+* `DensityMatrix.mutualInformation_nonneg` — `0 ≤ I(A : B)`, i.e. subadditivity
+  `S(ρ) ≤ S(ρ_A) + S(ρ_B)`.
 -/
 
 @[expose] public section
 
-namespace Matrix
+namespace DensityMatrix
 
-open scoped Kronecker MatrixOrder ComplexOrder QuantumInfo
+open Matrix
+open scoped Kronecker MatrixOrder ComplexOrder Matrix.QuantumInfo
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
-/-! ### Relative-entropy identity -/
+/-- The **quantum mutual information** `I(A : B) = S(ρ_A) + S(ρ_B) - S(ρ)` of a bipartite density
+matrix `ρ : DensityMatrix (n × m)`, where `ρ_A = tr₂(ρ)` and `ρ_B = tr₁(ρ)` are its marginals. -/
+noncomputable def mutualInformation (ρ : DensityMatrix (n × m)) : ℝ :=
+  S(ρ.traceRight) + S(ρ.traceLeft) - S(ρ)
 
-/-- **Mutual-information identity**: for a bipartite density matrix `ρ_AB : DensityMatrix (n × m)`
-whose canonical partial traces are `ρ_A` and `ρ_B`, the relative entropy w.r.t. the product
-`ρ_A ⊗ ρ_B` equals `-S(ρ_AB) + S(ρ_A) + S(ρ_B)`.
+/-! ### Relative-entropy form -/
+
+/-- **Mutual information as a relative entropy**: for a bipartite density matrix
+`ρ_AB : DensityMatrix (n × m)` with marginals `ρ_A = tr₂(ρ_AB)` and `ρ_B = tr₁(ρ_AB)`,
+`D(ρ_AB ‖ ρ_A ⊗ ρ_B) = I(A : B) = S(ρ_A) + S(ρ_B) - S(ρ_AB)`.
 
 No positive-definiteness is assumed: the support inclusion `supp ρ_AB ⊆ supp (ρ_A ⊗ ρ_B)` is
 automatic for marginals, and the trace identity holds because `ρ_AB` annihilates every eigenvector
 of `ρ_A ⊗ ρ_B` with zero eigenvalue, where the junk value `Real.log 0 = 0` would otherwise break
 `log (λᵢ μⱼ) = log λᵢ + log μⱼ`. -/
-theorem relativeEntropy_kronecker_marginals
-    (ρ_AB : DensityMatrix (n × m)) (ρ_A : DensityMatrix n) (ρ_B : DensityMatrix m)
-    (h_A_partialTrace : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix)
-    (h_B_partialTrace : tr₁(ρ_AB.toMatrix) = ρ_B.toMatrix) :
-    D(ρ_AB ∥ ρ_A ⊗ ρ_B) = -S(ρ_AB) + S(ρ_A) + S(ρ_B) := by
+theorem umegakiEntropy_eq_mutualInformation (ρ_AB : DensityMatrix (n × m)) :
+    D(ρ_AB.toMatrix ∥ (ρ_AB.traceRight ⊗ ρ_AB.traceLeft).toMatrix) =
+      (ρ_AB.mutualInformation : EReal) := by
+  set ρ_A := ρ_AB.traceRight with hρ_A
+  set ρ_B := ρ_AB.traceLeft with hρ_B
+  have h_A_partialTrace : tr₂(ρ_AB.toMatrix) = ρ_A.toMatrix := rfl
+  have h_B_partialTrace : tr₁(ρ_AB.toMatrix) = ρ_B.toMatrix := rfl
   classical
   -- Spectral data of the factors.
   set U_A : Matrix n n ℂ := (ρ_A.isHermitian.eigenvectorUnitary : Matrix n n ℂ) with hU_A
@@ -124,13 +150,12 @@ theorem relativeEntropy_kronecker_marginals
             Finset.single_le_sum (fun i' _ => hr_nonneg (i', j)) (Finset.mem_univ i)
         _ = 0 := by rw [hsum_i, hj]
   -- Support inclusion `supp ρ_AB ⊆ supp (ρ_A ⊗ ρ_B)`.
-  have h_supp : suppSubset ρ_AB.toMatrix (ρ_A ⊗ ρ_B).toMatrix := by
+  have h_supp : SuppSubset ρ_AB.toMatrix (ρ_A ⊗ ρ_B).toMatrix := by
     rw [hσ, suppSubset_unitary_conj_diagonal_iff ρ_AB.posSemidef W d]
     intro ij hij
     change M ij ij = 0
     rw [hM_diag, hr_zero ij hij, Complex.ofReal_zero]
-  unfold relativeEntropy
-  simp only [h_supp, ite_true]
+  rw [umegakiEntropy_of_suppSubset ρ_AB.posSemidef (ρ_A ⊗ ρ_B).posSemidef h_supp]
   -- The trace against `log (ρ_A ⊗ ρ_B)` splits into the two marginal traces.
   have h_real : ∑ ij : n × m, Real.log (d ij) * r ij =
       ∑ i, lam i * Real.log (lam i) + ∑ j, mu j * Real.log (mu j) := by
@@ -171,7 +196,7 @@ theorem relativeEntropy_kronecker_marginals
   -- Translate to the goal in EReal.
   change (↑(Tr (ρ_AB.toMatrix * (cfc Real.log ρ_AB.toMatrix -
         cfc Real.log (ρ_A ⊗ ρ_B).toMatrix))).re : EReal) =
-      -S(ρ_AB) + S(ρ_A) + S(ρ_B)
+      ((S(ρ_A) + S(ρ_B) - S(ρ_AB) : ℝ) : EReal)
   rw [h_split, Complex.sub_re, h_trace_log_kron]
   set α : ℝ := (Tr (ρ_AB.toMatrix * cfc Real.log ρ_AB.toMatrix)).re with hα
   set β : ℝ := (Tr (ρ_A.toMatrix * cfc Real.log ρ_A.toMatrix)).re with hβ
@@ -180,7 +205,13 @@ theorem relativeEntropy_kronecker_marginals
   have hSρ_A : S(ρ_A) = -β := rfl
   have hSρ_B : S(ρ_B) = -γ := rfl
   rw [hSρ, hSρ_A, hSρ_B]
-  have h_real' : α - (β + γ) = -(-α) + (-β) + (-γ) := by ring
+  have h_real' : α - (β + γ) = -β + -γ - -α := by ring
   exact_mod_cast h_real'
 
-end Matrix
+/-- **Subadditivity**: the mutual information is non-negative, `S(ρ_AB) ≤ S(ρ_A) + S(ρ_B)`. -/
+theorem mutualInformation_nonneg (ρ_AB : DensityMatrix (n × m)) : 0 ≤ ρ_AB.mutualInformation := by
+  have h := DensityMatrix.umegakiEntropy_nonneg ρ_AB (ρ_AB.traceRight ⊗ ρ_AB.traceLeft)
+  rw [umegakiEntropy_eq_mutualInformation] at h
+  exact_mod_cast h
+
+end DensityMatrix

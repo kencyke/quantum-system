@@ -5,8 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.Matrix
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 
 /-!
 # Basic theory of von Neumann factors and the comparison of projections
@@ -54,6 +56,9 @@ The file is organised in three parts:
 
 * `VonNeumannAlgebra.MvNEquiv.refl` / `symm` / `trans` — Murray–von Neumann equivalence is an
   equivalence relation on the projections of `N`.
+* `VonNeumannAlgebra.MvNEquiv.ne_zero`, `VonNeumannAlgebra.IsMinimalProjection.of_mvNEquiv` —
+  nonzeroness and minimality transport along Murray–von Neumann equivalence.
+* `VonNeumannAlgebra.isFactor_boundedLinearOperators` — `𝓑(H)` is a factor.
 * `VonNeumannAlgebra.IsFactor.central_projection_eq` — in a factor every central projection is
   `0` or `1`.
 * `VonNeumannAlgebra.isStarProjection_mem_commutant_iff` — a star projection lies in the commutant
@@ -147,6 +152,21 @@ noncomputable def boundedLinearOperators.starAlgEquiv :
       (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
     (StarAlgHom.ext fun _ => rfl) (StarAlgHom.ext fun _ => rfl)
 
+@[simp] lemma boundedLinearOperators.coe_starAlgEquiv_symm_apply (x : H →L[ℂ] H) :
+    ((boundedLinearOperators.starAlgEquiv (H := H)).symm x : H →L[ℂ] H) = x := rfl
+
+/-- `n × n` matrices as elements of `𝓑(ℂⁿ)`: the `⋆`-isomorphism `Matrix.toEuclideanCLM`, landing
+in the bundled von Neumann algebra `𝓑(EuclideanSpace ℂ n)`. For a normal functional `ψ` on
+`𝓑(ℂⁿ)`, `ψ.1 A.toBoundedLinearOperators` is `ψ` evaluated on the matrix `A`. -/
+noncomputable def _root_.Matrix.toBoundedLinearOperators {n : Type*} [Fintype n] [DecidableEq n] :
+    Matrix n n ℂ ≃⋆ₐ[ℂ] (𝓑(EuclideanSpace ℂ n) : VonNeumannAlgebra _).toStarSubalgebra :=
+  Matrix.toEuclideanCLM.trans boundedLinearOperators.starAlgEquiv.symm
+
+@[simp] lemma _root_.Matrix.coe_toBoundedLinearOperators {n : Type*} [Fintype n] [DecidableEq n]
+    (A : Matrix n n ℂ) :
+    ((Matrix.toBoundedLinearOperators A : (𝓑(EuclideanSpace ℂ n) : VonNeumannAlgebra _)) :
+      EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) = Matrix.toEuclideanCLM (𝕜 := ℂ) A := rfl
+
 /-- A von Neumann algebra is closed under scalar multiplication. -/
 lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
   rw [Algebra.smul_def]
@@ -192,6 +212,17 @@ lemma eq_boundedLinearOperators_complex (N : VonNeumannAlgebra ℂ) : N = 𝓑(�
 both `N` and its commutant is a scalar multiple of the identity. -/
 def IsFactor (N : VonNeumannAlgebra H) : Prop :=
   ∀ x : H →L[ℂ] H, x ∈ N → x ∈ N.commutant → ∃ c : ℂ, x = c • 1
+
+/-- **`B(H)` is a factor.** The centre of the full algebra is trivial: an operator lying in the
+commutant of `𝓑(H)` commutes with every operator, in particular with every rank-one operator, hence
+is a scalar (`ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm`). -/
+theorem isFactor_boundedLinearOperators : IsFactor 𝓑(H) := by
+  intro x _ hxComm
+  rw [VonNeumannAlgebra.mem_commutant_iff] at hxComm
+  refine ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm (fun a b => ?_)
+  have hg := hxComm (InnerProductSpace.rankOne ℂ a b) (mem_boundedLinearOperators _)
+  rw [ContinuousLinearMap.mul_def, ContinuousLinearMap.mul_def] at hg
+  exact hg.symm
 
 /-- A **minimal projection** of `N`: a nonzero star projection `e ∈ N` whose corner is trivial,
 `e N e = ℂ e`. This is the conventional operator-algebraic definition (Takesaki, Kadison–Ringrose);
@@ -445,6 +476,43 @@ lemma isStarProjection_subproj_comm {R : Type*} [Ring R] [StarRing R] {e f : R}
 /-- The source projection of a partial isometry acts as a right identity. -/
 lemma IsPartialIsometry.mul_source {R : Type*} [Monoid R] [StarMul R] {v : R}
     (h : IsPartialIsometry v) : v * (star v * v) = v := by rw [← mul_assoc]; exact h
+
+/-- The range projection of a Murray–von Neumann equivalence with nonzero source is nonzero. -/
+lemma MvNEquiv.ne_zero {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
+    (h : p ∼[N] q) (hp : p ≠ 0) : q ≠ 0 := by
+  obtain ⟨v, _, hvpi, hvp, hvq⟩ := h
+  intro hq0
+  apply hp
+  have hv0 : v = 0 := by
+    have hpi : v * star v * v = v := hvpi
+    rw [hvq, hq0, zero_mul] at hpi
+    exact hpi.symm
+  rw [← hvp, hv0]; simp
+
+/-- **Minimality transports along Murray–von Neumann equivalence.** If `e` is a minimal projection
+and `e ∼[N] p`, then `p` is minimal: with `v⋆v = e` and `vv⋆ = p`, the corner computes as
+`p a p = v (e (v⋆ a v) e) v⋆ = c • v e v⋆ = c • p`. -/
+lemma IsMinimalProjection.of_mvNEquiv {N : VonNeumannAlgebra H} {e p : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) (h : e ∼[N] p) : IsMinimalProjection N p := by
+  have hpproj : IsStarProjection p := h.isStarProjection_right
+  have hp0 : p ≠ 0 := h.ne_zero he.2.2.1
+  obtain ⟨v, hvN, hvpi, hvp, hvq⟩ := h
+  have hpN : p ∈ N := by rw [← hvq]; exact mul_mem hvN (star_mem hvN)
+  have hve : v * e = v := by rw [← hvp]; exact IsPartialIsometry.mul_source hvpi
+  have hev : e * star v = star v := by
+    have := congrArg star hve
+    rwa [star_mul, he.1.isSelfAdjoint.star_eq] at this
+  refine ⟨hpproj, hpN, hp0, fun a haN => ?_⟩
+  obtain ⟨c, hc⟩ := he.2.2.2 (star v * a * v) (mul_mem (mul_mem (star_mem hvN) haN) hvN)
+  refine ⟨c, ?_⟩
+  calc p * a * p
+      = (v * star v) * a * (v * star v) := by rw [hvq]
+    _ = (v * e) * (star v * a * v) * (e * star v) := by
+        rw [hve, hev]; simp only [mul_assoc]
+    _ = v * (e * (star v * a * v) * e) * star v := by simp only [mul_assoc]
+    _ = v * (c • e) * star v := by rw [hc]
+    _ = c • (v * e * star v) := by simp only [mul_smul_comm, smul_mul_assoc]
+    _ = c • p := by rw [hve, hvq]
 
 /-- `p ≼ q` in `N`: `p` is Murray–von Neumann equivalent to a subprojection of `q`. -/
 def MvNSub (N : VonNeumannAlgebra H) (p q : H →L[ℂ] H) : Prop :=

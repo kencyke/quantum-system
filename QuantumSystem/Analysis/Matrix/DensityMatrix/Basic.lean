@@ -6,8 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.Notation
 
 /-!
@@ -31,8 +31,8 @@ The spectral theorem gives ρ = U diag(λ₁, ..., λₙ) U* where λᵢ ≥ 0 a
 The Von Neumann entropy is:
   S(ρ) = -Tr(ρ log ρ) = -Σᵢ λᵢ log λᵢ
 
-The relative entropy is:
-  S(ρ || σ) = Tr(ρ (log ρ - log σ))
+Umegaki's relative entropy (`Matrix.umegakiEntropy`) is:
+  D(ρ ∥ σ) = Tr(ρ (log ρ - log σ)) if supp ρ ⊆ supp σ, and +∞ otherwise
 
 where log ρ and log σ are matrix logarithms computed via the continuous functional
 calculus (CFC), applied to each matrix's own spectral decomposition. This is the
@@ -65,6 +65,12 @@ variable {n : Type*} [Fintype n] [DecidableEq n]
 /-- Two density matrices are equal iff their underlying matrices are equal. -/
 @[ext] lemma ext {ρ σ : DensityMatrix n} (h : ρ.toMatrix = σ.toMatrix) : ρ = σ := by
   cases ρ; cases σ; congr
+
+/-- Density matrices exist only over a nonempty index type: an empty matrix has trace `0 ≠ 1`. -/
+lemma nonempty (ρ : DensityMatrix n) : Nonempty n := by
+  by_contra h
+  rw [not_nonempty_iff] at h
+  simpa [Matrix.trace] using ρ.trace_eq_one
 
 /-- A density matrix is Hermitian. -/
 lemma isHermitian (ρ : DensityMatrix n) : ρ.toMatrix.IsHermitian := ρ.posSemidef.1
@@ -161,27 +167,25 @@ noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1) :
     ↑(mix ρ₁ ρ₂ p hp hp1) = p • (↑ρ₁ : Matrix n n ℂ) + (1 - p) • ↑ρ₂ := rfl
 
-/-- Transport a density matrix along a trace-preserving `*-`algebra equivalence.
+/-- Transport a density matrix along a `*-`algebra equivalence of matrix algebras, which preserves
+the trace automatically (`Matrix.trace_map`).
 
 This is the abstract notion of "unitary equivalence" of density matrices in the
 quantum-information sense. -/
 noncomputable def map {m : Type*} [Fintype m] [DecidableEq m]
-    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ)
-    (hφ : ∀ A, (φ A).trace = A.trace) : DensityMatrix m where
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ) : DensityMatrix m where
   toMatrix := φ ρ.toMatrix
   posSemidef := ρ.posSemidef.map_starAlgEquiv φ
-  trace_eq_one := by rw [hφ]; exact ρ.trace_eq_one
+  trace_eq_one := by rw [Matrix.trace_map]; exact ρ.trace_eq_one
 
 @[simp] lemma map_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
-    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ)
-    (hφ : ∀ A, (φ A).trace = A.trace) :
-    (ρ.map φ hφ).toMatrix = φ ρ.toMatrix := rfl
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ) :
+    (ρ.map φ).toMatrix = φ ρ.toMatrix := rfl
 
 /-- `DensityMatrix` reindex via an index equivalence — built on `DensityMatrix.map`. -/
 noncomputable def mapEquiv {m : Type*} [Fintype m] [DecidableEq m]
     (ρ : DensityMatrix n) (e : m ≃ n) : DensityMatrix m :=
   ρ.map (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
-    (Matrix.trace_reindexStarAlgEquiv e.symm)
 
 @[simp] lemma mapEquiv_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
     (ρ : DensityMatrix n) (e : m ≃ n) :
@@ -192,7 +196,7 @@ noncomputable def mapEquiv {m : Type*} [Fintype m] [DecidableEq m]
 /-! ### Maximally mixed state
 
 The uniform state `π = I/d` is the unique state whose entropy attains the
-maximum `log d`. -/
+maximum `log d` (`Matrix.vonNeumannEntropy_eq_log_card_iff`). -/
 
 section MaximallyMixed
 

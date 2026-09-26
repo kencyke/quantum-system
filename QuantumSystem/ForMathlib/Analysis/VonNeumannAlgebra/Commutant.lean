@@ -5,6 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
+public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Algebra.Group.Center
@@ -28,6 +30,9 @@ with the transport of a von Neumann algebra along a linear isometric equivalence
   by the induced `*`-isomorphism `U.conjStarAlgEquiv` commutes with taking commutants
   (`conj_commutant`), hence with the generated-algebra construction (`conj_generated`): this is the
   statement that a unitary equivalence of representations carries `s''` to `(U s U⋆)''`.
+
+The instances `VonNeumannAlgebra.isClosed_coe` and `VonNeumannAlgebra.instStarOrderedRing` make
+`↥N` a C⋆-algebra ordered by the Loewner order of `B(H)`.
 
 These let one build `B(H₁) ⊗̄ 1` and `1 ⊗̄ B(H₂)` (and any concretely-generated von Neumann
 algebra) without unfolding the bicommutant by hand, and transport the generation theorem
@@ -95,6 +100,11 @@ the subtype `↥N` inherits an `Algebra ℂ ↥N` structure (via `SubalgebraClas
 instance instSMulMemClass : SMulMemClass (VonNeumannAlgebra H) ℂ (H →L[ℂ] H) where
   smul_mem {s} c _ hx := s.toStarSubalgebra.smul_mem hx c
 
+/-- A von Neumann algebra on a finite-dimensional Hilbert space is finite-dimensional. -/
+instance instFiniteDimensional [FiniteDimensional ℂ H] (N : VonNeumannAlgebra H) :
+    FiniteDimensional ℂ N :=
+  FiniteDimensional.of_injective (SMulMemClass.subtype N) (SMulMemClass.subtype_injective N)
+
 /-- The commutant `(s ∪ s⋆)′` of the *symmetrized* set of an arbitrary set of bounded operators,
 packaged as a von Neumann algebra. For star-closed `s` — in particular for every self-adjoint
 generating set — this coincides with the commutant `s′` of the operator-algebra literature; for
@@ -131,11 +141,21 @@ lemma coe_generated_of_star_eq {s : Set (H →L[ℂ] H)} (hs : star s = s) :
 
 /-- The carrier of a von Neumann algebra is norm-closed: it is a double centralizer, and
 centralizers are closed. (Von Neumann algebras are even weakly closed, but the norm-closedness
-is what the subalgebra-membership lemmas of the continuous functional calculus consume.) -/
-lemma isClosed_coe (N : VonNeumannAlgebra H) : IsClosed (N : Set (H →L[ℂ] H)) := by
+is what the subalgebra-membership lemmas of the continuous functional calculus consume.)
+
+Registered as an instance, so that `↥N` inherits Mathlib's `StarSubalgebra.cstarAlgebra` and
+`Subtype.starOrderedRing`: a von Neumann algebra is a C\*-algebra with the Loewner order. -/
+instance isClosed_coe (N : VonNeumannAlgebra H) : IsClosed (N : Set (H →L[ℂ] H)) := by
   rw [show (N : Set (H →L[ℂ] H)) = Set.centralizer (Set.centralizer (N : Set (H →L[ℂ] H))) from
     N.centralizer_centralizer.symm]
   exact Set.isClosed_centralizer _
+
+/-- A von Neumann algebra `↥N` is a star-ordered ring for the Loewner order of `B(H)`
+(`Subtype.starOrderedRing`, through `VonNeumannAlgebra.isClosed_coe`). Stated over a variable
+Hilbert space so that it is found directly: on a concrete space such as a Hilbert tensor product,
+the generic search times out. -/
+instance instStarOrderedRing (N : VonNeumannAlgebra H) : StarOrderedRing N :=
+  inferInstance
 
 /-- `M′` denotes the commutant `VonNeumannAlgebra.commutant M`, the prime of the operator-algebra
 literature. -/
