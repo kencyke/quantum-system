@@ -196,7 +196,7 @@ noncomputable def mapEquiv {m : Type*} [Fintype m] [DecidableEq m]
 /-! ### Maximally mixed state
 
 The uniform state `π = I/d` is the unique state whose entropy attains the
-maximum `log d` (`Matrix.vonNeumannEntropy_eq_log_card_iff`). -/
+maximum `log d` (`DensityMatrix.vonNeumannEntropy_eq_log_card_iff`). -/
 
 section MaximallyMixed
 

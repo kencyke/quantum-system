@@ -25,27 +25,116 @@ properties.
 
 ## Main definitions
 
-* `Matrix.vonNeumannEntropy ρ` — `S(ρ) = -Re Tr (ρ log ρ) ∈ ℝ`, with notation `S(ρ)` in scope
-  `Matrix.QuantumInfo`.
+* `DensityMatrix.vonNeumannEntropy ρ` — `S(ρ) = -Re Tr (ρ log ρ) ∈ ℝ`, with notation `S(ρ)` in
+  scope `Matrix.QuantumInfo`.
 
 ## Main results
 
-* `Matrix.vonNeumannEntropy_eq_negMulLog_sum` — eigenvalue-sum form `S(ρ) = ∑ᵢ negMulLog λᵢ`.
-* `Matrix.vonNeumannEntropy_nonneg` — `0 ≤ S(ρ)`.
-* `Matrix.vonNeumannEntropy_le_log_dim` — `S(ρ) ≤ log d`, `d = Fintype.card n`;
-  `Matrix.vonNeumannEntropy_maximallyMixed` — `S(I / d) = log d`;
-  `Matrix.vonNeumannEntropy_eq_log_card_iff` — the maximum is attained only at `I / d`.
-* `Matrix.vonNeumannEntropy_concave` — concavity, two-point form;
-  `Matrix.vonNeumannEntropy_concave_sum` — the finite form `Σᵢ wᵢ S(ρᵢ) ≤ S(Σᵢ wᵢ ρᵢ)`.
-* `Matrix.vonNeumannEntropy_map_starAlgEquiv`, `Matrix.vonNeumannEntropy_mapEquiv` — invariance
-  under `⋆`-algebra equivalences and reindexing.
+* `DensityMatrix.vonNeumannEntropy_eq_negMulLog_sum` — eigenvalue-sum form
+  `S(ρ) = ∑ᵢ negMulLog λᵢ`.
+* `DensityMatrix.vonNeumannEntropy_nonneg` — `0 ≤ S(ρ)`.
+* `DensityMatrix.vonNeumannEntropy_le_log_dim` — `S(ρ) ≤ log d`, `d = Fintype.card n`;
+  `DensityMatrix.vonNeumannEntropy_maximallyMixed` — `S(I / d) = log d`;
+  `DensityMatrix.vonNeumannEntropy_eq_log_card_iff` — the maximum is attained only at `I / d`.
+* `DensityMatrix.vonNeumannEntropy_concave` — concavity, two-point form;
+  `DensityMatrix.vonNeumannEntropy_concave_sum` — the finite form
+  `Σᵢ wᵢ S(ρᵢ) ≤ S(Σᵢ wᵢ ρᵢ)`.
+* `DensityMatrix.vonNeumannEntropy_map_starAlgEquiv`, `DensityMatrix.vonNeumannEntropy_mapEquiv` —
+  invariance under `⋆`-algebra equivalences and reindexing.
 -/
 
 @[expose] public section
 
 namespace Matrix
 
-open scoped MatrixOrder ComplexOrder QuantumInfo
+open scoped MatrixOrder ComplexOrder
+
+variable {n : Type*} [Fintype n] [DecidableEq n]
+
+/-- For PosSemidef ρ: Re(Tr (ρ^s)) = ∑ i, eigenvalue_i ^ s.
+This follows from the spectral theorem: ρ^s = U diag(λᵢ^s) U†,
+and trace cyclicity Tr (U D U†) = Tr (D) = ∑ Dᵢᵢ. -/
+lemma re_trace_rpow_eq_sum_rpow (ρ : Matrix n n ℂ) (hρ : ρ.PosSemidef) (s : ℝ) :
+    (Tr (ρ ^ s)).re = ∑ i, hρ.1.eigenvalues i ^ s := by
+  have h0 : (0 : Matrix n n ℂ) ≤ ρ := by rw [Matrix.le_iff, sub_zero]; exact hρ
+  rw [CFC.rpow_eq_cfc_real (a := ρ) (ha := h0), trace_cfc hρ.1]
+  simp [Complex.ofReal_re]
+
+/-- HasDerivAt of eigenvalue rpow sum.
+d/ds (∑ i, λᵢ ^ s)|_{s=1} = ∑ i, λᵢ * log(λᵢ).
+This follows from HasStrictDerivAt of x^s in s at s=1 for each term. -/
+lemma hasDerivAt_sum_rpow {α : Type*} [Fintype α] (evs : α → ℝ) (hev : ∀ i, 0 ≤ evs i) :
+    HasDerivAt (fun (s : ℝ) => ∑ i, evs i ^ s) (∑ i, evs i * Real.log (evs i)) 1 := by
+  let F : α → ℝ → ℝ := fun i s => evs i ^ s
+  have hF : ∀ i ∈ Finset.univ, HasDerivAt (F i) (evs i * Real.log (evs i)) 1 := by
+    intro i _
+    simp only [F]
+    rcases (hev i).lt_or_eq with hpos | hzero
+    · have h := HasDerivAt.exp ((hasDerivAt_id (𝕜 := ℝ) 1).mul_const (Real.log (evs i)))
+      simp only [id] at h
+      convert h using 1
+      · ext s
+        rw [Real.rpow_def_of_pos hpos, mul_comm (Real.log (evs i))]
+      · rw [one_mul, Real.exp_log hpos]
+    · rw [← hzero, Real.log_zero, mul_zero]
+      exact (hasDerivAt_const (𝕜 := ℝ) 1 0).congr_of_eventuallyEq
+        (Filter.Eventually.mono (Ioi_mem_nhds (by norm_num : (0 : ℝ) < 1))
+         (fun x hx => by simp [Real.zero_rpow (ne_of_gt hx)]))
+  have hsum : HasDerivAt (∑ i : α, F i) (∑ i : α, evs i * Real.log (evs i)) (1 : ℝ) :=
+    HasDerivAt.sum (𝕜 := ℝ) (u := Finset.univ) hF
+  have heq : (fun s : ℝ => ∑ i : α, evs i ^ s) = ∑ i : α, F i := by
+    ext s
+    simp [F]
+  rw [heq]
+  exact hsum
+
+/-- Trace-rpow concavity: for 0 < s ≤ 1 and positive semidefinite A, B,
+    p ⋅ Tr (Aˢ) + (1−p) ⋅ Tr (Bˢ) ≤ Tr ((pA + (1−p)B)ˢ).
+    This follows from Löwner-order concavity (`rpow_isLownerConcave`) plus the
+    trace-monotonicity of the Hermitian order. -/
+lemma re_trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
+    (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
+    (s : ℝ) (hs0 : 0 < s) (hs1 : s ≤ 1) :
+    p * (Tr (A ^ s)).re + (1 - p) * (Tr (B ^ s)).re ≤ (Tr ((p • A + (1 - p) • B) ^ s)).re := by
+  have hpsd_mix : (p • A + (1 - p) • B).PosSemidef :=
+    (hA.real_smul hp).add (hB.real_smul (by linarith))
+  have hlowner := rpow_isLownerConcave hs0 hs1 n A B hA hB p hp hp1 hpsd_mix.1
+  simp only [] at hlowner
+  have hA0 : (0 : Matrix n n ℂ) ≤ A := by rw [Matrix.le_iff, sub_zero]; exact hA
+  have hB0 : (0 : Matrix n n ℂ) ≤ B := by rw [Matrix.le_iff, sub_zero]; exact hB
+  have hM0 : (0 : Matrix n n ℂ) ≤ p • A + (1 - p) • B := by
+    rw [Matrix.le_iff, sub_zero]; exact hpsd_mix
+  have eA : cfc (fun x : ℝ => -(x ^ s)) A = -(A ^ s) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := A) (ha := hA0)]
+  have eB : cfc (fun x : ℝ => -(x ^ s)) B = -(B ^ s) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := B) (ha := hB0)]
+  have eM : cfc (fun x : ℝ => -(x ^ s)) (p • A + (1 - p) • B) =
+      -((p • A + (1 - p) • B) ^ s) := by
+    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := p • A + (1 - p) • B) (ha := hM0)]
+  rw [eA, eB, eM] at hlowner
+  have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s := by
+    have heq : p • -A ^ s + (1 - p) • -B ^ s = -(p • A ^ s + (1 - p) • B ^ s) := by
+      have h1 : p • -A ^ s = -(p • A ^ s) := smul_neg p (A ^ s)
+      have h2 : (1 - p) • -B ^ s = -((1 - p) • B ^ s) := smul_neg (1 - p) (B ^ s)
+      rw [h1, h2, ← neg_add]
+    rw [heq] at hlowner
+    rwa [neg_le_neg_iff] at hlowner
+  rw [Matrix.le_iff] at hlowner'
+  have htrace := (Complex.nonneg_iff.mp hlowner'.trace_nonneg).1
+  have htr1 : Tr (p • A ^ s) = (p : ℝ) • Tr (A ^ s) := Matrix.trace_smul (p : ℝ) (A ^ s)
+  have htr2 : Tr ((1 - p) • B ^ s) = (1 - p : ℝ) • Tr (B ^ s) :=
+    Matrix.trace_smul (1 - p : ℝ) (B ^ s)
+  rw [Matrix.trace_sub, Matrix.trace_add, htr1, htr2] at htrace
+  simp only [Complex.sub_re, Complex.add_re, Complex.real_smul, Complex.mul_re,
+             Complex.ofReal_re, Complex.ofReal_im] at htrace
+  linarith
+
+end Matrix
+
+namespace DensityMatrix
+
+open Matrix
+open scoped MatrixOrder ComplexOrder Matrix.QuantumInfo
 
 variable {n : Type*} [Fintype n] [DecidableEq n]
 
@@ -55,10 +144,19 @@ its trace is real, so `.re` is lossless (see `vonNeumannEntropy_ofReal`). -/
 noncomputable def vonNeumannEntropy (ρ : DensityMatrix n) : ℝ :=
   -(Tr (ρ * log ρ)).re
 
-namespace QuantumInfo
-/-- `S(ρ)` is the von Neumann entropy `Matrix.vonNeumannEntropy ρ`. -/
-scoped notation "S(" ρ ")" => Matrix.vonNeumannEntropy ρ
-end QuantumInfo
+end DensityMatrix
+
+namespace Matrix.QuantumInfo
+/-- `S(ρ)` is the von Neumann entropy `DensityMatrix.vonNeumannEntropy ρ`. -/
+scoped notation "S(" ρ ")" => DensityMatrix.vonNeumannEntropy ρ
+end Matrix.QuantumInfo
+
+namespace DensityMatrix
+
+open Matrix
+open scoped MatrixOrder ComplexOrder Matrix.QuantumInfo
+
+variable {n : Type*} [Fintype n] [DecidableEq n]
 
 /-- Casting `S(ρ)` back to ℂ recovers −Tr(ρ log ρ) exactly, confirming the trace is real. -/
 @[simp]
@@ -219,87 +317,9 @@ theorem vonNeumannEntropy_eq_log_card_iff [Nonempty n] (ρ : DensityMatrix n) :
     ext i j; by_cases hij : i = j <;> simp [hij]]
   rw [Matrix.mul_smul, Matrix.mul_one, Matrix.smul_mul, UUH_eq_one]
 
-/-- For PosSemidef ρ: Re(Tr (ρ^s)) = ∑ i, eigenvalue_i ^ s.
-This follows from the spectral theorem: ρ^s = U diag(λᵢ^s) U†,
-and trace cyclicity Tr (U D U†) = Tr (D) = ∑ Dᵢᵢ. -/
-lemma re_trace_rpow_eq_sum_rpow (ρ : Matrix n n ℂ) (hρ : ρ.PosSemidef) (s : ℝ) :
-    (Tr (ρ ^ s)).re = ∑ i, hρ.1.eigenvalues i ^ s := by
-  have h0 : (0 : Matrix n n ℂ) ≤ ρ := by rw [Matrix.le_iff, sub_zero]; exact hρ
-  rw [CFC.rpow_eq_cfc_real (a := ρ) (ha := h0), trace_cfc hρ.1]
-  simp [Complex.ofReal_re]
-
-/-- HasDerivAt of eigenvalue rpow sum.
-d/ds (∑ i, λᵢ ^ s)|_{s=1} = ∑ i, λᵢ * log(λᵢ).
-This follows from HasStrictDerivAt of x^s in s at s=1 for each term. -/
-lemma hasDerivAt_sum_rpow {α : Type*} [Fintype α] (evs : α → ℝ) (hev : ∀ i, 0 ≤ evs i) :
-    HasDerivAt (fun (s : ℝ) => ∑ i, evs i ^ s) (∑ i, evs i * Real.log (evs i)) 1 := by
-  let F : α → ℝ → ℝ := fun i s => evs i ^ s
-  have hF : ∀ i ∈ Finset.univ, HasDerivAt (F i) (evs i * Real.log (evs i)) 1 := by
-    intro i _
-    simp only [F]
-    rcases (hev i).lt_or_eq with hpos | hzero
-    · have h := HasDerivAt.exp ((hasDerivAt_id (𝕜 := ℝ) 1).mul_const (Real.log (evs i)))
-      simp only [id] at h
-      convert h using 1
-      · ext s
-        rw [Real.rpow_def_of_pos hpos, mul_comm (Real.log (evs i))]
-      · rw [one_mul, Real.exp_log hpos]
-    · rw [← hzero, Real.log_zero, mul_zero]
-      exact (hasDerivAt_const (𝕜 := ℝ) 1 0).congr_of_eventuallyEq
-        (Filter.Eventually.mono (Ioi_mem_nhds (by norm_num : (0 : ℝ) < 1))
-         (fun x hx => by simp [Real.zero_rpow (ne_of_gt hx)]))
-  have hsum : HasDerivAt (∑ i : α, F i) (∑ i : α, evs i * Real.log (evs i)) (1 : ℝ) :=
-    HasDerivAt.sum (𝕜 := ℝ) (u := Finset.univ) hF
-  have heq : (fun s : ℝ => ∑ i : α, evs i ^ s) = ∑ i : α, F i := by
-    ext s
-    simp [F]
-  rw [heq]
-  exact hsum
-
-/-- Trace-rpow concavity: for 0 < s ≤ 1 and positive semidefinite A, B,
-    p ⋅ Tr (Aˢ) + (1−p) ⋅ Tr (Bˢ) ≤ Tr ((pA + (1−p)B)ˢ).
-    This follows from Löwner-order concavity (`rpow_isLownerConcave`) plus the
-    trace-monotonicity of the Hermitian order. -/
-lemma re_trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
-    (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
-    (s : ℝ) (hs0 : 0 < s) (hs1 : s ≤ 1) :
-    p * (Tr (A ^ s)).re + (1 - p) * (Tr (B ^ s)).re ≤ (Tr ((p • A + (1 - p) • B) ^ s)).re := by
-  have hpsd_mix : (p • A + (1 - p) • B).PosSemidef :=
-    (hA.real_smul hp).add (hB.real_smul (by linarith))
-  have hlowner := rpow_isLownerConcave hs0 hs1 n A B hA hB p hp hp1 hpsd_mix.1
-  simp only [] at hlowner
-  have hA0 : (0 : Matrix n n ℂ) ≤ A := by rw [Matrix.le_iff, sub_zero]; exact hA
-  have hB0 : (0 : Matrix n n ℂ) ≤ B := by rw [Matrix.le_iff, sub_zero]; exact hB
-  have hM0 : (0 : Matrix n n ℂ) ≤ p • A + (1 - p) • B := by
-    rw [Matrix.le_iff, sub_zero]; exact hpsd_mix
-  have eA : cfc (fun x : ℝ => -(x ^ s)) A = -(A ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := A) (ha := hA0)]
-  have eB : cfc (fun x : ℝ => -(x ^ s)) B = -(B ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := B) (ha := hB0)]
-  have eM : cfc (fun x : ℝ => -(x ^ s)) (p • A + (1 - p) • B) =
-      -((p • A + (1 - p) • B) ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := p • A + (1 - p) • B) (ha := hM0)]
-  rw [eA, eB, eM] at hlowner
-  have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s := by
-    have heq : p • -A ^ s + (1 - p) • -B ^ s = -(p • A ^ s + (1 - p) • B ^ s) := by
-      have h1 : p • -A ^ s = -(p • A ^ s) := smul_neg p (A ^ s)
-      have h2 : (1 - p) • -B ^ s = -((1 - p) • B ^ s) := smul_neg (1 - p) (B ^ s)
-      rw [h1, h2, ← neg_add]
-    rw [heq] at hlowner
-    rwa [neg_le_neg_iff] at hlowner
-  rw [Matrix.le_iff] at hlowner'
-  have htrace := (Complex.nonneg_iff.mp hlowner'.trace_nonneg).1
-  have htr1 : Tr (p • A ^ s) = (p : ℝ) • Tr (A ^ s) := Matrix.trace_smul (p : ℝ) (A ^ s)
-  have htr2 : Tr ((1 - p) • B ^ s) = (1 - p : ℝ) • Tr (B ^ s) :=
-    Matrix.trace_smul (1 - p : ℝ) (B ^ s)
-  rw [Matrix.trace_sub, Matrix.trace_add, htr1, htr2] at htrace
-  simp only [Complex.sub_re, Complex.add_re, Complex.real_smul, Complex.mul_re,
-             Complex.ofReal_re, Complex.ofReal_im] at htrace
-  linarith
-
 /-- **Von Neumann entropy is concave**, two-point form:
 `S(p ρ₁ + (1 - p) ρ₂) ≥ p S(ρ₁) + (1 - p) S(ρ₂)` for `0 ≤ p ≤ 1`. The finite form
-`S(Σᵢ wᵢ ρᵢ) ≥ Σᵢ wᵢ S(ρᵢ)` is `Matrix.vonNeumannEntropy_concave_sum`.
+`S(Σᵢ wᵢ ρᵢ) ≥ Σᵢ wᵢ S(ρᵢ)` is `DensityMatrix.vonNeumannEntropy_concave_sum`.
 
 **Proof**: We use the Löwner-order concavity of A ↦ Aˢ for 0 < s ≤ 1
 (from `rpow_isLownerConcave`). Define g(s) := Tr (ρ_mixˢ)
@@ -390,7 +410,7 @@ theorem vonNeumannEntropy_concave (ρ₁ ρ₂ : DensityMatrix n) (p : ℝ) (hp 
   linarith
 
 /-- The entropy functional `A ↦ -Re Tr (A log A)` is concave on the convex set of density
-matrices; this is `Matrix.vonNeumannEntropy_concave` read on the underlying matrices. -/
+matrices; this is `DensityMatrix.vonNeumannEntropy_concave` read on the underlying matrices. -/
 private lemma concaveOn_vonNeumannEntropy :
     ConcaveOn ℝ {A : Matrix n n ℂ | A.PosSemidef ∧ Tr A = 1}
       (fun A => -(Tr (A * cfc Real.log A)).re) := by
@@ -453,4 +473,4 @@ lemma vonNeumannEntropy_mapEquiv (ρ : DensityMatrix m) (e : n ≃ m) :
 
 end IsomorphismInvariance
 
-end Matrix
+end DensityMatrix
