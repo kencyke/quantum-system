@@ -29,11 +29,11 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.TFAE
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
-public import QuantumSystem.Algebra.VonNeumannAlgebra.Diagonal
 public import QuantumSystem.Algebra.VonNeumannAlgebra.MinimalProjection
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeModular
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeTomita
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Multiplication
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
 public import QuantumSystem.Algebra.VonNeumannAlgebra.RadonNikodym
 public import QuantumSystem.Algebra.VonNeumannAlgebra.SplitInclusion
@@ -46,6 +46,7 @@ public import QuantumSystem.Analysis.Entropy.Araki.Basic
 public import QuantumSystem.Analysis.Entropy.Araki.Commutative
 public import QuantumSystem.Analysis.Entropy.Araki.Matrix
 public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
+public import QuantumSystem.Analysis.Entropy.Araki.Multiplication
 public import QuantumSystem.Analysis.Entropy.Araki.Vector
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
 public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
@@ -67,7 +68,9 @@ public import QuantumSystem.Analysis.Matrix.QuantumChannel.Dual
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.PartialTrace
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
+public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
+public import QuantumSystem.Analysis.UnboundedOperator.Multiplication
 public import QuantumSystem.Analysis.UnboundedOperator.Resolvent
 public import QuantumSystem.Analysis.UnboundedOperator.ResolventCFC
 public import QuantumSystem.Analysis.UnboundedOperator.RestrictScalars
@@ -91,6 +94,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplif
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
@@ -118,7 +122,11 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
+public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
+public import QuantumSystem.ForMathlib.MeasureTheory.Measure.Count
+public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
+public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
 public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap

@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.Basic
-public import QuantumSystem.Algebra.VonNeumannAlgebra.Diagonal
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Multiplication
 
 /-!
 # Split inclusions of von Neumann algebras
@@ -38,10 +38,10 @@ is inherited from the type I structure theorem
   `IsTypeIFactor.isSplitInclusion_self` and `IsSplitInclusion.isTypeIFactor_of_self`.
 * `VonNeumannAlgebra.IsSplitInclusion.exists_tensor_decomposition` — the split tensor
   decomposition of the inclusion.
-* `VonNeumannAlgebra.not_isSplitInclusion_diagonalAlgebra` — the negative control: the diagonal
-  algebra `ℂ ⊕ ℂ = diagonalAlgebra (Fin 2)` on `ℂ²` is not a factor
-  (`not_isFactor_diagonalAlgebra`), so its identity inclusion is *not* split. This is what keeps
-  the predicate distinguishable from plain inclusion.
+* `VonNeumannAlgebra.not_isSplitInclusion_multiplicationAlgebra_count` — the negative control:
+  the diagonal algebra `ℂ ⊕ ℂ = L∞(Fin 2, count)` on `ℂ² = L²(Fin 2, count)` is not a factor
+  (`not_isFactor_multiplicationAlgebra_count`), so its identity inclusion is *not* split. This is
+  what keeps the predicate distinguishable from plain inclusion.
 
 ## Notation
 
@@ -131,32 +131,43 @@ itself only when it is `ℂ·1`). Without it nothing built in this repository wo
 from plain inclusion, nor `IsFactor` from `True`.
 
 It lives here, next to the predicate it refutes, rather than among the local-net witnesses: it
-mentions no net, no index set and no representation. The algebra itself is the general diagonal
-algebra `ℓ^∞(ι)` of `QuantumSystem.Algebra.VonNeumannAlgebra.Diagonal` at `ι = Fin 2`.
+mentions no net, no index set and no representation. The algebra itself is the multiplication
+algebra `L∞(μ)` of `QuantumSystem.Algebra.VonNeumannAlgebra.Multiplication` for counting measure on
+`Fin 2`, which is not a factor because the measure splits
+(`VonNeumannAlgebra.not_isFactor_multiplicationAlgebra`).
 -/
 
 section Diagonal
 
-/-- **The diagonal algebra is not a factor**: the coordinate projection `P₀` lies in its centre
-(`coordProjection_mem`, `coordProjection_mem_commutant`) and is not a scalar. The first refuted
-`IsFactor` in the repository — without it nothing built here distinguishes `IsFactor` from `True`. -/
-theorem not_isFactor_diagonalAlgebra : ¬ IsFactor (diagonalAlgebra (Fin 2)) := fun h =>
-  let ⟨c, hc⟩ := h _ (coordProjection_mem 0) (coordProjection_mem_commutant 0)
-  coordProjection_ne_smul_one (by decide : (0 : Fin 2) ≠ 1) c hc
+open MeasureTheory
+
+/-- **The diagonal algebra is not a factor**: the coordinate projection `M_{1_{\{0\}}}` lies in its
+centre and is not a scalar. The first refuted `IsFactor` in the repository — without it nothing
+built here distinguishes `IsFactor` from `True`. -/
+theorem not_isFactor_multiplicationAlgebra_count :
+    ¬ IsFactor (multiplicationAlgebra (Measure.count : Measure (Fin 2))) :=
+  not_isFactor_multiplicationAlgebra (measurableSet_singleton (0 : Fin 2))
+    (by simp) (measure_ne_top _ _)
+    (by
+      rw [Ne, Measure.count_eq_zero_iff]
+      exact Set.nonempty_iff_ne_empty.mp ⟨1, by simp⟩)
+    (measure_ne_top _ _)
 
 /-- The diagonal algebra is not a type I factor, not being a factor at all. -/
-theorem not_isTypeIFactor_diagonalAlgebra : ¬ IsTypeIFactor (diagonalAlgebra (Fin 2)) := fun h =>
-  not_isFactor_diagonalAlgebra h.1
+theorem not_isTypeIFactor_multiplicationAlgebra_count :
+    ¬ IsTypeIFactor (multiplicationAlgebra (Measure.count : Measure (Fin 2))) := fun h =>
+  not_isFactor_multiplicationAlgebra_count h.1
 
 /-- **A non-split inclusion** — the minimal witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ`: the identity
 inclusion of the diagonal algebra on `ℂ²` is not split. An interpolating type I factor squeezed
-between `diagonalAlgebra (Fin 2)` and itself would *be* `diagonalAlgebra (Fin 2)`
+between the diagonal algebra and itself would *be* the diagonal algebra
 (`IsSplitInclusion.isTypeIFactor_of_self`), which is not a factor. This keeps the negation of
 `IsSplitInclusion` inhabited: without it nothing built in the repository distinguishes the
 predicate from plain inclusion. -/
-theorem not_isSplitInclusion_diagonalAlgebra :
-    ¬ IsSplitInclusion (diagonalAlgebra (Fin 2)) (diagonalAlgebra (Fin 2)) := fun h =>
-  not_isTypeIFactor_diagonalAlgebra h.isTypeIFactor_of_self
+theorem not_isSplitInclusion_multiplicationAlgebra_count :
+    ¬ IsSplitInclusion (multiplicationAlgebra (Measure.count : Measure (Fin 2)))
+      (multiplicationAlgebra (Measure.count : Measure (Fin 2))) := fun h =>
+  not_isTypeIFactor_multiplicationAlgebra_count h.isTypeIFactor_of_self
 
 end Diagonal
 
