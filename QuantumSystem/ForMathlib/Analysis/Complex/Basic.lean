@@ -16,7 +16,8 @@ public import Mathlib.Analysis.SpecialFunctions.Complex.Arg
 Non-negativity facts in `ComplexOrder` for real-valued complex numbers, and phase-alignment
 lemmas: every `z : ℂ` can be rotated by a complex number of norm at most one onto `‖z‖`
 (`Complex.phase_alignment`, `Complex.exp_neg_I_arg_mul_self`,
-`Complex.exists_unit_mul_eq_norm`).
+`Complex.exists_unit_mul_eq_norm`). The resolvent bound `‖(i - t)⁻¹‖ ≤ 1` for
+real `t` (`Complex.norm_inv_I_sub_ofReal_le`).
 -/
 
 @[expose] public section
@@ -90,3 +91,11 @@ lemma Complex.exists_unit_mul_eq_norm (z : ℂ) : ∃ (u : ℂ), ‖u‖ ≤ 1 �
       simp
     · rw [exp_neg_I_arg_mul_self]
       simp
+
+/-! ### Resolvent bound at `i` -/
+
+/-- `‖(i - t)⁻¹‖ ≤ 1` for real `t`. -/
+lemma Complex.norm_inv_I_sub_ofReal_le (t : ℝ) : ‖(I - (t : ℂ))⁻¹‖ ≤ 1 := by
+  rw [norm_inv]
+  refine inv_le_one_of_one_le₀ ?_
+  simpa using Complex.abs_im_le_norm (I - (t : ℂ))

@@ -35,6 +35,11 @@ set forces `T` to be closed (`LinearPMap.isClosed_of_mem_resolventSet`).
 * `LinearPMap.notMem_spectrum_resolvent` — for `z, w` in the resolvent set, `(w - z)⁻¹` is not in
   the spectrum of `(w - T)⁻¹`; equivalently `1 - (w - z) ζ ≠ 0` on that spectrum
   (`LinearPMap.one_sub_mul_ne_zero_of_mem_spectrum`).
+* `LinearPMap.mem_resolventSet_of_notMem_spectrum_resolvent` — the converse spectral mapping: if
+  `(z - w)⁻¹` is not in the spectrum of `(z - T)⁻¹`, then `w` is in the resolvent set.
+* `LinearPMap.mem_resolventSet_of_norm_mul_lt_one`, `LinearPMap.isOpen_resolventSet` — on a Banach
+  space the resolvent set is open: `w` is in it as soon as `‖w - z‖ ‖(z - T)⁻¹‖ < 1` for some `z`
+  in it (Neumann series).
 * `LinearPMap.isClosed_of_mem_resolventSet` — an operator with nonempty resolvent set is closed.
 * `LinearPMap.comp_resolvent_eq_resolvent_comp` — a bounded `V` mapping the graph of `T` into the
   graph of `S` intertwines their resolvents: `V (z - T)⁻¹ = (z - S)⁻¹ V`.
@@ -197,6 +202,70 @@ theorem one_sub_mul_ne_zero_of_mem_spectrum (hw : w ∈ T.resolventSet) (hz : z 
     exact one_ne_zero h
   have hzw : z ≠ w := fun h => hc (by rw [h, sub_self])
   exact notMem_spectrum_resolvent hw hz hzw (eq_inv_of_mul_eq_one_right (sub_eq_zero.mp h).symm ▸ hζ)
+
+/-- If `z` lies in the resolvent set and `1 + (w - z) (z - T)⁻¹` is invertible, then `w` lies in
+the resolvent set: `(w - T)⁻¹ = (z - T)⁻¹ (1 + (w - z) (z - T)⁻¹)⁻¹`. -/
+theorem mem_resolventSet_of_isUnit (hz : z ∈ T.resolventSet)
+    (hunit : IsUnit (1 + (w - z) • T.resolvent z)) : w ∈ T.resolventSet := by
+  set R := T.resolvent z
+  obtain ⟨B, hB⟩ := hunit
+  have hBx : ∀ x, (B : E →L[𝕜] E) x = x + (w - z) • R x := fun x => by
+    rw [hB]
+    rfl
+  have hinv : ∀ x, (B : E →L[𝕜] E) ((↑B⁻¹ : E →L[𝕜] E) x) = x := fun x => by
+    rw [← mul_apply_eq_comp, Units.mul_inv, one_apply_eq_self]
+  have hinv' : ∀ x, (↑B⁻¹ : E →L[𝕜] E) ((B : E →L[𝕜] E) x) = x := fun x => by
+    rw [← mul_apply_eq_comp, Units.inv_mul, one_apply_eq_self]
+  refine ⟨R ∘L ↑B⁻¹, fun x => ?_, fun u v huv => ?_⟩
+  · set y := (↑B⁻¹ : E →L[𝕜] E) x
+    have hpair : ((R ∘L ↑B⁻¹) x, w • (R ∘L ↑B⁻¹) x - x) = (R y, z • R y - y) := by
+      refine Prod.ext rfl ?_
+      change w • R y - x = z • R y - y
+      rw [← hinv x, hBx]
+      module
+    rw [hpair]
+    exact resolvent_mem_graph hz y
+  · have h₀ := resolvent_sub_apply hz huv
+    have hx : w • u - v = (B : E →L[𝕜] E) (z • u - v) := by
+      rw [hBx]
+      simp only [R, h₀]
+      module
+    rw [hx]
+    change R ((↑B⁻¹ : E →L[𝕜] E) ((B : E →L[𝕜] E) (z • u - v))) = u
+    rw [hinv', h₀]
+
+/-- **Neumann series.** If `z` lies in the resolvent set and `‖w - z‖ ‖(z - T)⁻¹‖ < 1`, then `w`
+lies in the resolvent set. -/
+theorem mem_resolventSet_of_norm_mul_lt_one [CompleteSpace E] (hz : z ∈ T.resolventSet)
+    (h : ‖w - z‖ * ‖T.resolvent z‖ < 1) : w ∈ T.resolventSet := by
+  have ht : ‖-((w - z) • T.resolvent z)‖ < 1 := by
+    rwa [norm_neg, norm_smul]
+  exact mem_resolventSet_of_isUnit hz ⟨Units.oneSub _ ht, by simp [Units.val_oneSub, sub_neg_eq_add]⟩
+
+/-- **Spectral mapping**, the converse of `LinearPMap.notMem_spectrum_resolvent`: for `z` in the
+resolvent set and `w ≠ z`, if `(z - w)⁻¹` is not in the spectrum of `(z - T)⁻¹`, then `w` lies in
+the resolvent set. -/
+theorem mem_resolventSet_of_notMem_spectrum_resolvent (hz : z ∈ T.resolventSet) (hwz : w ≠ z)
+    (h : (z - w)⁻¹ ∉ spectrum 𝕜 (T.resolvent z)) : w ∈ T.resolventSet := by
+  refine mem_resolventSet_of_isUnit hz ?_
+  have hc : z - w ≠ 0 := sub_ne_zero.mpr hwz.symm
+  rw [spectrum.notMem_iff] at h
+  have key : 1 + (w - z) • T.resolvent z =
+      algebraMap 𝕜 (E →L[𝕜] E) (z - w) * (algebraMap 𝕜 (E →L[𝕜] E) (z - w)⁻¹ - T.resolvent z) := by
+    rw [mul_sub, ← map_mul, mul_inv_cancel₀ hc, map_one, ← Algebra.smul_def]
+    module
+  rw [key]
+  exact ((IsUnit.mk0 _ hc).map (algebraMap 𝕜 (E →L[𝕜] E))).mul h
+
+/-- The resolvent set of a partially defined operator on a Banach space is open. -/
+theorem isOpen_resolventSet [CompleteSpace E] (T : E →ₗ.[𝕜] E) : IsOpen T.resolventSet := by
+  refine Metric.isOpen_iff.mpr fun z hz => ⟨(‖T.resolvent z‖ + 1)⁻¹, by positivity, fun w hw => ?_⟩
+  refine mem_resolventSet_of_norm_mul_lt_one hz ?_
+  rw [Metric.mem_ball, dist_eq_norm] at hw
+  calc ‖w - z‖ * ‖T.resolvent z‖ ≤ (‖T.resolvent z‖ + 1)⁻¹ * ‖T.resolvent z‖ := by gcongr
+    _ < 1 := by
+      rw [inv_mul_lt_iff₀ (by positivity)]
+      linarith
 
 /-- A partially defined operator with nonempty resolvent set is closed: its graph is the range
 of `x ↦ ((z - T)⁻¹ x, z (z - T)⁻¹ x - x)`, which has the continuous left inverse

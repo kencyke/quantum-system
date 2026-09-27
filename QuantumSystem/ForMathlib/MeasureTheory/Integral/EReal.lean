@@ -5,12 +5,9 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 public import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLogExp
-public import Mathlib.MeasureTheory.Integral.Bochner.Basic
-public import Mathlib.MeasureTheory.Integral.IntegrableOn
 public import Mathlib.MeasureTheory.Integral.IntegralEqImproper
-public import Mathlib.MeasureTheory.Measure.Prod
+public import Mathlib.MeasureTheory.Measure.LogLikelihoodRatio
 
 /-!
 # Extended-real-valued integrals and the integral of `-log`
@@ -42,6 +39,9 @@ measure of a relative modular operator, has this form. `negLogIntegral μ ≠ �
 * `MeasureTheory.erealIntegral_mono_ae`, `MeasureTheory.erealIntegral_congr_ae` — monotonicity.
 * `MeasureTheory.erealIntegral_coe` — agreement with the Bochner integral for integrable real `f`;
   `MeasureTheory.erealIntegral_add_coe` — `∫ (f + g) = ∫ f + ∫ g` for integrable real `g`.
+* `MeasureTheory.erealIntegral_llr_ne_bot`, `MeasureTheory.erealIntegral_llr_eq_top` — for `P ≪ Q`
+  with `Q` finite, `∫ log (dP/dQ) dP` is never `⊥`, and is `⊤` when `log (dP/dQ)` is not
+  `P`-integrable.
 * `MeasureTheory.erealIntegral_dirac`, `MeasureTheory.erealIntegral_smul_measure`,
   `MeasureTheory.erealIntegral_add_measure`, `MeasureTheory.erealIntegral_finsetSum_measure`,
   `MeasureTheory.erealIntegral_map` — dependence on the measure; additivity in the measure is
@@ -352,6 +352,66 @@ theorem erealIntegral_map {β : Type*} [MeasurableSpace β] {φ : α → β} {f 
   rfl
 
 end ERealIntegral
+
+/-! ### The log-likelihood ratio -/
+
+section LLR
+
+variable {α : Type*} [MeasurableSpace α] {P Q : Measure α}
+
+/-- For `P ≪ Q` with `Q` finite, the negative part of `log (dP/dQ)` has finite `P`-integral:
+`-log c ≤ c⁻¹` and `∫ (dP/dQ)⁻¹ dP ≤ Q(univ)`. -/
+theorem lintegral_ofReal_neg_llr_ne_top [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q) :
+    ∫⁻ x, ENNReal.ofReal (-llr P Q x) ∂P ≠ ∞ := by
+  refine ne_of_lt (lt_of_le_of_lt (lintegral_mono_ae (g := fun x => (P.rnDeriv Q x)⁻¹) ?_) ?_)
+  · filter_upwards [Measure.rnDeriv_pos hPQ, hPQ.ae_le (Measure.rnDeriv_lt_top P Q)] with x h₁ h₂
+    have hc : 0 < (P.rnDeriv Q x).toReal := ENNReal.toReal_pos h₁.ne' h₂.ne
+    rw [llr_def, ← Real.log_inv, ← ENNReal.ofReal_toReal (ENNReal.inv_ne_top.mpr h₁.ne'),
+      ENNReal.toReal_inv]
+    refine ENNReal.ofReal_le_ofReal ((Real.log_le_sub_one_of_pos (inv_pos.mpr hc)).trans ?_)
+    linarith
+  · rw [← lintegral_rnDeriv_mul hPQ (f := fun x => (P.rnDeriv Q x)⁻¹)
+      (Measure.measurable_rnDeriv P Q).inv.aemeasurable]
+    refine lt_of_le_of_lt (lintegral_mono fun x => ENNReal.mul_inv_le_one _) ?_
+    rw [lintegral_one]
+    exact measure_lt_top Q _
+
+/-- For `P ≪ Q` with `Q` finite, `∫ log (dP/dQ) dP` is never `-∞`: the extended integral of the
+log-likelihood ratio is a genuine value in `(-∞, +∞]`, not the junk value `⊤ - ⊤ = ⊥`. -/
+theorem erealIntegral_llr_ne_bot [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q) :
+    erealIntegral P (fun x => (llr P Q x : EReal)) ≠ ⊥ := by
+  rw [Ne, erealIntegral_eq_bot_iff]
+  simp_rw [← EReal.coe_neg, EReal.toENNReal_of_ne_top (EReal.coe_ne_top _), EReal.toReal_coe]
+  exact lintegral_ofReal_neg_llr_ne_top hPQ
+
+/-- For `P ≪ Q` with `Q` finite and a non-integrable `log (dP/dQ)`, `∫ log (dP/dQ) dP = +∞`. -/
+theorem erealIntegral_llr_eq_top [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q)
+    (hint : ¬Integrable (llr P Q) P) : erealIntegral P (fun x => (llr P Q x : EReal)) = ⊤ := by
+  have hpos : ∀ r : ℝ, ((r : EReal)).toENNReal = ENNReal.ofReal r := fun r => by
+    rw [EReal.toENNReal_of_ne_top (EReal.coe_ne_top r), EReal.toReal_coe]
+  have hneg : ∀ r : ℝ, (-(r : EReal)).toENNReal = ENNReal.ofReal (-r) := fun r => by
+    rw [← EReal.coe_neg, hpos]
+  have hN := lintegral_ofReal_neg_llr_ne_top hPQ
+  have hP : ∫⁻ x, ENNReal.ofReal (llr P Q x) ∂P = ∞ := by
+    by_contra hfin
+    apply hint
+    refine ⟨(stronglyMeasurable_llr P Q).aestronglyMeasurable, ?_⟩
+    rw [hasFiniteIntegral_iff_enorm]
+    have habs : ∀ x, ‖llr P Q x‖ₑ = ENNReal.ofReal (llr P Q x) + ENNReal.ofReal (-llr P Q x) :=
+      fun x => by
+        rw [Real.enorm_eq_ofReal_abs]
+        rcases le_total 0 (llr P Q x) with h | h
+        · rw [abs_of_nonneg h, ENNReal.ofReal_of_nonpos (neg_nonpos.mpr h), add_zero]
+        · rw [abs_of_nonpos h, ENNReal.ofReal_of_nonpos h, zero_add]
+    simp_rw [habs]
+    rw [lintegral_add_left ((measurable_llr P Q).ennreal_ofReal)]
+    exact ENNReal.add_lt_top.mpr ⟨lt_top_iff_ne_top.mpr hfin, lt_top_iff_ne_top.mpr hN⟩
+  rw [erealIntegral]
+  simp_rw [hpos, hneg]
+  rw [hP, ← ENNReal.ofReal_toReal hN, EReal.coe_ennreal_top, EReal.coe_ennreal_ofReal]
+  exact EReal.top_sub_coe _
+
+end LLR
 
 /-! ### The integral of `-log` -/
 

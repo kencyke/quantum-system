@@ -22,7 +22,8 @@ self-adjointness; a *positive self-adjoint* operator is `IsSelfAdjoint T ∧ T.I
 
 ## Main results
 
-* `IsSelfAdjoint.isFormalAdjoint` — a self-adjoint operator is symmetric.
+* `IsSelfAdjoint.isFormalAdjoint` — a self-adjoint operator is symmetric;
+  `IsSelfAdjoint.eq_of_le` — and it has no proper symmetric extension.
 * `LinearPMap.IsFormalAdjoint.inner_map_self_im_eq_zero` — for symmetric `T`, `⟪x, T x⟫` is real.
 * `LinearPMap.IsFormalAdjoint.inner_eq_of_mem_graph`, `LinearPMap.isFormalAdjoint_of_mem_graph` —
   symmetry in graph form.
@@ -89,3 +90,15 @@ lemma IsSelfAdjoint.isFormalAdjoint {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCom
   have h := LinearPMap.adjoint_isFormalAdjoint hA.dense_domain (T := A)
   rw [LinearPMap.isSelfAdjoint_def.mp hA] at h
   exact h
+
+/-- **A self-adjoint operator has no proper symmetric extension**: if `A` is symmetric and extends
+the self-adjoint `B`, then `A = B`, since `A ≤ B† = B`. -/
+lemma IsSelfAdjoint.eq_of_le {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [CompleteSpace E] {A B : E →ₗ.[𝕜] E} (hB : IsSelfAdjoint B)
+    (hA : A.IsFormalAdjoint A) (hle : B ≤ A) : A = B := by
+  have hform : B.IsFormalAdjoint A := fun x y => by
+    rw [hle.2 (y := ⟨x, hle.1 x.2⟩) rfl]
+    exact hA ⟨x, hle.1 x.2⟩ y
+  refine le_antisymm ?_ hle
+  calc A ≤ B† := hform.le_adjoint hB.dense_domain
+    _ = B := hB
