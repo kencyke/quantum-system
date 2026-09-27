@@ -16,13 +16,14 @@ For a closed, densely defined operator `T : E → F` between Hilbert spaces, the
 (composed on its natural domain) is positive and self-adjoint, `1 + T†T` maps its domain onto
 `E`, and its domain is a core for `T`.
 
-The self-adjointness comes from a general criterion: a symmetric operator `A` for which `c + A` is
-surjective for some real `c` is self-adjoint.
+The self-adjointness comes from a general criterion: a symmetric operator `A` for which `z + A` and
+`z̄ + A` are surjective for some scalar `z` is self-adjoint; here `z` is real.
 
 ## Main results
 
-* `LinearPMap.IsFormalAdjoint.isSelfAdjoint_of_surjective` — a symmetric `A` with `c + A`
-  surjective (`c` real) is self-adjoint.
+* `LinearPMap.IsFormalAdjoint.isSelfAdjoint_of_surjective_conj` — a symmetric `A` with `z + A` and
+  `z̄ + A` surjective is self-adjoint; `LinearPMap.IsFormalAdjoint.isSelfAdjoint_of_surjective` is
+  the case of real `z`.
 * `LinearPMap.exists_mem_graph_adjoint_compNat_self` — `1 + T†T` is surjective.
 * `LinearPMap.isPositive_adjoint_compNat_self` — `T†T` is positive, with
   `⟪T†T x, x⟫ = ⟪T x, T x⟫` (`LinearPMap.inner_adjoint_compNat_self`).
@@ -53,22 +54,24 @@ local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 namespace LinearPMap
 
-/-- **Self-adjointness criterion.** A symmetric operator `A` on a Hilbert space such that `c + A`
-maps `dom A` onto the whole space for some real `c` is self-adjoint. (Its domain is then
-automatically dense.) -/
-theorem IsFormalAdjoint.isSelfAdjoint_of_surjective [CompleteSpace E] {A : E →ₗ.[𝕜] E}
-    (hA : A.IsFormalAdjoint A) (c : ℝ)
-    (hsurj : ∀ h, ∃ u v, (u, v) ∈ A.graph ∧ (c : 𝕜) • u + v = h) : IsSelfAdjoint A := by
+/-- **Self-adjointness criterion.** A symmetric operator `A` on a Hilbert space such that `z + A`
+and `z̄ + A` both map `dom A` onto the whole space for some scalar `z` is self-adjoint. (Its domain
+is then automatically dense.) The usual choice is `z = i`: `A` is self-adjoint when `A ± i` are
+surjective. -/
+theorem IsFormalAdjoint.isSelfAdjoint_of_surjective_conj [CompleteSpace E] {A : E →ₗ.[𝕜] E}
+    (hA : A.IsFormalAdjoint A) (z : 𝕜)
+    (hsurj : ∀ h, ∃ u v, (u, v) ∈ A.graph ∧ z • u + v = h)
+    (hsurj' : ∀ h, ∃ u v, (u, v) ∈ A.graph ∧ conj z • u + v = h) : IsSelfAdjoint A := by
   have hd : Dense (A.domain : Set E) := by
     rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
       Submodule.eq_bot_iff]
     intro h hh
     obtain ⟨u, v, huv, rfl⟩ := hsurj h
     have hu : ∀ x, ⟪x, u⟫ = 0 := fun x => by
-      obtain ⟨a, b, hab, rfl⟩ := hsurj x
+      obtain ⟨a, b, hab, rfl⟩ := hsurj' x
       have h₁ := (Submodule.mem_orthogonal _ _).mp hh a (mem_domain_of_mem_graph hab)
       rw [inner_add_right, inner_smul_right, ← hA.inner_eq_of_mem_graph hab huv] at h₁
-      rw [inner_add_left, inner_smul_left, conj_ofReal, h₁]
+      rw [inner_add_left, inner_smul_left, conj_conj, h₁]
     have hu0 : u = 0 := inner_self_eq_zero.mp (hu u)
     subst hu0
     rw [A.graph_fst_eq_zero_snd huv rfl, smul_zero, add_zero]
@@ -82,23 +85,31 @@ theorem IsFormalAdjoint.isSelfAdjoint_of_surjective [CompleteSpace E] {A : E →
     rw [hA.inner_eq_of_mem_graph hab huv, sub_self]
   · obtain ⟨y, w⟩ := p
     rw [Submodule.mem_adjoint_iff] at hyw
-    obtain ⟨u, v, huv, he⟩ := hsurj ((c : 𝕜) • y + w)
-    have hperp : ∀ a b, (a, b) ∈ A.graph → ⟪(c : 𝕜) • a + b, y - u⟫ = 0 := fun a b hab => by
+    obtain ⟨u, v, huv, he⟩ := hsurj (z • y + w)
+    have hperp : ∀ a b, (a, b) ∈ A.graph → ⟪conj z • a + b, y - u⟫ = 0 := fun a b hab => by
       have h₁ := hyw a b hab
       dsimp only at h₁
       have h₂ := hA.inner_eq_of_mem_graph hab huv
-      have h₃ : ⟪a, (c : 𝕜) • u + v⟫ = ⟪a, (c : 𝕜) • y + w⟫ := by rw [he]
+      have h₃ : ⟪a, z • u + v⟫ = ⟪a, z • y + w⟫ := by rw [he]
       simp only [inner_add_right, inner_smul_right] at h₃
-      simp only [inner_add_left, inner_sub_right, inner_smul_left, conj_ofReal]
+      simp only [inner_add_left, inner_sub_right, inner_smul_left, conj_conj]
       linear_combination h₁ - h₂ - h₃
     have hyu : y = u := by
-      obtain ⟨a, b, hab, hab'⟩ := hsurj (y - u)
+      obtain ⟨a, b, hab, hab'⟩ := hsurj' (y - u)
       have := hperp a b hab
       rw [hab', inner_self_eq_zero, sub_eq_zero] at this
       exact this
     subst hyu
     obtain rfl : v = w := add_left_cancel he
     exact huv
+
+/-- **Self-adjointness criterion.** A symmetric operator `A` on a Hilbert space such that `c + A`
+maps `dom A` onto the whole space for some real `c` is self-adjoint. (Its domain is then
+automatically dense.) -/
+theorem IsFormalAdjoint.isSelfAdjoint_of_surjective [CompleteSpace E] {A : E →ₗ.[𝕜] E}
+    (hA : A.IsFormalAdjoint A) (c : ℝ)
+    (hsurj : ∀ h, ∃ u v, (u, v) ∈ A.graph ∧ (c : 𝕜) • u + v = h) : IsSelfAdjoint A :=
+  hA.isSelfAdjoint_of_surjective_conj c hsurj (by simpa only [conj_ofReal] using hsurj)
 
 variable [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}
 

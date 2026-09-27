@@ -30,8 +30,10 @@ spectral measure of `Δ^N_{Vη,Vξ}` at `Vξ` equals that of `Δ^M_{η,ξ}` at `
   `S^M_{η,ξ}` into that of `S^N_{Vη,Vξ}`, and `V†` maps the latter into the former.
 * `VonNeumannAlgebra.mem_graph_relativeModular_of_intertwiner` — `V` maps the graph of
   `Δ^M_{η,ξ}` into that of `Δ^N_{Vη,Vξ}`.
-* `VonNeumannAlgebra.spectralMeasure_relativeModular_of_intertwiner` — equality of the spectral
+* `VonNeumannAlgebra.measure_pvm_relativeModular_of_intertwiner` — equality of the spectral
   measures.
+* `VonNeumannAlgebra.star_comp_eq_of_comp_eq` — for a unitary `U`, `y U = U x` implies
+  `y⋆ U = U x⋆`.
 -/
 
 @[expose] public section
@@ -210,11 +212,22 @@ theorem mem_graph_relativeModular_of_intertwiner {η ξ u z : H}
 include hM hM' in
 /-- **Transport of spectral measures.** If moreover `V† V ξ = ξ`, the spectral measure of
 `Δ^N_{Vη,Vξ}` at `V ξ` equals that of `Δ^M_{η,ξ}` at `ξ`. -/
-theorem spectralMeasure_relativeModular_of_intertwiner {η ξ : H} (hV : V† (V ξ) = ξ) :
-    (isSelfAdjoint_relativeModular N (V η) (V ξ)).spectralMeasure (V ξ) =
-      (isSelfAdjoint_relativeModular M η ξ).spectralMeasure ξ :=
-  (isSelfAdjoint_relativeModular M η ξ).spectralMeasure_intertwiner
+theorem measure_pvm_relativeModular_of_intertwiner {η ξ : H} (hV : V† (V ξ) = ξ) :
+    (isSelfAdjoint_relativeModular N (V η) (V ξ)).pvm.measure (V ξ) =
+      (isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ :=
+  (isSelfAdjoint_relativeModular M η ξ).measure_pvm_intertwiner
     (isSelfAdjoint_relativeModular N (V η) (V ξ))
     (fun _ _ h => mem_graph_relativeModular_of_intertwiner hM hM' h) hV
+
+/-- For a unitary `U`, the intertwining relation `y U = U x` implies `y⋆ U = U x⋆`: the second
+half of the hypotheses above is automatic for spatial isomorphisms. -/
+theorem star_comp_eq_of_comp_eq (U : H ≃ₗᵢ[ℂ] K) {x : H →L[ℂ] H} {y : K →L[ℂ] K}
+    (h : y ∘L (U : H →L[ℂ] K) = U ∘L x) : star y ∘L (U : H →L[ℂ] K) = U ∘L star x := by
+  have h' := congrArg ContinuousLinearMap.adjoint h
+  rw [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.adjoint_comp, U.adjoint_eq_symm,
+    ← ContinuousLinearMap.star_eq_adjoint, ← ContinuousLinearMap.star_eq_adjoint] at h'
+  ext v
+  apply U.symm.injective
+  simpa using congr($h' (U v))
 
 end VonNeumannAlgebra

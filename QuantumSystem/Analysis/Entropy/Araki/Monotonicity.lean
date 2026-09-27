@@ -26,9 +26,9 @@ modular operators. Petz's map `V : y ζ ↦ α(y) ξ` is a contraction with `V�
 Kadison–Schwarz inequality, and `‖S_M V u‖ ≤ ‖S_N u‖`. In the non-faithful case one writes
 `y ζ = (y s) ζ` with `s = s(ζ) ∈ N`: then `S_M α(y s) ξ = s(ξ) α(s y⋆) ξ'` and
 `‖α(s y⋆) ξ'‖ ≤ ‖s y⋆ ζ'‖ = ‖S_N (y ζ)‖`
-(`VonNeumannAlgebra.integral_inv_add_spectralMeasure_relativeModular_le`). The variational formula
+(`VonNeumannAlgebra.integral_inv_add_measure_pvm_relativeModular_le`). The variational formula
 for resolvents turns this into `⟪ζ, (t + Δ_N)⁻¹ ζ⟫ ≤ ⟪ξ, (t + Δ_M)⁻¹ ξ⟫` for `t > 0`
-(`IsSelfAdjoint.integral_inv_add_spectralMeasure_le_of_forall_mem_graph`), and the representation
+(`IsSelfAdjoint.integral_inv_add_measure_pvm_le_of_forall_mem_graph`), and the representation
 `-log λ = ∫_{t > 0} ((t + λ)⁻¹ - (1 + t)⁻¹) dt` integrates it to
 `-⟪ζ, log Δ_N ζ⟫ ≤ -⟪ξ, log Δ_M ξ⟫` (`MeasureTheory.negLogIntegral_le_of_integral_inv_add_le`).
 Normal functionals reduce to this through the amplification by `ℓ²(ℕ)`, along which `α` lifts to
@@ -52,7 +52,7 @@ of `⟪u, (t + Δ)⁻¹ u⟫` for a positive self-adjoint `Δ = S̄†S̄`, and 
 
 * `VonNeumannAlgebra.norm_schwarzMap_apply_apply_le` — the vector bound `‖α(y) ξ‖ ≤ ‖y ζ‖` when
   `ω_ξ ∘ α = ω_ζ`.
-* `VonNeumannAlgebra.integral_inv_add_spectralMeasure_relativeModular_le` — Petz's resolvent
+* `VonNeumannAlgebra.integral_inv_add_measure_pvm_relativeModular_le` — Petz's resolvent
   inequality `⟪ζ, (t + Δ_{ζ',ζ})⁻¹ ζ⟫ ≤ ⟪ξ, (t + Δ_{ξ',ξ})⁻¹ ξ⟫`.
 * `VonNeumannAlgebra.arakiVec_le_of_schwarzMap` — the data-processing inequality for vector
   functionals: `S_N(ω_ζ ‖ ω_ζ') ≤ S_M(ω_ξ ‖ ω_ξ')` when `ω_ξ ∘ α = ω_ζ`, `ω_ξ' ∘ α = ω_ζ'`.
@@ -116,13 +116,13 @@ theorem norm_schwarzMap_apply_apply_le {ζ : K} {ξ : H}
 
 The point `(y ζ + z, s(ζ) y⋆ ζ')` of the graph of `S_{ζ',ζ}` (`y ∈ N`, `z ⊥ [N ζ]`) is dominated
 by the point `(x ξ, s(ξ) x⋆ ξ')` of the graph of `S_{ξ',ξ}` for `x = α(y s(ζ))`. -/
-theorem integral_inv_add_spectralMeasure_relativeModular_le {ζ ζ' : K} {ξ ξ' : H}
+theorem integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H}
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ)
     (hξ' : ∀ y : N, ⟪ζ', (y : K →L[ℂ] K) ζ'⟫_ℂ = ⟪ξ', (α y : H →L[ℂ] H) ξ'⟫_ℂ) {t : ℝ}
     (ht : 0 < t) :
-    ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular N ζ' ζ).spectralMeasure ζ ≤
-      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ' ξ).spectralMeasure ξ := by
-  refine (isSelfAdjoint_relativeModular M ξ' ξ).integral_inv_add_spectralMeasure_le_of_forall_mem_graph
+    ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular N ζ' ζ).pvm.measure ζ ≤
+      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ' ξ).pvm.measure ξ := by
+  refine (isSelfAdjoint_relativeModular M ξ' ξ).integral_inv_add_measure_pvm_le_of_forall_mem_graph
     (restrictScalars_relativeModular M ξ' ξ) (isSelfAdjoint_relativeModular N ζ' ζ)
     (isClosable_relativeTomita N ζ' ζ) (restrictScalars_relativeModular N ζ' ζ) ξ ζ ?_ ht
   intro w w' hw
@@ -165,14 +165,15 @@ theorem arakiVec_le_of_schwarzMap (hα : α 1 = 1) {ζ ζ' : K} {ξ ξ' : H}
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ)
     (hξ' : ∀ y : N, ⟪ζ', (y : K →L[ℂ] K) ζ'⟫_ℂ = ⟪ξ', (α y : H →L[ℂ] H) ξ'⟫_ℂ) :
     N.arakiVec ζ ζ' ≤ M.arakiVec ξ ξ' := by
-  refine negLogIntegral_le_of_integral_inv_add_le (ae_nonneg_spectralMeasure_relativeModular N ζ ζ')
+  refine negLogIntegral_le_of_integral_inv_add_le (ae_nonneg_measure_pvm_relativeModular N ζ ζ')
     (le_of_eq ?_) (arakiVec_ne_bot M ξ ξ')
-    fun t ht => integral_inv_add_spectralMeasure_relativeModular_le α hξ hξ' ht
+    fun t ht => integral_inv_add_measure_pvm_relativeModular_le α hξ hξ' ht
   -- Both spectral measures have mass `‖ζ‖² = ω_ζ(1) = ω_ξ(α 1) = ‖ξ‖²`.
   have h1 := hξ 1
   rw [hα, OneMemClass.coe_one, OneMemClass.coe_one, one_apply_eq_self, one_apply_eq_self,
     inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at h1
-  rw [IsSelfAdjoint.spectralMeasure_univ, IsSelfAdjoint.spectralMeasure_univ]
+  rw [ProjectionValuedMeasure.measure_univ, ProjectionValuedMeasure.measure_univ, ← ofReal_norm,
+    ← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _), ← ENNReal.ofReal_pow (norm_nonneg _)]
   exact congrArg ENNReal.ofReal (by exact_mod_cast h1.symm)
 
 end Vector

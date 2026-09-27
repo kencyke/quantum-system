@@ -33,16 +33,21 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
   vectors, `VonNeumannAlgebra.arakiVec_eq_umegakiEntropy`); for normal functionals,
   `VonNeumannAlgebra.arakiEntropy_normalFunctional`.
 * **Commutative algebras.** On the diagonal algebra it is the Kullback–Leibler divergence
-  `Σᵢ pᵢ log (pᵢ / qᵢ)` (`VonNeumannAlgebra.arakiVec_diagonalVec`), which pins the order: the
-  first argument carries the weights `pᵢ` outside the logarithm.
+  `Σᵢ pᵢ log (pᵢ / qᵢ)` (`VonNeumannAlgebra.arakiVec_densityVec_fintype`), which pins the order: the
+  first argument carries the weights `pᵢ` outside the logarithm. On the multiplication algebra
+  `L∞(μ)` of a σ-finite `μ`, every pair of normal functionals is integration against finite
+  measures `P, Q ≪ μ`, and it is `∫ log (dP/dQ) dP` if `P ≪ Q`, and `+∞` otherwise
+  (`VonNeumannAlgebra.existsUnique_arakiEntropy_ofMeasure`, in
+  `QuantumSystem.Analysis.Entropy.Araki.Multiplication`).
 * **Sign.** `S ≥ 0` for two states (`VonNeumannAlgebra.arakiVec_nonneg_of_norm_le`), and `S = +∞`
   when the support of the first functional is not under that of the second.
 
 The expression `-⟪ξ, log Δ ξ⟫` is *defined* here through the spectral measure; the operator
 `log Δ_{η,ξ}` itself is not constructed (it needs the Borel functional calculus, which is not
 formalised). This is Araki's own formulation, `-∫ log λ d‖E_λ ξ‖²` for the spectral resolution
-`E_λ` of `Δ_{η,ξ}`: the scalar spectral measure `μ_ξ = ‖E_(·) ξ‖²` is built directly from the
-resolvent of `Δ_{η,ξ}` (`IsSelfAdjoint.spectralMeasure`), without the projection-valued measure.
+`E_λ` of `Δ_{η,ξ}`: the scalar spectral measure `μ_ξ = ‖E_(·) ξ‖²` is the diagonal measure of the
+projection-valued measure `E` of `Δ_{η,ξ}` (`IsSelfAdjoint.pvm`),
+itself obtained from the resolvent of `Δ_{η,ξ}`.
 
 ## Without Tomita–Takesaki theory
 
@@ -112,19 +117,19 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 vector functionals `ω_ξ, ω_η` on `M`, where `μ_ξ` is the spectral measure at `ξ` of the relative
 modular operator `Δ_{η,ξ}`, and `-log 0 = +∞`. -/
 noncomputable def arakiVec : EReal :=
-  negLogIntegral ((isSelfAdjoint_relativeModular M η ξ).spectralMeasure ξ)
+  negLogIntegral ((isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ)
 
 /-! ### The spectral measure of `Δ_{η,ξ}` at `ξ` -/
 
 /-- The spectral measure of `Δ_{η,ξ}` at `ξ` has total mass `‖ξ‖²`. -/
-lemma measureReal_spectralMeasure_relativeModular_univ :
-    ((isSelfAdjoint_relativeModular M η ξ).spectralMeasure ξ).real Set.univ = ‖ξ‖ ^ 2 := by
-  rw [measureReal_def, IsSelfAdjoint.spectralMeasure_univ, ENNReal.toReal_ofReal (by positivity)]
+lemma measureReal_measure_pvm_relativeModular_univ :
+    ((isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ).real Set.univ = ‖ξ‖ ^ 2 := by
+  rw [ProjectionValuedMeasure.measureReal_univ]
 
 /-- The spectral measure of `Δ_{η,ξ}` at `ξ` lives on `[0, ∞)`. -/
-lemma ae_nonneg_spectralMeasure_relativeModular :
-    ∀ᵐ t ∂(isSelfAdjoint_relativeModular M η ξ).spectralMeasure ξ, 0 ≤ t :=
-  (isSelfAdjoint_relativeModular M η ξ).ae_nonneg_spectralMeasure ξ
+lemma ae_nonneg_measure_pvm_relativeModular :
+    ∀ᵐ t ∂(isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ, 0 ≤ t :=
+  (isSelfAdjoint_relativeModular M η ξ).ae_nonneg_measure_pvm ξ
     (isPositive_relativeModular M η ξ)
 
 /-! ### Basic properties -/
@@ -132,14 +137,14 @@ lemma ae_nonneg_spectralMeasure_relativeModular :
 /-- Araki's relative entropy is never `-∞`. -/
 theorem arakiVec_ne_bot : M.arakiVec ξ η ≠ ⊥ :=
   negLogIntegral_ne_bot_of_lintegral_ne_top
-    (ne_top_of_le_ne_top ENNReal.ofReal_ne_top lintegral_spectralMeasure_relativeModular_le)
+    (ne_top_of_le_ne_top ENNReal.ofReal_ne_top lintegral_measure_pvm_relativeModular_le)
 
 variable {M ξ η} in
 /-- **Support condition.** `S(ω_ξ ‖ ω_η) = +∞` unless `s(ξ) ≤ s(η)`. -/
 theorem arakiVec_eq_top_of_not_supportProj_le (h : ¬ M.supportProj ξ ≤ M.supportProj η) :
     M.arakiVec ξ η = ⊤ := by
   refine negLogIntegral_eq_top_of_measure_Iic_ne_zero (fun h0 => h ?_) (arakiVec_ne_bot M ξ η)
-  exact spectralMeasure_relativeModular_singleton_zero_eq_zero_iff.mp
+  exact measure_pvm_relativeModular_singleton_zero_eq_zero_iff.mp
     (measure_mono_null (Set.singleton_subset_iff.mpr (Set.mem_Iic.mpr le_rfl)) h0)
 
 variable {M ξ η} in
@@ -148,10 +153,10 @@ at `0`. -/
 theorem arakiVec_eq_top_of_supportProj_apply_eq_zero (hξ : ξ ≠ 0) (h : M.supportProj ξ η = 0) :
     M.arakiVec ξ η = ⊤ := by
   refine negLogIntegral_eq_top_of_lintegral_eq_zero (fun hμ => hξ ?_) ?_
-  · have := IsSelfAdjoint.spectralMeasure_univ (isSelfAdjoint_relativeModular M η ξ) ξ
-    rw [hμ, Measure.coe_zero, Pi.zero_apply, eq_comm, ENNReal.ofReal_eq_zero] at this
-    exact norm_eq_zero.mp (pow_eq_zero_iff two_ne_zero |>.mp (le_antisymm this (by positivity)))
-  · refine nonpos_iff_eq_zero.mp (lintegral_spectralMeasure_relativeModular_le.trans ?_)
+  · have := (isSelfAdjoint_relativeModular M η ξ).pvm.measure_univ ξ
+    rwa [hμ, Measure.coe_zero, Pi.zero_apply, eq_comm, pow_eq_zero_iff two_ne_zero,
+      enorm_eq_zero] at this
+  · refine nonpos_iff_eq_zero.mp (lintegral_measure_pvm_relativeModular_le.trans ?_)
     simp [h]
 
 variable {M ξ η} in
@@ -159,7 +164,7 @@ variable {M ξ η} in
 functionals `ω_ξ` and `ω_η` on `M`. -/
 theorem arakiVec_eq_of_inner_eq {ξ' η' : H} (hξ : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪ξ', x ξ'⟫_ℂ)
     (hη : ∀ x ∈ M, ⟪η, x η⟫_ℂ = ⟪η', x η'⟫_ℂ) : M.arakiVec ξ' η' = M.arakiVec ξ η := by
-  rw [arakiVec, arakiVec, spectralMeasure_relativeModular_eq_of_inner_eq hξ hη]
+  rw [arakiVec, arakiVec, measure_pvm_relativeModular_eq_of_inner_eq hξ hη]
 
 /-- **Invariance under intertwiners.** Let `V : H → K` be bounded with `V† V ξ = ξ`, such that
 every `x ∈ M` is intertwined with some `y ∈ N` (`y V = V x`, `y⋆ V = V x⋆`) and every `x′ ∈ M′`
@@ -171,12 +176,12 @@ theorem arakiVec_of_intertwiner {K : Type*} [NormedAddCommGroup K] [InnerProduct
     (hM' : ∀ x ∈ M′, ∃ y ∈ N′, y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x)
     (hV : ContinuousLinearMap.adjoint V (V ξ) = ξ) :
     N.arakiVec (V ξ) (V η) = M.arakiVec ξ η := by
-  rw [arakiVec, arakiVec, spectralMeasure_relativeModular_of_intertwiner hM hM' hV]
+  rw [arakiVec, arakiVec, measure_pvm_relativeModular_of_intertwiner hM hM' hV]
 
 /-- `S(ω_ξ ‖ ω_ξ) = 0`. -/
 @[simp]
 theorem arakiVec_self : M.arakiVec ξ ξ = 0 := by
-  rw [arakiVec, spectralMeasure_relativeModular_self, negLogIntegral_smul, negLogIntegral_dirac,
+  rw [arakiVec, measure_pvm_relativeModular_self, negLogIntegral_smul, negLogIntegral_dirac,
     ENNReal.ofReal_one, ENNReal.log_one, neg_zero, mul_zero]
 
 /-! ### Scaling -/
@@ -188,10 +193,10 @@ Mathlib's `log 0 = 0` and `0 * ⊤ = 0` in `EReal`. -/
 theorem arakiVec_smul_left (c : ℂ) :
     M.arakiVec (c • ξ) η =
       ((‖c‖ ^ 2 : ℝ) : EReal) * (M.arakiVec ξ η + ((‖ξ‖ ^ 2 * Real.log (‖c‖ ^ 2) : ℝ) : EReal)) := by
-  rw [arakiVec, spectralMeasure_relativeModular_smul_right, negLogIntegral_smul]
+  rw [arakiVec, measure_pvm_relativeModular_smul_right, negLogIntegral_smul]
   rcases eq_or_ne c 0 with rfl | hc
   · simp
-  rw [negLogIntegral_map_mul (by positivity), measureReal_spectralMeasure_relativeModular_univ,
+  rw [negLogIntegral_map_mul (by positivity), measureReal_measure_pvm_relativeModular_univ,
     Real.log_inv, mul_neg, EReal.coe_neg, sub_eq_add_neg, neg_neg, arakiVec]
   norm_cast
 
@@ -200,8 +205,8 @@ variable {η} in
 `S(ω_ξ ‖ |a|² ω_η) = S(ω_ξ ‖ ω_η) - ‖ξ‖² log |a|²`. -/
 theorem arakiVec_smul_right {a : ℂ} (ha : a ≠ 0) :
     M.arakiVec ξ (a • η) = M.arakiVec ξ η - ((‖ξ‖ ^ 2 * Real.log (‖a‖ ^ 2) : ℝ) : EReal) := by
-  rw [arakiVec, spectralMeasure_relativeModular_smul_left ha,
-    negLogIntegral_map_mul (by positivity), measureReal_spectralMeasure_relativeModular_univ,
+  rw [arakiVec, measure_pvm_relativeModular_smul_left ha,
+    negLogIntegral_map_mul (by positivity), measureReal_measure_pvm_relativeModular_univ,
     arakiVec]
 
 variable {η} in
@@ -221,8 +226,8 @@ variable {η} in
 theorem norm_sq_mul_log_le_arakiVec_of_le {b : ℝ} (hb : ‖M.supportProj ξ η‖ ^ 2 ≤ b) :
     ((‖ξ‖ ^ 2 * Real.log (‖ξ‖ ^ 2 / b) : ℝ) : EReal) ≤ M.arakiVec ξ η := by
   have := mul_log_le_negLogIntegral
-    (lintegral_spectralMeasure_relativeModular_le.trans (ENNReal.ofReal_le_ofReal hb))
-  rwa [measureReal_spectralMeasure_relativeModular_univ] at this
+    (lintegral_measure_pvm_relativeModular_le.trans (ENNReal.ofReal_le_ofReal hb))
+  rwa [measureReal_measure_pvm_relativeModular_univ] at this
 
 /-- **Klein bound**, in Araki's sharp form: `‖ξ‖² log (‖ξ‖² / ‖s(ξ) η‖²) ≤ S(ω_ξ ‖ ω_η)`, that is
 `ψ(1) log (ψ(1) / φ(s(ψ))) ≤ S(ψ ‖ φ)` for `ψ = ω_ξ`, `φ = ω_η`. With Mathlib's conventions the
@@ -275,10 +280,10 @@ theorem arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
         Real.sq_sqrt hc.le]
     exact (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).mp (hη' ▸ h x hx)
   have hres : ∀ t : ℝ, 0 < t →
-      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M η' ξ).spectralMeasure ξ ≤
-        ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ ξ).spectralMeasure ξ := by
+      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M η' ξ).pvm.measure ξ ≤
+        ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ ξ).pvm.measure ξ := by
     intro t ht
-    refine (isSelfAdjoint_relativeModular M ξ ξ).integral_inv_add_spectralMeasure_le_of_forall_mem_graph
+    refine (isSelfAdjoint_relativeModular M ξ ξ).integral_inv_add_measure_pvm_le_of_forall_mem_graph
       (restrictScalars_relativeModular M ξ ξ) (isSelfAdjoint_relativeModular M η' ξ)
       (isClosable_relativeTomita M η' ξ) (restrictScalars_relativeModular M η' ξ) ξ ξ ?_ ht
     intro w w' hw
@@ -296,8 +301,8 @@ theorem arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
     · exact h' _ (mul_mem (M.supportProj_mem ξ) (star_mem ha))
     · rw [inner_add_right, Submodule.inner_right_of_mem_orthogonal hK₁ hz, add_zero]
   have hle := negLogIntegral_le_of_integral_inv_add_le
-    (ae_nonneg_spectralMeasure_relativeModular M ξ η')
-    (by rw [IsSelfAdjoint.spectralMeasure_univ, IsSelfAdjoint.spectralMeasure_univ])
+    (ae_nonneg_measure_pvm_relativeModular M ξ η')
+    (by rw [ProjectionValuedMeasure.measure_univ, ProjectionValuedMeasure.measure_univ])
     (arakiVec_ne_bot M ξ ξ) hres
   change M.arakiVec ξ η' ≤ M.arakiVec ξ ξ at hle
   rw [arakiVec_self, arakiVec_sqrt_smul_right M ξ hc] at hle

@@ -54,7 +54,7 @@ mass, which makes the integral `+∞`, occurs exactly when `supp ρ ⊄ supp σ`
 
 * `Matrix.PosSemidef.inner_purification_amplifyRight` — `⟪Ω_ρ, (1 ⊗ A) Ω_ρ⟫ = Tr (ρ A)`.
 * `VonNeumannAlgebra.mem_graph_relativeModular_purification` — the eigenvectors of `Δ_{Ω_σ, Ω_ρ}`.
-* `VonNeumannAlgebra.spectralMeasure_relativeModular_purification` — the spectral measure.
+* `VonNeumannAlgebra.measure_pvm_relativeModular_purification` — the spectral measure.
 * `VonNeumannAlgebra.arakiVec_purification` — `S_{1 ⊗ B(ℂⁿ)}(ω_{Ω_ρ} ‖ ω_{Ω_σ})` is
   `Tr ρ (log ρ - log σ)` if `supp ρ ⊆ supp σ`, and `+∞` otherwise.
 * `Matrix.PosSemidef.eq_normalFunctional_of_apply` — a normal functional `A ↦ Tr (ρ A)` is `ω_ρ`;
@@ -247,8 +247,8 @@ lemma purification_eq_sum_eigenvectorBasis :
 
 variable (hρ hσ) in
 /-- **Spectral measure**: `μ_{Ω_ρ}` of `Δ_{Ω_σ, Ω_ρ}` is `Σ_{i,j} rᵢ |⟪e_j, fᵢ⟫|² δ_{s_j / rᵢ}`. -/
-theorem spectralMeasure_relativeModular_purification [CompleteSpace K] (hg : Orthonormal ℂ g) :
-    (isSelfAdjoint_relativeModular (𝓜) (hσ.purification g) (hρ.purification g)).spectralMeasure
+theorem measure_pvm_relativeModular_purification [CompleteSpace K] (hg : Orthonormal ℂ g) :
+    (isSelfAdjoint_relativeModular (𝓜) (hσ.purification g) (hρ.purification g)).pvm.measure
         (hρ.purification g) =
       ∑ p : n × n, (hρ.1.eigenvalues p.1 *
           ‖⟪hσ.1.eigenvectorBasis p.2, hρ.1.eigenvectorBasis p.1⟫_ℂ‖ ^ 2).toNNReal •
@@ -266,13 +266,13 @@ theorem spectralMeasure_relativeModular_purification [CompleteSpace K] (hg : Ort
         Complex.norm_real, Real.norm_of_nonneg (Real.sqrt_nonneg _), mul_pow,
         Real.sq_sqrt (hρ.eigenvalues_nonneg p.1)]
   have hsum := purification_eq_sum_eigenvectorBasis (g := g) hρ hσ
-  calc _ = (isSelfAdjoint_relativeModular (𝓜) (hσ.purification g) (hρ.purification g)).spectralMeasure
+  calc _ = (isSelfAdjoint_relativeModular (𝓜) (hσ.purification g) (hρ.purification g)).pvm.measure
         (∑ p : n × n, ((√ᶜ hρ.1.eigenvalues p.1) *
           ⟪hσ.1.eigenvectorBasis p.2, hρ.1.eigenvectorBasis p.1⟫_ℂ) •
             (g p.1 ⊗ₕ hσ.1.eigenvectorBasis p.2)) := by rw [← hsum]
     _ = _ := by
       simp_rw [← hnorm]
-      refine IsSelfAdjoint.spectralMeasure_sum_of_mem_graph _ Finset.univ (fun p _ => ?_)
+      refine IsSelfAdjoint.measure_pvm_sum_of_mem_graph _ Finset.univ (fun p _ => ?_)
         (fun p _ q _ hpq => ?_)
       · rcases (hρ.eigenvalues_nonneg p.1).eq_or_lt with h0 | hi
         · simp [← h0]
@@ -301,7 +301,7 @@ theorem arakiVec_purification [CompleteSpace K] (hg : Orthonormal ℂ g)
   have hW : ∀ i j, ‖⟪hσ.1.eigenvectorBasis j, hρ.1.eigenvectorBasis i⟫_ℂ‖ ^ 2 =
       Complex.normSq (Matrix.eigW hρ.1 hσ.1 j i) := fun i j => by
     rw [Matrix.eigW_apply, Complex.normSq_eq_norm_sq]
-  rw [arakiVec, spectralMeasure_relativeModular_purification hρ hσ hg]
+  rw [arakiVec, measure_pvm_relativeModular_purification hρ hσ hg]
   simp_rw [hW]
   by_cases hsupp : Matrix.SuppSubset ρ σ
   · have ht : ∀ i j, hρ.1.eigenvalues i * Complex.normSq (Matrix.eigW hρ.1 hσ.1 j i) ≠ 0 →

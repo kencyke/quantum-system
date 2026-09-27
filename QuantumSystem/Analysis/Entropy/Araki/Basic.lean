@@ -80,11 +80,12 @@ data-processing inequality for the dual channel.
 
 ## Not formalised
 
-The construction uses only the scalar spectral measures `μ_ξ` of the relative modular operator,
-built from its resolvent (`IsSelfAdjoint.spectralMeasure`). The following are not formalised:
+The construction uses only the scalar spectral measures `μ_ξ = ⟪E(·) ξ, ξ⟫` of the relative
+modular operator, the diagonal measures of its projection-valued measure `E`
+(`IsSelfAdjoint.pvm`). The following are not formalised:
 
-* the projection-valued spectral measure and the Borel functional calculus, hence the operators
-  `log Δ`, `Δ^{it}` and `Δ^{1/2}` themselves, and `dom Δ^{1/2} = dom S̄`;
+* the Borel functional calculus `f(Δ) = ∫ f dE`, hence the operators `log Δ`, `Δ^{it}` and
+  `Δ^{1/2}` themselves, and `dom Δ^{1/2} = dom S̄`;
 * the polar decomposition `S̄ = J Δ^{1/2}` and Tomita–Takesaki theory (`J M J = M′`,
   `Δ^{it} M Δ^{-it} = M`), the modular automorphism group `σ_t`, the KMS condition and Connes'
   cocycle;
