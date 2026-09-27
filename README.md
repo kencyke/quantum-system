@@ -2,31 +2,31 @@
 
 A Lean 4 formalization of quantum systems from an operator-algebraic perspective.
 
+> [!WARNING]
+> This project is a work in progress. Breaking API changes — renamed or
+> removed declarations, changed signatures, and reorganized modules — happen
+> frequently without deprecation.
+
 ## Highlights
 
 Notable results formalized in this repository include:
 
-- **Gelfand–Naimark theorem** — every (possibly non-unital) C\*-algebra embeds
-  isometrically as a \*-subalgebra of bounded operators on a Hilbert space,
-  realized as a direct sum of GNS representations.
-- **GNS construction** — for any state ω on a C\*-algebra, the associated
-  cyclic representation (π_ω, H_ω, Ω_ω) with ω(a) = ⟨Ω_ω, π_ω(a) Ω_ω⟩.
-- **Von Neumann bicommutant theorem (unital case / hard half)** — for any unital
-  \*-subalgebra A of bounded operators on a complex Hilbert space,
-  WOT-closedness (or SOT-closedness) implies A = A″.
-- **Von Neumann entropy** — S(ρ) = −Tr(ρ log ρ) for finite-dimensional
-  density matrices, together with non-negativity, the dimension bound
-  S(ρ) ≤ log(dim), and concavity in ρ.
-- **Umegaki relative entropy for finite-dimensional density matrices** —
-  D(ρ‖σ) = Tr ρ (log ρ − log σ), defined on `EReal` so that
-  supp(ρ) ⊄ supp(σ) is admitted as +∞.
-- **Strong subadditivity of the von Neumann entropy** — for density matrices on a
-  tripartite finite-dimensional tensor product ℋ_A ⊗ ℋ_B ⊗ ℋ_C,
-  S(ρ_AB) + S(ρ_BC) ≥ S(ρ_ABC) + S(ρ_B). The current statement is
-  *region-explicit*: the regions are concrete `Finset`s on a fixed `LocalNet`
-  together with a common-region split (`ΛAB \ ΛA = ΛB`, `ΛABC \ ΛA = ΛBC`).
-  An abstract formulation over a generic local net of algebras is not yet
-  provided (**TODO**).
-- **Lieb concavity for positive semidefinite matrices** — joint concavity of (A, B) ↦ Tr(Aᵖ K† B^(1−p) K)
-  for 0 ≤ p ≤ 1, via Effros' matrix-convex argument.
-
+| Theorem / Definition | Mathematical statement | Path / Name |
+|---|---|---|
+| **Gelfand–Naimark theorem** | Every (possibly non-unital) C\*-algebra A is isometrically \*-isomorphic onto a norm-closed \*-subalgebra of B(H), realized on the direct sum of the GNS spaces of all pure states; when A is separable, a countable norming family of pure states gives a separable H. | [`Algebra/CStarAlgebra/GelfandNaimark.lean`](QuantumSystem/Algebra/CStarAlgebra/GelfandNaimark.lean)<br>`CStarRep.exists_starAlgEquiv_range`<br>`CStarRep.exists_isometric_separable` |
+| **GNS construction** | For a state ω, the cyclic representation (π_ω, H_ω, Ω_ω) satisfies ω(a) = ⟨Ω_ω, π_ω(a) Ω_ω⟩ with Ω_ω a cyclic unit vector. | [`Algebra/CStarAlgebra/GNS/Construction.lean`](QuantumSystem/Algebra/CStarAlgebra/GNS/Construction.lean)<br>`State.gns_condition`<br>`State.gnsVector_cyclic` |
+| **Bicommutant theorem** | For a non-degenerate (possibly non-unital) \*-subalgebra A ⊆ B(H): A = A″ ⟺ A is WOT-closed ⟺ A is SOT-closed. | [`Algebra/Star/DoubleCommutant/TFAE.lean`](QuantumSystem/Algebra/Star/DoubleCommutant/TFAE.lean)<br>`DoubleCommutant.bicommutant_tfae`<br>`DoubleCommutant.bicommutant_tfae_starSubalgebra` |
+| **Type I factors** | A type I factor N ⊆ B(H) with a minimal projection e is unitarily B(ℓ²(F)) ⊗̄ 1 on ℓ²(F) ⊗̂ eH, with N′ ↦ 1 ⊗̄ B(eH); for a split inclusion A ≤ N ≤ B the same unitary sends A into B(ℓ²(F)) ⊗̄ 1 and B′ into 1 ⊗̄ B(eH). | [`Algebra/VonNeumannAlgebra/TypeI/Basic.lean`](QuantumSystem/Algebra/VonNeumannAlgebra/TypeI/Basic.lean)<br>`VonNeumannAlgebra.IsTypeIFactor.exists_spatial_tensor_decomposition`<br>`VonNeumannAlgebra.IsTypeIFactor.exists_split_tensor_decomposition` |
+| **Choi's theorem** | For linear Φ : M_n(ℂ) → M_m(ℂ): Φ is CP ⟺ Φ is n-positive ⟺ J(Φ) ⪰ 0 ⟺ Φ(A) = Σₐ Kₐ A Kₐ†; a CP map has a Kraus representation with rank J(Φ) operators, the minimum. | [`Analysis/Matrix/QuantumChannel/Choi.lean`](QuantumSystem/Analysis/Matrix/QuantumChannel/Choi.lean)<br>`Matrix.isCompletelyPositive_iff_posSemidef_choiMatrix`<br>`Matrix.isCompletelyPositive_iff_posSemidef_comp_map_self`<br>`Matrix.isCompletelyPositive_iff_exists_kraus`<br>`Matrix.IsCompletelyPositive.exists_kraus_rank` |
+| **Von Neumann entropy** | S(ρ) = −Tr ρ log ρ: 0 ≤ S(ρ) ≤ log d, with S(ρ) = log d ⟺ ρ = I/d, and S is concave. | [`Analysis/Entropy/VonNeumann/Basic.lean`](QuantumSystem/Analysis/Entropy/VonNeumann/Basic.lean)<br>`DensityMatrix.vonNeumannEntropy_nonneg`<br>`DensityMatrix.vonNeumannEntropy_le_log_dim`<br>`DensityMatrix.vonNeumannEntropy_eq_log_card_iff`<br>`DensityMatrix.vonNeumannEntropy_concave` |
+| **Umegaki's formula** | For positive semidefinite ρ, σ (any trace), D(ρ‖σ) := S(Tr(ρ ·)‖Tr(σ ·)) equals Tr ρ (log ρ − log σ) if supp ρ ⊆ supp σ, and +∞ otherwise. | [`Analysis/Entropy/Umegaki/Basic.lean`](QuantumSystem/Analysis/Entropy/Umegaki/Basic.lean)<br>`Matrix.umegakiEntropy_eq_ite` |
+| **Monotonicity and joint convexity** | For positive semidefinite ρ, σ: D(Φ(ρ)‖Φ(σ)) ≤ D(ρ‖σ) for every quantum channel Φ; D is jointly convex on pairs of positive semidefinite matrices. | [`Analysis/Entropy/Umegaki/Basic.lean`](QuantumSystem/Analysis/Entropy/Umegaki/Basic.lean)<br>`Matrix.umegakiEntropy_channel_le`<br>`Matrix.umegakiEntropy_jointly_convex` |
+| **Mutual information** | D(ρ_AB‖ρ_A ⊗ ρ_B) = I(A:B) ≥ 0, i.e. S(ρ_AB) ≤ S(ρ_A) + S(ρ_B). | [`Analysis/Entropy/VonNeumann/MutualInformation.lean`](QuantumSystem/Analysis/Entropy/VonNeumann/MutualInformation.lean)<br>`DensityMatrix.umegakiEntropy_eq_mutualInformation`<br>`DensityMatrix.mutualInformation_nonneg` |
+| **Strong subadditivity** | For every density matrix on A × B × C: S(ρ_AB) + S(ρ_BC) ≥ S(ρ_ABC) + S(ρ_B). | [`Analysis/Entropy/VonNeumann/StrongSubadditivity.lean`](QuantumSystem/Analysis/Entropy/VonNeumann/StrongSubadditivity.lean)<br>`DensityMatrix.vonNeumannEntropy_strong_subadditivity` |
+| **Lieb concavity** | For p, q ≥ 0 with p + q ≤ 1 and rectangular K, (A, B) ↦ Tr(Aᵖ K† B^q K) is jointly concave on positive semidefinite matrices (Effros' proof for p + q = 1, extended to p + q ≤ 1; endpoints under the convention X⁰ = 1). | [`Analysis/Matrix/LiebConcavity.lean`](QuantumSystem/Analysis/Matrix/LiebConcavity.lean)<br>`Matrix.lieb_joint_concavity_general` |
+| **Spectral measures** | For self-adjoint unbounded A, the projection-valued measure E_A on ℝ, transported from that of the resolvent (i − A)⁻¹ (itself built via Riesz–Markov–Kakutani and polarization), and its diagonal measures μ_u = ⟨E_A(·) u, u⟩, with ⟨u, (z − A)⁻¹ u⟩ = ∫ (z − λ)⁻¹ dμ_u(λ) for z in the resolvent set. | [`Analysis/UnboundedOperator/SpectralMeasure.lean`](QuantumSystem/Analysis/UnboundedOperator/SpectralMeasure.lean)<br>`IsSelfAdjoint.pvm`<br>`IsSelfAdjoint.inner_resolvent_eq_integral` |
+| **Relative Tomita operator** | S_{η,ξ} : xξ + ζ ↦ s(ξ) x\* η (x ∈ M, ζ ⊥ [Mξ]) is a closable, densely defined conjugate-linear operator. | [`Algebra/VonNeumannAlgebra/Modular/RelativeTomita.lean`](QuantumSystem/Algebra/VonNeumannAlgebra/Modular/RelativeTomita.lean)<br>`VonNeumannAlgebra.isClosable_relativeTomita` |
+| **Relative modular operator** | Δ_{η,ξ} = S̄†S̄ is positive self-adjoint (von Neumann's theorem; no Tomita–Takesaki theory needed). Support theorem: μ_ξ{0} = 0 ⟺ s(ξ) ≤ s(η). | [`Algebra/VonNeumannAlgebra/Modular/RelativeModular.lean`](QuantumSystem/Algebra/VonNeumannAlgebra/Modular/RelativeModular.lean)<br>`VonNeumannAlgebra.relativeModular`<br>`VonNeumannAlgebra.isSelfAdjoint_relativeModular`<br>`VonNeumannAlgebra.isPositive_relativeModular`<br>`VonNeumannAlgebra.measure_pvm_relativeModular_singleton_zero_eq_zero_iff` |
+| **Araki relative entropy of vectors** | S(ω_ξ‖ω_η) = −⟨ξ, log Δ_{η,ξ} ξ⟩, defined as −∫ log λ dμ_ξ(λ) ∈ EReal. | [`Analysis/Entropy/Araki/Vector.lean`](QuantumSystem/Analysis/Entropy/Araki/Vector.lean)<br>`VonNeumannAlgebra.arakiVec` |
+| **Araki relative entropy of normal functionals** | S(ψ‖φ) via vector representatives on the amplification ℓ²(ℕ) ⊗̂ H (in place of natural-cone vectors); independent of the representatives. | [`Analysis/Entropy/Araki/Basic.lean`](QuantumSystem/Analysis/Entropy/Araki/Basic.lean)<br>`VonNeumannAlgebra.arakiEntropy`<br>`VonNeumannAlgebra.arakiEntropy_eq_arakiVec` |
+| **Data-processing inequality** | S(ψ ∘ α‖φ ∘ α) ≤ S(ψ‖φ) for unital normal Schwarz maps α (Petz's resolvent argument). | [`Analysis/Entropy/Araki/Monotonicity.lean`](QuantumSystem/Analysis/Entropy/Araki/Monotonicity.lean)<br>`VonNeumannAlgebra.arakiEntropy_comp_le` |

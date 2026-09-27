@@ -5,8 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
 
@@ -42,6 +40,8 @@ canonical map `a ↦ [a]` is `ω.toPositiveLinearMap.gnsMk`.
 * `State.gnsVector_cyclic`, `State.norm_gnsVector`, `State.gns_condition` — `ξ[ω]` is a cyclic
   unit vector realising `ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫`.
 * `State.isFaithful_iff_separating` — `ω` is faithful iff `a ↦ π[ω] a ξ[ω]` is injective.
+* `State.gnsCStarRep_π_eq_smul_one_of_map_mul` — a multiplicative state acts by scalars,
+  `π[ω] a = ω a • 1`.
 * `State.normalize_apply_eq_inner` — for a nonzero positive functional `f`, the state
   `‖f‖ₒₚ⁻¹ f` is the vector state of the unit cyclic vector `normalize ξ_f`.
 * `State.gnsRep_one`, `State.gnsVector_eq_gnsMk_one` — on a unital algebra, `π[ω] 1 = 1` and
@@ -70,8 +70,15 @@ noncomputable instance : ComplexHilbertSpace f.GNS where
   toInnerProductSpace := inferInstance
   toCompleteSpace := inferInstance
 
-/-- Mathlib's GNS representation `(f.GNS, f.gnsNonUnitalStarAlgHom)` bundled as a `CStarRep`. -/
-noncomputable abbrev gnsCStarRep : CStarRep A := ⟨f.GNS, f.gnsNonUnitalStarAlgHom⟩
+/-- Mathlib's GNS representation `(f.GNS, f.gnsNonUnitalStarAlgHom)` bundled as a `CStarRep`.
+
+A plain `def` rather than an `abbrev`, so that it is elaborated once over a generic `A`. Unfolded
+at a concrete algebra such as the quasi-local algebra of a net (a uniform-space completion),
+the instance search for the GNS space's normed structure times out. -/
+noncomputable def gnsCStarRep : CStarRep A := ⟨f.GNS, f.gnsNonUnitalStarAlgHom⟩
+
+/-- The representation map of `f.gnsCStarRep` is Mathlib's `f.gnsNonUnitalStarAlgHom`. -/
+lemma gnsCStarRep_π (a : A) : f.gnsCStarRep.π a = f.gnsNonUnitalStarAlgHom a := rfl
 
 end PositiveLinearMap
 
@@ -130,6 +137,31 @@ lemma norm_gnsVector : ‖ξ[ω]‖ = 1 := by
 lemma gnsVector_ne_zero : ξ[ω] ≠ 0 := by
   rw [← norm_ne_zero_iff, norm_gnsVector]
   exact one_ne_zero
+
+/-- The GNS space of a state is nonzero: it contains the unit vector `ξ[ω]`. -/
+instance nontrivial_gnsCStarRep_H : Nontrivial ω.toPositiveLinearMap.gnsCStarRep.H :=
+  nontrivial_of_ne ξ[ω] 0 ω.gnsVector_ne_zero
+
+/-! ### Multiplicative states -/
+
+/-- **A multiplicative state acts by scalars in its GNS representation**: if
+`ω (a * b) = ω a * ω b`, then `π[ω] a = ω a • 1`. On the dense set of classes `[b]`,
+`π[ω] a [b] - ω a • [b] = [a b - ω a • b]` has squared norm `ω (d* d) = |ω d|² = 0`
+for `d = a b - ω a • b`. -/
+lemma gnsCStarRep_π_eq_smul_one_of_map_mul (hω : ∀ a b, ω (a * b) = ω a * ω b) (a : A) :
+    ω.toPositiveLinearMap.gnsCStarRep.π a = ω a • 1 := by
+  let f := ω.toPositiveLinearMap
+  change f.gnsNonUnitalStarAlgHom a = ω a • 1
+  refine ContinuousLinearMap.ext fun v => ?_
+  refine f.denseRange_gnsMk.induction_on v ?_ ?_
+  · exact isClosed_eq (f.gnsNonUnitalStarAlgHom a).continuous (ω a • (1 : _ →L[ℂ] _)).continuous
+  · intro b
+    rw [PositiveLinearMap.gnsNonUnitalStarAlgHom_apply_gnsMk, smul_apply, one_apply_eq_self,
+      ← map_smul, ← sub_eq_zero, ← map_sub, PositiveLinearMap.gnsMk_eq_zero_iff]
+    change ω (star (a * b - ω a • b) * (a * b - ω a • b)) = 0
+    have hd : ω (a * b - ω a • b) = 0 := by
+      rw [map_sub, map_smul, hω, smul_eq_mul, sub_self]
+    rw [hω, map_star, hd, mul_zero]
 
 /-! ### Faithful states -/
 

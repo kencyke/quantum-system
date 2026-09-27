@@ -8,10 +8,7 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 public import Mathlib.Analysis.InnerProductSpace.l2Space
-public import Mathlib.RingTheory.TensorProduct.Finite
 public import Mathlib.LinearAlgebra.TensorProduct.Finiteness
-public import Mathlib.Analysis.Normed.Module.FiniteDimension
-public import Mathlib.Topology.Algebra.LinearMapCompletion
 
 /-!
 # The completed Hilbert-space tensor product and operator amplification
@@ -51,7 +48,9 @@ The textbook symbols `⊗̂` (completed tensor) and `⊗ₕ` (pure tensor) live 
 
 * `HilbertTensor H₁ H₂` — the completed Hilbert-space tensor product.
 * `HilbertTensor.tmul x y` — the pure tensor `x ⊗ y` viewed in the completion.
-* `HilbertTensor.amplifyLeft A`, `HilbertTensor.amplifyRight B` — the amplified operators.
+* `HilbertTensor.amplifyLeft A`, `HilbertTensor.amplifyRight B` — the amplified operators; the
+  left amplification is defined for `A : H₁ →L[ℂ] H₃` between different first factors, as
+  `H₁ ⊗̂ H₂ →L[ℂ] H₃ ⊗̂ H₂`.
 * `HilbertTensor.amplifyLeftₐ`, `HilbertTensor.amplifyRightₐ` — the amplifications bundled as
   unital `⋆`-algebra homomorphisms (on genuine Hilbert spaces).
 
@@ -64,7 +63,9 @@ The textbook symbols `⊗̂` (completed tensor) and `⊗ₕ` (pure tensor) live 
   algebraic tensor product.
 * `HilbertTensor.amplifyLeft_tmul` / `amplifyRight_tmul` — the action on pure tensors.
 * `HilbertTensor.amplifyLeft_one` / `amplifyLeft_mul` / `amplifyLeft_add` / `amplifyLeft_smul`
-  (and the right analogues) — the amplifications are unital `ℂ`-algebra homomorphisms.
+  (and the right analogues) — the amplifications are unital `ℂ`-algebra homomorphisms;
+  `HilbertTensor.amplifyLeft_comp` and `HilbertTensor.amplifyLeft_adjoint` hold between different
+  first factors.
 -/
 
 @[expose] public section
@@ -147,9 +148,11 @@ lemma FiniteDimensional.completion {𝕜 E : Type*} [NontriviallyNormedField �
 
 end Completion
 
-variable {H₁ H₂ : Type*}
+variable {H₁ H₂ H₃ H₄ : Type*}
   [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
   [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂]
+  [NormedAddCommGroup H₃] [InnerProductSpace ℂ H₃]
+  [NormedAddCommGroup H₄] [InnerProductSpace ℂ H₄]
 
 /-- The **completed Hilbert-space tensor product** of two complex inner product spaces: the
 completion of the algebraic tensor product `H₁ ⊗[ℂ] H₂` with respect to the inner-product norm
@@ -259,28 +262,34 @@ lemma exists_orthonormal_rep (z : H₁ ⊗[ℂ] H₂) :
     _ = ∑ i, ξ i ⊗ₜ[ℂ] (b i : H₂) := by
         rw [map_sum]; simp_rw [LinearMap.lTensor_tmul]; rfl
 
-/-- **Cross-norm bound (left factor).** On the algebraic Hilbert tensor product, amplifying a
-bounded operator `A` on the first factor by the identity does not increase the norm beyond a
-factor of `‖A‖`: `‖(A ⊗ 1) z‖ ≤ ‖A‖ * ‖z‖`. -/
-theorem norm_map_left_le (A : H₁ →L[ℂ] H₁) (z : H₁ ⊗[ℂ] H₂) :
+omit [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] in
+/-- Pythagoras for a sum of pure tensors with orthonormal second factors:
+`‖∑ ηᵢ ⊗ eᵢ‖² = ∑ ‖ηᵢ‖²`. -/
+lemma norm_sq_sum_tmul_of_orthonormal {n : ℕ} {e : Fin n → H₂} (he : Orthonormal ℂ e)
+    (η : Fin n → H₃) : ‖∑ i, η i ⊗ₜ[ℂ] e i‖ ^ 2 = ∑ i, ‖η i‖ ^ 2 := by
+  classical
+  rw [← inner_self_eq_norm_sq (𝕜 := ℂ)]
+  have h : inner ℂ (∑ i, η i ⊗ₜ[ℂ] e i) (∑ i, η i ⊗ₜ[ℂ] e i)
+      = ∑ i, inner ℂ (η i) (η i) := by
+    rw [sum_inner]
+    simp_rw [inner_sum, TensorProduct.inner_tmul, orthonormal_iff_ite.mp he]
+    simp [Finset.sum_ite_eq]
+  rw [h, map_sum]
+  simp_rw [inner_self_eq_norm_sq (𝕜 := ℂ)]
+
+/-- **Cross-norm bound (left factor).** On the algebraic Hilbert tensor product, tensoring a
+bounded operator `A : H₁ → H₃` with the identity of the second factor does not increase the norm
+beyond a factor of `‖A‖`: `‖(A ⊗ 1) z‖ ≤ ‖A‖ * ‖z‖`. -/
+theorem norm_map_left_le (A : H₁ →L[ℂ] H₃) (z : H₁ ⊗[ℂ] H₂) :
     ‖TensorProduct.map A.toLinearMap LinearMap.id z‖ ≤ ‖A‖ * ‖z‖ := by
   obtain ⟨n, e, ξ, he, rfl⟩ := exists_orthonormal_rep z
-  classical
-  have key : ∀ (η : Fin n → H₁), ‖∑ i, η i ⊗ₜ[ℂ] e i‖ ^ 2 = ∑ i, ‖η i‖ ^ 2 := by
-    intro η
-    rw [← inner_self_eq_norm_sq (𝕜 := ℂ)]
-    have h : inner ℂ (∑ i, η i ⊗ₜ[ℂ] e i) (∑ i, η i ⊗ₜ[ℂ] e i)
-        = ∑ i, inner ℂ (η i) (η i) := by
-      rw [sum_inner]
-      simp_rw [inner_sum, TensorProduct.inner_tmul, orthonormal_iff_ite.mp he]
-      simp [Finset.sum_ite_eq]
-    rw [h, map_sum]
-    simp_rw [inner_self_eq_norm_sq (𝕜 := ℂ)]
+  have key₁ := norm_sq_sum_tmul_of_orthonormal he (H₃ := H₁)
+  have key₃ := norm_sq_sum_tmul_of_orthonormal he (H₃ := H₃)
   rw [map_sum]
   simp_rw [TensorProduct.map_tmul, LinearMap.id_coe, id_eq, ContinuousLinearMap.coe_coe]
   rw [← Real.sqrt_sq (norm_nonneg _), ← Real.sqrt_sq (mul_nonneg (norm_nonneg A) (norm_nonneg _))]
   apply Real.sqrt_le_sqrt
-  rw [mul_pow, key, key, Finset.mul_sum]
+  rw [mul_pow, key₃, key₁, Finset.mul_sum]
   apply Finset.sum_le_sum
   intro i _
   rw [← mul_pow]
@@ -310,9 +319,9 @@ namespace HilbertTensor
 
 open UniformSpace
 
-/-- The amplification `A ⊗ 1` as a bounded operator on the *algebraic* tensor product, packaged
-from the cross-norm bound `TensorProduct.norm_map_left_le`. -/
-noncomputable def algAmplifyLeft (A : H₁ →L[ℂ] H₁) : (H₁ ⊗[ℂ] H₂) →L[ℂ] (H₁ ⊗[ℂ] H₂) :=
+/-- The amplification `A ⊗ 1` of `A : H₁ → H₃` as a bounded operator between the *algebraic*
+tensor products, packaged from the cross-norm bound `TensorProduct.norm_map_left_le`. -/
+noncomputable def algAmplifyLeft (A : H₁ →L[ℂ] H₃) : (H₁ ⊗[ℂ] H₂) →L[ℂ] (H₃ ⊗[ℂ] H₂) :=
   LinearMap.mkContinuous (TensorProduct.map A.toLinearMap LinearMap.id) ‖A‖
     (TensorProduct.norm_map_left_le A)
 
@@ -321,7 +330,7 @@ noncomputable def algAmplifyRight (B : H₂ →L[ℂ] H₂) : (H₁ ⊗[ℂ] H�
   LinearMap.mkContinuous (TensorProduct.map LinearMap.id B.toLinearMap) ‖B‖
     (TensorProduct.norm_map_right_le B)
 
-@[simp] lemma algAmplifyLeft_tmul (A : H₁ →L[ℂ] H₁) (x : H₁) (y : H₂) :
+@[simp] lemma algAmplifyLeft_tmul (A : H₁ →L[ℂ] H₃) (x : H₁) (y : H₂) :
     algAmplifyLeft (H₂ := H₂) A (x ⊗ₜ[ℂ] y) = (A x) ⊗ₜ[ℂ] y := by
   simp [algAmplifyLeft]
 
@@ -329,11 +338,12 @@ noncomputable def algAmplifyRight (B : H₂ →L[ℂ] H₂) : (H₁ ⊗[ℂ] H�
     algAmplifyRight (H₁ := H₁) B (x ⊗ₜ[ℂ] y) = x ⊗ₜ[ℂ] (B y) := by
   simp [algAmplifyRight]
 
-/-- The **left amplification** `A ↦ A ⊗̂ 1` of a bounded operator on the first factor to a bounded
-operator on the completed Hilbert tensor product, obtained by extending `algAmplifyLeft A` from
-the dense algebraic tensor product to the completion. -/
-noncomputable def amplifyLeft (A : H₁ →L[ℂ] H₁) :
-    HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂ where
+/-- The **left amplification** `A ↦ A ⊗̂ 1` of a bounded operator `A : H₁ → H₃` between first
+factors to a bounded operator `H₁ ⊗̂ H₂ → H₃ ⊗̂ H₂` of completed Hilbert tensor products, obtained
+by extending `algAmplifyLeft A` from the dense algebraic tensor product to the completion. For
+`H₃ = H₁` it is the amplification of an operator on `H₁` (`HilbertTensor.amplifyLeftₐ`). -/
+noncomputable def amplifyLeft (A : H₁ →L[ℂ] H₃) :
+    HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₃ H₂ where
   toFun := Completion.map (algAmplifyLeft A)
   map_add' x y := by
     refine Completion.induction_on₂ x y
@@ -379,7 +389,7 @@ noncomputable def amplifyRight (B : H₂ →L[ℂ] H₂) :
     rfl
   cont := Completion.continuous_map
 
-@[simp] theorem amplifyLeft_tmul (A : H₁ →L[ℂ] H₁) (x : H₁) (y : H₂) :
+@[simp] theorem amplifyLeft_tmul (A : H₁ →L[ℂ] H₃) (x : H₁) (y : H₂) :
     amplifyLeft A (x ⊗ₕ y) = (A x) ⊗ₕ y := by
   rw [amplifyLeft, tmul]
   change Completion.map (algAmplifyLeft A) _ = _
@@ -392,9 +402,9 @@ noncomputable def amplifyRight (B : H₂ →L[ℂ] H₂) :
   rw [Completion.map_coe (algAmplifyRight B).uniformContinuous, algAmplifyRight_tmul, tmul]
 
 /-- The defining action of the left amplification on the image of the algebraic tensor product. -/
-@[simp] lemma amplifyLeft_coe (A : H₁ →L[ℂ] H₁) (a : H₁ ⊗[ℂ] H₂) :
+@[simp] lemma amplifyLeft_coe (A : H₁ →L[ℂ] H₃) (a : H₁ ⊗[ℂ] H₂) :
     amplifyLeft A (a : HilbertTensor H₁ H₂)
-      = ((algAmplifyLeft A a : H₁ ⊗[ℂ] H₂) : HilbertTensor H₁ H₂) :=
+      = ((algAmplifyLeft A a : H₃ ⊗[ℂ] H₂) : HilbertTensor H₃ H₂) :=
   Completion.map_coe (algAmplifyLeft A).uniformContinuous a
 
 /-- The defining action of the right amplification on the image of the algebraic tensor product. -/
@@ -439,6 +449,21 @@ lemma algAmplifyRight_mul_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H
   refine Completion.induction_on z
     (isClosed_eq (amplifyLeft _).continuous (ContinuousLinearMap.continuous 1)) (fun a => ?_)
   simp [algAmplifyLeft_one_apply]
+
+lemma algAmplifyLeft_comp_apply (A : H₃ →L[ℂ] H₄) (B : H₁ →L[ℂ] H₃) (a : H₁ ⊗[ℂ] H₂) :
+    algAmplifyLeft (A ∘L B) a = algAmplifyLeft A (algAmplifyLeft B a) := by
+  induction a using TensorProduct.inductionOn with
+  | tmul x y => simp
+  | add p q hp hq => simp [map_add, hp, hq]
+
+/-- The left amplification is functorial: `(A ∘ B) ⊗̂ 1 = (A ⊗̂ 1) ∘ (B ⊗̂ 1)`. -/
+theorem amplifyLeft_comp (A : H₃ →L[ℂ] H₄) (B : H₁ →L[ℂ] H₃) :
+    amplifyLeft (H₂ := H₂) (A ∘L B) = (amplifyLeft A).comp (amplifyLeft B) := by
+  ext z
+  refine Completion.induction_on z
+    (isClosed_eq (amplifyLeft _).continuous
+      ((amplifyLeft A).continuous.comp (amplifyLeft B).continuous)) (fun a => ?_)
+  simp [algAmplifyLeft_comp_apply]
 
 theorem amplifyLeft_mul (A B : H₁ →L[ℂ] H₁) :
     amplifyLeft (H₂ := H₂) (A * B) = amplifyLeft A * amplifyLeft B := by
@@ -623,7 +648,8 @@ section Adjoint
 variable [CompleteSpace H₁] [CompleteSpace H₂]
 
 omit [CompleteSpace H₂] in
-lemma algAmplifyLeft_inner_adjoint (A : H₁ →L[ℂ] H₁) (a b : H₁ ⊗[ℂ] H₂) :
+lemma algAmplifyLeft_inner_adjoint [CompleteSpace H₃] (A : H₁ →L[ℂ] H₃) (a : H₃ ⊗[ℂ] H₂)
+    (b : H₁ ⊗[ℂ] H₂) :
     inner ℂ (algAmplifyLeft (ContinuousLinearMap.adjoint A) a) b
       = inner ℂ a (algAmplifyLeft A b) := by
   simp only [algAmplifyLeft, LinearMap.mkContinuous_apply]
@@ -654,7 +680,7 @@ lemma algAmplifyRight_inner_adjoint (B : H₂ →L[ℂ] H₂) (a b : H₁ ⊗[�
 
 omit [CompleteSpace H₂] in
 /-- The adjoint of the left amplification of `A` is the left amplification of the adjoint of `A`. -/
-lemma amplifyLeft_adjoint (A : H₁ →L[ℂ] H₁) :
+lemma amplifyLeft_adjoint [CompleteSpace H₃] (A : H₁ →L[ℂ] H₃) :
     ContinuousLinearMap.adjoint (amplifyLeft (H₂ := H₂) A)
       = amplifyLeft (ContinuousLinearMap.adjoint A) := by
   symm

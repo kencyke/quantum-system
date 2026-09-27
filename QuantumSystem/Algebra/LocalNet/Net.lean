@@ -281,6 +281,20 @@ instance {α : Type*} : CausalOrthogonality (Finset α) where
 instance {α : Type*} : CausalIndexSet (Finset α) :=
   ⟨fun Λ => ⟨∅, Finset.disjoint_empty_right Λ⟩⟩
 
+/-- On the possibly **infinite** regions of a lattice of sites — half-chains, cones, complements
+    of finite regions — causal orthogonality is again set disjointness. These are the regions the
+    lattice split property is about; a net over finite regions reaches them through
+    `VonNeumannNet.extend` (`QuantumSystem.Algebra.LocalNet.InfiniteRegion`). -/
+instance {α : Type*} : CausalOrthogonality (Set α) where
+  Orthogonal := Disjoint
+  orthogonal_symm _ _ h := h.symm
+  orthogonal_mono_left _ _ _ h₀ h := h.mono_left h₀
+
+/-- The infinite lattice regions form a causal index set in the full sense, through the empty
+    region, exactly as the finite ones do. -/
+instance {α : Type*} : CausalIndexSet (Set α) :=
+  ⟨fun S => ⟨∅, disjoint_bot_right (a := S)⟩⟩
+
 /-- A **local net of C⋆-algebras** over a causal index set `K` — an ordered set of
     regions with a causal orthogonality relation `⟂` (`CausalOrthogonality`): the assignment
     `O ↦ 𝔄(O)` together with isotony embeddings `incl : 𝔄(O) →⋆ₐ[ℂ] 𝔄(O')` for `O ≤ O'`,

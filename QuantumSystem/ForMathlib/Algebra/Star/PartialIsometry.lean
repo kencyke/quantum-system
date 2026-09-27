@@ -7,6 +7,9 @@ module
 
 public import Mathlib.Algebra.Star.StarProjection
 public import Mathlib.Analysis.CStarAlgebra.Basic
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.LinearAlgebra.Projection
+public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Idempotent
 
 /-!
 # Partial isometries in a star semigroup
@@ -32,6 +35,8 @@ for von Neumann algebras.
   source or range projection forces `v` to be a partial isometry.
 * `isPartialIsometry_iff_isStarProjection_star_mul_self` /
   `isPartialIsometry_iff_isStarProjection_mul_star_self` — the resulting equivalences.
+* `IsPartialIsometry.sourceRangeEquiv` — on a Hilbert space, the isometric equivalence
+  `range (v⋆v) ≃ₗᵢ range (vv⋆)`, with inverse `v⋆` (`IsPartialIsometry.coe_sourceRangeEquiv_symm`).
 -/
 
 @[expose] public section
@@ -140,3 +145,102 @@ theorem isPartialIsometry_iff_isStarProjection_mul_star_self {v : R} :
     isPartialIsometry_of_isStarProjection_mul_star_self⟩
 
 end CStarRing
+
+section Hilbert
+
+/-! ### Partial isometries on a Hilbert space
+
+A partial isometry `v` of `B(H)` is isometric on its source subspace `range (v⋆v)` and restricts to
+a linear isometric equivalence `range (v⋆v) ≃ₗᵢ range (vv⋆)`. -/
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+/-- The range of a star projection, a closed subspace, is complete. -/
+lemma IsStarProjection.completeSpace_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
+    CompleteSpace (LinearMap.range (p : H →ₗ[ℂ] H)) :=
+  (ContinuousLinearMap.IsIdempotentElem.isClosed_range hp.isIdempotentElem).completeSpace_coe
+
+namespace IsPartialIsometry
+
+/-- For `x` in the source subspace (`p x = x` where `p = v⋆v`), the map preserves the norm:
+`‖v x‖ = ‖x‖`. -/
+lemma norm_apply {v : H →L[ℂ] H} {p : H →L[ℂ] H}
+    (hsource : star v * v = p) {x : H} (hx : (p : H →L[ℂ] H) x = x) : ‖v x‖ = ‖x‖ := by
+  have hinner : (inner ℂ (v x) (v x) : ℂ) = inner ℂ x x := by
+    rw [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.star_eq_adjoint,
+      ← mul_apply_eq_comp, hsource, hx]
+  have h2 : ‖v x‖ ^ 2 = ‖x‖ ^ 2 := by
+    rw [← inner_self_eq_norm_sq (𝕜 := ℂ), ← inner_self_eq_norm_sq (𝕜 := ℂ)]
+    exact congrArg RCLike.re hinner
+  have h3 := congrArg Real.sqrt h2
+  rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq (norm_nonneg _)] at h3
+
+/-- The image of any vector under a partial isometry lands in the range subspace: if `q = v v⋆`
+then `q (v x) = v x`. -/
+lemma apply_mem_range {v : H →L[ℂ] H} (hv : IsPartialIsometry v) {q : H →L[ℂ] H}
+    (hrange : v * star v = q) (x : H) : (q : H →L[ℂ] H) (v x) = v x := by
+  rw [← mul_apply_eq_comp, ← hrange, hv]
+
+/-- A partial isometry `v` with source projection `star v * v = p` and range projection
+`v * star v = q` restricts to a linear isometric equivalence from the source subspace
+`range p` onto the range subspace `range q`. -/
+noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
+    {p q : H →L[ℂ] H} (hsource : star v * v = p) (hrange : v * star v = q) :
+    LinearMap.range (p : H →ₗ[ℂ] H) ≃ₗᵢ[ℂ] LinearMap.range (q : H →ₗ[ℂ] H) := by
+  have hpidem : (p : H →L[ℂ] H) * p = p := by
+    have := hv.isStarProjection_star_mul_self.isIdempotentElem
+    rwa [hsource] at this
+  have hqidem : (q : H →L[ℂ] H) * q = q := by
+    have := hv.isStarProjection_mul_star_self.isIdempotentElem
+    rwa [hrange] at this
+  have hsvpi : star v * v * star v = star v := by
+    have h : star v * star (star v) * star v = star v := IsPartialIsometry.star hv
+    rwa [star_star] at h
+  have hfix : ∀ {x : H}, x ∈ LinearMap.range (p : H →ₗ[ℂ] H) → (p : H →L[ℂ] H) x = x := by
+    rintro x ⟨z, rfl⟩
+    rw [ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hpidem]
+  refine LinearIsometryEquiv.ofSurjective
+    { toFun := fun ξ => ⟨v ξ.1, ⟨v ξ.1, by
+        rw [ContinuousLinearMap.coe_coe]; exact hv.apply_mem_range hrange ξ.1⟩⟩
+      map_add' := fun a b => by apply Subtype.ext; simp
+      map_smul' := fun c a => by apply Subtype.ext; simp
+      norm_map' := fun ξ => norm_apply hsource (hfix ξ.2) } ?_
+  rintro ⟨η, hη⟩
+  have hqfix : (q : H →L[ℂ] H) η = η := by
+    obtain ⟨z, hz⟩ := hη
+    rw [← hz, ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hqidem]
+  have hmem : star v η ∈ LinearMap.range (p : H →ₗ[ℂ] H) := by
+    refine ⟨star v η, ?_⟩
+    rw [ContinuousLinearMap.coe_coe, show (p : H →L[ℂ] H) (star v η) = (p * star v) η from rfl,
+      ← hsource, hsvpi]
+  refine ⟨⟨star v η, hmem⟩, Subtype.ext ?_⟩
+  change v (star v η) = η
+  rw [← mul_apply_eq_comp, hrange, hqfix]
+
+end IsPartialIsometry
+
+/-- The inverse of the partial-isometry-induced equivalence acts as `v⋆`: for `η` in the range
+subspace, `(sourceRangeEquiv v).symm η = v⋆ η`. -/
+lemma IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
+    {p q : H →L[ℂ] H} (hsource : star v * v = p) (hrange : v * star v = q)
+    (η : LinearMap.range (q : H →ₗ[ℂ] H)) :
+    ((hv.sourceRangeEquiv hsource hrange).symm η : H) = star v (η : H) := by
+  have hsvpi : star v * v * star v = star v := by
+    have h : star v * star (star v) * star v = star v := IsPartialIsometry.star hv
+    rwa [star_star] at h
+  have hq : IsStarProjection q := by rw [← hrange]; exact hv.isStarProjection_mul_star_self
+  have hqfix : (q : H →L[ℂ] H) (η : H) = (η : H) := (LinearMap.IsIdempotentElem.mem_range_iff
+    (ContinuousLinearMap.IsIdempotentElem.toLinearMap hq.isIdempotentElem)).mp η.2
+  have hmem : star v (η : H) ∈ LinearMap.range (p : H →ₗ[ℂ] H) :=
+    ⟨star v (η : H), by
+      rw [ContinuousLinearMap.coe_coe, ← hsource, ← mul_apply_eq_comp, hsvpi]⟩
+  have hG : (hv.sourceRangeEquiv hsource hrange) ⟨star v (η : H), hmem⟩ = η := by
+    apply Subtype.ext
+    change v (star v (η : H)) = (η : H)
+    rw [← mul_apply_eq_comp, hrange, hqfix]
+  have hsymm : (hv.sourceRangeEquiv hsource hrange).symm η = ⟨star v (η : H), hmem⟩ :=
+    (hv.sourceRangeEquiv hsource hrange).injective (by
+      rw [LinearIsometryEquiv.apply_symm_apply]; exact hG.symm)
+  rw [hsymm]
+
+end Hilbert

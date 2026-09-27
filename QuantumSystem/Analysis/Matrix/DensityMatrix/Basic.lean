@@ -1,0 +1,248 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
+module
+
+public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
+public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
+public import QuantumSystem.Notation
+
+/-!
+# Density Matrices
+
+This file defines density matrices for finite dimensional systems.
+
+## Main definitions
+
+* `DensityMatrix`: Structure wrapping a positive semi-definite, trace-1 matrix.
+
+## Mathematical Background
+
+For a density matrix ρ on ℂⁿ:
+- ρ is Hermitian (self-adjoint)
+- ρ is positive semi-definite: ⟨v, ρv⟩ ≥ 0 for all v
+- Tr(ρ) = 1
+
+The spectral theorem gives ρ = U diag(λ₁, ..., λₙ) U* where λᵢ ≥ 0 and Σλᵢ = 1.
+
+The Von Neumann entropy is:
+  S(ρ) = -Tr(ρ log ρ) = -Σᵢ λᵢ log λᵢ
+
+Umegaki's relative entropy (`Matrix.umegakiEntropy`) is:
+  D(ρ ∥ σ) = Tr(ρ (log ρ - log σ)) if supp ρ ⊆ supp σ, and +∞ otherwise
+
+where log ρ and log σ are matrix logarithms computed via the continuous functional
+calculus (CFC), applied to each matrix's own spectral decomposition. This is the
+operator-algebraically correct definition, including the non-commuting case.
+
+## References
+
+* Nielsen, Chuang, *Quantum Computation and Quantum Information*
+-/
+
+@[expose] public section
+
+open Matrix
+open scoped ComplexOrder MatrixOrder
+
+/-- A density matrix is a positive semi-definite matrix with trace 1.
+This represents a mixed quantum state: ρ ≥ 0, Tr(ρ) = 1. -/
+structure DensityMatrix (n : Type*) [Fintype n] [DecidableEq n] where
+  /-- The underlying matrix -/
+  toMatrix : Matrix n n ℂ
+  /-- ρ is positive semi-definite -/
+  posSemidef : toMatrix.PosSemidef
+  /-- Tr(ρ) = 1 -/
+  trace_eq_one : Tr toMatrix = 1
+
+namespace DensityMatrix
+
+variable {n : Type*} [Fintype n] [DecidableEq n]
+
+/-- Two density matrices are equal iff their underlying matrices are equal. -/
+@[ext] lemma ext {ρ σ : DensityMatrix n} (h : ρ.toMatrix = σ.toMatrix) : ρ = σ := by
+  cases ρ; cases σ; congr
+
+/-- Density matrices exist only over a nonempty index type: an empty matrix has trace `0 ≠ 1`. -/
+lemma nonempty (ρ : DensityMatrix n) : Nonempty n := by
+  by_contra h
+  rw [not_nonempty_iff] at h
+  simpa [Matrix.trace] using ρ.trace_eq_one
+
+/-- A density matrix is Hermitian. -/
+lemma isHermitian (ρ : DensityMatrix n) : ρ.toMatrix.IsHermitian := ρ.posSemidef.1
+
+/-- All eigenvalues of a density matrix are non-negative. -/
+lemma eigenvalues_nonneg (ρ : DensityMatrix n) (i : n) :
+    0 ≤ ρ.isHermitian.eigenvalues i :=
+  (ρ.isHermitian.posSemidef_iff_eigenvalues_nonneg.mp ρ.posSemidef) i
+
+/-- The eigenvalues of a density matrix sum to 1. -/
+lemma sum_eigenvalues (ρ : DensityMatrix n) :
+    ∑ i, ρ.isHermitian.eigenvalues i = 1 := by
+  have htr := ρ.trace_eq_one
+  rw [ρ.isHermitian.spectral_theorem] at htr
+  rw [Unitary.conjStarAlgAut_apply, trace_mul_cycle, Unitary.coe_star_mul_self,
+      Matrix.one_mul, Matrix.trace_diagonal] at htr
+  simp only [Function.comp_apply] at htr
+  have : (1 : ℂ) = ↑(1 : ℝ) := by simp
+  rw [this] at htr
+  have hinj := RCLike.ofReal_injective (K := ℂ)
+  rw [← RCLike.ofReal_sum] at htr
+  exact hinj htr
+
+/-- Each eigenvalue of a density matrix is at most 1. -/
+lemma eigenvalue_le_one (ρ : DensityMatrix n) (i : n) :
+    ρ.isHermitian.eigenvalues i ≤ 1 := by
+  have hsum := ρ.sum_eigenvalues
+  calc ρ.isHermitian.eigenvalues i
+      ≤ ∑ j, ρ.isHermitian.eigenvalues j := Finset.single_le_sum
+          (fun j _ => ρ.eigenvalues_nonneg j) (Finset.mem_univ i)
+    _ = 1 := hsum
+
+/-- Coercion from `DensityMatrix` to `Matrix n n ℂ`. -/
+instance : Coe (DensityMatrix n) (Matrix n n ℂ) where
+  coe := DensityMatrix.toMatrix
+
+@[simp] lemma coe_eq_toMatrix (ρ : DensityMatrix n) : (↑ρ : Matrix n n ℂ) = ρ.toMatrix := rfl
+
+/-- Density matrix times a complex matrix (coercion on the left). -/
+noncomputable instance : HMul (DensityMatrix n) (Matrix n n ℂ) (Matrix n n ℂ) where
+  hMul ρ A := ρ.toMatrix * A
+
+@[simp] lemma densityMatrix_hmul_eq (ρ : DensityMatrix n) (A : Matrix n n ℂ) :
+    ρ * A = ρ.toMatrix * A := rfl
+
+/-- Real-power of a density matrix, delegated to matrix rpow. -/
+noncomputable instance : HPow (DensityMatrix n) ℝ (Matrix n n ℂ) where
+  hPow ρ s := ρ.toMatrix ^ s
+
+lemma densityMatrix_hpow_eq (ρ : DensityMatrix n) (s : ℝ) :
+    ρ ^ s = ρ.toMatrix ^ s := rfl
+
+/-- Matrix logarithm of a density matrix: `log ρ = U diag(log λᵢ) U*`,
+Mathlib's continuous functional calculus applied to `Real.log`. -/
+noncomputable def log (ρ : DensityMatrix n) :
+    Matrix n n ℂ :=
+  cfc Real.log ↑ρ
+
+/-- The product `ρ * log ρ` is Hermitian.
+Both factors are Hermitian and commute because `log ρ` is a matrix function of `ρ`. -/
+lemma mul_log_isHermitian (ρ : DensityMatrix n) :
+    (ρ.toMatrix * log ρ).IsHermitian := by
+  unfold log
+  exact mul_cfc_isHermitian ρ.isHermitian Real.log
+
+/-- Convex combination of two density matrices is a density matrix. -/
+noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)
+    (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1) : DensityMatrix n where
+  toMatrix := p • ↑ρ₁ + (1 - p) • ↑ρ₂
+  posSemidef := by
+    have hρ₁_smul :
+        p • (ρ₁.toMatrix : Matrix n n ℂ) = ((p : ℂ)) • (ρ₁.toMatrix : Matrix n n ℂ) := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    have hρ₂_smul :
+        (1 - p) • (ρ₂.toMatrix : Matrix n n ℂ) =
+          ((1 - p : ℝ) : ℂ) • (ρ₂.toMatrix : Matrix n n ℂ) := by
+      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
+    rw [hρ₁_smul, hρ₂_smul]
+    refine (Matrix.PosSemidef.smul ρ₁.posSemidef ?_).add
+      (Matrix.PosSemidef.smul ρ₂.posSemidef ?_)
+    · exact_mod_cast hp
+    · exact_mod_cast (sub_nonneg.mpr hp1)
+  trace_eq_one := by
+    rw [Matrix.trace_add,
+        show (p • (ρ₁.toMatrix : Matrix n n ℂ)).trace = p • ρ₁.toMatrix.trace
+          from Matrix.trace_smul p ρ₁.toMatrix,
+        show ((1 - p) • (ρ₂.toMatrix : Matrix n n ℂ)).trace = (1 - p) • ρ₂.toMatrix.trace
+          from Matrix.trace_smul (1 - p) ρ₂.toMatrix,
+        ρ₁.trace_eq_one, ρ₂.trace_eq_one, Algebra.smul_def, Algebra.smul_def, mul_one, mul_one]
+    push_cast
+    ring
+
+@[simp] lemma mix_toMatrix (ρ₁ ρ₂ : DensityMatrix n)
+    (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1) :
+    ↑(mix ρ₁ ρ₂ p hp hp1) = p • (↑ρ₁ : Matrix n n ℂ) + (1 - p) • ↑ρ₂ := rfl
+
+/-- Transport a density matrix along a `*-`algebra equivalence of matrix algebras, which preserves
+the trace automatically (`Matrix.trace_map`).
+
+This is the abstract notion of "unitary equivalence" of density matrices in the
+quantum-information sense. -/
+noncomputable def map {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ) : DensityMatrix m where
+  toMatrix := φ ρ.toMatrix
+  posSemidef := ρ.posSemidef.map_starAlgEquiv φ
+  trace_eq_one := by rw [Matrix.trace_map]; exact ρ.trace_eq_one
+
+@[simp] lemma map_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (φ : Matrix n n ℂ ≃⋆ₐ[ℂ] Matrix m m ℂ) :
+    (ρ.map φ).toMatrix = φ ρ.toMatrix := rfl
+
+/-- `DensityMatrix` reindex via an index equivalence — built on `DensityMatrix.map`. -/
+noncomputable def mapEquiv {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (e : m ≃ n) : DensityMatrix m :=
+  ρ.map (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
+
+@[simp] lemma mapEquiv_toMatrix {m : Type*} [Fintype m] [DecidableEq m]
+    (ρ : DensityMatrix n) (e : m ≃ n) :
+    (ρ.mapEquiv e).toMatrix = ρ.toMatrix.submatrix e e := by
+  unfold mapEquiv
+  rfl
+
+/-! ### Maximally mixed state
+
+The uniform state `π = I/d` is the unique state whose entropy attains the
+maximum `log d` (`DensityMatrix.vonNeumannEntropy_eq_log_card_iff`). -/
+
+section MaximallyMixed
+
+variable [Nonempty n]
+
+omit [DecidableEq n] in
+/-- `(Fintype.card n : ℂ)⁻¹` has positive real part. -/
+private lemma card_inv_re_pos : (0 : ℝ) < ((Fintype.card n : ℂ)⁻¹).re := by
+  simp only [Complex.inv_re, Complex.natCast_re, Complex.normSq_natCast]
+  have hd : (0 : ℝ) < Fintype.card n := by exact_mod_cast Fintype.card_pos (α := n)
+  positivity
+
+omit [DecidableEq n] [Nonempty n] in
+/-- `(Fintype.card n : ℂ)⁻¹` as a complex number equals its real part (it's real-valued). -/
+private lemma card_inv_eq_re_ofReal :
+    ((Fintype.card n : ℂ)⁻¹) = (((Fintype.card n : ℂ)⁻¹).re : ℂ) := by
+  apply Complex.ext
+  · rfl
+  · simp only [Complex.ofReal_im, Complex.inv_im, Complex.natCast_im, neg_zero, zero_div]
+
+/-- The **maximally-mixed (uniform) state** on a finite-dimensional system:
+`π = I / d` where `d = Fintype.card n`. -/
+noncomputable def maximallyMixed : DensityMatrix n where
+  toMatrix := ((Fintype.card n : ℂ)⁻¹) • (1 : Matrix n n ℂ)
+  posSemidef := PosSemidef.smul Matrix.PosSemidef.one (Complex.zero_le_natCast_inv _)
+  trace_eq_one := by
+    rw [Matrix.trace_smul, Matrix.trace_one]
+    have hd : (Fintype.card n : ℂ) ≠ 0 := by
+      exact_mod_cast (Fintype.card_pos (α := n)).ne'
+    rw [smul_eq_mul, inv_mul_cancel₀ hd]
+
+@[simp] lemma maximallyMixed_toMatrix :
+    (maximallyMixed (n := n)).toMatrix = ((Fintype.card n : ℂ)⁻¹) • (1 : Matrix n n ℂ) := rfl
+
+/-- The maximally-mixed state is positive definite. -/
+theorem maximallyMixed_posDef : (maximallyMixed (n := n)).toMatrix.PosDef := by
+  rw [maximallyMixed_toMatrix]
+  have hzero : (0 : Matrix n n ℂ).PosSemidef := Matrix.PosSemidef.zero
+  have hreg := PosSemidef.add_smul_one_posDef hzero (card_inv_re_pos (n := n))
+  rw [zero_add] at hreg
+  rwa [card_inv_eq_re_ofReal]
+
+end MaximallyMixed
+
+end DensityMatrix
+
+namespace Matrix.QuantumInfo
+scoped prefix:max "log " => DensityMatrix.log
+end Matrix.QuantumInfo

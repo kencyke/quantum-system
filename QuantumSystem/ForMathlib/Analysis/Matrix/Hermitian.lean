@@ -5,13 +5,15 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.Classes
-public import Mathlib.LinearAlgebra.Matrix.Hermitian
+public import Mathlib.Analysis.CStarAlgebra.Matrix
+public import Mathlib.Analysis.InnerProductSpace.Trace
+public import Mathlib.Analysis.Matrix.PosDef
 
 /-!
 # Hermitian Matrices
 
-This file collects basic lemmas about Hermitian matrices over `ℂ`.
+This file collects basic lemmas about Hermitian matrices over `ℂ`; the rank-one decompositions
+of the last section are over any `RCLike` field.
 
 ## Main results
 
@@ -23,6 +25,14 @@ This file collects basic lemmas about Hermitian matrices over `ℂ`.
 - `IsHermitian.diagonal_real`: a diagonal matrix with real entries is Hermitian.
 - `IsHermitian.smul_complex_real`: multiplication by a real scalar (viewed in `ℂ`) preserves
   Hermiticity.
+- `IsHermitian.toEuclideanCLM_eigenvectorBasis`: an eigenvector of a Hermitian matrix is an
+  eigenvector of the operator it defines on `ℂⁿ`.
+- `PosSemidef.trace_mul_eq_sum_inner`: `Tr (ρ A) = Σᵢ rᵢ ⟪fᵢ, A fᵢ⟫` in the eigenvector basis of a
+  positive semidefinite `ρ`.
+- `IsHermitian.eq_sum_eigenvalues_smul_vecMulVec`: the spectral decomposition
+  `A = Σⱼ λⱼ uⱼ uⱼᴴ` of a Hermitian matrix.
+- `PosSemidef.exists_eq_sum_vecMulVec_rank`: a positive semidefinite matrix is a sum of
+  `rank M` rank-one matrices `vᵢ vᵢᴴ`.
 -/
 @[expose] public section
 
@@ -89,5 +99,95 @@ lemma IsHermitian.smul_complex_real {m : Type*}
   unfold IsHermitian at *
   rw [conjTranspose_smul, hA]
   simp only [RCLike.star_def, Complex.conj_ofReal]
+
+section Eigenbasis
+
+open scoped InnerProductSpace ComplexOrder
+
+variable {n : Type*} [Fintype n] [DecidableEq n]
+
+/-- An eigenvector of a Hermitian matrix is an eigenvector of the operator it defines on `ℂⁿ`. -/
+lemma IsHermitian.toEuclideanCLM_eigenvectorBasis {A : Matrix n n ℂ} (hA : A.IsHermitian)
+    (i : n) :
+    Matrix.toEuclideanCLM (𝕜 := ℂ) A (hA.eigenvectorBasis i) =
+      ((hA.eigenvalues i : ℝ) : ℂ) • hA.eigenvectorBasis i := by
+  refine PiLp.ext fun k => ?_
+  have := congrFun (hA.mulVec_eigenvectorBasis i) k
+  rw [RCLike.real_smul_eq_coe_smul (K := ℂ)] at this
+  exact this
+
+variable {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef)
+
+/-- `Tr (ρ A) = Σᵢ rᵢ ⟪fᵢ, A fᵢ⟫` in the eigenvector basis of `ρ`. -/
+lemma PosSemidef.trace_mul_eq_sum_inner (A : Matrix n n ℂ) :
+    Matrix.trace (ρ * A) = ∑ i, ((hρ.1.eigenvalues i : ℝ) : ℂ) *
+      ⟪hρ.1.eigenvectorBasis i,
+        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ := by
+  have h : Matrix.trace (ρ * A) =
+      LinearMap.trace ℂ _ (Matrix.toEuclideanLin (ρ * A)) := by
+    rw [LinearMap.trace_eq_matrix_trace ℂ (EuclideanSpace.basisFun n ℂ).toBasis,
+      Matrix.toEuclideanLin_eq_toLin_orthonormal, LinearMap.toMatrix_toLin]
+  rw [h, LinearMap.trace_eq_sum_inner _ hρ.1.eigenvectorBasis]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  change ⟪_, Matrix.toEuclideanCLM (𝕜 := ℂ) (ρ * A) _⟫_ℂ = _
+  rw [map_mul]
+  calc _ = ⟪Matrix.toEuclideanCLM (𝕜 := ℂ) ρ (hρ.1.eigenvectorBasis i),
+        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ :=
+        (Matrix.isSymmetric_toEuclideanLin_iff.mpr hρ.1 _ _).symm
+    _ = _ := by
+      rw [hρ.1.toEuclideanCLM_eigenvectorBasis, inner_smul_left, Complex.conj_ofReal]
+
+end Eigenbasis
+
+section RankOne
+
+open scoped ComplexOrder
+
+variable {𝕜 : Type*} [RCLike 𝕜] {n : Type*} [Fintype n]
+
+/-- **Spectral decomposition** of a Hermitian matrix as a sum of rank-one matrices:
+`A = Σⱼ λⱼ uⱼ uⱼᴴ`, with `uⱼ` the eigenvector basis and `λⱼ` the eigenvalues. -/
+theorem IsHermitian.eq_sum_eigenvalues_smul_vecMulVec [DecidableEq n] {A : Matrix n n 𝕜}
+    (hA : A.IsHermitian) :
+    A = ∑ j, hA.eigenvalues j •
+      vecMulVec ⇑(hA.eigenvectorBasis j) (star ⇑(hA.eigenvectorBasis j)) := by
+  conv_lhs => rw [hA.spectral_theorem, Unitary.conjStarAlgAut_apply]
+  ext a b
+  simp only [mul_apply, diagonal_apply, Matrix.sum_apply, Matrix.smul_apply, vecMulVec_apply,
+    star_apply, Function.comp_apply, mul_ite, mul_zero, Finset.sum_ite_eq', Finset.mem_univ,
+    ite_true, eigenvectorUnitary_apply, Pi.star_apply, RCLike.real_smul_eq_coe_mul]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  ring
+
+/-- A positive semidefinite matrix is a sum of `rank M` rank-one matrices: `M = Σᵢ vᵢ vᵢᴴ` with
+`i` ranging over `Fin (rank M)`. The vectors are `vⱼ = √λⱼ uⱼ` for the nonzero eigenvalues `λⱼ`.
+Compare `Matrix.posSemidef_iff_eq_sum_vecMulVec`, which does not bound the number of terms. -/
+theorem PosSemidef.exists_eq_sum_vecMulVec_rank {M : Matrix n n 𝕜} (hM : M.PosSemidef) :
+    ∃ v : Fin M.rank → n → 𝕜, M = ∑ i, vecMulVec (v i) (star (v i)) := by
+  classical
+  set hA := hM.isHermitian
+  let w : n → n → 𝕜 := fun j => ((√(hA.eigenvalues j) : ℝ) : 𝕜) • ⇑(hA.eigenvectorBasis j)
+  have hw (j : n) : vecMulVec (w j) (star (w j)) = hA.eigenvalues j •
+      vecMulVec ⇑(hA.eigenvectorBasis j) (star ⇑(hA.eigenvectorBasis j)) := by
+    have h : ((√(hA.eigenvalues j) : ℝ) : 𝕜) * ((√(hA.eigenvalues j) : ℝ) : 𝕜) =
+        (hA.eigenvalues j : 𝕜) := by exact_mod_cast Real.mul_self_sqrt (hM.eigenvalues_nonneg j)
+    ext a b
+    simp only [w, vecMulVec_apply, Pi.smul_apply, Pi.star_apply, star_smul, smul_eq_mul,
+      Matrix.smul_apply, RCLike.real_smul_eq_coe_mul, RCLike.star_def, RCLike.conj_ofReal]
+    linear_combination
+      (⇑(hA.eigenvectorBasis j) a * (starRingEnd 𝕜) (⇑(hA.eigenvectorBasis j) b)) * h
+  have hw0 (j : n) (hj : ¬hA.eigenvalues j ≠ 0) : vecMulVec (w j) (star (w j)) = 0 := by
+    rw [hw, not_not.mp hj, zero_smul]
+  let e : Fin M.rank ≃ {j // hA.eigenvalues j ≠ 0} :=
+    (Fintype.equivFinOfCardEq hA.rank_eq_card_non_zero_eigs.symm).symm
+  refine ⟨fun i => w (e i), ?_⟩
+  rw [e.sum_comp (fun s => vecMulVec (w s.1) (star (w s.1))),
+    ← Finset.sum_subtype (Finset.univ.filter fun j => hA.eigenvalues j ≠ 0) (fun j => by simp)
+      (fun j => vecMulVec (w j) (star (w j))),
+    Finset.sum_filter_of_ne (fun j _ h => by_contra fun hj => h (hw0 j hj))]
+  conv_lhs => rw [hA.eq_sum_eigenvalues_smul_vecMulVec]
+  exact Finset.sum_congr rfl fun j _ => (hw j).symm
+
+end RankOne
 
 end Matrix
