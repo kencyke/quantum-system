@@ -90,35 +90,14 @@ lemma hasDerivAt_sum_rpow {α : Type*} [Fintype α] (evs : α → ℝ) (hev : �
 
 /-- Trace-rpow concavity: for 0 < s ≤ 1 and positive semidefinite A, B,
     p ⋅ Tr (Aˢ) + (1−p) ⋅ Tr (Bˢ) ≤ Tr ((pA + (1−p)B)ˢ).
-    This follows from Löwner-order concavity (`rpow_isLownerConcave`) plus the
+    This follows from Löwner-order concavity (`rpow_concavity_le`) plus the
     trace-monotonicity of the Hermitian order. -/
 lemma re_trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
     (s : ℝ) (hs0 : 0 < s) (hs1 : s ≤ 1) :
     p * (Tr (A ^ s)).re + (1 - p) * (Tr (B ^ s)).re ≤ (Tr ((p • A + (1 - p) • B) ^ s)).re := by
-  have hpsd_mix : (p • A + (1 - p) • B).PosSemidef :=
-    (hA.real_smul hp).add (hB.real_smul (by linarith))
-  have hlowner := rpow_isLownerConcave hs0 hs1 n A B hA hB p hp hp1 hpsd_mix.1
-  simp only [] at hlowner
-  have hA0 : (0 : Matrix n n ℂ) ≤ A := by rw [Matrix.le_iff, sub_zero]; exact hA
-  have hB0 : (0 : Matrix n n ℂ) ≤ B := by rw [Matrix.le_iff, sub_zero]; exact hB
-  have hM0 : (0 : Matrix n n ℂ) ≤ p • A + (1 - p) • B := by
-    rw [Matrix.le_iff, sub_zero]; exact hpsd_mix
-  have eA : cfc (fun x : ℝ => -(x ^ s)) A = -(A ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := A) (ha := hA0)]
-  have eB : cfc (fun x : ℝ => -(x ^ s)) B = -(B ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := B) (ha := hB0)]
-  have eM : cfc (fun x : ℝ => -(x ^ s)) (p • A + (1 - p) • B) =
-      -((p • A + (1 - p) • B) ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := p • A + (1 - p) • B) (ha := hM0)]
-  rw [eA, eB, eM] at hlowner
-  have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s := by
-    have heq : p • -A ^ s + (1 - p) • -B ^ s = -(p • A ^ s + (1 - p) • B ^ s) := by
-      have h1 : p • -A ^ s = -(p • A ^ s) := smul_neg p (A ^ s)
-      have h2 : (1 - p) • -B ^ s = -((1 - p) • B ^ s) := smul_neg (1 - p) (B ^ s)
-      rw [h1, h2, ← neg_add]
-    rw [heq] at hlowner
-    rwa [neg_le_neg_iff] at hlowner
+  have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s :=
+    rpow_concavity_le hs0.le hs1 hA hB hp hp1
   rw [Matrix.le_iff] at hlowner'
   have htrace := (Complex.nonneg_iff.mp hlowner'.trace_nonneg).1
   have htr1 : Tr (p • A ^ s) = (p : ℝ) • Tr (A ^ s) := Matrix.trace_smul (p : ℝ) (A ^ s)

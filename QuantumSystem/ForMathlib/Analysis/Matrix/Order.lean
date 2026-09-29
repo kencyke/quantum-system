@@ -10,14 +10,11 @@ public import Mathlib.Analysis.Matrix.Order
 /-!
 # Löwner Order on Matrices
 
-This file defines the Löwner (positive semidefinite) order on Hermitian matrices over `ℂ`
-and proves its basic properties.
+This file proves basic properties of Mathlib's Löwner order on complex matrices
+(`MatrixOrder`: `A ≤ B` iff `B - A` is positive semidefinite).
 
 ## Main results
 
-- `loewnerLE` (`A ≤ₗ B`): `B - A` is positive semidefinite.
-- `loewnerLE_refl`: the Löwner order is reflexive.
-- `loewnerLE_trans`: the Löwner order is transitive.
 - `compression_le`: M ≤ N ⇒ V†MV ≤ V†NV.
 - `trace_mono`: A ≤ B ⇒ Re(tr A) ≤ Re(tr B).
 -/
@@ -26,28 +23,6 @@ and proves its basic properties.
 namespace Matrix
 
 open scoped MatrixOrder ComplexOrder
-
-/-- Löwner order on Hermitian matrices: A ≤_L B iff B - A is positive semidefinite. -/
-def loewnerLE {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) : Prop :=
-  (B - A).PosSemidef
-
-notation:50 A " ≤ₗ " B => loewnerLE A B
-
-/-- Löwner order is reflexive. -/
-lemma loewnerLE_refl {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) : A ≤ₗ A := by
-  unfold loewnerLE
-  simp only [sub_self]
-  exact PosSemidef.zero
-
-/-- Löwner order is transitive. -/
-lemma loewnerLE_trans {m : Type*} [Fintype m] [DecidableEq m]
-    {A B C : Matrix m m ℂ} (hab : A ≤ₗ B) (hbc : B ≤ₗ C) : A ≤ₗ C := by
-  unfold loewnerLE at *
-  have h : C - A = (C - B) + (B - A) := by abel
-  rw [h]
-  exact hbc.add hab
 
 /-- Compression preserves the Löwner order: M ≤ N ⇒ V†MV ≤ V†NV. -/
 lemma compression_le {n m : Type*} [Fintype n] [Finite m]

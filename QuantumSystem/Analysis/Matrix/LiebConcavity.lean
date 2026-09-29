@@ -8,7 +8,6 @@ module
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Notation
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
 
 /-!
 # Lieb's Concavity Theorem via Effros's Matrix Convexity Approach
@@ -138,18 +137,16 @@ but the result follows from the underlying trace identity and the perspective
 structure. -/
 private lemma matrixPerspective_inner_eq_neg_liebJointFunction {m : Type*} [Fintype m] [DecidableEq m]
     (K : Matrix m m ℂ) (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
-    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef)
-    (hL_psd : (𝐋 A).PosSemidef) (hR_pd : (𝐑 B).PosDef) :
+    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) :
     let v : (m × m) → ℂ := fun x => Kᴴ x.1 x.2
-    (star v ⬝ᵥ (matrixPerspective (fun x => -(x ^ p))
-      (𝐋 A) (𝐑 B) hL_psd hR_pd *ᵥ v)).re =
+    (star v ⬝ᵥ (matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) *ᵥ v)).re =
     -(liebJointFunction K p A hA.posSemidef B hB.posSemidef).re := by
   intro v
   have hp1' : 0 ≤ 1 - p := by linarith
   have h_persp :
-      matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) hL_psd hR_pd =
+      matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) =
       -(𝐋 (A ^ p) * 𝐑 (B ^ (1 - p))) :=
-    Matrix.matrixPerspective_neg_leftRight_eq A B hA hB p hp hL_psd hR_pd
+    Matrix.matrixPerspective_neg_leftRight_eq A B hA hB p hp
   -- Compute the quadratic form
   rw [h_persp, Matrix.neg_mulVec, dotProduct_neg, Complex.neg_re]
   congr 1
@@ -198,7 +195,7 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   /- Proof by Effros's Matrix Perspective Approach -/
   -- 1. Setup the function f(x) = -x^p, which is Matrix Convex.
   let f : ℝ → ℝ := fun x => -(x ^ p)
-  have hconv : IsJensenConvex f := neg_rpow_isJensenConvex hp0 (le_of_lt hp1)
+  have hconv : IsLownerConvex f := neg_rpow_isLownerConvex hp0.le hp1.le
   -- 2. Define Left and Right multiplication operators
   let L₁ := 𝐋 A₁
   let L₂ := 𝐋 A₂
@@ -222,10 +219,9 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   -- This requires commutativity L R = R L, which holds.
   -- And functional calculus property on Kronecker product.
   -- We assume the identity: ⟨matrixPerspective f L R K†, K†⟩_HS = -Lieb(A, B).
-  let term1 := matrixPerspective f L₁ R₁ hL₁_psd hR₁_pd
-  let term2 := matrixPerspective f L₂ R₂ hL₂_psd hR₂_pd
-  let term_comb :=
-    matrixPerspective f L R ((hL₁_psd.real_smul hw₁).add (hL₂_psd.real_smul hw₂)) hR_pd
+  let term1 := matrixPerspective f L₁ R₁
+  let term2 := matrixPerspective f L₂ R₂
+  let term_comb := matrixPerspective f L R
   -- The inequality is term_comb ≤ w₁ term1 + w₂ term2
   -- Apply ⟨· K†, K†⟩ which preserves order.
   let v : (m × m) → ℂ := fun x => Kᴴ x.1 x.2
@@ -242,12 +238,12 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
       -(liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re := by
     exact
       matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₁ B₁
-        hA₁ hB₁ hL₁_psd hR₁_pd
+        hA₁ hB₁
   have h_ident2 : (star v ⬝ᵥ (term2 *ᵥ v)).re =
       -(liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re := by
     exact
       matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₂ B₂
-        hA₂ hB₂ hL₂_psd hR₂_pd
+        hA₂ hB₂
   have hA_comb : (w₁ • A₁ + w₂ • A₂).PosDef := PosDef.convex_comb_nonneg hA₁ hA₂ hw₁ hw₂ hw
   have hB_comb : (w₁ • B₁ + w₂ • B₂).PosDef := PosDef.convex_comb_nonneg hB₁ hB₂ hw₁ hw₂ hw
   -- The combined identity follows from matrixPerspective_inner_eq_neg_liebJointFunction
@@ -273,9 +269,6 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
       · subst h
         simp [R, R₁, R₂, rightMulMatrix_apply]
       · simp [R, R₁, R₂, rightMulMatrix_apply, h]
-    have hR_pd' : (𝐑 (w₁ • B₁ + w₂ • B₂)).PosDef := by rw [← hRlin]; exact hR_pd
-    have hL_psd' : (𝐋 (w₁ • A₁ + w₂ • A₂)).PosSemidef := by
-      rw [← hLlin]; exact (hL₁_psd.real_smul hw₁).add (hL₂_psd.real_smul hw₂)
     -- Apply matrixPerspective_inner_eq_neg_liebJointFunction to the convex combination
     -- The key identity relates the HS inner product to the Lieb function.
     -- After establishing that term_comb = matrixPerspective f (leftMulMatrix (w₁•A₁+w₂•A₂))
@@ -288,24 +281,14 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     -- the result for general positive definite matrices.
     have h_apply := matrixPerspective_inner_eq_neg_liebJointFunction K p
         (le_of_lt hp0) (le_of_lt hp1)
-        (w₁ • A₁ + w₂ • A₂) (w₁ • B₁ + w₂ • B₂) hA_comb hB_comb hL_psd' hR_pd'
+        (w₁ • A₁ + w₂ • A₂) (w₁ • B₁ + w₂ • B₂) hA_comb hB_comb
     -- The term_comb uses L and R which equal leftMulMatrix/rightMulMatrix of convex combs.
     -- After substitution, the goal matches h_apply.
     -- The matrices are definitionally equal after applying hLlin and hRlin.
-    -- term_comb = matrixPerspective f L R _ _
-    --           = matrixPerspective f (leftMulMatrix (w₁•A₁+w₂•A₂))
-    --               (rightMulMatrix (w₁•B₁+w₂•B₂)) _ _
-    -- The proof terms may differ but the matrices are equal by proof irrelevance.
-    -- Since both sides compute the same quadratic form value, they are equal.
-    -- We establish this by showing the matrixPerspective matrices are equal.
     have hpersp_eq : term_comb = matrixPerspective f
-        (𝐋 (w₁ • A₁ + w₂ • A₂))
-        (𝐑 (w₁ • B₁ + w₂ • B₂)) hL_psd' hR_pd' := by
-      simp only [term_comb, L, R, L₁, L₂, R₁, R₂]
-      exact matrixPerspective_congr f _ _ _ _
-        _ hL_psd' _ hR_pd'
-        (by rw [leftMulMatrix_add, ← leftMulMatrix_smul_real, ← leftMulMatrix_smul_real])
-        (by rw [rightMulMatrix_add, ← rightMulMatrix_smul_real, ← rightMulMatrix_smul_real])
+        (𝐋 (w₁ • A₁ + w₂ • A₂)) (𝐑 (w₁ • B₁ + w₂ • B₂)) := by
+      change matrixPerspective f L R = _
+      rw [hLlin, hRlin]
     rw [hpersp_eq]
     exact h_apply
   -- Substitute identities into the nonnegativity inequality.
@@ -881,10 +864,10 @@ theorem lieb_joint_concavity_general {n m : Type*} [Fintype n] [DecidableEq n]
   -- operator concavity of `X ↦ Xˢ` in each block of arguments
   have hw₁1 : w₁ ≤ 1 := by linarith
   have hA_le : w₁ • A₁ ^ s + w₂ • A₂ ^ s ≤ (w₁ • A₁ + w₂ • A₂) ^ s := by
-    have h := rpow_concavity_le hs0' hs1 hA₁ hA₂ hw₁ hw₁1
+    have h := rpow_concavity_le hs0'.le hs1 hA₁ hA₂ hw₁ hw₁1
     rwa [show (1 : ℝ) - w₁ = w₂ by linarith] at h
   have hB_le : w₁ • B₁ ^ s + w₂ • B₂ ^ s ≤ (w₁ • B₁ + w₂ • B₂) ^ s := by
-    have h := rpow_concavity_le hs0' hs1 hB₁ hB₂ hw₁ hw₁1
+    have h := rpow_concavity_le hs0'.le hs1 hB₁ hB₂ hw₁ hw₁1
     rwa [show (1 : ℝ) - w₁ = w₂ by linarith] at h
   -- Löwner–Heinz at the reduced exponents
   have hApow := rpow_le_rpow hA_le hps0 hps1
@@ -943,9 +926,9 @@ lemma trace_rpow_conj_rpow_nonneg {n m : Type*} [Fintype n] [DecidableEq n]
     0 ≤ Tr (A ^ p * Kᴴ * B ^ q * K) := by
   classical
   have hM : (Kᴴ * B ^ q * K).PosSemidef := (posSemidef_rpow B q).conjTranspose_mul_mul_same K
-  set S : Matrix n n ℂ := matrixSqrt _ hM with hS_def
-  have hSH : Sᴴ = S := matrixSqrt_isHermitian hM
-  have hSS : S * S = Kᴴ * B ^ q * K := matrixSqrt_mul_self_posSemidef hM
+  set S : Matrix n n ℂ := (Kᴴ * B ^ q * K) ^ (1 / 2 : ℝ) with hS_def
+  have hSH : Sᴴ = S := (posSemidef_rpow _ _).isHermitian
+  have hSS : S * S = Kᴴ * B ^ q * K := rpow_half_mul_rpow_half hM
   have h_assoc : A ^ p * Kᴴ * B ^ q * K = A ^ p * (Kᴴ * B ^ q * K) := by
     simp only [Matrix.mul_assoc]
   have h_tr : Tr (A ^ p * Kᴴ * B ^ q * K) = Tr (Sᴴ * A ^ p * S) := by

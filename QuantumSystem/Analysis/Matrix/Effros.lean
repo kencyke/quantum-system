@@ -7,25 +7,28 @@ module
 
 public import Mathlib.LinearAlgebra.Matrix.Bilinear
 public import QuantumSystem.Analysis.Matrix.Order
+public import QuantumSystem.Analysis.Matrix.PosDef
+public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
 
 /-!
-# Effros's Matrix Convexity Approach
+# Effros's matrix perspective
 
-This file formalises the Effros (2008) machinery used to prove Lieb's joint concavity theorem.
+This file formalises Effros's (2008) matrix-perspective route to Lieb's joint concavity theorem.
+The operator-convexity inputs (Löwner convexity, Jensen's operator inequality) are in
+`QuantumSystem/Analysis/Matrix/Order.lean`.
 
-## Contents
+## Main definitions
 
-1. **Compression lemmas** – `compression_pow_eq`, `compression_aeval_eq`,
-   `eigenvalues_compression_subset`, and `cfc_compression_of_commuting`:
-   the map `X ↦ V† X V` (sandwiching) interacts well with polynomial/functional calculus
-   when `V†V = I` and `M` commutes with `VV†`.
-2. **Block diagonal** – `compression_of_fromBlocks_cfc` and related CFC lemmas.
-3. **`lownerConvex_compression_le`** – the fundamental inequality
-   `f(V†TV) ≤ V†f(T)V` when `V†V ≤ I`, `f` is Löwner convex, and `f(0) ≤ 0`.
-4. **`isJensenConvex_of_isLownerConvex`** – Löwner convexity implies Jensen/HPJ
-   convexity (Effros 2008, Theorem 3.1; Hansen–Pedersen 1981).
-5. **`neg_rpow_isJensenConvex`** – `f(t) = −tˢ` is Jensen convex for `0 < s ≤ 1`.
-6. **`hpj_subhomogeneous`**, **`hpj_affine`** – concrete HPJ inequality instances.
+* `Matrix.leftMulMatrix A`, `Matrix.rightMulMatrix B` (notation `𝐋 A`, `𝐑 B`): the matrices of
+  left and right multiplication `X ↦ AX`, `X ↦ XB` in the standard basis.
+* `Matrix.matrixPerspective f L R`: the perspective `R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}`.
+
+## Main results
+
+* `Matrix.matrixPerspective_joint_convex`: **Effros's theorem**, joint convexity of the matrix
+  perspective of a Löwner convex `f` on positive semidefinite `L` and positive definite `R`.
+* `Matrix.matrixPerspective_neg_leftRight_eq`: for `f(x) = -xᵖ`, the perspective of `(𝐋 A, 𝐑 B)`
+  is `-(𝐋 (Aᵖ) · 𝐑 (B¹⁻ᵖ))`, which turns Effros's theorem into Lieb's concavity theorem.
 
 ## References
 
@@ -36,7 +39,7 @@ This file formalises the Effros (2008) machinery used to prove Lieb's joint conc
 
 namespace Matrix
 
-open Real NNReal MeasureTheory Set
+open Real NNReal Set
 open scoped MatrixOrder ComplexOrder Kronecker
 
 /-- Left multiplication operator on matrices. -/
@@ -336,24 +339,16 @@ lemma rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
   simpa [rightMulMatrix_eq_one_kronecker_transpose] using
     (Matrix.PosDef.kronecker (m := m) (x := (1 : Matrix m m ℂ)) (y := Bᵀ) posDef_one hB')
 
-/-- Matrix perspective of a function `f` using the Kubo-Ando style formula.
-Defined for PSD `L` and PD `R`. -/
+/-- Matrix perspective `R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}` of a function `f`, using the
+Kubo–Ando style formula. It is meant for positive semidefinite `L` and positive definite `R`;
+the theorems about it assume these. -/
 noncomputable def matrixPerspective {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℝ) (L R : Matrix m m ℂ) (_hL : L.PosSemidef) (hR : R.PosDef) : Matrix m m ℂ :=
-  let Rinv := matrixInvSqrt R hR
+    (f : ℝ → ℝ) (L R : Matrix m m ℂ) : Matrix m m ℂ :=
+  let Rinv := R ^ (-1 / 2 : ℝ)
   let inner := Rinvᴴ * L * Rinv
   let fInner := cfc f inner
-  let Rhalf := matrixSqrt R hR.posSemidef
+  let Rhalf := R ^ (1 / 2 : ℝ)
   Rhalf * fInner * Rhalf
-
-/-- Congruence lemma for matrixPerspective: equal matrices give equal results
-    regardless of the proof terms. -/
-lemma matrixPerspective_congr {m : Type*} [Fintype m] [DecidableEq m]
-    (f : ℝ → ℝ) (L₁ L₂ R₁ R₂ : Matrix m m ℂ)
-    (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef) (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
-    (hL : L₁ = L₂) (hR : R₁ = R₂) :
-    matrixPerspective f L₁ R₁ hL₁ hR₁ = matrixPerspective f L₂ R₂ hL₂ hR₂ := by
-  cases hL; cases hR; rfl
 
 /-- Cancellation for (c · (S · P))† (c · (S · P)) = c² · (P · R · P) when S² = R. -/
 lemma perspective_AA_cancel {n : Type*} [Fintype n]
@@ -413,28 +408,28 @@ lemma perspective_sandwich_eq {n : Type*} [Fintype n]
     exact (IsScalarTower.algebraMap_smul ℂ w₂ _).symm
   rw [mul_sub, sub_mul, mul_add, add_mul, h₁, h₂, hZ]
 
-/-- Joint convexity of the matrix perspective for Löwner convex `f`. -/
+/-- **Effros's theorem**: the matrix perspective `(L, R) ↦ R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}`
+of a Löwner convex `f` is jointly convex on positive semidefinite `L` and positive definite `R`.
+No condition on `f(0)` is needed: the weights `Aᵢ = (wᵢRᵢ)^{1/2} R^{-1/2}` satisfy
+`A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `hpj_affine` applies. -/
 theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsJensenConvex.{v} f)
+    {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
     (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef)
     (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
     {w₁ w₂ : ℝ} (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) (hw : w₁ + w₂ = 1) :
-    matrixPerspective f (w₁ • L₁ + w₂ • L₂) (w₁ • R₁ + w₂ • R₂)
-        ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂))
-        (PosDef.convex_comb_nonneg hR₁ hR₂ hw₁ hw₂ hw) ≤
-      w₁ • matrixPerspective f L₁ R₁ hL₁ hR₁ +
-        w₂ • matrixPerspective f L₂ R₂ hL₂ hR₂ := by
+    matrixPerspective f (w₁ • L₁ + w₂ • L₂) (w₁ • R₁ + w₂ • R₂) ≤
+      w₁ • matrixPerspective f L₁ R₁ + w₂ • matrixPerspective f L₂ R₂ := by
   classical
   set L : Matrix m m ℂ := w₁ • L₁ + w₂ • L₂
   set R : Matrix m m ℂ := w₁ • R₁ + w₂ • R₂
   have hR : R.PosDef := PosDef.convex_comb_nonneg hR₁ hR₂ hw₁ hw₂ hw
-  set Rinv : Matrix m m ℂ := matrixInvSqrt R hR
-  set Rhalf : Matrix m m ℂ := matrixSqrt R hR.posSemidef
-  set R₁inv : Matrix m m ℂ := matrixInvSqrt R₁ hR₁
-  set R₂inv : Matrix m m ℂ := matrixInvSqrt R₂ hR₂
-  set R₁half : Matrix m m ℂ := matrixSqrt R₁ hR₁.posSemidef
-  set R₂half : Matrix m m ℂ := matrixSqrt R₂ hR₂.posSemidef
+  set Rinv : Matrix m m ℂ := R ^ (-1 / 2 : ℝ)
+  set Rhalf : Matrix m m ℂ := R ^ (1 / 2 : ℝ)
+  set R₁inv : Matrix m m ℂ := R₁ ^ (-1 / 2 : ℝ)
+  set R₂inv : Matrix m m ℂ := R₂ ^ (-1 / 2 : ℝ)
+  set R₁half : Matrix m m ℂ := R₁ ^ (1 / 2 : ℝ)
+  set R₂half : Matrix m m ℂ := R₂ ^ (1 / 2 : ℝ)
   set A₁ : Matrix m m ℂ := (Real.sqrt w₁ : ℂ) • (R₁half * Rinv)
   set A₂ : Matrix m m ℂ := (Real.sqrt w₂ : ℂ) • (R₂half * Rinv)
   set T₁ : Matrix m m ℂ := R₁invᴴ * L₁ * R₁inv
@@ -443,10 +438,10 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     simpa [T₁] using hL₁.conjTranspose_mul_mul_same R₁inv
   have hT₂ : T₂.PosSemidef := by
     simpa [T₂] using hL₂.conjTranspose_mul_mul_same R₂inv
-  have hRinv_herm : Rinv.IsHermitian := matrixInvSqrt_isHermitian hR
-  have hR₁half_herm : R₁half.IsHermitian := matrixSqrt_isHermitian hR₁.posSemidef
-  have hR₂half_herm : R₂half.IsHermitian := matrixSqrt_isHermitian hR₂.posSemidef
-  have hRhalf_herm : Rhalf.IsHermitian := matrixSqrt_isHermitian hR.posSemidef
+  have hRinv_herm : Rinv.IsHermitian := (posSemidef_rpow _ _).isHermitian
+  have hR₁half_herm : R₁half.IsHermitian := (posSemidef_rpow _ _).isHermitian
+  have hR₂half_herm : R₂half.IsHermitian := (posSemidef_rpow _ _).isHermitian
+  have hRhalf_herm : Rhalf.IsHermitian := (posSemidef_rpow _ _).isHermitian
   have hA₁_adj : A₁ᴴ = (Real.sqrt w₁ : ℂ) • (Rinv * R₁half) := by
     simp only [A₁, Matrix.conjTranspose_smul, Matrix.conjTranspose_mul,
       hRinv_herm.eq, hR₁half_herm.eq, Complex.star_def, Complex.conj_ofReal]
@@ -463,10 +458,10 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
   have hA_sum : A₁ᴴ * A₁ + A₂ᴴ * A₂ = (Rinv * R * Rinv) := by
     have hA₁A₁ : A₁ᴴ * A₁ = (w₁ : ℂ) • (Rinv * R₁ * Rinv) :=
       perspective_AA_cancel (Real.sqrt w₁) w₁ Rinv R₁half R₁
-        hRinv_herm hR₁half_herm (matrixSqrt_mul_self hR₁) hsqrt₁_real
+        hRinv_herm hR₁half_herm (rpow_half_mul_rpow_half hR₁.posSemidef) hsqrt₁_real
     have hA₂A₂ : A₂ᴴ * A₂ = (w₂ : ℂ) • (Rinv * R₂ * Rinv) :=
       perspective_AA_cancel (Real.sqrt w₂) w₂ Rinv R₂half R₂
-        hRinv_herm hR₂half_herm (matrixSqrt_mul_self hR₂) hsqrt₂_real
+        hRinv_herm hR₂half_herm (rpow_half_mul_rpow_half hR₂.posSemidef) hsqrt₂_real
     calc
       A₁ᴴ * A₁ + A₂ᴴ * A₂ =
           (w₁ : ℂ) • (Rinv * R₁ * Rinv) + (w₂ : ℂ) • (Rinv * R₂ * Rinv) := by
@@ -475,20 +470,11 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
         simp [mul_add, add_mul, mul_assoc]
       _ = Rinv * R * Rinv := by
         congr 2
-  have hAB : A₁ᴴ * A₁ + A₂ᴴ * A₂ ≤ (1 : Matrix m m ℂ) := by
+  have hAB : A₁ᴴ * A₁ + A₂ᴴ * A₂ = (1 : Matrix m m ℂ) := by
     have hRinv_mul : Rinv * R * Rinv = (1 : Matrix m m ℂ) := by
-      simpa [Rinv, R] using matrixInvSqrt_mul_self hR
+      simpa [Rinv, R] using rpow_neg_half_mul_mul_rpow_neg_half hR
     simp [hA_sum, hRinv_mul]
-  have hT₁_herm : T₁.IsHermitian :=
-    isHermitian_conjTranspose_mul_mul (B := R₁inv) (A := L₁) hL₁.1
-  have hT₂_herm : T₂.IsHermitian :=
-    isHermitian_conjTranspose_mul_mul (B := R₂inv) (A := L₂) hL₂.1
-  have hC : (A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂).IsHermitian :=
-    IsHermitian.add_isHermitian
-      (isHermitian_conjTranspose_mul_mul (B := A₁) (A := T₁) hT₁_herm)
-      (isHermitian_conjTranspose_mul_mul (B := A₂) (A := T₂) hT₂_herm)
-  have hconv' := hconv (m := m) (A := A₁) (B := A₂) (T₁ := T₁) (T₂ := T₂) hT₁ hT₂ hAB hC
-  simp only [] at hconv'
+  have hconv' := hpj_affine hconv A₁ A₂ T₁ T₂ hT₁ hT₂ hAB
   have hpsd :
       (A₁ᴴ * cfc f T₁ * A₁ +
         A₂ᴴ * cfc f T₂ * A₂ -
@@ -507,12 +493,12 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
   have hinner : A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂ = Rinvᴴ * L * Rinv := by
     have hA₁TA₁ : A₁ᴴ * T₁ * A₁ = (w₁ : ℂ) • (Rinv * L₁ * Rinv) :=
       perspective_ATA_cancel (Real.sqrt w₁) w₁ Rinv R₁half R₁inv L₁
-        hRinv_herm hR₁half_herm (matrixInvSqrt_isHermitian hR₁)
-        (matrixSqrt_mul_matrixInvSqrt hR₁) (matrixInvSqrt_mul_matrixSqrt hR₁) hsqrt₁_real
+        hRinv_herm hR₁half_herm ((posSemidef_rpow _ _).isHermitian)
+        (rpow_half_mul_rpow_neg_half hR₁) (rpow_neg_half_mul_rpow_half hR₁) hsqrt₁_real
     have hA₂TA₂ : A₂ᴴ * T₂ * A₂ = (w₂ : ℂ) • (Rinv * L₂ * Rinv) :=
       perspective_ATA_cancel (Real.sqrt w₂) w₂ Rinv R₂half R₂inv L₂
-        hRinv_herm hR₂half_herm (matrixInvSqrt_isHermitian hR₂)
-        (matrixSqrt_mul_matrixInvSqrt hR₂) (matrixInvSqrt_mul_matrixSqrt hR₂) hsqrt₂_real
+        hRinv_herm hR₂half_herm ((posSemidef_rpow _ _).isHermitian)
+        (rpow_half_mul_rpow_neg_half hR₂) (rpow_neg_half_mul_rpow_half hR₂) hsqrt₂_real
     calc
       A₁ᴴ * T₁ * A₁ + A₂ᴴ * T₂ * A₂ =
           (w₁ : ℂ) • (Rinv * L₁ * Rinv) + (w₂ : ℂ) • (Rinv * L₂ * Rinv) := by
@@ -524,9 +510,9 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
         congr 2
   -- Cancellation lemmas for Rhalf and Rinv
   have hRhalf_Rinv : Rhalf * Rinv = 1 := by
-    simpa [Rhalf, Rinv] using matrixSqrt_mul_matrixInvSqrt hR
+    simpa [Rhalf, Rinv] using rpow_half_mul_rpow_neg_half hR
   have hRinv_Rhalf : Rinv * Rhalf = 1 := by
-    simpa [Rhalf, Rinv] using matrixInvSqrt_mul_matrixSqrt hR
+    simpa [Rhalf, Rinv] using rpow_neg_half_mul_rpow_half hR
   -- Sandwich helper lemmas (outside hfinal for performance)
   have hRhalf_A₁_adj : Rhalf * A₁ᴴ = (Real.sqrt w₁ : ℂ) • R₁half := by
     rw [hA₁_adj, mul_smul_comm]; congr 1; rw [← mul_assoc, hRhalf_Rinv, one_mul]
@@ -541,9 +527,8 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     congrArg (cfc f) hinner
   -- Final step: apply sandwich equation and conclude
   have hfinal :
-      matrixPerspective f L R ((hL₁.real_smul hw₁).add (hL₂.real_smul hw₂)) hR ≤
-        w₁ • matrixPerspective f L₁ R₁ hL₁ hR₁ +
-          w₂ • matrixPerspective f L₂ R₂ hL₂ hR₂ := by
+      matrixPerspective f L R ≤
+        w₁ • matrixPerspective f L₁ R₁ + w₂ • matrixPerspective f L₂ R₂ := by
     rw [Matrix.le_iff]
     rw [hRhalf_eq] at hpsd'
     rw [perspective_sandwich_eq hRhalf_A₁_adj hA₁_Rhalf
@@ -553,27 +538,22 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
 
 /-! ### Kronecker Product Powers and Perspective Identity -/
 
-/-- For commuting PSD L and PD R, the perspective inner matrix simplifies:
-Rinv† * L * Rinv = L * R^{-1}.
-Since matrixInvSqrt is Hermitian (self-adjoint), Rinv† = Rinv,
-and since Rinv commutes with L, the product is L * Rinv * Rinv = L * R^{-1}. -/
+/-- For commuting L and R, the perspective inner matrix simplifies to
+`Rinv† * L * Rinv = L * Rinv * Rinv`, where `Rinv = R ^ (-1/2)`: `Rinv` is Hermitian and
+commutes with `L`. -/
 lemma perspective_inner_eq_commuting {n : Type*} [Fintype n] [DecidableEq n]
-    {L R : Matrix n n ℂ} (hL : L.PosSemidef) (hR : R.PosDef)
-    (hcomm : L * R = R * L) :
-    (matrixInvSqrt R hR)ᴴ * L * matrixInvSqrt R hR = L * matrixInvSqrt R hR * matrixInvSqrt R hR := by
-  have hRinv_herm := matrixInvSqrt_isHermitian hR
-  rw [hRinv_herm.eq]  -- Rinv† = Rinv
-  rw [← matrixInvSqrt_commute_of_commute hL hR hcomm]
+    {L R : Matrix n n ℂ} (hcomm : L * R = R * L) :
+    (R ^ (-1 / 2 : ℝ))ᴴ * L * R ^ (-1 / 2 : ℝ) = L * R ^ (-1 / 2 : ℝ) * R ^ (-1 / 2 : ℝ) := by
+  rw [(posSemidef_rpow R (-1 / 2 : ℝ)).isHermitian.eq]  -- Rinv† = Rinv
+  rw [← (rpow_commute_of_commute (Commute.symm hcomm) _).eq]
 
-/-- For commuting PSD L and PD R, the perspective inner matrix equals L * R^{-1}.
+/-- For L commuting with a PD R, the perspective inner matrix equals L * R^{-1}.
 This combines the commutativity simplification with the fact that Rinv * Rinv = R^{-1}. -/
 lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
-    {L R : Matrix n n ℂ} (hL : L.PosSemidef) (hR : R.PosDef)
+    {L R : Matrix n n ℂ} (hR : R.PosDef)
     (hcomm : L * R = R * L) :
-    (matrixInvSqrt R hR)ᴴ * L * matrixInvSqrt R hR = L * R⁻¹ := by
-  rw [perspective_inner_eq_commuting hL hR hcomm]
-  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
-  rw [hRinv_eq]
+    (R ^ (-1 / 2 : ℝ))ᴴ * L * R ^ (-1 / 2 : ℝ) = L * R⁻¹ := by
+  rw [perspective_inner_eq_commuting hcomm]
   let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
   let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
   let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
@@ -598,106 +578,6 @@ lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
   -- L * (R^{-1/2} * R^{-1/2}) = L * R⁻¹
   rw [mul_assoc, hRhalf_sq]  -- mul_assoc: (L * R^{-1/2}) * R^{-1/2} → L * (R^{-1/2} * R^{-1/2})
 
-/-- Kronecker product distributes over rpow for PSD matrices:
-`(X ⊗ₖ Y) ^ p = (X ^ p) ⊗ₖ (Y ^ p)` when `p ≥ 0`. -/
-lemma kronecker_rpow_psd {m n : Type*} [Fintype m] [DecidableEq m] [Fintype n] [DecidableEq n]
-    {X : Matrix m m ℂ} {Y : Matrix n n ℂ} (hX : X.PosSemidef) (hY : Y.PosSemidef)
-    (p : ℝ) (hp : 0 ≤ p) :
-    (X ⊗ₖ Y) ^ p = (X ^ p) ⊗ₖ (Y ^ p) := by
-  -- Spectral decomposition data
-  let UX := hX.1.eigenvectorUnitary
-  let dX := hX.1.eigenvalues
-  let UY := hY.1.eigenvectorUnitary
-  let dY := hY.1.eigenvalues
-  -- Eigenvalue nonnegativity
-  have hdX : ∀ i, 0 ≤ dX i := hX.eigenvalues_nonneg
-  have hdY : ∀ i, 0 ≤ dY i := hY.eigenvalues_nonneg
-  -- Spectral decompositions: X = UX * diag(dX) * UX†, etc.
-  have hX_eq : X = (UX : Matrix m m ℂ) * diagonal (RCLike.ofReal ∘ dX) *
-      (UX : Matrix m m ℂ)ᴴ := by
-    rw [hX.1.spectral_theorem (𝕜 := ℂ), Unitary.conjStarAlgAut_apply, star_eq_conjTranspose]
-  have hY_eq : Y = (UY : Matrix n n ℂ) * diagonal (RCLike.ofReal ∘ dY) *
-      (UY : Matrix n n ℂ)ᴴ := by
-    rw [hY.1.spectral_theorem (𝕜 := ℂ), Unitary.conjStarAlgAut_apply, star_eq_conjTranspose]
-  -- Diagonal matrices are PSD / nonneg
-  have hDX_psd : (diagonal (RCLike.ofReal ∘ dX) : Matrix m m ℂ).PosSemidef :=
-    posSemidef_diagonal_iff.mpr fun i => RCLike.ofReal_nonneg.mpr (hdX i)
-  have hDY_psd : (diagonal (RCLike.ofReal ∘ dY) : Matrix n n ℂ).PosSemidef :=
-    posSemidef_diagonal_iff.mpr fun j => RCLike.ofReal_nonneg.mpr (hdY j)
-  have hDX_nonneg : (0 : Matrix m m ℂ) ≤ diagonal (RCLike.ofReal ∘ dX) := hDX_psd.nonneg
-  have hDY_nonneg : (0 : Matrix n n ℂ) ≤ diagonal (RCLike.ofReal ∘ dY) := hDY_psd.nonneg
-  -- The conjugated forms are nonneg (needed for rpow_unitary_conj auto-param)
-  have hX_nonneg : 0 ≤ (UX : Matrix m m ℂ) * diagonal (RCLike.ofReal ∘ dX) *
-      (UX : Matrix m m ℂ)ᴴ := by
-    rw [← hX_eq]; exact hX.nonneg
-  have hY_nonneg : 0 ≤ (UY : Matrix n n ℂ) * diagonal (RCLike.ofReal ∘ dY) *
-      (UY : Matrix n n ℂ)ᴴ := by
-    rw [← hY_eq]; exact hY.nonneg
-  -- Diagonal rpow
-  have hDX_rpow : diagonal (RCLike.ofReal ∘ dX) ^ p =
-      diagonal (fun i => ((dX i ^ p : ℝ) : ℂ)) := by
-    change diagonal (fun i => (dX i : ℂ)) ^ p = _
-    exact diagonal_rpow dX hdX p hp
-  have hDY_rpow : diagonal (RCLike.ofReal ∘ dY) ^ p =
-      diagonal (fun j => ((dY j ^ p : ℝ) : ℂ)) := by
-    change diagonal (fun j => (dY j : ℂ)) ^ p = _
-    exact diagonal_rpow dY hdY p hp
-  -- CFC rpow via spectral: X^p = UX * diag(dX^p) * UX†
-  have hX_rpow : X ^ p = (UX : Matrix m m ℂ) * diagonal (fun i => ((dX i ^ p : ℝ) : ℂ)) *
-      (UX : Matrix m m ℂ)ᴴ := by
-    conv_lhs => rw [hX_eq]
-    rw [rpow_unitary_conj UX.2 hp hDX_nonneg (hM' := hX_nonneg), hDX_rpow]
-  have hY_rpow : Y ^ p = (UY : Matrix n n ℂ) * diagonal (fun j => ((dY j ^ p : ℝ) : ℂ)) *
-      (UY : Matrix n n ℂ)ᴴ := by
-    conv_lhs => rw [hY_eq]
-    rw [rpow_unitary_conj UY.2 hp hDY_nonneg (hM' := hY_nonneg), hDY_rpow]
-  -- Kronecker: X ⊗ₖ Y = (UX ⊗ₖ UY) * diag(dX ⊗ dY) * (UX ⊗ₖ UY)†
-  have hXY_eq : X ⊗ₖ Y = ((UX : Matrix m m ℂ) ⊗ₖ (UY : Matrix n n ℂ)) *
-      (diagonal (RCLike.ofReal ∘ dX) ⊗ₖ diagonal (RCLike.ofReal ∘ dY)) *
-      ((UX : Matrix m m ℂ) ⊗ₖ (UY : Matrix n n ℂ))ᴴ := by
-    rw [hX_eq, hY_eq, conjTranspose_kronecker, ← mul_kronecker_mul, ← mul_kronecker_mul]
-  -- UX ⊗ₖ UY is in unitaryGroup
-  have hUXY : ((UX : Matrix m m ℂ) ⊗ₖ (UY : Matrix n n ℂ)) ∈
-      Matrix.unitaryGroup (m × n) ℂ := by
-    rw [Matrix.mem_unitaryGroup_iff']
-    have h1 := Matrix.mem_unitaryGroup_iff'.mp UX.2
-    have h2 := Matrix.mem_unitaryGroup_iff'.mp UY.2
-    rw [star_eq_conjTranspose, conjTranspose_kronecker, ← mul_kronecker_mul]
-    simp only [← star_eq_conjTranspose]
-    rw [h1, h2, one_kronecker_one]
-  -- DXY = diag(dX) ⊗ₖ diag(dY) is nonneg
-  have hDXY_nonneg : 0 ≤ diagonal (RCLike.ofReal ∘ dX) ⊗ₖ
-      diagonal (RCLike.ofReal ∘ dY) :=
-    (hDX_psd.kronecker hDY_psd).nonneg
-  -- The conjugated Kronecker form is nonneg
-  have hXY_nonneg : 0 ≤ ((UX : Matrix m m ℂ) ⊗ₖ (UY : Matrix n n ℂ)) *
-      (diagonal (RCLike.ofReal ∘ dX) ⊗ₖ diagonal (RCLike.ofReal ∘ dY)) *
-      ((UX : Matrix m m ℂ) ⊗ₖ (UY : Matrix n n ℂ))ᴴ := by
-    rw [← hXY_eq]; exact (hX.kronecker hY).nonneg
-  -- CFC rpow on the Kronecker product
-  have hXY_rpow : (X ⊗ₖ Y) ^ p = ((UX : Matrix m m ℂ) ⊗ₖ (UY : Matrix n n ℂ)) *
-      ((diagonal (RCLike.ofReal ∘ dX) ⊗ₖ diagonal (RCLike.ofReal ∘ dY)) ^ p) *
-      ((UX : Matrix m m ℂ) ⊗ₖ (UY : Matrix n n ℂ))ᴴ := by
-    conv_lhs => rw [hXY_eq]
-    exact rpow_unitary_conj hUXY hp hDXY_nonneg (hM' := hXY_nonneg)
-  -- Diagonal Kronecker rpow: (DX ⊗ₖ DY)^p = DX^p ⊗ₖ DY^p
-  have hDXY_rpow : (diagonal (RCLike.ofReal ∘ dX) ⊗ₖ
-      diagonal (RCLike.ofReal ∘ dY)) ^ p =
-      diagonal (fun i => ((dX i ^ p : ℝ) : ℂ)) ⊗ₖ
-      diagonal (fun j => ((dY j ^ p : ℝ) : ℂ)) := by
-    change (diagonal (fun i => (dX i : ℂ)) ⊗ₖ diagonal (fun j => (dY j : ℂ))) ^ p = _
-    -- Convert LHS Kronecker to single diagonal
-    have hkron : diagonal (fun i => (dX i : ℂ)) ⊗ₖ diagonal (fun j => (dY j : ℂ)) =
-        diagonal (fun mn : m × n => ((dX mn.fst * dY mn.snd : ℝ) : ℂ)) := by
-      rw [diagonal_kronecker_diagonal]; congr 1; ext ⟨a, b⟩; push_cast; ring
-    rw [hkron, diagonal_rpow _ (fun ⟨a, b⟩ => mul_nonneg (hdX a) (hdY b)) p hp]
-    -- Convert back to Kronecker
-    rw [diagonal_kronecker_diagonal]; congr 1; ext ⟨a, b⟩
-    push_cast [Real.mul_rpow (hdX a) (hdY b)]; ring
-  -- Combine everything
-  rw [hXY_rpow, hDXY_rpow, hX_rpow, hY_rpow]
-  rw [conjTranspose_kronecker, ← mul_kronecker_mul, ← mul_kronecker_mul]
-
 /-- The inner matrix of the perspective, raised to the power `p` and multiplied by `R`,
 equals `L_{A^p} · R_{B^{1-p}}` for PD matrices `A`, `B` and `p ≥ 0`.
 Here `L = L_A`, `R = R_B` are left/right multiplication operators, and
@@ -706,14 +586,13 @@ lemma perspective_inner_rpow_mul_eq_leftRight {m : Type*} [Fintype m] [Decidable
     (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p) :
     let L := 𝐋 A
     let R := 𝐑 B
-    let hR_pd := rightMulMatrix_posDef hB
-    let S := matrixInvSqrt R hR_pd
+    let S := R ^ (-1 / 2 : ℝ)
     (Sᴴ * L * S) ^ p * R = 𝐋 (A ^ p) * 𝐑 (B ^ (1 - p)) := by
-  intro L R hR_pd S
-  have hL_psd : L.PosSemidef := leftMulMatrix_posSemidef hA.posSemidef
+  intro L R S
+  have hR_pd : R.PosDef := rightMulMatrix_posDef hB
   have hcomm : L * R = R * L := leftMulMatrix_rightMulMatrix_commute A B
   have hinner_eq : Sᴴ * L * S = L * R⁻¹ :=
-    perspective_inner_eq_mul_inv hL_psd hR_pd hcomm
+    perspective_inner_eq_mul_inv hR_pd hcomm
   have hB_unit : IsUnit B := hB.isUnit
   have hB_det : IsUnit B.det := (Matrix.isUnit_iff_isUnit_det B).mp hB_unit
   have hR_unit : IsUnit R := hR_pd.isUnit
@@ -733,7 +612,7 @@ lemma perspective_inner_rpow_mul_eq_leftRight {m : Type*} [Fintype m] [Decidable
   have hBinvT_psd : ((B⁻¹)ᵀ).PosSemidef := hBinv_psd.transpose
   have hLRinv_rpow : (L * R⁻¹) ^ p = (A ^ p) ⊗ₖ (((B⁻¹)ᵀ) ^ p) := by
     rw [hLRinv_kron]
-    exact kronecker_rpow_psd hA.posSemidef hBinvT_psd p hp
+    exact PosSemidef.rpow_kronecker hA.posSemidef hBinvT_psd p
   have hBinvT_rpow_mul : ((B⁻¹)ᵀ) ^ p * Bᵀ = (B ^ (1 - p))ᵀ :=
     inv_transpose_rpow_mul_transpose_eq B hB p hp
   rw [hinner_eq, hLRinv_rpow]
@@ -750,19 +629,18 @@ lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [Decida
   (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (_hp : 0 ≤ p) :
     let L := 𝐋 A
     let R := 𝐑 B
-    let hR_pd := rightMulMatrix_posDef hB
-    let S := matrixInvSqrt R hR_pd
-    let T := matrixSqrt R hR_pd.posSemidef
+    let S := R ^ (-1 / 2 : ℝ)
+    let T := R ^ (1 / 2 : ℝ)
     (Sᴴ * L * S) ^ p * T = T * (Sᴴ * L * S) ^ p := by
-  intro L R hR_pd S T
-  have hL_psd : L.PosSemidef := leftMulMatrix_posSemidef hA.posSemidef
+  intro L R S T
+  have hR_pd : R.PosDef := rightMulMatrix_posDef hB
   have hcomm : L * R = R * L := leftMulMatrix_rightMulMatrix_commute A B
   have hinner_eq : Sᴴ * L * S = L * R⁻¹ :=
-    perspective_inner_eq_mul_inv hL_psd hR_pd hcomm
+    perspective_inner_eq_mul_inv hR_pd hcomm
   have hR_nonneg : (0 : Matrix (m × m) (m × m) ℂ) ≤ R := by
     simpa [Matrix.le_iff] using hR_pd.posSemidef
   have hR_unit : IsUnit R := hR_pd.isUnit
-  have hRhalf_eq : T = R ^ (1 / 2 : ℝ) := matrixSqrt_eq_rpow hR_pd.posSemidef
+  have hRhalf_eq : T = R ^ (1 / 2 : ℝ) := rfl
   have hR_det : IsUnit R.det := (Matrix.isUnit_iff_isUnit_det R).mp hR_unit
   have hLRinv_comm_R : Commute R (L * R⁻¹) := by
     rw [Commute, SemiconjBy]
@@ -773,7 +651,7 @@ lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [Decida
       rw [mul_assoc, Matrix.nonsing_inv_mul R hR_det, mul_one]
     rw [h1, h2]
   have hinner_psd : (Sᴴ * L * S).PosSemidef :=
-    hL_psd.conjTranspose_mul_mul_same S
+    (leftMulMatrix_posSemidef hA.posSemidef).conjTranspose_mul_mul_same S
   have hinner_psd_nonneg : (0 : Matrix (m × m) (m × m) ℂ) ≤ L * R⁻¹ := by
     rw [← hinner_eq]
     exact hinner_psd.nonneg
@@ -788,20 +666,19 @@ equals −(L_{Aᵖ} · R_{B¹⁻ᵖ}) for PD matrices A, B and p ≥ 0.
 Here L = L_A, R = R_B, S = R^(⁻¹⁄₂), T = R^(¹⁄₂), and the perspective is
 T · f(S* L S) · T. -/
 lemma matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p)
-    (hL_psd : (𝐋 A).PosSemidef) (hR_pd : (𝐑 B).PosDef) :
-    matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) hL_psd hR_pd =
+    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p) :
+    matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) =
       -(𝐋 (A ^ p) * 𝐑 (B ^ (1 - p))) := by
   set L := 𝐋 A
   set R := 𝐑 B
-  set S := matrixInvSqrt R hR_pd
-  set T := matrixSqrt R hR_pd.posSemidef
+  set S := R ^ (-1 / 2 : ℝ)
+  set T := R ^ (1 / 2 : ℝ)
   have hinner_psd : (Sᴴ * L * S).PosSemidef :=
-    hL_psd.conjTranspose_mul_mul_same S
+    (leftMulMatrix_posSemidef hA.posSemidef).conjTranspose_mul_mul_same S
   have hfun_neg : cfc (fun x : ℝ => -(x ^ p)) (Sᴴ * L * S) = -((Sᴴ * L * S) ^ p) := by
     rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := Sᴴ * L * S)
       (ha := by rw [Matrix.le_iff, sub_zero]; exact hinner_psd)]
-  have hRhalf_sq : T * T = R := matrixSqrt_mul_self_posSemidef hR_pd.posSemidef
+  have hRhalf_sq : T * T = R := rpow_half_mul_rpow_half (rightMulMatrix_posDef hB).posSemidef
   have hinnerp_comm_Rhalf : (Sᴴ * L * S) ^ p * T = T * (Sᴴ * L * S) ^ p := by
     simpa [L, R, S, T] using
       perspective_inner_rpow_comm_sqrt_leftRight A B hA hB p hp

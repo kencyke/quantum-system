@@ -31,13 +31,13 @@ calculus `cfc`; the spectral expansion `cfc f A = U diag(f(λᵢ)) Uᴴ` is `cfc
 - `cfc_map_starAlgEquiv`: `cfc f` commutes with `*-`algebra equivalences of matrix algebras on
   Hermitian matrices (any `f`, finite spectrum).
 - Matrix logarithm `cfc Real.log`: `cfc_spectral_eq`, `cfc_log_spectral_eq`, `cfc_log_map_starAlgEquiv`.
-- Special functions: `matrixSqrt`, `matrixInvSqrt` defined via `CFC.rpow`.
 
-### Hermitian and PSD Structure
-- `matrixSqrt`: the matrix square root A¹⁄² for PSD A (`= A ^ (1/2 : ℝ)`).
-- `matrixInvSqrt`: the matrix inverse square root A⁻¹⁄² for PD A (`= A ^ (-1/2 : ℝ)`).
-- `matrixInvSqrt_commute_of_commute`: R⁻¹⁄² commutes with L when L and R commute
-  (for PSD L, PD R).
+### Square roots
+Square roots are Mathlib's real powers `A ^ (1 / 2 : ℝ)`, `A ^ (-1 / 2 : ℝ)` (`CFC.rpow`).
+- `posSemidef_rpow`: `A ^ s` is positive semidefinite.
+- `rpow_half_mul_rpow_half`, `rpow_half_mul_rpow_neg_half`, `rpow_neg_half_mul_rpow_half`,
+  `rpow_neg_half_mul_mul_rpow_neg_half`: the square-root identities.
+- `rpow_commute_of_commute`: `R ^ s` commutes with every matrix commuting with `R`.
 
 ### Spectral Decomposition Identities
 - `Matrix.UHU_eq_one`: Uᴴ * U = 1 for the eigenvector unitary.
@@ -255,190 +255,52 @@ theorem cfc_log_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
     cfc Real.log (φ M) = φ (cfc Real.log M) :=
   cfc_map_starAlgEquiv hM Real.log φ
 
-/-- Matrix inverse square root via the continuous functional calculus for PD matrices. -/
-noncomputable def matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (_hA : A.PosDef) : Matrix m m ℂ :=
-  cfc (fun x => Real.rpow x (-1 / 2 : ℝ)) A
+/-! ### Square roots via `CFC.rpow`
 
-/-- `matrixInvSqrt A = A ^ (-1/2)` via `CFC.rpow`. -/
-lemma matrixInvSqrt_eq_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) :=
-  (CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA.posSemidef)).symm
+Square roots and inverse square roots are Mathlib's real powers `A ^ (1 / 2 : ℝ)` and
+`A ^ (-1 / 2 : ℝ)` (`CFC.rpow`); `CFC.sqrt_eq_rpow` identifies the first with `CFC.sqrt A`. -/
 
-/-- The matrix inverse square root of a PD matrix is Hermitian. -/
-lemma matrixInvSqrt_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    (matrixInvSqrt A hA).IsHermitian := by
-  rw [matrixInvSqrt]
-  exact cfc_isHermitian hA.1 (fun x => Real.rpow x (-1 / 2 : ℝ))
-
-/-- For a positive definite matrix `A`, `A^{-1/2} * A * A^{-1/2} = I`. -/
-lemma matrixInvSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixInvSqrt A hA * A * matrixInvSqrt A hA = 1 := by
-  have hS : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    exact matrixInvSqrt_eq_rpow hA
-  have hAunit : IsUnit A := hA.isUnit
-  have hnonneg : 0 ≤ A := by
-    simpa [Matrix.le_iff] using hA.posSemidef
-  calc
-    matrixInvSqrt A hA * A * matrixInvSqrt A hA =
-        A ^ (-1 / 2 : ℝ) * A * A ^ (-1 / 2 : ℝ) := by
-      simp [hS]
-    _ = A ^ (-1 / 2 : ℝ) * A ^ (1 : ℝ) * A ^ (-1 / 2 : ℝ) := by
-      simp [CFC.rpow_one (a := A) hnonneg]
-    _ = A ^ ((-1 / 2 : ℝ) + (1 : ℝ)) * A ^ (-1 / 2 : ℝ) := by
-      simp [CFC.rpow_add (a := A) (x := (-1 / 2 : ℝ)) (y := (1 : ℝ)) hAunit, mul_assoc]
-    _ = A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) := by
-      ring_nf
-    _ = 1 := by
-      calc
-        A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) =
-            A ^ ((1 / 2 : ℝ) + (-1 / 2 : ℝ)) := by
-          symm
-          simpa using (CFC.rpow_add (a := A) (x := (1 / 2 : ℝ)) (y := (-1 / 2 : ℝ)) hAunit)
-        _ = 1 := by
-          ring_nf
-          simpa using (CFC.rpow_zero (a := A) hnonneg)
-
-/-- Matrix square root via the continuous functional calculus for PSD matrices. -/
-noncomputable def matrixSqrt {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (_hA : A.PosSemidef) : Matrix m m ℂ :=
-  cfc (fun x => Real.rpow x (1 / 2 : ℝ)) A
-
-/-- `matrixSqrt A = A ^ (1/2)` via `CFC.rpow`. -/
-lemma matrixSqrt_eq_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) :
-    matrixSqrt A hA = A ^ (1 / 2 : ℝ) :=
-  (CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA)).symm
-
-/-- The matrix square root of a PSD matrix is Hermitian. -/
-lemma matrixSqrt_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) :
-    (matrixSqrt A hA).IsHermitian := by
-  rw [matrixSqrt]
-  exact cfc_isHermitian hA.1 (fun x => Real.rpow x (1 / 2 : ℝ))
+/-- The CFC real power of any matrix is positive semidefinite.
+(`CFC.rpow_nonneg` is unconditional: on non-PSD input the CFC returns a junk
+value that is still `0 ≤ ·`.) -/
+lemma posSemidef_rpow {m : Type*} [Fintype m] [DecidableEq m]
+    (A : Matrix m m ℂ) (s : ℝ) : (A ^ s).PosSemidef :=
+  Matrix.nonneg_iff_posSemidef.mp CFC.rpow_nonneg
 
 /-- For a positive semidefinite matrix `A`, `A^{1/2} * A^{1/2} = A`. -/
-lemma matrixSqrt_mul_self_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
+lemma rpow_half_mul_rpow_half {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) :
-    matrixSqrt A hA * matrixSqrt A hA = A := by
-  classical
-  -- Use the spectral decomposition and diagonal computation.
-  rw [matrixSqrt, cfc_spectral_eq hA.1 (fun x => Real.rpow x (1 / 2 : ℝ))]
-  set U : Matrix m m ℂ := (hA.1.eigenvectorUnitary : Matrix m m ℂ)
-  set D : Matrix m m ℂ :=
-    diagonal (fun i => (Real.rpow (hA.1.eigenvalues i) (1 / 2 : ℝ) : ℂ))
-  have hU : Uᴴ * U = (1 : Matrix m m ℂ) := by
-    simpa [U, star_eq_conjTranspose] using Unitary.coe_star_mul_self hA.1.eigenvectorUnitary
-  have hD_mul : D * D = diagonal (fun i => (hA.1.eigenvalues i : ℂ)) := by
-    ext i j
-    by_cases h : i = j
-    · subst h
-      have hnonneg : 0 ≤ hA.1.eigenvalues i := hA.eigenvalues_nonneg i
-      simp only [D, mul_diagonal, diagonal_apply_eq]
-      norm_cast
-      simp only [Real.rpow_eq_pow]
-      rw [← Real.sqrt_eq_rpow, Real.mul_self_sqrt hnonneg]
-    · simp only [D, mul_diagonal]
-      simp [h]
-  calc
-    U * D * Uᴴ * (U * D * Uᴴ)
-        = U * (D * D) * Uᴴ := by
-            simp only [Matrix.mul_assoc]
-            congr 1
-            rw [← Matrix.mul_assoc Uᴴ U, hU, Matrix.one_mul]
-    _ = U * diagonal (fun i => (hA.1.eigenvalues i : ℂ)) * Uᴴ := by
-            simp [hD_mul]
-    _ = A := by
-            exact (hA.1.spectral_theorem).symm
-
-/-- For a positive definite matrix `A`, `A^{1/2} * A^{1/2} = A`. -/
-lemma matrixSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixSqrt A hA.posSemidef * matrixSqrt A hA.posSemidef = A := by
-  have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    exact matrixSqrt_eq_rpow hA.posSemidef
-  have hAunit : IsUnit A := hA.isUnit
-  calc
-    matrixSqrt A hA.posSemidef * matrixSqrt A hA.posSemidef =
-        A ^ (1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) := by
-      simp [hS]
-    _ = A ^ ((1 / 2 : ℝ) + (1 / 2 : ℝ)) := by
-      symm
-      simpa using (CFC.rpow_add (a := A) (x := (1 / 2 : ℝ)) (y := (1 / 2 : ℝ)) hAunit)
-    _ = A := by
-      have hnonneg : 0 ≤ A := by
-        simpa [Matrix.le_iff] using hA.posSemidef
-      ring_nf
-      simpa using (CFC.rpow_one (a := A) hnonneg)
+    A ^ (1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) = A := by
+  rw [← CFC.sqrt_eq_rpow]
+  exact CFC.sqrt_mul_sqrt_self A hA.nonneg
 
 /-- For a positive definite matrix `A`, `A^{1/2} * A^{-1/2} = I`. -/
-lemma matrixSqrt_mul_matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]
+lemma rpow_half_mul_rpow_neg_half {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixSqrt A hA.posSemidef * matrixInvSqrt A hA = 1 := by
-  have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    exact matrixSqrt_eq_rpow hA.posSemidef
-  have hSi : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    exact matrixInvSqrt_eq_rpow hA
-  have hAunit : IsUnit A := hA.isUnit
-  have hnonneg : 0 ≤ A := by
-    simpa [Matrix.le_iff] using hA.posSemidef
-  calc
-    matrixSqrt A hA.posSemidef * matrixInvSqrt A hA =
-        A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) := by
-      simp [hS, hSi]
-    _ = A ^ ((1 / 2 : ℝ) + (-1 / 2 : ℝ)) := by
-      symm
-      simpa using (CFC.rpow_add (a := A) (x := (1 / 2 : ℝ)) (y := (-1 / 2 : ℝ)) hAunit)
-    _ = 1 := by
-      ring_nf
-      simpa using (CFC.rpow_zero (a := A) hnonneg)
+    A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) = 1 := by
+  rw [neg_div]
+  exact CFC.rpow_mul_rpow_neg (1 / 2 : ℝ) hA.isStrictlyPositive
 
 /-- For a positive definite matrix `A`, `A^{-1/2} * A^{1/2} = I`. -/
-lemma matrixInvSqrt_mul_matrixSqrt {m : Type*} [Fintype m] [DecidableEq m]
+lemma rpow_neg_half_mul_rpow_half {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixInvSqrt A hA * matrixSqrt A hA.posSemidef = 1 := by
-  have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    exact matrixSqrt_eq_rpow hA.posSemidef
-  have hSi : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    exact matrixInvSqrt_eq_rpow hA
-  have hAunit : IsUnit A := hA.isUnit
-  have hnonneg : 0 ≤ A := by
-    simpa [Matrix.le_iff] using hA.posSemidef
-  calc
-    matrixInvSqrt A hA * matrixSqrt A hA.posSemidef =
-        A ^ (-1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) := by
-      simp [hS, hSi]
-    _ = A ^ ((-1 / 2 : ℝ) + (1 / 2 : ℝ)) := by
-      symm
-      simpa using (CFC.rpow_add (a := A) (x := (-1 / 2 : ℝ)) (y := (1 / 2 : ℝ)) hAunit)
-    _ = 1 := by
-      ring_nf
-      simpa using (CFC.rpow_zero (a := A) hnonneg)
+    A ^ (-1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) = 1 := by
+  rw [neg_div]
+  exact CFC.rpow_neg_mul_rpow (1 / 2 : ℝ) hA.isStrictlyPositive
 
-/-- For commuting PSD L and PD R, matrixInvSqrt R commutes with L.
-This follows from the fact that L commutes with R, and CFC (hence rpow) preserves
-commutativity. Since matrixInvSqrt R = R^{-1/2} (by CFC.rpow), and
-Commute.cfc_real gives that cfc g R commutes with L when L commutes with R,
-the result follows. -/
-lemma matrixInvSqrt_commute_of_commute {n : Type*} [Fintype n] [DecidableEq n]
-    {L R : Matrix n n ℂ} (_hL : L.PosSemidef) (hR : R.PosDef)
-    (hcomm : L * R = R * L) :
-    matrixInvSqrt R hR * L = L * matrixInvSqrt R hR := by
-  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  let : CStarAlgebra (Matrix n n ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
-  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
-  rw [hRinv_eq]
-  -- R^{-1/2} = cfc(x^{-1/2}, R), so it commutes with L since L commutes with R
-  have hR0 : (0 : Matrix n n ℂ) ≤ R := by simpa [Matrix.le_iff] using hR.posSemidef
-  rw [CFC.rpow_eq_cfc_real (a := R) (ha := hR0)]
-  have hcommute : Commute R L := hcomm.symm
-  exact Commute.cfc_real hcommute _
+/-- For a positive definite matrix `A`, `A^{-1/2} * A * A^{-1/2} = I`. -/
+lemma rpow_neg_half_mul_mul_rpow_neg_half {m : Type*} [Fintype m] [DecidableEq m]
+    {A : Matrix m m ℂ} (hA : A.PosDef) :
+    A ^ (-1 / 2 : ℝ) * A * A ^ (-1 / 2 : ℝ) = 1 := by
+  conv_lhs => enter [1, 2]; rw [← rpow_half_mul_rpow_half hA.posSemidef]
+  rw [← Matrix.mul_assoc, rpow_neg_half_mul_rpow_half hA, Matrix.one_mul,
+    rpow_half_mul_rpow_neg_half hA]
+
+/-- A real power `R ^ s` commutes with every matrix that commutes with `R`. -/
+lemma rpow_commute_of_commute {n : Type*} [Fintype n] [DecidableEq n]
+    {L R : Matrix n n ℂ} (hcomm : Commute R L) (s : ℝ) : Commute (R ^ s) L := by
+  rw [CFC.rpow_def]
+  exact hcomm.cfc_nnreal _
 
 /-- CFC commutes with unitary conjugation using `Unitary.conjStarAlgAut`. -/
 lemma cfc_unitary_conjugation' {m : Type*} [Fintype m] [DecidableEq m]
