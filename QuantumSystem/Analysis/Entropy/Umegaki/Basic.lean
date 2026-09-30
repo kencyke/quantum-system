@@ -684,13 +684,13 @@ theorem umegakiEntropy_channel_le (Φ : QuantumChannel n m) {ρ σ : Matrix n n 
     (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) : D(Φ.val ρ ∥ Φ.val σ) ≤ D(ρ ∥ σ) := by
   have hα := QuantumChannel.isNormalMap_dualSchwarzMap Φ
   have key : ∀ {τ : Matrix n n ℂ} (hτ : τ.PosSemidef),
-      (Φ.2.completelyPositive.posSemidef_map hτ).normalFunctional =
+      (Φ.val.posSemidef_map hτ).normalFunctional =
         hτ.normalFunctional.comp (QuantumChannel.dualSchwarzMap Φ) hα := fun {τ} hτ =>
-    ((Φ.2.completelyPositive.posSemidef_map hτ).eq_normalFunctional_of_apply fun B => by
+    ((Φ.val.posSemidef_map hτ).eq_normalFunctional_of_apply fun B => by
       rw [VonNeumannAlgebra.NormalFunctional.comp_apply, QuantumChannel.dualSchwarzMap_apply,
         hτ.normalFunctional_apply, trace_mul_traceDual]).symm
-  rw [umegakiEntropy_def (Φ.2.completelyPositive.posSemidef_map hρ)
-      (Φ.2.completelyPositive.posSemidef_map hσ), umegakiEntropy_def hρ hσ, key hρ, key hσ]
+  rw [umegakiEntropy_def (Φ.val.posSemidef_map hρ)
+      (Φ.val.posSemidef_map hσ), umegakiEntropy_def hρ hσ, key hρ, key hσ]
   exact VonNeumannAlgebra.arakiEntropy_comp_le _ (QuantumChannel.dualSchwarzMap_one Φ) hα _ _
 
 /-! ### Equality under recoverable channels -/
@@ -711,8 +711,8 @@ theorem umegakiEntropy_channel_eq_of_recoverable (Φ : QuantumChannel n m) {ρ �
     (hRρ : R.val (Φ.val ρ) = ρ) (hRσ : R.val (Φ.val σ) = σ) :
     D(Φ.val ρ ∥ Φ.val σ) = D(ρ ∥ σ) := by
   refine le_antisymm (umegakiEntropy_channel_le Φ hρ hσ) ?_
-  have hle := umegakiEntropy_channel_le R (Φ.2.completelyPositive.posSemidef_map hρ)
-    (Φ.2.completelyPositive.posSemidef_map hσ)
+  have hle := umegakiEntropy_channel_le R (Φ.val.posSemidef_map hρ)
+    (Φ.val.posSemidef_map hσ)
   rwa [hRρ, hRσ] at hle
 
 /-! ### Joint Convexity of Relative Entropy -/

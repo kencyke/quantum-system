@@ -101,12 +101,12 @@ noncomputable def numKraus (Φ : QuantumChannel n m) : ℕ :=
 /-- A minimal Kraus representation of `Φ`, with `numKraus Φ` operators:
 `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` (`kraus_spec`). -/
 noncomputable def kraus (Φ : QuantumChannel n m) : Fin (numKraus Φ) → Matrix m n ℂ :=
-  Φ.2.completelyPositive.exists_kraus_rank.choose
+  Φ.val.exists_kraus_rank.choose
 
 /-- The chosen Kraus operators represent `Φ`: `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ`. -/
 lemma kraus_spec (Φ : QuantumChannel n m) (A : Matrix n n ℂ) :
     Φ.val A = ∑ i, (kraus Φ) i * A * ((kraus Φ) i)ᴴ :=
-  Φ.2.completelyPositive.exists_kraus_rank.choose_spec A
+  Φ.val.exists_kraus_rank.choose_spec A
 
 /-- Every Kraus representation of `Φ` has at least `numKraus Φ` operators. -/
 lemma numKraus_le_card_of_kraus (Φ : QuantumChannel n m) {ι : Type*} [Fintype ι]
@@ -123,7 +123,7 @@ lemma sum_adjoint_toEuclideanL_kraus (Φ : QuantumChannel n m) :
         Matrix.toEuclideanCLM (𝕜 := ℂ) (((kraus Φ) i)ᴴ * (1 : Matrix m m ℂ) * (kraus Φ) i) := by
     rw [toEuclideanCLM_conjTranspose_mul_mul, map_one, one_def, ContinuousLinearMap.id_comp]
   simp_rw [h, Matrix.mul_one, ← map_sum,
-    Φ.property.tracePreserving.kraus_sum_eq_one (kraus_spec Φ), map_one]
+    Φ.property.kraus_sum_eq_one (kraus_spec Φ), map_one]
 
 /-- The **dual channel** `Φ* : B(ℂᵐ) → B(ℂⁿ)`, `B ↦ Σᵢ Kᵢᴴ B Kᵢ`, as a Schwarz map
 (`SchwarzMap.ofKraus`). Its values do not depend on the chosen Kraus operators: it is the trace dual

@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import Mathlib.Analysis.Matrix.Order
 public import QuantumSystem.Notation
 
@@ -13,26 +14,26 @@ public import QuantumSystem.Notation
 # Quantum channels (completely positive trace-preserving maps)
 
 This file defines quantum channels on finite-dimensional matrix algebras. A quantum channel is a
-linear map `Φ : M_n(ℂ) → M_m(ℂ)` that is
+map `Φ : M_n(ℂ) → M_m(ℂ)` that is
 1. completely positive (CP): `id_k ⊗ Φ` is positive for every `k`;
 2. trace preserving (TP): `Tr (Φ A) = Tr A` for all `A`.
 
+Completely positive maps are Mathlib's bundled `CompletelyPositiveMap`
+(`Matrix n n ℂ →CP Matrix m m ℂ`); their identity and composition are
+`CompletelyPositiveMap.id` and `CompletelyPositiveMap.comp`
+(`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/CompletelyPositiveMap.lean`).
+
 ## Main definitions
 
-* `Matrix.IsTracePreserving`: a linear map preserves trace.
-* `Matrix.IsCompletelyPositive`: a linear map is completely positive.
-* `Matrix.IsCompletelyPositive.toCompletelyPositiveMap`: a CP map as Mathlib's bundled
-  `CompletelyPositiveMap`.
-* `Matrix.IsQuantumChannel`: a linear map is both CP and TP.
-* `Matrix.QuantumChannel n m`: the subtype of CPTP maps `M_n(ℂ) → M_m(ℂ)`.
+* `Matrix.IsTracePreserving`: a map preserves trace.
+* `Matrix.QuantumChannel n m`: the subtype of trace-preserving completely positive maps
+  `M_n(ℂ) → M_m(ℂ)`.
+* `Matrix.QuantumChannel.id`, `Matrix.QuantumChannel.comp`: identity and composition.
 
 ## Main statements
 
-* `Matrix.isCompletelyPositive_id`, `Matrix.IsCompletelyPositive.comp`: the identity is CP, and
-  CP maps compose.
-* `Matrix.isQuantumChannel_id`, `Matrix.QuantumChannel.comp`: identity and composition.
-* `Matrix.IsCompletelyPositive.isHermitian_map`, `Matrix.IsCompletelyPositive.posSemidef_map`:
-  CP maps preserve Hermitian and positive semidefinite matrices.
+* `CompletelyPositiveMap.isHermitian_map`, `CompletelyPositiveMap.posSemidef_map`: CP maps
+  preserve Hermitian and positive semidefinite matrices.
 
 ## Mathematical Background
 
@@ -42,7 +43,14 @@ Complete positivity is Mathlib's `CompletelyPositiveMap` condition: applying `Φ
 matrices form the C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)`; by
 `CStarMatrix.nonneg_iff_posSemidef_comp` its order is positive semidefiniteness of the flattened
 `kn × kn` matrix, which is the physicists' condition that `id_k ⊗ Φ` be positive
-(`Matrix.isCompletelyPositive_iff_posSemidef_comp_map` in `Choi.lean`).
+(`CompletelyPositiveMap.posSemidef_comp_map` in `Choi.lean`).
+
+This file specialises that general notion to the matrix algebras `M_n(ℂ)`. The general theory is
+used beyond matrices elsewhere: the Kadison–Schwarz inequality for `2`-positive, in particular
+completely positive, maps between arbitrary unital C⋆-algebras is
+`KPositiveMapClass.le_map_star_mul`
+(`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`), and the trace dual of a channel
+is a Schwarz map on `B(ℂᵐ)` (`QuantumSystem/Analysis/Matrix/QuantumChannel/Dual.lean`).
 
 By the Choi–Kraus theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Choi.lean`) complete
 positivity is equivalent to positive semidefiniteness of the Choi matrix and to the existence of a
@@ -50,7 +58,7 @@ Kraus representation `Φ(ρ) = Σᵢ Kᵢ ρ Kᵢᴴ`. The completeness relation
 trace-preserving maps is in `QuantumSystem/Analysis/Matrix/QuantumChannel/Kraus.lean`. By
 Stinespring's theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Stinespring.lean`) a map is a
 quantum channel iff it is `ρ ↦ Tr_E (V ρ Vᴴ)` for an isometry `V`
-(`Matrix.isQuantumChannel_iff_exists_stinespring`).
+(`Matrix.QuantumChannel.exists_val_toLinearMap_eq_iff_exists_stinespring`).
 
 ## References
 
@@ -67,91 +75,65 @@ open scoped ComplexOrder CStarAlgebra
 
 /-! ### Trace-Preserving Maps -/
 
-/-- A linear map is trace-preserving if Tr(Φ(A)) = Tr(A) for all A. -/
-def IsTracePreserving (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) : Prop :=
+/-- A map `Φ : M_n(ℂ) → M_m(ℂ)` is trace-preserving if `Tr (Φ A) = Tr A` for all `A`. It is
+stated for any `FunLike` type, so that it applies to linear maps and to completely positive maps
+alike. -/
+def IsTracePreserving {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] (Φ : F) : Prop :=
   ∀ A : Matrix n n ℂ, Tr (Φ A) = Tr A
 
-/-! ### Completely Positive Maps -/
+/-! ### Quantum Channels -/
 
 variable [DecidableEq n] [DecidableEq m] [DecidableEq k]
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- A linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive if applying it entrywise to a
-nonnegative `r × r` block matrix with entries in `M_n(ℂ)` gives a nonnegative block matrix, for
-every `r`; that is, `id_r ⊗ Φ` is positive for every `r`
-(`Matrix.isCompletelyPositive_iff_posSemidef_comp_map`).
+/-- A **quantum channel** is a completely positive trace-preserving (CPTP) map
+`M_n(ℂ) → M_m(ℂ)`: a completely positive map in Mathlib's sense (`CompletelyPositiveMap`, for the
+C⋆-algebra structure `Matrix.Norms.L2Operator` and the order `MatrixOrder`) that preserves the
+trace. These are the physically realizable operations on quantum states.
 
-This is verbatim the field of Mathlib's `CompletelyPositiveMap`, for the C⋆-algebra structure
-`Matrix.Norms.L2Operator` and the order `MatrixOrder` on `M_n(ℂ)`
-(`IsCompletelyPositive.toCompletelyPositiveMap`). -/
-def IsCompletelyPositive (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) : Prop :=
-  ∀ (r : ℕ) (M : CStarMatrix (Fin r) (Fin r) (Matrix n n ℂ)), 0 ≤ M → 0 ≤ M.map Φ
+The instances `Matrix.Norms.L2Operator` and `MatrixOrder` are scoped, so writing
+`Matrix n n ℂ →CP Matrix m m ℂ` directly needs
+`open scoped CStarAlgebra Matrix.Norms.L2Operator MatrixOrder`; the type `QuantumChannel n m`
+itself carries them and needs no `open`. -/
+abbrev QuantumChannel (n : Type*) (m : Type*) [Fintype n] [Fintype m] [DecidableEq n]
+    [DecidableEq m] :=
+  { φ : Matrix n n ℂ →CP Matrix m m ℂ // IsTracePreserving φ }
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- A completely positive map on matrix algebras as Mathlib's bundled `CompletelyPositiveMap`. -/
-def IsCompletelyPositive.toCompletelyPositiveMap {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) : Matrix n n ℂ →CP Matrix m m ℂ :=
-  ⟨Φ, hΦ⟩
+/-- The identity map is a quantum channel. -/
+noncomputable def QuantumChannel.id : QuantumChannel n n :=
+  ⟨CompletelyPositiveMap.id _, fun _ => rfl⟩
 
-@[simp]
-lemma IsCompletelyPositive.coe_toCompletelyPositiveMap {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) : ⇑hΦ.toCompletelyPositiveMap = Φ :=
-  rfl
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- Composition of quantum channels is a quantum channel: `Ψ.comp Φ` is `Ψ ∘ Φ`, applying `Φ`
+first. -/
+noncomputable def QuantumChannel.comp
+    (Ψ : QuantumChannel m k) (Φ : QuantumChannel n m) : QuantumChannel n k :=
+  ⟨Ψ.val.comp Φ.val, fun A => (Ψ.property (Φ.val A)).trans (Φ.property A)⟩
 
-/-- The identity map is completely positive. -/
-lemma isCompletelyPositive_id :
-    IsCompletelyPositive (LinearMap.id : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) :=
-  fun _ M hM => by simpa using hM
+end Matrix
 
-/-- A composition of completely positive maps is completely positive. -/
-lemma IsCompletelyPositive.comp {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    {Ψ : Matrix m m ℂ →ₗ[ℂ] Matrix k k ℂ} (hΨ : IsCompletelyPositive Ψ)
-    (hΦ : IsCompletelyPositive Φ) : IsCompletelyPositive (Ψ ∘ₗ Φ) :=
-  fun r M hM => hΨ r _ (hΦ r M hM)
+/-! ### Completely positive maps on matrix algebras -/
+
+namespace CompletelyPositiveMap
+
+open Matrix
+open scoped ComplexOrder CStarAlgebra
+
+variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- A completely positive map sends positive semidefinite matrices to positive semidefinite
 matrices. -/
-lemma IsCompletelyPositive.posSemidef_map {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) {A : Matrix n n ℂ} (hA : A.PosSemidef) : (Φ A).PosSemidef :=
-  Matrix.nonneg_iff_posSemidef.mp (map_nonneg hΦ.toCompletelyPositiveMap hA.nonneg)
+lemma posSemidef_map (φ : Matrix n n ℂ →CP Matrix m m ℂ) {A : Matrix n n ℂ} (hA : A.PosSemidef) :
+    (φ A).PosSemidef :=
+  Matrix.nonneg_iff_posSemidef.mp (map_nonneg φ hA.nonneg)
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- A completely positive map preserves Hermitianity of matrices: it is positive, and positive
 ℂ-linear maps between C⋆-algebras preserve `⋆`. -/
-lemma IsCompletelyPositive.isHermitian_map {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) {A : Matrix n n ℂ} (hA : A.IsHermitian) : (Φ A).IsHermitian :=
-  (map_star hΦ.toCompletelyPositiveMap A).symm.trans (congrArg _ hA)
+lemma isHermitian_map (φ : Matrix n n ℂ →CP Matrix m m ℂ) {A : Matrix n n ℂ}
+    (hA : A.IsHermitian) : (φ A).IsHermitian :=
+  (map_star φ A).symm.trans (congrArg _ hA)
 
-/-! ### Quantum Channels -/
-
-/-- A quantum channel is a completely positive trace-preserving (CPTP) map.
-These are the physically realizable operations on quantum states. -/
-structure IsQuantumChannel (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) : Prop where
-  /-- The map is completely positive -/
-  completelyPositive : IsCompletelyPositive Φ
-  /-- The map preserves trace -/
-  tracePreserving : IsTracePreserving Φ
-
-/-- Quantum channel as a subtype for cleaner API. -/
-abbrev QuantumChannel (n : Type*) (m : Type*) [Fintype n] [Fintype m] [DecidableEq n]
-    [DecidableEq m] :=
-  { Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ // IsQuantumChannel Φ }
-
-/-- The identity map is a quantum channel. -/
-lemma isQuantumChannel_id : IsQuantumChannel (LinearMap.id : Matrix n n ℂ →ₗ[ℂ] Matrix n n ℂ) where
-  completelyPositive := isCompletelyPositive_id
-  tracePreserving := fun _ => rfl
-
-/-- Composition of quantum channels is a quantum channel: `Ψ.comp Φ` is `Ψ ∘ Φ`, applying `Φ`
-first. -/
-noncomputable def QuantumChannel.comp
-    (Ψ : QuantumChannel m k) (Φ : QuantumChannel n m) : QuantumChannel n k where
-  val := Ψ.val.comp Φ.val
-  property.completelyPositive := Ψ.property.completelyPositive.comp Φ.property.completelyPositive
-  property.tracePreserving := by
-    intro A
-    simp only [LinearMap.comp_apply]
-    rw [Ψ.property.tracePreserving, Φ.property.tracePreserving]
-
-end Matrix
+end CompletelyPositiveMap

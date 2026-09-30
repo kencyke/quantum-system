@@ -38,9 +38,9 @@ noncomputable def QuantumChannel.apply [DecidableEq n] [DecidableEq m]
     (Φ : QuantumChannel n m) (ρ : DensityMatrix n) :
     DensityMatrix m where
   toMatrix := Φ.val ↑ρ
-  posSemidef := Φ.property.completelyPositive.posSemidef_map ρ.posSemidef
+  posSemidef := Φ.val.posSemidef_map ρ.posSemidef
   trace_eq_one := by
-    rw [Φ.property.tracePreserving]
+    rw [Φ.property]
     exact ρ.trace_eq_one
 
 /-- Quantum channels can be applied as functions from density matrices to density matrices. -/
