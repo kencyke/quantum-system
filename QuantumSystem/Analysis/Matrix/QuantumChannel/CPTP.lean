@@ -97,8 +97,7 @@ The instances `Matrix.Norms.L2Operator` and `MatrixOrder` are scoped, so writing
 `Matrix n n ℂ →CP Matrix m m ℂ` directly needs
 `open scoped CStarAlgebra Matrix.Norms.L2Operator MatrixOrder`; the type `QuantumChannel n m`
 itself carries them and needs no `open`. -/
-abbrev QuantumChannel (n : Type*) (m : Type*) [Fintype n] [Fintype m] [DecidableEq n]
-    [DecidableEq m] :=
+abbrev QuantumChannel (n m : Type*) [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m] :=
   { φ : Matrix n n ℂ →CP Matrix m m ℂ // IsTracePreserving φ }
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
@@ -109,8 +108,7 @@ noncomputable def QuantumChannel.id : QuantumChannel n n :=
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- Composition of quantum channels is a quantum channel: `Ψ.comp Φ` is `Ψ ∘ Φ`, applying `Φ`
 first. -/
-noncomputable def QuantumChannel.comp
-    (Ψ : QuantumChannel m k) (Φ : QuantumChannel n m) : QuantumChannel n k :=
+noncomputable def QuantumChannel.comp (Ψ : QuantumChannel m k) (Φ : QuantumChannel n m) : QuantumChannel n k :=
   ⟨Ψ.val.comp Φ.val, fun A => (Ψ.property (Φ.val A)).trans (Φ.property A)⟩
 
 end Matrix

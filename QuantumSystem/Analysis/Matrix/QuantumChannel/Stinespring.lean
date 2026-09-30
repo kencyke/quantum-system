@@ -108,8 +108,7 @@ omit [Fintype m] in
 /-- The Kraus map is the partial trace over `ι` of conjugation by the Stinespring isometry:
 `Σᵢ Kᵢ A Kᵢᴴ = Tr_ι (V A Vᴴ)`, the sum of the diagonal blocks of `V A Vᴴ`. -/
 lemma traceLeft_stinespringIsometry_mul_mul_conjTranspose {ι : Type*} [Fintype ι]
-    (K : ι → Matrix m n ℂ)
-    (A : Matrix n n ℂ) :
+    (K : ι → Matrix m n ℂ) (A : Matrix n n ℂ) :
     traceLeft (stinespringIsometry K * A * (stinespringIsometry K)ᴴ) =
       ∑ i, K i * A * (K i)ᴴ := by
   ext a b
@@ -185,8 +184,7 @@ open scoped ComplexOrder Kronecker
 /-! ### Heisenberg picture and quantum channels -/
 
 variable [DecidableEq n] [DecidableEq m]
-variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
-  [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
+variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
 
 omit [DecidableEq n] [DecidableEq m] in
 /-- The Stinespring pairing: `Tr (Tr_ι (V A Vᴴ) B) = Tr (A Vᴴ (1 ⊗ B) V)`. -/
@@ -201,8 +199,7 @@ lemma trace_traceLeft_mul_mul_conjTranspose_mul {ι : Type*} [Fintype ι] [Decid
 omit [DecidableEq m] in
 /-- **Stinespring's theorem, Heisenberg picture**: `Φ(A) = Tr_ι (V A Vᴴ)` for all `A` iff the
 trace dual of `Φ` is `Φ*(B) = Vᴴ (1 ⊗ B) V` for all `B`. -/
-theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
-    (V : Matrix (ι × m) n ℂ) :
+theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} (V : Matrix (ι × m) n ℂ) :
     (∀ A, Φ A = traceLeft (V * A * Vᴴ)) ↔
       ∀ B, traceDual Φ B = Vᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) * V := by
   constructor
@@ -216,8 +213,8 @@ theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] 
 omit [DecidableEq m] in
 /-- **Stinespring's theorem, Heisenberg picture**: if `Φ(A) = Tr_ι (V A Vᴴ)` then the trace dual
 of `Φ` is `Φ*(B) = Vᴴ (1 ⊗ B) V`. -/
-theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
-    (V : Matrix (ι × m) n ℂ) (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) (B : Matrix m m ℂ) :
+theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} (V : Matrix (ι × m) n ℂ)
+    (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) (B : Matrix m m ℂ) :
     traceDual Φ B = Vᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) * V :=
   (traceDual_eq_iff_stinespring V).1 hV B
 
@@ -235,25 +232,23 @@ theorem QuantumChannel.exists_stinespring (Φ : QuantumChannel n m) :
 
 /-- **Stinespring's theorem** for quantum channels, converse: `A ↦ Tr_ι (V A Vᴴ)` for an isometry
 `V`, `Vᴴ V = I`, is a quantum channel. -/
-noncomputable def QuantumChannel.ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*}
-    [Fintype ι] (V : Matrix (ι × m) n ℂ) (hVV : Vᴴ * V = 1)
-    (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) : QuantumChannel n m :=
+noncomputable def QuantumChannel.ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
+    (V : Matrix (ι × m) n ℂ) (hVV : Vᴴ * V = 1) (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) : QuantumChannel n m :=
   ⟨.ofStinespring Φ V hV, fun A => by
     change Tr (Φ A) = Tr A
     rw [hV, trace_traceLeft, Matrix.trace_mul_cycle, hVV, Matrix.one_mul]⟩
 
 /-- The quantum channel `Matrix.QuantumChannel.ofStinespring Φ V hVV hV` is `Φ` as a function. -/
-@[simp] lemma QuantumChannel.coe_ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*}
-    [Fintype ι] (V : Matrix (ι × m) n ℂ) (hVV : Vᴴ * V = 1)
-    (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) : ⇑(QuantumChannel.ofStinespring Φ V hVV hV).val = Φ :=
+@[simp] lemma QuantumChannel.coe_ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
+    (V : Matrix (ι × m) n ℂ) (hVV : Vᴴ * V = 1) (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) :
+    ⇑(QuantumChannel.ofStinespring Φ V hVV hV).val = Φ :=
   rfl
 
 open scoped CStarAlgebra Matrix.Norms.L2Operator MatrixOrder in
 /-- **Stinespring's theorem** for quantum channels: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is a quantum
 channel iff `Φ(A) = Tr_E (V A Vᴴ)` for an isometry `V : ℂⁿ → ℂ^E ⊗ ℂᵐ`, `Vᴴ V = I`, with
 environment `E = Fin r`, `r ≤ nm`. -/
-theorem QuantumChannel.exists_val_toLinearMap_eq_iff_exists_stinespring
-    (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
+theorem QuantumChannel.exists_val_toLinearMap_eq_iff_exists_stinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
     (∃ Ψ : QuantumChannel n m, Ψ.val.toLinearMap = Φ) ↔
       ∃ r ≤ Fintype.card n * Fintype.card m,
         ∃ V : Matrix (Fin r × m) n ℂ, Vᴴ * V = 1 ∧ ∀ A, Φ A = traceLeft (V * A * Vᴴ) :=
