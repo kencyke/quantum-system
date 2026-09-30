@@ -27,6 +27,7 @@ completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`; complete positivity is not used.
 namespace Matrix
 
 variable {n m : Type*} [Fintype n] [Fintype m]
+variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
 
 open scoped ComplexOrder
 
@@ -39,8 +40,7 @@ private lemma matrix_eq_one_of_trace_mul [DecidableEq n]
 
 /-- Kraus representations of trace-preserving maps satisfy the completeness relation
 `∑ₖ Kₖ† Kₖ = I`. Complete positivity is not needed. -/
-lemma IsTracePreserving.kraus_sum_eq_one [DecidableEq n] {F : Type*}
-    [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] {Φ : F} (hΦ : IsTracePreserving Φ)
+lemma IsTracePreserving.kraus_sum_eq_one [DecidableEq n] {Φ : F} (hΦ : IsTracePreserving Φ)
     {ι : Type*} [Fintype ι] {K : ι → Matrix m n ℂ} (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) :
     ∑ i, (K i)ᴴ * K i = 1 := by
   apply matrix_eq_one_of_trace_mul

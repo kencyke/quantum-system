@@ -185,6 +185,8 @@ open scoped ComplexOrder Kronecker
 /-! ### Heisenberg picture and quantum channels -/
 
 variable [DecidableEq n] [DecidableEq m]
+variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
+  [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
 
 omit [DecidableEq n] [DecidableEq m] in
 /-- The Stinespring pairing: `Tr (Tr_ι (V A Vᴴ) B) = Tr (A Vᴴ (1 ⊗ B) V)`. -/
@@ -199,9 +201,8 @@ lemma trace_traceLeft_mul_mul_conjTranspose_mul {ι : Type*} [Fintype ι] [Decid
 omit [DecidableEq m] in
 /-- **Stinespring's theorem, Heisenberg picture**: `Φ(A) = Tr_ι (V A Vᴴ)` for all `A` iff the
 trace dual of `Φ` is `Φ*(B) = Vᴴ (1 ⊗ B) V` for all `B`. -/
-theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι]
-    {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
-    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] {Φ : F} (V : Matrix (ι × m) n ℂ) :
+theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
+    (V : Matrix (ι × m) n ℂ) :
     (∀ A, Φ A = traceLeft (V * A * Vᴴ)) ↔
       ∀ B, traceDual Φ B = Vᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) * V := by
   constructor
@@ -215,10 +216,8 @@ theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι]
 omit [DecidableEq m] in
 /-- **Stinespring's theorem, Heisenberg picture**: if `Φ(A) = Tr_ι (V A Vᴴ)` then the trace dual
 of `Φ` is `Φ*(B) = Vᴴ (1 ⊗ B) V`. -/
-theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι]
-    {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
-    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] {Φ : F} (V : Matrix (ι × m) n ℂ)
-    (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) (B : Matrix m m ℂ) :
+theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
+    (V : Matrix (ι × m) n ℂ) (hV : ∀ A, Φ A = traceLeft (V * A * Vᴴ)) (B : Matrix m m ℂ) :
     traceDual Φ B = Vᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) * V :=
   (traceDual_eq_iff_stinespring V).1 hV B
 

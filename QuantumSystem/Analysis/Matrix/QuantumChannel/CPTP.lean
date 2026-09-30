@@ -75,10 +75,12 @@ open scoped ComplexOrder CStarAlgebra
 
 /-! ### Trace-Preserving Maps -/
 
+variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
+
 /-- A map `Φ : M_n(ℂ) → M_m(ℂ)` is trace-preserving if `Tr (Φ A) = Tr A` for all `A`. It is
 stated for any `FunLike` type, so that it applies to linear maps and to completely positive maps
 alike. -/
-def IsTracePreserving {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] (Φ : F) : Prop :=
+def IsTracePreserving (Φ : F) : Prop :=
   ∀ A : Matrix n n ℂ, Tr (Φ A) = Tr A
 
 /-! ### Quantum Channels -/
