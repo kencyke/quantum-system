@@ -12,9 +12,11 @@ public import Mathlib.LinearAlgebra.Matrix.Trace
 
 Facts about `Matrix.trace` that plausibly belong upstream next to
 `Mathlib.LinearAlgebra.Matrix.Trace`, including the **trace dual** (Heisenberg picture) of a linear
-map between matrix algebras: for `Φ : Matrix n n R →ₗ[R] Matrix m m R` over a commutative
+map between matrix algebras: for a linear map `Φ : Matrix n n R → Matrix m m R` over a commutative
 semiring, `Matrix.traceDual Φ : Matrix m m R →ₗ[R] Matrix n n R` is the adjoint of `Φ` for the
-trace pairing `(A, B) ↦ (A * B).trace`.
+trace pairing `(A, B) ↦ (A * B).trace`. The map `Φ` is taken from any `FunLike` type, with
+`LinearMapClass` where linearity is used, so that bundled linear maps and completely positive maps
+are covered alike.
 
 ## Main definitions
 
@@ -49,14 +51,14 @@ end Reindex
 section TraceDual
 
 variable {n m R : Type*} [Fintype n] [Fintype m] [DecidableEq n] [CommSemiring R]
+variable {F : Type*} [FunLike F (Matrix n n R) (Matrix m m R)]
 
-/-- The **trace dual** (Heisenberg picture) of a linear map on matrix algebras, characterised by
+/-- The **trace dual** (Heisenberg picture) of a linear map `Φ` on matrix algebras, characterised by
 `(Φ A * B).trace = (A * traceDual Φ B).trace` (`Matrix.trace_mul_traceDual`). Its entries are
 `(traceDual Φ B) j i = (Φ (E_{ij}) * B).trace` for the matrix units `E_{ij} = Matrix.single i j 1`.
 For a Kraus map `A ↦ Σᵢ Kᵢ A Kᵢᴴ` it is `B ↦ Σᵢ Kᵢᴴ B Kᵢ` (`Matrix.traceDual_eq_of_kraus`); it is
 unital when `Φ` is trace preserving (`Matrix.traceDual_one`). -/
-def traceDual (Φ : Matrix n n R →ₗ[R] Matrix m m R) :
-    Matrix m m R →ₗ[R] Matrix n n R where
+def traceDual (Φ : F) : Matrix m m R →ₗ[R] Matrix n n R where
   toFun B := Matrix.of fun j i => (Φ (Matrix.single i j 1) * B).trace
   map_add' B C := by
     ext j i
@@ -66,12 +68,15 @@ def traceDual (Φ : Matrix n n R →ₗ[R] Matrix m m R) :
     simp [Matrix.mul_smul, Matrix.trace_smul]
 
 omit [Fintype n] in
-lemma traceDual_apply (Φ : Matrix n n R →ₗ[R] Matrix m m R) (B : Matrix m m R) (j i : n) :
+/-- The entries of the trace dual: `Φ*(B) j i = Tr (Φ(Eᵢⱼ) B)`. -/
+lemma traceDual_apply (Φ : F) (B : Matrix m m R) (j i : n) :
     traceDual Φ B j i = (Φ (Matrix.single i j 1) * B).trace := rfl
 
+variable [LinearMapClass F R (Matrix n n R) (Matrix m m R)]
+
 /-- **The defining duality**: `(Φ A * B).trace = (A * traceDual Φ B).trace`. -/
-theorem trace_mul_traceDual (Φ : Matrix n n R →ₗ[R] Matrix m m R) (A : Matrix n n R)
-    (B : Matrix m m R) : (Φ A * B).trace = (A * traceDual Φ B).trace := by
+theorem trace_mul_traceDual (Φ : F) (A : Matrix n n R) (B : Matrix m m R) :
+    (Φ A * B).trace = (A * traceDual Φ B).trace := by
   conv_lhs => rw [Matrix.matrix_eq_sum_single A]
   simp only [map_sum, Finset.sum_mul, Matrix.trace_sum]
   simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply, traceDual_apply]
@@ -81,8 +86,8 @@ theorem trace_mul_traceDual (Φ : Matrix n n R →ₗ[R] Matrix m m R) (A : Matr
   simp only [Matrix.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc]
 
 /-- The trace dual of a Kraus map `A ↦ Σᵢ Kᵢ A Kᵢᴴ` is `B ↦ Σᵢ Kᵢᴴ B Kᵢ`. -/
-theorem traceDual_eq_of_kraus [Star R] {Φ : Matrix n n R →ₗ[R] Matrix m m R}
-    {ι : Type*} [Fintype ι] {K : ι → Matrix m n R} (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) (B : Matrix m m R) :
+theorem traceDual_eq_of_kraus [Star R] {Φ : F} {ι : Type*} [Fintype ι] {K : ι → Matrix m n R}
+    (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) (B : Matrix m m R) :
     traceDual Φ B = ∑ i, (K i)ᴴ * B * K i := by
   refine Matrix.ext_iff_trace_mul_left.mpr fun x => ?_
   rw [← trace_mul_traceDual, hK, Finset.sum_mul, Matrix.trace_sum, Matrix.mul_sum,
@@ -93,8 +98,8 @@ theorem traceDual_eq_of_kraus [Star R] {Φ : Matrix n n R →ₗ[R] Matrix m m R
   exact Matrix.trace_mul_comm _ _
 
 /-- The trace dual of a trace-preserving map is unital. -/
-theorem traceDual_one [DecidableEq m] {Φ : Matrix n n R →ₗ[R] Matrix m m R}
-    (hΦ : ∀ A, (Φ A).trace = A.trace) : traceDual Φ 1 = 1 := by
+theorem traceDual_one [DecidableEq m] {Φ : F} (hΦ : ∀ A, (Φ A).trace = A.trace) :
+    traceDual Φ 1 = 1 := by
   refine Matrix.ext_iff_trace_mul_left.mpr fun x => ?_
   rw [← trace_mul_traceDual, Matrix.mul_one, Matrix.mul_one, hΦ]
 
