@@ -413,7 +413,8 @@ lemma perspective_sandwich_eq {n : Type*} [Fintype n]
 of an `f` Löwner convex on `[0, ∞)` is jointly convex on positive semidefinite `L` and positive
 definite `R`.
 No condition on `f(0)` is needed: the weights `Aᵢ = (wᵢRᵢ)^{1/2} R^{-1/2}` satisfy
-`A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `hpj_affine` applies. -/
+`A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `IsLownerConvexOn.cfc_affine_le`
+applies. -/
 theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq m]
     {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Set.Ici 0) f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
@@ -476,7 +477,7 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     have hRinv_mul : Rinv * R * Rinv = (1 : Matrix m m ℂ) := by
       simpa [Rinv, R] using rpow_neg_half_mul_mul_rpow_neg_half hR
     simp [hA_sum, hRinv_mul]
-  have hconv' := hpj_affine hconv A₁ A₂ T₁ T₂ hT₁ hT₂ hAB
+  have hconv' := hconv.cfc_affine_le A₁ A₂ T₁ T₂ hT₁ hT₂ hAB
   have hpsd :
       (A₁ᴴ * cfc f T₁ * A₁ +
         A₂ᴴ * cfc f T₂ * A₂ -

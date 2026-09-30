@@ -47,7 +47,7 @@ def traceRightKraus {X Y : Type*} [DecidableEq X] [DecidableEq Y] (y : Y) :
   Matrix.of fun x p => if p = (x, y) then (1 : ℂ) else 0
 
 /-- Tracing out `Y` is the Kraus map with operators `K_y`, `y : Y`:
-`Tr_Y M = Σ_y K_y M K_yᴴ`. -/
+`tr₂(M) = Σ_y K_y M K_yᴴ`. -/
 -- The binder `y : Y` is annotated: with the type left to inference, Mathlib's default instance
 -- `CStarMatrix.instHMul` is selected for the products and elaboration fails.
 lemma traceRight_eq_sum_kraus {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y]

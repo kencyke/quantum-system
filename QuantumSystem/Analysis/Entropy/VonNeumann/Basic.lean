@@ -88,16 +88,16 @@ lemma hasDerivAt_sum_rpow {α : Type*} [Fintype α] (evs : α → ℝ) (hev : �
   rw [heq]
   exact hsum
 
-/-- Trace-rpow concavity: for 0 < s ≤ 1 and positive semidefinite A, B,
+/-- Trace-rpow concavity: for 0 ≤ s ≤ 1 and positive semidefinite A, B,
     p ⋅ Tr (Aˢ) + (1−p) ⋅ Tr (Bˢ) ≤ Tr ((pA + (1−p)B)ˢ).
-    This follows from Löwner-order concavity (`rpow_concavity_le`) plus the
-    trace-monotonicity of the Hermitian order. -/
+    This follows from the Löwner–Heinz concavity of `A ↦ Aˢ` (`rpow_isLownerConcaveOn`, unfolded
+    as `rpow_concavity_le`) plus the trace-monotonicity of the Hermitian order. -/
 lemma re_trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
-    (s : ℝ) (hs0 : 0 < s) (hs1 : s ≤ 1) :
+    (s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     p * (Tr (A ^ s)).re + (1 - p) * (Tr (B ^ s)).re ≤ (Tr ((p • A + (1 - p) • B) ^ s)).re := by
   have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s :=
-    rpow_concavity_le hs0.le hs1 hA hB hp hp1
+    rpow_concavity_le hs0 hs1 hA hB hp hp1
   rw [Matrix.le_iff] at hlowner'
   have htrace := (Complex.nonneg_iff.mp hlowner'.trace_nonneg).1
   have htr1 : Tr (p • A ^ s) = (p : ℝ) • Tr (A ^ s) := Matrix.trace_smul (p : ℝ) (A ^ s)
@@ -301,7 +301,7 @@ theorem vonNeumannEntropy_eq_log_card_iff [Nonempty n] (ρ : DensityMatrix n) :
 `S(Σᵢ wᵢ ρᵢ) ≥ Σᵢ wᵢ S(ρᵢ)` is `DensityMatrix.vonNeumannEntropy_concave_sum`.
 
 **Proof**: We use the Löwner-order concavity of A ↦ Aˢ for 0 < s ≤ 1
-(from `rpow_isLownerConcaveOn`). Define g(s) := Tr (ρ_mixˢ)
+(`rpow_isLownerConcaveOn`, through `re_trace_rpow_concave`). Define g(s) := Tr (ρ_mixˢ)
 − p Tr (ρ₁ˢ) − (1−p) Tr (ρ₂ˢ).
 
 - **Non-negativity**: For s ∈ (0,1], Löwner concavity gives
@@ -325,7 +325,7 @@ theorem vonNeumannEntropy_concave (ρ₁ ρ₂ : DensityMatrix n) (p : ℝ) (hp 
     (p * (ρ₁.toMatrix ^ s).trace.re + (1 - p) * (ρ₂.toMatrix ^ s).trace.re)
   have g_nonneg : ∀ s ∈ Set.Ioc (0 : ℝ) 1, 0 ≤ g s := by
     intro s hs
-    exact sub_nonneg.mpr (re_trace_rpow_concave ρ₁.toMatrix ρ₂.toMatrix hpsd₁ hpsd₂ p hp hp1 s hs.1 hs.2)
+    exact sub_nonneg.mpr (re_trace_rpow_concave ρ₁.toMatrix ρ₂.toMatrix hpsd₁ hpsd₂ p hp hp1 s hs.1.le hs.2)
   have hg_one : g 1 = 0 := by
     simp only [g]
     rw [CFC.rpow_one _ (by simpa [Matrix.le_iff, sub_zero] using hpsd_mix),

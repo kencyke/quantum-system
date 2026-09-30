@@ -28,6 +28,7 @@ Completely positive maps are Mathlib's bundled `CompletelyPositiveMap`
 * `Matrix.IsTracePreserving`: a map preserves trace.
 * `Matrix.QuantumChannel n m`: the subtype of trace-preserving completely positive maps
   `M_n(ℂ) → M_m(ℂ)`.
+* `Matrix.QuantumChannel.toLinearMap`: the underlying linear map of a quantum channel.
 * `Matrix.QuantumChannel.id`, `Matrix.QuantumChannel.comp`: identity and composition.
 
 ## Main statements
@@ -46,10 +47,11 @@ matrices form the C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)`; b
 (`CompletelyPositiveMap.posSemidef_comp_map` in `Choi.lean`).
 
 This file specialises that general notion to the matrix algebras `M_n(ℂ)`. The general theory is
-used beyond matrices elsewhere: the Kadison–Schwarz inequality for `2`-positive, in particular
-completely positive, maps between arbitrary unital C⋆-algebras is
-`KPositiveMapClass.le_map_star_mul`
-(`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`), and the trace dual of a channel
+used beyond matrices elsewhere: the Kadison–Schwarz inequality
+`φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` for `2`-positive, in particular completely positive, maps between
+arbitrary unital C⋆-algebras is `KPositiveMapClass.le_norm_smul_map_star_mul`, and its normalised
+form `φ(a)⋆ φ(a) ≤ φ(a⋆ a)` under `φ 1 ≤ 1` is `KPositiveMapClass.le_map_star_mul`
+(`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`); and the trace dual of a channel
 is a Schwarz map on `B(ℂᵐ)` (`QuantumSystem/Analysis/Matrix/QuantumChannel/Dual.lean`).
 
 By the Choi–Kraus theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Choi.lean`) complete
@@ -57,8 +59,8 @@ positivity is equivalent to positive semidefiniteness of the Choi matrix and to 
 Kraus representation `Φ(ρ) = Σᵢ Kᵢ ρ Kᵢᴴ`. The completeness relation `Σᵢ Kᵢᴴ Kᵢ = I` for
 trace-preserving maps is in `QuantumSystem/Analysis/Matrix/QuantumChannel/Kraus.lean`. By
 Stinespring's theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Stinespring.lean`) a map is a
-quantum channel iff it is `ρ ↦ Tr_E (V ρ Vᴴ)` for an isometry `V`
-(`Matrix.QuantumChannel.exists_val_toLinearMap_eq_iff_exists_stinespring`).
+quantum channel iff it is `ρ ↦ tr₁(V ρ Vᴴ)` for an isometry `V`, the partial trace `tr₁` removing
+the environment (`Matrix.QuantumChannel.exists_toLinearMap_eq_iff_exists_stinespring`).
 
 ## References
 
@@ -95,10 +97,25 @@ trace. These are the physically realizable operations on quantum states.
 
 The instances `Matrix.Norms.L2Operator` and `MatrixOrder` are scoped, so writing
 `Matrix n n ℂ →CP Matrix m m ℂ` directly needs
-`open scoped CStarAlgebra Matrix.Norms.L2Operator MatrixOrder`; the type `QuantumChannel n m`
-itself carries them and needs no `open`. -/
+`open scoped CStarAlgebra Matrix.Norms.L2Operator MatrixOrder`. The type `QuantumChannel n m`
+itself carries them: stating and using channels needs no `open`, through the application `Φ.val A`
+and the API of this namespace (`QuantumChannel.toLinearMap`, `QuantumChannel.id`,
+`QuantumChannel.comp`). Only calls into the `CompletelyPositiveMap` API on `Φ.val` that re-synthesise
+the C⋆-structure of `Matrix n n ℂ`, such as `Φ.val.toLinearMap` or `Ψ.val.comp Φ.val`, need the
+scoped instances. -/
 abbrev QuantumChannel (n m : Type*) [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m] :=
   { φ : Matrix n n ℂ →CP Matrix m m ℂ // IsTracePreserving φ }
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- The underlying linear map `M_n(ℂ) →ₗ[ℂ] M_m(ℂ)` of a quantum channel. -/
+noncomputable def QuantumChannel.toLinearMap (Φ : QuantumChannel n m) :
+    Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ :=
+  Φ.val.toLinearMap
+
+/-- The linear map of a quantum channel `Φ` is `Φ` as a function. -/
+@[simp] lemma QuantumChannel.toLinearMap_apply (Φ : QuantumChannel n m) (A : Matrix n n ℂ) :
+    Φ.toLinearMap A = Φ.val A :=
+  rfl
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- The identity map is a quantum channel. -/

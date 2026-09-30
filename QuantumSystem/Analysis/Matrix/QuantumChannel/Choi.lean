@@ -24,6 +24,9 @@ For a linear map `Φ : M_n(ℂ) → M_m(ℂ)` the following are equivalent:
 ## Main definitions
 
 * `Matrix.choiMatrix Φ`: the Choi matrix `J(Φ) ((i, b), (j, b')) = Φ(Eᵢⱼ) b b'`.
+* `CompletelyPositiveMap.ofKraus`, `CompletelyPositiveMap.ofPosSemidefChoiMatrix`,
+  `CompletelyPositiveMap.ofKPositiveMap`: the completely positive map built from a Kraus
+  representation, from a positive semidefinite Choi matrix, and from an `n`-positive map.
 
 ## Main statements
 

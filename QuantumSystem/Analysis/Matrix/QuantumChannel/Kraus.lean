@@ -39,7 +39,7 @@ private lemma matrix_eq_one_of_trace_mul [DecidableEq n]
   Matrix.ext_iff_trace_mul_right.mpr fun A => by rw [one_mul]; exact h A
 
 /-- Kraus representations of trace-preserving maps satisfy the completeness relation
-`∑ₖ Kₖ† Kₖ = I`. Complete positivity is not needed. -/
+`Σᵢ Kᵢᴴ Kᵢ = I`. Complete positivity is not needed. -/
 lemma IsTracePreserving.kraus_sum_eq_one [DecidableEq n] {Φ : F} (hΦ : IsTracePreserving Φ)
     {ι : Type*} [Fintype ι] {K : ι → Matrix m n ℂ} (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) :
     ∑ i, (K i)ᴴ * K i = 1 := by

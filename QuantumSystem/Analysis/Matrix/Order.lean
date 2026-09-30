@@ -32,7 +32,8 @@ and related operator-convexity results.
   parameter because `Real.log 0 = 0` and `0 ^ p = 0` for `p < 0`: the logarithm is Löwner monotone
   and concave, and `tᵖ` (`-1 ≤ p < 0`) Löwner convex, on `(0, ∞)`, but the logarithm is not Löwner
   monotone on `[0, ∞)` (`Matrix.not_log_isLownerMonotoneOn_Ici`).
-- `Matrix.IsJensenConvex f`: for A†A + B†B ≤ I and positive semidefinite T₁, T₂,
+- `Matrix.IsJensenConvex f`: Jensen convexity in the sense of Hansen–Pedersen–Jensen (HPJ): for
+  A†A + B†B ≤ I and positive semidefinite T₁, T₂,
   f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B.
 
 ## Main results
@@ -47,8 +48,8 @@ and related operator-convexity results.
   Löwner concave function is Löwner convex.
 - `Matrix.lownerConvex_isometry_compression_le`: f(W†TW) ≤ W†f(T)W for f Löwner convex on
   `[0, ∞)` and an isometry W, with no condition on f(0).
-- `Matrix.hpj_affine`: Jensen's operator inequality for f Löwner convex on `[0, ∞)` and
-  A†A + B†B = I.
+- `Matrix.IsLownerConvexOn.cfc_affine_le`: Jensen's operator inequality for f Löwner convex on
+  `[0, ∞)` and A†A + B†B = I.
 - `Matrix.rpow_isLownerMonotoneOn`, `Matrix.rpow_isLownerConcaveOn`: tˢ (0 ≤ s ≤ 1) is Löwner
   monotone and concave on `[0, ∞)` (Löwner–Heinz; Mathlib's `CFC.monotone_rpow`,
   `CFC.concaveOn_rpow`), and `Matrix.neg_rpow_isLownerConvexOn`, `Matrix.neg_rpow_isJensenConvex`.
@@ -136,7 +137,7 @@ lemma IsLownerConvexOn.cfc_le.{v} {s : Set ℝ} {f : ℝ → ℝ} (hconv : IsLow
   (hconv m).2 hA hB ht0 (sub_nonneg.2 ht1) (add_sub_cancel t 1)
 
 /-- `f` is Löwner convex iff `-f` is Löwner concave. -/
-lemma isLownerConvexOn_neg_iff.{v} {s : Set ℝ} {f : ℝ → ℝ} :
+lemma neg_isLownerConvexOn_iff.{v} {s : Set ℝ} {f : ℝ → ℝ} :
     IsLownerConvexOn.{v} s (fun x => -f x) ↔ IsLownerConcaveOn.{v} s f := by
   refine forall_congr' fun m => forall_congr' fun _ => forall_congr' fun _ => ?_
   have : (fun A : Matrix m m ℂ => cfc (fun x => -f x) A) = -fun A => cfc f A := by
@@ -160,7 +161,7 @@ lemma IsLownerConcaveOn.subset.{v} {s t : Set ℝ} {f : ℝ → ℝ} (h : IsLown
     ht.convex_setOf_isSelfAdjoint_spectrum_subset
 
 /-- Löwner monotonicity on `s` restricts to any `t ⊆ s`. -/
-lemma IsLownerMonotoneOn.subset.{v} {s t : Set ℝ} {f : ℝ → ℝ} (h : IsLownerMonotoneOn.{v} s f)
+lemma IsLownerMonotoneOn.mono.{v} {s t : Set ℝ} {f : ℝ → ℝ} (h : IsLownerMonotoneOn.{v} s f)
     (hts : t ⊆ s) : IsLownerMonotoneOn.{v} t f :=
   fun m _ _ => (h m).mono fun _ hA => ⟨hA.1, hA.2.trans hts⟩
 
@@ -195,7 +196,8 @@ lemma IsLownerConvexOn.comp_isLownerConcaveOn.{v} {s t : Set ℝ} {g f : ℝ →
           (cfc_mem_setOf_isSelfAdjoint_spectrum_subset hst hAB) ((hf m).2 hA hB ha hb hab)
     _ ≤ a • cfc g (cfc f A) + b • cfc g (cfc f B) := (hg m).2 hfA hfB ha hb hab
 
-/-- Jensen convexity (HPJ sense) on `[0, ∞)`: compression inequality for two terms.
+/-- Jensen convexity in the sense of Hansen–Pedersen–Jensen (HPJ) on `[0, ∞)`: the compression
+inequality for two terms.
 For A†A + B†B ≤ I and PSD T₁, T₂:
 f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B. The domain is the positive semidefinite cone:
 `A = B = 0` is allowed, which forces `f 0 ≤ 0` (`Matrix.isJensenConvex_iff`). -/
@@ -609,7 +611,7 @@ lemma rpow_isLownerMonotoneOn {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
 /-- The negated power function `-tˢ` (`0 ≤ s ≤ 1`) is Löwner convex on `[0, ∞)`. -/
 lemma neg_rpow_isLownerConvexOn {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     IsLownerConvexOn (Ici 0) (fun t => -(t ^ s)) :=
-  isLownerConvexOn_neg_iff.2 (rpow_isLownerConcaveOn hs0 hs1)
+  neg_isLownerConvexOn_iff.2 (rpow_isLownerConcaveOn hs0 hs1)
 
 /-- The matrix logarithm is Löwner monotone on `(0, ∞)` (Mathlib's `CFC.log_monotoneOn`). On
 `[0, ∞)` it is not (`not_log_isLownerMonotoneOn_Ici`). -/
@@ -678,19 +680,19 @@ lemma rpow_isLownerConvexOn_of_nonpos {p : ℝ} (hp1 : -1 ≤ p) (hp0 : p ≤ 0)
   simp only [Function.comp_apply]
   rw [← Real.rpow_neg (le_of_lt ht), neg_neg]
 
-/-- The function `f(t) = −t^s` is Jensen convex for `0 < s ≤ 1`, by
-`isJensenConvex_of_isLownerConvexOn`: `f` is Löwner convex and `f(0) = 0`. -/
-lemma neg_rpow_isJensenConvex.{v} {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1) :
-    IsJensenConvex.{v} (fun t => -(t ^ s)) := by
-  apply isJensenConvex_of_isLownerConvexOn.{v} (neg_rpow_isLownerConvexOn hs0.le hs1)
-  simp only [Real.zero_rpow (ne_of_gt hs0), neg_zero]
-  exact le_refl 0
+/-- The function `f(t) = −t^s` is Jensen convex for `0 ≤ s ≤ 1`, by
+`isJensenConvex_of_isLownerConvexOn`: `f` is Löwner convex and `f(0) ≤ 0` (`f(0) = 0` for
+`s > 0`, and `f ≡ -1` for `s = 0`). -/
+lemma neg_rpow_isJensenConvex.{v} {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    IsJensenConvex.{v} (fun t => -(t ^ s)) :=
+  isJensenConvex_of_isLownerConvexOn.{v} (neg_rpow_isLownerConvexOn hs0 hs1)
+    (neg_nonpos.mpr (Real.rpow_nonneg le_rfl s))
 
 /-- **Jensen's operator inequality** (Hansen–Pedersen), two-term affine case: for `f` Löwner
 convex on `[0, ∞)`, `A†A + B†B = I` and positive semidefinite `T₁, T₂`,
 `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`. No condition on `f(0)` is needed; compare
 `isJensenConvex_of_isLownerConvexOn`, where `A†A + B†B ≤ I` forces `f(0) ≤ 0`. -/
-lemma hpj_affine.{v} {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Ici 0) f)
+lemma IsLownerConvexOn.cfc_affine_le.{v} {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Ici 0) f)
     {m : Type v} [Fintype m] [DecidableEq m]
     (A B T₁ T₂ : Matrix m m ℂ)
     (hT₁ : T₁.PosSemidef) (hT₂ : T₂.PosSemidef)
@@ -706,8 +708,9 @@ lemma hpj_affine.{v} {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Ici 0) f)
 
 /-! ### Consequences for the CFC real power
 
-Positive semidefiniteness of real powers, unfolded operator concavity, and
-monotonicity of the trace pairing. Together with Löwner–Heinz monotonicity
+Unfolded operator concavity of real powers and monotonicity of the trace pairing (positive
+semidefiniteness of real powers is `Matrix.posSemidef_rpow` in `HermitianFunctionalCalculus.lean`).
+Together with Löwner–Heinz monotonicity
 (`Matrix.rpow_le_rpow` in `LiebConcavity.lean`, a wrapper around Mathlib's
 `CFC.rpow_le_rpow`), they extend Lieb's joint concavity from the boundary case
 `p + q = 1` to the full region `p + q ≤ 1`

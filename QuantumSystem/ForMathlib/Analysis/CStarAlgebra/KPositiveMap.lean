@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
 /-!
 # `k`-positive maps
@@ -18,14 +19,16 @@ Mathlib's structure and morphism class.
 
 The main result is the **Kadison–Schwarz inequality** of Choi (*A Schwarz inequality for positive
 linear maps on C⋆-algebras*, Illinois J. Math. 18 (1974)): a `2`-positive map with `φ 1 ≤ 1`
-satisfies `φ(a)⋆ φ(a) ≤ φ(a⋆ a)`. As completely positive maps are `2`-positive, it applies to them.
+satisfies `φ(a)⋆ φ(a) ≤ φ(a⋆ a)`, and every `2`-positive map satisfies
+`φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)`. As completely positive maps are `2`-positive, it applies to them.
 
 ## Main definitions
 
 * `KPositiveMap k A₁ A₂` — `k`-positive ℂ-linear maps.
 * `KPositiveMapClass F k A₁ A₂` — the corresponding morphism class. As
   `CompletelyPositiveMapClass`, it records only the order property and is meant to be used
-  together with `LinearMapClass`.
+  together with `LinearMapClass`; unlike that class, `A₁` and `A₂` are `outParam`s, so that
+  `KPositiveMapClass.le_map_star_mul φ hφ a` elaborates without an expected type.
 
 ## Main results
 
@@ -34,6 +37,8 @@ satisfies `φ(a)⋆ φ(a) ≤ φ(a⋆ a)`. As completely positive maps are `2`-p
 * `CompletelyPositiveMap.instKPositiveMapClass` — completely positive maps are `k`-positive.
 * `KPositiveMapClass.le_map_star_mul` — the Kadison–Schwarz inequality for `2`-positive maps with
   `φ 1 ≤ 1`.
+* `KPositiveMapClass.le_norm_smul_map_star_mul` — the unnormalised Kadison–Schwarz inequality
+  `φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` for every `2`-positive map.
 -/
 
 @[expose] public section
@@ -72,7 +77,9 @@ structure KPositiveMap (k : ℕ) (A₁ : Type*) (A₂ : Type*) [NonUnitalCStarAl
     0 ≤ M.map toLinearMap
 
 /-- The morphism class of `k`-positive maps. As `CompletelyPositiveMapClass`, it records only the
-order property and is meant to be used together with `LinearMapClass`. -/
+order property and is meant to be used together with `LinearMapClass`. Unlike that class, `A₁` and
+`A₂` are `outParam`s, determined by `F`, so that lemmas about `φ : F` elaborate without an expected
+type. -/
 class KPositiveMapClass (F : Type*) (k : ℕ) (A₁ A₂ : outParam Type*)
     [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂]
     [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂] : Prop where
@@ -115,13 +122,28 @@ variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂] [PartialO
   [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂] [LinearMapClass F ℂ A₁ A₂]
   [KPositiveMapClass F 2 A₁ A₂]
 
-/-- **Kadison–Schwarz inequality** (Choi 1974): a `2`-positive map with `φ 1 ≤ 1` satisfies
-`φ(a)⋆ φ(a) ≤ φ(a⋆ a)`. The matrix `!![1, a; a⋆, a⋆ a] = X⋆ X`, `X = !![1, a; 0, 0]`, is positive,
-hence so is `N = !![φ 1, b; φ(a⋆), c]` with `b = φ a`, `c = φ(a⋆ a)` by `2`-positivity; being
-self-adjoint, `N` has `φ(a⋆) = b⋆`. The lower-right entry of `Y⋆ N Y`, `Y = !![1, -b; 0, 1]`, is
-`c - 2 b⋆ b + b⋆ φ(1) b ≤ c - b⋆ b` and is positive (`CStarMatrix.diag_nonneg`). -/
-theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
-    star (φ a) * φ a ≤ φ (star a * a) := by
+omit [LinearMapClass F ℂ A₁ A₂] in
+/-- A `2`-positive map sends `y⋆ y` to a nonnegative element: it is the upper-left entry of the
+image of `X⋆ X`, `X = !![y, 0; 0, 0]` (`CStarMatrix.diag_nonneg`). -/
+theorem map_star_mul_self_nonneg (φ : F) (y : A₁) : 0 ≤ φ (star y * y) := by
+  let X : CStarMatrix (Fin 2) (Fin 2) A₁ := CStarMatrix.ofMatrix !![y, 0; 0, 0]
+  have h := CStarMatrix.diag_nonneg (map_cstarMatrix_nonneg' φ _ (star_mul_self_nonneg X)) (i := 0)
+  simpa [X, CStarMatrix.mul_apply, CStarMatrix.star_apply, CStarMatrix.map_apply,
+    Fin.sum_univ_two] using h
+
+omit [LinearMapClass F ℂ A₁ A₂] in
+/-- A `2`-positive map sends `1` to a nonnegative element. -/
+theorem map_one_nonneg (φ : F) : 0 ≤ φ 1 := by
+  simpa using map_star_mul_self_nonneg φ (1 : A₁)
+
+/-- The core estimate of Choi's proof of the Kadison–Schwarz inequality, with no normalisation of
+`φ 1`: for a `2`-positive map `φ` and `b = φ a`,
+`0 ≤ φ(a⋆ a) - b⋆ b - b⋆ b + b⋆ φ(1) b`. The matrix `!![1, a; a⋆, a⋆ a] = X⋆ X`,
+`X = !![1, a; 0, 0]`, is positive, hence so is `N = !![φ 1, b; φ(a⋆), φ(a⋆ a)]` by `2`-positivity;
+being self-adjoint, `N` has `φ(a⋆) = b⋆`. The right-hand side is the lower-right entry of `Y⋆ N Y`,
+`Y = !![1, -b; 0, 1]`, which is positive (`CStarMatrix.diag_nonneg`). -/
+theorem sub_star_mul_add_star_mul_map_one_mul_nonneg (φ : F) (a : A₁) :
+    0 ≤ φ (star a * a) - star (φ a) * φ a - star (φ a) * φ a + star (φ a) * φ 1 * φ a := by
   set b := φ a
   let X : CStarMatrix (Fin 2) (Fin 2) A₁ := CStarMatrix.ofMatrix !![1, a; 0, 0]
   let Y : CStarMatrix (Fin 2) (Fin 2) A₂ := CStarMatrix.ofMatrix !![1, -b; 0, 1]
@@ -142,11 +164,72 @@ theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
       CStarMatrix.map_apply, Fin.sum_univ_two, Matrix.cons_val_zero, map_add, star_neg, star_one, one_mul,
       star_zero, zero_mul, map_zero, add_zero, neg_mul, mul_one, hstar, mul_neg, Y, b, X]
     noncomm_ring
+  rwa [h₂] at h₁
+
+/-- **Kadison–Schwarz inequality** (Choi 1974): a `2`-positive map with `φ 1 ≤ 1` satisfies
+`φ(a)⋆ φ(a) ≤ φ(a⋆ a)`. With `b = φ a`, `sub_star_mul_add_star_mul_map_one_mul_nonneg` gives
+`0 ≤ φ(a⋆ a) - 2 b⋆ b + b⋆ φ(1) b`, and `b⋆ φ(1) b ≤ b⋆ b`. The unnormalised form is
+`KPositiveMapClass.le_norm_smul_map_star_mul`. -/
+theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
+    star (φ a) * φ a ≤ φ (star a * a) := by
+  set b := φ a
+  have h₁ := sub_star_mul_add_star_mul_map_one_mul_nonneg φ a
   have h₃ : star b * φ 1 * b ≤ star b * b := by
     simpa using star_left_conjugate_le_conjugate hφ b
-  rw [h₂] at h₁
   rw [← sub_nonneg]
   calc (0 : A₂) ≤ _ + (star b * b - star b * φ 1 * b) := add_nonneg h₁ (sub_nonneg.mpr h₃)
     _ = φ (star a * a) - star b * b := by noncomm_ring
+
+/-- **Kadison–Schwarz inequality**, unnormalised form (Choi 1974): every `2`-positive map satisfies
+`φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)`. For `μ ≥ 0` the map `μ • φ` is `2`-positive, and
+`sub_star_mul_add_star_mul_map_one_mul_nonneg` for it, with `b⋆ φ(1) b ≤ ‖φ 1‖ • b⋆ b`
+(`CStarAlgebra.star_left_conjugate_le_norm_smul`), gives `(2μ² - μ³ ‖φ 1‖) • b⋆ b ≤ μ • φ(a⋆ a)`. Take
+`μ = ‖φ 1‖⁻¹` when `φ 1 ≠ 0`; when `φ 1 = 0` let `μ → ∞` to get `b⋆ b = 0`. -/
+theorem le_norm_smul_map_star_mul (φ : F) (a : A₁) :
+    star (φ a) * φ a ≤ ‖φ 1‖ • φ (star a * a) := by
+  set b := φ a
+  set c := φ (star a * a)
+  set l := ‖φ 1‖
+  have hX : 0 ≤ star b * b := star_mul_self_nonneg b
+  have key (μ : ℝ) (hμ : 0 ≤ μ) : (2 * μ ^ 2 - μ ^ 3 * l) • (star b * b) ≤ μ • c := by
+    let ψ : KPositiveMap 2 A₁ A₂ :=
+      { toLinearMap := μ • (φ : A₁ →ₗ[ℂ] A₂)
+        map_cstarMatrix_nonneg' := fun M hM => by
+          have hM' : M.map (μ • (φ : A₁ →ₗ[ℂ] A₂)) = μ • M.map φ := by ext i j; rfl
+          rw [hM']
+          exact smul_nonneg hμ (map_cstarMatrix_nonneg' φ M hM) }
+    have hψ (x : A₁) : ψ x = μ • φ x := rfl
+    have h := sub_star_mul_add_star_mul_map_one_mul_nonneg ψ a
+    simp only [hψ, star_smul, star_trivial, smul_mul_smul_comm] at h
+    have hconj : star b * φ 1 * b ≤ l • (star b * b) := by
+      exact CStarAlgebra.star_left_conjugate_le_norm_smul b (φ 1)
+        (IsSelfAdjoint.of_nonneg (map_one_nonneg φ))
+    have h' := add_nonneg h
+      (sub_nonneg.2 (smul_le_smul_of_nonneg_left hconj (pow_nonneg hμ 3)))
+    rw [← sub_nonneg]
+    convert h' using 1
+    module
+  rcases (norm_nonneg (φ 1)).eq_or_lt with hl | hl
+  · -- `φ 1 = 0`: `2 μ² ‖b⋆ b‖ ≤ μ ‖c‖` for every `μ ≥ 0` forces `b⋆ b = 0`.
+    have hl0 : l = 0 := hl.symm
+    suffices hb : star b * b = 0 by rw [hb, hl0, zero_smul]
+    by_contra hne
+    have hpos : 0 < ‖star b * b‖ := norm_pos_iff.2 hne
+    set μ := ‖c‖ / ‖star b * b‖ + 1
+    have hμ : 0 < μ := by positivity
+    have hk := key μ hμ.le
+    rw [hl0, mul_zero, sub_zero] at hk
+    have h := CStarAlgebra.norm_le_norm_of_le_of_nonneg hk (smul_nonneg (by positivity) hX)
+    rw [norm_smul, norm_smul, Real.norm_of_nonneg (by positivity), Real.norm_of_nonneg hμ.le] at h
+    have : μ * ‖star b * b‖ = ‖c‖ + ‖star b * b‖ := by
+      simp only [μ]; field_simp
+    nlinarith [norm_nonneg c]
+  · -- `φ 1 ≠ 0`: take `μ = ‖φ 1‖⁻¹` and multiply by `‖φ 1‖²`.
+    have hl' : l ≠ 0 := hl.ne'
+    have h := smul_le_smul_of_nonneg_left (key l⁻¹ (inv_nonneg.2 hl.le)) (sq_nonneg l)
+    rw [smul_smul, smul_smul] at h
+    have e₁ : l ^ 2 * (2 * l⁻¹ ^ 2 - l⁻¹ ^ 3 * l) = 1 := by field_simp; ring
+    have e₂ : l ^ 2 * l⁻¹ = l := by field_simp
+    rwa [e₁, e₂, one_smul] at h
 
 end KPositiveMapClass
