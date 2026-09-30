@@ -5,7 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.LinearAlgebra.Matrix.Trace
 
 /-!
@@ -16,8 +15,6 @@ Notations and abbreviations for quantum information theory.
 <table>
 <tr><th>Symbol</th><th>Expansion</th><th>How to activate</th><th>Defined in</th></tr>
 <tr><td><code>Tr A</code></td><td><code>Matrix.trace A</code></td>
-  <td>always available (prefix notation)</td><td>this file</td></tr>
-<tr><td><code>reTr A</code></td><td><code>Matrix.reTr A</code> (<code>(Tr A).re</code>)</td>
   <td>always available (prefix notation)</td><td>this file</td></tr>
 <tr><td><code>log ρ</code></td><td><code>DensityMatrix.log ρ</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
@@ -62,11 +59,3 @@ Notations and abbreviations for quantum information theory.
 -- `Tr A` is notation for `Matrix.trace A`.
 
 prefix:max "Tr " => Matrix.trace
-
-/-- Real part of the trace for complex matrices: `reTr A = Re(Tr A)`.
-Useful for entropy definitions where the trace of a Hermitian product is real. -/
-noncomputable abbrev Matrix.reTr {n : Type*} [Fintype n] (A : Matrix n n ℂ) : ℝ := (Tr A).re
-
--- `reTr A` is notation for `Matrix.reTr A`.
-
-prefix:max "reTr " => Matrix.reTr
