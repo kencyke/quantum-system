@@ -26,7 +26,8 @@ The operator-convexity inputs (Löwner convexity, Jensen's operator inequality) 
 ## Main results
 
 * `Matrix.matrixPerspective_joint_convex`: **Effros's theorem**, joint convexity of the matrix
-  perspective of a Löwner convex `f` on positive semidefinite `L` and positive definite `R`.
+  perspective of an `f` Löwner convex on `[0, ∞)`, on positive semidefinite `L` and positive
+  definite `R`.
 * `Matrix.matrixPerspective_neg_leftRight_eq`: for `f(x) = -xᵖ`, the perspective of `(𝐋 A, 𝐑 B)`
   is `-(𝐋 (Aᵖ) · 𝐑 (B¹⁻ᵖ))`, which turns Effros's theorem into Lieb's concavity theorem.
 
@@ -409,11 +410,12 @@ lemma perspective_sandwich_eq {n : Type*} [Fintype n]
   rw [mul_sub, sub_mul, mul_add, add_mul, h₁, h₂, hZ]
 
 /-- **Effros's theorem**: the matrix perspective `(L, R) ↦ R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}`
-of a Löwner convex `f` is jointly convex on positive semidefinite `L` and positive definite `R`.
+of an `f` Löwner convex on `[0, ∞)` is jointly convex on positive semidefinite `L` and positive
+definite `R`.
 No condition on `f(0)` is needed: the weights `Aᵢ = (wᵢRᵢ)^{1/2} R^{-1/2}` satisfy
 `A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `hpj_affine` applies. -/
 theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f)
+    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Set.Ici 0) f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
     (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef)
     (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)

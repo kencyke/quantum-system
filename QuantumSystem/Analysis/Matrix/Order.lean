@@ -5,8 +5,12 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Order
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.RingInverseOrder
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Unital
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 
@@ -18,33 +22,51 @@ and related operator-convexity results.
 
 ## Main definitions
 
-- `Matrix.IsLownerMonotone f`, `Matrix.IsLownerConvex f`, `Matrix.IsLownerConcave f`: in every
-  matrix dimension, `A ↦ f(A)` is monotone / convex / concave on positive semidefinite matrices
-  in the Löwner order, stated with Mathlib's `MonotoneOn`, `ConvexOn`, `ConcaveOn` on `Set.Ici 0`.
+- `Matrix.IsLownerMonotoneOn s f`, `Matrix.IsLownerAntitoneOn s f`, `Matrix.IsLownerConvexOn s f`,
+  `Matrix.IsLownerConcaveOn s f`: in every matrix dimension, `A ↦ f(A)` is monotone / antitone /
+  convex / concave in the Löwner order on self-adjoint matrices with spectrum in `s`, stated with
+  Mathlib's `MonotoneOn`, `AntitoneOn`, `ConvexOn`, `ConcaveOn`. For `s = [0, ∞)` the domain is the
+  positive semidefinite cone `Set.Ici 0`, for `s = (0, ∞)` the positive definite matrices
+  `{A | IsStrictlyPositive A}`; `s` is meant to be an interval, since for an `s` with a gap the
+  domain is not convex and the convex / concave predicates fail for every `f`. The domain is a
+  parameter because `Real.log 0 = 0` and `0 ^ p = 0` for `p < 0`: the logarithm is Löwner monotone
+  and concave, and `tᵖ` (`-1 ≤ p < 0`) Löwner convex, on `(0, ∞)`, but the logarithm is not Löwner
+  monotone on `[0, ∞)` (`Matrix.not_log_isLownerMonotoneOn_Ici`).
 - `Matrix.IsJensenConvex f`: for A†A + B†B ≤ I and positive semidefinite T₁, T₂,
   f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B.
-- `Matrix.IsJensenConcave f`: −f is Jensen convex.
 
 ## Main results
 
-- `Matrix.lownerConvex_compression_le`: f(V†TV) ≤ V†f(T)V for Löwner convex f with f(0) ≤ 0
-  and V†V ≤ I.
-- `Matrix.isJensenConvex_of_isLownerConvex`: Löwner convexity with f(0) ≤ 0 implies
-  Jensen (HPJ) convexity. Follows the defect-matrix proof of Hansen-Pedersen 1981.
-- `Matrix.rpow_isLownerConcave`: the power function tˢ (0 ≤ s ≤ 1) is Löwner concave
-  (Mathlib's `CFC.concaveOn_rpow`).
-- `Matrix.neg_rpow_isLownerConvex`: −tˢ is Löwner convex.
-- `Matrix.neg_rpow_isJensenConvex`: −tˢ is Jensen convex (0 < s ≤ 1).
-- `Matrix.lownerConvex_isometry_compression_le`: f(W†TW) ≤ W†f(T)W for Löwner convex f and an
-  isometry W, with no condition on f(0).
-- `Matrix.hpj_affine`: Jensen's operator inequality for Löwner convex f and A†A + B†B = I.
+- `Matrix.lownerConvex_compression_le`: f(V†TV) ≤ V†f(T)V for f Löwner convex on `[0, ∞)` with
+  f(0) ≤ 0 and V†V ≤ I.
+- `Matrix.isJensenConvex_iff` (Hansen–Pedersen 1982): f is Jensen convex iff it is Löwner convex
+  on `[0, ∞)` and f(0) ≤ 0. The direction `Matrix.isJensenConvex_of_isLownerConvexOn` follows
+  the defect-matrix proof of Hansen–Pedersen; the converse is `Matrix.IsJensenConvex.isLownerConvexOn`
+  with `Matrix.IsJensenConvex.map_zero_nonpos`.
+- `Matrix.IsLownerConvexOn.comp_isLownerConcaveOn`: a Löwner convex and antitone function of a
+  Löwner concave function is Löwner convex.
+- `Matrix.lownerConvex_isometry_compression_le`: f(W†TW) ≤ W†f(T)W for f Löwner convex on
+  `[0, ∞)` and an isometry W, with no condition on f(0).
+- `Matrix.hpj_affine`: Jensen's operator inequality for f Löwner convex on `[0, ∞)` and
+  A†A + B†B = I.
+- `Matrix.rpow_isLownerMonotoneOn`, `Matrix.rpow_isLownerConcaveOn`: tˢ (0 ≤ s ≤ 1) is Löwner
+  monotone and concave on `[0, ∞)` (Löwner–Heinz; Mathlib's `CFC.monotone_rpow`,
+  `CFC.concaveOn_rpow`), and `Matrix.neg_rpow_isLownerConvexOn`, `Matrix.neg_rpow_isJensenConvex`.
+- `Matrix.log_isLownerMonotoneOn`, `Matrix.log_isLownerConcaveOn`: log is Löwner monotone and
+  concave on `(0, ∞)`; `Matrix.not_log_isLownerMonotoneOn_Ici`: not monotone on `[0, ∞)`.
+- `Matrix.inv_isLownerConvexOn`, `Matrix.inv_isLownerAntitoneOn`: t⁻¹ is Löwner convex and
+  antitone on `(0, ∞)`.
+- `Matrix.rpow_isLownerConvexOn_of_nonpos`: tᵖ (−1 ≤ p ≤ 0) is Löwner convex on `(0, ∞)`.
 - `Matrix.rpow_concavity_le`: operator concavity of xˢ in unfolded form.
 
 ## References
 
 * Effros, *A Matrix Convexity Approach to Some Celebrated Quantum Inequalities* (2008)
-* Hansen, Pedersen, *Jensen's operator inequality* (1981)
-* Bhatia, *Matrix Analysis*, Theorem V.2.5 (1997)
+* F. Hansen, G. K. Pedersen, *Jensen's inequality for operators and Löwner's theorem*,
+  Math. Ann. 258 (1982), 229–241
+* F. Hansen, G. K. Pedersen, *Jensen's operator inequality*, Bull. London Math. Soc. 35 (2003),
+  553–564
+* Bhatia, *Matrix Analysis*, Chapter V (1997)
 -/
 @[expose] public section
 
@@ -53,43 +75,130 @@ namespace Matrix
 open Real NNReal Set
 open scoped MatrixOrder ComplexOrder NNReal
 
-/-- A real function `f` is **Löwner monotone** (operator monotone) on `[0, ∞)`: in every matrix
-dimension, `A ↦ f(A)` is monotone on positive semidefinite matrices in the Löwner order. -/
-def IsLownerMonotone (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m],
-    MonotoneOn (fun A : Matrix m m ℂ => cfc f A) (Set.Ici 0)
+/-! ### Löwner monotone, antitone, convex and concave functions
 
-/-- A real function `f` is **Löwner convex** (operator convex) on `[0, ∞)`: in every matrix
-dimension, `A ↦ f(A)` is convex on positive semidefinite matrices in the Löwner order. -/
-def IsLownerConvex (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m],
-    ConvexOn ℝ (Set.Ici (0 : Matrix m m ℂ)) (fun A => cfc f A)
+The domain of `A ↦ f(A)` is the set of self-adjoint matrices with spectrum in `s`. For
+`s = [0, ∞)` this is the positive semidefinite cone `Set.Ici 0`
+(`setOf_isSelfAdjoint_spectrum_subset_Ici`), and for `s = (0, ∞)` the positive definite matrices
+`{A | IsStrictlyPositive A}` (`setOf_isSelfAdjoint_spectrum_subset_Ioi`). The domain is convex when
+`s` is an interval (`Set.OrdConnected.convex_setOf_isSelfAdjoint_spectrum_subset`). -/
 
-/-- A real function `f` is **Löwner concave** (operator concave) on `[0, ∞)`: in every matrix
-dimension, `A ↦ f(A)` is concave on positive semidefinite matrices in the Löwner order. -/
-def IsLownerConcave (f : ℝ → ℝ) : Prop :=
+/-- A real function `f` is **Löwner monotone** (operator monotone) on `s ⊆ ℝ`: in every matrix
+dimension, `A ↦ f(A)` is monotone in the Löwner order on self-adjoint matrices with spectrum in
+`s`. -/
+def IsLownerMonotoneOn (s : Set ℝ) (f : ℝ → ℝ) : Prop :=
   ∀ (m : Type*) [Fintype m] [DecidableEq m],
-    ConcaveOn ℝ (Set.Ici (0 : Matrix m m ℂ)) (fun A => cfc f A)
+    MonotoneOn (fun A : Matrix m m ℂ => cfc f A) {A | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s}
 
-/-- Löwner convexity in unfolded form: `f(tA + (1-t)B) ≤ t f(A) + (1-t) f(B)` for positive
-semidefinite `A, B` and `t ∈ [0, 1]`. -/
-lemma IsLownerConvex.cfc_le.{v} {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f)
+/-- A real function `f` is **Löwner antitone** (operator antitone) on `s ⊆ ℝ`: in every matrix
+dimension, `A ↦ f(A)` is antitone in the Löwner order on self-adjoint matrices with spectrum in
+`s`. -/
+def IsLownerAntitoneOn (s : Set ℝ) (f : ℝ → ℝ) : Prop :=
+  ∀ (m : Type*) [Fintype m] [DecidableEq m],
+    AntitoneOn (fun A : Matrix m m ℂ => cfc f A) {A | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s}
+
+/-- A real function `f` is **Löwner convex** (operator convex) on `s ⊆ ℝ`: in every matrix
+dimension, `A ↦ f(A)` is convex in the Löwner order on self-adjoint matrices with spectrum in
+`s`. This requires `s` to be an interval, since `ConvexOn` includes convexity of the domain. -/
+def IsLownerConvexOn (s : Set ℝ) (f : ℝ → ℝ) : Prop :=
+  ∀ (m : Type*) [Fintype m] [DecidableEq m],
+    ConvexOn ℝ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s} (fun A => cfc f A)
+
+/-- A real function `f` is **Löwner concave** (operator concave) on `s ⊆ ℝ`: in every matrix
+dimension, `A ↦ f(A)` is concave in the Löwner order on self-adjoint matrices with spectrum in
+`s`. This requires `s` to be an interval, since `ConcaveOn` includes convexity of the domain. -/
+def IsLownerConcaveOn (s : Set ℝ) (f : ℝ → ℝ) : Prop :=
+  ∀ (m : Type*) [Fintype m] [DecidableEq m],
+    ConcaveOn ℝ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s} (fun A => cfc f A)
+
+/-- A positive semidefinite matrix lies in the domain for `s = [0, ∞)`. -/
+lemma PosSemidef.mem_setOf_isSelfAdjoint_spectrum_subset_Ici {m : Type*} [Fintype m]
+    [DecidableEq m] {A : Matrix m m ℂ} (hA : A.PosSemidef) :
+    A ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ Ici 0} := by
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ici]
+  exact hA.nonneg
+
+/-- A positive definite matrix lies in the domain for `s = (0, ∞)`. -/
+lemma PosDef.mem_setOf_isSelfAdjoint_spectrum_subset_Ioi {m : Type*} [Fintype m]
+    [DecidableEq m] {A : Matrix m m ℂ} (hA : A.PosDef) :
+    A ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ Ioi 0} := by
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  exact hA.isStrictlyPositive
+
+/-- Löwner convexity in unfolded form: `f(tA + (1-t)B) ≤ t f(A) + (1-t) f(B)` for `A, B` in the
+domain and `t ∈ [0, 1]`. -/
+lemma IsLownerConvexOn.cfc_le.{v} {s : Set ℝ} {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} s f)
     {m : Type v} [Fintype m] [DecidableEq m] {A B : Matrix m m ℂ}
-    (hA : A.PosSemidef) (hB : B.PosSemidef) {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    (hA : A ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s})
+    (hB : B ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s})
+    {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
     cfc f (t • A + (1 - t) • B) ≤ t • cfc f A + (1 - t) • cfc f B :=
-  (hconv m).2 hA.nonneg hB.nonneg ht0 (sub_nonneg.2 ht1) (add_sub_cancel t 1)
+  (hconv m).2 hA hB ht0 (sub_nonneg.2 ht1) (add_sub_cancel t 1)
 
 /-- `f` is Löwner convex iff `-f` is Löwner concave. -/
-lemma isLownerConvex_neg_iff.{v} {f : ℝ → ℝ} :
-    IsLownerConvex.{v} (fun x => -f x) ↔ IsLownerConcave.{v} f := by
+lemma isLownerConvexOn_neg_iff.{v} {s : Set ℝ} {f : ℝ → ℝ} :
+    IsLownerConvexOn.{v} s (fun x => -f x) ↔ IsLownerConcaveOn.{v} s f := by
   refine forall_congr' fun m => forall_congr' fun _ => forall_congr' fun _ => ?_
   have : (fun A : Matrix m m ℂ => cfc (fun x => -f x) A) = -fun A => cfc f A := by
     funext A; simp [cfc_neg]
   rw [this, neg_convexOn_iff]
 
-/-- Jensen convexity (HPJ sense): compression inequality for two terms.
+/-- Löwner convexity only depends on the values of `f` on `s`. -/
+lemma IsLownerConvexOn.congr.{v} {s : Set ℝ} {f g : ℝ → ℝ} (h : IsLownerConvexOn.{v} s f)
+    (hfg : EqOn f g s) : IsLownerConvexOn.{v} s g :=
+  fun m _ _ => (h m).congr fun _ hA => cfc_congr fun _ hx => hfg (hA.2 hx)
+
+/-- Löwner antitonicity only depends on the values of `f` on `s`. -/
+lemma IsLownerAntitoneOn.congr.{v} {s : Set ℝ} {f g : ℝ → ℝ} (h : IsLownerAntitoneOn.{v} s f)
+    (hfg : EqOn f g s) : IsLownerAntitoneOn.{v} s g :=
+  fun m _ _ => (h m).congr fun _ hA => cfc_congr fun _ hx => hfg (hA.2 hx)
+
+/-- Löwner concavity on `s` restricts to any interval `t ⊆ s`. -/
+lemma IsLownerConcaveOn.subset.{v} {s t : Set ℝ} {f : ℝ → ℝ} (h : IsLownerConcaveOn.{v} s f)
+    (hts : t ⊆ s) (ht : t.OrdConnected) : IsLownerConcaveOn.{v} t f :=
+  fun m _ _ => (h m).subset (fun _ hA => ⟨hA.1, hA.2.trans hts⟩)
+    ht.convex_setOf_isSelfAdjoint_spectrum_subset
+
+/-- Löwner monotonicity on `s` restricts to any `t ⊆ s`. -/
+lemma IsLownerMonotoneOn.subset.{v} {s t : Set ℝ} {f : ℝ → ℝ} (h : IsLownerMonotoneOn.{v} s f)
+    (hts : t ⊆ s) : IsLownerMonotoneOn.{v} t f :=
+  fun m _ _ => (h m).mono fun _ hA => ⟨hA.1, hA.2.trans hts⟩
+
+/-- `f(A)` lies in the domain for `t` when `A` lies in the domain for `s` and `f` maps `s` into
+`t`. -/
+private lemma cfc_mem_setOf_isSelfAdjoint_spectrum_subset {m : Type*} [Fintype m] [DecidableEq m]
+    {s t : Set ℝ} {f : ℝ → ℝ} (hst : MapsTo f s t) {A : Matrix m m ℂ}
+    (hA : A ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s}) :
+    cfc f A ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ t} := by
+  refine ⟨cfc_predicate f A, ?_⟩
+  rw [cfc_map_spectrum (f := f) (a := A) hA.1 (finite_real_spectrum.continuousOn _)]
+  exact image_subset_iff.2 fun _ hx => hst (hA.2 hx)
+
+/-- A Löwner convex and antitone function of a Löwner concave function is Löwner convex. -/
+lemma IsLownerConvexOn.comp_isLownerConcaveOn.{v} {s t : Set ℝ} {g f : ℝ → ℝ}
+    (hg : IsLownerConvexOn.{v} t g) (hg' : IsLownerAntitoneOn.{v} t g)
+    (hf : IsLownerConcaveOn.{v} s f) (hst : MapsTo f s t) :
+    IsLownerConvexOn.{v} s (g ∘ f) := by
+  intro m _ _
+  have hcomp : ∀ A : Matrix m m ℂ, IsSelfAdjoint A → cfc (g ∘ f) A = cfc g (cfc f A) :=
+    fun A hA => cfc_comp g f A hA ((finite_real_spectrum.image f).continuousOn _)
+      (finite_real_spectrum.continuousOn _)
+  refine ⟨(hf m).1, fun A hA B hB a b ha hb hab => ?_⟩
+  have hAB := (hf m).1 hA hB ha hb hab
+  have hfA := cfc_mem_setOf_isSelfAdjoint_spectrum_subset hst hA
+  have hfB := cfc_mem_setOf_isSelfAdjoint_spectrum_subset hst hB
+  simp only
+  rw [hcomp _ hAB.1, hcomp _ hA.1, hcomp _ hB.1]
+  calc cfc g (cfc f (a • A + b • B))
+      ≤ cfc g (a • cfc f A + b • cfc f B) :=
+        (hg' m) ((hg m).1 hfA hfB ha hb hab)
+          (cfc_mem_setOf_isSelfAdjoint_spectrum_subset hst hAB) ((hf m).2 hA hB ha hb hab)
+    _ ≤ a • cfc g (cfc f A) + b • cfc g (cfc f B) := (hg m).2 hfA hfB ha hb hab
+
+/-- Jensen convexity (HPJ sense) on `[0, ∞)`: compression inequality for two terms.
 For A†A + B†B ≤ I and PSD T₁, T₂:
-f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B. -/
+f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B. The domain is the positive semidefinite cone:
+`A = B = 0` is allowed, which forces `f 0 ≤ 0` (`Matrix.isJensenConvex_iff`). -/
 def IsJensenConvex (f : ℝ → ℝ) : Prop :=
   ∀ (m : Type*) [Fintype m] [DecidableEq m]
     (A B T₁ T₂ : Matrix m m ℂ)
@@ -98,17 +207,6 @@ def IsJensenConvex (f : ℝ → ℝ) : Prop :=
     let fT₁ := cfc f T₁
     let fT₂ := cfc f T₂
     let fC := cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B)
-    fC ≤ Aᴴ * fT₁ * A + Bᴴ * fT₂ * B
-
-/-- Jensen concavity in the HPJ sense: −f is Jensen convex. -/
-def IsJensenConcave (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m]
-    (A B T₁ T₂ : Matrix m m ℂ)
-    (_hT₁ : T₁.PosSemidef) (_hT₂ : T₂.PosSemidef)
-    (_hAB : Aᴴ * A + Bᴴ * B ≤ (1 : Matrix m m ℂ)),
-    let fT₁ := cfc (fun x => -f x) T₁
-    let fT₂ := cfc (fun x => -f x) T₂
-    let fC := cfc (fun x => -f x) (Aᴴ * T₁ * A + Bᴴ * T₂ * B)
     fC ≤ Aᴴ * fT₁ * A + Bᴴ * fT₂ * B
 
 /-- Block diagonal matrix is positive semidefinite if blocks are positive semidefinite. -/
@@ -156,7 +254,7 @@ The proof is the pinching argument: with `P = WW†` and the symmetry `S = 2P - 
 `f(M) ≤ (f(T) + S f(T) S)/2`, whose compression by `W` is `W†f(T)W`. -/
 lemma lownerConvex_isometry_compression_le.{v} {k m : Type v} [Fintype k] [Fintype m]
     [DecidableEq k] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f)
+    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Ici 0) f)
     (W : Matrix k m ℂ) (hWW : Wᴴ * W = 1) (T' : Matrix k k ℂ) (hT'_psd : T'.PosSemidef) :
     cfc f (Wᴴ * T' * W) ≤ Wᴴ * cfc f T' * W := by
   classical
@@ -210,7 +308,8 @@ lemma lownerConvex_isometry_compression_le.{v} {k m : Type v} [Fintype k] [Finty
   have hM_eq : M = (1/2 : ℝ) • T' + (1 - 1/2 : ℝ) • (S * T' * S) := by
     simp only [hM_def]; congr 1; congr 1; norm_num
   have hM_herm' : M.IsHermitian := by rw [hM_eq]; exact hM_herm
-  have hconv_app := hconv.cfc_le hT'_psd hST'S_psd (t := 1/2) (by norm_num) (by norm_num)
+  have hconv_app := hconv.cfc_le hT'_psd.mem_setOf_isSelfAdjoint_spectrum_subset_Ici
+    hST'S_psd.mem_setOf_isSelfAdjoint_spectrum_subset_Ici (t := 1/2) (by norm_num) (by norm_num)
   rw [← hM_eq] at hconv_app
   have hT'_sa : IsSelfAdjoint T' := by
     rwa [IsSelfAdjoint, star_eq_conjTranspose]
@@ -287,7 +386,7 @@ The matrix Jensen inequality gives f(W†T'W) ≤ W†f(T')W for Löwner convex 
 Since f(0) ≤ 0 and I - V†V ≥ 0, we have f(0)·(I - V†V) ≤ 0.
 Thus f(V†TV) ≤ V†f(T)V + f(0)·(I - V†V) ≤ V†f(T)V. -/
 lemma lownerConvex_compression_le.{v} {n : Type v} {m : Type v} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f) (hf0 : f 0 ≤ 0)
+    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Ici 0) f) (hf0 : f 0 ≤ 0)
     (V : Matrix n m ℂ) (hVV : Vᴴ * V ≤ 1)
     (T : Matrix n n ℂ) (hT : T.PosSemidef) :
     cfc f (Vᴴ * T * V) ≤ Vᴴ * cfc f T * V := by
@@ -412,8 +511,8 @@ private lemma compression_of_fromBlocks_cfc {m : Type*} [Fintype m] [DecidableEq
   simpa [V] using fromRows_compress_blockDiag
     (A := A) (B := B) (T₁ := cfc f T₁) (T₂ := cfc f T₂)
 
-/-- IsLownerConvex + f(0) ≤ 0 implies HPJ inequality (Matrix Convexity).
-Theorem 3.1 in Effros 2008, originally Hansen-Pedersen 1981 Theorem 2.1 (i)⟹(iii).
+/-- Löwner convexity on `[0, ∞)` with f(0) ≤ 0 implies the HPJ inequality (Jensen convexity).
+Theorem 3.1 in Effros 2008, originally Hansen–Pedersen 1982 Theorem 2.1 (i)⟹(iii).
 
 The proof reduces the 2-term subhomogeneous case to:
 1. A single-term compression inequality: f(V†TV) ≤ V†f(T)V when V†V ≤ I
@@ -421,8 +520,8 @@ The proof reduces the 2-term subhomogeneous case to:
 
 Step 1 uses the defect matrix D = √(I - V†V) and f(0) ≤ 0 to absorb the defect term.
 Step 2 is compression_of_fromBlocks_cfc (already proved). -/
-lemma isJensenConvex_of_isLownerConvex.{v}
-    {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f) (hf0 : f 0 ≤ 0) :
+lemma isJensenConvex_of_isLownerConvexOn.{v}
+    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Ici 0) f) (hf0 : f 0 ≤ 0) :
     IsJensenConvex.{v} f := by
   classical
   intro m _ _ A B T₁ T₂ hT₁ hT₂ hAB
@@ -453,34 +552,145 @@ lemma isJensenConvex_of_isLownerConvex.{v}
         exact lownerConvex_compression_le hconv hf0 V hVV T hT_psd
     _ = Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := hVfTV
 
-/-- **Operator concavity of the power function** (Löwner–Heinz, Bhatia V.2.5): `t ↦ tˢ` is
-Löwner concave for `0 ≤ s ≤ 1`. This is Mathlib's `CFC.concaveOn_rpow` on the C⋆-algebra
-`Matrix.Norms.L2Operator` of matrices. -/
-lemma rpow_isLownerConcave {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
-    IsLownerConcave (fun t => t ^ s) := by
+/-- Jensen convexity implies Löwner convexity on `[0, ∞)`: take the scalars `A = √t`,
+`B = √(1 - t)` in `IsJensenConvex`. -/
+lemma IsJensenConvex.isLownerConvexOn.{v} {f : ℝ → ℝ} (hJ : IsJensenConvex.{v} f) :
+    IsLownerConvexOn.{v} (Ici 0) f := by
   intro m _ _
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ici]
+  refine ⟨convex_Ici 0, fun T₁ hT₁ T₂ hT₂ a b ha hb hab => ?_⟩
+  have hsq {c : ℝ} (hc : 0 ≤ c) (T : Matrix m m ℂ) :
+      (√c • (1 : Matrix m m ℂ))ᴴ * T * (√c • 1) = c • T := by
+    simp only [conjTranspose_smul, conjTranspose_one, star_trivial, smul_mul_assoc,
+      mul_smul_comm, one_mul, mul_one, smul_smul, Real.mul_self_sqrt hc]
+  have key := hJ m (√a • 1) (√b • 1) T₁ T₂ (nonneg_iff_posSemidef.mp hT₁)
+    (nonneg_iff_posSemidef.mp hT₂) (by
+      rw [← Matrix.mul_one (√a • (1 : Matrix m m ℂ))ᴴ, ← Matrix.mul_one (√b • (1 : Matrix m m ℂ))ᴴ,
+        hsq ha, hsq hb, ← add_smul, hab, one_smul])
+  simp only [hsq ha, hsq hb] at key
+  exact key
+
+/-- Jensen convexity forces `f 0 ≤ 0`: take `A = B = 0` in dimension one. -/
+lemma IsJensenConvex.map_zero_nonpos.{v} {f : ℝ → ℝ} (hJ : IsJensenConvex.{v} f) : f 0 ≤ 0 := by
+  have h := hJ PUnit.{v + 1} 0 0 0 0 PosSemidef.zero PosSemidef.zero (by simp)
+  simp only [Matrix.mul_zero, add_zero] at h
+  rw [← map_zero (algebraMap ℝ (Matrix PUnit.{v + 1} PUnit.{v + 1} ℂ)), cfc_algebraMap] at h
+  exact (le_algebraMap_iff_spectrum_le (IsSelfAdjoint.algebraMap _ (.all _))).1 h _
+    (by rw [spectrum.scalar_eq]; rfl)
+
+/-- **Hansen–Pedersen** (1982, Theorem 2.1, stated there on `[0, α)`; this is the case `α = ∞`):
+`f` is Jensen convex on `[0, ∞)` iff it is Löwner convex on `[0, ∞)` and `f 0 ≤ 0`. -/
+theorem isJensenConvex_iff.{v} {f : ℝ → ℝ} :
+    IsJensenConvex.{v} f ↔ IsLownerConvexOn.{v} (Ici 0) f ∧ f 0 ≤ 0 :=
+  ⟨fun h => ⟨h.isLownerConvexOn, h.map_zero_nonpos⟩,
+    fun h => isJensenConvex_of_isLownerConvexOn h.1 h.2⟩
+
+/-- **Operator concavity of the power function** (Löwner–Heinz; Bhatia, Chapter V): `t ↦ tˢ` is
+Löwner concave on `[0, ∞)` for `0 ≤ s ≤ 1`. This is Mathlib's `CFC.concaveOn_rpow` on the
+C⋆-algebra `Matrix.Norms.L2Operator` of matrices. -/
+lemma rpow_isLownerConcaveOn {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    IsLownerConcaveOn (Ici 0) (fun t => t ^ s) := by
+  intro m _ _
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ici]
   open scoped Matrix.Norms.L2Operator in
   exact (CFC.concaveOn_rpow ⟨hs0, hs1⟩).congr fun A hA =>
     CFC.rpow_eq_cfc_real (a := A) hA
 
-/-- The negated power function `-tˢ` (`0 ≤ s ≤ 1`) is Löwner convex. -/
-lemma neg_rpow_isLownerConvex {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
-    IsLownerConvex (fun t => -(t ^ s)) :=
-  isLownerConvex_neg_iff.2 (rpow_isLownerConcave hs0 hs1)
+/-- **Löwner–Heinz theorem** (Bhatia, Theorem V.1.9): `t ↦ tˢ` is Löwner monotone on `[0, ∞)` for
+`0 ≤ s ≤ 1`. This is Mathlib's `CFC.monotone_rpow`. -/
+lemma rpow_isLownerMonotoneOn {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    IsLownerMonotoneOn (Ici 0) (fun t => t ^ s) := by
+  intro m _ _
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ici]
+  open scoped Matrix.Norms.L2Operator in
+  exact ((CFC.monotone_rpow ⟨hs0, hs1⟩).monotoneOn _).congr fun A hA =>
+    CFC.rpow_eq_cfc_real (a := A) hA
+
+/-- The negated power function `-tˢ` (`0 ≤ s ≤ 1`) is Löwner convex on `[0, ∞)`. -/
+lemma neg_rpow_isLownerConvexOn {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    IsLownerConvexOn (Ici 0) (fun t => -(t ^ s)) :=
+  isLownerConvexOn_neg_iff.2 (rpow_isLownerConcaveOn hs0 hs1)
+
+/-- The matrix logarithm is Löwner monotone on `(0, ∞)` (Mathlib's `CFC.log_monotoneOn`). On
+`[0, ∞)` it is not (`not_log_isLownerMonotoneOn_Ici`). -/
+lemma log_isLownerMonotoneOn : IsLownerMonotoneOn (Ioi 0) Real.log := by
+  intro m _ _
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  open scoped Matrix.Norms.L2Operator in
+  exact CFC.log_monotoneOn
+
+/-- The matrix logarithm is **not** Löwner monotone on `[0, ∞)`: `Real.log 0 = 0`, so in dimension
+one `0 ≤ ½` but `log 0 = 0 > log ½`. -/
+lemma not_log_isLownerMonotoneOn_Ici.{v} : ¬ IsLownerMonotoneOn.{v} (Ici 0) Real.log := by
+  intro h
+  have hmono := h PUnit.{v + 1}
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ici] at hmono
+  have hspec (r : ℝ) :
+      spectrum ℝ (algebraMap ℝ (Matrix PUnit.{v + 1} PUnit.{v + 1} ℂ) r) = {r} :=
+    spectrum.scalar_eq (A := Matrix PUnit.{v + 1} PUnit.{v + 1} ℂ) r
+  have hc : algebraMap ℝ (Matrix PUnit.{v + 1} PUnit.{v + 1} ℂ) 0 ≤
+      algebraMap ℝ (Matrix PUnit.{v + 1} PUnit.{v + 1} ℂ) (1 / 2) :=
+    (algebraMap_le_iff_le_spectrum (IsSelfAdjoint.algebraMap _ (.all _))).2 fun x hx => by
+      rw [hspec, Set.mem_singleton_iff] at hx
+      rw [hx]; norm_num
+  have h0 : (0 : Matrix PUnit.{v + 1} PUnit.{v + 1} ℂ) ≤ algebraMap ℝ _ 0 := by rw [map_zero]
+  have hle := hmono h0 (h0.trans hc) hc
+  simp only [cfc_algebraMap] at hle
+  have hlog := (algebraMap_le_iff_le_spectrum (IsSelfAdjoint.algebraMap _ (.all _))).1 hle
+    (Real.log (1 / 2)) (by rw [hspec]; rfl)
+  rw [Real.log_zero] at hlog
+  exact absurd hlog (not_le.2 (Real.log_neg (by norm_num) (by norm_num)))
+
+/-- The matrix logarithm is Löwner concave on `(0, ∞)` (Mathlib's `CFC.concaveOn_log`). -/
+lemma log_isLownerConcaveOn : IsLownerConcaveOn (Ioi 0) Real.log := by
+  intro m _ _
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  open scoped Matrix.Norms.L2Operator in
+  exact CFC.concaveOn_log
+
+/-- The inverse `t ↦ t⁻¹` is Löwner convex on `(0, ∞)` (Mathlib's
+`CStarAlgebra.convexOn_ringInverse`). -/
+lemma inv_isLownerConvexOn : IsLownerConvexOn (Ioi 0) (fun t => t⁻¹) := by
+  intro m _ _
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  open scoped Matrix.Norms.L2Operator in
+  exact CStarAlgebra.convexOn_ringInverse.congr fun A hA =>
+    (cfc_ringInverse_id (R := ℝ) (a := A) hA.isUnit).symm
+
+/-- The inverse `t ↦ t⁻¹` is Löwner antitone on `(0, ∞)` (Mathlib's
+`CStarAlgebra.antitoneOn_ringInverse`). -/
+lemma inv_isLownerAntitoneOn : IsLownerAntitoneOn (Ioi 0) (fun t => t⁻¹) := by
+  intro m _ _
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  open scoped Matrix.Norms.L2Operator in
+  exact CStarAlgebra.antitoneOn_ringInverse.congr fun A hA =>
+    (cfc_ringInverse_id (R := ℝ) (a := A) hA.isUnit).symm
+
+/-- `t ↦ tᵖ` is Löwner convex on `(0, ∞)` for `-1 ≤ p ≤ 0` (Bhatia, Chapter V): it is the inverse,
+Löwner convex and antitone, of the Löwner concave `t ↦ t⁻ᵖ`. -/
+lemma rpow_isLownerConvexOn_of_nonpos {p : ℝ} (hp1 : -1 ≤ p) (hp0 : p ≤ 0) :
+    IsLownerConvexOn (Ioi 0) (fun t => t ^ p) := by
+  have h := inv_isLownerConvexOn.comp_isLownerConcaveOn inv_isLownerAntitoneOn
+    ((rpow_isLownerConcaveOn (s := -p) (by linarith) (by linarith)).subset Ioi_subset_Ici_self
+      ordConnected_Ioi)
+    (fun _ ht => Real.rpow_pos_of_pos ht _)
+  refine h.congr fun t ht => ?_
+  simp only [Function.comp_apply]
+  rw [← Real.rpow_neg (le_of_lt ht), neg_neg]
 
 /-- The function `f(t) = −t^s` is Jensen convex for `0 < s ≤ 1`, by
-`isJensenConvex_of_isLownerConvex`: `f` is Löwner convex and `f(0) = 0`. -/
+`isJensenConvex_of_isLownerConvexOn`: `f` is Löwner convex and `f(0) = 0`. -/
 lemma neg_rpow_isJensenConvex.{v} {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1) :
     IsJensenConvex.{v} (fun t => -(t ^ s)) := by
-  apply isJensenConvex_of_isLownerConvex.{v} (neg_rpow_isLownerConvex hs0.le hs1)
+  apply isJensenConvex_of_isLownerConvexOn.{v} (neg_rpow_isLownerConvexOn hs0.le hs1)
   simp only [Real.zero_rpow (ne_of_gt hs0), neg_zero]
   exact le_refl 0
 
-/-- **Jensen's operator inequality** (Hansen–Pedersen), two-term affine case: for Löwner convex
-`f`, `A†A + B†B = I` and positive semidefinite `T₁, T₂`,
+/-- **Jensen's operator inequality** (Hansen–Pedersen), two-term affine case: for `f` Löwner
+convex on `[0, ∞)`, `A†A + B†B = I` and positive semidefinite `T₁, T₂`,
 `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`. No condition on `f(0)` is needed; compare
-`isJensenConvex_of_isLownerConvex`, where `A†A + B†B ≤ I` forces `f(0) ≤ 0`. -/
-lemma hpj_affine.{v} {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f)
+`isJensenConvex_of_isLownerConvexOn`, where `A†A + B†B ≤ I` forces `f(0) ≤ 0`. -/
+lemma hpj_affine.{v} {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Ici 0) f)
     {m : Type v} [Fintype m] [DecidableEq m]
     (A B T₁ T₂ : Matrix m m ℂ)
     (hT₁ : T₁.PosSemidef) (hT₂ : T₂.PosSemidef)

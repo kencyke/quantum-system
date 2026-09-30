@@ -301,7 +301,7 @@ theorem vonNeumannEntropy_eq_log_card_iff [Nonempty n] (ρ : DensityMatrix n) :
 `S(Σᵢ wᵢ ρᵢ) ≥ Σᵢ wᵢ S(ρᵢ)` is `DensityMatrix.vonNeumannEntropy_concave_sum`.
 
 **Proof**: We use the Löwner-order concavity of A ↦ Aˢ for 0 < s ≤ 1
-(from `rpow_isLownerConcave`). Define g(s) := Tr (ρ_mixˢ)
+(from `rpow_isLownerConcaveOn`). Define g(s) := Tr (ρ_mixˢ)
 − p Tr (ρ₁ˢ) − (1−p) Tr (ρ₂ˢ).
 
 - **Non-negativity**: For s ∈ (0,1], Löwner concavity gives

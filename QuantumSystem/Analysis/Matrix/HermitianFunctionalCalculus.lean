@@ -418,11 +418,12 @@ lemma cfc_fromBlocks_diag' {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
   rw [h_prod] at h_map
   exact h_map.symm
 
-/-! ### Matrix Convexity Implies Jensen Convexity
+/-! ### Block-matrix tools for Jensen's operator inequality
 
-The equivalence between Löwner convexity and Löwner convexity (HPJ form) is a
-classical result in matrix analysis. The standard proof uses the block diagonal
-technique: embed the 2-term HPJ problem into a larger space using block matrices.
+Löwner convexity on `[0, ∞)` with `f 0 ≤ 0` is equivalent to Jensen convexity in the HPJ form
+(`Matrix.isJensenConvex_iff` in `Order.lean`). The proof uses the block diagonal technique: embed
+the 2-term HPJ problem into a larger space using block matrices. This section provides the
+block-matrix identities.
 
 Reference: Hansen-Pedersen (2003), "Jensen's Operator Inequality" -/
 

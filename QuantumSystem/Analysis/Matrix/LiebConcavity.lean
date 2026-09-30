@@ -5,9 +5,9 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Notation
-public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Continuity
 
 /-!
 # Lieb's Concavity Theorem via Effros's Matrix Convexity Approach
@@ -58,8 +58,10 @@ The proof proceeds via:
    (equivalently, f(t) = -t^s is Löwner convex). This follows from Löwner-Heinz.
 2. **Hansen-Pedersen-Jensen (HPJ) inequality**: For Löwner convex f and matrices
    A, B with A*A + B*B = I: f(A*T₁A + B*T₂B) ≤ A*f(T₁)A + B*f(T₂)B.
-3. **Matrix perspective**: The perspective g(L,R) = f(L/R)R for commuting positive
-   operators L, R is jointly convex when f is Löwner convex.
+3. **Matrix perspective**: The noncommutative perspective
+   g(L,R) = R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2} is jointly convex in positive semidefinite L
+   and positive definite R when f is Löwner convex (`Matrix.matrixPerspective_joint_convex`);
+   L and R need not commute.
 4. **Left/right multiplication**: For L(X) = AX and R(X) = XB (operators on M_n),
    apply the perspective with f(t) = -t^s to obtain joint concavity of
    (A,B) ↦ Tr(A^s K† B^{1-s} K).
@@ -132,9 +134,8 @@ The proof is technical but the key insight is:
 - The quadratic form ⟨vec(K†), L_X R_Y vec(K†)⟩ = Tr(X K† Y K)
 - Combining: ⟨v, (-L^p R^{1-p}) v⟩ = -Tr(A^p K† B^{1-p} K) = -liebJointFunction
 
-For full generality this requires functional calculus on Kronecker products,
-but the result follows from the underlying trace identity and the perspective
-structure. -/
+The simplification uses functional calculus on Kronecker products
+(`Matrix.matrixPerspective_neg_leftRight_eq`). -/
 private lemma matrixPerspective_inner_eq_neg_liebJointFunction {m : Type*} [Fintype m] [DecidableEq m]
     (K : Matrix m m ℂ) (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
     (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) :
@@ -195,7 +196,7 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   /- Proof by Effros's Matrix Perspective Approach -/
   -- 1. Setup the function f(x) = -x^p, which is Matrix Convex.
   let f : ℝ → ℝ := fun x => -(x ^ p)
-  have hconv : IsLownerConvex f := neg_rpow_isLownerConvex hp0.le hp1.le
+  have hconv : IsLownerConvexOn (Set.Ici 0) f := neg_rpow_isLownerConvexOn hp0.le hp1.le
   -- 2. Define Left and Right multiplication operators
   let L₁ := 𝐋 A₁
   let L₂ := 𝐋 A₂
@@ -215,10 +216,8 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   -- g(L, R) = f(L R⁻¹) R = -(L R⁻¹)^p R = -L^p R^{1-p} (for commuting L, R)
   -- Lieb(A, B) = Tr(A^p K† B^{1-p} K) = ⟨L_{A^p} R_{B^{1-p}} K†, K†⟩
 
-  -- Helper: matrixPerspective f L R = -L^p R^(1-p)
-  -- This requires commutativity L R = R L, which holds.
-  -- And functional calculus property on Kronecker product.
-  -- We assume the identity: ⟨matrixPerspective f L R K†, K†⟩_HS = -Lieb(A, B).
+  -- ⟨matrixPerspective f L R K†, K†⟩_HS = -Lieb(A, B) is
+  -- `matrixPerspective_inner_eq_neg_liebJointFunction`; it uses that L and R commute.
   let term1 := matrixPerspective f L₁ R₁
   let term2 := matrixPerspective f L₂ R₂
   let term_comb := matrixPerspective f L R
