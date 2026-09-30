@@ -323,14 +323,9 @@ theorem measure_pvm_resolvent_intertwiner (hV : ∀ u v, (u, v) ∈ A.graph → 
   have : IsStarNormal (A.resolvent w) := hA.isStarNormal_resolvent w
   have : IsStarNormal (B.resolvent w) := hB.isStarNormal_resolvent w
   have h₁ := LinearPMap.comp_resolvent_eq_resolvent_comp hwA hwB hV
-  have h₂ : V ∘L ContinuousLinearMap.adjoint (A.resolvent w) =
-      ContinuousLinearMap.adjoint (B.resolvent w) ∘L V := by
-    rw [hA.adjoint_resolvent hwA, hB.adjoint_resolvent hwB]
-    exact LinearPMap.comp_resolvent_eq_resolvent_comp (hA.conj_mem_resolventSet hwA)
-      (hB.conj_mem_resolventSet hwB) hV
   refine (hA.isStarNormal_resolvent w).eq_measure_pvm_of_integral
     ((hB.isStarNormal_resolvent w).pvm.measure (V u)) fun g => ?_
-  have hcomm := ContinuousLinearMap.comp_cfc_eq_cfc_comp ‹_› ‹_› h₁ h₂
+  have hcomm := ContinuousLinearMap.comp_cfc_eq_cfc_comp ‹_› ‹_› h₁
     (f := fun ζ => (g ζ : ℂ)) (continuous_ofReal.comp g.continuous).continuousOn
     (continuous_ofReal.comp g.continuous).continuousOn
   rw [(hB.isStarNormal_resolvent w).integral_measure_pvm (V u) g.continuous.continuousOn,
