@@ -122,7 +122,8 @@ lemma sum_adjoint_toEuclideanL_kraus (Φ : QuantumChannel n m) :
       adjoint (toEuclideanL ((kraus Φ) i)) ∘L toEuclideanL ((kraus Φ) i) =
         Matrix.toEuclideanCLM (𝕜 := ℂ) (((kraus Φ) i)ᴴ * (1 : Matrix m m ℂ) * (kraus Φ) i) := by
     rw [toEuclideanCLM_conjTranspose_mul_mul, map_one, one_def, ContinuousLinearMap.id_comp]
-  simp_rw [h, Matrix.mul_one, ← map_sum, QuantumChannel.kraus_sum_eq_one Φ (kraus_spec Φ), map_one]
+  simp_rw [h, Matrix.mul_one, ← map_sum,
+    Φ.property.tracePreserving.kraus_sum_eq_one (kraus_spec Φ), map_one]
 
 /-- The **dual channel** `Φ* : B(ℂᵐ) → B(ℂⁿ)`, `B ↦ Σᵢ Kᵢᴴ B Kᵢ`, as a Schwarz map
 (`SchwarzMap.ofKraus`). Its values do not depend on the chosen Kraus operators: it is the trace dual

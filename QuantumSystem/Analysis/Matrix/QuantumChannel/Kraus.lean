@@ -10,12 +10,12 @@ public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
 /-!
 # Kraus completeness for quantum channels
 
-Every Kraus representation `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` of a trace-preserving map satisfies the
-completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`.
+Every Kraus representation `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` of a trace-preserving linear map satisfies the
+completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`; complete positivity is not used.
 
 ## Main statements
 
-* `Matrix.QuantumChannel.kraus_sum_eq_one`: the completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`.
+* `Matrix.IsTracePreserving.kraus_sum_eq_one`: the completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`.
 
 ## References
 
@@ -37,10 +37,11 @@ private lemma matrix_eq_one_of_trace_mul [DecidableEq n]
     (M : Matrix n n ℂ) (h : ∀ A : Matrix n n ℂ, Tr (M * A) = Tr A) : M = 1 :=
   Matrix.ext_iff_trace_mul_right.mpr fun A => by rw [one_mul]; exact h A
 
-/-- Trace-preserving Kraus channels satisfy the completeness relation: ∑ₖ Kₖ† Kₖ = I. -/
-lemma QuantumChannel.kraus_sum_eq_one [DecidableEq n] [DecidableEq m]
-    (Φ : QuantumChannel n m)
-    {ι : Type*} [Fintype ι] {K : ι → Matrix m n ℂ} (hK : ∀ A, Φ.val A = ∑ i, K i * A * (K i)ᴴ) :
+/-- Kraus representations of trace-preserving maps satisfy the completeness relation
+`∑ₖ Kₖ† Kₖ = I`. Complete positivity is not needed. -/
+lemma IsTracePreserving.kraus_sum_eq_one [DecidableEq n] {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    (hΦ : IsTracePreserving Φ)
+    {ι : Type*} [Fintype ι] {K : ι → Matrix m n ℂ} (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) :
     ∑ i, (K i)ᴴ * K i = 1 := by
   apply matrix_eq_one_of_trace_mul
   intro A
@@ -48,7 +49,7 @@ lemma QuantumChannel.kraus_sum_eq_one [DecidableEq n] [DecidableEq m]
     rw [Matrix.mul_assoc, Matrix.trace_mul_comm (K i)ᴴ]
   rw [Finset.sum_mul]
   simp_rw [Matrix.trace_sum, key, ← Matrix.trace_sum]
-  have := Φ.property.tracePreserving A
+  have := hΦ A
   rwa [hK] at this
 
 end Matrix

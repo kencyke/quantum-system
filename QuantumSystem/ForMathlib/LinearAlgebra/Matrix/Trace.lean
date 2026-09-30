@@ -81,8 +81,8 @@ theorem trace_mul_traceDual (Φ : Matrix n n R →ₗ[R] Matrix m m R) (A : Matr
   simp only [Matrix.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc]
 
 /-- The trace dual of a Kraus map `A ↦ Σᵢ Kᵢ A Kᵢᴴ` is `B ↦ Σᵢ Kᵢᴴ B Kᵢ`. -/
-theorem traceDual_eq_of_kraus [Star R] {Φ : Matrix n n R →ₗ[R] Matrix m m R} {r : ℕ}
-    {K : Fin r → Matrix m n R} (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) (B : Matrix m m R) :
+theorem traceDual_eq_of_kraus [Star R] {Φ : Matrix n n R →ₗ[R] Matrix m m R}
+    {ι : Type*} [Fintype ι] {K : ι → Matrix m n R} (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ) (B : Matrix m m R) :
     traceDual Φ B = ∑ i, (K i)ᴴ * B * K i := by
   refine Matrix.ext_iff_trace_mul_left.mpr fun x => ?_
   rw [← trace_mul_traceDual, hK, Finset.sum_mul, Matrix.trace_sum, Matrix.mul_sum,

@@ -12,20 +12,22 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 /-!
 # Partial trace and reindexing as quantum channels
 
-Tracing out a factor of a matrix on `X × Y` is completely positive and trace preserving, and so is
-conjugation by an index equivalence. Composing the two gives the trace-out-`C` channel
+Tracing out either factor of a matrix on `X × Y` is completely positive and trace preserving, and
+so is conjugation by an index equivalence. Composing the two gives the trace-out-`C` channel
 `Matrix.QuantumChannel.traceOutC` on `A × B × C`, which realises the `lean-eval` marginal map.
 
 ## Main definitions
 
 * `Matrix.partialTraceRightₗ`, `Matrix.partialTraceLeftₗ`: partial traces as `ℂ`-linear maps.
-* `Matrix.QuantumChannel.partialTraceRight`: bundled quantum channel tracing out `Y`.
+* `Matrix.QuantumChannel.partialTraceRight`, `Matrix.QuantumChannel.partialTraceLeft`: bundled
+  quantum channels tracing out `Y` and `X`.
 * `Matrix.QuantumChannel.reindex`: conjugation by an index equivalence, as a channel.
 * `Matrix.QuantumChannel.traceOutC`: trace out the `C` factor of `A × B × C`.
 
 ## Main statements
 
 * `Matrix.isCompletelyPositive_partialTraceRight`, `Matrix.isTracePreserving_partialTraceRight`.
+* `Matrix.isCompletelyPositive_partialTraceLeft`, `Matrix.isTracePreserving_partialTraceLeft`.
 * `Matrix.isCompletelyPositive_reindexₗ`, `Matrix.isTracePreserving_reindexₗ`.
 
 ## References
@@ -152,6 +154,31 @@ noncomputable def QuantumChannel.reindex {Z W : Type*} [Fintype Z] [DecidableEq 
     [DecidableEq W] (e : Z ≃ W) :
     Matrix.QuantumChannel Z W :=
   ⟨reindexₗ e, isCompletelyPositive_reindexₗ e, isTracePreserving_reindexₗ e⟩
+
+/-! #### Left partial trace as a channel -/
+
+/-- Tracing out `X` is tracing out the right factor after swapping the factors. -/
+lemma partialTraceLeftₗ_eq_comp {X Y : Type*} [Fintype X] :
+    (partialTraceLeftₗ : Matrix (X × Y) (X × Y) ℂ →ₗ[ℂ] Matrix Y Y ℂ) =
+      partialTraceRightₗ ∘ₗ reindexₗ (Equiv.prodComm X Y) := by
+  ext1 M
+  rw [LinearMap.comp_apply, partialTraceLeftₗ_apply, partialTraceRightₗ_apply, reindexₗ_apply,
+    traceLeft_eq_traceRight_prodComm, Matrix.reindex_apply]
+
+lemma isCompletelyPositive_partialTraceLeft {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y]
+    [DecidableEq Y] : IsCompletelyPositive (partialTraceLeftₗ (X := X) (Y := Y)) := by
+  rw [partialTraceLeftₗ_eq_comp]
+  exact isCompletelyPositive_partialTraceRight.comp (isCompletelyPositive_reindexₗ _)
+
+lemma isTracePreserving_partialTraceLeft {X Y : Type*} [Fintype X] [Fintype Y] :
+    IsTracePreserving (partialTraceLeftₗ (X := X) (Y := Y)) :=
+  fun M => by rw [partialTraceLeftₗ_apply]; exact trace_traceLeft M
+
+/-- Left partial trace (trace out `X`) as a bundled `QuantumChannel`. -/
+noncomputable def QuantumChannel.partialTraceLeft {X Y : Type*} [Fintype X] [DecidableEq X]
+    [Fintype Y] [DecidableEq Y] :
+    Matrix.QuantumChannel (X × Y) Y :=
+  ⟨partialTraceLeftₗ, isCompletelyPositive_partialTraceLeft, isTracePreserving_partialTraceLeft⟩
 
 /-! #### Trace-out-`C` channel for `A × B × C` -/
 

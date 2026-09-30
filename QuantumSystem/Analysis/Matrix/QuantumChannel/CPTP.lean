@@ -47,7 +47,10 @@ matrices form the C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)`; b
 By the Choi–Kraus theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Choi.lean`) complete
 positivity is equivalent to positive semidefiniteness of the Choi matrix and to the existence of a
 Kraus representation `Φ(ρ) = Σᵢ Kᵢ ρ Kᵢᴴ`. The completeness relation `Σᵢ Kᵢᴴ Kᵢ = I` for
-trace-preserving maps is in `QuantumSystem/Analysis/Matrix/QuantumChannel/Kraus.lean`.
+trace-preserving maps is in `QuantumSystem/Analysis/Matrix/QuantumChannel/Kraus.lean`. By
+Stinespring's theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Stinespring.lean`) a map is a
+quantum channel iff it is `ρ ↦ Tr_E (V ρ Vᴴ)` for an isometry `V`
+(`Matrix.isQuantumChannel_iff_exists_stinespring`).
 
 ## References
 
