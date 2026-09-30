@@ -83,6 +83,7 @@ public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Unital
