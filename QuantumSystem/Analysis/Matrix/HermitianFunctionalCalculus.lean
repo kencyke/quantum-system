@@ -28,6 +28,8 @@ calculus `cfc`; the spectral expansion `cfc f A = U diag(f(λᵢ)) Uᴴ` is `cfc
 - `cfc_isHermitian`, `mul_cfc_isHermitian`: `f(A)` and `A·f(A)` are Hermitian for real `f`.
 - `cfc_add_const_eq`, `cfc_inv_add_const`, `cfc_resolvent`: affine / resolvent identities.
 - `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry commuting with `M`.
+- `cfc_fromBlocks_diag`, `cfc_blockDiagonal`: `f(⊕ᵢ Tᵢ) = ⊕ᵢ f(Tᵢ)` for block diagonal matrices;
+  `spectrum_blockDiagonal_subset`: the spectrum of `⊕ᵢ Tᵢ` lies in the union of the spectra.
 - `cfc_map_starAlgEquiv`: `cfc f` commutes with `*-`algebra equivalences of matrix algebras on
   Hermitian matrices (any `f`, finite spectrum).
 - Matrix logarithm `cfc Real.log`: `cfc_spectral_eq`, `cfc_log_spectral_eq`, `cfc_log_map_starAlgEquiv`.
@@ -418,10 +420,60 @@ lemma cfc_fromBlocks_diag' {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
   rw [h_prod] at h_map
   exact h_map.symm
 
+/-- Block diagonal embedding of a finite family of matrices as a star algebra homomorphism,
+`(Tᵢ)ᵢ ↦ blockDiagonal T`. -/
+noncomputable def blockDiagonalStarAlgHom (m ι : Type*) [Fintype m] [DecidableEq m] [Fintype ι]
+    [DecidableEq ι] : (ι → Matrix m m ℂ) →⋆ₐ[ℝ] Matrix (m × ι) (m × ι) ℂ where
+  toRingHom := blockDiagonalRingHom m ι ℂ
+  commutes' r := by
+    change blockDiagonal (algebraMap ℝ (ι → Matrix m m ℂ) r) = algebraMap ℝ _ r
+    rw [Algebra.algebraMap_eq_smul_one, Algebra.algebraMap_eq_smul_one, blockDiagonal_smul,
+      blockDiagonal_one]
+  map_star' T := by
+    change blockDiagonal (star T) = star (blockDiagonal T)
+    rw [star_eq_conjTranspose, blockDiagonal_conjTranspose]
+    rfl
+
+/-- The spectrum of a block diagonal matrix lies in the union of the spectra of its blocks. -/
+lemma spectrum_blockDiagonal_subset {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι]
+    [DecidableEq ι] (T : ι → Matrix m m ℂ) :
+    spectrum ℝ (blockDiagonal T) ⊆ ⋃ i, spectrum ℝ (T i) := by
+  rw [← Pi.spectrum_eq]
+  exact AlgHom.spectrum_apply_subset (blockDiagonalStarAlgHom m ι) T
+
+/-- CFC of a block diagonal matrix is the block diagonal of the CFC of the blocks:
+`f(⊕ᵢ Tᵢ) = ⊕ᵢ f(Tᵢ)`. -/
+lemma cfc_blockDiagonal {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι] [DecidableEq ι]
+    (T : ι → Matrix m m ℂ) (hT : ∀ i, IsSelfAdjoint (T i)) (f : ℝ → ℝ) :
+    cfc f (blockDiagonal T) = blockDiagonal fun i => cfc f (T i) := by
+  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
+  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
+  let : CStarAlgebra (Matrix m m ℂ) := by
+    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
+  let : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  let : CStarAlgebra (ι → Matrix m m ℂ) := inferInstance
+  let : ContinuousFunctionalCalculus ℂ (ι → Matrix m m ℂ) IsStarNormal :=
+    IsStarNormal.instContinuousFunctionalCalculus
+  let : ContinuousFunctionalCalculus ℝ (ι → Matrix m m ℂ) IsSelfAdjoint :=
+    IsSelfAdjoint.instContinuousFunctionalCalculus
+  have hcont : Continuous (blockDiagonalStarAlgHom m ι) :=
+    Continuous.matrix_blockDiagonal continuous_id
+  have hfin : (⋃ i, spectrum ℝ (T i)).Finite :=
+    Set.finite_iUnion fun i => Matrix.finite_real_spectrum (A := T i)
+  have hTsa : IsSelfAdjoint T := by
+    rw [IsSelfAdjoint]; funext i; exact (hT i).star_eq
+  have h_map := StarAlgHom.map_cfc (blockDiagonalStarAlgHom m ι) f T (by
+    rw [Pi.spectrum_eq]; exact hfin.continuousOn f) hcont hTsa
+  have h_pi := cfc_map_pi (S := ℝ) f T (hfin.continuousOn f) hTsa hT
+  rw [h_pi] at h_map
+  exact h_map.symm
+
 /-! ### Block-matrix tools for Jensen's operator inequality
 
-Löwner convexity on `[0, ∞)` with `f 0 ≤ 0` is equivalent to Jensen convexity in the HPJ form
-(`Matrix.isJensenConvex_iff` in `Order.lean`). The proof uses the block diagonal technique: embed
+Löwner convexity on an interval `s ∋ 0` with `f 0 ≤ 0` is equivalent to Jensen convexity in the HPJ form
+(`Matrix.isJensenConvexOn_iff` in `Order.lean`). The proof uses the block diagonal technique: embed
 the 2-term HPJ problem into a larger space using block matrices. This section provides the
 block-matrix identities.
 

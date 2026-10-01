@@ -27,7 +27,9 @@ The operator-convexity inputs (Löwner convexity, Jensen's operator inequality) 
 
 * `Matrix.matrixPerspective_joint_convex`: **Effros's theorem**, joint convexity of the matrix
   perspective of an `f` Löwner convex on `[0, ∞)`, on positive semidefinite `L` and positive
-  definite `R`.
+  definite `R`; `Matrix.matrixPerspective_joint_convex_of_posDef`: for `f` Löwner convex on
+  `(0, ∞)` (such as `-log`, `t⁻¹`), on positive definite `L` and `R`;
+  `Matrix.matrixPerspective_joint_convex_of_mem`: for `f` Löwner convex on any interval `s`.
 * `Matrix.matrixPerspective_neg_leftRight_eq`: for `f(x) = -xᵖ`, the perspective of `(𝐋 A, 𝐑 B)`
   is `-(𝐋 (Aᵖ) · 𝐑 (B¹⁻ᵖ))`, which turns Effros's theorem into Lieb's concavity theorem.
 
@@ -411,17 +413,23 @@ lemma perspective_sandwich_eq {n : Type*} [Fintype n]
     exact (IsScalarTower.algebraMap_smul ℂ w₂ _).symm
   rw [mul_sub, sub_mul, mul_add, add_mul, h₁, h₂, hZ]
 
-/-- **Effros's theorem**: the matrix perspective `(L, R) ↦ R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}`
-of an `f` Löwner convex on `[0, ∞)` is jointly convex on positive semidefinite `L` and positive
-definite `R`.
+/-- **Effros's theorem** for `f` Löwner convex on an interval `s`: the matrix perspective
+`(L, R) ↦ R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}` is jointly convex on the pairs of a positive
+definite `R` and a self-adjoint `L` with `R^{-1/2} L R^{-1/2}` of spectrum in `s`. For
+`s = [0, ∞)` the condition is `L ⪰ 0`
+(`Matrix.matrixPerspective_joint_convex`), for `s = (0, ∞)` it is `L ≻ 0`
+(`Matrix.matrixPerspective_joint_convex_of_posDef`).
 No condition on `f(0)` is needed: the weights `Aᵢ = (wᵢRᵢ)^{1/2} R^{-1/2}` satisfy
 `A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `IsLownerConvexOn.cfc_affine_le`
 applies. -/
-theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Set.Ici 0) f)
+theorem matrixPerspective_joint_convex_of_mem.{v} {m : Type v} [Fintype m] [DecidableEq m]
+    {s : Set ℝ} {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} s f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
-    (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef)
     (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
+    (hL₁ : (R₁ ^ (-1 / 2 : ℝ))ᴴ * L₁ * R₁ ^ (-1 / 2 : ℝ) ∈
+      {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s})
+    (hL₂ : (R₂ ^ (-1 / 2 : ℝ))ᴴ * L₂ * R₂ ^ (-1 / 2 : ℝ) ∈
+      {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s})
     {w₁ w₂ : ℝ} (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) (hw : w₁ + w₂ = 1) :
     matrixPerspective f (w₁ • L₁ + w₂ • L₂) (w₁ • R₁ + w₂ • R₂) ≤
       w₁ • matrixPerspective f L₁ R₁ + w₂ • matrixPerspective f L₂ R₂ := by
@@ -439,10 +447,6 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
   set A₂ : Matrix m m ℂ := (Real.sqrt w₂ : ℂ) • (R₂half * Rinv)
   set T₁ : Matrix m m ℂ := R₁invᴴ * L₁ * R₁inv
   set T₂ : Matrix m m ℂ := R₂invᴴ * L₂ * R₂inv
-  have hT₁ : T₁.PosSemidef := by
-    simpa [T₁] using hL₁.conjTranspose_mul_mul_same R₁inv
-  have hT₂ : T₂.PosSemidef := by
-    simpa [T₂] using hL₂.conjTranspose_mul_mul_same R₂inv
   have hRinv_herm : Rinv.IsHermitian := (posSemidef_rpow _ _).isHermitian
   have hR₁half_herm : R₁half.IsHermitian := (posSemidef_rpow _ _).isHermitian
   have hR₂half_herm : R₂half.IsHermitian := (posSemidef_rpow _ _).isHermitian
@@ -479,7 +483,7 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     have hRinv_mul : Rinv * R * Rinv = (1 : Matrix m m ℂ) := by
       simpa [Rinv, R] using rpow_neg_half_mul_mul_rpow_neg_half hR
     simp [hA_sum, hRinv_mul]
-  have hconv' := hconv.cfc_affine_le A₁ A₂ T₁ T₂ hT₁ hT₂ hAB
+  have hconv' := hconv.cfc_affine_le A₁ A₂ T₁ T₂ hL₁ hL₂ hAB
   have hpsd :
       (A₁ᴴ * cfc f T₁ * A₁ +
         A₂ᴴ * cfc f T₂ * A₂ -
@@ -540,6 +544,42 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
       hRhalf_A₂_adj hA₂_Rhalf hsqrt₁ hsqrt₂ hmfC] at hpsd'
     exact hpsd'
   simpa [L, R] using hfinal
+
+/-- **Effros's theorem**: the matrix perspective `(L, R) ↦ R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}`
+of an `f` Löwner convex on `[0, ∞)` is jointly convex on positive semidefinite `L` and positive
+definite `R`. -/
+theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq m]
+    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Set.Ici 0) f)
+    {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
+    (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef)
+    (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
+    {w₁ w₂ : ℝ} (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) (hw : w₁ + w₂ = 1) :
+    matrixPerspective f (w₁ • L₁ + w₂ • L₂) (w₁ • R₁ + w₂ • R₂) ≤
+      w₁ • matrixPerspective f L₁ R₁ + w₂ • matrixPerspective f L₂ R₂ :=
+  matrixPerspective_joint_convex_of_mem hconv hR₁ hR₂
+    (hL₁.conjTranspose_mul_mul_same _).mem_setOf_isSelfAdjoint_spectrum_subset_Ici
+    (hL₂.conjTranspose_mul_mul_same _).mem_setOf_isSelfAdjoint_spectrum_subset_Ici hw₁ hw₂ hw
+
+/-- **Effros's theorem** on `(0, ∞)`: the matrix perspective of an `f` Löwner convex on `(0, ∞)`,
+such as `-log` or `t⁻¹` (`Matrix.log_isLownerConcaveOn`, `Matrix.inv_isLownerConvexOn`), is
+jointly convex on positive definite `L` and `R`. -/
+theorem matrixPerspective_joint_convex_of_posDef.{v} {m : Type v} [Fintype m] [DecidableEq m]
+    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Set.Ioi 0) f)
+    {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
+    (hL₁ : L₁.PosDef) (hL₂ : L₂.PosDef)
+    (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
+    {w₁ w₂ : ℝ} (hw₁ : 0 ≤ w₁) (hw₂ : 0 ≤ w₂) (hw : w₁ + w₂ = 1) :
+    matrixPerspective f (w₁ • L₁ + w₂ • L₂) (w₁ • R₁ + w₂ • R₂) ≤
+      w₁ • matrixPerspective f L₁ R₁ + w₂ • matrixPerspective f L₂ R₂ := by
+  have hinj {R : Matrix m m ℂ} (hR : R.PosDef) : Function.Injective (R ^ (-1 / 2 : ℝ)).mulVec :=
+    fun v w h => by
+      have := congrArg (R ^ (1 / 2 : ℝ)).mulVec h
+      rwa [mulVec_mulVec, mulVec_mulVec, rpow_half_mul_rpow_neg_half hR, one_mulVec,
+        one_mulVec] at this
+  exact matrixPerspective_joint_convex_of_mem hconv hR₁ hR₂
+    (hL₁.conjTranspose_mul_mul_same (hinj hR₁)).mem_setOf_isSelfAdjoint_spectrum_subset_Ioi
+    (hL₂.conjTranspose_mul_mul_same (hinj hR₂)).mem_setOf_isSelfAdjoint_spectrum_subset_Ioi
+    hw₁ hw₂ hw
 
 /-! ### Kronecker Product Powers and Perspective Identity -/
 
