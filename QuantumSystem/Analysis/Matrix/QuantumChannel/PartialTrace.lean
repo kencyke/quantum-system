@@ -48,8 +48,9 @@ def traceRightKraus {X Y : Type*} [DecidableEq X] [DecidableEq Y] (y : Y) :
 
 /-- Tracing out `Y` is the Kraus map with operators `K_y`, `y : Y`:
 `tr₂(M) = Σ_y K_y M K_yᴴ`. -/
--- The binder `y : Y` is annotated: with the type left to inference, Mathlib's default instance
--- `CStarMatrix.instHMul` is selected for the products and elaboration fails.
+-- The binder `y : Y` is annotated: with the type left to inference, Mathlib's `@[default_instance]`
+-- rectangular product on `CStarMatrix` (`CStarMatrix.instHMulOfFintypeOfMulOfAddCommMonoid`) is
+-- selected for the products and elaboration fails.
 lemma traceRight_eq_sum_kraus {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y]
     [DecidableEq Y] (M : Matrix (X × Y) (X × Y) ℂ) :
     traceRight M = ∑ y : Y, traceRightKraus (X := X) y * M * (traceRightKraus (X := X) y)ᴴ := by
