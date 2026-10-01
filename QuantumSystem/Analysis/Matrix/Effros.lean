@@ -75,11 +75,13 @@ noncomputable def rightMulMatrix {m : Type*} [Fintype m] [DecidableEq m]
     (B : Matrix m m ℂ) : Matrix (m × m) (m × m) ℂ :=
   LinearMap.toMatrix (matrixBasis m) (matrixBasis m) (rightMul B)
 
-/-- Shorthand for `leftMulMatrix`. Corresponds to L_A in Effros (2008). -/
-notation "𝐋" => leftMulMatrix
+/-- Shorthand for `leftMulMatrix`. Corresponds to L_A in Effros (2008). Active inside
+`namespace Matrix` or after `open scoped Matrix`. -/
+scoped notation "𝐋" => leftMulMatrix
 
-/-- Shorthand for `rightMulMatrix`. Corresponds to R_B in Effros (2008). -/
-notation "𝐑" => rightMulMatrix
+/-- Shorthand for `rightMulMatrix`. Corresponds to R_B in Effros (2008). Active inside
+`namespace Matrix` or after `open scoped Matrix`. -/
+scoped notation "𝐑" => rightMulMatrix
 
 /-- Matrix representations of left and right multiplication commute. -/
 lemma leftMulMatrix_rightMulMatrix_commute {m : Type*} [Fintype m] [DecidableEq m]

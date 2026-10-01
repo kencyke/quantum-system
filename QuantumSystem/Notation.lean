@@ -41,6 +41,10 @@ Notations and abbreviations for quantum information theory.
 <tr><td><code>E →σw[𝕜] F</code></td><td><code>ContinuousLinearMapSigmaWeak 𝕜 E F</code></td>
   <td>always available</td>
   <td><code>ForMathlib/Analysis/LocallyConvex/SigmaWeakOperatorTopology.lean</code></td></tr>
+<tr><td><code>𝐋 A</code>, <code>𝐑 B</code></td>
+  <td><code>Matrix.leftMulMatrix A</code>, <code>Matrix.rightMulMatrix B</code></td>
+  <td><code>open scoped Matrix</code></td>
+  <td><code>Analysis/Matrix/Effros.lean</code></td></tr>
 <tr><td><code>⟪X, Y⟫_HS</code></td><td><code>Matrix.hsInnerProduct X Y</code></td>
   <td><code>open scoped Matrix.QuantumInfo</code></td>
   <td><code>Analysis/Matrix/LiebConcavity.lean</code></td></tr>
