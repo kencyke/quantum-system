@@ -60,7 +60,7 @@ Kraus representation `Φ(ρ) = Σᵢ Kᵢ ρ Kᵢᴴ`. The completeness relation
 trace-preserving maps is in `QuantumSystem/Analysis/Matrix/QuantumChannel/Kraus.lean`. By
 Stinespring's theorem (`QuantumSystem/Analysis/Matrix/QuantumChannel/Stinespring.lean`) a map is a
 quantum channel iff it is `ρ ↦ tr₁(V ρ Vᴴ)` for an isometry `V`, the partial trace `tr₁` removing
-the environment (`Matrix.QuantumChannel.exists_toLinearMap_eq_iff_exists_stinespring`).
+the environment (`Matrix.QuantumChannel.exists_toLinearMap_eq_iff_exists_stinespringMatrix`).
 
 ## References
 
