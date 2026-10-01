@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
+public import Mathlib.CategoryTheory.Category.Basic
 
 /-!
 # Identity and composition of completely positive maps
@@ -14,12 +15,15 @@ Mathlib's `CompletelyPositiveMap` (`A₁ →CP A₂`) comes with its `FunLike`, 
 `CompletelyPositiveMapClass` instances. This file adds the category structure: the identity map
 is completely positive (`CompletelyPositiveMap.id`), and completely positive maps compose
 (`CompletelyPositiveMap.comp`), since applying `ψ ∘ φ` entrywise to a block matrix is applying `φ`
-and then `ψ`.
+and then `ψ`. Composition is associative and unital, so the C⋆-algebras with completely positive
+maps form a category (`CStarAlgCP`).
 
 ## Main definitions
 
 * `CompletelyPositiveMap.id` — the identity map as a completely positive map.
 * `CompletelyPositiveMap.comp` — the composition of completely positive maps.
+* `CStarAlgCP` — the category of (possibly non-unital) C⋆-algebras, with the star order, and
+  completely positive maps.
 -/
 
 @[expose] public section
@@ -80,3 +84,33 @@ lemma comp_assoc {A₄ : Type*} [NonUnitalCStarAlgebra A₄] [PartialOrder A₄]
     (χ.comp ψ).comp φ = χ.comp (ψ.comp φ) := rfl
 
 end CompletelyPositiveMap
+
+universe u
+
+/-- The category of (possibly non-unital) C⋆-algebras with their star order and completely
+positive maps as morphisms. -/
+structure CStarAlgCP : Type (u + 1) where
+  /-- The underlying C⋆-algebra. -/
+  carrier : Type u
+  [instNonUnitalCStarAlgebra : NonUnitalCStarAlgebra carrier]
+  [instPartialOrder : PartialOrder carrier]
+  [instStarOrderedRing : StarOrderedRing carrier]
+
+namespace CStarAlgCP
+
+attribute [instance] instNonUnitalCStarAlgebra instPartialOrder instStarOrderedRing
+
+instance : CoeSort CStarAlgCP (Type u) := ⟨carrier⟩
+
+/-- The C⋆-algebras with completely positive maps form a category: identities and composites of
+completely positive maps are completely positive (`CompletelyPositiveMap.id`,
+`CompletelyPositiveMap.comp`), and the category laws hold definitionally. -/
+instance : CategoryTheory.Category CStarAlgCP.{u} where
+  Hom A B := A →CP B
+  id A := CompletelyPositiveMap.id A
+  comp φ ψ := ψ.comp φ
+
+/-- A morphism of `CStarAlgCP` is a completely positive map. -/
+lemma hom_def (A B : CStarAlgCP.{u}) : (A ⟶ B) = (A →CP B) := rfl
+
+end CStarAlgCP
