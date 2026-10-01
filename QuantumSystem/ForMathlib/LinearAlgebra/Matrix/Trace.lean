@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Data.Matrix.Composition
 public import Mathlib.LinearAlgebra.Matrix.Trace
 
 /-!
@@ -25,11 +26,18 @@ bundled linear maps and completely positive maps are covered alike.
 ## Main statements
 
 * `Matrix.trace_reindex_self` — reindexing by an equivalence preserves the trace.
+* `Matrix.trace_comp_mul_comp` — the trace of a product of flattened block matrices is the sum of
+  the traces of the products of blocks.
+* `Matrix.trace_mul_vecMulVec` — `Tr (A (v wᵀ)) = w ⬝ᵥ A v`.
 * `Matrix.trace_mul_traceDual` — the defining duality
   `(Φ A * B).trace = (A * traceDual Φ B).trace`.
+* `Matrix.trace_comp_map_mul_comp_map_traceDual` — the same duality for `Φ` and `traceDual Φ`
+  applied blockwise to block matrices.
 * `Matrix.traceDual_eq_of_kraus` — for a Kraus map `A ↦ Σᵢ Kᵢ A Kᵢᴴ` the trace dual is
   `B ↦ Σᵢ Kᵢᴴ B Kᵢ`.
-* `Matrix.traceDual_one` — the trace dual of a trace-preserving map is unital.
+* `Matrix.traceDual_one`, `Matrix.traceDual_one_iff` — a linear map is trace preserving iff its
+  trace dual is unital.
+* `Matrix.traceDual_traceDual` — the trace dual is an involution, `Φ** = Φ`.
 -/
 
 @[expose] public section
@@ -47,6 +55,31 @@ variable {n m R : Type*} [Fintype n] [Fintype m] [AddCommMonoid R]
   exact Equiv.sum_comp e.symm (fun i => M i i)
 
 end Reindex
+
+section Composition
+
+variable {s t p q R : Type*} [Fintype s] [Fintype t] [Fintype p] [Fintype q]
+  [NonUnitalNonAssocSemiring R]
+
+/-- The trace of a product of flattened block matrices is the sum of the traces of the products of
+blocks: `Tr(comp A * comp B) = Σᵢⱼ Tr(Aᵢⱼ Bⱼᵢ)`. -/
+lemma trace_comp_mul_comp (A : Matrix s t (Matrix p q R)) (B : Matrix t s (Matrix q p R)) :
+    (comp s t p q R A * comp t s q p R B).trace = ∑ i, ∑ j, (A i j * B j i).trace := by
+  simp only [trace, diag, mul_apply, comp_apply, Fintype.sum_prod_type]
+  exact Finset.sum_congr rfl fun i _ => Finset.sum_comm
+
+end Composition
+
+section VecMulVec
+
+variable {n R : Type*} [Fintype n] [CommSemiring R]
+
+/-- Pairing with a rank-one matrix evaluates a bilinear form: `Tr (A (v wᵀ)) = w ⬝ᵥ A v`. -/
+lemma trace_mul_vecMulVec (A : Matrix n n R) (v w : n → R) :
+    (A * vecMulVec v w).trace = w ⬝ᵥ (A *ᵥ v) := by
+  rw [mul_vecMulVec, trace_vecMulVec, dotProduct_comm]
+
+end VecMulVec
 
 section TraceDual
 
@@ -84,6 +117,14 @@ theorem trace_mul_traceDual [LinearMapClass F R (Matrix n n R) (Matrix m m R)] (
       rw [Matrix.smul_single, smul_eq_mul, mul_one], map_smul]
   simp only [Matrix.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc]
 
+/-- The defining duality for block matrices: applying `Φ` blockwise is dual to applying
+`traceDual Φ` blockwise, `Tr(comp (Y.map Φ) * comp X) = Tr(comp Y * comp (X.map Φ*))`. -/
+theorem trace_comp_map_mul_comp_map_traceDual [LinearMapClass F R (Matrix n n R) (Matrix m m R)]
+    (Φ : F) {s : Type*} [Fintype s] (Y : Matrix s s (Matrix n n R)) (X : Matrix s s (Matrix m m R)) :
+    (comp s s m m R (Y.map Φ) * comp s s m m R X).trace =
+      (comp s s n n R Y * comp s s n n R (X.map (traceDual Φ))).trace := by
+  simp only [trace_comp_mul_comp, map_apply, trace_mul_traceDual]
+
 /-- The trace dual of a Kraus map `A ↦ Σᵢ Kᵢ A Kᵢᴴ` is `B ↦ Σᵢ Kᵢᴴ B Kᵢ`. The trace dual depends
 on `Φ` only through its values, so no linearity of `Φ` is assumed: the Kraus form supplies it. -/
 theorem traceDual_eq_of_kraus [Star R] {Φ : F} {ι : Type*} [Fintype ι] {K : ι → Matrix m n R}
@@ -107,7 +148,8 @@ theorem traceDual_eq_of_kraus [Star R] {Φ : F} {ι : Type*} [Fintype ι] {K : �
     Matrix.mul_assoc x]
   exact Matrix.trace_mul_comm _ _
 
-/-- The trace dual of a trace-preserving map is unital. -/
+/-- The trace dual of a trace-preserving map is unital. The converse, for linear `Φ`, is
+`Matrix.traceDual_one_iff`. -/
 theorem traceDual_one [DecidableEq m] {Φ : F} (hΦ : ∀ A, (Φ A).trace = A.trace) :
     traceDual Φ 1 = 1 := by
   ext j i
@@ -116,6 +158,21 @@ theorem traceDual_one [DecidableEq m] {Φ : F} (hΦ : ∀ A, (Φ A).trace = A.tr
   · subst h
     simp
   · simp [Matrix.trace_single_eq_of_ne _ _ _ h, Ne.symm h]
+
+/-- A linear map is trace preserving iff its trace dual is unital:
+`Tr (Φ A) = Tr (Φ A * 1) = Tr (A * Φ*(1))`. -/
+theorem traceDual_one_iff [DecidableEq m] [LinearMapClass F R (Matrix n n R) (Matrix m m R)]
+    {Φ : F} : traceDual Φ 1 = 1 ↔ ∀ A, (Φ A).trace = A.trace :=
+  ⟨fun h A => by rw [← Matrix.mul_one (Φ A), trace_mul_traceDual, h, Matrix.mul_one],
+    traceDual_one⟩
+
+/-- The trace dual is an involution: `Φ** = Φ`, by the defining duality applied twice,
+`Tr (Φ**(A) B) = Tr (B Φ**(A)) = Tr (Φ*(B) A) = Tr (A Φ*(B)) = Tr (Φ(A) B)`. -/
+theorem traceDual_traceDual [DecidableEq m] [LinearMapClass F R (Matrix n n R) (Matrix m m R)]
+    (Φ : F) (A : Matrix n n R) : traceDual (traceDual Φ) A = Φ A :=
+  Matrix.ext_iff_trace_mul_right.mpr fun B => by
+    rw [Matrix.trace_mul_comm, ← trace_mul_traceDual, Matrix.trace_mul_comm,
+      ← trace_mul_traceDual]
 
 end TraceDual
 
