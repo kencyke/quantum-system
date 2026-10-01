@@ -27,8 +27,8 @@ relative entropy: `Matrix.umegakiEntropy ρ σ` is `S(ω_ρ ‖ ω_σ)` for the 
 value `0`. Logarithms are natural, so the unit is the nat.
 
 A result about `S(ω_ρ ‖ ω_σ)` is a result about `D(ρ ‖ σ)` by definition. Monotonicity under
-channels is Araki's data-processing inequality for the dual channel, a unital normal Schwarz map
-(`Matrix.QuantumChannel.dualSchwarzMap`).
+`2`-positive trace-preserving maps, in particular channels, is Araki's data-processing inequality
+for the dual map, a unital normal Schwarz map (`KPositiveMap.dualSchwarzMap`).
 
 ## Main definitions
 
@@ -48,8 +48,9 @@ and reindexing also have density-matrix forms in namespace `DensityMatrix`):
 * `Matrix.umegakiEntropy_nonneg` — **Klein's inequality** `0 ≤ D(ρ ‖ σ)` when `Tr σ ≤ Tr ρ`.
 * `Matrix.umegakiEntropy_eq_zero_iff` — **faithfulness**: `D(ρ ‖ σ) = 0 ↔ ρ = σ` when
   `Tr ρ = Tr σ`.
-* `Matrix.umegakiEntropy_channel_le` — **monotonicity** (data-processing inequality):
-  `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` for a quantum channel `Φ`.
+* `Matrix.umegakiEntropy_le_of_kPositiveMap`, `Matrix.umegakiEntropy_channel_le` —
+  **monotonicity** (data-processing inequality): `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` for a `2`-positive
+  trace-preserving map `Φ`, in particular a quantum channel.
 * `Matrix.umegakiEntropy_channel_eq_of_recoverable` — equality in monotonicity when a recovery
   channel exists: if `R(Φ(ρ)) = ρ` and `R(Φ(σ)) = σ`, then `D(Φ(ρ) ‖ Φ(σ)) = D(ρ ‖ σ)`.
 * `Matrix.umegakiEntropy_map_starAlgEquiv`, `Matrix.umegakiEntropy_reindex` — isometric invariance
@@ -60,8 +61,9 @@ and reindexing also have density-matrix forms in namespace `DensityMatrix`):
 
 ## Proofs
 
-Monotonicity is `VonNeumannAlgebra.arakiEntropy_comp_le` for the dual channel
-`Φ* B = Σᵢ Kᵢᴴ B Kᵢ`, which pulls `ω_ρ` back to `ω_{Φ(ρ)}` (`Matrix.trace_mul_traceDual`).
+Monotonicity is `VonNeumannAlgebra.arakiEntropy_comp_le` for the trace dual `Φ*`, a unital
+Schwarz map by the Kadison–Schwarz inequality, which pulls `ω_ρ` back to `ω_{Φ(ρ)}`
+(`Matrix.trace_mul_traceDual`).
 Joint convexity differentiates `s ↦ Tr ρˢ σ¹⁻ˢ` at `s = 1` and uses Lieb's concavity theorem.
 Faithfulness writes `D(ρ ‖ σ)` in the eigenbases of `ρ` and `σ` as a sum of Kullback–Leibler terms.
 
@@ -71,6 +73,14 @@ monotonicity; this direction is `Matrix.umegakiEntropy_channel_eq_of_recoverable
 gives the converse — equality forces the existence of such an R, explicitly the Petz map
   R(·) = σ^(1/2) Φ*(Φ(σ)^(-1/2) · Φ(σ)^(-1/2)) σ^(1/2)
 with Φ* the trace dual `Matrix.traceDual Φ` — but that converse is **not** formalised here.
+
+## TODO
+
+* Monotonicity `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` holds for every positive trace-preserving map `Φ`
+  (Müller-Hermes–Reeb). Only the `2`-positive case is proved here
+  (`Matrix.umegakiEntropy_le_of_kPositiveMap`): its proof needs the dual `Φ*` to be a Schwarz map,
+  which the Kadison–Schwarz inequality gives for `2`-positive `Φ` but not for merely positive `Φ`.
+  The positive case goes through the sandwiched Rényi divergences instead.
 
 ## References
 
@@ -82,6 +92,8 @@ with Φ* the trace dual `Matrix.traceDual Φ` — but that converse is **not** f
 * Lindblad, *Completely positive maps and entropy inequalities*
 * Petz, *Monotonicity of quantum relative entropy revisited*
 * Ruskai, *Inequalities for quantum entropy: A review with conditions for equality*
+* A. Müller-Hermes, D. Reeb, *Monotonicity of the quantum relative entropy under positive maps*,
+  Ann. Henri Poincaré 18 (2017), 1777–1788.
 -/
 
 @[expose] public section
@@ -673,25 +685,35 @@ private lemma hasDerivAt_trace_rpow_mul {ρ σ : Matrix n n ℂ} (hρ : ρ.PosSe
 
 /-! ### Monotonicity -/
 
-/-- **Monotonicity of Umegaki's relative entropy** (data-processing inequality, Lindblad–Uhlmann):
-for a quantum channel `Φ` and positive semidefinite `ρ, σ`, `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)`.
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **Monotonicity of Umegaki's relative entropy** under `2`-positive trace-preserving maps
+(data-processing inequality, Uhlmann): for a `2`-positive trace-preserving `φ : M_n(ℂ) → M_m(ℂ)`
+and positive semidefinite `ρ, σ`, `D(φ(ρ) ‖ φ(σ)) ≤ D(ρ ‖ σ)`.
 
 This is Uhlmann's monotonicity theorem for Araki's relative entropy
-(`VonNeumannAlgebra.arakiEntropy_comp_le`) applied to the dual channel `Φ*`, a unital normal
-Schwarz map (`Matrix.QuantumChannel.dualSchwarzMap`) that pulls `ω_ρ` back to `ω_{Φ(ρ)}`:
-`Tr (ρ Φ*(B)) = Tr (Φ(ρ) B)` (`Matrix.trace_mul_traceDual`). -/
-theorem umegakiEntropy_channel_le (Φ : QuantumChannel n m) {ρ σ : Matrix n n ℂ}
-    (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) : D(Φ.val ρ ∥ Φ.val σ) ≤ D(ρ ∥ σ) := by
-  have hα := QuantumChannel.isNormalMap_dualSchwarzMap Φ
+(`VonNeumannAlgebra.arakiEntropy_comp_le`) applied to the dual `φ*`, a unital normal Schwarz map
+(`KPositiveMap.dualSchwarzMap`) that pulls `ω_ρ` back to `ω_{φ(ρ)}`:
+`Tr (ρ φ*(B)) = Tr (φ(ρ) B)` (`Matrix.trace_mul_traceDual`). -/
+theorem umegakiEntropy_le_of_kPositiveMap (φ : KPositiveMap 2 (Matrix n n ℂ) (Matrix m m ℂ))
+    (hφ : IsTracePreserving φ) {ρ σ : Matrix n n ℂ} (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) :
+    D(φ ρ ∥ φ σ) ≤ D(ρ ∥ σ) := by
+  have hα := KPositiveMap.isNormalMap_dualSchwarzMap φ hφ
+  have hpos {τ : Matrix n n ℂ} (hτ : τ.PosSemidef) : (φ τ).PosSemidef :=
+    KPositiveMapClass.posSemidef_map (k := 2) (by norm_num) φ hτ
   have key : ∀ {τ : Matrix n n ℂ} (hτ : τ.PosSemidef),
-      (Φ.val.posSemidef_map hτ).normalFunctional =
-        hτ.normalFunctional.comp (QuantumChannel.dualSchwarzMap Φ) hα := fun {τ} hτ =>
-    ((Φ.val.posSemidef_map hτ).eq_normalFunctional_of_apply fun B => by
-      rw [VonNeumannAlgebra.NormalFunctional.comp_apply, QuantumChannel.dualSchwarzMap_apply,
+      (hpos hτ).normalFunctional = hτ.normalFunctional.comp (φ.dualSchwarzMap hφ) hα :=
+    fun {τ} hτ => ((hpos hτ).eq_normalFunctional_of_apply fun B => by
+      rw [VonNeumannAlgebra.NormalFunctional.comp_apply, KPositiveMap.dualSchwarzMap_apply,
         hτ.normalFunctional_apply, trace_mul_traceDual]).symm
-  rw [umegakiEntropy_def (Φ.val.posSemidef_map hρ)
-      (Φ.val.posSemidef_map hσ), umegakiEntropy_def hρ hσ, key hρ, key hσ]
-  exact VonNeumannAlgebra.arakiEntropy_comp_le _ (QuantumChannel.dualSchwarzMap_one Φ) hα _ _
+  rw [umegakiEntropy_def (hpos hρ) (hpos hσ), umegakiEntropy_def hρ hσ, key hρ, key hσ]
+  exact VonNeumannAlgebra.arakiEntropy_comp_le _ (KPositiveMap.dualSchwarzMap_one φ hφ) hα _ _
+
+/-- **Monotonicity of Umegaki's relative entropy** (data-processing inequality, Lindblad–Uhlmann):
+for a quantum channel `Φ` and positive semidefinite `ρ, σ`, `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)`. A quantum
+channel is `2`-positive, and `Matrix.umegakiEntropy_le_of_kPositiveMap` applies. -/
+theorem umegakiEntropy_channel_le (Φ : QuantumChannel n m) {ρ σ : Matrix n n ℂ}
+    (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) : D(Φ.val ρ ∥ Φ.val σ) ≤ D(ρ ∥ σ) :=
+  umegakiEntropy_le_of_kPositiveMap Φ.toKPositiveMap₂ Φ.property hρ hσ
 
 /-! ### Equality under recoverable channels -/
 
