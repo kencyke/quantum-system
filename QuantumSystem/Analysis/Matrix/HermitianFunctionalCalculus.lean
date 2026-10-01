@@ -472,8 +472,8 @@ lemma cfc_blockDiagonal {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι] 
 
 /-! ### Block-matrix tools for Jensen's operator inequality
 
-Löwner convexity on an interval `s ∋ 0` with `f 0 ≤ 0` is equivalent to Jensen convexity in the HPJ form
-(`Matrix.isJensenConvexOn_iff` in `Order.lean`). The proof uses the block diagonal technique: embed
+Löwner convexity on an interval `s ∋ 0` with `f 0 ≤ 0` is equivalent to the sub-unital Jensen
+inequality (`Matrix.isLownerConvexOn_and_map_zero_nonpos_iff` in `Order.lean`). The proof uses the block diagonal technique: embed
 the 2-term HPJ problem into a larger space using block matrices. This section provides the
 block-matrix identities.
 
