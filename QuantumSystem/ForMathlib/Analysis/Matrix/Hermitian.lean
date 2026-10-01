@@ -12,8 +12,9 @@ public import Mathlib.Analysis.Matrix.PosDef
 /-!
 # Hermitian Matrices
 
-This file collects basic lemmas about Hermitian matrices over `ℂ`; the rank-one decompositions
-of the last section are over any `RCLike` field.
+This file collects basic lemmas about Hermitian and positive semidefinite matrices over `ℂ`; the
+rank-one decompositions of the last section, and the nonnegativity of `Tr (A B)` for positive
+semidefinite `A` and `B` derived from them, are over any `RCLike` field.
 
 ## Main results
 
@@ -31,8 +32,12 @@ of the last section are over any `RCLike` field.
   positive semidefinite `ρ`.
 - `IsHermitian.eq_sum_eigenvalues_smul_vecMulVec`: the spectral decomposition
   `A = Σⱼ λⱼ uⱼ uⱼᴴ` of a Hermitian matrix.
+- `posSemidef_iff_dotProduct_mulVec_complex`: over `ℂ` a matrix is positive semidefinite
+  iff its quadratic form is nonnegative; the Hermitian condition is automatic.
 - `PosSemidef.exists_eq_sum_vecMulVec_rank`: a positive semidefinite matrix is a sum of
   `rank M` rank-one matrices `vᵢ vᵢᴴ`.
+- `PosSemidef.trace_mul_nonneg`: the trace of a product of two positive semidefinite matrices is
+  nonnegative.
 -/
 @[expose] public section
 
@@ -99,6 +104,26 @@ lemma IsHermitian.smul_complex_real {m : Type*}
   unfold IsHermitian at *
   rw [conjTranspose_smul, hA]
   simp only [RCLike.star_def, Complex.conj_ofReal]
+
+section QuadraticForm
+
+open scoped ComplexOrder
+
+variable {n : Type*} [Fintype n]
+
+/-- Over `ℂ` a matrix is positive semidefinite iff its quadratic form is nonnegative: a
+nonnegative, in particular real, quadratic form `v ↦ vᴴ A v` forces `A` to be Hermitian. -/
+lemma posSemidef_iff_dotProduct_mulVec_complex {A : Matrix n n ℂ} :
+    A.PosSemidef ↔ ∀ x, 0 ≤ star x ⬝ᵥ (A *ᵥ x) := by
+  refine ⟨fun h => h.dotProduct_mulVec_nonneg, fun h => .of_dotProduct_mulVec_nonneg ?_ h⟩
+  classical
+  rw [← isSymmetric_toEuclideanLin_iff, LinearMap.isSymmetric_iff_inner_map_self_real]
+  intro v
+  rw [EuclideanSpace.inner_eq_star_dotProduct, Complex.conj_eq_iff_im, dotProduct_star,
+    Complex.star_def, Complex.conj_im, neg_eq_zero]
+  simpa [toEuclideanLin, dotProduct_comm] using (Complex.nonneg_iff.mp (h (WithLp.ofLp v))).2.symm
+
+end QuadraticForm
 
 section Eigenbasis
 
@@ -187,6 +212,16 @@ theorem PosSemidef.exists_eq_sum_vecMulVec_rank {M : Matrix n n 𝕜} (hM : M.Po
     Finset.sum_filter_of_ne (fun j _ h => by_contra fun hj => h (hw0 j hj))]
   conv_lhs => rw [hA.eq_sum_eigenvalues_smul_vecMulVec]
   exact Finset.sum_congr rfl fun j _ => (hw j).symm
+
+/-- The trace of a product of two positive semidefinite matrices is nonnegative: writing
+`B = Σᵢ vᵢ vᵢᴴ`, it is `Σᵢ vᵢᴴ A vᵢ`. -/
+lemma PosSemidef.trace_mul_nonneg {A B : Matrix n n 𝕜} (hA : A.PosSemidef) (hB : B.PosSemidef) :
+    0 ≤ (A * B).trace := by
+  obtain ⟨v, hv⟩ := hB.exists_eq_sum_vecMulVec_rank
+  rw [hv, Matrix.mul_sum, trace_sum]
+  refine Finset.sum_nonneg fun i _ => ?_
+  rw [mul_vecMulVec, trace_vecMulVec, dotProduct_comm]
+  exact hA.dotProduct_mulVec_nonneg (v i)
 
 end RankOne
 
