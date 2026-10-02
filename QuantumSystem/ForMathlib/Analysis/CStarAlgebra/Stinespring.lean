@@ -72,9 +72,11 @@ C⋆-algebras are automatically bounded.
   `CompletelyPositiveMap.stinespringOperator_apply` (`V ξ = [1 ⊗ ξ]`),
   `CompletelyPositiveMap.adjoint_stinespringOperator_comp_self` (`V† V = φ 1`),
   `CompletelyPositiveMap.isometry_stinespringOperator_iff` (`V` is an isometry iff `φ 1 = 1`),
-  `CompletelyPositiveMap.norm_stinespringOperator_sq_eq_norm_map_one` (`‖V‖² = ‖φ 1‖`),
-  `CompletelyPositiveMap.opNorm_eq_norm_map_one` (`‖φ‖ = ‖φ 1‖`) and
-  `CompletelyPositiveMap.exists_unital_stinespring_dilation`.
+  `CompletelyPositiveMap.norm_stinespringOperator_sq_eq_norm_map_one` (`‖V‖² = ‖φ 1‖`) and
+  `CompletelyPositiveMap.exists_unital_stinespring_dilation`. Together with
+  `CompletelyPositiveMap.norm_stinespringOperator_sq`, the identity `‖V‖² = ‖φ 1‖` gives
+  `‖φ‖ = ‖φ 1‖`, which holds more generally for `2`-positive maps
+  (`KPositiveMapClass.opNorm_eq_norm_map_one` in `KPositiveMap.lean`) and is not restated here.
 
 ## References
 
@@ -944,11 +946,6 @@ theorem isometry_stinespringOperator_iff : Isometry φ.stinespringOperator ↔ �
 /-- `‖V‖² = ‖φ 1‖`. -/
 theorem norm_stinespringOperator_sq_eq_norm_map_one : ‖φ.stinespringOperator‖ ^ 2 = ‖φ 1‖ := by
   rw [← adjoint_stinespringOperator_comp_self, ContinuousLinearMap.norm_adjoint_comp_self, sq]
-
-/-- A completely positive map `φ : A → B(H)` on a unital C⋆-algebra attains its norm at the unit:
-`‖φ‖ = ‖φ 1‖`, from `‖V‖² = ‖φ‖` and `‖V‖² = ‖φ 1‖`. -/
-theorem opNorm_eq_norm_map_one : ‖φ‖ₒₚ = ‖φ 1‖ := by
-  rw [← norm_stinespringOperator_sq, norm_stinespringOperator_sq_eq_norm_map_one]
 
 /-- **Stinespring's theorem** for completely positive maps `φ : A → B(H)` on a unital C⋆-algebra
 `A`: there are a Hilbert space `K`, a unital ⋆-representation `π : A →⋆ₐ[ℂ] B(K)` and a bounded

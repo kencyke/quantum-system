@@ -79,9 +79,11 @@ Mathlib's `CompletelyPositiveMap` condition for general C⋆-algebras, specialis
 The operator-algebraic side is not confined to matrices. Stinespring's theorem itself holds for
 completely positive maps `A → B(H)` on arbitrary, possibly non-unital, C⋆-algebras
 (`CompletelyPositiveMap.exists_stinespring_dilation`). The Kadison–Schwarz inequality
-`φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` for `2`-positive, in particular completely positive, maps between
-arbitrary unital C⋆-algebras is `KPositiveMapClass.le_norm_smul_map_star_mul`, with the normalised
-form `KPositiveMapClass.le_map_star_mul` under `φ 1 ≤ 1`
+`φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` for `2`-positive, in particular completely positive, maps on an
+arbitrary unital C⋆-algebra, into a possibly non-unital one, is
+`KPositiveMapClass.le_norm_smul_map_star_mul`, with `‖φ‖` in place of `‖φ 1‖` on a non-unital
+domain (`KPositiveMapClass.le_opNorm_smul_map_star_mul`) and the normalised form
+`KPositiveMapClass.le_map_star_mul` under `φ 1 ≤ 1` between unital C⋆-algebras
 (`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`), and Kraus maps between the
 operator algebras of arbitrary Hilbert spaces are `SchwarzMap.ofKraus`
 (`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/SchwarzMap.lean`). A matrix channel enters that

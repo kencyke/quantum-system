@@ -33,8 +33,8 @@ Completely positive maps are Mathlib's bundled `CompletelyPositiveMap`
 
 ## Main statements
 
-* `CompletelyPositiveMap.isHermitian_map`, `CompletelyPositiveMap.posSemidef_map`: CP maps
-  preserve Hermitian and positive semidefinite matrices.
+* `Matrix.PosSemidef.map`: positive maps, in particular completely positive maps, preserve
+  positive semidefinite matrices.
 
 ## Mathematical Background
 
@@ -44,13 +44,16 @@ Complete positivity is Mathlib's `CompletelyPositiveMap` condition: applying `Φ
 matrices form the C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)`; by
 `CStarMatrix.nonneg_iff_posSemidef_comp` its order is positive semidefiniteness of the flattened
 `kn × kn` matrix, which is the physicists' condition that `id_k ⊗ Φ` be positive
-(`CompletelyPositiveMap.posSemidef_comp_map` in `Choi.lean`).
+(`Matrix.posSemidef_comp_map` in `Choi.lean`).
 
 This file specialises that general notion to the matrix algebras `M_n(ℂ)`. The general theory is
 used beyond matrices elsewhere: the Kadison–Schwarz inequality
-`φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` for `2`-positive, in particular completely positive, maps between
-arbitrary unital C⋆-algebras is `KPositiveMapClass.le_norm_smul_map_star_mul`, and its normalised
-form `φ(a)⋆ φ(a) ≤ φ(a⋆ a)` under `φ 1 ≤ 1` is `KPositiveMapClass.le_map_star_mul`
+`φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` for `2`-positive, in particular completely positive, maps on an
+arbitrary unital C⋆-algebra, into a possibly non-unital one, is
+`KPositiveMapClass.le_norm_smul_map_star_mul`; on a non-unital domain `‖φ‖` replaces `‖φ 1‖`
+(`KPositiveMapClass.le_opNorm_smul_map_star_mul`), and the normalised form
+`φ(a)⋆ φ(a) ≤ φ(a⋆ a)` under `φ 1 ≤ 1` between unital C⋆-algebras is
+`KPositiveMapClass.le_map_star_mul`
 (`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`); and the trace dual of a channel
 is a Schwarz map on `B(ℂᵐ)` (`QuantumSystem/Analysis/Matrix/QuantumChannel/Dual.lean`).
 
@@ -130,27 +133,24 @@ noncomputable def QuantumChannel.comp (Ψ : QuantumChannel m k) (Φ : QuantumCha
 
 end Matrix
 
-/-! ### Completely positive maps on matrix algebras -/
+/-! ### Positive maps on matrix algebras -/
 
-namespace CompletelyPositiveMap
+namespace Matrix
 
-open Matrix
-open scoped ComplexOrder CStarAlgebra
+open scoped MatrixOrder ComplexOrder
 
-variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
+/-- A positive map `φ : M_n(ℂ) → M_m(ℂ)`, of any `OrderHomClass` for the Löwner order, sends
+positive semidefinite matrices to positive semidefinite matrices. Completely positive maps are
+positive by Mathlib's instance; a `k`-positive map with `k ≥ 1` is positive by
+`KPositiveMapClass.orderHomClass`, an instance for `k = 2` (`KPositiveMapClass.instOrderHomClass`).
+Hermiticity is preserved by every `StarHomClass`
+(`IsSelfAdjoint.map`). -/
+theorem PosSemidef.map {n m F : Type*} [Finite n] [Finite m]
+    [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] [ZeroHomClass F (Matrix n n ℂ) (Matrix m m ℂ)]
+    [OrderHomClass F (Matrix n n ℂ) (Matrix m m ℂ)] {A : Matrix n n ℂ} (hA : A.PosSemidef)
+    (φ : F) : (φ A).PosSemidef := by
+  have := Fintype.ofFinite n
+  have := Fintype.ofFinite m
+  exact Matrix.nonneg_iff_posSemidef.mp (map_nonneg φ hA.nonneg)
 
-open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- A completely positive map sends positive semidefinite matrices to positive semidefinite
-matrices. -/
-lemma posSemidef_map (φ : Matrix n n ℂ →CP Matrix m m ℂ) {A : Matrix n n ℂ} (hA : A.PosSemidef) :
-    (φ A).PosSemidef :=
-  Matrix.nonneg_iff_posSemidef.mp (map_nonneg φ hA.nonneg)
-
-open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- A completely positive map preserves Hermitianity of matrices: it is positive, and positive
-ℂ-linear maps between C⋆-algebras preserve `⋆`. -/
-lemma isHermitian_map (φ : Matrix n n ℂ →CP Matrix m m ℂ) {A : Matrix n n ℂ}
-    (hA : A.IsHermitian) : (φ A).IsHermitian :=
-  (map_star φ A).symm.trans (congrArg _ hA)
-
-end CompletelyPositiveMap
+end Matrix

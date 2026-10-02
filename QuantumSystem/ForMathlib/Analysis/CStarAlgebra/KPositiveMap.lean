@@ -19,7 +19,8 @@ matrix over its domain preserves nonnegativity (Paulsen, *Completely Bounded Map
 Algebras*, Ch. 3). Mathlib's completely positive maps (`CompletelyPositiveMap`) are the maps that
 are `k`-positive for every `k`; this file adds the notion at a single matrix size `k`, mirroring
 Mathlib's structure and morphism class. A `k`-positive map is `j`-positive for every `j ≤ k`
-(`KPositiveMapClass.of_le`), and positive for `k ≥ 1` (`KPositiveMapClass.orderHomClass`).
+(`KPositiveMapClass.of_le`), and, when linear, positive for `k ≥ 1`
+(`KPositiveMapClass.orderHomClass`).
 
 The main result is the **Kadison–Schwarz inequality** of Choi (*A Schwarz inequality for positive
 linear maps on C⋆-algebras*, Illinois J. Math. 18 (1974)), for `2`-positive, in particular
@@ -28,7 +29,11 @@ Cauchy–Schwarz inequality `φ(x⋆ y)⋆ φ(x⋆ y) ≤ ‖φ(x⋆ x)‖ • �
 `(φ(xᵢ⋆ xⱼ))ᵢⱼ`. With `x = 1` it is `φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` on a unital domain, normalised
 to `φ(a)⋆ φ(a) ≤ φ(a⋆ a)` under `φ 1 ≤ 1`; with `x` running through an approximate unit it is
 `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` on a non-unital domain (Lance, *Hilbert C⋆-modules*, Lemma 5.3, for
-completely positive maps). On a unital domain it gives `‖φ‖ = ‖φ 1‖`.
+completely positive maps). On a unital domain it gives `‖φ‖ = ‖φ 1‖`. Here `φ : F` is a
+`FunLike` map with `LinearMapClass F ℂ A₁ A₂`, and `‖φ‖` is the operator norm of the bounded
+positive map `PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂`, which exists since a
+`2`-positive linear map is positive (`KPositiveMapClass.instOrderHomClass`) and positive maps
+between C⋆-algebras are bounded.
 
 ## Main definitions
 
@@ -45,9 +50,11 @@ completely positive maps). On a unital domain it gives `‖φ‖ = ‖φ 1‖`.
   generally every reindexing `(M (f i) (f j))ᵢⱼ`, of a nonnegative `CStarMatrix` are nonnegative.
 * `CStarMatrix.star_mul_le_norm_smul_of_nonneg` — if `!![p, b; b⋆, q]` is nonnegative, then
   `b⋆ b ≤ ‖p‖ • q`.
-* `CompletelyPositiveMap.instKPositiveMapClass` — completely positive maps are `k`-positive.
+* `CompletelyPositiveMapClass.instKPositiveMapClass` — completely positive maps, of any
+  `CompletelyPositiveMapClass`, are `k`-positive.
 * `KPositiveMapClass.of_le`, `KPositiveMapClass.orderHomClass` — a `k`-positive map is
-  `j`-positive for `j ≤ k`, and positive for `k ≥ 1`.
+  `j`-positive for `j ≤ k`, and positive for `k ≥ 1`; for `k = 2` this is the instance
+  `KPositiveMapClass.instOrderHomClass`.
 * `KPositiveMapClass.star_map_mul_le_norm_smul` — the Cauchy–Schwarz inequality
   `φ(x⋆ y)⋆ φ(x⋆ y) ≤ ‖φ(x⋆ x)‖ • φ(y⋆ y)` for `2`-positive maps.
 * `KPositiveMapClass.le_norm_smul_map_star_mul` — the Kadison–Schwarz inequality
@@ -58,19 +65,26 @@ completely positive maps). On a unital domain it gives `‖φ‖ = ‖φ 1‖`.
   — the Kadison–Schwarz inequality `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` for `2`-positive maps on a
   possibly non-unital domain.
 * `KPositiveMapClass.norm_apply_le_norm_map_one`, `KPositiveMapClass.opNorm_eq_norm_map_one` — a
-  `2`-positive map on a unital domain attains its norm at the unit, `‖φ‖ = ‖φ 1‖`.
+  `2`-positive map on a unital domain attains its norm at the unit, `‖φ‖ = ‖φ 1‖`;
+  `KPositiveMapClass.norm_apply_le_of_map_one_le` — so `φ 1 ≤ 1` makes it a contraction.
+* `OrderHomClass.norm_map_one_le_one` — a positive map with `φ 1 ≤ 1` has `‖φ 1‖ ≤ 1`.
 
 ## TODO
 
-* `‖φ‖ = ‖φ 1‖` holds for every positive map `φ` between unital C⋆-algebras, by the Russo–Dye
+* `‖φ‖ = ‖φ 1‖` holds for every positive map `φ` on a unital C⋆-algebra, by the Russo–Dye
   theorem (the closed unit ball is the closed convex hull of the unitaries). Only the `2`-positive
   case is proved here (`KPositiveMapClass.opNorm_eq_norm_map_one`), through the Kadison–Schwarz
   inequality; the general positive case needs Russo–Dye, which Mathlib does not provide.
+* Kadison's inequality `φ(a)² ≤ φ(a²)` holds for every positive unital `φ` and self-adjoint `a`
+  (Kadison 1952). Only the `2`-positive form `φ(a)⋆ φ(a) ≤ φ(a⋆ a)`, for all `a`, is proved here
+  (`KPositiveMapClass.le_map_star_mul`).
 
 ## References
 
 * M.-D. Choi, *A Schwarz inequality for positive linear maps on C⋆-algebras*, Illinois J. Math.
   18 (1974), 565–574.
+* R. V. Kadison, *A generalized Schwarz inequality and algebraic invariants for operator
+  algebras*, Ann. of Math. 56 (1952), 494–503.
 * E. C. Lance, *Hilbert C⋆-Modules*, London Math. Soc. Lecture Note Ser. 210 (1995), Lemma 5.3.
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
   (2002), Ch. 3.
@@ -250,12 +264,14 @@ instance : KPositiveMapClass (KPositiveMap k A₁ A₂) k A₁ A₂ where
 
 end KPositiveMap
 
-/-- A completely positive map is `k`-positive for every `k`. -/
-instance CompletelyPositiveMap.instKPositiveMapClass {k : ℕ} {A₁ A₂ : Type*}
+/-- A completely positive map is `k`-positive for every `k`. This covers the bundled maps
+`A₁ →CP A₂` and every other `CompletelyPositiveMapClass`, such as ⋆-homomorphisms
+(`NonUnitalStarAlgHomClass.instCompletelyPositiveMapClass`). -/
+instance CompletelyPositiveMapClass.instKPositiveMapClass {k : ℕ} {F A₁ A₂ : Type*}
     [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂]
-    [StarOrderedRing A₁] [StarOrderedRing A₂] :
-    KPositiveMapClass (A₁ →CP A₂) k A₁ A₂ where
-  map_cstarMatrix_nonneg' φ := φ.map_cstarMatrix_nonneg' k
+    [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂]
+    [CompletelyPositiveMapClass F A₁ A₂] : KPositiveMapClass F k A₁ A₂ where
+  map_cstarMatrix_nonneg' φ := CompletelyPositiveMapClass.map_cstarMatrix_nonneg' φ k
 
 namespace KPositiveMapClass
 
@@ -296,6 +312,15 @@ theorem orderHomClass {k : ℕ} [KPositiveMapClass F k A₁ A₂] [LinearMapClas
   simp only [X, CStarMatrix.mul_apply, CStarMatrix.star_apply, CStarMatrix.map_apply,
     Finset.univ_unique, Finset.sum_singleton] at h
   exact h
+
+/-- A `2`-positive linear map is positive (`KPositiveMapClass.orderHomClass`). The Kadison–Schwarz
+inequalities are stated for `2`-positive maps, so their positivity is registered once here. Like
+`SchwarzMapClass.instOrderHomClass`, it has low priority, so that cheaper instances are tried
+first. -/
+instance (priority := 100) instOrderHomClass [KPositiveMapClass F 2 A₁ A₂]
+    [LinearMapClass F ℂ A₁ A₂] :
+    OrderHomClass F A₁ A₂ :=
+  orderHomClass (k := 2) (by norm_num)
 
 end NonUnital
 
@@ -393,12 +418,12 @@ theorem le_smul_map_star_mul_of_norm_le [LinearMapClass F ℂ A₁ A₂] (φ : F
       nlinarith [norm_nonneg e]
     _ = C := mul_one C
 
-/-- The **Kadison–Schwarz inequality** for a positive `2`-positive map on a possibly non-unital
+/-- The **Kadison–Schwarz inequality** for a `2`-positive map on a possibly non-unital
 C⋆-algebra, in terms of its operator norm: `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` (Lance, Lemma 5.3, for
-completely positive maps). Positive linear maps between C⋆-algebras are bounded, and `‖φ‖` is the
-norm of `PositiveContinuousLinearMap.ofClass φ`. -/
-theorem le_opNorm_smul_map_star_mul [LinearMapClass F ℂ A₁ A₂] [OrderHomClass F A₁ A₂] (φ : F)
-    (a : A₁) :
+completely positive maps). A `2`-positive map is positive (`KPositiveMapClass.instOrderHomClass`),
+positive linear maps between C⋆-algebras are bounded, and `‖φ‖` is the norm of
+`PositiveContinuousLinearMap.ofClass φ`. -/
+theorem le_opNorm_smul_map_star_mul [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
     star (φ a) * φ a ≤
       ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ • φ (star a * a) :=
   le_smul_map_star_mul_of_norm_le φ (fun x => (PositiveContinuousLinearMap.ofClass φ :
@@ -435,7 +460,6 @@ theorem le_norm_smul_map_star_mul (φ : F) (a : A₁) :
 `φ(a⋆ a) ≤ ‖a⋆ a‖ • φ 1` by positivity of `φ`. -/
 theorem norm_apply_le_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
     ‖φ a‖ ≤ ‖φ 1‖ * ‖a‖ := by
-  have := orderHomClass (F := F) (k := 2) (by norm_num)
   have h₁ : ‖φ (star a * a)‖ ≤ ‖φ 1‖ * ‖star a * a‖ := by
     have hle : φ (star a * a) ≤ ‖star a * a‖ • φ 1 := by
       rw [← Complex.coe_smul, ← map_smul, Complex.coe_smul, ← Algebra.algebraMap_eq_smul_one]
@@ -450,9 +474,10 @@ theorem norm_apply_le_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) (a 
     nlinarith [norm_nonneg (φ 1), norm_nonneg (φ (star a * a))]
   exact (mul_self_le_mul_self_iff (norm_nonneg _) (by positivity)).2 h₃
 
-/-- A positive `2`-positive map on a unital C⋆-algebra attains its norm at the unit:
-`‖φ‖ = ‖φ 1‖`. -/
-theorem opNorm_eq_norm_map_one [LinearMapClass F ℂ A₁ A₂] [OrderHomClass F A₁ A₂] (φ : F) :
+/-- A `2`-positive map on a unital C⋆-algebra attains its norm at the unit: `‖φ‖ = ‖φ 1‖`, where
+`‖φ‖` is the norm of the bounded positive map `PositiveContinuousLinearMap.ofClass φ`
+(`KPositiveMapClass.instOrderHomClass`). -/
+theorem opNorm_eq_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) :
     ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ = ‖φ 1‖ := by
   refine le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _)
     (norm_apply_le_norm_map_one φ)) ?_
@@ -468,6 +493,14 @@ end Unital
 
 /-! ### Unital domain and codomain -/
 
+/-- A positive map between unital C⋆-algebras with `φ 1 ≤ 1` has `‖φ 1‖ ≤ 1`, since
+`0 ≤ φ 1 ≤ 1`. A `2`-positive linear map is positive (`KPositiveMapClass.instOrderHomClass`). -/
+theorem _root_.OrderHomClass.norm_map_one_le_one {F A₁ A₂ : Type*} [CStarAlgebra A₁]
+    [CStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂]
+    [FunLike F A₁ A₂] [ZeroHomClass F A₁ A₂] [OrderHomClass F A₁ A₂] (φ : F) (hφ : φ 1 ≤ 1) :
+    ‖φ 1‖ ≤ 1 :=
+  (CStarAlgebra.norm_le_one_iff_of_nonneg _ (map_zero φ ▸ OrderHomClass.mono φ zero_le_one)).2 hφ
+
 section Unital₂
 
 variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂]
@@ -478,12 +511,19 @@ variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂] [PartialO
 `KPositiveMapClass.le_norm_smul_map_star_mul`. -/
 theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
     star (φ a) * φ a ≤ φ (star a * a) := by
-  have hn : ‖φ 1‖ ≤ 1 :=
-    (CStarAlgebra.norm_le_norm_of_le_of_nonneg hφ (map_one_nonneg φ)).trans norm_one_le_one
   refine (le_norm_smul_map_star_mul φ a).trans ?_
+  have hn : ‖φ 1‖ ≤ 1 := (CStarAlgebra.norm_le_one_iff_of_nonneg _ (map_one_nonneg φ)).2 hφ
   calc ‖φ 1‖ • φ (star a * a) ≤ (1 : ℝ) • φ (star a * a) :=
         smul_le_smul_of_nonneg_right hn (map_star_mul_self_nonneg φ a)
     _ = φ (star a * a) := one_smul _ _
+
+/-- A `2`-positive map with `φ 1 ≤ 1` is a contraction, `‖φ a‖ ≤ ‖a‖`: `‖φ 1‖ ≤ 1`
+(`OrderHomClass.norm_map_one_le_one`) in `KPositiveMapClass.norm_apply_le_norm_map_one`. -/
+theorem norm_apply_le_of_map_one_le [LinearMapClass F ℂ A₁ A₂] (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
+    ‖φ a‖ ≤ ‖a‖ := by
+  calc ‖φ a‖ ≤ ‖φ 1‖ * ‖a‖ := norm_apply_le_norm_map_one φ a
+    _ ≤ 1 * ‖a‖ := by gcongr; exact OrderHomClass.norm_map_one_le_one φ hφ
+    _ = ‖a‖ := one_mul _
 
 end Unital₂
 

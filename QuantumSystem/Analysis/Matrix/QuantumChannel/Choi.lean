@@ -41,18 +41,18 @@ For a linear map `Φ : M_n(ℂ) → M_m(ℂ)` the following are equivalent:
 ## Main statements
 
 * `Matrix.choiMatrix_eq_sum_kronecker`: `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)`.
-* `KPositiveMapClass.posSemidef_comp_map`: `k`-positivity in matrix form, `id_k ⊗ φ` sends
+* `Matrix.posSemidef_comp_map`: `k`-positivity in matrix form, `id_k ⊗ φ` sends
   positive semidefinite `kn × kn` matrices to positive semidefinite `km × km` matrices.
-* `KPositiveMapClass.posSemidef_choiMatrix`: the Choi matrix of an `n`-positive map is positive
+* `Matrix.posSemidef_choiMatrix_of_kPositive`: the Choi matrix of an `n`-positive map is positive
   semidefinite.
 * `Matrix.exists_kraus_of_posSemidef_choiMatrix`: a map with positive semidefinite Choi matrix has
   a Kraus representation with `rank J(Φ)` operators.
 * `Matrix.rank_choiMatrix_le_card_of_kraus`: every Kraus representation has at least `rank J(Φ)`
   operators; `Matrix.rank_choiMatrix_eq_card_iff_linearIndependent`: exactly `rank J(Φ)` iff the
   Kraus operators are linearly independent.
-* `KPositiveMapClass.posSemidef_comp_map_traceDual`: the trace dual of a `k`-positive map is
+* `Matrix.posSemidef_comp_map_traceDual`: the trace dual of a `k`-positive map is
   `k`-positive, by self-duality of the positive semidefinite cone.
-* `KPositiveMapClass.posSemidef_choiMatrix_of_min_le`: the Choi matrix of a `k`-positive map with
+* `Matrix.posSemidef_choiMatrix_of_min_le`: the Choi matrix of a `k`-positive map with
   `k ≥ min(n, m)` is positive semidefinite; for `k ≥ m` through the trace dual.
 
 **Choi's theorem**, where a linear map `Φ` is completely positive when it is the linear map of
@@ -66,12 +66,12 @@ The two directions separately, for a completely positive map `φ` (1 ⇒ 2, 3, 4
 map `Φ` with the data of 2, 3 or 4, from which the completely positive map is built
 (2, 3, 4 ⇒ 1):
 
-* `CompletelyPositiveMap.posSemidef_comp_map`: complete positivity in matrix form, `id_k ⊗ φ`
-  sends positive semidefinite `kn × kn` matrices to positive semidefinite `km × km` matrices for
-  every finite index type `k`; `CompletelyPositiveMap.ofKPositiveMap` is the converse from
-  a single block size `k ≥ min(n, m)`.
-* `CompletelyPositiveMap.posSemidef_choiMatrix`, `CompletelyPositiveMap.ofPosSemidefChoiMatrix`:
-  the Choi matrix.
+* `Matrix.posSemidef_comp_map` for every block size `k` (a finite index type `ι` with `k`
+  elements), since a completely positive map is `k`-positive for every `k`
+  (`CompletelyPositiveMapClass.instKPositiveMapClass`);
+  `CompletelyPositiveMap.ofKPositiveMap` is the converse from a single block size `k ≥ min(n, m)`.
+* `Matrix.posSemidef_choiMatrix_of_kPositive` (a completely positive map is `n`-positive),
+  `CompletelyPositiveMap.ofPosSemidefChoiMatrix`: the Choi matrix.
 * `CompletelyPositiveMap.exists_kraus_rank`: a CP map has a Kraus representation with exactly
   `rank J(φ)` operators, the minimal number by `Matrix.rank_choiMatrix_le_card_of_kraus`.
 * `CompletelyPositiveMap.exists_kraus`, `CompletelyPositiveMap.ofKraus`: a CP map has a Kraus
@@ -211,9 +211,7 @@ end Matrix
 
 /-! ### `k`-positive maps and the Choi matrix -/
 
-namespace KPositiveMapClass
-
-open Matrix
+namespace Matrix
 open scoped ComplexOrder CStarAlgebra
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
@@ -244,7 +242,7 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 `id_n ⊗ φ` applied to the block matrix `(Eᵢⱼ)ᵢⱼ`, whose flattening `ω ωᴴ` is `n` times the
 rank-one projection onto the normalised maximally entangled vector `ω / √n`, `ω = Σᵢ eᵢ ⊗ eᵢ`.
 Only the single block size `n` is used. -/
-theorem posSemidef_choiMatrix
+theorem posSemidef_choiMatrix_of_kPositive
     [KPositiveMapClass F (Fintype.card n) (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F) :
     (choiMatrix φ).PosSemidef := by
   let ω : n × n → ℂ := fun p => if p.1 = p.2 then 1 else 0
@@ -273,30 +271,35 @@ theorem posSemidef_comp_map_traceDual {k : ℕ} [KPositiveMapClass F k (Matrix n
     Matrix.trace_mul_comm, ← trace_comp_map_mul_comp_map_traceDual]
   exact (posSemidef_comp_map φ hι hY).trace_mul_nonneg hX
 
-end KPositiveMapClass
+end Matrix
 
 namespace KPositiveMap
 
 open Matrix
-open scoped ComplexOrder
+open scoped ComplexOrder CStarAlgebra
 
-variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m] {k : ℕ}
+variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
+variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- The trace dual `φ*` of a `k`-positive map `φ : M_n(ℂ) → M_m(ℂ)`, characterised by
-`Tr (φ(A) B) = Tr (A φ*(B))` (`Matrix.trace_mul_traceDual`), is `k`-positive
-(`KPositiveMapClass.posSemidef_comp_map_traceDual`). -/
-noncomputable def traceDual (φ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ)) :
+`Tr (φ(A) B) = Tr (A φ*(B))` (`Matrix.trace_mul_traceDual`), as a `k`-positive map
+(`Matrix.posSemidef_comp_map_traceDual`). The block size `k` is explicit, since `φ` may
+be `k`-positive for several `k`. -/
+noncomputable def traceDual (k : ℕ) [KPositiveMapClass F k (Matrix n n ℂ) (Matrix m m ℂ)]
+    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F) :
     KPositiveMap k (Matrix m m ℂ) (Matrix n n ℂ) where
   toLinearMap := Matrix.traceDual φ
   map_cstarMatrix_nonneg' M hM := by
     rw [CStarMatrix.nonneg_iff_posSemidef_comp] at hM ⊢
-    exact KPositiveMapClass.posSemidef_comp_map_traceDual φ (Fintype.card_fin k) hM
+    exact Matrix.posSemidef_comp_map_traceDual φ (Fintype.card_fin k) hM
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- The `k`-positive map `KPositiveMap.traceDual φ` is the trace dual of `φ` as a function. -/
-@[simp] lemma coe_traceDual (φ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ)) :
-    ⇑φ.traceDual = Matrix.traceDual φ :=
+/-- The `k`-positive map `KPositiveMap.traceDual k φ` is the trace dual of `φ` as a
+function. -/
+@[simp] lemma coe_traceDual (k : ℕ) [KPositiveMapClass F k (Matrix n n ℂ) (Matrix m m ℂ)]
+    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F) :
+    ⇑(traceDual k φ) = Matrix.traceDual φ :=
   rfl
 
 end KPositiveMap
@@ -309,15 +312,6 @@ open Matrix
 open scoped ComplexOrder Kronecker CStarAlgebra
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
-
-open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- Complete positivity in matrix form: `id_k ⊗ φ` sends positive semidefinite `kn × kn` matrices
-to positive semidefinite `km × km` matrices, for every finite index type `k`. -/
-theorem posSemidef_comp_map (φ : Matrix n n ℂ →CP Matrix m m ℂ) {k : Type*} [Finite k]
-    {X : Matrix k k (Matrix n n ℂ)} (hX : (Matrix.comp k k n n ℂ X).PosSemidef) :
-    (Matrix.comp k k m m ℂ (X.map φ)).PosSemidef := by
-  have := Fintype.ofFinite k
-  exact KPositiveMapClass.posSemidef_comp_map φ rfl hX
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- A linear map with a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ`, indexed by any finite type, is
@@ -338,14 +332,9 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
   rfl
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- The Choi matrix of a completely positive map is positive semidefinite. -/
-theorem posSemidef_choiMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
-    (choiMatrix φ).PosSemidef :=
-  KPositiveMapClass.posSemidef_choiMatrix φ
-
-open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**: a linear map with positive semidefinite Choi matrix is completely
-positive. With `CompletelyPositiveMap.posSemidef_choiMatrix` this characterises complete
+positive. With `Matrix.posSemidef_choiMatrix_of_kPositive`, which applies to completely positive
+maps (`CompletelyPositiveMapClass.instKPositiveMapClass`), this characterises complete
 positivity. -/
 def ofPosSemidefChoiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
     (h : (choiMatrix Φ).PosSemidef) : Matrix n n ℂ →CP Matrix m m ℂ where
@@ -366,7 +355,7 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 `rank J(φ)` operators. This is the minimal number (`Matrix.rank_choiMatrix_le_card_of_kraus`). -/
 theorem exists_kraus_rank (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
     ∃ K : Fin (choiMatrix φ).rank → Matrix m n ℂ, ∀ A, φ A = ∑ a, K a * A * (K a)ᴴ :=
-  exists_kraus_of_posSemidef_choiMatrix φ.posSemidef_choiMatrix
+  exists_kraus_of_posSemidef_choiMatrix (posSemidef_choiMatrix_of_kPositive φ)
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi–Kraus theorem**: a completely positive map `φ : M_n(ℂ) → M_m(ℂ)` has a Kraus
@@ -382,12 +371,12 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- The trace dual `φ*` of a completely positive map `φ : M_n(ℂ) → M_m(ℂ)`, characterised by
 `Tr (φ(A) B) = Tr (A φ*(B))` (`Matrix.trace_mul_traceDual`), is completely positive: the positive
 semidefinite cone is self-dual for the trace pairing, and `id_k ⊗ φ*` is the trace dual of
-`id_k ⊗ φ` (`KPositiveMapClass.posSemidef_comp_map_traceDual`). -/
+`id_k ⊗ φ` (`Matrix.posSemidef_comp_map_traceDual`). -/
 def traceDual (φ : Matrix n n ℂ →CP Matrix m m ℂ) : Matrix m m ℂ →CP Matrix n n ℂ where
   toLinearMap := Matrix.traceDual φ
   map_cstarMatrix_nonneg' k M hM := by
     rw [CStarMatrix.nonneg_iff_posSemidef_comp] at hM ⊢
-    exact KPositiveMapClass.posSemidef_comp_map_traceDual φ (Fintype.card_fin k) hM
+    exact Matrix.posSemidef_comp_map_traceDual φ (Fintype.card_fin k) hM
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- The completely positive map `CompletelyPositiveMap.traceDual φ` is the trace dual of `φ` as a
@@ -415,47 +404,36 @@ lemma toEuclidean_apply {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A]
 
 end CompletelyPositiveMap
 
-namespace KPositiveMapClass
+namespace Matrix
 
-open Matrix
 open scoped ComplexOrder CStarAlgebra
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- A `k`-positive map with `k ≥ 1` sends positive semidefinite matrices to positive semidefinite
-matrices (`KPositiveMapClass.orderHomClass`). -/
-theorem posSemidef_map {k : ℕ} [KPositiveMapClass F k (Matrix n n ℂ) (Matrix m m ℂ)]
-    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] (hk : 1 ≤ k) (φ : F) {A : Matrix n n ℂ}
-    (hA : A.PosSemidef) : (φ A).PosSemidef := by
-  have := orderHomClass (F := F) hk
-  exact Matrix.nonneg_iff_posSemidef.mp (map_nonneg φ hA.nonneg)
-
-open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**, `min(n, m)`-positivity form: the Choi matrix of a `k`-positive map
 `φ : M_n(ℂ) → M_m(ℂ)` with `k ≥ min(n, m)` is positive semidefinite. For `k ≥ n` the map is
-`n`-positive (`KPositiveMapClass.of_le`, `KPositiveMapClass.posSemidef_choiMatrix`). For `k ≥ m` its
-trace dual `φ* : M_m(ℂ) → M_n(ℂ)` is `m`-positive (`KPositiveMap.traceDual`), hence completely
+`n`-positive (`KPositiveMapClass.of_le`, `Matrix.posSemidef_choiMatrix_of_kPositive`). For `k ≥ m`
+its trace dual `φ* : M_m(ℂ) → M_n(ℂ)` is `m`-positive (`KPositiveMap.traceDual`), hence completely
 positive, and so is `φ = φ**` (`Matrix.traceDual_traceDual`). -/
 theorem posSemidef_choiMatrix_of_min_le {k : ℕ} [KPositiveMapClass F k (Matrix n n ℂ) (Matrix m m ℂ)]
     [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F)
     (hk : min (Fintype.card n) (Fintype.card m) ≤ k) : (choiMatrix φ).PosSemidef := by
   rcases min_le_iff.1 hk with h | h
-  · have := of_le (F := F) h
-    exact posSemidef_choiMatrix φ
-  · let ψ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ) :=
-      ⟨(φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ), map_cstarMatrix_nonneg' φ⟩
-    let χ : Matrix m m ℂ →CP Matrix n n ℂ := CompletelyPositiveMap.ofPosSemidefChoiMatrix
-      (Matrix.traceDual ψ) (posSemidef_choiMatrix (ψ.traceDual.ofLE h))
-    have hχ : ⇑χ.traceDual = ⇑φ := funext fun A => traceDual_traceDual ψ A
+  · have := KPositiveMapClass.of_le (F := F) h
+    exact posSemidef_choiMatrix_of_kPositive φ
+  · let χ : Matrix m m ℂ →CP Matrix n n ℂ := CompletelyPositiveMap.ofPosSemidefChoiMatrix
+      (Matrix.traceDual φ)
+      (posSemidef_choiMatrix_of_kPositive ((KPositiveMap.traceDual k φ).ofLE h))
+    have hχ : ⇑χ.traceDual = ⇑φ := funext fun A => traceDual_traceDual φ A
     have hJ : choiMatrix φ = choiMatrix χ.traceDual := by
       ext p q
       simp only [choiMatrix, of_apply, hχ]
     rw [hJ]
-    exact χ.traceDual.posSemidef_choiMatrix
+    exact posSemidef_choiMatrix_of_kPositive χ.traceDual
 
-end KPositiveMapClass
+end Matrix
 
 namespace CompletelyPositiveMap
 
@@ -468,15 +446,20 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**, `min(n, m)`-positivity form: a `k`-positive map `φ : M_n(ℂ) → M_m(ℂ)` with
 `k ≥ min(n, m)`, i.e. one for which `id_k ⊗ φ` sends positive semidefinite `kn × kn` matrices to
 positive semidefinite `km × km` matrices, is completely positive
-(`KPositiveMapClass.posSemidef_choiMatrix_of_min_le`). Conversely a completely positive map is
-`k`-positive for every `k` (`CompletelyPositiveMap.instKPositiveMapClass`). -/
-def ofKPositiveMap {k : ℕ} (φ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ))
+(`Matrix.posSemidef_choiMatrix_of_min_le`). Conversely a completely positive map is
+`k`-positive for every `k` (`CompletelyPositiveMapClass.instKPositiveMapClass`). -/
+def ofKPositiveMap {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] {k : ℕ}
+    [KPositiveMapClass F k (Matrix n n ℂ) (Matrix m m ℂ)]
+    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F)
     (hk : min (Fintype.card n) (Fintype.card m) ≤ k) : Matrix n n ℂ →CP Matrix m m ℂ :=
-  ofPosSemidefChoiMatrix φ.toLinearMap (KPositiveMapClass.posSemidef_choiMatrix_of_min_le φ hk)
+  ofPosSemidefChoiMatrix (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
+    (Matrix.posSemidef_choiMatrix_of_min_le φ hk)
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- The completely positive map `CompletelyPositiveMap.ofKPositiveMap φ hk` is `φ` as a function. -/
-@[simp] lemma coe_ofKPositiveMap {k : ℕ} (φ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ))
+@[simp] lemma coe_ofKPositiveMap {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] {k : ℕ}
+    [KPositiveMapClass F k (Matrix n n ℂ) (Matrix m m ℂ)]
+    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F)
     (hk : min (Fintype.card n) (Fintype.card m) ≤ k) : ⇑(ofKPositiveMap φ hk) = φ :=
   rfl
 
@@ -486,7 +469,7 @@ linear map of some `φ : M_n(ℂ) →CP M_m(ℂ)`, iff its Choi matrix `J(Φ)` i
 semidefinite. -/
 theorem exists_toLinearMap_eq_iff_posSemidef_choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
     (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, φ.toLinearMap = Φ) ↔ (choiMatrix Φ).PosSemidef :=
-  ⟨fun ⟨φ, hφ⟩ => hφ ▸ φ.posSemidef_choiMatrix, fun h => ⟨ofPosSemidefChoiMatrix Φ h, rfl⟩⟩
+  ⟨fun ⟨φ, hφ⟩ => hφ ▸ posSemidef_choiMatrix_of_kPositive φ, fun h => ⟨ofPosSemidefChoiMatrix Φ h, rfl⟩⟩
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**, `min(n, m)`-positivity form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is

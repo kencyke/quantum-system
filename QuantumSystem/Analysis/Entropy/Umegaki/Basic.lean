@@ -28,7 +28,7 @@ value `0`. Logarithms are natural, so the unit is the nat.
 
 A result about `S(ω_ρ ‖ ω_σ)` is a result about `D(ρ ‖ σ)` by definition. Monotonicity under
 `2`-positive trace-preserving maps, in particular channels, is Araki's data-processing inequality
-for the dual map, a unital normal Schwarz map (`KPositiveMap.dualSchwarzMap`).
+for the dual map, a unital normal Schwarz map (`Matrix.dualSchwarzMap`).
 
 ## Main definitions
 
@@ -692,28 +692,34 @@ and positive semidefinite `ρ, σ`, `D(φ(ρ) ‖ φ(σ)) ≤ D(ρ ‖ σ)`.
 
 This is Uhlmann's monotonicity theorem for Araki's relative entropy
 (`VonNeumannAlgebra.arakiEntropy_comp_le`) applied to the dual `φ*`, a unital normal Schwarz map
-(`KPositiveMap.dualSchwarzMap`) that pulls `ω_ρ` back to `ω_{φ(ρ)}`:
-`Tr (ρ φ*(B)) = Tr (φ(ρ) B)` (`Matrix.trace_mul_traceDual`). -/
-theorem umegakiEntropy_le_of_kPositiveMap (φ : KPositiveMap 2 (Matrix n n ℂ) (Matrix m m ℂ))
+(`Matrix.dualSchwarzMap`) that pulls `ω_ρ` back to `ω_{φ(ρ)}`:
+`Tr (ρ φ*(B)) = Tr (φ(ρ) B)` (`Matrix.trace_mul_traceDual`). It applies to any type `F` of
+`2`-positive linear maps, in particular to completely positive maps `M_n(ℂ) →CP M_m(ℂ)`. -/
+theorem umegakiEntropy_le_of_kPositiveMap {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
+    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
+    [KPositiveMapClass F 2 (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F)
     (hφ : IsTracePreserving φ) {ρ σ : Matrix n n ℂ} (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) :
     D(φ ρ ∥ φ σ) ≤ D(ρ ∥ σ) := by
-  have hα := KPositiveMap.isNormalMap_dualSchwarzMap φ hφ
-  have hpos {τ : Matrix n n ℂ} (hτ : τ.PosSemidef) : (φ τ).PosSemidef :=
-    KPositiveMapClass.posSemidef_map (k := 2) (by norm_num) φ hτ
+  have hφ' := (traceDual_one hφ).le
+  have hα := Matrix.isNormalMap_dualSchwarzMap φ hφ'
+  have hpos {τ : Matrix n n ℂ} (hτ : τ.PosSemidef) : (φ τ).PosSemidef := hτ.map φ
   have key : ∀ {τ : Matrix n n ℂ} (hτ : τ.PosSemidef),
-      (hpos hτ).normalFunctional = hτ.normalFunctional.comp (φ.dualSchwarzMap hφ) hα :=
+      (hpos hτ).normalFunctional =
+        hτ.normalFunctional.comp (Matrix.dualSchwarzMap φ hφ') hα :=
     fun {τ} hτ => ((hpos hτ).eq_normalFunctional_of_apply fun B => by
-      rw [VonNeumannAlgebra.NormalFunctional.comp_apply, KPositiveMap.dualSchwarzMap_apply,
+      rw [VonNeumannAlgebra.NormalFunctional.comp_apply, Matrix.dualSchwarzMap_apply,
         hτ.normalFunctional_apply, trace_mul_traceDual]).symm
   rw [umegakiEntropy_def (hpos hρ) (hpos hσ), umegakiEntropy_def hρ hσ, key hρ, key hσ]
-  exact VonNeumannAlgebra.arakiEntropy_comp_le _ (KPositiveMap.dualSchwarzMap_one φ hφ) hα _ _
+  exact VonNeumannAlgebra.arakiEntropy_comp_le _ (Matrix.dualSchwarzMap_one φ hφ) hα _ _
 
+open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Monotonicity of Umegaki's relative entropy** (data-processing inequality, Lindblad–Uhlmann):
 for a quantum channel `Φ` and positive semidefinite `ρ, σ`, `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)`. A quantum
-channel is `2`-positive, and `Matrix.umegakiEntropy_le_of_kPositiveMap` applies. -/
+channel is completely positive, hence `2`-positive, and `Matrix.umegakiEntropy_le_of_kPositiveMap`
+applies. -/
 theorem umegakiEntropy_channel_le (Φ : QuantumChannel n m) {ρ σ : Matrix n n ℂ}
     (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) : D(Φ.val ρ ∥ Φ.val σ) ≤ D(ρ ∥ σ) :=
-  umegakiEntropy_le_of_kPositiveMap Φ.toKPositiveMap₂ Φ.property hρ hσ
+  umegakiEntropy_le_of_kPositiveMap Φ.val Φ.property hρ hσ
 
 /-! ### Equality under recoverable channels -/
 
@@ -733,8 +739,9 @@ theorem umegakiEntropy_channel_eq_of_recoverable (Φ : QuantumChannel n m) {ρ �
     (hRρ : R.val (Φ.val ρ) = ρ) (hRσ : R.val (Φ.val σ) = σ) :
     D(Φ.val ρ ∥ Φ.val σ) = D(ρ ∥ σ) := by
   refine le_antisymm (umegakiEntropy_channel_le Φ hρ hσ) ?_
-  have hle := umegakiEntropy_channel_le R (Φ.val.posSemidef_map hρ)
-    (Φ.val.posSemidef_map hσ)
+  have hle : D(R.val (Φ.val ρ) ∥ R.val (Φ.val σ)) ≤ D(Φ.val ρ ∥ Φ.val σ) := by
+    open scoped Matrix.Norms.L2Operator MatrixOrder in
+    exact umegakiEntropy_channel_le R (hρ.map Φ.val) (hσ.map Φ.val)
   rwa [hRρ, hRσ] at hle
 
 /-! ### Joint Convexity of Relative Entropy -/
