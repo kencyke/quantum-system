@@ -25,19 +25,20 @@ For a unital representation `π(1) = 1`, so `(K, V)` is the Hilbert sum of `m` c
 
 `K = ⊕ᵢ Vᵢ(E)`, and `π(B) (Vᵢ ξ) = Σⱼ Bⱼᵢ Vⱼ ξ`.
 
-Read through `K ≅ E ⊗ 𝕜ᵐ`, this says `π(B) = 1_E ⊗ B`: every unital ⋆-representation of `M_m(𝕜)`
-is a multiple of the identity representation on `𝕜ᵐ`, with multiplicity `dim E`. The identification
-is stated here as the Hilbert sum `Matrix.isHilbertSum_multiplicityIsometry`, which carries the
-metric structure, together with the intertwining relation `Matrix.map_apply_multiplicityIsometry`,
-and as the unitary equivalence `Matrix.multiplicityLinearIsometryEquiv π i₀ : K ≃ ℓ²(m, E)`
+Read through `K ≅ 𝕜ᵐ ⊗ E`, `δᵢ ⊗ ξ ↦ Vᵢ ξ` for the standard basis `δᵢ` of `𝕜ᵐ`, this says
+`π(B) = B ⊗ 1_E`: every unital ⋆-representation of `M_m(𝕜)` is a multiple of the identity
+representation on `𝕜ᵐ`, with multiplicity `dim E`. The identification is stated here as the
+Hilbert sum `Matrix.isHilbertSum_multiplicityIsometry`, which carries the metric structure,
+together with the intertwining relation `Matrix.map_apply_multiplicityIsometry`, and as the
+unitary equivalence `Matrix.multiplicityLinearIsometryEquiv π i₀ : K ≃ ℓ²(m, E)`
 intertwining `π(B)` with `B ⊗ 1_E` (`Matrix.multiplicityLinearIsometryEquiv_map_apply`); its linear
 part is the linear equivalence `Matrix.multiplicityEquiv π i₀ : K ≃ E^m`, whence
 `rank K = m · rank E` in any dimension. No structure theory of type I von Neumann algebras is used:
 the decomposition comes from the matrix units alone.
 
 When `K` is finite-dimensional and `π` is unital, an orthonormal basis `e` of `E` gives the
-orthonormal basis `b (k, i) = Vᵢ (e k)` of `K` (`multiplicityBasis π e`), in which `π(B)` has the
-matrix `1 ⊗ B`.
+orthonormal basis `b (i, k) = Vᵢ (e k)` of `K` (`multiplicityBasis π e`), adapted to
+`K ≅ 𝕜ᵐ ⊗ E`, in which `π(B)` has the matrix `B ⊗ 1`.
 
 ## Main definitions
 
@@ -58,10 +59,10 @@ matrix `1 ⊗ B`.
 * `Matrix.multiplicityLinearIsometryEquiv_map_apply` — for unital `π`, the unitary equivalence
   `K ≃ ℓ²(m, E)` intertwines `π(B)` with `B ⊗ 1_E`: `π` is unitarily equivalent to a multiple of
   the identity representation.
-* `Matrix.toMatrix_multiplicityBasis` — the matrix of `π(B)` is `1 ⊗ B`.
+* `Matrix.toMatrix_multiplicityBasis` — the matrix of `π(B)` is `B ⊗ 1`.
 * `Matrix.rank_eq_card_mul_rank_multiplicitySpace`,
-  `Matrix.finrank_eq_finrank_multiplicitySpace_mul` — for unital `π`, `rank K = m · rank E` and
-  `dim K = dim E · m`, with no finite-dimensionality assumption.
+  `Matrix.finrank_eq_card_mul_finrank_multiplicitySpace` — for unital `π`, `rank K = m · rank E`
+  and `dim K = m · dim E`, with no finite-dimensionality assumption.
 
 ## Implementation notes
 
@@ -189,7 +190,7 @@ theorem orthogonalFamily_multiplicityIsometry (i₀ : m) :
   fun i j hij ξ η => by simp only [inner_multiplicityIsometry, hij, ↓reduceIte]
 
 /-- The representation acts on the copies of `E` as `B` acts on `𝕜ᵐ`:
-`π(B) (Vᵢ ξ) = Σⱼ Bⱼᵢ Vⱼ ξ`, that is, `π(B) = 1_E ⊗ B`. -/
+`π(B) (Vᵢ ξ) = Σⱼ Bⱼᵢ Vⱼ ξ`, that is, `π(B) = B ⊗ 1_E` on `K ≅ 𝕜ᵐ ⊗ E`. -/
 theorem map_apply_multiplicityIsometry {i₀ : m} (B : Matrix m m 𝕜) (i : m)
     (ξ : multiplicitySpace π i₀) :
     π B (multiplicityIsometry π i₀ i ξ) = ∑ j, B j i • multiplicityIsometry π i₀ j ξ := by
@@ -226,10 +227,10 @@ theorem iSup_range_multiplicityIsometry (i₀ : m) :
 /-- The vectors `Vᵢ (e k)` are orthonormal. -/
 lemma orthonormal_multiplicityIsometry {i₀ : m}
     (e : OrthonormalBasis ι 𝕜 (multiplicitySpace π i₀)) :
-    Orthonormal 𝕜 fun p : ι × m => multiplicityIsometry π i₀ p.2 (e p.1) := by
+    Orthonormal 𝕜 fun p : m × ι => multiplicityIsometry π i₀ p.1 (e p.2) := by
   classical
   rw [orthonormal_iff_ite]
-  rintro ⟨k, i⟩ ⟨l, j⟩
+  rintro ⟨i, k⟩ ⟨j, l⟩
   rw [inner_multiplicityIsometry, orthonormal_iff_ite.mp e.orthonormal]
   by_cases hij : i = j <;> by_cases hkl : k = l <;> simp [hij, hkl]
 
@@ -334,11 +335,11 @@ theorem rank_eq_card_mul_rank_multiplicitySpace (i₀ : m) :
   simp only [Cardinal.lift_mul, Cardinal.lift_natCast, Cardinal.lift_lift] at h
   exact Cardinal.lift_injective (h.trans (by simp))
 
-/-- For unital `π`, `dim K = dim E · m`. Both sides are `0` when `K` is infinite-dimensional. -/
-theorem finrank_eq_finrank_multiplicitySpace_mul (i₀ : m) :
-    Module.finrank 𝕜 K = Module.finrank 𝕜 (multiplicitySpace π i₀) * Fintype.card m := by
+/-- For unital `π`, `dim K = m · dim E`. Both sides are `0` when `K` is infinite-dimensional. -/
+theorem finrank_eq_card_mul_finrank_multiplicitySpace (i₀ : m) :
+    Module.finrank 𝕜 K = Fintype.card m * Module.finrank 𝕜 (multiplicitySpace π i₀) := by
   rw [Module.finrank, Module.finrank, rank_eq_card_mul_rank_multiplicitySpace π i₀,
-    Cardinal.toNat_mul, Cardinal.toNat_natCast, mul_comm]
+    Cardinal.toNat_mul, Cardinal.toNat_natCast]
 
 /-! ### Finite-dimensional representations -/
 
@@ -346,33 +347,33 @@ section FiniteDimensional
 
 /-- For unital `π`, the vectors `Vᵢ (e k)` span `K`. -/
 lemma span_multiplicityIsometry {i₀ : m} (e : OrthonormalBasis ι 𝕜 (multiplicitySpace π i₀)) :
-    ⊤ ≤ Submodule.span 𝕜 (Set.range fun p : ι × m => multiplicityIsometry π i₀ p.2 (e p.1)) := by
+    ⊤ ≤ Submodule.span 𝕜 (Set.range fun p : m × ι => multiplicityIsometry π i₀ p.1 (e p.2)) := by
   intro x _
   rw [← sum_multiplicityIsometry_map_single_apply_eq_self π i₀ x]
   refine Submodule.sum_mem _ fun i _ => ?_
   rw [← e.sum_repr (⟨_, map_single_apply_mem_multiplicitySpace π i₀ i x⟩), map_sum]
   exact Submodule.sum_mem _ fun k _ => by
     rw [map_smul]
-    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨(k, i), rfl⟩)
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨(i, k), rfl⟩)
 
-/-- The orthonormal basis `b (k, i) = Vᵢ (e k)` of a finite-dimensional `K` built from an
-orthonormal basis `e` of the multiplicity space of a unital `π`. -/
+/-- The orthonormal basis `b (i, k) = Vᵢ (e k)` of a finite-dimensional `K` built from an
+orthonormal basis `e` of the multiplicity space of a unital `π`, adapted to `K ≅ 𝕜ᵐ ⊗ E`. -/
 noncomputable def multiplicityBasis {i₀ : m}
-    (e : OrthonormalBasis ι 𝕜 (multiplicitySpace π i₀)) : OrthonormalBasis (ι × m) 𝕜 K :=
+    (e : OrthonormalBasis ι 𝕜 (multiplicitySpace π i₀)) : OrthonormalBasis (m × ι) 𝕜 K :=
   .mk (orthonormal_multiplicityIsometry π e) (span_multiplicityIsometry π e)
 
-/-- `b (k, i) = Vᵢ (e k)`. -/
+/-- `b (i, k) = Vᵢ (e k)`. -/
 @[simp] lemma multiplicityBasis_apply {i₀ : m}
-    (e : OrthonormalBasis ι 𝕜 (multiplicitySpace π i₀)) (p : ι × m) :
-    multiplicityBasis π e p = multiplicityIsometry π i₀ p.2 (e p.1) := by
+    (e : OrthonormalBasis ι 𝕜 (multiplicitySpace π i₀)) (p : m × ι) :
+    multiplicityBasis π e p = multiplicityIsometry π i₀ p.1 (e p.2) := by
   simp [multiplicityBasis]
 
-/-- In the basis `b (k, i) = Vᵢ (e k)` the operator `π(B)` has the matrix `1 ⊗ B`. -/
+/-- In the basis `b (i, k) = Vᵢ (e k)` the operator `π(B)` has the matrix `B ⊗ 1`. -/
 theorem toMatrix_multiplicityBasis [DecidableEq ι] {i₀ : m}
     (e : OrthonormalBasis ι 𝕜 (multiplicitySpace π i₀)) (B : Matrix m m 𝕜) :
     LinearMap.toMatrix (multiplicityBasis π e).toBasis (multiplicityBasis π e).toBasis
-      (π B : K →ₗ[𝕜] K) = (1 : Matrix ι ι 𝕜) ⊗ₖ B := by
-  ext ⟨k, i⟩ ⟨l, j⟩
+      (π B : K →ₗ[𝕜] K) = B ⊗ₖ (1 : Matrix ι ι 𝕜) := by
+  ext ⟨i, k⟩ ⟨j, l⟩
   rw [LinearMap.toMatrix_apply, OrthonormalBasis.coe_toBasis_repr_apply,
     OrthonormalBasis.repr_apply_apply, OrthonormalBasis.coe_toBasis, kroneckerMap_apply]
   simp only [multiplicityBasis_apply, ContinuousLinearMap.coe_coe, map_apply_multiplicityIsometry,

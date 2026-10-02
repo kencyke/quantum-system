@@ -16,18 +16,18 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 /-!
 # Stinespring's theorem for matrix channels
 
-A linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive iff it is `A ↦ tr₁(V A Vᴴ)` for some
-`V : Matrix (Fin r × m) n ℂ`, and a quantum channel iff moreover `V` is an isometry, `Vᴴ V = I`
+A linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive iff it is `A ↦ tr₂(V A Vᴴ)` for some
+`V : Matrix (m × Fin r) n ℂ`, and a quantum channel iff moreover `V` is an isometry, `Vᴴ V = I`
 (`CompletelyPositiveMap.exists_toLinearMap_eq_iff_exists_stinespringMatrix`,
 `Matrix.QuantumChannel.exists_toLinearMap_eq_iff_exists_stinespringMatrix`). The environment
 `E = Fin r` has the dimension `r = rank J(Φ) ≤ nm` of the Choi matrix `J(Φ)`, and this is minimal:
 every such `V` has an environment with at least `rank J(Φ)` elements
-(`Matrix.rank_choiMatrix_le_card_of_stinespring`), with equality iff its row blocks are linearly
+(`Matrix.rank_choiMatrix_le_card_of_stinespring`), with equality iff its Kraus blocks are linearly
 independent (`Matrix.rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock`).
 
 This is the Schrödinger-picture form of Stinespring's dilation (Watrous, Theorem 2.22 and
 Corollary 2.27). Stinespring's original Heisenberg-picture statement, that the trace dual is
-`Φ*(B) = Vᴴ (1 ⊗ B) V`, is `CompletelyPositiveMap.exists_traceDual_eq_stinespringMatrix`, and
+`Φ*(B) = Vᴴ (B ⊗ 1) V`, is `CompletelyPositiveMap.exists_traceDual_eq_stinespringMatrix`, and
 `Matrix.QuantumChannel.exists_traceDual_eq_stinespringMatrix` with `V` an isometry. For a fixed `V`
 the two pictures are equivalent (`Matrix.traceDual_eq_iff_stinespring`).
 
@@ -42,35 +42,37 @@ theorem gives `ψ(B) = W† π(B) W` for a unital ⋆-representation `π` of `M_
 space `K` and the Stinespring operator `W : ℂⁿ → K`. The space `K` is the completion of
 `M_m(ℂ) ⊗ ℂⁿ`, so `dim K ≤ m² n`. A unital ⋆-representation of `M_m(ℂ)` is a multiple of the
 identity representation (`QuantumSystem/ForMathlib/Analysis/InnerProductSpace/MatrixRepresentation.lean`):
-`K ≅ ℂʳ ⊗ ℂᵐ` with `π(B) = 1 ⊗ B`, where `r · m = dim K`, hence `r ≤ nm`. For an orthonormal basis
+`K ≅ ℂᵐ ⊗ ℂʳ` with `π(B) = B ⊗ 1`, where `m · r = dim K`, hence `r ≤ nm`. For an orthonormal basis
 `e` of the multiplicity space `ℂʳ`, `W` is in the adapted basis `Matrix.multiplicityBasis π e` of
 `K` the matrix `V = CompletelyPositiveMap.stinespringMatrix φ e`
 (`CompletelyPositiveMap.toLin_stinespringMatrix`), and `ψ(B) = W† π(B) W` reads
-`φ*(B) = Vᴴ (1 ⊗ B) V`. The name "Stinespring operator" is reserved for the operator `W` of the
+`φ*(B) = Vᴴ (B ⊗ 1) V`. The name "Stinespring operator" is reserved for the operator `W` of the
 general theorem; `V` is its matrix.
 
 The minimality of the Stinespring representation, that the vectors `π(B) W ξ` span `K`, makes the
-row blocks of `V` linearly independent
+Kraus blocks of `V` linearly independent
 (`CompletelyPositiveMap.linearIndependent_krausBlock_stinespringMatrix`). They are Kraus operators
 of `φ`, so `r = rank J(φ)` (`CompletelyPositiveMap.card_eq_rank_choiMatrix`): the general theorem
 produces an environment of the minimal dimension without any choice of Kraus operators.
 
 ## Kraus blocks
 
-Conversely, the row blocks `Kᵢ a b = V (i, a) b` (`Matrix.krausBlock V i`) of any
-`V : Matrix (ι × m) n ℂ` are Kraus operators for `A ↦ tr₁(V A Vᴴ) = Σᵢ Kᵢ A Kᵢᴴ`, so that map is
-completely positive (`CompletelyPositiveMap.ofStinespring`). Since `Vᴴ V = Σᵢ Kᵢᴴ Kᵢ`, the matrix
-`V` is an isometry iff its row blocks satisfy the completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`, and every
-family of Kraus operators is the family of row blocks of the matrix obtained by stacking it
-(`Matrix.exists_krausBlock_eq`).
+Conversely, write `V : Matrix (m × ι) n ℂ` as `V = Σᵢ Kᵢ ⊗ eᵢ` with the Kraus blocks
+`Kᵢ a b = V (a, i) b` (`Matrix.krausBlock V i`). They are Kraus operators for
+`A ↦ tr₂(V A Vᴴ) = Σᵢ Kᵢ A Kᵢᴴ`, so that map is completely positive
+(`CompletelyPositiveMap.ofStinespring`). Since `Vᴴ V = Σᵢ Kᵢᴴ Kᵢ`, the matrix `V` is an isometry iff
+its Kraus blocks satisfy the completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`, and every family of Kraus
+operators is the family of Kraus blocks of `Σᵢ Kᵢ ⊗ eᵢ` (`Matrix.exists_krausBlock_eq`).
 
 ## Conventions
 
-The environment is the **left** factor of `E × ℂᵐ` and is removed by the partial trace
-`tr₁ = Matrix.traceLeft` (the notation of
-`QuantumSystem/Analysis/Matrix/DensityMatrix/Kronecker.lean`). Watrous places the environment
-on the right, `Φ(X) = Tr_Z (A X A*)` with `A : X → Y ⊗ Z`; the two forms differ by a swap of
-tensor factors, as for the Choi matrix (`QuantumSystem/Analysis/Matrix/QuantumChannel/Choi.lean`).
+The environment is the **right** factor of `ℂᵐ ⊗ ℂ^E`, indexed by `m × E`, and is removed by the
+partial trace `tr₂ = Matrix.traceRight` (the notation of
+`QuantumSystem/Analysis/Matrix/DensityMatrix/Kronecker.lean`). This is Watrous's convention,
+`Φ(X) = Tr_Z (A X A*)` with `A : X → Y ⊗ Z`, and Stinespring's `π(B) = B ⊗ 1` on `ℂᵐ ⊗ ℂʳ`, the
+order of the multiplicity decomposition
+(`QuantumSystem/ForMathlib/Analysis/InnerProductSpace/MatrixRepresentation.lean`). The Choi matrix
+keeps Choi's ordering, input first (`QuantumSystem/Analysis/Matrix/QuantumChannel/Choi.lean`).
 
 This file treats the finite-dimensional matrix algebras `M_n(ℂ)`: complete positivity is
 Mathlib's `CompletelyPositiveMap` condition for general C⋆-algebras, specialised to `Matrix n n ℂ`.
@@ -88,48 +90,49 @@ setting through its trace dual, a Schwarz map on `B(ℂᵐ)` (`Matrix.QuantumCha
 
 ## Main definitions
 
-* `Matrix.krausBlock V i`: the row block `Kᵢ a b = V (i, a) b` of `V : Matrix (ι × m) n ℂ`.
+* `Matrix.krausBlock V i`: the Kraus block `Kᵢ a b = V (a, i) b` of `V : Matrix (m × ι) n ℂ`,
+  so that `V = Σᵢ Kᵢ ⊗ eᵢ`.
 * `CompletelyPositiveMap.stinespringEnvDim φ i₀`: the environment dimension `r`, the dimension of
   the multiplicity space at `i₀` of the Stinespring representation.
 * `CompletelyPositiveMap.stinespringMatrix φ e`: the matrix of the Stinespring operator of
-  `φ.traceDual.toEuclidean` in the basis of the Stinespring space adapted to `K ≅ ℂ^ι ⊗ ℂᵐ` by an
+  `φ.traceDual.toEuclidean` in the basis of the Stinespring space adapted to `K ≅ ℂᵐ ⊗ ℂ^ι` by an
   orthonormal basis `e` of the multiplicity space indexed by `ι`, with environment `ι`.
-* `CompletelyPositiveMap.ofStinespring`: `A ↦ tr₁(V A Vᴴ)` as a completely positive map.
-* `Matrix.QuantumChannel.ofStinespring`: `A ↦ tr₁(V A Vᴴ)` for an isometry `V` as a quantum
+* `CompletelyPositiveMap.ofStinespring`: `A ↦ tr₂(V A Vᴴ)` as a completely positive map.
+* `Matrix.QuantumChannel.ofStinespring`: `A ↦ tr₂(V A Vᴴ)` for an isometry `V` as a quantum
   channel.
 
 ## Main statements
 
 * `Matrix.conjTranspose_mul_self_eq_sum_krausBlock`: `Vᴴ V = Σᵢ Kᵢᴴ Kᵢ`.
-* `Matrix.traceLeft_mul_mul_conjTranspose`: `tr₁(V A Vᴴ) = Σᵢ Kᵢ A Kᵢᴴ`, the sum of the diagonal
+* `Matrix.traceRight_mul_mul_conjTranspose`: `tr₂(V A Vᴴ) = Σᵢ Kᵢ A Kᵢᴴ`, the sum of the diagonal
   blocks of `V A Vᴴ`.
 * `Matrix.traceDual_eq_iff_stinespring`: for a fixed `V`, the trace dual is
-  `Φ*(B) = Vᴴ (1 ⊗ B) V` for all `B` iff `Φ(A) = tr₁(V A Vᴴ)` for all `A`.
+  `Φ*(B) = Vᴴ (B ⊗ 1) V` for all `B` iff `Φ(A) = tr₂(V A Vᴴ)` for all `A`.
 * `CompletelyPositiveMap.traceDual_eq_stinespringMatrix`,
-  `CompletelyPositiveMap.apply_eq_traceLeft_stinespringMatrix`: `φ*(B) = Vᴴ (1 ⊗ B) V` and
-  `φ(A) = tr₁(V A Vᴴ)` for the Stinespring matrix `V`.
+  `CompletelyPositiveMap.apply_eq_traceRight_stinespringMatrix`: `φ*(B) = Vᴴ (B ⊗ 1) V` and
+  `φ(A) = tr₂(V A Vᴴ)` for the Stinespring matrix `V`.
 * `CompletelyPositiveMap.linearIndependent_krausBlock_stinespringMatrix`,
   `CompletelyPositiveMap.card_eq_rank_choiMatrix`,
-  `CompletelyPositiveMap.stinespringEnvDim_eq_rank_choiMatrix`: the row blocks of the Stinespring
+  `CompletelyPositiveMap.stinespringEnvDim_eq_rank_choiMatrix`: the Kraus blocks of the Stinespring
   matrix are linearly independent, and its environment has dimension `r = rank J(φ)`; in
   particular `r ≤ nm` (`CompletelyPositiveMap.stinespringEnvDim_le`).
 * `Matrix.rank_choiMatrix_le_card_of_stinespring`: **minimality**: every `V` with
-  `Φ(A) = tr₁(V A Vᴴ)` has an environment with at least `rank J(Φ)` elements;
+  `Φ(A) = tr₂(V A Vᴴ)` has an environment with at least `rank J(Φ)` elements;
   `Matrix.rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock`: with equality iff its row
   blocks are linearly independent.
 * `CompletelyPositiveMap.exists_traceDual_eq_stinespringMatrix`: **Stinespring's theorem,
-  Heisenberg picture**: the trace dual of a CP map is `B ↦ Vᴴ (1 ⊗ B) V` for some `V` with
+  Heisenberg picture**: the trace dual of a CP map is `B ↦ Vᴴ (B ⊗ 1) V` for some `V` with
   environment `Fin (rank J(φ))`.
-* `CompletelyPositiveMap.exists_stinespringMatrix`: a CP map is `A ↦ tr₁(V A Vᴴ)` for some `V`
+* `CompletelyPositiveMap.exists_stinespringMatrix`: a CP map is `A ↦ tr₂(V A Vᴴ)` for some `V`
   with environment `Fin (rank J(φ))`; the converse is `CompletelyPositiveMap.ofStinespring`.
 * `CompletelyPositiveMap.exists_toLinearMap_eq_iff_exists_stinespringMatrix`: **Stinespring's
-  theorem**: a linear map is completely positive iff it is `A ↦ tr₁(V A Vᴴ)` for some `V`.
+  theorem**: a linear map is completely positive iff it is `A ↦ tr₂(V A Vᴴ)` for some `V`.
 * `Matrix.QuantumChannel.exists_traceDual_eq_stinespringMatrix`: the trace dual of a quantum channel is
-  `B ↦ Vᴴ (1 ⊗ B) V` for an isometry `V`.
-* `Matrix.QuantumChannel.exists_stinespringMatrix`: a quantum channel is `A ↦ tr₁(V A Vᴴ)` for an
+  `B ↦ Vᴴ (B ⊗ 1) V` for an isometry `V`.
+* `Matrix.QuantumChannel.exists_stinespringMatrix`: a quantum channel is `A ↦ tr₂(V A Vᴴ)` for an
   isometry `V`; the converse is `Matrix.QuantumChannel.ofStinespring`.
 * `Matrix.QuantumChannel.exists_toLinearMap_eq_iff_exists_stinespringMatrix`: a linear map is a
-  quantum channel iff it is `A ↦ tr₁(V A Vᴴ)` for an isometry `V`.
+  quantum channel iff it is `A ↦ tr₂(V A Vᴴ)` for an isometry `V`.
 
 ## References
 
@@ -155,41 +158,43 @@ section KrausBlock
 variable {ι R : Type*}
 
 omit [Fintype n] [Fintype m] in
-/-- The row blocks `Kᵢ a b = V (i, a) b` of `V : Matrix (ι × m) n R`. They are the Kraus operators
-of `A ↦ tr₁(V A Vᴴ)` (`traceLeft_mul_mul_conjTranspose`), and every family of matrices arises this
+/-- The Kraus blocks `Kᵢ a b = V (a, i) b` of `V : Matrix (m × ι) n R`, so that `V = Σᵢ Kᵢ ⊗ eᵢ`.
+They are the Kraus operators
+of `A ↦ tr₂(V A Vᴴ)` (`traceRight_mul_mul_conjTranspose`), and every family of matrices arises this
 way (`exists_krausBlock_eq`). -/
-def krausBlock (V : Matrix (ι × m) n R) (i : ι) : Matrix m n R :=
-  Matrix.of fun a b => V (i, a) b
+def krausBlock (V : Matrix (m × ι) n R) (i : ι) : Matrix m n R :=
+  Matrix.of fun a b => V (a, i) b
 
 omit [Fintype n] [Fintype m] in
-/-- `Kᵢ a b = V (i, a) b`. -/
-@[simp] lemma krausBlock_apply (V : Matrix (ι × m) n R) (i : ι) (a : m) (b : n) :
-    krausBlock V i a b = V (i, a) b :=
+/-- `Kᵢ a b = V (a, i) b`. -/
+@[simp] lemma krausBlock_apply (V : Matrix (m × ι) n R) (i : ι) (a : m) (b : n) :
+    krausBlock V i a b = V (a, i) b :=
   rfl
 
 omit [Fintype n] [Fintype m] in
-/-- Every family `Kᵢ : Matrix m n R` is the family of row blocks of the matrix `V (i, a) b = Kᵢ a b`
-obtained by stacking it. -/
+/-- Every family `Kᵢ : Matrix m n R` is the family of Kraus blocks of the matrix
+`V (a, i) b = Kᵢ a b`, that is, of `V = Σᵢ Kᵢ ⊗ eᵢ`. -/
 lemma exists_krausBlock_eq (K : ι → Matrix m n R) :
-    ∃ V : Matrix (ι × m) n R, ∀ i, krausBlock V i = K i :=
-  ⟨Matrix.of fun p b => K p.1 p.2 b, fun _ => rfl⟩
+    ∃ V : Matrix (m × ι) n R, ∀ i, krausBlock V i = K i :=
+  ⟨Matrix.of fun p b => K p.2 p.1 b, fun _ => rfl⟩
 
 omit [Fintype n] in
-/-- `Vᴴ V = Σᵢ Kᵢᴴ Kᵢ` for the row blocks `Kᵢ` of `V`. In particular `V` is an isometry,
-`Vᴴ V = I`, iff its row blocks satisfy the Kraus completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`. -/
+/-- `Vᴴ V = Σᵢ Kᵢᴴ Kᵢ` for the Kraus blocks `Kᵢ` of `V`. In particular `V` is an isometry,
+`Vᴴ V = I`, iff its Kraus blocks satisfy the Kraus completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`. -/
 lemma conjTranspose_mul_self_eq_sum_krausBlock [Fintype ι] [NonUnitalSemiring R] [StarRing R]
-    (V : Matrix (ι × m) n R) : Vᴴ * V = ∑ i, (krausBlock V i)ᴴ * krausBlock V i := by
+    (V : Matrix (m × ι) n R) : Vᴴ * V = ∑ i, (krausBlock V i)ᴴ * krausBlock V i := by
   ext a b
-  simp [Matrix.mul_apply, Matrix.sum_apply, Fintype.sum_prod_type]
+  simp [Matrix.mul_apply, Matrix.sum_apply, Fintype.sum_prod_type_right]
 
 omit [Fintype m] in
-/-- Conjugation by `V` followed by the partial trace over `ι` is the Kraus map of the row blocks
-`Kᵢ` of `V`: `tr₁(V A Vᴴ) = Σᵢ Kᵢ A Kᵢᴴ`, the sum of the diagonal blocks of `V A Vᴴ`. -/
-lemma traceLeft_mul_mul_conjTranspose [Fintype ι] [NonUnitalSemiring R] [StarRing R]
-    (V : Matrix (ι × m) n R) (A : Matrix n n R) :
-    tr₁(V * A * Vᴴ) = ∑ i, krausBlock V i * A * (krausBlock V i)ᴴ := by
+/-- Conjugation by `V` followed by the partial trace over `ι` is the Kraus map of the Kraus blocks
+`Kᵢ` of `V`: `tr₂(V A Vᴴ) = Σᵢ Kᵢ A Kᵢᴴ`, the sum over `i` of the `((·, i), (·, i))` blocks of
+`V A Vᴴ`. -/
+lemma traceRight_mul_mul_conjTranspose [Fintype ι] [NonUnitalSemiring R] [StarRing R]
+    (V : Matrix (m × ι) n R) (A : Matrix n n R) :
+    tr₂(V * A * Vᴴ) = ∑ i, krausBlock V i * A * (krausBlock V i)ᴴ := by
   ext a b
-  simp [traceLeft_apply, Matrix.sum_apply, Matrix.mul_apply]
+  simp [traceRight_apply, Matrix.sum_apply, Matrix.mul_apply]
 
 end KrausBlock
 
@@ -201,33 +206,33 @@ variable [DecidableEq n] {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ
   [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
 
 omit [DecidableEq n] in
-/-- The Stinespring pairing: `Tr (tr₁(V A Vᴴ) B) = Tr (A Vᴴ (1 ⊗ B) V)`. -/
-lemma trace_traceLeft_mul_mul_conjTranspose_mul {ι : Type*} [Fintype ι] [DecidableEq ι]
-    (V : Matrix (ι × m) n ℂ) (A : Matrix n n ℂ) (B : Matrix m m ℂ) :
-    Tr (tr₁(V * A * Vᴴ) * B) = Tr (A * (Vᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) * V)) := by
-  rw [← trace_mul_kronecker_one_left]
+/-- The Stinespring pairing: `Tr (tr₂(V A Vᴴ) B) = Tr (A Vᴴ (B ⊗ 1) V)`. -/
+lemma trace_traceRight_mul_mul_conjTranspose_mul {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (V : Matrix (m × ι) n ℂ) (A : Matrix n n ℂ) (B : Matrix m m ℂ) :
+    Tr (tr₂(V * A * Vᴴ) * B) = Tr (A * (Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V)) := by
+  rw [← trace_mul_kronecker_one_right]
   simp only [Matrix.mul_assoc]
   rw [Matrix.trace_mul_comm V]
   simp only [Matrix.mul_assoc]
 
 /-- Heisenberg and Schrödinger pictures of conjugation by a matrix `V`: the trace dual of `Φ` is
-`Φ*(B) = Vᴴ (1 ⊗ B) V` for all `B` iff `Φ(A) = tr₁(V A Vᴴ)` for all `A`. -/
+`Φ*(B) = Vᴴ (B ⊗ 1) V` for all `B` iff `Φ(A) = tr₂(V A Vᴴ)` for all `A`. -/
 theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
-    (V : Matrix (ι × m) n ℂ) :
-    (∀ B, traceDual Φ B = Vᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) * V) ↔
-      ∀ A, Φ A = tr₁(V * A * Vᴴ) := by
+    (V : Matrix (m × ι) n ℂ) :
+    (∀ B, traceDual Φ B = Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V) ↔
+      ∀ A, Φ A = tr₂(V * A * Vᴴ) := by
   constructor
   · intro h A
     refine Matrix.ext_iff_trace_mul_right.mpr fun B => ?_
-    rw [trace_mul_traceDual, h, trace_traceLeft_mul_mul_conjTranspose_mul]
+    rw [trace_mul_traceDual, h, trace_traceRight_mul_mul_conjTranspose_mul]
   · intro hV B
     refine Matrix.ext_iff_trace_mul_left.mpr fun A => ?_
-    rw [← trace_mul_traceDual, hV, trace_traceLeft_mul_mul_conjTranspose_mul]
+    rw [← trace_mul_traceDual, hV, trace_traceRight_mul_mul_conjTranspose_mul]
 
-/-- If `Φ(A) = tr₁(V A Vᴴ)` for all `A`, then the trace dual of `Φ` is `Φ*(B) = Vᴴ (1 ⊗ B) V`. -/
+/-- If `Φ(A) = tr₂(V A Vᴴ)` for all `A`, then the trace dual of `Φ` is `Φ*(B) = Vᴴ (B ⊗ 1) V`. -/
 theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
-    (V : Matrix (ι × m) n ℂ) (hV : ∀ A, Φ A = tr₁(V * A * Vᴴ)) (B : Matrix m m ℂ) :
-    traceDual Φ B = Vᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) * V :=
+    (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = tr₂(V * A * Vᴴ)) (B : Matrix m m ℂ) :
+    traceDual Φ B = Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V :=
   (traceDual_eq_iff_stinespring V).2 hV B
 
 end Heisenberg
@@ -244,18 +249,18 @@ open scoped ComplexOrder CStarAlgebra
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- **Stinespring's theorem**, converse: conjugation by `V : Matrix (ι × m) n ℂ` followed by
-tracing out the environment `ι` is completely positive; its Kraus operators are the row blocks
-`Matrix.krausBlock V i` of `V`. -/
+/-- **Stinespring's theorem**, converse: conjugation by `V : Matrix (m × ι) n ℂ` followed by
+tracing out the environment `ι` is completely positive; its Kraus operators are the Kraus
+blocks `Matrix.krausBlock V i` of `V`. -/
 def ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
-    (V : Matrix (ι × m) n ℂ) (hV : ∀ A, Φ A = tr₁(V * A * Vᴴ)) :
+    (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = tr₂(V * A * Vᴴ)) :
     Matrix n n ℂ →CP Matrix m m ℂ :=
-  ofKraus Φ (krausBlock V) fun A => by rw [hV, traceLeft_mul_mul_conjTranspose]
+  ofKraus Φ (krausBlock V) fun A => by rw [hV, traceRight_mul_mul_conjTranspose]
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- The completely positive map `CompletelyPositiveMap.ofStinespring Φ V hV` is `Φ` as a function. -/
 @[simp] lemma coe_ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
-    (V : Matrix (ι × m) n ℂ) (hV : ∀ A, Φ A = tr₁(V * A * Vᴴ)) :
+    (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = tr₂(V * A * Vᴴ)) :
     ⇑(ofStinespring Φ V hV) = Φ :=
   rfl
 
@@ -279,20 +284,20 @@ noncomputable def stinespringEnvDim (φ : Matrix n n ℂ →CP Matrix m m ℂ) (
 
 variable {ι : Type*} [Fintype ι]
 
-/-- The **Stinespring matrix** `V : Matrix (ι × m) n ℂ` of a completely positive map
+/-- The **Stinespring matrix** `V : Matrix (m × ι) n ℂ` of a completely positive map
 `φ : M_n(ℂ) → M_m(ℂ)`, for an orthonormal basis `e` indexed by `ι` of the multiplicity space at
 `i₀` of the Stinespring representation `π` of `φ.traceDual.toEuclidean`: the matrix of the
 Stinespring operator `φ.traceDual.toEuclidean.stinespringOperator : ℂⁿ → K`
 (`CompletelyPositiveMap.toLin_stinespringMatrix`) in the standard basis of `ℂⁿ` and the basis
-`b (k, i) = multiplicityIsometry π i₀ i (e k)` of `K` adapted to `K ≅ ℂ^ι ⊗ ℂᵐ`
-(`Matrix.multiplicityBasis π e`). It satisfies `φ*(B) = Vᴴ (1 ⊗ B) V`
-(`CompletelyPositiveMap.traceDual_eq_stinespringMatrix`) and `φ(A) = tr₁(V A Vᴴ)`
-(`CompletelyPositiveMap.apply_eq_traceLeft_stinespringMatrix`). It depends on the choices of `i₀`
+`b (i, k) = multiplicityIsometry π i₀ i (e k)` of `K` adapted to `K ≅ ℂᵐ ⊗ ℂ^ι`
+(`Matrix.multiplicityBasis π e`). It satisfies `φ*(B) = Vᴴ (B ⊗ 1) V`
+(`CompletelyPositiveMap.traceDual_eq_stinespringMatrix`) and `φ(A) = tr₂(V A Vᴴ)`
+(`CompletelyPositiveMap.apply_eq_traceRight_stinespringMatrix`). It depends on the choices of `i₀`
 and of `e`; its environment dimension `card ι = rank J(φ)` does not
 (`CompletelyPositiveMap.card_eq_rank_choiMatrix`). -/
 noncomputable def stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) {i₀ : m}
     (e : OrthonormalBasis ι ℂ (multiplicitySpace φ.traceDual.toEuclidean.stinespringStarAlgHom i₀)) :
-    Matrix (ι × m) n ℂ :=
+    Matrix (m × ι) n ℂ :=
   LinearMap.toMatrix (EuclideanSpace.basisFun n ℂ).toBasis
     (multiplicityBasis φ.traceDual.toEuclidean.stinespringStarAlgHom e).toBasis
     (φ.traceDual.toEuclidean.stinespringOperator : EuclideanSpace ℂ n →ₗ[ℂ] φ.traceDual.toEuclidean.Stinespring)
@@ -306,25 +311,25 @@ lemma toLin_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) {i₀ :
       (φ.stinespringMatrix e) = φ.traceDual.toEuclidean.stinespringOperator :=
   Matrix.toLin_toMatrix _ _ _
 
-/-- The entries of the Stinespring matrix are `V ((k, a), j) = ⟪V_a (e k), W eⱼ⟫`, with `W` the
+/-- The entries of the Stinespring matrix are `V ((a, k), j) = ⟪V_a (e k), W eⱼ⟫`, with `W` the
 Stinespring operator and `V_a = multiplicityIsometry π i₀ a`. -/
 lemma stinespringMatrix_apply (φ : Matrix n n ℂ →CP Matrix m m ℂ) {i₀ : m}
     (e : OrthonormalBasis ι ℂ (multiplicitySpace φ.traceDual.toEuclidean.stinespringStarAlgHom i₀))
-    (k : ι) (a : m) (j : n) :
-    φ.stinespringMatrix e (k, a) j =
+    (a : m) (k : ι) (j : n) :
+    φ.stinespringMatrix e (a, k) j =
       ⟪multiplicityIsometry φ.traceDual.toEuclidean.stinespringStarAlgHom i₀ a (e k),
         φ.traceDual.toEuclidean.stinespringOperator (EuclideanSpace.basisFun n ℂ j)⟫_ℂ := by
   simp only [stinespringMatrix, LinearMap.toMatrix_apply, OrthonormalBasis.coe_toBasis_repr_apply,
     OrthonormalBasis.repr_apply_apply, OrthonormalBasis.coe_toBasis, ContinuousLinearMap.coe_coe]
-  exact congrArg (fun x => ⟪x, _⟫_ℂ) (multiplicityBasis_apply _ e (k, a))
+  exact congrArg (fun x => ⟪x, _⟫_ℂ) (multiplicityBasis_apply _ e (a, k))
 
 /-- The environment dimension is `r = dim K / m`, independently of `i₀`. -/
 lemma stinespringEnvDim_eq (φ : Matrix n n ℂ →CP Matrix m m ℂ) (i₀ : m) :
     φ.stinespringEnvDim i₀ = Module.finrank ℂ φ.traceDual.toEuclidean.Stinespring / Fintype.card m := by
-  rw [stinespringEnvDim, finrank_eq_finrank_multiplicitySpace_mul φ.traceDual.toEuclidean.stinespringStarAlgHom i₀,
-    Nat.mul_div_cancel _ (Fintype.card_pos_iff.mpr ⟨i₀⟩)]
+  rw [stinespringEnvDim, finrank_eq_card_mul_finrank_multiplicitySpace φ.traceDual.toEuclidean.stinespringStarAlgHom i₀,
+    Nat.mul_div_cancel_left _ (Fintype.card_pos_iff.mpr ⟨i₀⟩)]
 
-/-- The environment has dimension `r ≤ nm`: `r · m = dim K ≤ dim (M_m(ℂ) ⊗ ℂⁿ) = m² n`. -/
+/-- The environment has dimension `r ≤ nm`: `m · r = dim K ≤ dim (M_m(ℂ) ⊗ ℂⁿ) = m² n`. -/
 lemma stinespringEnvDim_le (φ : Matrix n n ℂ →CP Matrix m m ℂ) (i₀ : m) :
     φ.stinespringEnvDim i₀ ≤ Fintype.card n * Fintype.card m := by
   have hK : Module.finrank ℂ φ.traceDual.toEuclidean.Stinespring ≤
@@ -332,21 +337,21 @@ lemma stinespringEnvDim_le (φ : Matrix n n ℂ →CP Matrix m m ℂ) (i₀ : m)
     refine Module.finrank_completion_le.trans_eq ?_
     rw [finrank_preStinespring, Module.finrank_matrix, Module.finrank_self, mul_one,
       finrank_euclideanSpace]
-  rw [finrank_eq_finrank_multiplicitySpace_mul φ.traceDual.toEuclidean.stinespringStarAlgHom i₀] at hK
-  refine Nat.le_of_mul_le_mul_right ?_ (Fintype.card_pos_iff.mpr ⟨i₀⟩)
+  rw [finrank_eq_card_mul_finrank_multiplicitySpace φ.traceDual.toEuclidean.stinespringStarAlgHom i₀] at hK
+  refine Nat.le_of_mul_le_mul_left ?_ (Fintype.card_pos_iff.mpr ⟨i₀⟩)
   rw [stinespringEnvDim]
   linarith [hK]
 
 open scoped Kronecker in
 /-- **Stinespring's theorem, Heisenberg picture**, for the Stinespring matrix `V`:
-`φ*(B) = Vᴴ (1 ⊗ B) V`. This is the general theorem
+`φ*(B) = Vᴴ (B ⊗ 1) V`. This is the general theorem
 (`CompletelyPositiveMap.apply_eq_adjoint_comp_stinespringStarAlgHom_comp`) for `φ.traceDual.toEuclidean`,
 read in the basis `Matrix.multiplicityBasis π e`, in which the unital ⋆-representation `π` of `M_m(ℂ)`
-is `1 ⊗ B` (`Matrix.toMatrix_multiplicityBasis`). -/
+is `B ⊗ 1` (`Matrix.toMatrix_multiplicityBasis`). -/
 theorem traceDual_eq_stinespringMatrix [DecidableEq ι] (φ : Matrix n n ℂ →CP Matrix m m ℂ) {i₀ : m}
     (e : OrthonormalBasis ι ℂ (multiplicitySpace φ.traceDual.toEuclidean.stinespringStarAlgHom i₀))
     (B : Matrix m m ℂ) :
-    Matrix.traceDual φ B = (φ.stinespringMatrix e)ᴴ * ((1 : Matrix ι ι ℂ) ⊗ₖ B) *
+    Matrix.traceDual φ B = (φ.stinespringMatrix e)ᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) *
       φ.stinespringMatrix e := by
   set f := (EuclideanSpace.basisFun n ℂ).toBasis
   have hmat : ∀ X : Matrix n n ℂ,
@@ -369,11 +374,11 @@ theorem traceDual_eq_stinespringMatrix [DecidableEq ι] (φ : Matrix n n ℂ →
   congr 2
   exact toMatrix_multiplicityBasis _ e B
 
-/-- **Stinespring's theorem** for the Stinespring matrix `V`: `φ(A) = tr₁(V A Vᴴ)`. -/
-theorem apply_eq_traceLeft_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) {i₀ : m}
+/-- **Stinespring's theorem** for the Stinespring matrix `V`: `φ(A) = tr₂(V A Vᴴ)`. -/
+theorem apply_eq_traceRight_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) {i₀ : m}
     (e : OrthonormalBasis ι ℂ (multiplicitySpace φ.traceDual.toEuclidean.stinespringStarAlgHom i₀))
     (A : Matrix n n ℂ) :
-    φ A = tr₁(φ.stinespringMatrix e * A * (φ.stinespringMatrix e)ᴴ) := by
+    φ A = tr₂(φ.stinespringMatrix e * A * (φ.stinespringMatrix e)ᴴ) := by
   classical
   exact (traceDual_eq_iff_stinespring (φ.stinespringMatrix e)).1
     (φ.traceDual_eq_stinespringMatrix e) A
@@ -424,14 +429,14 @@ theorem linearIndependent_krausBlock_stinespringMatrix (φ : Matrix n n ℂ →C
   simpa using Fintype.linearIndependent_iff.1 e.orthonormal.linearIndependent _ h2 k
 
 /-- The environment of the Stinespring matrix has the minimal dimension `card ι = rank J(φ)`: its
-Kraus blocks are a Kraus representation of `φ` (`Matrix.traceLeft_mul_mul_conjTranspose`) by
+Kraus blocks are a Kraus representation of `φ` (`Matrix.traceRight_mul_mul_conjTranspose`) by
 linearly independent operators (`CompletelyPositiveMap.linearIndependent_krausBlock_stinespringMatrix`),
 hence with exactly `rank J(φ)` of them (`Matrix.rank_choiMatrix_eq_card_iff_linearIndependent`). -/
 theorem card_eq_rank_choiMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) {i₀ : m}
     (e : OrthonormalBasis ι ℂ (multiplicitySpace φ.traceDual.toEuclidean.stinespringStarAlgHom i₀)) :
     Fintype.card ι = (choiMatrix φ).rank :=
   ((rank_choiMatrix_eq_card_iff_linearIndependent (krausBlock (φ.stinespringMatrix e)) fun A => by
-    rw [← traceLeft_mul_mul_conjTranspose, ← φ.apply_eq_traceLeft_stinespringMatrix e]).2
+    rw [← traceRight_mul_mul_conjTranspose, ← φ.apply_eq_traceRight_stinespringMatrix e]).2
     (φ.linearIndependent_krausBlock_stinespringMatrix e)).symm
 
 /-- The environment dimension is the rank of the Choi matrix, `r = rank J(φ)`, for every `i₀`. -/
@@ -443,44 +448,44 @@ end StinespringMatrix
 
 open scoped Matrix.Norms.L2Operator MatrixOrder Kronecker in
 /-- **Stinespring's theorem, Heisenberg picture**, for matrix algebras: the trace dual of a
-completely positive map `φ : M_n(ℂ) → M_m(ℂ)` is `φ*(B) = Vᴴ (1 ⊗ B) V` for some
-`V : ℂⁿ → ℂ^E ⊗ ℂᵐ` with environment `E = Fin r` of the minimal dimension `r = rank J(φ) ≤ nm`
+completely positive map `φ : M_n(ℂ) → M_m(ℂ)` is `φ*(B) = Vᴴ (B ⊗ 1) V` for some
+`V : ℂⁿ → ℂᵐ ⊗ ℂ^E` with environment `E = Fin r` of the minimal dimension `r = rank J(φ) ≤ nm`
 (`Matrix.rank_choiMatrix_le_card_of_stinespring`). The explicit witness is the Stinespring matrix
 (`CompletelyPositiveMap.traceDual_eq_stinespringMatrix`). -/
 theorem exists_traceDual_eq_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
-    ∃ V : Matrix (Fin (choiMatrix φ).rank × m) n ℂ, ∀ B, Matrix.traceDual φ B =
-      Vᴴ * ((1 : Matrix (Fin (choiMatrix φ).rank) (Fin (choiMatrix φ).rank) ℂ) ⊗ₖ B) * V := by
+    ∃ V : Matrix (m × Fin (choiMatrix φ).rank) n ℂ, ∀ B, Matrix.traceDual φ B =
+      Vᴴ * (B ⊗ₖ (1 : Matrix (Fin (choiMatrix φ).rank) (Fin (choiMatrix φ).rank) ℂ)) * V := by
   cases isEmpty_or_nonempty m with
   | inl _ =>
     refine ⟨0, fun B => ?_⟩
     rw [Subsingleton.elim B 0, map_zero, conjTranspose_zero, Matrix.zero_mul, Matrix.zero_mul]
   | inr hm =>
-    suffices ∀ r, φ.stinespringEnvDim hm.some = r → ∃ V : Matrix (Fin r × m) n ℂ,
-        ∀ B, Matrix.traceDual φ B = Vᴴ * ((1 : Matrix (Fin r) (Fin r) ℂ) ⊗ₖ B) * V from
+    suffices ∀ r, φ.stinespringEnvDim hm.some = r → ∃ V : Matrix (m × Fin r) n ℂ,
+        ∀ B, Matrix.traceDual φ B = Vᴴ * (B ⊗ₖ (1 : Matrix (Fin r) (Fin r) ℂ)) * V from
       this _ (φ.stinespringEnvDim_eq_rank_choiMatrix hm.some)
     rintro r rfl
     exact ⟨_, φ.traceDual_eq_stinespringMatrix (stdOrthonormalBasis ℂ _)⟩
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Stinespring's theorem** for matrix algebras: a completely positive map
-`φ : M_n(ℂ) → M_m(ℂ)` is `φ(A) = tr₁(V A Vᴴ)` for some `V : ℂⁿ → ℂ^E ⊗ ℂᵐ` with environment
+`φ : M_n(ℂ) → M_m(ℂ)` is `φ(A) = tr₂(V A Vᴴ)` for some `V : ℂⁿ → ℂᵐ ⊗ ℂ^E` with environment
 `E = Fin r` of the minimal dimension `r = rank J(φ) ≤ nm`
 (`Matrix.rank_choiMatrix_le_card_of_stinespring`). Conversely every such map is completely
 positive (`CompletelyPositiveMap.ofStinespring`). -/
 theorem exists_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
-    ∃ V : Matrix (Fin (choiMatrix φ).rank × m) n ℂ, ∀ A, φ A = tr₁(V * A * Vᴴ) := by
+    ∃ V : Matrix (m × Fin (choiMatrix φ).rank) n ℂ, ∀ A, φ A = tr₂(V * A * Vᴴ) := by
   obtain ⟨V, hV⟩ := φ.exists_traceDual_eq_stinespringMatrix
   exact ⟨V, (traceDual_eq_iff_stinespring V).1 hV⟩
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Stinespring's theorem** for matrix algebras: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is
 completely positive, i.e. it is the linear map of some `φ : M_n(ℂ) →CP M_m(ℂ)`, iff
-`Φ(A) = tr₁(V A Vᴴ)` for some `V : ℂⁿ → ℂ^E ⊗ ℂᵐ` with environment `E = Fin r` of the minimal
+`Φ(A) = tr₂(V A Vᴴ)` for some `V : ℂⁿ → ℂᵐ ⊗ ℂ^E` with environment `E = Fin r` of the minimal
 dimension `r = rank J(Φ) ≤ nm`. -/
 theorem exists_toLinearMap_eq_iff_exists_stinespringMatrix
     (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
     (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, φ.toLinearMap = Φ) ↔
-      ∃ V : Matrix (Fin (choiMatrix Φ).rank × m) n ℂ, ∀ A, Φ A = tr₁(V * A * Vᴴ) :=
+      ∃ V : Matrix (m × Fin (choiMatrix Φ).rank) n ℂ, ∀ A, Φ A = tr₂(V * A * Vᴴ) :=
   ⟨fun ⟨φ, hφ⟩ => hφ ▸ φ.exists_stinespringMatrix,
     fun ⟨V, hV⟩ => ⟨ofStinespring Φ V hV, rfl⟩⟩
 
@@ -498,23 +503,23 @@ section Minimality
 
 variable [DecidableEq n] {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
 
-/-- **Minimality of the environment**: if `Φ(A) = tr₁(V A Vᴴ)` for `V : Matrix (ι × m) n ℂ`, the
+/-- **Minimality of the environment**: if `Φ(A) = tr₂(V A Vᴴ)` for `V : Matrix (m × ι) n ℂ`, the
 environment `ι` has at least `rank J(Φ)` elements, the dimension attained by the Stinespring matrix
-(`CompletelyPositiveMap.card_eq_rank_choiMatrix`): the row blocks of `V` are Kraus operators of `Φ`
-(`Matrix.rank_choiMatrix_le_card_of_kraus`). -/
+(`CompletelyPositiveMap.card_eq_rank_choiMatrix`): the Kraus blocks of `V` are Kraus operators of
+`Φ` (`Matrix.rank_choiMatrix_le_card_of_kraus`). -/
 theorem rank_choiMatrix_le_card_of_stinespring {Φ : F} {ι : Type*} [Fintype ι]
-    (V : Matrix (ι × m) n ℂ) (hV : ∀ A, Φ A = tr₁(V * A * Vᴴ)) :
+    (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = tr₂(V * A * Vᴴ)) :
     (choiMatrix Φ).rank ≤ Fintype.card ι :=
   rank_choiMatrix_le_card_of_kraus (krausBlock V) fun A => by
-    rw [hV, traceLeft_mul_mul_conjTranspose]
+    rw [hV, traceRight_mul_mul_conjTranspose]
 
-/-- The environment of `Φ(A) = tr₁(V A Vᴴ)` has the minimal dimension `rank J(Φ)` iff the row
+/-- The environment of `Φ(A) = tr₂(V A Vᴴ)` has the minimal dimension `rank J(Φ)` iff the row
 blocks `Kᵢ = Matrix.krausBlock V i` of `V` are linearly independent. -/
 theorem rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock {Φ : F} {ι : Type*} [Fintype ι]
-    (V : Matrix (ι × m) n ℂ) (hV : ∀ A, Φ A = tr₁(V * A * Vᴴ)) :
+    (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = tr₂(V * A * Vᴴ)) :
     (choiMatrix Φ).rank = Fintype.card ι ↔ LinearIndependent ℂ (krausBlock V) :=
   rank_choiMatrix_eq_card_iff_linearIndependent (krausBlock V) fun A => by
-    rw [hV, traceLeft_mul_mul_conjTranspose]
+    rw [hV, traceRight_mul_mul_conjTranspose]
 
 end Minimality
 
@@ -523,49 +528,49 @@ end Minimality
 variable [DecidableEq n] [DecidableEq m]
 
 /-- **Stinespring's theorem, Heisenberg picture**, for quantum channels: the trace dual of a
-quantum channel `Φ : M_n(ℂ) → M_m(ℂ)` is the unital map `Φ*(B) = Vᴴ (1 ⊗ B) V` for an isometry
-`V : ℂⁿ → ℂ^E ⊗ ℂᵐ`, `Vᴴ V = I`, with environment `E = Fin r` of the minimal dimension
+quantum channel `Φ : M_n(ℂ) → M_m(ℂ)` is the unital map `Φ*(B) = Vᴴ (B ⊗ 1) V` for an isometry
+`V : ℂⁿ → ℂᵐ ⊗ ℂ^E`, `Vᴴ V = I`, with environment `E = Fin r` of the minimal dimension
 `r = rank J(Φ) ≤ nm`. The isometry is `Vᴴ V = Vᴴ (1 ⊗ 1) V = Φ*(1) = 1`. -/
 theorem QuantumChannel.exists_traceDual_eq_stinespringMatrix (Φ : QuantumChannel n m) :
-    ∃ V : Matrix (Fin (choiMatrix Φ.toLinearMap).rank × m) n ℂ, Vᴴ * V = 1 ∧
+    ∃ V : Matrix (m × Fin (choiMatrix Φ.toLinearMap).rank) n ℂ, Vᴴ * V = 1 ∧
       ∀ B, traceDual Φ.toLinearMap B = Vᴴ *
-        ((1 : Matrix (Fin (choiMatrix Φ.toLinearMap).rank) (Fin (choiMatrix Φ.toLinearMap).rank) ℂ) ⊗ₖ
-          B) * V := by
+        (B ⊗ₖ
+          (1 : Matrix (Fin (choiMatrix Φ.toLinearMap).rank) (Fin (choiMatrix Φ.toLinearMap).rank) ℂ)) * V := by
   rw [show choiMatrix Φ.toLinearMap = choiMatrix Φ.val from rfl]
   obtain ⟨V, hV⟩ := Φ.val.exists_traceDual_eq_stinespringMatrix
   refine ⟨V, ?_, hV⟩
   rw [← Matrix.mul_one Vᴴ, ← one_kronecker_one, ← hV, traceDual_one Φ.property]
 
 /-- **Stinespring's theorem** for quantum channels: a quantum channel `Φ : M_n(ℂ) → M_m(ℂ)` is
-`Φ(A) = tr₁(V A Vᴴ)` for an isometry `V : ℂⁿ → ℂ^E ⊗ ℂᵐ`, `Vᴴ V = I`, with environment
+`Φ(A) = tr₂(V A Vᴴ)` for an isometry `V : ℂⁿ → ℂᵐ ⊗ ℂ^E`, `Vᴴ V = I`, with environment
 `E = Fin r` of the minimal dimension `r = rank J(Φ) ≤ nm`. Conversely every such map is a quantum
 channel (`Matrix.QuantumChannel.ofStinespring`). -/
 theorem QuantumChannel.exists_stinespringMatrix (Φ : QuantumChannel n m) :
-    ∃ V : Matrix (Fin (choiMatrix Φ.toLinearMap).rank × m) n ℂ,
-      Vᴴ * V = 1 ∧ ∀ A, Φ.val A = tr₁(V * A * Vᴴ) := by
+    ∃ V : Matrix (m × Fin (choiMatrix Φ.toLinearMap).rank) n ℂ,
+      Vᴴ * V = 1 ∧ ∀ A, Φ.val A = tr₂(V * A * Vᴴ) := by
   obtain ⟨V, hVV, hV⟩ := Φ.exists_traceDual_eq_stinespringMatrix
   exact ⟨V, hVV, (traceDual_eq_iff_stinespring V).1 hV⟩
 
-/-- **Stinespring's theorem** for quantum channels, converse: `A ↦ tr₁(V A Vᴴ)` for an isometry
+/-- **Stinespring's theorem** for quantum channels, converse: `A ↦ tr₂(V A Vᴴ)` for an isometry
 `V`, `Vᴴ V = I`, is a quantum channel. -/
 noncomputable def QuantumChannel.ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
-    (V : Matrix (ι × m) n ℂ) (hVV : Vᴴ * V = 1) (hV : ∀ A, Φ A = tr₁(V * A * Vᴴ)) : QuantumChannel n m :=
+    (V : Matrix (m × ι) n ℂ) (hVV : Vᴴ * V = 1) (hV : ∀ A, Φ A = tr₂(V * A * Vᴴ)) : QuantumChannel n m :=
   ⟨.ofStinespring Φ V hV, fun A => by
     change Tr (Φ A) = Tr A
-    rw [hV, trace_traceLeft, Matrix.trace_mul_cycle, hVV, Matrix.one_mul]⟩
+    rw [hV, trace_traceRight, Matrix.trace_mul_cycle, hVV, Matrix.one_mul]⟩
 
 /-- The quantum channel `Matrix.QuantumChannel.ofStinespring Φ V hVV hV` is `Φ` as a function. -/
 @[simp] lemma QuantumChannel.coe_ofStinespring (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
-    (V : Matrix (ι × m) n ℂ) (hVV : Vᴴ * V = 1) (hV : ∀ A, Φ A = tr₁(V * A * Vᴴ)) :
+    (V : Matrix (m × ι) n ℂ) (hVV : Vᴴ * V = 1) (hV : ∀ A, Φ A = tr₂(V * A * Vᴴ)) :
     ⇑(QuantumChannel.ofStinespring Φ V hVV hV).val = Φ :=
   rfl
 
 /-- **Stinespring's theorem** for quantum channels: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is a quantum
-channel iff `Φ(A) = tr₁(V A Vᴴ)` for an isometry `V : ℂⁿ → ℂ^E ⊗ ℂᵐ`, `Vᴴ V = I`, with
+channel iff `Φ(A) = tr₂(V A Vᴴ)` for an isometry `V : ℂⁿ → ℂᵐ ⊗ ℂ^E`, `Vᴴ V = I`, with
 environment `E = Fin r` of the minimal dimension `r = rank J(Φ) ≤ nm`. -/
 theorem QuantumChannel.exists_toLinearMap_eq_iff_exists_stinespringMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
     (∃ Ψ : QuantumChannel n m, Ψ.toLinearMap = Φ) ↔
-      ∃ V : Matrix (Fin (choiMatrix Φ).rank × m) n ℂ, Vᴴ * V = 1 ∧ ∀ A, Φ A = tr₁(V * A * Vᴴ) :=
+      ∃ V : Matrix (m × Fin (choiMatrix Φ).rank) n ℂ, Vᴴ * V = 1 ∧ ∀ A, Φ A = tr₂(V * A * Vᴴ) :=
   ⟨fun ⟨Ψ, hΨ⟩ => hΨ ▸ Ψ.exists_stinespringMatrix,
     fun ⟨V, hVV, hV⟩ => ⟨QuantumChannel.ofStinespring Φ V hVV hV, rfl⟩⟩
 
