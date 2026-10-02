@@ -42,8 +42,8 @@ needs the GNS construction of the project, and it is the reason this file lives 
 
 ## References
 
-The equivalence is standard; cf. Hansen–Pedersen 1982 and Bhatia, Chapter V, where operator
-convexity is defined on `𝓑(H)`.
+The equivalence is standard; cf. Hansen–Pedersen 1982, where operator convexity is defined on
+`𝓑(H)`, and Bhatia, Chapter V, where it is defined on the matrices of every size.
 
 * F. Hansen, G. K. Pedersen, *Jensen's inequality for operators and Löwner's theorem*,
   Math. Ann. 258 (1982), 229–241

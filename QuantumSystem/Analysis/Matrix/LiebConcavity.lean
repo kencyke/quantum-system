@@ -199,7 +199,7 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   -- 1. Setup the function f(x) = -x^p, which is Matrix Convex.
   let f : ℝ → ℝ := fun x => -(x ^ p)
   have hconv : IsMatrixConvexOn (Set.Ici 0) f :=
-    (isOperatorConvexOn_neg_rpow.{0} hp0.le hp1.le).isMatrixConvexOn
+    isMatrixConvexOn_neg_rpow hp0.le hp1.le
   -- 2. Define Left and Right multiplication operators
   let L₁ := 𝐋 A₁
   let L₂ := 𝐋 A₂

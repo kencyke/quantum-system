@@ -24,12 +24,15 @@ on the self-adjoint elements with spectrum in `s`. Quantifying over the matrix a
 alone gives *matrix convexity* (`IsMatrixConvexOn`; Bhatia, Chapter V; Effros), which needs no
 continuity, since matrices have finite spectra. For `f` continuous on `s` the two agree, but they
 differ on discontinuous functions: on `[0, ∞)`, `f(0) = 1` and `f(t) = 0` for `t > 0` gives the
-projection `f(A)` onto `ker A`, and is matrix convex (this example is not formalised here). Both
-notions are kept. This file proves the specialisation `IsOperatorConvexOn.isMatrixConvexOn`
-(operator convex ⇒ matrix convex), and the converse direction (matrix convex ⇒ operator convex)
-for continuous `f` on bounded operators on a Hilbert space,
-`IsMatrixConvexOn.convexOn_continuousLinearMap`. The converse in every C⋆-algebra
-transfers the Hilbert space case along a faithful representation (Gelfand–Naimark,
+projection `f(A)` onto `ker A`, and is matrix convex (`isMatrixConvexOn_indicator_zero`) but not
+operator convex (`not_isOperatorConvexOn_indicator_zero`). The separation is one of conventions: the
+obstruction is the continuity that operator convexity requires (Hansen–Pedersen), while the
+argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is algebraic. Bhatia's operator
+convexity is matrix convexity in every size, without continuity. Both notions are kept. This file
+proves the specialisation `IsOperatorConvexOn.isMatrixConvexOn` (operator convex ⇒ matrix convex),
+and the converse direction (matrix convex ⇒ operator convex) for continuous `f` on bounded operators
+on a Hilbert space, `IsMatrixConvexOn.convexOn_continuousLinearMap`. The converse in every
+C⋆-algebra transfers the Hilbert space case along a faithful representation (Gelfand–Naimark,
 `ConvexOn.cfc_of_injective`); it needs the Gelfand–Naimark theorem, which Mathlib does not provide
 and which the project builds from direct sums of Mathlib's GNS representations
 (`GNS.DirectSum.repStarAlgHom`), and is proved outside `ForMathlib` in
@@ -82,6 +85,11 @@ in `QuantumSystem/Analysis/Matrix/Order.lean` (`IsMatrixConvexOn.cfc_sum_le`).
   (Mathlib's `CFC.concaveOn_rpow`); `isOperatorConvexOn_neg_log`, `isOperatorConvexOn_inv`:
   `-log t` and `t⁻¹` are operator convex on `(0, ∞)` (Mathlib's `CFC.concaveOn_log`,
   `CStarAlgebra.convexOn_ringInverse`).
+* `isMatrixConvexOn_neg_rpow`: `-tᵖ` (`0 ≤ p ≤ 1`) is matrix convex on `[0, ∞)`;
+  `isMatrixConvexOn_neg_log`, `isMatrixConvexOn_inv`: `-log t` and `t⁻¹` are matrix convex on
+  `(0, ∞)`.
+* `isMatrixConvexOn_indicator_zero`, `not_isOperatorConvexOn_indicator_zero`: the indicator of
+  `{0}` is matrix convex but not operator convex on `[0, ∞)`.
 
 ## Implementation notes
 
@@ -611,7 +619,8 @@ Gelfand–Naimark and is proved outside `ForMathlib`, in
 `QuantumSystem/Analysis/CStarAlgebra/OperatorConvex.lean` (`isOperatorConvexOn_congr_universe`);
 the examples below are proved uniformly in every C⋆-algebra and hold in every universe.
 
-The field `continuousOn` follows the definition in the literature (Hansen–Pedersen, Bhatia). It
+The field `continuousOn` follows the definition of Hansen–Pedersen; Bhatia's operator convexity,
+which asks for no continuity, is `IsMatrixConvexOn`. It
 is not independent of `convexOn`: Mathlib's junk value `cfc f a = 0` for `f` discontinuous on the
 spectrum of `a` makes convexity in every C⋆-algebra force continuity, but that derivation has no
 mathematical content, so continuity is kept as a field. When `s` has at most one point the domain
@@ -875,6 +884,140 @@ lemma isOperatorConvexOn_inv : IsOperatorConvexOn (Ioi 0) (fun t => t⁻¹) := b
   rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
   exact CStarAlgebra.convexOn_ringInverse.congr fun a ha =>
     (cfc_ringInverse_id (R := ℝ) (a := a) ha.isUnit).symm
+
+/-- The negated power function `-tᵖ` (`0 ≤ p ≤ 1`) is matrix convex on `[0, ∞)`
+(`isOperatorConvexOn_neg_rpow`). -/
+lemma isMatrixConvexOn_neg_rpow {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1) :
+    IsMatrixConvexOn (Ici 0) (fun t => -(t ^ p)) :=
+  (isOperatorConvexOn_neg_rpow.{0} hp0 hp1).isMatrixConvexOn
+
+/-- The negated logarithm `-log t` is matrix convex on `(0, ∞)` (`isOperatorConvexOn_neg_log`). -/
+lemma isMatrixConvexOn_neg_log : IsMatrixConvexOn (Ioi 0) (fun t => -Real.log t) :=
+  isOperatorConvexOn_neg_log.{0}.isMatrixConvexOn
+
+/-- The inverse `t⁻¹` is matrix convex on `(0, ∞)` (`isOperatorConvexOn_inv`). -/
+lemma isMatrixConvexOn_inv : IsMatrixConvexOn (Ioi 0) (fun t => t⁻¹) :=
+  isOperatorConvexOn_inv.{0}.isMatrixConvexOn
+
+/-! ### A matrix convex function that is not operator convex
+
+The indicator `f = 1_{\{0\}}` of `{0}` on `[0, ∞)` sends `A ⪰ 0` to the projection `f(A)` onto
+`ker A`. For `A, B ⪰ 0` and `a, b > 0`, `ker(a A + b B) = ker A ∩ ker B`, so the projection onto
+`ker(a A + b B)` lies below those onto `ker A` and `ker B`, and `f` is matrix convex. It is not
+continuous at `0`, so it is not operator convex: the obstruction is the continuity in the
+definition of `IsOperatorConvexOn`, not the kernel argument.
+-/
+
+section IndicatorZero
+
+variable {A : Type*} [CStarAlgebra A]
+
+/-- For `X` with finite spectrum, `1_{\{0\}}(X)` is a projection. -/
+private lemma isStarProjection_cfc_indicator_zero {X : A} (hX : (spectrum ℝ X).Finite) :
+    IsStarProjection (cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X) := by
+  refine ⟨?_, cfc_predicate _ _⟩
+  rw [IsIdempotentElem, ← cfc_mul (hf := hX.continuousOn _) (hg := hX.continuousOn _)]
+  congr 1
+  funext x
+  by_cases hx : x = 0 <;> simp [hx]
+
+/-- `X · 1_{\{0\}}(X) = 0` for self-adjoint `X` with finite spectrum: the range of `1_{\{0\}}(X)`
+lies in `ker X`. -/
+private lemma mul_cfc_indicator_zero {X : A} (hX : IsSelfAdjoint X) (hfin : (spectrum ℝ X).Finite) :
+    X * cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X = 0 := by
+  have h := cfc_mul (fun x : ℝ => x) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X
+    (hfin.continuousOn _) (hfin.continuousOn _)
+  rw [cfc_id' ℝ X] at h
+  rw [← h, show (fun x : ℝ => x * ({0} : Set ℝ).indicator (1 : ℝ → ℝ) x) = (0 : ℝ → ℝ) from
+    funext fun x => by by_cases hx : x = 0 <;> simp [hx]]
+  simp
+
+/-- `1 - 1_{\{0\}}(X) = X⁻¹ X` with `0⁻¹ = 0`, for self-adjoint `X` with finite spectrum: the
+complementary projection factors through `X`. -/
+private lemma one_sub_cfc_indicator_zero {X : A} (hX : IsSelfAdjoint X)
+    (hfin : (spectrum ℝ X).Finite) :
+    1 - cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X = cfc (fun x : ℝ => x⁻¹) X * X := by
+  have h := cfc_mul (fun x : ℝ => x⁻¹) (fun x : ℝ => x) X (hfin.continuousOn _)
+    (hfin.continuousOn _)
+  rw [cfc_id' ℝ X] at h
+  rw [← h, ← cfc_one ℝ X, ← cfc_sub (hf := hfin.continuousOn _) (hg := hfin.continuousOn _)]
+  congr 1
+  funext x
+  by_cases hx : x = 0 <;> simp [hx]
+
+variable [PartialOrder A] [StarOrderedRing A]
+
+/-- For self-adjoint `X` with finite spectrum, a projection `P` with `X P = 0`, i.e. with range in
+`ker X`, lies below the projection `1_{\{0\}}(X)` onto `ker X`. -/
+private lemma le_cfc_indicator_zero {X P : A} (hX : IsSelfAdjoint X)
+    (hfin : (spectrum ℝ X).Finite) (hP : IsStarProjection P) (hXP : X * P = 0) :
+    P ≤ cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X := by
+  refine hP.le_of_mul_eq_right (isStarProjection_cfc_indicator_zero hfin) ?_
+  have h : (1 - cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X) * P = 0 := by
+    rw [one_sub_cfc_indicator_zero hX hfin, mul_assoc, hXP, mul_zero]
+  rwa [sub_mul, one_mul, sub_eq_zero, eq_comm] at h
+
+/-- For `a ≥ 0`, `q⋆ a q = 0` forces `a q = 0`. -/
+private lemma mul_eq_zero_of_star_mul_mul_eq_zero {a q : A} (ha : 0 ≤ a)
+    (h : star q * a * q = 0) : a * q = 0 := by
+  obtain ⟨d, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp ha
+  have hdq : d * q = 0 := by
+    rw [← CStarRing.star_mul_self_eq_zero_iff, star_mul, ← h]
+    noncomm_ring
+  rw [mul_assoc, hdq, mul_zero]
+
+end IndicatorZero
+
+/-- The indicator `1_{\{0\}}` of `{0}` is matrix convex on `[0, ∞)`: `1_{\{0\}}(A)` is the
+projection onto `ker A`, and `ker(a A + b B) = ker A ∩ ker B` for `A, B ⪰ 0` and `a, b > 0`. It
+is not continuous, hence not operator convex (`not_isOperatorConvexOn_indicator_zero`): the two
+notions differ on discontinuous functions, through the continuity that operator convexity
+requires. -/
+theorem isMatrixConvexOn_indicator_zero :
+    IsMatrixConvexOn (Ici 0) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) := fun n => by
+  open scoped MatrixOrder Matrix.Norms.L2Operator in
+  refine ⟨ordConnected_Ici.convex_setOf_isSelfAdjoint_spectrum_subset, ?_⟩
+  intro A hA B hB a b ha hb hab
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ici] at hA hB
+  change 0 ≤ A at hA
+  change 0 ≤ B at hB
+  rcases ha.eq_or_lt with rfl | ha'
+  · rw [zero_add] at hab
+    simp [hab]
+  rcases hb.eq_or_lt with rfl | hb'
+  · rw [add_zero] at hab
+    simp [hab]
+  set Q := cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) (a • A + b • B) with hQ
+  have hC : 0 ≤ a • A + b • B := add_nonneg (smul_nonneg ha hA) (smul_nonneg hb hB)
+  have hQP : IsStarProjection Q :=
+    isStarProjection_cfc_indicator_zero (a • A + b • B).finite_real_spectrum
+  -- `Q⋆ (a A + b B) Q = 0` splits into two nonnegative terms, so `Q⋆ A Q = Q⋆ B Q = 0`.
+  have hsum : a • (star Q * A * Q) + b • (star Q * B * Q) = 0 := by
+    have h : star Q * (a • A + b • B) * Q = 0 := by
+      rw [mul_assoc, mul_cfc_indicator_zero hC.isSelfAdjoint (a • A + b • B).finite_real_spectrum,
+        mul_zero]
+    simpa only [mul_add, add_mul, mul_smul_comm, smul_mul_assoc] using h
+  have h0 := (add_eq_zero_iff_of_nonneg (smul_nonneg ha (star_left_conjugate_nonneg hA Q))
+    (smul_nonneg hb (star_left_conjugate_nonneg hB Q))).1 hsum
+  have hQA := le_cfc_indicator_zero hA.isSelfAdjoint A.finite_real_spectrum hQP
+    (mul_eq_zero_of_star_mul_mul_eq_zero hA ((smul_eq_zero.1 h0.1).resolve_left ha'.ne'))
+  have hQB := le_cfc_indicator_zero hB.isSelfAdjoint B.finite_real_spectrum hQP
+    (mul_eq_zero_of_star_mul_mul_eq_zero hB ((smul_eq_zero.1 h0.2).resolve_left hb'.ne'))
+  calc Q = a • Q + b • Q := by rw [← add_smul, hab, one_smul]
+    _ ≤ _ := add_le_add (smul_le_smul_of_nonneg_left hQA ha) (smul_le_smul_of_nonneg_left hQB hb)
+
+/-- The indicator `1_{\{0\}}` of `{0}` is not operator convex on `[0, ∞)`, in any universe: it is
+not continuous at `0`, and the proof uses only the field `IsOperatorConvexOn.continuousOn`. It is
+matrix convex (`isMatrixConvexOn_indicator_zero`). -/
+theorem not_isOperatorConvexOn_indicator_zero :
+    ¬ IsOperatorConvexOn (Ici 0) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) := fun h => by
+  have hc : Filter.Tendsto (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) (nhdsWithin 0 (Ioi 0))
+      (nhds (({0} : Set ℝ).indicator (1 : ℝ → ℝ) 0)) :=
+    (h.continuousOn 0 self_mem_Ici).mono Ioi_subset_Ici_self
+  have h0 : Filter.Tendsto (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) (nhdsWithin 0 (Ioi 0)) (nhds 0) :=
+    tendsto_const_nhds.congr' (eventually_nhdsWithin_of_forall fun x hx => by
+      simp [(mem_Ioi.1 hx).ne'])
+  simpa using tendsto_nhds_unique hc h0
 
 /-! ### Matrix convexity on bounded operators -/
 

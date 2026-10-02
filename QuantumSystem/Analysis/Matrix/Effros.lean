@@ -31,7 +31,7 @@ through Jensen's operator inequality for matrices
 * `Matrix.matrixPerspective_joint_convex`: **Effros's theorem**, joint convexity of the matrix
   perspective of an `f` matrix convex on `[0, ∞)`, on positive semidefinite `L` and positive
   definite `R`; `Matrix.matrixPerspective_joint_convex_of_posDef`: for `f` matrix convex on
-  `(0, ∞)` (such as `-log`, `t⁻¹`: `isOperatorConvexOn_neg_log`, `isOperatorConvexOn_inv`), on
+  `(0, ∞)` (such as `-log`, `t⁻¹`: `isMatrixConvexOn_neg_log`, `isMatrixConvexOn_inv`), on
   positive definite `L` and `R`;
   `Matrix.matrixPerspective_joint_convex_of_mem`: for `f` matrix convex on any `s`.
 * `Matrix.matrixPerspective_neg_leftRight_eq`: for `f(x) = -xᵖ`, the perspective of `(𝐋 A, 𝐑 B)`
@@ -569,8 +569,8 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     (hL₂.conjTranspose_mul_mul_same _).mem_setOf_isSelfAdjoint_spectrum_subset_Ici hw₁ hw₂ hw
 
 /-- **Effros's theorem** on `(0, ∞)`: the matrix perspective of an `f` matrix convex on `(0, ∞)`,
-such as `-log` or `t⁻¹` (`isOperatorConvexOn_neg_log.{0}.isMatrixConvexOn`,
-`isOperatorConvexOn_inv.{0}.isMatrixConvexOn`), is jointly convex on positive definite `L` and `R`. -/
+such as `-log` or `t⁻¹` (`isMatrixConvexOn_neg_log`, `isMatrixConvexOn_inv`), is jointly convex
+on positive definite `L` and `R`. -/
 theorem matrixPerspective_joint_convex_of_posDef.{v} {m : Type v} [Fintype m] [DecidableEq m]
     {f : ℝ → ℝ} (hconv : IsMatrixConvexOn (Set.Ioi 0) f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
