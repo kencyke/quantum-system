@@ -38,9 +38,7 @@ noncomputable def QuantumChannel.apply [DecidableEq n] [DecidableEq m]
     (Φ : QuantumChannel n m) (ρ : DensityMatrix n) :
     DensityMatrix m where
   toMatrix := Φ.val ↑ρ
-  posSemidef := by
-    open scoped Matrix.Norms.L2Operator MatrixOrder in
-    exact Matrix.PosSemidef.map ρ.posSemidef Φ.val
+  posSemidef := Φ.posSemidef_apply ρ.posSemidef
   trace_eq_one := by
     rw [Φ.property]
     exact ρ.trace_eq_one

@@ -103,9 +103,9 @@ The instances `Matrix.Norms.L2Operator` and `MatrixOrder` are scoped, so writing
 `open scoped CStarAlgebra Matrix.Norms.L2Operator MatrixOrder`. The type `QuantumChannel n m`
 itself carries them: stating and using channels needs no `open`, through the application `Φ.val A`
 and the API of this namespace (`QuantumChannel.toLinearMap`, `QuantumChannel.id`,
-`QuantumChannel.comp`). Only calls into the `CompletelyPositiveMap` API on `Φ.val` that re-synthesise
-the C⋆-structure of `Matrix n n ℂ`, such as `Φ.val.toLinearMap` or `Ψ.val.comp Φ.val`, need the
-scoped instances. -/
+`QuantumChannel.comp`, `QuantumChannel.posSemidef_apply`). Only calls into the
+`CompletelyPositiveMap` API on `Φ.val` that re-synthesise the C⋆-structure of `Matrix n n ℂ`, such
+as `Φ.val.toLinearMap` or `Ψ.val.comp Φ.val`, need the scoped instances. -/
 abbrev QuantumChannel (n m : Type*) [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m] :=
   { φ : Matrix n n ℂ →CP Matrix m m ℂ // IsTracePreserving φ }
 
@@ -152,5 +152,13 @@ theorem PosSemidef.map {n m F : Type*} [Finite n] [Finite m]
   have := Fintype.ofFinite n
   have := Fintype.ofFinite m
   exact Matrix.nonneg_iff_posSemidef.mp (map_nonneg φ hA.nonneg)
+
+open scoped Matrix.Norms.L2Operator in
+/-- A quantum channel sends positive semidefinite matrices to positive semidefinite matrices
+(`Matrix.PosSemidef.map` for the completely positive map `Φ.val`). -/
+theorem QuantumChannel.posSemidef_apply {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n]
+    [DecidableEq m] (Φ : QuantumChannel n m) {A : Matrix n n ℂ} (hA : A.PosSemidef) :
+    (Φ.val A).PosSemidef :=
+  hA.map Φ.val
 
 end Matrix

@@ -740,8 +740,7 @@ theorem umegakiEntropy_channel_eq_of_recoverable (Φ : QuantumChannel n m) {ρ �
     D(Φ.val ρ ∥ Φ.val σ) = D(ρ ∥ σ) := by
   refine le_antisymm (umegakiEntropy_channel_le Φ hρ hσ) ?_
   have hle : D(R.val (Φ.val ρ) ∥ R.val (Φ.val σ)) ≤ D(Φ.val ρ ∥ Φ.val σ) := by
-    open scoped Matrix.Norms.L2Operator MatrixOrder in
-    exact umegakiEntropy_channel_le R (hρ.map Φ.val) (hσ.map Φ.val)
+    exact umegakiEntropy_channel_le R (Φ.posSemidef_apply hρ) (Φ.posSemidef_apply hσ)
   rwa [hRρ, hRσ] at hle
 
 /-! ### Joint Convexity of Relative Entropy -/
