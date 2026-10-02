@@ -56,8 +56,9 @@ The last row is the general two-exponent form of Lieb 1973 (Adv. Math. 11,
 The proof proceeds via:
 1. **Matrix concavity of t^s**: For 0 < s ≤ 1, the map A ↦ A^s is operator concave
    (equivalently, f(t) = -t^s is operator convex). This is Mathlib's `CFC.concaveOn_rpow`.
-2. **Jensen's operator inequality** (Hansen–Pedersen, `IsMatrixConvexOn.cfc_affine_le`): for
-   matrix convex f and A, B with A*A + B*B = I: f(A*T₁A + B*T₂B) ≤ A*f(T₁)A + B*f(T₂)B.
+2. **Jensen's operator inequality** (Hansen–Pedersen,
+   `IsMatrixConvexOn.cfc_add_le`): for matrix convex f and A, B with
+   A†A + B†B = I: f(A†T₁A + B†T₂B) ≤ A†f(T₁)A + B†f(T₂)B.
 3. **Matrix perspective**: The noncommutative perspective
    g(L,R) = R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2} is jointly convex in positive semidefinite L
    and positive definite R when f is matrix convex (`Matrix.matrixPerspective_joint_convex`);

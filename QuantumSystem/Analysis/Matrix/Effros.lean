@@ -16,7 +16,8 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalcul
 This file formalises Effros's (2009) matrix-perspective route to Lieb's joint concavity theorem.
 The convexity input is matrix convexity (`IsMatrixConvexOn`, defined in
 `QuantumSystem/ForMathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/OperatorConvex.lean`)
-through Jensen's operator inequality for matrices (`IsMatrixConvexOn.cfc_affine_le` in
+through Jensen's operator inequality for matrices
+(`IsMatrixConvexOn.cfc_add_le` in
 `QuantumSystem/Analysis/Matrix/Order.lean`); no continuity of `f` is required.
 
 ## Main definitions
@@ -427,8 +428,8 @@ definite `R` and a self-adjoint `L` with `R^{-1/2} L R^{-1/2}` of spectrum in `s
 (`Matrix.matrixPerspective_joint_convex`), for `s = (0, ∞)` it is `L ≻ 0`
 (`Matrix.matrixPerspective_joint_convex_of_posDef`).
 No condition on `f(0)` is needed: the weights `Aᵢ = (wᵢRᵢ)^{1/2} R^{-1/2}` satisfy
-`A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `IsMatrixConvexOn.cfc_affine_le`
-applies. -/
+`A₁†A₁ + A₂†A₂ = I` exactly, so the two-term Jensen inequality
+`IsMatrixConvexOn.cfc_add_le` applies. -/
 theorem matrixPerspective_joint_convex_of_mem.{v} {m : Type v} [Fintype m] [DecidableEq m]
     {s : Set ℝ} {f : ℝ → ℝ} (hconv : IsMatrixConvexOn s f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
@@ -490,7 +491,7 @@ theorem matrixPerspective_joint_convex_of_mem.{v} {m : Type v} [Fintype m] [Deci
     have hRinv_mul : Rinv * R * Rinv = (1 : Matrix m m ℂ) := by
       simpa [Rinv, R] using rpow_neg_half_mul_mul_rpow_neg_half hR
     simp [hA_sum, hRinv_mul]
-  have hconv' := hconv.cfc_affine_le A₁ A₂ T₁ T₂ hL₁ hL₂ hAB
+  have hconv' := hconv.cfc_add_le A₁ A₂ T₁ T₂ hL₁ hL₂ hAB
   have hpsd :
       (A₁ᴴ * cfc f T₁ * A₁ +
         A₂ᴴ * cfc f T₂ * A₂ -

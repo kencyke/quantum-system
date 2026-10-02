@@ -33,15 +33,13 @@ continuity on the finite spectra of matrices is automatic.
   `Matrix.PosDef.mem_setOf_isSelfAdjoint_spectrum_subset_Ioi`: positive semidefinite and positive
   definite matrices lie in the domains for `[0, ∞)` and `(0, ∞)`.
 * `IsMatrixConvexOn.convexOn`: matrix convexity in every finite index type.
-* `IsMatrixConvexOn.cfc_sum_le`, `IsMatrixConvexOn.cfc_affine_le` (Hansen–Pedersen 2003):
-  `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ` for `Σᵢ Aᵢ† Aᵢ = I`;
-  `IsMatrixConvexOn.cfc_sum_conjTranspose_mul_mul_le` for rectangular `Aᵢ : Matrix k m ℂ`
-  (Davis 1957 for a single isometry).
-* `IsMatrixConvexOn.cfc_sum_le_of_le_one`, `IsMatrixConvexOn.cfc_affine_le_of_le_one`,
-  `IsMatrixConvexOn.cfc_sum_conjTranspose_mul_mul_le_of_le_one` (Hansen–Pedersen 1982): the
-  sub-unital forms for `Σᵢ Aᵢ† Aᵢ ≤ I`, on `s ∋ 0` with `f(0) ≤ 0`.
-* `isMatrixConvexOn_iff_cfc_affine_le` (Hansen–Pedersen 2003): on an interval, `f` is matrix
-  convex iff the two-term unital Jensen inequality holds in every size.
+* `IsMatrixConvexOn.cfc_sum_le` (Hansen–Pedersen 2003; Davis 1957 for a single isometry):
+  `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ` for `Σᵢ Aᵢ† Aᵢ = I`, with rectangular `Aᵢ : Matrix k m ℂ`;
+  `IsMatrixConvexOn.cfc_add_le`: the two-term case `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`.
+* `IsMatrixConvexOn.cfc_sum_le_of_le_one`, `IsMatrixConvexOn.cfc_add_le_of_le_one`
+  (Hansen–Pedersen 1982): the sub-unital forms for `Σᵢ Aᵢ† Aᵢ ≤ I`, on `s ∋ 0` with `f(0) ≤ 0`.
+* `isMatrixConvexOn_iff_cfc_add_le` (Hansen–Pedersen 2003): on an
+  interval, `f` is matrix convex iff the two-term unital Jensen inequality holds in every size.
 * `isMatrixConvexOn_and_map_zero_nonpos_iff` (Hansen–Pedersen 1982): on an interval `s ∋ 0`,
   `f` is matrix convex with `f(0) ≤ 0` iff the two-term sub-unital Jensen inequality holds.
 * `Matrix.rpow_concavity_le`: operator concavity of `xˢ` in unfolded form.
@@ -169,12 +167,11 @@ theorem IsMatrixConvexOn.convexOn (hf : IsMatrixConvexOn s f) (m : Type*) [Finty
   exact ConvexOn.cfc_of_injective (Matrix.reindexStarAlgEquiv (R := ℂ) (Fintype.equivFin m))
     (EquivLike.injective _) (hf _)
 
-/-- **Jensen's operator inequality for matrices** (Hansen–Pedersen 2003, Theorem 2.1): for `f`
-matrix convex on `s`, a finite family `Aᵢ : Matrix m m ℂ` with `Σᵢ Aᵢ† Aᵢ = I` and self-adjoint
-`Tᵢ` with spectrum in `s`, `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ`. No continuity of `f` is needed:
-the spectra are finite. -/
-theorem IsMatrixConvexOn.cfc_sum_le (hf : IsMatrixConvexOn s f) {ι m : Type*} [Fintype ι]
-    [Fintype m] [DecidableEq m] (A : ι → Matrix m m ℂ) (T : ι → Matrix m m ℂ)
+/-- Square case of `IsMatrixConvexOn.cfc_sum_le`, for `Aᵢ : Matrix m m ℂ`: Jensen's inequality in
+`CStarMatrix ι ι (Matrix m m ℂ)` (`cfc_sum_le_of_convexOn_cstarMatrix`). No continuity of `f` is
+needed: the spectra are finite. -/
+private theorem IsMatrixConvexOn.cfc_sum_le_square (hf : IsMatrixConvexOn s f) {ι m : Type*}
+    [Fintype ι] [Fintype m] [DecidableEq m] (A : ι → Matrix m m ℂ) (T : ι → Matrix m m ℂ)
     (hT : ∀ i, T i ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
     (hA : ∑ i, (A i)ᴴ * A i = 1) :
     cfc f (∑ i, (A i)ᴴ * T i * A i) ≤ ∑ i, (A i)ᴴ * cfc f (T i) * A i := by
@@ -187,39 +184,38 @@ theorem IsMatrixConvexOn.cfc_sum_le (hf : IsMatrixConvexOn s f) {ι m : Type*} [
 /-- **Jensen's operator inequality for matrices**, two-term case (Hansen–Pedersen 2003): for `f`
 matrix convex on `s`, `A†A + B†B = I` and self-adjoint `T₁, T₂` with spectrum in `s`,
 `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`. -/
-theorem IsMatrixConvexOn.cfc_affine_le (hf : IsMatrixConvexOn s f) {m : Type*} [Fintype m]
-    [DecidableEq m] (A B T₁ T₂ : Matrix m m ℂ)
+theorem IsMatrixConvexOn.cfc_add_le (hf : IsMatrixConvexOn s f)
+    {m : Type*} [Fintype m] [DecidableEq m] (A B T₁ T₂ : Matrix m m ℂ)
     (hT₁ : T₁ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
     (hT₂ : T₂ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
     (hAB : Aᴴ * A + Bᴴ * B = 1) :
     cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
-  simpa [Fin.sum_univ_two] using hf.cfc_sum_le ![A, B] ![T₁, T₂] (Fin.forall_fin_two.2 ⟨hT₁, hT₂⟩)
-    (by simpa [Fin.sum_univ_two] using hAB)
+  simpa [Fin.sum_univ_two] using hf.cfc_sum_le_square ![A, B] ![T₁, T₂]
+    (Fin.forall_fin_two.2 ⟨hT₁, hT₂⟩) (by simpa [Fin.sum_univ_two] using hAB)
 
-/-- **Jensen's operator inequality for matrices, sub-unital form** (Hansen–Pedersen 1982,
-Theorem 2.1): for `f` matrix convex on `s ∋ 0` with `f(0) ≤ 0`, a finite family `Aᵢ` with
-`Σᵢ Aᵢ† Aᵢ ≤ I` and self-adjoint `Tᵢ` with spectrum in `s`, `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ`
+/-- Square case of `IsMatrixConvexOn.cfc_sum_le_of_le_one`, for `Aᵢ : Matrix m m ℂ`
 (`cfc_sum_le_of_le_one_of_forall`). -/
-theorem IsMatrixConvexOn.cfc_sum_le_of_le_one (hf : IsMatrixConvexOn s f) (h0 : (0 : ℝ) ∈ s)
-    (hf0 : f 0 ≤ 0) {ι m : Type*} [Fintype ι] [Fintype m] [DecidableEq m]
+private theorem IsMatrixConvexOn.cfc_sum_le_of_le_one_square (hf : IsMatrixConvexOn s f)
+    (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {ι m : Type*} [Fintype ι] [Fintype m] [DecidableEq m]
     (A : ι → Matrix m m ℂ) (T : ι → Matrix m m ℂ)
     (hT : ∀ i, T i ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
     (hA : ∑ i, (A i)ᴴ * A i ≤ 1) :
     cfc f (∑ i, (A i)ᴴ * T i * A i) ≤ ∑ i, (A i)ᴴ * cfc f (T i) * A i := by
   open scoped Matrix.Norms.L2Operator in
   exact cfc_sum_le_of_le_one_of_forall (A := Matrix m m ℂ) h0 hf0
-    (fun a x hx ha => hf.cfc_sum_le a x hx ha) A T hT hA
+    (fun a x hx ha => hf.cfc_sum_le_square a x hx ha) A T hT hA
 
 /-- **Jensen's operator inequality for matrices, sub-unital two-term form** (Hansen–Pedersen
 1982): for `f` matrix convex on `s ∋ 0` with `f(0) ≤ 0`, `A†A + B†B ≤ I` and self-adjoint `T₁, T₂`
 with spectrum in `s`, `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`. -/
-theorem IsMatrixConvexOn.cfc_affine_le_of_le_one (hf : IsMatrixConvexOn s f) (h0 : (0 : ℝ) ∈ s)
-    (hf0 : f 0 ≤ 0) {m : Type*} [Fintype m] [DecidableEq m] (A B T₁ T₂ : Matrix m m ℂ)
+theorem IsMatrixConvexOn.cfc_add_le_of_le_one (hf : IsMatrixConvexOn s f)
+    (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {m : Type*} [Fintype m] [DecidableEq m]
+    (A B T₁ T₂ : Matrix m m ℂ)
     (hT₁ : T₁ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
     (hT₂ : T₂ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
     (hAB : Aᴴ * A + Bᴴ * B ≤ 1) :
     cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
-  simpa [Fin.sum_univ_two] using hf.cfc_sum_le_of_le_one h0 hf0 ![A, B] ![T₁, T₂]
+  simpa [Fin.sum_univ_two] using hf.cfc_sum_le_of_le_one_square h0 hf0 ![A, B] ![T₁, T₂]
     (Fin.forall_fin_two.2 ⟨hT₁, hT₂⟩) (by simpa [Fin.sum_univ_two] using hAB)
 
 /-- `√c • 1` conjugates `T` to `c • T`. -/
@@ -235,13 +231,14 @@ private lemma conjTranspose_sqrt_smul_one_mul_mul {m : Type*} [Fintype m] [Decid
 self-adjoint `T₁, T₂` with spectrum in `s`. The
 converse takes the scalars `A = √λ`, `B = √(1 - λ)`. No continuity of `f` and no condition on
 `f(0)` is needed; compare `isMatrixConvexOn_and_map_zero_nonpos_iff`. -/
-theorem isMatrixConvexOn_iff_cfc_affine_le (hs : s.OrdConnected) :
+theorem isMatrixConvexOn_iff_cfc_add_le (hs : s.OrdConnected) :
     IsMatrixConvexOn s f ↔ ∀ (n : ℕ) (A B T₁ T₂ : Matrix (Fin n) (Fin n) ℂ),
       T₁ ∈ {X : Matrix (Fin n) (Fin n) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} →
       T₂ ∈ {X : Matrix (Fin n) (Fin n) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} →
       Aᴴ * A + Bᴴ * B = 1 →
       cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
-  refine ⟨fun hf n A B T₁ T₂ hT₁ hT₂ hAB => hf.cfc_affine_le A B T₁ T₂ hT₁ hT₂ hAB, fun hJ n =>
+  refine ⟨fun hf n A B T₁ T₂ hT₁ hT₂ hAB =>
+    hf.cfc_add_le A B T₁ T₂ hT₁ hT₂ hAB, fun hJ n =>
     ⟨hs.convex_setOf_isSelfAdjoint_spectrum_subset, fun T₁ hT₁ T₂ hT₂ a b ha hb hab => ?_⟩⟩
   have key := hJ n ((√a : ℝ) • 1) ((√b : ℝ) • 1) T₁ T₂ hT₁ hT₂ (by
     rw [← Matrix.mul_one ((√a : ℝ) • (1 : Matrix (Fin n) (Fin n) ℂ))ᴴ,
@@ -256,9 +253,9 @@ an interval `s ∋ 0`, `f` is matrix convex with `f(0) ≤ 0` iff the sub-unital
 `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B` holds in every size for all `A†A + B†B ≤ I` and
 self-adjoint `T₁, T₂` with spectrum in `s`. The converse takes the scalars `A = √λ`,
 `B = √(1 - λ)` for convexity and `A = B = 0` in size one for `f(0) ≤ 0`. The unital form
-`isMatrixConvexOn_iff_cfc_affine_le` characterises matrix convexity alone; the sub-unital form is
-specific to intervals containing `0`, since `A† T A` has spectrum in the convex hull of
-`spectrum T ∪ {0}`. -/
+`isMatrixConvexOn_iff_cfc_add_le` characterises matrix convexity alone; the
+sub-unital form is specific to intervals containing `0`, since `A† T A` has spectrum in the convex
+hull of `spectrum T ∪ {0}`. -/
 theorem isMatrixConvexOn_and_map_zero_nonpos_iff (hs : s.OrdConnected) (h0 : (0 : ℝ) ∈ s) :
     IsMatrixConvexOn s f ∧ f 0 ≤ 0 ↔ ∀ (n : ℕ) (A B T₁ T₂ : Matrix (Fin n) (Fin n) ℂ),
       T₁ ∈ {X : Matrix (Fin n) (Fin n) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} →
@@ -266,9 +263,9 @@ theorem isMatrixConvexOn_and_map_zero_nonpos_iff (hs : s.OrdConnected) (h0 : (0 
       Aᴴ * A + Bᴴ * B ≤ 1 →
       cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
   refine ⟨fun ⟨hf, hf0⟩ n A B T₁ T₂ hT₁ hT₂ hAB =>
-    hf.cfc_affine_le_of_le_one h0 hf0 A B T₁ T₂ hT₁ hT₂ hAB, fun hJ => ⟨?_, ?_⟩⟩
-  · exact (isMatrixConvexOn_iff_cfc_affine_le hs).2 fun n A B T₁ T₂ hT₁ hT₂ hAB =>
-      hJ n A B T₁ T₂ hT₁ hT₂ hAB.le
+    hf.cfc_add_le_of_le_one h0 hf0 A B T₁ T₂ hT₁ hT₂ hAB, fun hJ => ⟨?_, ?_⟩⟩
+  · exact (isMatrixConvexOn_iff_cfc_add_le hs).2
+      fun n A B T₁ T₂ hT₁ hT₂ hAB => hJ n A B T₁ T₂ hT₁ hT₂ hAB.le
   · have h0mem : (0 : Matrix (Fin 1) (Fin 1) ℂ) ∈
         {X : Matrix (Fin 1) (Fin 1) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} :=
       zero_mem_setOf_isSelfAdjoint_spectrum_subset h0
@@ -280,11 +277,12 @@ theorem isMatrixConvexOn_and_map_zero_nonpos_iff (hs : s.OrdConnected) (h0 : (0 
 
 end Square
 
-/-- **Jensen's operator inequality for rectangular weights** (Hansen–Pedersen 2003; Davis 1957 for
-one isometry): for `f` matrix convex on `s`, a finite family `Aᵢ : Matrix k m ℂ` with
+/-- **Jensen's operator inequality for matrices** (Hansen–Pedersen 2003, Theorem 2.1; Davis 1957
+for one isometry): for `f` matrix convex on `s`, a finite family `Aᵢ : Matrix k m ℂ` with
 `Σᵢ Aᵢ† Aᵢ = I` and self-adjoint `Tᵢ` with spectrum in `s`, `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ`.
-For `k = m` this is `IsMatrixConvexOn.cfc_sum_le`. -/
-theorem IsMatrixConvexOn.cfc_sum_conjTranspose_mul_mul_le {s : Set ℝ} {f : ℝ → ℝ}
+The weights may be rectangular; the square case `k = m` is the matrix form of
+`IsOperatorConvexOn.cfc_sum_le`. No continuity of `f` is needed: the spectra are finite. -/
+theorem IsMatrixConvexOn.cfc_sum_le {s : Set ℝ} {f : ℝ → ℝ}
     (hf : IsMatrixConvexOn s f) {ι k m : Type*} [Fintype ι] [Fintype k] [DecidableEq k]
     [Fintype m] [DecidableEq m] (A : ι → Matrix k m ℂ) (T : ι → Matrix k k ℂ)
     (hT : ∀ i, T i ∈ {X : Matrix k k ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
@@ -332,7 +330,7 @@ theorem IsMatrixConvexOn.cfc_sum_conjTranspose_mul_mul_le {s : Set ℝ} {f : ℝ
     have h := hsum 1
     simp only [Pi.one_apply, Matrix.mul_one, h1, hA, fromBlocks_one] at h
     exact h
-  have h := hf.cfc_sum_le W X hX hW
+  have h := hf.cfc_sum_le_square W X hX hW
   have hc₁ : (cfc f (fromBlocks c₁ 0 0 c₂)).toBlocks₁₁ = cfc f c₁ := by
     rw [cfc_fromBlocks_zero_zero f hck.1 hcm.1, toBlocks_fromBlocks₁₁]
   have hcT (i : ι) : (cfc f (fromBlocks (T i) 0 0 c₂)).toBlocks₁₁ = cfc f (T i) := by
@@ -343,11 +341,11 @@ theorem IsMatrixConvexOn.cfc_sum_conjTranspose_mul_mul_le {s : Set ℝ} {f : ℝ
     (isSelfAdjoint_sum_conjTranspose_mul_mul A fun i => (hT i).1)] at h
   simpa using toBlocks₂₂_mono h
 
-/-- **Jensen's operator inequality for rectangular weights, sub-unital form** (Hansen–Pedersen
-1982): for `f` matrix convex on `s ∋ 0` with `f(0) ≤ 0`, a finite family `Aᵢ : Matrix k m ℂ` with
-`Σᵢ Aᵢ† Aᵢ ≤ I` and self-adjoint `Tᵢ` with spectrum in `s`, `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ`.
-For `k = m` this is `IsMatrixConvexOn.cfc_sum_le_of_le_one`. -/
-theorem IsMatrixConvexOn.cfc_sum_conjTranspose_mul_mul_le_of_le_one {s : Set ℝ}
+/-- **Jensen's operator inequality for matrices, sub-unital form** (Hansen–Pedersen 1982,
+Theorem 2.1): for `f` matrix convex on `s ∋ 0` with `f(0) ≤ 0`, a finite family
+`Aᵢ : Matrix k m ℂ` with `Σᵢ Aᵢ† Aᵢ ≤ I` and self-adjoint `Tᵢ` with spectrum in `s`,
+`f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ`. The weights may be rectangular. -/
+theorem IsMatrixConvexOn.cfc_sum_le_of_le_one {s : Set ℝ}
     {f : ℝ → ℝ} (hf : IsMatrixConvexOn s f) (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0)
     {ι k m : Type*} [Fintype ι] [Fintype k] [DecidableEq k] [Fintype m] [DecidableEq m]
     (A : ι → Matrix k m ℂ) (T : ι → Matrix k k ℂ)
@@ -375,7 +373,7 @@ theorem IsMatrixConvexOn.cfc_sum_conjTranspose_mul_mul_le_of_le_one {s : Set ℝ
     refine PosSemidef.add ?_ (posSemidef_fromBlocks_zero_zero_zero (Matrix.le_iff.1 hA))
     simpa [fromBlocks_conjTranspose, fromBlocks_multiply] using
       posSemidef_conjTranspose_mul_self (fromBlocks (1 : Matrix k k ℂ) 0 0 (0 : Matrix m m ℂ))
-  have h := hf.cfc_sum_le_of_le_one h0 hf0 W X hX hW
+  have h := hf.cfc_sum_le_of_le_one_square h0 hf0 W X hX hW
   have hcT (i : ι) : (cfc f (fromBlocks (T i) 0 0 (0 : Matrix m m ℂ))).toBlocks₁₁ = cfc f (T i) := by
     rw [cfc_fromBlocks_zero_zero f (hT i).1 h0m.1, toBlocks_fromBlocks₁₁]
   rw [hsum X, hsum fun i => cfc f (X i)] at h
