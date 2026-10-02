@@ -515,7 +515,7 @@ private lemma fromBlocks_top_posSemidef {n m : Type*} [Finite n] [Finite m]
   intro v
   have heq : star v ⬝ᵥ (Matrix.fromBlocks A 0 0 0 *ᵥ v) =
       star (fun i => v (Sum.inl i)) ⬝ᵥ (A *ᵥ fun i => v (Sum.inl i)) := by
-    simp [dotProduct, Fintype.sum_sum_type, fromBlocks_mulVec_inl, fromBlocks_mulVec_inr,
+    simp [dotProduct, Fintype.sum_sum_type, fromBlocks_mulVec, Function.comp_def,
       Matrix.zero_mulVec]
   rw [heq]
   exact hA.dotProduct_mulVec_nonneg _
@@ -531,7 +531,7 @@ private lemma fromBlocks_bot_posSemidef {n m : Type*} [Finite n] [Finite m]
   intro v
   have heq : star v ⬝ᵥ (Matrix.fromBlocks 0 0 0 B *ᵥ v) =
       star (fun i => v (Sum.inr i)) ⬝ᵥ (B *ᵥ fun i => v (Sum.inr i)) := by
-    simp [dotProduct, Fintype.sum_sum_type, fromBlocks_mulVec_inl, fromBlocks_mulVec_inr,
+    simp [dotProduct, Fintype.sum_sum_type, fromBlocks_mulVec, Function.comp_def,
       Matrix.zero_mulVec]
   rw [heq]
   exact hB.dotProduct_mulVec_nonneg _
@@ -924,16 +924,12 @@ lemma rpow_nonneg_smul {α : Type*} [Fintype α] [DecidableEq α]
   have h_lhs : (c • A) ^ s =
       U * diagonal (fun i => (((c * ev i) ^ s : ℝ) : ℂ)) * Uᴴ := by
     conv_lhs => rw [hcA_spec]
-    rw [rpow_unitary_conj hU_mem hcD_le
-          (hM' := by simpa [Matrix.le_iff, hcA_spec] using hcA_nonneg),
-        diagonal_rpow _ hcev_nn s]
+    rw [rpow_unitary_conj hU_mem hcD_le, diagonal_rpow _ hcev_nn s]
   -- A^s = U * diag(ev^s) * U†
   have h_rhs : A ^ s =
       U * diagonal (fun i => ((ev i ^ s : ℝ) : ℂ)) * Uᴴ := by
     conv_lhs => rw [hspec]
-    rw [rpow_unitary_conj hU_mem hD_le
-          (hM' := by rw [← hspec]; rw [Matrix.le_iff, sub_zero]; exact hA),
-        diagonal_rpow _ hev_nn s]
+    rw [rpow_unitary_conj hU_mem hD_le, diagonal_rpow _ hev_nn s]
   -- (c * ev_i)^s = c^s * ev_i^s by Real.mul_rpow
   rw [h_lhs, h_rhs]
   -- Goal: (U * diag((c*ev)^s) * U†) = c^s • (U * diag(ev^s) * U†)

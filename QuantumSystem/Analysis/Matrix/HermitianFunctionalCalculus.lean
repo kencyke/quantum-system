@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
 public import Mathlib.LinearAlgebra.Lagrange
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
+public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
 
 /-!
 # Matrix Functional Calculus and Foundational Inequalities
@@ -748,12 +749,8 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
     -- M^s = U diag(ev^s) U†
     have hMs_spec : M ^ s = (U : Matrix m m ℂ) *
         diagonal (fun i => ((ev i ^ s : ℝ) : ℂ)) * (U : Matrix m m ℂ)ᴴ := by
-      have hM'_nonneg : (0 : Matrix m m ℂ) ≤
-          (U : Matrix m m ℂ) * diagonal (fun i => (ev i : ℂ)) * (U : Matrix m m ℂ)ᴴ := by
-        rw [← hspec]; simpa [Matrix.le_iff] using hM_psd
       conv_lhs => rw [hspec]
-      rw [rpow_unitary_conj U.2 hev_nneg_cast hM'_nonneg,
-          diagonal_rpow ev hev_nonneg s]
+      rw [rpow_unitary_conj U.2 hev_nneg_cast, diagonal_rpow ev hev_nonneg s]
     have hUstarU : (U : Matrix m m ℂ)ᴴ * U = 1 := by
       have := Unitary.coe_star_mul_self U
       simp only [star_eq_conjTranspose] at this
