@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.PartialTrace
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kronecker
 
 /-!
 # Strong subadditivity of the von Neumann entropy
@@ -19,7 +19,7 @@ finite-dimensional quantum-information argument
 1. the mutual-information identity `DensityMatrix.umegakiEntropy_eq_mutualInformation`
    (applied to the `(A : B×C)` and `(A : B)` bipartitions), and
 2. the data-processing inequality `DensityMatrix.umegakiEntropy_channel_le` for the
-   trace-out-`C` channel `Matrix.QuantumChannel.traceOutC`.
+   trace-out-`C` channel `id_A ⊗ Tr_C = QuantumChannel.id ⊗ QuantumChannel.partialTraceRight`.
 
 The AQFT companion — the same inequality stated over a local net with nested regions, using the
 split property `LocalNet.SplitProperty` (`Algebra/LocalNet/SplitProperty.lean`) — is the planned
@@ -35,48 +35,6 @@ split property `LocalNet.SplitProperty` (`Algebra/LocalNet/SplitProperty.lean`) 
 
 @[expose] public section
 
-namespace Matrix
-
-open scoped Kronecker MatrixOrder ComplexOrder QuantumInfo
-
-/-! ### Associativity of iterated partial traces over `prodAssoc` -/
-
-variable {A B C : Type*} [Fintype A] [Fintype B] [Fintype C]
-
-omit [Fintype A] in
-/-- Tracing out `C` (after the associativity reindex to `(A×B)×C`) then `B` equals tracing out
-`B × C` directly. -/
-lemma traceRight_traceRight_submatrix_prodAssoc (M : Matrix (A × B × C) (A × B × C) ℂ) :
-    Matrix.traceRight (Matrix.traceRight
-        (M.submatrix (Equiv.prodAssoc A B C) (Equiv.prodAssoc A B C)))
-      = Matrix.traceRight M := by
-  ext a a'
-  simp only [traceRight_apply, Matrix.submatrix_apply, Equiv.prodAssoc_apply]
-  rw [Fintype.sum_prod_type]
-
-omit [Fintype B] in
-/-- Tracing out `C` (after the reindex) then `A` equals tracing out `C` of (trace out `A`). -/
-lemma traceLeft_traceRight_submatrix_prodAssoc (M : Matrix (A × B × C) (A × B × C) ℂ) :
-    Matrix.traceLeft (Matrix.traceRight
-        (M.submatrix (Equiv.prodAssoc A B C) (Equiv.prodAssoc A B C)))
-      = Matrix.traceRight (Matrix.traceLeft M) := by
-  ext b b'
-  simp only [traceLeft_apply, traceRight_apply, Matrix.submatrix_apply, Equiv.prodAssoc_apply]
-  rw [Finset.sum_comm]
-
-omit [Fintype A] [Fintype B] in
-/-- Tracing out `C` of `(M_A ⊗ M_BC)` reassociated to `(A×B)×C` factors through `M_BC`. -/
-lemma traceRight_submatrix_prodAssoc_kronecker (M_A : Matrix A A ℂ)
-    (M_BC : Matrix (B × C) (B × C) ℂ) :
-    Matrix.traceRight ((M_A ⊗ₖ M_BC).submatrix (Equiv.prodAssoc A B C) (Equiv.prodAssoc A B C))
-      = M_A ⊗ₖ Matrix.traceRight M_BC := by
-  ext p q
-  simp only [traceRight_apply, Matrix.submatrix_apply, Equiv.prodAssoc_apply,
-    Matrix.kroneckerMap_apply]
-  rw [Finset.mul_sum]
-
-end Matrix
-
 namespace DensityMatrix
 
 open Matrix
@@ -87,20 +45,30 @@ open scoped Kronecker MatrixOrder ComplexOrder Matrix.QuantumInfo
 variable {A B C : Type*} [Fintype A] [DecidableEq A] [Fintype B] [DecidableEq B]
   [Fintype C] [DecidableEq C]
 
-/-- **Strong subadditivity.** For any density matrix `ρ` on `A × B × C`,
-`S(ρ) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`, where `ρ_AB` traces out `C` with the channel
-`Matrix.QuantumChannel.traceOutC`, `ρ_BC = tr₁(ρ)` traces out `A`, and `ρ_B` traces out `A` and
-`C`. Direct proof: the mutual-information identity
-`DensityMatrix.umegakiEntropy_eq_mutualInformation` for the `(A : B×C)` and `(A : B)`
-bipartitions, followed by the data-processing inequality for the trace-out-`C` channel. -/
+/-- **Strong subadditivity.** For any density matrix `ρ = ρ_ABC` on `A × B × C`,
+
+  `S(ρ_ABC) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`.
+
+The marginals are spelled with the bipartite partial traces `DensityMatrix.traceRight` (`tr₂`)
+and `DensityMatrix.traceLeft` (`tr₁`):
+
+* `ρ_B = ρ.traceLeft.traceRight` — trace out `A`, then `C`;
+* `ρ_AB = ρ.map (QuantumChannel.id ⊗ QuantumChannel.partialTraceRight)` — trace out `C` with the
+  channel `id_A ⊗ Tr_C`;
+* `ρ_BC = ρ.traceLeft` — trace out `A`.
+
+Direct proof: the mutual-information identity `DensityMatrix.umegakiEntropy_eq_mutualInformation`
+for the `(A : B×C)` and `(A : B)` bipartitions, followed by the data-processing inequality for the
+trace-out-`C` channel `id_A ⊗ Tr_C`. -/
 theorem vonNeumannEntropy_strong_subadditivity (ρ : DensityMatrix (A × B × C)) :
     S(ρ) + S(ρ.traceLeft.traceRight) ≤
-      S(ρ.map QuantumChannel.traceOutC) + S(ρ.traceLeft) := by
+      S(ρ.map (QuantumChannel.id ⊗ QuantumChannel.partialTraceRight)) + S(ρ.traceLeft) := by
   classical
   set ρ_ABC := ρ with hρ_ABC
   set ρ_A := ρ_ABC.traceRight with hρ_A
   set ρ_BC := ρ_ABC.traceLeft with hρ_BC
-  set Φ := Matrix.QuantumChannel.traceOutC (A := A) (B := B) (C := C) with hΦ
+  set Φ : QuantumChannel (A × B × C) (A × B) :=
+    QuantumChannel.id ⊗ QuantumChannel.partialTraceRight with hΦ
   set ρ_AB := ρ_ABC.map Φ with hρ_AB
   set ρ_B := ρ_ABC.traceLeft.traceRight with hρ_B
   -- Mutual-information identity for the `(A : B×C)` split of `ρ_ABC`.
@@ -111,23 +79,21 @@ theorem vonNeumannEntropy_strong_subadditivity (ρ : DensityMatrix (A × B × C)
   have h_A : ρ_AB.traceRight = ρ_A := by
     apply DensityMatrix.ext
     rw [hρ_AB, hρ_A, traceRight_toMatrix, traceRight_toMatrix, DensityMatrix.map_toMatrix, hΦ,
-      Matrix.QuantumChannel.traceOutC_apply, Matrix.reindex_apply, Equiv.symm_symm]
-    exact traceRight_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
+      QuantumChannel.traceRight_kronecker_apply, QuantumChannel.id_apply]
   have h_B : ρ_AB.traceLeft = ρ_B := by
     apply DensityMatrix.ext
     rw [hρ_AB, hρ_B, traceLeft_toMatrix, traceRight_toMatrix, traceLeft_toMatrix,
-      DensityMatrix.map_toMatrix, hΦ, Matrix.QuantumChannel.traceOutC_apply, Matrix.reindex_apply,
-      Equiv.symm_symm]
-    exact traceLeft_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
+      DensityMatrix.map_toMatrix, hΦ, QuantumChannel.traceLeft_kronecker_apply,
+      QuantumChannel.partialTraceRight_apply]
   have h_id2 : D(ρ_AB.toMatrix ∥ (ρ_A ⊗ ρ_B).toMatrix) =
       ((S(ρ_A) + S(ρ_B) - S(ρ_AB) : ℝ) : EReal) := by
     rw [← h_A, ← h_B]
     exact umegakiEntropy_eq_mutualInformation ρ_AB
   -- Data-processing inequality for the trace-out-`C` channel.
   have h_Φσ : ((ρ_A ⊗ ρ_BC).map Φ).toMatrix = (ρ_A ⊗ ρ_B).toMatrix := by
-    rw [DensityMatrix.map_toMatrix, hΦ, Matrix.QuantumChannel.traceOutC_apply,
-      DensityMatrix.kronecker_toMatrix, DensityMatrix.kronecker_toMatrix, Matrix.reindex_apply,
-      Equiv.symm_symm, Matrix.traceRight_submatrix_prodAssoc_kronecker]
+    rw [DensityMatrix.map_toMatrix, hΦ, DensityMatrix.kronecker_toMatrix,
+      DensityMatrix.kronecker_toMatrix, QuantumChannel.kronecker_apply_kronecker,
+      QuantumChannel.id_apply, QuantumChannel.partialTraceRight_apply]
     simp only [hρ_B, hρ_BC, traceRight_toMatrix, traceLeft_toMatrix]
   have h_dpi : D(ρ_AB.toMatrix ∥ ((ρ_A ⊗ ρ_BC).map Φ).toMatrix) ≤
       D(ρ_ABC.toMatrix ∥ (ρ_A ⊗ ρ_BC).toMatrix) :=

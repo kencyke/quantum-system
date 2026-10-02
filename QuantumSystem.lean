@@ -68,6 +68,7 @@ public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Dual
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kronecker
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.PartialTrace
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
 public import QuantumSystem.Analysis.SpectralTheory.Normal

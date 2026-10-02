@@ -35,6 +35,8 @@ finite-dimensional quantum system.
 
 * `Matrix.traceLeft_eq_traceRight_prodComm` — tracing out the left factor equals tracing out
   the right factor after swapping the two factors with `Equiv.prodComm`.
+* `Matrix.traceRight_kronecker`, `Matrix.traceLeft_kronecker` — the partial traces of a Kronecker
+  product, `traceRight (X ⊗ Y) = Tr(Y) • X` and `traceLeft (X ⊗ Y) = Tr(X) • Y`.
 -/
 
 @[expose] public section
@@ -131,6 +133,31 @@ theorem traceLeft_eq_traceRight_prodComm {l c n : Type*} [Fintype n]
   simp only [Matrix.trace, Matrix.diag_apply, traceLeft_apply]
   rw [Finset.sum_comm]
   exact (Fintype.sum_prod_type fun p : n × l => M p p).symm
+
+section Kronecker
+
+open scoped Kronecker
+
+variable {S : Type*} [CommSemiring S]
+
+/-- Tracing out the right factor of a Kronecker product: `tr₂(X ⊗ Y) = Tr(Y) • X`. -/
+@[simp] lemma traceRight_kronecker {l c n : Type*} [Fintype n] (X : Matrix l c S)
+    (Y : Matrix n n S) :
+    traceRight (X ⊗ₖ Y) = Y.trace • X := by
+  ext i j
+  simp only [traceRight_apply, kroneckerMap_apply, smul_apply, smul_eq_mul, Matrix.trace,
+    diag_apply, ← Finset.mul_sum]
+  exact mul_comm _ _
+
+/-- Tracing out the left factor of a Kronecker product: `tr₁(X ⊗ Y) = Tr(X) • Y`. -/
+@[simp] lemma traceLeft_kronecker {l c n : Type*} [Fintype n] (X : Matrix n n S)
+    (Y : Matrix l c S) :
+    traceLeft (X ⊗ₖ Y) = X.trace • Y := by
+  ext i j
+  simp only [traceLeft_apply, kroneckerMap_apply, smul_apply, smul_eq_mul, Matrix.trace,
+    diag_apply, ← Finset.sum_mul]
+
+end Kronecker
 
 section PosSemidef
 

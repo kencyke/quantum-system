@@ -13,15 +13,15 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 # Partial traces as quantum channels
 
 Tracing out either factor of a matrix on `X × Y` is completely positive and trace preserving.
-Composed with the reindexing channel `Matrix.QuantumChannel.reindex`, the right partial trace gives
-the trace-out-`C` channel `Matrix.QuantumChannel.traceOutC` on `A × B × C`.
+Marginals of multipartite states are tensor products of these channels with the identity channel
+(`Matrix.QuantumChannel.kronecker`, `Analysis/Matrix/QuantumChannel/Kronecker.lean`): tracing out
+`C` from `A × (B × C)` is `id_A ⊗ Tr_C = QuantumChannel.id ⊗ partialTraceRight`.
 
 ## Main definitions
 
 * `Matrix.QuantumChannel.partialTraceRight`, `Matrix.QuantumChannel.partialTraceLeft`: bundled
   quantum channels tracing out `Y` and `X`, acting as `Matrix.traceRight` and `Matrix.traceLeft`
   (`Matrix.QuantumChannel.partialTraceRight_apply`, `Matrix.QuantumChannel.partialTraceLeft_apply`).
-* `Matrix.QuantumChannel.traceOutC`: trace out the `C` factor of `A × B × C`.
 
 ## Main statements
 
@@ -126,25 +126,6 @@ noncomputable def QuantumChannel.partialTraceLeft {X Y : Type*} [Fintype X] [Dec
 @[simp] lemma QuantumChannel.partialTraceLeft_apply {X Y : Type*} [Fintype X] [DecidableEq X]
     [Fintype Y] [DecidableEq Y] (M : Matrix (X × Y) (X × Y) ℂ) :
     QuantumChannel.partialTraceLeft M = Matrix.traceLeft M :=
-  rfl
-
-/-! ### Trace-out-`C` channel for `A × B × C` -/
-
-/-- Trace out the `C` factor of `A × B × C`, landing on `A × B`: the right partial trace after
-regrouping as `(A × B) × C`. -/
-noncomputable def QuantumChannel.traceOutC {A B C : Type*} [Fintype A] [DecidableEq A] [Fintype B]
-    [DecidableEq B] [Fintype C] [DecidableEq C] :
-    Matrix.QuantumChannel (A × B × C) (A × B) :=
-  QuantumChannel.partialTraceRight.comp (QuantumChannel.reindex (Equiv.prodAssoc A B C).symm)
-
-/-- Tracing out `C` from `A × B × C` is the right partial trace after regrouping as
-`(A × B) × C`. -/
-@[simp] lemma QuantumChannel.traceOutC_apply {A B C : Type*}
-    [Fintype A] [DecidableEq A] [Fintype B] [DecidableEq B] [Fintype C] [DecidableEq C]
-    (M : Matrix (A × B × C) (A × B × C) ℂ) :
-    QuantumChannel.traceOutC (A := A) (B := B) (C := C) M
-      = Matrix.traceRight
-          (M.reindex (Equiv.prodAssoc A B C).symm (Equiv.prodAssoc A B C).symm) :=
   rfl
 
 end Matrix
