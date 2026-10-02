@@ -145,6 +145,7 @@ noncomputable def repStarAlgHom : A →⋆ₐ[ℂ] 𝓑((rep A).H) :=
       change (rep A).π (algebraMap ℂ A r) = algebraMap ℂ _ r
       rw [Algebra.algebraMap_eq_smul_one, Algebra.algebraMap_eq_smul_one, map_smul, rep_π_one] }
 
+/-- The unital ⋆-homomorphism `repStarAlgHom A` acts as the direct sum representation. -/
 @[simp] lemma repStarAlgHom_apply (a : A) : repStarAlgHom A a = (rep A).π a := rfl
 
 /-- The unital direct sum representation is faithful. -/
