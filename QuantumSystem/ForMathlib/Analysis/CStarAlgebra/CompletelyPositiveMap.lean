@@ -42,9 +42,9 @@ variable {A₁ A₂ A₃ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAl
 /-- Completely positive maps are equal if they agree at every point. -/
 @[ext] lemma ext {φ ψ : A₁ →CP A₂} (h : ∀ a, φ a = ψ a) : φ = ψ := DFunLike.ext _ _ h
 
-/-- A completely positive map is determined by its underlying linear map. -/
-lemma toLinearMap_injective :
-    Function.Injective (toLinearMap : (A₁ →CP A₂) → A₁ →ₗ[ℂ] A₂) :=
+/-- A completely positive map is determined by its underlying linear map
+`(φ : A₁ →ₗ[ℂ] A₂)`. -/
+lemma coe_injective : Function.Injective ((↑) : (A₁ →CP A₂) → A₁ →ₗ[ℂ] A₂) :=
   fun _ _ h => ext fun a => LinearMap.congr_fun h a
 
 variable (A₁) in

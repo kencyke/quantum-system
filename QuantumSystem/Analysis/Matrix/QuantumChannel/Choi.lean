@@ -58,9 +58,9 @@ For a linear map `Φ : M_n(ℂ) → M_m(ℂ)` the following are equivalent:
 **Choi's theorem**, where a linear map `Φ` is completely positive when it is the linear map of
 some `φ : Matrix n n ℂ →CP Matrix m m ℂ`:
 
-* `CompletelyPositiveMap.exists_toLinearMap_eq_iff_posSemidef_choiMatrix`: 1 ⟺ 3.
-* `CompletelyPositiveMap.exists_toLinearMap_eq_iff_exists_kPositiveMap`: 1 ⟺ 2.
-* `CompletelyPositiveMap.exists_toLinearMap_eq_iff_exists_kraus`: 1 ⟺ 4.
+* `CompletelyPositiveMap.exists_coe_eq_iff_posSemidef_choiMatrix`: 1 ⟺ 3.
+* `CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`: 1 ⟺ 2.
+* `CompletelyPositiveMap.exists_coe_eq_iff_exists_kraus`: 1 ⟺ 4.
 
 The two directions separately, for a completely positive map `φ` (1 ⇒ 2, 3, 4) and for a linear
 map `Φ` with the data of 2, 3 or 4, from which the completely positive map is built
@@ -467,27 +467,30 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive, i.e. it is the
 linear map of some `φ : M_n(ℂ) →CP M_m(ℂ)`, iff its Choi matrix `J(Φ)` is positive
 semidefinite. -/
-theorem exists_toLinearMap_eq_iff_posSemidef_choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
-    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, φ.toLinearMap = Φ) ↔ (choiMatrix Φ).PosSemidef :=
-  ⟨fun ⟨φ, hφ⟩ => hφ ▸ posSemidef_choiMatrix_of_kPositive φ, fun h => ⟨ofPosSemidefChoiMatrix Φ h, rfl⟩⟩
+theorem exists_coe_eq_iff_posSemidef_choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      (choiMatrix Φ).PosSemidef :=
+  ⟨fun ⟨φ, hφ⟩ => hφ ▸ posSemidef_choiMatrix_of_kPositive φ,
+    fun h => ⟨ofPosSemidefChoiMatrix Φ h, rfl⟩⟩
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**, `min(n, m)`-positivity form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is
 completely positive iff it is `k`-positive, i.e. `id_k ⊗ Φ` sends positive semidefinite
 `kn × kn` matrices to positive semidefinite `km × km` matrices, for a single block size
 `k ≥ min(n, m)`. -/
-theorem exists_toLinearMap_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
+theorem exists_coe_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
     {k : ℕ} (hk : min (Fintype.card n) (Fintype.card m) ≤ k) :
-    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, φ.toLinearMap = Φ) ↔
-      ∃ ψ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ), ψ.toLinearMap = Φ :=
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∃ ψ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ),
+        (ψ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ :=
   ⟨fun ⟨φ, hφ⟩ => ⟨⟨φ.toLinearMap, φ.map_cstarMatrix_nonneg' _⟩, hφ⟩,
     fun ⟨ψ, hψ⟩ => ⟨ofKPositiveMap ψ hk, hψ⟩⟩
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi–Kraus theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive iff it has
 a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` with at most `nm` operators. -/
-theorem exists_toLinearMap_eq_iff_exists_kraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
-    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, φ.toLinearMap = Φ) ↔
+theorem exists_coe_eq_iff_exists_kraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
       ∃ r ≤ Fintype.card n * Fintype.card m,
         ∃ K : Fin r → Matrix m n ℂ, ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ :=
   ⟨fun ⟨φ, hφ⟩ => hφ ▸ φ.exists_kraus, fun ⟨_, _, K, hK⟩ => ⟨ofKraus Φ K hK, rfl⟩⟩

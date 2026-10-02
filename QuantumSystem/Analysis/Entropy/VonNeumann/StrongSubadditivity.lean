@@ -88,19 +88,20 @@ variable {A B C : Type*} [Fintype A] [DecidableEq A] [Fintype B] [DecidableEq B]
   [Fintype C] [DecidableEq C]
 
 /-- **Strong subadditivity.** For any density matrix `ρ` on `A × B × C`,
-`S(ρ) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`, where `ρ_AB` traces out `C` (after reassociating to
-`(A × B) × C`), `ρ_BC = tr₁(ρ)` traces out `A`, and `ρ_B` traces out `A` and `C`. Direct proof: the
-mutual-information identity `DensityMatrix.umegakiEntropy_eq_mutualInformation` for the
-`(A : B×C)` and `(A : B)` bipartitions, followed by the data-processing inequality for the
-trace-out-`C` channel. -/
+`S(ρ) + S(ρ_B) ≤ S(ρ_AB) + S(ρ_BC)`, where `ρ_AB` traces out `C` with the channel
+`Matrix.QuantumChannel.traceOutC`, `ρ_BC = tr₁(ρ)` traces out `A`, and `ρ_B` traces out `A` and
+`C`. Direct proof: the mutual-information identity
+`DensityMatrix.umegakiEntropy_eq_mutualInformation` for the `(A : B×C)` and `(A : B)`
+bipartitions, followed by the data-processing inequality for the trace-out-`C` channel. -/
 theorem vonNeumannEntropy_strong_subadditivity (ρ : DensityMatrix (A × B × C)) :
     S(ρ) + S(ρ.traceLeft.traceRight) ≤
-      S((ρ.mapEquiv (Equiv.prodAssoc A B C)).traceRight) + S(ρ.traceLeft) := by
+      S(ρ.map QuantumChannel.traceOutC) + S(ρ.traceLeft) := by
   classical
   set ρ_ABC := ρ with hρ_ABC
   set ρ_A := ρ_ABC.traceRight with hρ_A
   set ρ_BC := ρ_ABC.traceLeft with hρ_BC
-  set ρ_AB := (ρ_ABC.mapEquiv (Equiv.prodAssoc A B C)).traceRight with hρ_AB
+  set Φ := Matrix.QuantumChannel.traceOutC (A := A) (B := B) (C := C) with hΦ
+  set ρ_AB := ρ_ABC.map Φ with hρ_AB
   set ρ_B := ρ_ABC.traceLeft.traceRight with hρ_B
   -- Mutual-information identity for the `(A : B×C)` split of `ρ_ABC`.
   have h_id1 : D(ρ_ABC.toMatrix ∥ (ρ_A ⊗ ρ_BC).toMatrix) =
@@ -109,36 +110,29 @@ theorem vonNeumannEntropy_strong_subadditivity (ρ : DensityMatrix (A × B × C)
   -- Mutual-information identity for the `(A : B)` split of `ρ_AB`.
   have h_A : ρ_AB.traceRight = ρ_A := by
     apply DensityMatrix.ext
-    rw [hρ_AB, hρ_A, traceRight_toMatrix, traceRight_toMatrix, traceRight_toMatrix,
-      DensityMatrix.mapEquiv_toMatrix]
+    rw [hρ_AB, hρ_A, traceRight_toMatrix, traceRight_toMatrix, DensityMatrix.map_toMatrix, hΦ,
+      Matrix.QuantumChannel.traceOutC_apply, Matrix.reindex_apply, Equiv.symm_symm]
     exact traceRight_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
   have h_B : ρ_AB.traceLeft = ρ_B := by
     apply DensityMatrix.ext
-    rw [hρ_AB, hρ_B, traceLeft_toMatrix, traceRight_toMatrix, traceRight_toMatrix,
-      traceLeft_toMatrix, DensityMatrix.mapEquiv_toMatrix]
+    rw [hρ_AB, hρ_B, traceLeft_toMatrix, traceRight_toMatrix, traceLeft_toMatrix,
+      DensityMatrix.map_toMatrix, hΦ, Matrix.QuantumChannel.traceOutC_apply, Matrix.reindex_apply,
+      Equiv.symm_symm]
     exact traceLeft_traceRight_submatrix_prodAssoc ρ_ABC.toMatrix
   have h_id2 : D(ρ_AB.toMatrix ∥ (ρ_A ⊗ ρ_B).toMatrix) =
       ((S(ρ_A) + S(ρ_B) - S(ρ_AB) : ℝ) : EReal) := by
     rw [← h_A, ← h_B]
     exact umegakiEntropy_eq_mutualInformation ρ_AB
   -- Data-processing inequality for the trace-out-`C` channel.
-  set Φ := Matrix.QuantumChannel.traceOutC (A := A) (B := B) (C := C) with hΦ
-  have h_Φρ_ABC : Φ ρ_ABC = ρ_AB := by
-    apply DensityMatrix.ext
-    change Φ.val ρ_ABC.toMatrix = ρ_AB.toMatrix
-    rw [hΦ, Matrix.QuantumChannel.traceOutC_val_apply, hρ_AB, traceRight_toMatrix,
-      DensityMatrix.mapEquiv_toMatrix, Matrix.reindex_apply, Equiv.symm_symm]
-  have h_Φσ : Φ (ρ_A ⊗ ρ_BC) = ρ_A ⊗ ρ_B := by
-    apply DensityMatrix.ext
-    change Φ.val (ρ_A ⊗ ρ_BC).toMatrix = (ρ_A ⊗ ρ_B).toMatrix
-    rw [hΦ, Matrix.QuantumChannel.traceOutC_val_apply, DensityMatrix.kronecker_toMatrix,
-      DensityMatrix.kronecker_toMatrix, Matrix.reindex_apply, Equiv.symm_symm,
-      Matrix.traceRight_submatrix_prodAssoc_kronecker]
+  have h_Φσ : ((ρ_A ⊗ ρ_BC).map Φ).toMatrix = (ρ_A ⊗ ρ_B).toMatrix := by
+    rw [DensityMatrix.map_toMatrix, hΦ, Matrix.QuantumChannel.traceOutC_apply,
+      DensityMatrix.kronecker_toMatrix, DensityMatrix.kronecker_toMatrix, Matrix.reindex_apply,
+      Equiv.symm_symm, Matrix.traceRight_submatrix_prodAssoc_kronecker]
     simp only [hρ_B, hρ_BC, traceRight_toMatrix, traceLeft_toMatrix]
-  have h_dpi : D((Φ ρ_ABC).toMatrix ∥ (Φ (ρ_A ⊗ ρ_BC)).toMatrix) ≤
+  have h_dpi : D(ρ_AB.toMatrix ∥ ((ρ_A ⊗ ρ_BC).map Φ).toMatrix) ≤
       D(ρ_ABC.toMatrix ∥ (ρ_A ⊗ ρ_BC).toMatrix) :=
     DensityMatrix.umegakiEntropy_channel_le Φ ρ_ABC (ρ_A ⊗ ρ_BC)
-  rw [h_Φρ_ABC, h_Φσ, h_id2, h_id1] at h_dpi
+  rw [h_Φσ, h_id2, h_id1] at h_dpi
   have h_real : S(ρ_A) + S(ρ_B) - S(ρ_AB) ≤ S(ρ_A) + S(ρ_BC) - S(ρ_ABC) := by
     exact_mod_cast h_dpi
   linarith

@@ -718,8 +718,8 @@ for a quantum channel `Φ` and positive semidefinite `ρ, σ`, `D(Φ(ρ) ‖ Φ(
 channel is completely positive, hence `2`-positive, and `Matrix.umegakiEntropy_le_of_kPositiveMap`
 applies. -/
 theorem umegakiEntropy_channel_le (Φ : QuantumChannel n m) {ρ σ : Matrix n n ℂ}
-    (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) : D(Φ.val ρ ∥ Φ.val σ) ≤ D(ρ ∥ σ) :=
-  umegakiEntropy_le_of_kPositiveMap Φ.val Φ.property hρ hσ
+    (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) : D(Φ ρ ∥ Φ σ) ≤ D(ρ ∥ σ) :=
+  umegakiEntropy_le_of_kPositiveMap Φ Φ.isTracePreserving hρ hσ
 
 /-! ### Equality under recoverable channels -/
 
@@ -736,10 +736,10 @@ D(ρ‖σ) = D(R(Φ(ρ))‖R(Φ(σ))) ≤ D(Φ(ρ)‖Φ(σ)).
 -/
 theorem umegakiEntropy_channel_eq_of_recoverable (Φ : QuantumChannel n m) {ρ σ : Matrix n n ℂ}
     (hρ : ρ.PosSemidef) (hσ : σ.PosSemidef) (R : QuantumChannel m n)
-    (hRρ : R.val (Φ.val ρ) = ρ) (hRσ : R.val (Φ.val σ) = σ) :
-    D(Φ.val ρ ∥ Φ.val σ) = D(ρ ∥ σ) := by
+    (hRρ : R (Φ ρ) = ρ) (hRσ : R (Φ σ) = σ) :
+    D(Φ ρ ∥ Φ σ) = D(ρ ∥ σ) := by
   refine le_antisymm (umegakiEntropy_channel_le Φ hρ hσ) ?_
-  have hle : D(R.val (Φ.val ρ) ∥ R.val (Φ.val σ)) ≤ D(Φ.val ρ ∥ Φ.val σ) := by
+  have hle : D(R (Φ ρ) ∥ R (Φ σ)) ≤ D(Φ ρ ∥ Φ σ) := by
     exact umegakiEntropy_channel_le R (Φ.posSemidef_apply hρ) (Φ.posSemidef_apply hσ)
   rwa [hRρ, hRσ] at hle
 
@@ -924,7 +924,7 @@ lemma umegakiEntropy_map_starAlgEquiv (ρ σ : Matrix m m ℂ)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
     D(φ ρ ∥ φ σ) = D(ρ ∥ σ) := by
   have hpsd : ∀ {A : Matrix m m ℂ}, (φ A).PosSemidef ↔ A.PosSemidef := fun {A} =>
-    ⟨fun h => by simpa using h.map_starAlgEquiv φ.symm, fun h => h.map_starAlgEquiv φ⟩
+    ⟨fun h => by simpa using h.map φ.symm, fun h => h.map φ⟩
   by_cases hρσ : ρ.PosSemidef ∧ σ.PosSemidef
   · obtain ⟨hρ, hσ⟩ := hρσ
     have h_supp_iff : SuppSubset (φ ρ) (φ σ) ↔ SuppSubset ρ σ :=
@@ -954,7 +954,7 @@ variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
 /-- **Monotonicity** for density matrices: `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)`. -/
 theorem umegakiEntropy_channel_le (Φ : QuantumChannel n m) (ρ σ : DensityMatrix n) :
-    D((Φ ρ).toMatrix ∥ (Φ σ).toMatrix) ≤ D(ρ.toMatrix ∥ σ.toMatrix) :=
+    D((ρ.map Φ).toMatrix ∥ (σ.map Φ).toMatrix) ≤ D(ρ.toMatrix ∥ σ.toMatrix) :=
   Matrix.umegakiEntropy_channel_le Φ ρ.posSemidef σ.posSemidef
 
 /-- **Joint convexity** for density matrices. -/
@@ -964,9 +964,11 @@ theorem umegakiEntropy_jointly_convex (ρ₁ ρ₂ σ₁ σ₂ : DensityMatrix n
       p * D(ρ₁.toMatrix ∥ σ₁.toMatrix) + (1 - p) * D(ρ₂.toMatrix ∥ σ₂.toMatrix) :=
   Matrix.umegakiEntropy_jointly_convex ρ₁.posSemidef ρ₂.posSemidef σ₁.posSemidef σ₂.posSemidef hp hp1
 
-/-- `umegakiEntropy_reindex` for density matrices. -/
-lemma umegakiEntropy_mapEquiv (ρ σ : DensityMatrix m) (e : n ≃ m) :
-    D((ρ.mapEquiv e).toMatrix ∥ (σ.mapEquiv e).toMatrix) = D(ρ.toMatrix ∥ σ.toMatrix) :=
-  Matrix.umegakiEntropy_reindex e.symm ρ.toMatrix σ.toMatrix
+/-- **Invariance under reindexing** for density matrices:
+`D(ρ.map (.reindex e) ‖ σ.map (.reindex e)) = D(ρ ‖ σ)` (`Matrix.umegakiEntropy_reindex`). -/
+lemma umegakiEntropy_map_reindex (ρ σ : DensityMatrix m) (e : m ≃ n) :
+    D((ρ.map (.reindex e)).toMatrix ∥ (σ.map (.reindex e)).toMatrix) =
+      D(ρ.toMatrix ∥ σ.toMatrix) :=
+  Matrix.umegakiEntropy_reindex e ρ.toMatrix σ.toMatrix
 
 end DensityMatrix

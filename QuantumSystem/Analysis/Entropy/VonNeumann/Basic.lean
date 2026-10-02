@@ -9,6 +9,7 @@ public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
 
 /-!
 # Von Neumann Entropy
@@ -39,8 +40,9 @@ properties.
 * `DensityMatrix.vonNeumannEntropy_concave` — concavity, two-point form;
   `DensityMatrix.vonNeumannEntropy_concave_sum` — the finite form
   `Σᵢ wᵢ S(ρᵢ) ≤ S(Σᵢ wᵢ ρᵢ)`.
-* `DensityMatrix.vonNeumannEntropy_map_starAlgEquiv`, `DensityMatrix.vonNeumannEntropy_mapEquiv` —
-  invariance under `⋆`-algebra equivalences and reindexing.
+* `DensityMatrix.vonNeumannEntropy_map_ofStarAlgEquiv`,
+  `DensityMatrix.vonNeumannEntropy_map_reindex` — invariance under the channels of `⋆`-algebra
+  equivalences and of reindexing.
 -/
 
 @[expose] public section
@@ -415,9 +417,10 @@ theorem vonNeumannEntropy_concave_sum {ι : Type*} (s : Finset ι) (ρ : ι → 
 /-! ### Isomorphism invariance
 
 For a `*-`algebra equivalence `φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ`, von Neumann entropy is
-invariant: `S(ρ.map φ) = S(ρ)`. Every such `φ` is conjugation by a unitary (Skolem–Noether), so in
-quantum-information terms this is the **unitary invariance of von Neumann entropy**. Such a `φ`
-preserves the trace (`Matrix.trace_map`). -/
+invariant under its channel `Matrix.QuantumChannel.ofStarAlgEquiv φ`:
+`S(ρ.map (.ofStarAlgEquiv φ)) = S(ρ)`. Every such `φ` is conjugation by a unitary
+(Skolem–Noether), so in quantum-information terms this is the **unitary invariance of von Neumann
+entropy**. -/
 
 section IsomorphismInvariance
 
@@ -425,30 +428,31 @@ variable {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- **Von Neumann entropy is invariant under `*-`algebra equivalence**,
 for every density matrix (no positive-definiteness required). -/
-lemma vonNeumannEntropy_map_starAlgEquiv
+lemma vonNeumannEntropy_map_ofStarAlgEquiv
     (ρ : DensityMatrix m)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
-    S(ρ.map φ) = S(ρ) := by
+    S(ρ.map (.ofStarAlgEquiv φ)) = S(ρ) := by
   unfold vonNeumannEntropy
-  have h_log_eq : cfc Real.log (ρ.map φ).toMatrix =
+  have h_log_eq : cfc Real.log (ρ.map (.ofStarAlgEquiv φ)).toMatrix =
       φ (cfc Real.log ρ.toMatrix) := by
-    change cfc Real.log (φ ρ.toMatrix) = _
+    rw [DensityMatrix.map_toMatrix, Matrix.QuantumChannel.coe_ofStarAlgEquiv]
     exact cfc_log_map_starAlgEquiv ρ.isHermitian φ
-  have h_tr : Tr ((ρ.map φ).toMatrix *
-        cfc Real.log (ρ.map φ).toMatrix) =
+  have h_tr : Tr ((ρ.map (.ofStarAlgEquiv φ)).toMatrix *
+        cfc Real.log (ρ.map (.ofStarAlgEquiv φ)).toMatrix) =
       Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix) := by
-    rw [h_log_eq, DensityMatrix.map_toMatrix, ← map_mul, Matrix.trace_map]
-  change -(Tr ((ρ.map φ).toMatrix *
-      cfc Real.log (ρ.map φ).toMatrix)).re =
+    rw [h_log_eq, DensityMatrix.map_toMatrix, Matrix.QuantumChannel.coe_ofStarAlgEquiv, ← map_mul,
+      Matrix.trace_map]
+  change -(Tr ((ρ.map (.ofStarAlgEquiv φ)).toMatrix *
+      cfc Real.log (ρ.map (.ofStarAlgEquiv φ)).toMatrix)).re =
     -(Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix)).re
   rw [h_tr]
 
-/-- **`vonNeumannEntropy` is invariant under reindex**: `S(ρ.mapEquiv e) = S(ρ)` for every
-density matrix `ρ` and equivalence `e`. Specialisation of
-`vonNeumannEntropy_map_starAlgEquiv` to `Matrix.reindexStarAlgEquiv`. -/
-lemma vonNeumannEntropy_mapEquiv (ρ : DensityMatrix m) (e : n ≃ m) :
-    S(ρ.mapEquiv e) = S(ρ) :=
-  vonNeumannEntropy_map_starAlgEquiv ρ _
+/-- **`vonNeumannEntropy` is invariant under reindexing**: `S(ρ.map (.reindex e)) = S(ρ)` for
+every density matrix `ρ` and equivalence `e`. Specialisation of
+`vonNeumannEntropy_map_ofStarAlgEquiv` to `Matrix.reindexStarAlgEquiv`. -/
+lemma vonNeumannEntropy_map_reindex (ρ : DensityMatrix m) (e : m ≃ n) :
+    S(ρ.map (.reindex e)) = S(ρ) :=
+  vonNeumannEntropy_map_ofStarAlgEquiv ρ _
 
 end IsomorphismInvariance
 

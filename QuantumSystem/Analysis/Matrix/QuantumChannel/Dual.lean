@@ -170,19 +170,19 @@ open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
 (`Matrix.dualSchwarzMap`); no Kraus representation of `Φ` is chosen. -/
 noncomputable def dualSchwarzMap (Φ : QuantumChannel n m) :
     SchwarzMap 𝓑(EuclideanSpace ℂ m) 𝓑(EuclideanSpace ℂ n) :=
-  Matrix.dualSchwarzMap Φ.val (traceDual_one Φ.property).le
+  Matrix.dualSchwarzMap Φ (traceDual_one Φ.isTracePreserving).le
 
 open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
 /-- On the operator of a matrix `B`, the dual channel is the operator of `Matrix.traceDual Φ B`. -/
 theorem dualSchwarzMap_apply (Φ : QuantumChannel n m) (B : Matrix m m ℂ) :
     (dualSchwarzMap Φ) B.toBoundedLinearOperators =
-      (Matrix.traceDual Φ.val B).toBoundedLinearOperators :=
-  Matrix.dualSchwarzMap_apply Φ.val (traceDual_one Φ.property).le B
+      (Matrix.traceDual Φ B).toBoundedLinearOperators :=
+  Matrix.dualSchwarzMap_apply Φ (traceDual_one Φ.isTracePreserving).le B
 
 open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
 /-- The dual of a (trace-preserving) channel is unital. -/
 theorem dualSchwarzMap_one (Φ : QuantumChannel n m) : (dualSchwarzMap Φ) 1 = 1 :=
-  Matrix.dualSchwarzMap_one Φ.val Φ.property
+  Matrix.dualSchwarzMap_one Φ Φ.isTracePreserving
 
 /-- The dual of a channel is normal (finite dimensions). -/
 theorem isNormalMap_dualSchwarzMap (Φ : QuantumChannel n m) :

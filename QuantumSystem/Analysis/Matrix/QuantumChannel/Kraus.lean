@@ -25,7 +25,7 @@ representation satisfying the completeness relation, with `rank J(Φ)` operators
 * `Matrix.IsTracePreserving.kraus_sum_eq_one`: the completeness relation `Σᵢ Kᵢᴴ Kᵢ = I`.
 * `Matrix.QuantumChannel.exists_kraus`: a quantum channel has a Kraus representation with
   `rank J(Φ)` operators satisfying `Σᵢ Kᵢᴴ Kᵢ = I`.
-* `Matrix.QuantumChannel.exists_toLinearMap_eq_iff_exists_kraus`: **Kraus representation of
+* `Matrix.QuantumChannel.exists_coe_eq_iff_exists_kraus`: **Kraus representation of
   quantum channels**, a linear map is a quantum channel iff `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` with
   `Σᵢ Kᵢᴴ Kᵢ = I`.
 
@@ -87,24 +87,24 @@ noncomputable def QuantumChannel.ofKraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix
 /-- The quantum channel `Matrix.QuantumChannel.ofKraus Φ K hK hKK` is `Φ` as a function. -/
 @[simp] lemma QuantumChannel.coe_ofKraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*}
     [Fintype ι] (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ)
-    (hKK : ∑ i, (K i)ᴴ * K i = 1) : ⇑(QuantumChannel.ofKraus Φ K hK hKK).val = Φ :=
+    (hKK : ∑ i, (K i)ᴴ * K i = 1) : ⇑(QuantumChannel.ofKraus Φ K hK hKK) = Φ :=
   rfl
 
 /-- A quantum channel has a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` with `rank J(Φ)` operators,
 the minimal number (`Matrix.rank_choiMatrix_le_card_of_kraus`), satisfying the completeness
 relation `Σₐ Kₐᴴ Kₐ = I`. -/
 theorem QuantumChannel.exists_kraus (Φ : QuantumChannel n m) :
-    ∃ K : Fin (choiMatrix Φ.toLinearMap).rank → Matrix m n ℂ,
-      (∀ A, Φ.val A = ∑ a, K a * A * (K a)ᴴ) ∧ ∑ a, (K a)ᴴ * K a = 1 := by
-  obtain ⟨K, hK⟩ := Φ.val.exists_kraus_rank
-  exact ⟨K, hK, Φ.property.kraus_sum_eq_one hK⟩
+    ∃ K : Fin (choiMatrix Φ).rank → Matrix m n ℂ,
+      (∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) ∧ ∑ a, (K a)ᴴ * K a = 1 := by
+  obtain ⟨K, hK⟩ := Φ.toCompletelyPositiveMap.exists_kraus_rank
+  exact ⟨K, hK, Φ.isTracePreserving.kraus_sum_eq_one hK⟩
 
 /-- **Kraus representation of quantum channels** (Nielsen–Chuang, Theorem 8.1): a linear map
 `Φ : M_n(ℂ) → M_m(ℂ)` is a quantum channel iff `Φ(A) = Σₐ Kₐ A Kₐᴴ` with `Σₐ Kₐᴴ Kₐ = I`, and then
 with `rank J(Φ)` operators. -/
-theorem QuantumChannel.exists_toLinearMap_eq_iff_exists_kraus
+theorem QuantumChannel.exists_coe_eq_iff_exists_kraus
     (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
-    (∃ Ψ : QuantumChannel n m, Ψ.toLinearMap = Φ) ↔
+    (∃ Ψ : QuantumChannel n m, (Ψ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
       ∃ K : Fin (choiMatrix Φ).rank → Matrix m n ℂ,
         (∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) ∧ ∑ a, (K a)ᴴ * K a = 1 :=
   ⟨fun ⟨Ψ, hΨ⟩ => hΨ ▸ Ψ.exists_kraus,
