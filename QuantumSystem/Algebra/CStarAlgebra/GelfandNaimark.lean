@@ -31,10 +31,12 @@ Gelfand-Naimark theorem — Gelfand duality — which Mathlib carries as
 * `CStarRep.exists_starAlgEquiv_range` — the same statement in the form the classical
   formulation uses: an explicit `*`-isomorphism of `A` onto a norm closed `*`-subalgebra
   of `𝓑(R.H)` that preserves the norm.
+* `CStarRep.exists_isometric_unital` — for unital `A`, the representation of
+  `CStarRep.exists_isometric` may moreover be taken unital, `R.π 1 = 1`.
 * `CStarRep.exists_isometric_separable` — the **separable refinement**: when `A` is
   separable the Hilbert space may be taken separable as well.
 
-The witness for the first two is `GNS.DirectSum.rep`, the ℓ²-direct sum of the GNS
+The witness for the first three is `GNS.DirectSum.rep`, the ℓ²-direct sum of the GNS
 representations of all pure states of `A`; faithfulness comes from there being enough pure
 states (`IsPureState.exists_pos_of_ne_zero`), and isometry from faithfulness by
 `NonUnitalStarAlgHom.norm_map`. The separable refinement uses a different witness,
@@ -64,7 +66,10 @@ state space.
 * `CStarRep.exists_isometric_separable` does **not** claim that `H` may be taken to be
   `ℓ²(ℕ)`.  That is true, by the unitary classification of Hilbert spaces by the cardinality
   of an orthonormal basis, but it is extra content and is not stated here.
-* There is no unital corollary: nothing here states `R.π 1 = 1` for unital `A`.
+* For unital `A`, `CStarRep.exists_isometric_unital` adds `R.π 1 = 1`.  Its witness is the
+  same `GNS.DirectSum.rep A`, unital since it acts non-degenerately
+  (`GNS.DirectSum.rep_π_one`); as a unital `*`-homomorphism `A →⋆ₐ[ℂ] 𝓑(H)` it is
+  `GNS.DirectSum.repStarAlgHom`.
 -/
 
 @[expose] public section
@@ -108,6 +113,19 @@ theorem CStarRep.exists_starAlgEquiv_range (A : Type u) [NonUnitalCStarAlgebra A
   have := CStarAlgebra.spectralOrderedRing A
   exact ⟨GNS.DirectSum.rep A, NonUnitalStarAlgHom.range (GNS.DirectSum.rep A).π, GNS.DirectSum.repRangeEquiv A,
     GNS.DirectSum.rep_isClosed_range, GNS.DirectSum.norm_repRangeEquiv⟩
+
+/-- **Gelfand-Naimark theorem, unital form**: every unital C\*-algebra `A` has a unital,
+isometric, faithful `*`-representation with norm closed image, `R.π 1 = 1`.
+
+The witness is the same as for `CStarRep.exists_isometric`, `GNS.DirectSum.rep A`: it acts
+non-degenerately, so `π (1) x = x` for every `x` (`GNS.DirectSum.rep_π_one`). -/
+theorem CStarRep.exists_isometric_unital (A : Type u) [CStarAlgebra A] :
+    ∃ R : CStarRep.{u, u} A, Isometry R.π ∧ Function.Injective R.π ∧
+      IsClosed (NonUnitalStarAlgHom.range R.π : Set 𝓑(R.H)) ∧ R.π 1 = 1 := by
+  let := CStarAlgebra.spectralOrder A
+  have := CStarAlgebra.spectralOrderedRing A
+  exact ⟨GNS.DirectSum.rep A, GNS.DirectSum.rep_isometry, GNS.DirectSum.rep_injective,
+    GNS.DirectSum.rep_isClosed_range, GNS.DirectSum.rep_π_one⟩
 
 /-- **Gelfand-Naimark theorem, separable refinement**: a *separable* C\*-algebra, not
 necessarily unital, admits a faithful isometric `*`-representation with norm closed image on

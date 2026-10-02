@@ -6,30 +6,51 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
+public import QuantumSystem.Analysis.CStarAlgebra.KadisonSchwarz
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 
 /-!
 # The dual of a quantum channel as a Schwarz map
 
-For a quantum channel `Φ : Mₙ(ℂ) → Mₘ(ℂ)` with Kraus operators `Kᵢ`, the trace dual
-`Φ* B = Σᵢ Kᵢᴴ B Kᵢ` (`Matrix.traceDual`) is, as a map `B(ℂᵐ) → B(ℂⁿ)`, a unital normal Schwarz
-map. It is the Heisenberg-picture channel along which the data-processing inequality for Araki's
-relative entropy (`VonNeumannAlgebra.arakiEntropy_comp_le`) applies, and it transports the normal
-functional `Tr (ρ ·)` to `Tr (Φ(ρ) ·)`: `Tr (ρ Φ*(B)) = Tr (Φ(ρ) B)`
+Let `φ : Mₙ(ℂ) → Mₘ(ℂ)` be a `2`-positive, in particular a completely positive, map that is trace
+non-increasing on positive semidefinite matrices, equivalently `Matrix.traceDual φ 1 ≤ 1`
+(`Matrix.traceDual_one_le_one_iff`). Its trace dual `Matrix.traceDual φ : Mₘ(ℂ) → Mₙ(ℂ)`,
+read on operators through the ⋆-isomorphisms `Matrix.toEuclideanCLM`, is a normal Schwarz map
+`Matrix.dualSchwarzMap φ hφ : B(ℂᵐ) → B(ℂⁿ)`, unital when `φ` is trace preserving, as a
+quantum channel is. The trace dual is `2`-positive by self-duality of the positive semidefinite
+cone (`KPositiveMap.traceDual`) and sub-unital, hence a Schwarz map by the Kadison–Schwarz
+inequality (`KPositiveMapClass.toSchwarzMap`); the ⋆-isomorphisms are Schwarz maps
+(`NonUnitalStarAlgHomClass.instSchwarzMapClass`). No Kraus representation of `φ` is chosen. It is
+the Heisenberg-picture channel along which the data-processing inequality for Araki's relative
+entropy (`VonNeumannAlgebra.arakiEntropy_comp_le`) applies, and it transports the normal functional
+`Tr (ρ ·)` to `Tr (φ(ρ) ·)`: `Tr (ρ (Matrix.traceDual φ B)) = Tr (φ(ρ) B)`
 (`Matrix.trace_mul_traceDual`).
+
+The construction is stated for any type `F` of `2`-positive linear maps
+(`KPositiveMapClass F 2`), so that completely positive maps (`CompletelyPositiveMap`, through
+`CompletelyPositiveMapClass.instKPositiveMapClass`) and `2`-positive maps (`KPositiveMap 2`) enter
+directly.
 
 ## Main definitions
 
-* `Matrix.QuantumChannel.dualSchwarzMap Φ : SchwarzMap 𝓑(ℂᵐ) 𝓑(ℂⁿ)` — the trace dual of `Φ`.
+* `SchwarzMap.onBoundedLinearOperators T : SchwarzMap 𝓑(K) 𝓑(H)` — a Schwarz map
+  `B(K) → B(H)` between the bundled von Neumann algebras.
+* `Matrix.dualSchwarzMap φ hφ : SchwarzMap 𝓑(ℂᵐ) 𝓑(ℂⁿ)` — the trace dual of a
+  `2`-positive map `φ` with `Matrix.traceDual φ 1 ≤ 1`; `Matrix.QuantumChannel.dualSchwarzMap Φ`
+  for a quantum channel `Φ`.
 
 ## Main results
 
-* `Matrix.QuantumChannel.dualSchwarzMap_apply` — on `B ∈ Mₘ(ℂ)` it is `Matrix.traceDual Φ B`.
-* `Matrix.QuantumChannel.dualSchwarzMap_one` — it is unital, as `Φ` is trace preserving.
-* `Matrix.QuantumChannel.isNormalMap_dualSchwarzMap` — it is normal.
+* `Matrix.traceDual_one_le_one_iff` — `Matrix.traceDual φ 1 ≤ 1` iff `φ` is trace
+  non-increasing on positive semidefinite matrices.
+* `Matrix.dualSchwarzMap_apply`, `Matrix.QuantumChannel.dualSchwarzMap_apply` — on the
+  operator of `B ∈ Mₘ(ℂ)` it is the operator of `Matrix.traceDual φ B`.
+* `Matrix.dualSchwarzMap_one`, `Matrix.QuantumChannel.dualSchwarzMap_one` — it is
+  unital when `φ` is trace preserving.
+* `Matrix.isNormalMap_dualSchwarzMap`, `Matrix.QuantumChannel.isNormalMap_dualSchwarzMap`
+  — it is normal.
 -/
 
 @[expose] public section
@@ -60,100 +81,108 @@ noncomputable def onBoundedLinearOperators (T : SchwarzMap (K →L[ℂ] K) (H �
 
 end SchwarzMap
 
+/-! ### The dual of a `2`-positive trace non-increasing map -/
+
 namespace Matrix
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
+  {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
 
-/-- A rectangular matrix `K ∈ M_{m×n}(ℂ)` as the bounded operator `ℂⁿ → ℂᵐ`. -/
-noncomputable def toEuclideanL (K : Matrix m n ℂ) : EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ m :=
-  LinearMap.toContinuousLinearMap (Matrix.toEuclideanLin K)
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- The trace dual of a positive map is sub-unital, `Matrix.traceDual φ 1 ≤ 1`, iff the map is
+**trace non-increasing** on positive semidefinite matrices, `Re Tr φ(ρ) ≤ Re Tr ρ`:
+`Tr φ(ρ) = Tr (ρ (Matrix.traceDual φ 1))` (`Matrix.trace_mul_traceDual`), and the positive
+semidefinite cone is self-dual, tested here on the rank-one matrices `x x†`. -/
+theorem traceDual_one_le_one_iff [OrderHomClass F (Matrix n n ℂ) (Matrix m m ℂ)]
+    [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F) :
+    Matrix.traceDual φ 1 ≤ 1 ↔
+      ∀ ρ : Matrix n n ℂ, ρ.PosSemidef → (φ ρ).trace.re ≤ ρ.trace.re := by
+  have key (ρ : Matrix n n ℂ) : (φ ρ).trace = (ρ * Matrix.traceDual φ 1).trace := by
+    rw [← trace_mul_traceDual, Matrix.mul_one]
+  refine ⟨fun h ρ hρ => ?_, fun h => ?_⟩
+  · have h' := (Complex.le_def.1 (hρ.trace_mul_nonneg (Matrix.le_iff.1 h))).1
+    rwa [Matrix.mul_sub, trace_sub, Matrix.mul_one, ← key, Complex.sub_re, Complex.zero_re,
+      sub_nonneg] at h'
+  · rw [Matrix.le_iff, posSemidef_iff_dotProduct_mulVec_complex]
+    intro x
+    have hρ := posSemidef_vecMulVec_self_star x
+    rw [← trace_mul_vecMulVec, Matrix.sub_mul, Matrix.one_mul, trace_sub,
+      Matrix.trace_mul_comm (Matrix.traceDual φ 1), ← key]
+    have h₁ := Complex.le_def.1 hρ.trace_nonneg
+    have h₂ := Complex.le_def.1 (hρ.map φ).trace_nonneg
+    refine Complex.le_def.2 ⟨?_, ?_⟩
+    · simpa [sub_nonneg] using h _ hρ
+    · rw [Complex.sub_im, ← h₁.2, ← h₂.2, sub_self, Complex.zero_im]
 
-omit [DecidableEq m] in
-/-- `toEuclideanL K v` is the matrix-vector product `K v`. -/
-@[simp] lemma toEuclideanL_apply (K : Matrix m n ℂ) (v : EuclideanSpace ℂ n) :
-    toEuclideanL K v = WithLp.toLp 2 (K *ᵥ WithLp.ofLp v) := rfl
+open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
+/-- The **dual** `B(ℂᵐ) → B(ℂⁿ)` of a `2`-positive map `φ : M_n(ℂ) → M_m(ℂ)` with
+`Matrix.traceDual φ 1 ≤ 1`, that is, a trace non-increasing one
+(`Matrix.traceDual_one_le_one_iff`), as a Schwarz map: the trace dual of `φ`
+(`Matrix.dualSchwarzMap_apply`) read on operators,
+`Matrix.toEuclideanCLM ∘ Matrix.traceDual φ ∘ Matrix.toEuclideanCLM⁻¹`. The trace dual is
+`2`-positive (`KPositiveMap.traceDual`) and sub-unital, hence a Schwarz map
+(`KPositiveMapClass.toSchwarzMap`), and the ⋆-isomorphisms are Schwarz maps. For a trace-preserving
+`φ` the hypothesis is `(Matrix.traceDual_one hφ).le` and the dual is unital
+(`Matrix.dualSchwarzMap_one`). -/
+noncomputable def dualSchwarzMap [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
+    [KPositiveMapClass F 2 (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F)
+    (hφ : Matrix.traceDual φ 1 ≤ 1) : SchwarzMap 𝓑(EuclideanSpace ℂ m) 𝓑(EuclideanSpace ℂ n) :=
+  SchwarzMap.onBoundedLinearOperators <|
+    (SchwarzMapClass.toSchwarzMap (Matrix.toEuclideanCLM (n := n) (𝕜 := ℂ))).comp <|
+      (KPositiveMapClass.toSchwarzMap (KPositiveMap.traceDual 2 φ) hφ).comp
+        (SchwarzMapClass.toSchwarzMap (Matrix.toEuclideanCLM (n := m) (𝕜 := ℂ)).symm)
 
-/-- The adjoint of `K : ℂⁿ → ℂᵐ` is `Kᴴ`. -/
-lemma adjoint_toEuclideanL (K : Matrix m n ℂ) : adjoint (toEuclideanL K) = toEuclideanL Kᴴ := by
-  symm
-  rw [ContinuousLinearMap.eq_adjoint_iff]
-  intro x y
-  change inner ℂ (Matrix.toEuclideanLin Kᴴ x) y = inner ℂ x (Matrix.toEuclideanLin K y)
-  rw [Matrix.toEuclideanLin_conjTranspose_eq_adjoint, LinearMap.adjoint_inner_left]
+open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
+/-- On the operator of a matrix `B`, the dual `Matrix.dualSchwarzMap φ hφ` is the
+operator of the trace dual `Matrix.traceDual φ B`. -/
+theorem dualSchwarzMap_apply [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
+    [KPositiveMapClass F 2 (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F)
+    (hφ : Matrix.traceDual φ 1 ≤ 1) (B : Matrix m m ℂ) :
+    (dualSchwarzMap φ hφ) B.toBoundedLinearOperators =
+      (Matrix.traceDual φ B).toBoundedLinearOperators := by
+  apply Subtype.ext
+  change Matrix.toEuclideanCLM (𝕜 := ℂ) (Matrix.traceDual φ
+    ((Matrix.toEuclideanCLM (n := m) (𝕜 := ℂ)).symm (Matrix.toEuclideanCLM (𝕜 := ℂ) B))) = _
+  rw [StarAlgEquiv.symm_apply_apply]
+  rfl
 
-/-- Conjugating a square matrix by a rectangular one: `Kᴴ B K` is `K† ∘ B ∘ K` as operators. -/
-lemma toEuclideanCLM_conjTranspose_mul_mul (K : Matrix m n ℂ) (B : Matrix m m ℂ) :
-    Matrix.toEuclideanCLM (𝕜 := ℂ) (Kᴴ * B * K) =
-      adjoint (toEuclideanL K) ∘L Matrix.toEuclideanCLM (𝕜 := ℂ) B ∘L toEuclideanL K := by
-  ext1 v
-  rw [adjoint_toEuclideanL]
-  apply (WithLp.equiv 2 _).injective
-  simp [Matrix.mulVec_mulVec, Matrix.mul_assoc]
+open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
+/-- The dual of a trace-preserving map is unital. -/
+theorem dualSchwarzMap_one [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
+    [KPositiveMapClass F 2 (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F) (hφ : IsTracePreserving φ) :
+    (dualSchwarzMap φ (traceDual_one hφ).le) 1 = 1 := by
+  apply Subtype.ext
+  change Matrix.toEuclideanCLM (𝕜 := ℂ)
+    (Matrix.traceDual φ ((Matrix.toEuclideanCLM (n := m) (𝕜 := ℂ)).symm 1)) = 1
+  rw [map_one, traceDual_one hφ, map_one]
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- The dual of a `2`-positive trace non-increasing map is normal (finite dimensions). -/
+theorem isNormalMap_dualSchwarzMap [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
+    [KPositiveMapClass F 2 (Matrix n n ℂ) (Matrix m m ℂ)] (φ : F)
+    (hφ : Matrix.traceDual φ 1 ≤ 1) : VonNeumannAlgebra.IsNormalMap (dualSchwarzMap φ hφ) :=
+  VonNeumannAlgebra.isNormalMap_of_finiteDimensional _
 
 namespace QuantumChannel
 
-/-- The **Kraus rank** of `Φ`: the rank of its Choi matrix, which is the number of Kraus operators
-in `kraus Φ` and the minimal number in any Kraus representation
-(`Matrix.rank_choiMatrix_le_card_of_kraus`). -/
-noncomputable def numKraus (Φ : QuantumChannel n m) : ℕ :=
-  (choiMatrix Φ.val).rank
-
-/-- A minimal Kraus representation of `Φ`, with `numKraus Φ` operators:
-`Φ(A) = Σᵢ Kᵢ A Kᵢᴴ` (`kraus_spec`). -/
-noncomputable def kraus (Φ : QuantumChannel n m) : Fin (numKraus Φ) → Matrix m n ℂ :=
-  Φ.2.completelyPositive.exists_kraus_rank.choose
-
-/-- The chosen Kraus operators represent `Φ`: `Φ(A) = Σᵢ Kᵢ A Kᵢᴴ`. -/
-lemma kraus_spec (Φ : QuantumChannel n m) (A : Matrix n n ℂ) :
-    Φ.val A = ∑ i, (kraus Φ) i * A * ((kraus Φ) i)ᴴ :=
-  Φ.2.completelyPositive.exists_kraus_rank.choose_spec A
-
-/-- Every Kraus representation of `Φ` has at least `numKraus Φ` operators. -/
-lemma numKraus_le_card_of_kraus (Φ : QuantumChannel n m) {ι : Type*} [Fintype ι]
-    (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ.val A = ∑ i, K i * A * (K i)ᴴ) :
-    numKraus Φ ≤ Fintype.card ι :=
-  rank_choiMatrix_le_card_of_kraus K hK
-
-/-- The Kraus operators as bounded operators satisfy `Σᵢ Kᵢ† Kᵢ = 1`. -/
-lemma sum_adjoint_toEuclideanL_kraus (Φ : QuantumChannel n m) :
-    ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L toEuclideanL ((kraus Φ) i) = 1 := by
-  classical
-  have h (i : Fin (numKraus Φ)) :
-      adjoint (toEuclideanL ((kraus Φ) i)) ∘L toEuclideanL ((kraus Φ) i) =
-        Matrix.toEuclideanCLM (𝕜 := ℂ) (((kraus Φ) i)ᴴ * (1 : Matrix m m ℂ) * (kraus Φ) i) := by
-    rw [toEuclideanCLM_conjTranspose_mul_mul, map_one, one_def, ContinuousLinearMap.id_comp]
-  simp_rw [h, Matrix.mul_one, ← map_sum, QuantumChannel.kraus_sum_eq_one Φ (kraus_spec Φ), map_one]
-
-/-- The **dual channel** `Φ* : B(ℂᵐ) → B(ℂⁿ)`, `B ↦ Σᵢ Kᵢᴴ B Kᵢ`, as a Schwarz map
-(`SchwarzMap.ofKraus`). Its values do not depend on the chosen Kraus operators: it is the trace dual
-`Matrix.traceDual Φ` (`dualSchwarzMap_apply`). -/
+open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
+/-- The **dual channel** `Φ* : B(ℂᵐ) → B(ℂⁿ)` of a quantum channel as a Schwarz map
+(`Matrix.dualSchwarzMap`); no Kraus representation of `Φ` is chosen. -/
 noncomputable def dualSchwarzMap (Φ : QuantumChannel n m) :
     SchwarzMap 𝓑(EuclideanSpace ℂ m) 𝓑(EuclideanSpace ℂ n) :=
-  (SchwarzMap.ofKraus _ (sum_adjoint_toEuclideanL_kraus Φ).le).onBoundedLinearOperators
+  Matrix.dualSchwarzMap Φ (traceDual_one Φ.isTracePreserving).le
 
-/-- `Φ*(x) = Σᵢ Kᵢ† x Kᵢ` on the underlying operators. -/
-@[simp] lemma coe_dualSchwarzMap (Φ : QuantumChannel n m) (x : 𝓑(EuclideanSpace ℂ m)) :
-    ((dualSchwarzMap Φ) x : EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) =
-      ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L (x : _ →L[ℂ] _) ∘L toEuclideanL ((kraus Φ) i) :=
-  rfl
-
-/-- `Φ*(B) = Matrix.traceDual Φ B` for a matrix `B`. -/
+open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
+/-- On the operator of a matrix `B`, the dual channel is the operator of `Matrix.traceDual Φ B`. -/
 theorem dualSchwarzMap_apply (Φ : QuantumChannel n m) (B : Matrix m m ℂ) :
     (dualSchwarzMap Φ) B.toBoundedLinearOperators =
-      (Matrix.traceDual Φ.val B).toBoundedLinearOperators := by
-  apply Subtype.ext
-  rw [coe_dualSchwarzMap, coe_toBoundedLinearOperators, coe_toBoundedLinearOperators,
-    Matrix.traceDual_eq_of_kraus (kraus_spec Φ), map_sum]
-  simp_rw [toEuclideanCLM_conjTranspose_mul_mul]
+      (Matrix.traceDual Φ B).toBoundedLinearOperators :=
+  Matrix.dualSchwarzMap_apply Φ (traceDual_one Φ.isTracePreserving).le B
 
+open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
 /-- The dual of a (trace-preserving) channel is unital. -/
-theorem dualSchwarzMap_one (Φ : QuantumChannel n m) : (dualSchwarzMap Φ) 1 = 1 := by
-  apply Subtype.ext
-  rw [coe_dualSchwarzMap]
-  change ∑ i, adjoint (toEuclideanL ((kraus Φ) i)) ∘L (1 : _ →L[ℂ] _) ∘L
-      toEuclideanL ((kraus Φ) i) = (1 : EuclideanSpace ℂ n →L[ℂ] _)
-  simp_rw [one_def, ContinuousLinearMap.id_comp]
-  exact (sum_adjoint_toEuclideanL_kraus Φ)
+theorem dualSchwarzMap_one (Φ : QuantumChannel n m) : (dualSchwarzMap Φ) 1 = 1 :=
+  Matrix.dualSchwarzMap_one Φ Φ.isTracePreserving
 
 /-- The dual of a channel is normal (finite dimensions). -/
 theorem isNormalMap_dualSchwarzMap (Φ : QuantumChannel n m) :

@@ -10,23 +10,24 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 
 /-!
-# Partial trace and reindexing as quantum channels
+# Partial traces as quantum channels
 
-Tracing out a factor of a matrix on `X × Y` is completely positive and trace preserving, and so is
-conjugation by an index equivalence. Composing the two gives the trace-out-`C` channel
-`Matrix.QuantumChannel.traceOutC` on `A × B × C`, which realises the `lean-eval` marginal map.
+Tracing out either factor of a matrix on `X × Y` is completely positive and trace preserving.
+Marginals of multipartite states are tensor products of these channels with the identity channel
+(`Matrix.QuantumChannel.kronecker`, `Analysis/Matrix/QuantumChannel/Kronecker.lean`): tracing out
+`C` from `A × (B × C)` is `id_A ⊗ Tr_C = QuantumChannel.id ⊗ partialTraceRight`.
 
 ## Main definitions
 
-* `Matrix.partialTraceRightₗ`, `Matrix.partialTraceLeftₗ`: partial traces as `ℂ`-linear maps.
-* `Matrix.QuantumChannel.partialTraceRight`: bundled quantum channel tracing out `Y`.
-* `Matrix.QuantumChannel.reindex`: conjugation by an index equivalence, as a channel.
-* `Matrix.QuantumChannel.traceOutC`: trace out the `C` factor of `A × B × C`.
+* `Matrix.QuantumChannel.partialTraceRight`, `Matrix.QuantumChannel.partialTraceLeft`: bundled
+  quantum channels tracing out `Y` and `X`, acting as `Matrix.traceRight` and `Matrix.traceLeft`
+  (`Matrix.QuantumChannel.partialTraceRight_apply`, `Matrix.QuantumChannel.partialTraceLeft_apply`).
 
 ## Main statements
 
-* `Matrix.isCompletelyPositive_partialTraceRight`, `Matrix.isTracePreserving_partialTraceRight`.
-* `Matrix.isCompletelyPositive_reindexₗ`, `Matrix.isTracePreserving_reindexₗ`.
+* `Matrix.traceRight_eq_sum_kraus`, `Matrix.traceLeft_eq_sum_kraus`,
+  `Matrix.reindex_eq_kraus`: Kraus representations of the partial traces and of reindexing; the
+  first two make the partial traces completely positive (`CompletelyPositiveMap.ofKraus`).
 
 ## References
 
@@ -37,47 +38,21 @@ conjugation by an index equivalence. Composing the two gives the trace-out-`C` c
 
 namespace Matrix
 
-/-! ### Partial trace as a quantum channel (product index types) -/
-
-/-! #### Right partial trace as a linear map -/
-
-/-- `Matrix.traceRight` as a `ℂ`-linear map `Matrix (X × Y) (X × Y) ℂ →ₗ[ℂ] Matrix X X ℂ`. -/
-noncomputable def partialTraceRightₗ {X Y : Type*} [Fintype Y] :
-    Matrix (X × Y) (X × Y) ℂ →ₗ[ℂ] Matrix X X ℂ where
-  toFun M := Matrix.traceRight M
-  map_add' M N := by
-    ext i j; simp only [traceRight_apply, Matrix.add_apply, Finset.sum_add_distrib]
-  map_smul' c M := by
-    ext i j
-    simp only [traceRight_apply, Matrix.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.mul_sum]
-
-@[simp] lemma partialTraceRightₗ_apply {X Y : Type*} [Fintype Y] (M : Matrix (X × Y) (X × Y) ℂ) :
-    partialTraceRightₗ M = Matrix.traceRight M := rfl
-
-/-- `Matrix.traceLeft` as a `ℂ`-linear map `Matrix (X × Y) (X × Y) ℂ →ₗ[ℂ] Matrix Y Y ℂ`. -/
-noncomputable def partialTraceLeftₗ {X Y : Type*} [Fintype X] :
-    Matrix (X × Y) (X × Y) ℂ →ₗ[ℂ] Matrix Y Y ℂ where
-  toFun M := Matrix.traceLeft M
-  map_add' M N := by
-    ext i j; simp only [traceLeft_apply, Matrix.add_apply, Finset.sum_add_distrib]
-  map_smul' c M := by
-    ext i j
-    simp only [traceLeft_apply, Matrix.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.mul_sum]
-
-@[simp] lemma partialTraceLeftₗ_apply {X Y : Type*} [Fintype X] (M : Matrix (X × Y) (X × Y) ℂ) :
-    partialTraceLeftₗ M = Matrix.traceLeft M := rfl
-
-/-! #### Kraus operators and complete positivity -/
+/-! ### Kraus representations -/
 
 /-- Kraus operator for the right partial trace, indexed by `y : Y`: `K_y x p = [p = (x, y)]`. -/
 def traceRightKraus {X Y : Type*} [DecidableEq X] [DecidableEq Y] (y : Y) :
     Matrix X (X × Y) ℂ :=
   Matrix.of fun x p => if p = (x, y) then (1 : ℂ) else 0
 
-lemma isCompletelyPositive_partialTraceRight {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y]
-    [DecidableEq Y] : IsCompletelyPositive (partialTraceRightₗ (X := X) (Y := Y)) := by
-  refine isCompletelyPositive_of_kraus (traceRightKraus (X := X)) fun M => ?_
-  rw [partialTraceRightₗ_apply]
+/-- Tracing out `Y` is the Kraus map with operators `K_y`, `y : Y`:
+`tr₂(M) = Σ_y K_y M K_yᴴ`. -/
+-- The binder `y : Y` is annotated: with the type left to inference, Mathlib's `@[default_instance]`
+-- rectangular product on `CStarMatrix` (`CStarMatrix.instHMulOfFintypeOfMulOfAddCommMonoid`) is
+-- selected for the products and elaboration fails.
+lemma traceRight_eq_sum_kraus {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y]
+    [DecidableEq Y] (M : Matrix (X × Y) (X × Y) ℂ) :
+    traceRight M = ∑ y : Y, traceRightKraus (X := X) y * M * (traceRightKraus (X := X) y)ᴴ := by
   ext i j
   rw [traceRight_apply, Matrix.sum_apply]
   refine Finset.sum_congr rfl fun y _ => ?_
@@ -95,38 +70,15 @@ lemma isCompletelyPositive_partialTraceRight {X Y : Type*} [Fintype X] [Decidabl
     rw [ite_eq_right hq]; simp
   · simp
 
-lemma isTracePreserving_partialTraceRight {X Y : Type*} [Fintype X] [Fintype Y] :
-    IsTracePreserving (partialTraceRightₗ (X := X) (Y := Y)) :=
-  fun M => by rw [partialTraceRightₗ_apply]; exact trace_traceRight M
-
-/-- Right partial trace (trace out `Y`) as a bundled `QuantumChannel`. -/
-noncomputable def QuantumChannel.partialTraceRight {X Y : Type*} [Fintype X] [DecidableEq X]
-    [Fintype Y] [DecidableEq Y] :
-    Matrix.QuantumChannel (X × Y) X :=
-  ⟨partialTraceRightₗ, isCompletelyPositive_partialTraceRight, isTracePreserving_partialTraceRight⟩
-
-/-! #### Conjugation by an index equivalence as a channel -/
-
-/-- Conjugation by a reindex `e : Z ≃ W`: `M ↦ M.submatrix e.symm e.symm`, as a linear map. -/
-noncomputable def reindexₗ {Z W : Type*} (e : Z ≃ W) :
-    Matrix Z Z ℂ →ₗ[ℂ] Matrix W W ℂ where
-  toFun M := M.submatrix e.symm e.symm
-  map_add' M N := by ext w w'; simp [Matrix.submatrix_apply]
-  map_smul' c M := by ext w w'; simp [Matrix.submatrix_apply]
-
-@[simp] lemma reindexₗ_apply {Z W : Type*} (e : Z ≃ W) (M : Matrix Z Z ℂ) :
-    reindexₗ e M = M.submatrix e.symm e.symm := rfl
-
-/-- Kraus operator (permutation matrix) for `reindexₗ e`: `P w z = [z = e.symm w]`. -/
+/-- Kraus operator (permutation matrix) for `Matrix.reindex e e`: `P w z = [z = e.symm w]`. -/
 def reindexKraus {Z W : Type*} [DecidableEq Z] (e : Z ≃ W) : Matrix W Z ℂ :=
   Matrix.of fun w z => if z = e.symm w then (1 : ℂ) else 0
 
-lemma isCompletelyPositive_reindexₗ {Z W : Type*} [Fintype Z] [DecidableEq Z] [Fintype W]
-    [DecidableEq W] (e : Z ≃ W) : IsCompletelyPositive (reindexₗ e) := by
-  refine isCompletelyPositive_of_kraus (fun _ : Unit => reindexKraus e) fun M => ?_
-  simp only [Finset.univ_unique, Finset.sum_singleton]
+/-- Reindexing by `e` is conjugation by the permutation matrix `P`. -/
+lemma reindex_eq_kraus {Z W : Type*} [Fintype Z] [DecidableEq Z] (e : Z ≃ W)
+    (M : Matrix Z Z ℂ) : M.reindex e e = reindexKraus e * M * (reindexKraus e)ᴴ := by
   ext w w'
-  rw [reindexₗ_apply, Matrix.submatrix_apply]
+  rw [reindex_apply, submatrix_apply]
   symm
   rw [Matrix.mul_apply, Finset.sum_eq_single (e.symm w')]
   · rw [Matrix.mul_apply, Finset.sum_eq_single (e.symm w)]
@@ -141,34 +93,39 @@ lemma isCompletelyPositive_reindexₗ {Z W : Type*} [Fintype Z] [DecidableEq Z] 
     rw [ite_eq_right hz]; simp
   · simp
 
-lemma isTracePreserving_reindexₗ {Z W : Type*} [Fintype Z] [Fintype W] (e : Z ≃ W) :
-    IsTracePreserving (reindexₗ e) := by
-  intro M
-  rw [reindexₗ_apply]
-  exact trace_reindex_self e M
+/-- Tracing out `X` is the Kraus map with operators `K_x P`, `x : X`: swap the factors with the
+permutation matrix `P` of `Equiv.prodComm`, then trace out the right factor. -/
+lemma traceLeft_eq_sum_kraus {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype Y]
+    [DecidableEq Y] (M : Matrix (X × Y) (X × Y) ℂ) :
+    traceLeft M = ∑ x : X, (traceRightKraus (X := Y) x * reindexKraus (Equiv.prodComm X Y)) * M *
+      (traceRightKraus (X := Y) x * reindexKraus (Equiv.prodComm X Y))ᴴ := by
+  rw [traceLeft_eq_traceRight_prodComm, traceRight_eq_sum_kraus, reindex_eq_kraus]
+  simp only [conjTranspose_mul, Matrix.mul_assoc]
 
-/-- Conjugation by an index equivalence as a bundled `QuantumChannel`. -/
-noncomputable def QuantumChannel.reindex {Z W : Type*} [Fintype Z] [DecidableEq Z] [Fintype W]
-    [DecidableEq W] (e : Z ≃ W) :
-    Matrix.QuantumChannel Z W :=
-  ⟨reindexₗ e, isCompletelyPositive_reindexₗ e, isTracePreserving_reindexₗ e⟩
+/-! ### Partial traces as quantum channels -/
 
-/-! #### Trace-out-`C` channel for `A × B × C` -/
+/-- Right partial trace (trace out `Y`) as a bundled `QuantumChannel`. -/
+noncomputable def QuantumChannel.partialTraceRight {X Y : Type*} [Fintype X] [DecidableEq X]
+    [Fintype Y] [DecidableEq Y] :
+    Matrix.QuantumChannel (X × Y) X :=
+  ⟨.ofKraus (traceRightLinearMap ℂ) traceRightKraus traceRight_eq_sum_kraus, trace_traceRight⟩
 
-/-- Trace out the `C` factor of `A × B × C`, landing on `A × B`. Its action is the `lean-eval`
-marginal map `M ↦ traceRight (M.reindex (prodAssoc).symm (prodAssoc).symm)`. -/
-noncomputable def QuantumChannel.traceOutC {A B C : Type*} [Fintype A] [DecidableEq A] [Fintype B]
-    [DecidableEq B] [Fintype C] [DecidableEq C] :
-    Matrix.QuantumChannel (A × B × C) (A × B) :=
-  QuantumChannel.partialTraceRight.comp (QuantumChannel.reindex (Equiv.prodAssoc A B C).symm)
+/-- Left partial trace (trace out `X`) as a bundled `QuantumChannel`. -/
+noncomputable def QuantumChannel.partialTraceLeft {X Y : Type*} [Fintype X] [DecidableEq X]
+    [Fintype Y] [DecidableEq Y] :
+    Matrix.QuantumChannel (X × Y) Y :=
+  ⟨.ofKraus (traceLeftLinearMap ℂ) _ traceLeft_eq_sum_kraus, trace_traceLeft⟩
 
-@[simp] lemma QuantumChannel.traceOutC_val_apply {A B C : Type*}
-    [Fintype A] [DecidableEq A] [Fintype B] [DecidableEq B] [Fintype C] [DecidableEq C]
-    (M : Matrix (A × B × C) (A × B × C) ℂ) :
-    (QuantumChannel.traceOutC (A := A) (B := B) (C := C)).val M
-      = Matrix.traceRight
-          (M.reindex (Equiv.prodAssoc A B C).symm (Equiv.prodAssoc A B C).symm) := by
-  change partialTraceRightₗ (reindexₗ (Equiv.prodAssoc A B C).symm M) = _
-  rw [partialTraceRightₗ_apply, reindexₗ_apply, Matrix.reindex_apply]
+/-- The right partial-trace channel acts as `Matrix.traceRight`. -/
+@[simp] lemma QuantumChannel.partialTraceRight_apply {X Y : Type*} [Fintype X] [DecidableEq X]
+    [Fintype Y] [DecidableEq Y] (M : Matrix (X × Y) (X × Y) ℂ) :
+    QuantumChannel.partialTraceRight M = Matrix.traceRight M :=
+  rfl
+
+/-- The left partial-trace channel acts as `Matrix.traceLeft`. -/
+@[simp] lemma QuantumChannel.partialTraceLeft_apply {X Y : Type*} [Fintype X] [DecidableEq X]
+    [Fintype Y] [DecidableEq Y] (M : Matrix (X × Y) (X × Y) ℂ) :
+    QuantumChannel.partialTraceLeft M = Matrix.traceLeft M :=
+  rfl
 
 end Matrix

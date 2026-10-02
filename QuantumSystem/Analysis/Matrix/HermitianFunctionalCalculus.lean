@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
 public import Mathlib.LinearAlgebra.Lagrange
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
+public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
 
 /-!
 # Matrix Functional Calculus and Foundational Inequalities
@@ -27,17 +28,21 @@ calculus `cfc`; the spectral expansion `cfc f A = U diag(f(λᵢ)) Uᴴ` is `cfc
 - `trace_cfc`, `trace_mul_cfc`: trace formulas `Tr(f(A)) = ∑ f(λᵢ)` and `Tr(A·f(A)) = ∑ λᵢ f(λᵢ)`.
 - `cfc_isHermitian`, `mul_cfc_isHermitian`: `f(A)` and `A·f(A)` are Hermitian for real `f`.
 - `cfc_add_const_eq`, `cfc_inv_add_const`, `cfc_resolvent`: affine / resolvent identities.
-- `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry commuting with `M`.
+- `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry `V` whose range
+  projection `V Vᴴ` commutes with `M`; `rpow_conj_isometry`: `(V A Vᴴ)ˢ = V Aˢ Vᴴ` for an
+  isometry `V`, `A ⪰ 0` and `s ≠ 0`.
+- `cfc_fromBlocks_diag`, `cfc_fromBlocks_diag'`: `f(A ⊕ D) = f(A) ⊕ f(D)` for block diagonal
+  matrices.
 - `cfc_map_starAlgEquiv`: `cfc f` commutes with `*-`algebra equivalences of matrix algebras on
   Hermitian matrices (any `f`, finite spectrum).
 - Matrix logarithm `cfc Real.log`: `cfc_spectral_eq`, `cfc_log_spectral_eq`, `cfc_log_map_starAlgEquiv`.
-- Special functions: `matrixSqrt`, `matrixInvSqrt` defined via `CFC.rpow`.
 
-### Hermitian and PSD Structure
-- `matrixSqrt`: the matrix square root A¹⁄² for PSD A (`= A ^ (1/2 : ℝ)`).
-- `matrixInvSqrt`: the matrix inverse square root A⁻¹⁄² for PD A (`= A ^ (-1/2 : ℝ)`).
-- `matrixInvSqrt_commute_of_commute`: R⁻¹⁄² commutes with L when L and R commute
-  (for PSD L, PD R).
+### Square roots
+Square roots are Mathlib's real powers `A ^ (1 / 2 : ℝ)`, `A ^ (-1 / 2 : ℝ)` (`CFC.rpow`).
+- `posSemidef_rpow`: `A ^ s` is positive semidefinite.
+- `rpow_half_mul_rpow_half`, `rpow_half_mul_rpow_neg_half`, `rpow_neg_half_mul_rpow_half`,
+  `rpow_neg_half_mul_mul_rpow_neg_half`: the square-root identities.
+- `rpow_commute_of_commute`: `R ^ s` commutes with every matrix commuting with `R`.
 
 ### Spectral Decomposition Identities
 - `Matrix.UHU_eq_one`: Uᴴ * U = 1 for the eigenvector unitary.
@@ -137,7 +142,8 @@ lemma cfc_inv_add_const {m : Type*} [Fintype m] [DecidableEq m]
   have hcfcinv : cfc (fun x : ℝ => (x + t)⁻¹) A = Ring.inverse (cfc (fun x : ℝ => x + t) A) := by
     simpa using (cfc_inv (A := Matrix m m ℂ) (f := fun x : ℝ => x + t) (a := A) hneq)
   have hcfcaff : cfc (fun x : ℝ => x + t) A = A + (t : ℂ) • 1 := cfc_add_const_eq hA' t
-  have hposdef : (A + (t : ℂ) • 1).PosDef := PosSemidef.add_smul_one_posDef hA ht
+  have hposdef : (A + (t : ℂ) • 1).PosDef :=
+    Matrix.PosDef.posSemidef_add hA (Matrix.PosDef.one.smul (Complex.zero_lt_real.2 ht))
   have hunit : IsUnit (A + (t : ℂ) • 1) := hposdef.isUnit
   let _ := hunit.invertible
   have hcfcaff_inv : Ring.inverse (cfc (fun x : ℝ => x + t) A) = (A + (t : ℂ) • 1)⁻¹ := by
@@ -255,190 +261,52 @@ theorem cfc_log_map_starAlgEquiv {m n : Type*} [Fintype m] [DecidableEq m]
     cfc Real.log (φ M) = φ (cfc Real.log M) :=
   cfc_map_starAlgEquiv hM Real.log φ
 
-/-- Matrix inverse square root via the continuous functional calculus for PD matrices. -/
-noncomputable def matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (_hA : A.PosDef) : Matrix m m ℂ :=
-  cfc (fun x => Real.rpow x (-1 / 2 : ℝ)) A
+/-! ### Square roots via `CFC.rpow`
 
-/-- `matrixInvSqrt A = A ^ (-1/2)` via `CFC.rpow`. -/
-lemma matrixInvSqrt_eq_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) :=
-  (CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA.posSemidef)).symm
+Square roots and inverse square roots are Mathlib's real powers `A ^ (1 / 2 : ℝ)` and
+`A ^ (-1 / 2 : ℝ)` (`CFC.rpow`); `CFC.sqrt_eq_rpow` identifies the first with `CFC.sqrt A`. -/
 
-/-- The matrix inverse square root of a PD matrix is Hermitian. -/
-lemma matrixInvSqrt_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    (matrixInvSqrt A hA).IsHermitian := by
-  rw [matrixInvSqrt]
-  exact cfc_isHermitian hA.1 (fun x => Real.rpow x (-1 / 2 : ℝ))
-
-/-- For a positive definite matrix `A`, `A^{-1/2} * A * A^{-1/2} = I`. -/
-lemma matrixInvSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixInvSqrt A hA * A * matrixInvSqrt A hA = 1 := by
-  have hS : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    exact matrixInvSqrt_eq_rpow hA
-  have hAunit : IsUnit A := hA.isUnit
-  have hnonneg : 0 ≤ A := by
-    simpa [Matrix.le_iff] using hA.posSemidef
-  calc
-    matrixInvSqrt A hA * A * matrixInvSqrt A hA =
-        A ^ (-1 / 2 : ℝ) * A * A ^ (-1 / 2 : ℝ) := by
-      simp [hS]
-    _ = A ^ (-1 / 2 : ℝ) * A ^ (1 : ℝ) * A ^ (-1 / 2 : ℝ) := by
-      simp [CFC.rpow_one (a := A) hnonneg]
-    _ = A ^ ((-1 / 2 : ℝ) + (1 : ℝ)) * A ^ (-1 / 2 : ℝ) := by
-      simp [CFC.rpow_add (a := A) (x := (-1 / 2 : ℝ)) (y := (1 : ℝ)) hAunit, mul_assoc]
-    _ = A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) := by
-      ring_nf
-    _ = 1 := by
-      calc
-        A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) =
-            A ^ ((1 / 2 : ℝ) + (-1 / 2 : ℝ)) := by
-          symm
-          simpa using (CFC.rpow_add (a := A) (x := (1 / 2 : ℝ)) (y := (-1 / 2 : ℝ)) hAunit)
-        _ = 1 := by
-          ring_nf
-          simpa using (CFC.rpow_zero (a := A) hnonneg)
-
-/-- Matrix square root via the continuous functional calculus for PSD matrices. -/
-noncomputable def matrixSqrt {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (_hA : A.PosSemidef) : Matrix m m ℂ :=
-  cfc (fun x => Real.rpow x (1 / 2 : ℝ)) A
-
-/-- `matrixSqrt A = A ^ (1/2)` via `CFC.rpow`. -/
-lemma matrixSqrt_eq_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) :
-    matrixSqrt A hA = A ^ (1 / 2 : ℝ) :=
-  (CFC.rpow_eq_cfc_real (a := A) (ha := by rw [Matrix.le_iff, sub_zero]; exact hA)).symm
-
-/-- The matrix square root of a PSD matrix is Hermitian. -/
-lemma matrixSqrt_isHermitian {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosSemidef) :
-    (matrixSqrt A hA).IsHermitian := by
-  rw [matrixSqrt]
-  exact cfc_isHermitian hA.1 (fun x => Real.rpow x (1 / 2 : ℝ))
+/-- The CFC real power of any matrix is positive semidefinite.
+(`CFC.rpow_nonneg` is unconditional: on non-PSD input the CFC returns a junk
+value that is still `0 ≤ ·`.) -/
+lemma posSemidef_rpow {m : Type*} [Fintype m] [DecidableEq m]
+    (A : Matrix m m ℂ) (s : ℝ) : (A ^ s).PosSemidef :=
+  Matrix.nonneg_iff_posSemidef.mp CFC.rpow_nonneg
 
 /-- For a positive semidefinite matrix `A`, `A^{1/2} * A^{1/2} = A`. -/
-lemma matrixSqrt_mul_self_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
+lemma rpow_half_mul_rpow_half {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosSemidef) :
-    matrixSqrt A hA * matrixSqrt A hA = A := by
-  classical
-  -- Use the spectral decomposition and diagonal computation.
-  rw [matrixSqrt, cfc_spectral_eq hA.1 (fun x => Real.rpow x (1 / 2 : ℝ))]
-  set U : Matrix m m ℂ := (hA.1.eigenvectorUnitary : Matrix m m ℂ)
-  set D : Matrix m m ℂ :=
-    diagonal (fun i => (Real.rpow (hA.1.eigenvalues i) (1 / 2 : ℝ) : ℂ))
-  have hU : Uᴴ * U = (1 : Matrix m m ℂ) := by
-    simpa [U, star_eq_conjTranspose] using Unitary.coe_star_mul_self hA.1.eigenvectorUnitary
-  have hD_mul : D * D = diagonal (fun i => (hA.1.eigenvalues i : ℂ)) := by
-    ext i j
-    by_cases h : i = j
-    · subst h
-      have hnonneg : 0 ≤ hA.1.eigenvalues i := hA.eigenvalues_nonneg i
-      simp only [D, mul_diagonal, diagonal_apply_eq]
-      norm_cast
-      simp only [Real.rpow_eq_pow]
-      rw [← Real.sqrt_eq_rpow, Real.mul_self_sqrt hnonneg]
-    · simp only [D, mul_diagonal]
-      simp [h]
-  calc
-    U * D * Uᴴ * (U * D * Uᴴ)
-        = U * (D * D) * Uᴴ := by
-            simp only [Matrix.mul_assoc]
-            congr 1
-            rw [← Matrix.mul_assoc Uᴴ U, hU, Matrix.one_mul]
-    _ = U * diagonal (fun i => (hA.1.eigenvalues i : ℂ)) * Uᴴ := by
-            simp [hD_mul]
-    _ = A := by
-            exact (hA.1.spectral_theorem).symm
-
-/-- For a positive definite matrix `A`, `A^{1/2} * A^{1/2} = A`. -/
-lemma matrixSqrt_mul_self {m : Type*} [Fintype m] [DecidableEq m]
-    {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixSqrt A hA.posSemidef * matrixSqrt A hA.posSemidef = A := by
-  have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    exact matrixSqrt_eq_rpow hA.posSemidef
-  have hAunit : IsUnit A := hA.isUnit
-  calc
-    matrixSqrt A hA.posSemidef * matrixSqrt A hA.posSemidef =
-        A ^ (1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) := by
-      simp [hS]
-    _ = A ^ ((1 / 2 : ℝ) + (1 / 2 : ℝ)) := by
-      symm
-      simpa using (CFC.rpow_add (a := A) (x := (1 / 2 : ℝ)) (y := (1 / 2 : ℝ)) hAunit)
-    _ = A := by
-      have hnonneg : 0 ≤ A := by
-        simpa [Matrix.le_iff] using hA.posSemidef
-      ring_nf
-      simpa using (CFC.rpow_one (a := A) hnonneg)
+    A ^ (1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) = A := by
+  rw [← CFC.sqrt_eq_rpow]
+  exact CFC.sqrt_mul_sqrt_self A hA.nonneg
 
 /-- For a positive definite matrix `A`, `A^{1/2} * A^{-1/2} = I`. -/
-lemma matrixSqrt_mul_matrixInvSqrt {m : Type*} [Fintype m] [DecidableEq m]
+lemma rpow_half_mul_rpow_neg_half {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixSqrt A hA.posSemidef * matrixInvSqrt A hA = 1 := by
-  have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    exact matrixSqrt_eq_rpow hA.posSemidef
-  have hSi : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    exact matrixInvSqrt_eq_rpow hA
-  have hAunit : IsUnit A := hA.isUnit
-  have hnonneg : 0 ≤ A := by
-    simpa [Matrix.le_iff] using hA.posSemidef
-  calc
-    matrixSqrt A hA.posSemidef * matrixInvSqrt A hA =
-        A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) := by
-      simp [hS, hSi]
-    _ = A ^ ((1 / 2 : ℝ) + (-1 / 2 : ℝ)) := by
-      symm
-      simpa using (CFC.rpow_add (a := A) (x := (1 / 2 : ℝ)) (y := (-1 / 2 : ℝ)) hAunit)
-    _ = 1 := by
-      ring_nf
-      simpa using (CFC.rpow_zero (a := A) hnonneg)
+    A ^ (1 / 2 : ℝ) * A ^ (-1 / 2 : ℝ) = 1 := by
+  rw [neg_div]
+  exact CFC.rpow_mul_rpow_neg (1 / 2 : ℝ) hA.isStrictlyPositive
 
 /-- For a positive definite matrix `A`, `A^{-1/2} * A^{1/2} = I`. -/
-lemma matrixInvSqrt_mul_matrixSqrt {m : Type*} [Fintype m] [DecidableEq m]
+lemma rpow_neg_half_mul_rpow_half {m : Type*} [Fintype m] [DecidableEq m]
     {A : Matrix m m ℂ} (hA : A.PosDef) :
-    matrixInvSqrt A hA * matrixSqrt A hA.posSemidef = 1 := by
-  have hS : matrixSqrt A hA.posSemidef = A ^ (1 / 2 : ℝ) := by
-    exact matrixSqrt_eq_rpow hA.posSemidef
-  have hSi : matrixInvSqrt A hA = A ^ (-1 / 2 : ℝ) := by
-    exact matrixInvSqrt_eq_rpow hA
-  have hAunit : IsUnit A := hA.isUnit
-  have hnonneg : 0 ≤ A := by
-    simpa [Matrix.le_iff] using hA.posSemidef
-  calc
-    matrixInvSqrt A hA * matrixSqrt A hA.posSemidef =
-        A ^ (-1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) := by
-      simp [hS, hSi]
-    _ = A ^ ((-1 / 2 : ℝ) + (1 / 2 : ℝ)) := by
-      symm
-      simpa using (CFC.rpow_add (a := A) (x := (-1 / 2 : ℝ)) (y := (1 / 2 : ℝ)) hAunit)
-    _ = 1 := by
-      ring_nf
-      simpa using (CFC.rpow_zero (a := A) hnonneg)
+    A ^ (-1 / 2 : ℝ) * A ^ (1 / 2 : ℝ) = 1 := by
+  rw [neg_div]
+  exact CFC.rpow_neg_mul_rpow (1 / 2 : ℝ) hA.isStrictlyPositive
 
-/-- For commuting PSD L and PD R, matrixInvSqrt R commutes with L.
-This follows from the fact that L commutes with R, and CFC (hence rpow) preserves
-commutativity. Since matrixInvSqrt R = R^{-1/2} (by CFC.rpow), and
-Commute.cfc_real gives that cfc g R commutes with L when L commutes with R,
-the result follows. -/
-lemma matrixInvSqrt_commute_of_commute {n : Type*} [Fintype n] [DecidableEq n]
-    {L R : Matrix n n ℂ} (_hL : L.PosSemidef) (hR : R.PosDef)
-    (hcomm : L * R = R * L) :
-    matrixInvSqrt R hR * L = L * matrixInvSqrt R hR := by
-  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  let : CStarAlgebra (Matrix n n ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
-  have hRinv_eq : matrixInvSqrt R hR = R ^ (-1 / 2 : ℝ) := matrixInvSqrt_eq_rpow hR
-  rw [hRinv_eq]
-  -- R^{-1/2} = cfc(x^{-1/2}, R), so it commutes with L since L commutes with R
-  have hR0 : (0 : Matrix n n ℂ) ≤ R := by simpa [Matrix.le_iff] using hR.posSemidef
-  rw [CFC.rpow_eq_cfc_real (a := R) (ha := hR0)]
-  have hcommute : Commute R L := hcomm.symm
-  exact Commute.cfc_real hcommute _
+/-- For a positive definite matrix `A`, `A^{-1/2} * A * A^{-1/2} = I`. -/
+lemma rpow_neg_half_mul_mul_rpow_neg_half {m : Type*} [Fintype m] [DecidableEq m]
+    {A : Matrix m m ℂ} (hA : A.PosDef) :
+    A ^ (-1 / 2 : ℝ) * A * A ^ (-1 / 2 : ℝ) = 1 := by
+  conv_lhs => enter [1, 2]; rw [← rpow_half_mul_rpow_half hA.posSemidef]
+  rw [← Matrix.mul_assoc, rpow_neg_half_mul_rpow_half hA, Matrix.one_mul,
+    rpow_half_mul_rpow_neg_half hA]
+
+/-- A real power `R ^ s` commutes with every matrix that commutes with `R`. -/
+lemma rpow_commute_of_commute {n : Type*} [Fintype n] [DecidableEq n]
+    {L R : Matrix n n ℂ} (hcomm : Commute R L) (s : ℝ) : Commute (R ^ s) L := by
+  rw [CFC.rpow_def]
+  exact hcomm.cfc_nnreal _
 
 /-- CFC commutes with unitary conjugation using `Unitary.conjStarAlgAut`. -/
 lemma cfc_unitary_conjugation' {m : Type*} [Fintype m] [DecidableEq m]
@@ -556,15 +424,16 @@ lemma cfc_fromBlocks_diag' {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
   rw [h_prod] at h_map
   exact h_map.symm
 
-/-! ### Matrix Convexity Implies Jensen Convexity
+/-! ### Compressions by isometries
 
-The equivalence between Löwner convexity and Löwner convexity (HPJ form) is a
-classical result in matrix analysis. The standard proof uses the block diagonal
-technique: embed the 2-term HPJ problem into a larger space using block matrices.
+For an isometry `V` (`Vᴴ V = 1`) and a matrix `M` commuting with `V Vᴴ`, compression by `V`
+commutes with powers, polynomials and the continuous functional calculus
+(`Matrix.cfc_compression_of_commuting`), so `(V A Vᴴ)ˢ = V Aˢ Vᴴ` for `A ⪰ 0` and `s ≠ 0`
+(`Matrix.rpow_conj_isometry`). At `s = 0` the identity fails for a non-unitary `V`: the left side
+is `1` and the right side the range projection `V Vᴴ`.
+-/
 
-Reference: Hansen-Pedersen (2003), "Jensen's Operator Inequality" -/
-
-section JensenConvexity
+section Compression
 
 -- Helper: V†M^k V = (V†MV)^k when PM = MP and V†V = I
 -- where P = VV†.
@@ -823,14 +692,18 @@ lemma cfc_compression_of_commuting {n m : Type*}
     _ = hVM.cfc f := by rw [← h_cfc_f_eq_p_VM]
     _ = cfc f (Vᴴ * M * V) := by rw [← h_cfc_VM]
 
-/-- For an isometry V (V†V = I), PSD A, and s > 0: (VAV†)^s = V A^s V†.
+/-- For an isometry V (V†V = I), PSD A, and s ≠ 0: (VAV†)^s = V A^s V†.
+
+For `s < 0` both sides are powers on the support: the real power of a matrix follows the
+convention `0 ^ s = 0` for `s ≠ 0`, so `A ^ s` is the generalised (Moore–Penrose type) inverse
+power, and `V A Vᴴ` need not be invertible.
 
 **Proof**: Uses `cfc_compression_of_commuting` to get V†(VAV†)^s V = A^s,
 then shows (VAV†)^s annihilates the complement (1 - VV†) via kernel preservation. -/
 lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
     [DecidableEq n] [DecidableEq m]
     (V : Matrix m n ℂ) (hV : Vᴴ * V = 1)
-    (A : Matrix n n ℂ) (hA : A.PosSemidef) (s : ℝ) (hs : 0 < s) :
+    (A : Matrix n n ℂ) (hA : A.PosSemidef) (s : ℝ) (hs : s ≠ 0) :
     (V * A * Vᴴ) ^ s = V * (A ^ s) * Vᴴ := by
   set M := V * A * Vᴴ with hM_def
   set P := V * Vᴴ with hP_def
@@ -881,12 +754,8 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
     -- M^s = U diag(ev^s) U†
     have hMs_spec : M ^ s = (U : Matrix m m ℂ) *
         diagonal (fun i => ((ev i ^ s : ℝ) : ℂ)) * (U : Matrix m m ℂ)ᴴ := by
-      have hM'_nonneg : (0 : Matrix m m ℂ) ≤
-          (U : Matrix m m ℂ) * diagonal (fun i => (ev i : ℂ)) * (U : Matrix m m ℂ)ᴴ := by
-        rw [← hspec]; simpa [Matrix.le_iff] using hM_psd
       conv_lhs => rw [hspec]
-      rw [rpow_unitary_conj U.2 hs.le hev_nneg_cast hM'_nonneg,
-          diagonal_rpow ev hev_nonneg s hs.le]
+      rw [rpow_unitary_conj U.2 hev_nneg_cast, diagonal_rpow ev hev_nonneg s]
     have hUstarU : (U : Matrix m m ℂ)ᴴ * U = 1 := by
       have := Unitary.coe_star_mul_self U
       simp only [star_eq_conjTranspose] at this
@@ -921,7 +790,7 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
       rcases mul_eq_zero.mp (hDQ_entry i j) with h | h
       · -- ev_i = 0 → ev_i^s = 0^s = 0
         have hevi_zero : ev i = 0 := by exact_mod_cast h
-        simp [hevi_zero, Real.zero_rpow (ne_of_gt hs)]
+        simp [hevi_zero, Real.zero_rpow hs]
       · -- Q_{i,j} = 0
         simp [h]
     -- M^s * (1-P) = U * D_s * U† * (1-P) = U * (D_s * Q) = U * 0 = 0
@@ -960,7 +829,7 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
   -- Conclusion: M^s = M^s * V * V† = V * A^s * V†
   rw [hMsP_eq, show P = V * Vᴴ from hP_def, ← Matrix.mul_assoc, hMsV]
 
-end JensenConvexity
+end Compression
 
 /-! ### Spectral Decomposition Identities -/
 

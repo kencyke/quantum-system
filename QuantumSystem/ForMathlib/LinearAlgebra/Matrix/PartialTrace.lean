@@ -25,10 +25,18 @@ column "kept" indices `l`, `c` are allowed to differ, so the operations apply to
 blocks; they are stated over an arbitrary `AddCommMonoid` so they specialise to scalars in any
 finite-dimensional quantum system.
 
+## Main definitions
+
+* `Matrix.traceRightLinearMap`, `Matrix.traceLeftLinearMap` — `traceRight` and `traceLeft` as
+  linear maps, for use where a bundled `LinearMap` is required (as `Matrix.traceLinearMap` is for
+  `Matrix.trace`). Results about partial traces are stated with `traceRight` and `traceLeft`.
+
 ## Main results
 
 * `Matrix.traceLeft_eq_traceRight_prodComm` — tracing out the left factor equals tracing out
   the right factor after swapping the two factors with `Equiv.prodComm`.
+* `Matrix.traceRight_kronecker`, `Matrix.traceLeft_kronecker` — the partial traces of a Kronecker
+  product, `traceRight (X ⊗ Y) = Tr(Y) • X` and `traceLeft (X ⊗ Y) = Tr(X) • Y`.
 -/
 
 @[expose] public section
@@ -49,10 +57,14 @@ with rows indexed by `n × l` and columns by `n × c`, leaving a matrix on `l ×
 def traceLeft {l c n : Type*} [Fintype n] (M : Matrix (n × l) (n × c) R) : Matrix l c R :=
   Matrix.of fun i j => ∑ k, M (k, i) (k, j)
 
+/-- The entries of the right partial trace:
+`traceRight M i j = Σₖ M (i, k) (j, k)`, summing over the right factor. -/
 @[simp] lemma traceRight_apply {l c n : Type*} [Fintype n] (M : Matrix (l × n) (c × n) R)
     (i : l) (j : c) :
     traceRight M i j = ∑ k, M (i, k) (j, k) := rfl
 
+/-- The entries of the left partial trace:
+`traceLeft M i j = Σₖ M (k, i) (k, j)`, summing over the left factor. -/
 @[simp] lemma traceLeft_apply {l c n : Type*} [Fintype n] (M : Matrix (n × l) (n × c) R)
     (i : l) (j : c) :
     traceLeft M i j = ∑ k, M (k, i) (k, j) := rfl
@@ -77,6 +89,28 @@ def traceLeft {l c n : Type*} [Fintype n] (M : Matrix (n × l) (n × c) R) : Mat
     traceLeft (c • M) = c • traceLeft M := by
   ext i j; simp only [traceLeft_apply, Matrix.smul_apply]; exact Finset.smul_sum.symm
 
+section LinearMap
+
+variable (S : Type*) {α : Type*} [Semiring S] [AddCommMonoid α] [Module S α]
+
+/-- `Matrix.traceRight` as an `S`-linear map. -/
+@[simps]
+def traceRightLinearMap {l c n : Type*} [Fintype n] :
+    Matrix (l × n) (c × n) α →ₗ[S] Matrix l c α where
+  toFun := traceRight
+  map_add' M N := by ext i j; simp [Finset.sum_add_distrib]
+  map_smul' r M := by ext i j; simp [Finset.smul_sum]
+
+/-- `Matrix.traceLeft` as an `S`-linear map. -/
+@[simps]
+def traceLeftLinearMap {l c n : Type*} [Fintype n] :
+    Matrix (n × l) (n × c) α →ₗ[S] Matrix l c α where
+  toFun := traceLeft
+  map_add' M N := by ext i j; simp [Finset.sum_add_distrib]
+  map_smul' r M := by ext i j; simp [Finset.smul_sum]
+
+end LinearMap
+
 /-- Tracing out the **left** factor equals tracing out the **right** factor after swapping the
 two factors with `Equiv.prodComm`. -/
 theorem traceLeft_eq_traceRight_prodComm {l c n : Type*} [Fintype n]
@@ -99,6 +133,31 @@ theorem traceLeft_eq_traceRight_prodComm {l c n : Type*} [Fintype n]
   simp only [Matrix.trace, Matrix.diag_apply, traceLeft_apply]
   rw [Finset.sum_comm]
   exact (Fintype.sum_prod_type fun p : n × l => M p p).symm
+
+section Kronecker
+
+open scoped Kronecker
+
+variable {S : Type*} [CommSemiring S]
+
+/-- Tracing out the right factor of a Kronecker product: `tr₂(X ⊗ Y) = Tr(Y) • X`. -/
+@[simp] lemma traceRight_kronecker {l c n : Type*} [Fintype n] (X : Matrix l c S)
+    (Y : Matrix n n S) :
+    traceRight (X ⊗ₖ Y) = Y.trace • X := by
+  ext i j
+  simp only [traceRight_apply, kroneckerMap_apply, smul_apply, smul_eq_mul, Matrix.trace,
+    diag_apply, ← Finset.mul_sum]
+  exact mul_comm _ _
+
+/-- Tracing out the left factor of a Kronecker product: `tr₁(X ⊗ Y) = Tr(X) • Y`. -/
+@[simp] lemma traceLeft_kronecker {l c n : Type*} [Fintype n] (X : Matrix n n S)
+    (Y : Matrix l c S) :
+    traceLeft (X ⊗ₖ Y) = X.trace • Y := by
+  ext i j
+  simp only [traceLeft_apply, kroneckerMap_apply, smul_apply, smul_eq_mul, Matrix.trace,
+    diag_apply, ← Finset.sum_mul]
+
+end Kronecker
 
 section PosSemidef
 

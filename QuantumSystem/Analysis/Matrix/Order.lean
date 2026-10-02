@@ -5,987 +5,414 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.IntegralRepresentation
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
-public import QuantumSystem.Analysis.Matrix.PosDef
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
+public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 
 /-!
-# Effros's Matrix Convexity Approach
+# Matrix convexity and Jensen's operator inequality for matrices
 
-This file formalises the Effros (2008) machinery used to prove Lieb's joint concavity theorem
-and related operator-convexity results.
-
-## Main definitions
-
-- `Matrix.IsLownerMonotone f`: A ≤ B ⇒ f(A) ≤ f(B) in the Löwner order.
-- `Matrix.IsLownerConvex f`: f(tA + (1-t)B) ≤ t f(A) + (1-t)f(B) in the Löwner order.
-- `Matrix.IsLownerConcave f`: −f is Löwner convex.
-- `Matrix.IsJensenConvex f`: for Löwner convex f and A†A + B†B ≤ I,
-  f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B.
-- `Matrix.IsJensenConcave f`: −f is Jensen convex.
+A real function `f` is matrix convex on `s` (`IsMatrixConvexOn`, Bhatia Chapter V; Effros's
+"matrix convexity") when `A ↦ f(A)` is convex in the Löwner order on the self-adjoint matrices
+with spectrum in `s`, in every size. No continuity of `f` is required; for `f` continuous on `s`,
+matrix convexity is operator convexity (`isOperatorConvexOn_iff_continuousOn_and_isMatrixConvexOn`
+in `QuantumSystem/Analysis/CStarAlgebra/OperatorConvex.lean`). This file proves Jensen's
+operator inequality for matrix convex functions, in the unital form of Hansen–Pedersen 2003 and
+the sub-unital form of Hansen–Pedersen 1982, with square and with rectangular weights, and the
+characterisations of matrix convexity by these inequalities. The common core over a C⋆-algebra,
+`cfc_sum_le_of_convexOn_cstarMatrix`, is in `OperatorConvex.lean`; here the C⋆-algebra structure
+on matrices (the operator norm of scope `Matrix.Norms.L2Operator`) is used only inside proofs, and
+continuity on the finite spectra of matrices is automatic.
 
 ## Main results
 
-- `Matrix.isJensenConvex_of_isLownerConvex`: Löwner convexity with f(0) ≤ 0 implies
-  Jensen (HPJ) convexity. Follows the defect-matrix proof of Hansen-Pedersen 1981.
-- `Matrix.rpow_isLownerConcave`: the power function tˢ (0 < s ≤ 1) is Löwner concave.
-  Proved via the Stieltjes integral representation of xˢ and pointwise resolvent concavity.
-- `Matrix.neg_rpow_isLownerConvex`: −tˢ is Löwner convex.
-- `Matrix.neg_rpow_isJensenConvex`: −tˢ is Jensen convex.
-- `Matrix.hpj_subhomogeneous`: HPJ inequality for A†A + B†B ≤ I.
-- `Matrix.hpj_affine`: HPJ inequality for A†A + B†B = I.
+* `Matrix.PosSemidef.mem_setOf_isSelfAdjoint_spectrum_subset_Ici`,
+  `Matrix.PosDef.mem_setOf_isSelfAdjoint_spectrum_subset_Ioi`: positive semidefinite and positive
+  definite matrices lie in the domains for `[0, ∞)` and `(0, ∞)`.
+* `IsMatrixConvexOn.convexOn`: matrix convexity in every finite index type.
+* `IsMatrixConvexOn.cfc_sum_le` (Hansen–Pedersen 2003; Davis 1957 for a single isometry):
+  `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ` for `Σᵢ Aᵢ† Aᵢ = I`, with rectangular `Aᵢ : Matrix k m ℂ`;
+  `IsMatrixConvexOn.cfc_add_le`: the two-term case `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`.
+* `IsMatrixConvexOn.cfc_sum_le_of_le_one`, `IsMatrixConvexOn.cfc_add_le_of_le_one`
+  (Hansen–Pedersen 1982): the sub-unital forms for `Σᵢ Aᵢ† Aᵢ ≤ I`, on `s ∋ 0` with `f(0) ≤ 0`.
+* `isMatrixConvexOn_iff_cfc_add_le` (Hansen–Pedersen 2003): on an
+  interval, `f` is matrix convex iff the two-term unital Jensen inequality holds in every size.
+* `isMatrixConvexOn_and_map_zero_nonpos_iff` (Hansen–Pedersen 1982): on an interval `s ∋ 0`,
+  `f` is matrix convex with `f(0) ≤ 0` iff the two-term sub-unital Jensen inequality holds.
+* `Matrix.rpow_concavity_le`: operator concavity of `xˢ` in unfolded form.
+* `Matrix.trace_mul_mono_of_posSemidef`: monotonicity of the trace pairing.
+
+## Implementation notes
+
+The square inequalities come from `cfc_sum_le_of_convexOn_cstarMatrix`, applied to the C⋆-algebra
+`Matrix m m ℂ` with the ⋆-isomorphism `CStarMatrix ι ι (Matrix m m ℂ) ≃⋆ₐ Matrix (ι × m) (ι × m) ℂ`
+(`Matrix.compStarAlgEquiv`), where matrix convexity supplies the convexity of `cfc f` and
+finiteness of the spectrum (`Matrix.finite_real_spectrum`) the continuity. The rectangular
+inequalities pad `Aᵢ` to `(0 Aᵢ; 0 0)` in `Matrix (k ⊕ m) (k ⊕ m) ℂ` and read off the lower right
+block.
 
 ## References
 
-* Effros, *A Matrix Convexity Approach to Some Celebrated Quantum Inequalities* (2008)
-* Hansen, Pedersen, *Jensen's operator inequality* (1981)
-* Bhatia, *Matrix Analysis*, Theorem V.2.5 (1997)
+* C. Davis, *A Schwarz inequality for convex operator functions*, Proc. Amer. Math. Soc. 8 (1957),
+  42–44
+* F. Hansen, G. K. Pedersen, *Jensen's inequality for operators and Löwner's theorem*,
+  Math. Ann. 258 (1982), 229–241
+* F. Hansen, G. K. Pedersen, *Jensen's operator inequality*, Bull. London Math. Soc. 35 (2003),
+  553–564
+* R. Bhatia, *Matrix Analysis*, Chapter V (1997)
+* E. G. Effros, *A matrix convexity approach to some celebrated quantum inequalities*, Proc. Natl.
+  Acad. Sci. USA 106 (2009), 1006–1008
 -/
 @[expose] public section
 
+open Real Set
+open scoped MatrixOrder ComplexOrder
+
 namespace Matrix
 
-open Real NNReal MeasureTheory Set
-open scoped MatrixOrder ComplexOrder NNReal
+/-- A positive semidefinite matrix lies in the domain for `s = [0, ∞)`. -/
+lemma PosSemidef.mem_setOf_isSelfAdjoint_spectrum_subset_Ici {m : Type*} [Fintype m]
+    [DecidableEq m] {A : Matrix m m ℂ} (hA : A.PosSemidef) :
+    A ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ Ici 0} := by
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ici]
+  exact hA.nonneg
 
-/-- A real function f is Löwner monotone on positive semidefinite matrices if
-A ≤ B (in the Löwner order) implies f(A) ≤ f(B). -/
-def IsLownerMonotone (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (_hA : A.PosSemidef) (_hB : B.PosSemidef),
-    A ≤ B →
-    let fA := cfc f A
-    let fB := cfc f B
-    fA ≤ fB
+/-- A positive definite matrix lies in the domain for `s = (0, ∞)`. -/
+lemma PosDef.mem_setOf_isSelfAdjoint_spectrum_subset_Ioi {m : Type*} [Fintype m]
+    [DecidableEq m] {A : Matrix m m ℂ} (hA : A.PosDef) :
+    A ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ Ioi 0} := by
+  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  exact hA.isStrictlyPositive
 
-/-- A real function f is Löwner convex if
-f(tA + (1-t)B) ≤ t · f(A) + (1-t) · f(B) in the Löwner order for all t ∈ [0,1]. -/
-def IsLownerConvex (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (_hA : A.PosSemidef) (_hB : B.PosSemidef) (t : ℝ),
-    0 ≤ t → t ≤ 1 →
-    ∀ (_hC : (t • A + (1 - t) • B).IsHermitian),
-    let fA := cfc f A
-    let fB := cfc f B
-    let fC := cfc f (t • A + (1 - t) • B)
-    fC ≤ t • fA + (1 - t) • fB
+/-- A block diagonal matrix `T₁ ⊕ T₂` with blocks in the domain for `s` lies in the domain: its
+spectrum is contained in `spectrum T₁ ∪ spectrum T₂`. -/
+private lemma fromBlocks_mem_setOf_isSelfAdjoint_spectrum_subset {n m : Type*} [Fintype n]
+    [DecidableEq n] [Fintype m] [DecidableEq m] {s : Set ℝ} {T₁ : Matrix n n ℂ} {T₂ : Matrix m m ℂ}
+    (h₁ : T₁ ∈ {A : Matrix n n ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s})
+    (h₂ : T₂ ∈ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s}) :
+    fromBlocks T₁ 0 0 T₂ ∈
+      {A : Matrix (n ⊕ m) (n ⊕ m) ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s} := by
+  refine ⟨IsHermitian.fromBlocks (show T₁.IsHermitian from h₁.1) (by simp)
+    (show T₂.IsHermitian from h₂.1), ?_⟩
+  have h := AlgHom.spectrum_apply_subset (blockDiagEmbed' n m) (T₁, T₂)
+  rw [Prod.spectrum_eq] at h
+  exact (h : spectrum ℝ (fromBlocks T₁ 0 0 T₂) ⊆ _).trans (union_subset h₁.2 h₂.2)
 
-/-- A real function f is Löwner concave if −f is Löwner convex. -/
-def IsLownerConcave (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (_hA : A.PosSemidef) (_hB : B.PosSemidef) (t : ℝ),
-    0 ≤ t → t ≤ 1 →
-    ∀ (_hC : (t • A + (1 - t) • B).IsHermitian),
-    let fA := cfc (fun x => -f x) A
-    let fB := cfc (fun x => -f x) B
-    let fC := cfc (fun x => -f x) (t • A + (1 - t) • B)
-    fC ≤ t • fA + (1 - t) • fB
+/-- The lower right block is monotone in the Löwner order. -/
+private lemma toBlocks₂₂_mono {n m : Type*} [Finite n] [Finite m]
+    {X Y : Matrix (n ⊕ m) (n ⊕ m) ℂ} (h : X ≤ Y) : X.toBlocks₂₂ ≤ Y.toBlocks₂₂ := by
+  have := Fintype.ofFinite n
+  have := Fintype.ofFinite m
+  rw [Matrix.le_iff] at h ⊢
+  convert h.submatrix Sum.inr using 1
+  ext i j
+  rfl
 
-/-- Jensen convexity (HPJ sense): compression inequality for two terms.
-For A†A + B†B ≤ I and PSD T₁, T₂:
-f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B. -/
-def IsJensenConvex (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m]
-    (A B T₁ T₂ : Matrix m m ℂ)
-    (_hT₁ : T₁.PosSemidef) (_hT₂ : T₂.PosSemidef)
-    (_hAB : Aᴴ * A + Bᴴ * B ≤ (1 : Matrix m m ℂ))
-    (_hC : (Aᴴ * T₁ * A + Bᴴ * T₂ * B).IsHermitian),
-    let fT₁ := cfc f T₁
-    let fT₂ := cfc f T₂
-    let fC := cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B)
-    fC ≤ Aᴴ * fT₁ * A + Bᴴ * fT₂ * B
+/-- The block diagonal `cfc f (T₁ ⊕ T₂) = f(T₁) ⊕ f(T₂)` for self-adjoint blocks. -/
+private lemma cfc_fromBlocks_zero_zero {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
+    [DecidableEq m] (f : ℝ → ℝ) {T₁ : Matrix n n ℂ} {T₂ : Matrix m m ℂ} (h₁ : IsSelfAdjoint T₁)
+    (h₂ : IsSelfAdjoint T₂) : cfc f (fromBlocks T₁ 0 0 T₂) = fromBlocks (cfc f T₁) 0 0 (cfc f T₂) :=
+  cfc_fromBlocks_diag' T₁ T₂ h₁ h₂ f ((finite_real_spectrum.union finite_real_spectrum).continuousOn f)
 
-/-- Jensen concavity in the HPJ sense: −f is Jensen convex. -/
-def IsJensenConcave (f : ℝ → ℝ) : Prop :=
-  ∀ (m : Type*) [Fintype m] [DecidableEq m]
-    (A B T₁ T₂ : Matrix m m ℂ)
-    (_hT₁ : T₁.PosSemidef) (_hT₂ : T₂.PosSemidef)
-    (_hAB : Aᴴ * A + Bᴴ * B ≤ (1 : Matrix m m ℂ))
-    (_hC : (Aᴴ * T₁ * A + Bᴴ * T₂ * B).IsHermitian),
-    let fT₁ := cfc (fun x => -f x) T₁
-    let fT₂ := cfc (fun x => -f x) T₂
-    let fC := cfc (fun x => -f x) (Aᴴ * T₁ * A + Bᴴ * T₂ * B)
-    fC ≤ Aᴴ * fT₁ * A + Bᴴ * fT₂ * B
+/-- A sum `Σᵢ Aᵢ† Tᵢ Aᵢ` of compressions of Hermitian matrices is self-adjoint. -/
+private lemma isSelfAdjoint_sum_conjTranspose_mul_mul {ι k m : Type*} [Fintype ι] [Fintype k]
+    (A : ι → Matrix k m ℂ) {T : ι → Matrix k k ℂ} (hT : ∀ i, IsSelfAdjoint (T i)) :
+    IsSelfAdjoint (∑ i, (A i)ᴴ * T i * A i) :=
+  isSelfAdjoint_sum _ fun i _ => isHermitian_conjTranspose_mul_mul (A i) (hT i)
 
-/-- Block diagonal matrix is positive semidefinite if blocks are positive semidefinite. -/
-private lemma fromBlocks_posSemidef_diag {m n : Type*} [Finite m] [Finite n]
-  {A : Matrix m m ℂ} {D : Matrix n n ℂ}
-    (hA : A.PosSemidef) (hD : D.PosSemidef) :
-    (Matrix.fromBlocks A 0 0 D).PosSemidef := by
-  let := Fintype.ofFinite m
-  let := Fintype.ofFinite n
+/-- A positive semidefinite lower right block gives a positive semidefinite block matrix. -/
+private lemma posSemidef_fromBlocks_zero_zero_zero {k m : Type*} [Finite k] [Finite m]
+    {R : Matrix m m ℂ} (hR : R.PosSemidef) :
+    (fromBlocks 0 0 0 R : Matrix (k ⊕ m) (k ⊕ m) ℂ).PosSemidef := by
   classical
-  refine PosSemidef.of_dotProduct_mulVec_nonneg ?_ ?_
-  · -- Hermitian
-    simpa using (Matrix.IsHermitian.fromBlocks (A := A) (B := (0 : Matrix m n ℂ))
-      (C := (0 : Matrix n m ℂ)) (D := D) hA.1 (by simp) hD.1)
-  · intro v
-    -- Split the vector into left/right blocks.
-    let v₁ : m → ℂ := fun i => v (Sum.inl i)
-    let v₂ : n → ℂ := fun i => v (Sum.inr i)
-    have hleft :
-        (star v ⬝ᵥ (Matrix.fromBlocks A 0 0 D *ᵥ v)).re =
-          (star v₁ ⬝ᵥ (A *ᵥ v₁)).re + (star v₂ ⬝ᵥ (D *ᵥ v₂)).re := by
-      -- Compute dotProduct with block structure.
-      classical
-      simp [dotProduct, Fintype.sum_sum_type, fromBlocks_mulVec_inl, fromBlocks_mulVec_inr,
-        v₁, v₂, Finset.sum_add_distrib, Complex.add_re]
-    have hA_nonneg : 0 ≤ (star v₁ ⬝ᵥ (A *ᵥ v₁)).re := hA.re_dotProduct_nonneg v₁
-    have hD_nonneg : 0 ≤ (star v₂ ⬝ᵥ (D *ᵥ v₂)).re := hD.re_dotProduct_nonneg v₂
-    have hsum_nonneg :
-        0 ≤ (star v₁ ⬝ᵥ (A *ᵥ v₁)).re + (star v₂ ⬝ᵥ (D *ᵥ v₂)).re :=
-      add_nonneg hA_nonneg hD_nonneg
-    have hreal : 0 ≤ (star v ⬝ᵥ (Matrix.fromBlocks A 0 0 D *ᵥ v)).re := by
-      simpa [hleft] using hsum_nonneg
-    have him : (star v ⬝ᵥ (Matrix.fromBlocks A 0 0 D *ᵥ v)).im = 0 := by
-      apply IsHermitian.quadForm_im_eq_zero
-      simpa using (Matrix.IsHermitian.fromBlocks (A := A) (B := (0 : Matrix m n ℂ))
-        (C := (0 : Matrix n m ℂ)) (D := D) hA.1 (by simp) hD.1)
-    exact (Complex.nonneg_iff).2 ⟨hreal, him.symm⟩
+  have := Fintype.ofFinite k
+  have := Fintype.ofFinite m
+  have h := hR.conjTranspose_mul_mul_same (fromCols (0 : Matrix m k ℂ) (1 : Matrix m m ℂ))
+  have heq : (fromCols (0 : Matrix m k ℂ) (1 : Matrix m m ℂ))ᴴ * R * fromCols (0 : Matrix m k ℂ) (1 : Matrix m m ℂ) =
+      fromBlocks 0 0 0 R := by
+    ext (a | a) (b | b) <;> simp [fromCols, Matrix.mul_apply, Matrix.one_apply]
+  rwa [heq] at h
 
-/-- Fundamental compression inequality for Löwner convex functions.
-For Löwner convex f with f(0) ≤ 0, and V with V†V ≤ I (contraction),
-the compression satisfies f(V†TV) ≤ V†f(T)V.
+/-- Compressing a matrix by the padded weight `(0 A; 0 0)` picks out `A† T₁₁ A` in the lower right
+block. -/
+private lemma fromBlocks_zero_conjTranspose_mul_mul {k m : Type*} [Fintype k] [Fintype m]
+    (A : Matrix k m ℂ) (T : Matrix (k ⊕ m) (k ⊕ m) ℂ) :
+    (fromBlocks 0 A 0 0 : Matrix (k ⊕ m) (k ⊕ m) ℂ)ᴴ * T * fromBlocks 0 A 0 0 =
+      fromBlocks 0 0 0 (Aᴴ * T.toBlocks₁₁ * A) := by
+  rw [← fromBlocks_toBlocks T, fromBlocks_conjTranspose]
+  simp [fromBlocks_multiply]
 
-The proof uses the defect technique: let D = √(I - V†V), W = [V; D], T' = T ⊕ 0.
-Then W is an isometry (W†W = I), and:
-- W†T'W = V†TV (the compression)
-- W†f(T')W = V†f(T)V + f(0)·D†D = V†f(T)V + f(0)·(I - V†V)
+/-- A sum of lower right blocks is the lower right block of the sum. -/
+private lemma sum_fromBlocks_zero_zero_zero {ι k m : Type*} [Fintype ι] (X : ι → Matrix m m ℂ) :
+    ∑ i, (fromBlocks 0 0 0 (X i) : Matrix (k ⊕ m) (k ⊕ m) ℂ) = fromBlocks 0 0 0 (∑ i, X i) := by
+  ext (a | a) (b | b) <;> simp [Matrix.sum_apply]
 
-The matrix Jensen inequality gives f(W†T'W) ≤ W†f(T')W for Löwner convex f.
-Since f(0) ≤ 0 and I - V†V ≥ 0, we have f(0)·(I - V†V) ≤ 0.
-Thus f(V†TV) ≤ V†f(T)V + f(0)·(I - V†V) ≤ V†f(T)V. -/
-lemma lownerConvex_compression_le.{v} {n : Type v} {m : Type v} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f) (hf0 : f 0 ≤ 0)
-    (V : Matrix n m ℂ) (hVV : Vᴴ * V ≤ 1)
-    (T : Matrix n n ℂ) (hT : T.PosSemidef) :
-    cfc f (Vᴴ * T * V) ≤ Vᴴ * cfc f T * V := by
-  -- The proof uses the defect technique and the block diagonal CFC formula.
+end Matrix
+
+open Matrix
+
+section Square
+
+variable {s : Set ℝ} {f : ℝ → ℝ}
+
+/-- A matrix convex function is convex on the matrices of every finite index type, through
+`Matrix.reindexStarAlgEquiv`. -/
+theorem IsMatrixConvexOn.convexOn (hf : IsMatrixConvexOn s f) (m : Type*) [Fintype m]
+    [DecidableEq m] :
+    ConvexOn ℝ {A : Matrix m m ℂ | IsSelfAdjoint A ∧ spectrum ℝ A ⊆ s} (cfc f) := by
+  open scoped Matrix.Norms.L2Operator in
+  exact ConvexOn.cfc_of_injective (Matrix.reindexStarAlgEquiv (R := ℂ) (Fintype.equivFin m))
+    (EquivLike.injective _) (hf _)
+
+/-- Square case of `IsMatrixConvexOn.cfc_sum_le`, for `Aᵢ : Matrix m m ℂ`: Jensen's inequality in
+`CStarMatrix ι ι (Matrix m m ℂ)` (`cfc_sum_le_of_convexOn_cstarMatrix`). No continuity of `f` is
+needed: the spectra are finite. -/
+private theorem IsMatrixConvexOn.cfc_sum_le_square (hf : IsMatrixConvexOn s f) {ι m : Type*}
+    [Fintype ι] [Fintype m] [DecidableEq m] (A : ι → Matrix m m ℂ) (T : ι → Matrix m m ℂ)
+    (hT : ∀ i, T i ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hA : ∑ i, (A i)ᴴ * A i = 1) :
+    cfc f (∑ i, (A i)ᴴ * T i * A i) ≤ ∑ i, (A i)ᴴ * cfc f (T i) * A i := by
   classical
-  -- Step 1: Setup the defect matrix D = √(I - V†V)
-  have hΔ : ((1 : Matrix m m ℂ) - Vᴴ * V).PosSemidef := by
-    simpa [Matrix.le_iff] using hVV
-  let D := matrixSqrt ((1 : Matrix m m ℂ) - Vᴴ * V) hΔ
-  have hD_herm : D.IsHermitian := matrixSqrt_isHermitian hΔ
-  have hDD : D * D = (1 : Matrix m m ℂ) - Vᴴ * V := matrixSqrt_mul_self_posSemidef hΔ
-  -- D†D = DD since D is Hermitian (D† = D)
-  have hDhD : Dᴴ * D = (1 : Matrix m m ℂ) - Vᴴ * V := by
-    rw [hD_herm.eq, hDD]
-  -- V†V + D†D = I
-  have hsum : Vᴴ * V + Dᴴ * D = (1 : Matrix m m ℂ) := by
-    rw [hDhD]; simp
-  -- Step 2: Create the extended block diagonal matrix T' = T ⊕ 0
-  let T' := Matrix.fromBlocks T 0 0 (0 : Matrix m m ℂ)
-  have hT'_psd : T'.PosSemidef := by
-    have h0_psd : (0 : Matrix m m ℂ).PosSemidef := Matrix.PosSemidef.zero
-    exact fromBlocks_posSemidef_diag hT h0_psd
-  have hT'_herm : T'.IsHermitian := hT'_psd.1
-  -- Step 3: Create the extended contraction W = [V; D] : (n ⊕ m) → m
-  -- Here V : n → m and D : m → m, stacked vertically
-  let W : Matrix (n ⊕ m) m ℂ := Matrix.fromRows V D
-  -- W†W = V†V + D†D = I (isometry property)
-  have hWW : Wᴴ * W = (1 : Matrix m m ℂ) := by
-    simp only [W, fromRows_conjTranspose_mul_self, hsum]
-  -- Step 4: Compute W†T'W = V†TV
-  have hWTW : Wᴴ * T' * W = Vᴴ * T * V := by
-    have h := fromRows_compress_blockDiag V D T (0 : Matrix m m ℂ)
-    simp only [W, T'] at h ⊢
-    rw [h]
-    simp only [Matrix.mul_zero, Matrix.zero_mul, add_zero]
-  -- Step 6-7: W†f(T')W = V†f(T)V + f(0)·D†D
-  have hWfTW : Wᴴ * cfc f T' * W =
-      Vᴴ * cfc f T * V + (f 0 : ℂ) • (Dᴴ * D) := by
-    have hT_sa : IsSelfAdjoint T := by
-      exact hT.1.isSelfAdjoint
-    have h0_sa : IsSelfAdjoint (0 : Matrix m m ℂ) := by
-      simp [IsSelfAdjoint]
-    have hfinite : (spectrum ℝ T ∪ spectrum ℝ (0 : Matrix m m ℂ)).Finite :=
-      (Matrix.finite_real_spectrum (A := T)).union
-        (Matrix.finite_real_spectrum (A := (0 : Matrix m m ℂ)))
-    have hcont : ContinuousOn f (spectrum ℝ T ∪ spectrum ℝ (0 : Matrix m m ℂ)) :=
-      Set.Finite.continuousOn hfinite f
-    have hfT' : cfc f T' = Matrix.fromBlocks (cfc f T) 0 0 (cfc f (0 : Matrix m m ℂ)) :=
-      cfc_fromBlocks_diag' T (0 : Matrix m m ℂ) hT_sa h0_sa f hcont
-    have hf0_mat : cfc f (0 : Matrix m m ℂ) = (f 0 : ℂ) • (1 : Matrix m m ℂ) := by
-      rw [cfc_apply_zero]
-      simp only [Algebra.algebraMap_eq_smul_one]
-      ext i j
-      simp only [smul_apply, smul_eq_mul, one_apply, Complex.real_smul]
-    have hfT'_expanded : cfc f T' = Matrix.fromBlocks (cfc f T) 0 0 ((f 0 : ℂ) • 1) := by
-      rw [hfT', hf0_mat]
-    rw [hfT'_expanded]
-    have h := fromRows_compress_blockDiag V D (cfc f T) ((f 0 : ℂ) • (1 : Matrix m m ℂ))
-    simp only [W] at h ⊢
-    rw [h]
-    simp only [Matrix.mul_smul, Matrix.smul_mul, Matrix.mul_one]
-  -- Step 8: Apply the matrix Jensen inequality
-  have hVTV_herm := isHermitian_conjTranspose_mul_mul (B := V) (A := T) hT.1
-  have hDD_psd : (Dᴴ * D).PosSemidef := by
-    rw [hDhD]; exact hΔ
-  have hf0_term_le : (f 0 : ℂ) • (Dᴴ * D) ≤ (0 : Matrix m m ℂ) := by
-    have h := Matrix.PosSemidef.smul_nonpos hf0 hDD_psd
-    have heq : (f 0 : ℂ) • (Dᴴ * D) = (f 0 : ℝ) • (Dᴴ * D) := by
-      ext i j; simp only [smul_apply, Complex.real_smul, smul_eq_mul]
-    rw [heq]
+  open scoped Matrix.Norms.L2Operator in
+  exact cfc_sum_le_of_convexOn_cstarMatrix (A := Matrix m m ℂ) (B := Matrix (ι × m) (ι × m) ℂ)
+    (CStarMatrix.ofMatrixStarAlgEquiv.symm.trans (Matrix.compStarAlgEquiv ι m ℂ ℂ))
+    (EquivLike.injective _) (hf.convexOn (ι × m)) (fun _ _ _ => finite_real_spectrum.continuousOn f) A T hT hA
+
+/-- **Jensen's operator inequality for matrices**, two-term case (Hansen–Pedersen 2003): for `f`
+matrix convex on `s`, `A†A + B†B = I` and self-adjoint `T₁, T₂` with spectrum in `s`,
+`f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`. -/
+theorem IsMatrixConvexOn.cfc_add_le (hf : IsMatrixConvexOn s f)
+    {m : Type*} [Fintype m] [DecidableEq m] (A B T₁ T₂ : Matrix m m ℂ)
+    (hT₁ : T₁ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hT₂ : T₂ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hAB : Aᴴ * A + Bᴴ * B = 1) :
+    cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
+  simpa [Fin.sum_univ_two] using hf.cfc_sum_le_square ![A, B] ![T₁, T₂]
+    (Fin.forall_fin_two.2 ⟨hT₁, hT₂⟩) (by simpa [Fin.sum_univ_two] using hAB)
+
+/-- Square case of `IsMatrixConvexOn.cfc_sum_le_of_le_one`, for `Aᵢ : Matrix m m ℂ`
+(`cfc_sum_le_of_le_one_of_forall`). -/
+private theorem IsMatrixConvexOn.cfc_sum_le_of_le_one_square (hf : IsMatrixConvexOn s f)
+    (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {ι m : Type*} [Fintype ι] [Fintype m] [DecidableEq m]
+    (A : ι → Matrix m m ℂ) (T : ι → Matrix m m ℂ)
+    (hT : ∀ i, T i ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hA : ∑ i, (A i)ᴴ * A i ≤ 1) :
+    cfc f (∑ i, (A i)ᴴ * T i * A i) ≤ ∑ i, (A i)ᴴ * cfc f (T i) * A i := by
+  open scoped Matrix.Norms.L2Operator in
+  exact cfc_sum_le_of_le_one_of_forall (A := Matrix m m ℂ) h0 hf0
+    (fun a x hx ha => hf.cfc_sum_le_square a x hx ha) A T hT hA
+
+/-- **Jensen's operator inequality for matrices, sub-unital two-term form** (Hansen–Pedersen
+1982): for `f` matrix convex on `s ∋ 0` with `f(0) ≤ 0`, `A†A + B†B ≤ I` and self-adjoint `T₁, T₂`
+with spectrum in `s`, `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`. -/
+theorem IsMatrixConvexOn.cfc_add_le_of_le_one (hf : IsMatrixConvexOn s f)
+    (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {m : Type*} [Fintype m] [DecidableEq m]
+    (A B T₁ T₂ : Matrix m m ℂ)
+    (hT₁ : T₁ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hT₂ : T₂ ∈ {X : Matrix m m ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hAB : Aᴴ * A + Bᴴ * B ≤ 1) :
+    cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
+  simpa [Fin.sum_univ_two] using hf.cfc_sum_le_of_le_one_square h0 hf0 ![A, B] ![T₁, T₂]
+    (Fin.forall_fin_two.2 ⟨hT₁, hT₂⟩) (by simpa [Fin.sum_univ_two] using hAB)
+
+/-- `√c • 1` conjugates `T` to `c • T`. -/
+private lemma conjTranspose_sqrt_smul_one_mul_mul {m : Type*} [Fintype m] [DecidableEq m] {c : ℝ}
+    (hc : 0 ≤ c) (T : Matrix m m ℂ) :
+    ((√c : ℝ) • (1 : Matrix m m ℂ))ᴴ * T * ((√c : ℝ) • 1) = c • T := by
+  simp only [conjTranspose_smul, conjTranspose_one, star_trivial, smul_mul_assoc, mul_smul_comm,
+    one_mul, mul_one, smul_smul, Real.mul_self_sqrt hc]
+
+/-- **Hansen–Pedersen** (2003, Theorem 2.1 (i)⟺(ii) with `n = 2`) for matrices: on an interval
+`s`, `f` is matrix convex iff the two-term Jensen inequality
+`f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B` holds in every size for all `A†A + B†B = I` and
+self-adjoint `T₁, T₂` with spectrum in `s`. The
+converse takes the scalars `A = √λ`, `B = √(1 - λ)`. No continuity of `f` and no condition on
+`f(0)` is needed; compare `isMatrixConvexOn_and_map_zero_nonpos_iff`. -/
+theorem isMatrixConvexOn_iff_cfc_add_le (hs : s.OrdConnected) :
+    IsMatrixConvexOn s f ↔ ∀ (n : ℕ) (A B T₁ T₂ : Matrix (Fin n) (Fin n) ℂ),
+      T₁ ∈ {X : Matrix (Fin n) (Fin n) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} →
+      T₂ ∈ {X : Matrix (Fin n) (Fin n) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} →
+      Aᴴ * A + Bᴴ * B = 1 →
+      cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
+  refine ⟨fun hf n A B T₁ T₂ hT₁ hT₂ hAB =>
+    hf.cfc_add_le A B T₁ T₂ hT₁ hT₂ hAB, fun hJ n =>
+    ⟨hs.convex_setOf_isSelfAdjoint_spectrum_subset, fun T₁ hT₁ T₂ hT₂ a b ha hb hab => ?_⟩⟩
+  have key := hJ n ((√a : ℝ) • 1) ((√b : ℝ) • 1) T₁ T₂ hT₁ hT₂ (by
+    rw [← Matrix.mul_one ((√a : ℝ) • (1 : Matrix (Fin n) (Fin n) ℂ))ᴴ,
+      conjTranspose_sqrt_smul_one_mul_mul ha,
+      ← Matrix.mul_one ((√b : ℝ) • (1 : Matrix (Fin n) (Fin n) ℂ))ᴴ,
+      conjTranspose_sqrt_smul_one_mul_mul hb, ← add_smul, hab, one_smul])
+  simpa only [conjTranspose_sqrt_smul_one_mul_mul ha, conjTranspose_sqrt_smul_one_mul_mul hb]
+    using key
+
+/-- **Hansen–Pedersen** (1982, Theorem 2.1 (i)⟺(iii), stated there on `[0, α)`) for matrices: on
+an interval `s ∋ 0`, `f` is matrix convex with `f(0) ≤ 0` iff the sub-unital Jensen inequality
+`f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B` holds in every size for all `A†A + B†B ≤ I` and
+self-adjoint `T₁, T₂` with spectrum in `s`. The converse takes the scalars `A = √λ`,
+`B = √(1 - λ)` for convexity and `A = B = 0` in size one for `f(0) ≤ 0`. The unital form
+`isMatrixConvexOn_iff_cfc_add_le` characterises matrix convexity alone; the
+sub-unital form is specific to intervals containing `0`, since `A† T A` has spectrum in the convex
+hull of `spectrum T ∪ {0}`. -/
+theorem isMatrixConvexOn_and_map_zero_nonpos_iff (hs : s.OrdConnected) (h0 : (0 : ℝ) ∈ s) :
+    IsMatrixConvexOn s f ∧ f 0 ≤ 0 ↔ ∀ (n : ℕ) (A B T₁ T₂ : Matrix (Fin n) (Fin n) ℂ),
+      T₁ ∈ {X : Matrix (Fin n) (Fin n) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} →
+      T₂ ∈ {X : Matrix (Fin n) (Fin n) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} →
+      Aᴴ * A + Bᴴ * B ≤ 1 →
+      cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B) ≤ Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
+  refine ⟨fun ⟨hf, hf0⟩ n A B T₁ T₂ hT₁ hT₂ hAB =>
+    hf.cfc_add_le_of_le_one h0 hf0 A B T₁ T₂ hT₁ hT₂ hAB, fun hJ => ⟨?_, ?_⟩⟩
+  · exact (isMatrixConvexOn_iff_cfc_add_le hs).2
+      fun n A B T₁ T₂ hT₁ hT₂ hAB => hJ n A B T₁ T₂ hT₁ hT₂ hAB.le
+  · have h0mem : (0 : Matrix (Fin 1) (Fin 1) ℂ) ∈
+        {X : Matrix (Fin 1) (Fin 1) ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} :=
+      zero_mem_setOf_isSelfAdjoint_spectrum_subset h0
+    have h := hJ 1 0 0 0 0 h0mem h0mem (by simp)
+    simp only [conjTranspose_zero, Matrix.mul_zero, add_zero, cfc_apply_zero] at h
+    rw [← map_zero (algebraMap ℝ (Matrix (Fin 1) (Fin 1) ℂ))] at h
+    exact (le_algebraMap_iff_spectrum_le (IsSelfAdjoint.algebraMap _ (.all (f 0)))).1 h (f 0)
+      (by rw [spectrum.scalar_eq]; rfl)
+
+end Square
+
+/-- **Jensen's operator inequality for matrices** (Hansen–Pedersen 2003, Theorem 2.1; Davis 1957
+for one isometry): for `f` matrix convex on `s`, a finite family `Aᵢ : Matrix k m ℂ` with
+`Σᵢ Aᵢ† Aᵢ = I` and self-adjoint `Tᵢ` with spectrum in `s`, `f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ`.
+The weights may be rectangular; the square case `k = m` is the matrix form of
+`IsOperatorConvexOn.cfc_sum_le`. No continuity of `f` is needed: the spectra are finite. -/
+theorem IsMatrixConvexOn.cfc_sum_le {s : Set ℝ} {f : ℝ → ℝ}
+    (hf : IsMatrixConvexOn s f) {ι k m : Type*} [Fintype ι] [Fintype k] [DecidableEq k]
+    [Fintype m] [DecidableEq m] (A : ι → Matrix k m ℂ) (T : ι → Matrix k k ℂ)
+    (hT : ∀ i, T i ∈ {X : Matrix k k ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hA : ∑ i, (A i)ᴴ * A i = 1) :
+    cfc f (∑ i, (A i)ᴴ * T i * A i) ≤ ∑ i, (A i)ᴴ * cfc f (T i) * A i := by
+  classical
+  rcases isEmpty_or_nonempty m with hm | hm
+  · exact le_of_eq (Subsingleton.elim _ _)
+  obtain ⟨i₁⟩ : Nonempty ι := by
+    by_contra h
+    rw [not_nonempty_iff] at h
+    simp at hA
+  have hk : Nonempty k := by
+    by_contra h
+    rw [not_nonempty_iff] at h
+    simp [Subsingleton.elim (A _) 0] at hA
+  obtain ⟨t, ht⟩ := ContinuousFunctionalCalculus.spectrum_nonempty (R := ℝ) (T i₁) (hT i₁).1
+  have hts := (hT i₁).2 ht
+  have hck := algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset (A := Matrix k k ℂ) hts
+  have hcm := algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset (A := Matrix m m ℂ) hts
+  let c₁ : Matrix k k ℂ := algebraMap ℝ _ t
+  let c₂ : Matrix m m ℂ := algebraMap ℝ _ t
+  let W : Option ι → Matrix (k ⊕ m) (k ⊕ m) ℂ :=
+    fun o => o.elim (fromBlocks 1 0 0 0) fun i => fromBlocks 0 (A i) 0 0
+  let X : Option ι → Matrix (k ⊕ m) (k ⊕ m) ℂ :=
+    fun o => o.elim (fromBlocks c₁ 0 0 c₂) fun i => fromBlocks (T i) 0 0 c₂
+  have hX : ∀ o, X o ∈ {Y : Matrix (k ⊕ m) (k ⊕ m) ℂ | IsSelfAdjoint Y ∧ spectrum ℝ Y ⊆ s} :=
+    fun o => match o with
+      | none => fromBlocks_mem_setOf_isSelfAdjoint_spectrum_subset hck hcm
+      | some i => fromBlocks_mem_setOf_isSelfAdjoint_spectrum_subset (hT i) hcm
+  have hP (Y : Matrix (k ⊕ m) (k ⊕ m) ℂ) :
+      (fromBlocks 1 0 0 0 : Matrix (k ⊕ m) (k ⊕ m) ℂ)ᴴ * Y * fromBlocks 1 0 0 0 =
+        fromBlocks Y.toBlocks₁₁ 0 0 0 := by
+    rw [← fromBlocks_toBlocks Y, fromBlocks_conjTranspose]
+    simp [fromBlocks_multiply]
+  have hsum (Y : Option ι → Matrix (k ⊕ m) (k ⊕ m) ℂ) :
+      ∑ o, (W o)ᴴ * Y o * W o =
+        fromBlocks (Y none).toBlocks₁₁ 0 0 (∑ i, (A i)ᴴ * (Y (some i)).toBlocks₁₁ * A i) := by
+    rw [Fintype.sum_option]
+    simp only [W, Option.elim_none, Option.elim_some, hP, fromBlocks_zero_conjTranspose_mul_mul,
+      sum_fromBlocks_zero_zero_zero, fromBlocks_add, add_zero, zero_add]
+  have h1 : (1 : Matrix (k ⊕ m) (k ⊕ m) ℂ).toBlocks₁₁ = 1 := by
+    rw [← fromBlocks_one, toBlocks_fromBlocks₁₁]
+  have hW : ∑ o, (W o)ᴴ * W o = 1 := by
+    have h := hsum 1
+    simp only [Pi.one_apply, Matrix.mul_one, h1, hA, fromBlocks_one] at h
     exact h
-  have hWfTW' : Wᴴ * cfc f T' * W = Vᴴ * cfc f T * V + (f 0 : ℂ) • (Dᴴ * D) := hWfTW
-  have h_jensen : cfc f (Wᴴ * T' * W) ≤ Wᴴ * cfc f T' * W := by
-    set P : Matrix (n ⊕ m) (n ⊕ m) ℂ := W * Wᴴ with hP_def
-    have hP_sq : P * P = P := by
-      change W * Wᴴ * (W * Wᴴ) = W * Wᴴ
-      rw [Matrix.mul_assoc W Wᴴ (W * Wᴴ),
-          show Wᴴ * (W * Wᴴ) = (Wᴴ * W) * Wᴴ from (Matrix.mul_assoc _ _ _).symm,
-          hWW, Matrix.one_mul]
-    have hP_herm : Pᴴ = P := by
-      change (W * Wᴴ)ᴴ = W * Wᴴ
-      rw [conjTranspose_mul, conjTranspose_conjTranspose]
-    set S : Matrix (n ⊕ m) (n ⊕ m) ℂ := (2 : ℝ) • P - 1 with hS_def
-    have h2P : (2 : ℝ) • P = P + P := two_smul ℝ P
-    have hS_herm : Sᴴ = S := by
-      rw [hS_def, h2P, conjTranspose_sub, conjTranspose_one, conjTranspose_add,
-          hP_herm]
-    have hS_sq : S * S = 1 := by
-      rw [hS_def, h2P]
-      have hPstep : P * (P + P - 1) = P := by
-        rw [mul_sub, mul_add, hP_sq, mul_one, add_sub_cancel_right]
-      rw [sub_mul, one_mul, add_mul, hPstep]
-      abel
-    have hS_star_eq : star S = S := by
-      rw [star_eq_conjTranspose, hS_herm]
-    have hS_mem_unitary : S ∈ unitary (Matrix (n ⊕ m) (n ⊕ m) ℂ) := by
-      rw [Unitary.mem_iff]; exact ⟨by rw [hS_star_eq, hS_sq], by rw [hS_star_eq, hS_sq]⟩
-    let S_unit : unitary (Matrix (n ⊕ m) (n ⊕ m) ℂ) := ⟨S, hS_mem_unitary⟩
-    have hPW : P * W = W := by
-      change W * Wᴴ * W = W
-      rw [Matrix.mul_assoc, hWW, Matrix.mul_one]
-    have hSP : S * P = P := by
-      rw [hS_def, h2P, sub_mul, one_mul, add_mul, hP_sq, add_sub_cancel_right]
-    have hPS : P * S = P := by
-      rw [hS_def, h2P, mul_sub, mul_one, mul_add, hP_sq, add_sub_cancel_right]
-    have hSW : S * W = W := by
-      have h : (S * P) * W = P * W := by rw [hSP]
-      rw [Matrix.mul_assoc] at h; rwa [hPW] at h
-    have hWhS : Wᴴ * S = Wᴴ := by
-      have h := congr_arg Matrix.conjTranspose hSW
-      rwa [conjTranspose_mul, hS_herm] at h
-    have hST'S_psd : (S * T' * S).PosSemidef := by
-      have h := hT'_psd.conjTranspose_mul_mul_same S
-      rwa [hS_herm] at h
-    have hST'S_herm : (S * T' * S).IsHermitian := hST'S_psd.1
-    have hM_herm : ((1/2 : ℝ) • T' + (1 - 1/2 : ℝ) • (S * T' * S)).IsHermitian :=
-      IsHermitian.add_isHermitian (IsHermitian.smul_real hT'_herm (1/2))
-        (IsHermitian.smul_real hST'S_herm (1 - 1/2))
-    set M : Matrix (n ⊕ m) (n ⊕ m) ℂ := (1/2 : ℝ) • T' + (1/2 : ℝ) • (S * T' * S) with hM_def
-    have hM_eq : M = (1/2 : ℝ) • T' + (1 - 1/2 : ℝ) • (S * T' * S) := by
-      simp only [hM_def]; congr 1; congr 1; norm_num
-    have hM_herm' : M.IsHermitian := by rw [hM_eq]; exact hM_herm
-    have hconv_app := hconv (n ⊕ m) T' (S * T' * S) hT'_psd hST'S_psd (1/2)
-      (by norm_num) (by norm_num) hM_herm
-    rw [← hM_eq] at hconv_app
-    have hT'_sa : IsSelfAdjoint T' := by
-      rwa [IsSelfAdjoint, star_eq_conjTranspose]
-    have hcfc_conj : S * cfc f T' * S = cfc f (S * T' * S) := by
-      have h : S * cfc f T' * star S = cfc f (S * T' * star S) :=
-        cfc_unitary_conjugation' S_unit T' hT'_sa f
-          (Set.Finite.continuousOn (Matrix.finite_real_spectrum) f)
-      rwa [star_eq_conjTranspose, hS_herm] at h
-    have hM_comm : M * (W * Wᴴ) = (W * Wᴴ) * M := by
-      rw [← hP_def]
-      suffices h : M * P = P * M from h
-      rw [hM_def, Matrix.add_mul, Matrix.mul_add, smul_mul_assoc, smul_mul_assoc,
-          mul_smul_comm, mul_smul_comm,
-          show S * T' * S * P = S * T' * (S * P) from by
-            simp only [Matrix.mul_assoc], hSP,
-          show P * (S * T' * S) = (P * S) * T' * S from by
-            simp only [Matrix.mul_assoc], hPS]
-      have hST'P : S * T' * P = P * T' * P + P * T' * P - T' * P := by
-        rw [hS_def, h2P, sub_mul, one_mul, add_mul, sub_mul, add_mul]
-      have hPT'S : P * T' * S = P * T' * P + P * T' * P - P * T' := by
-        rw [hS_def, h2P, mul_sub, mul_one, mul_add]
-      rw [hST'P, hPT'S]
-      module
-    have hWMW : Wᴴ * M * W = Wᴴ * T' * W := by
-      rw [hM_def, Matrix.mul_add, Matrix.add_mul,
-          show Wᴴ * (1/2 : ℝ) • T' = (1/2 : ℝ) • (Wᴴ * T') from Matrix.mul_smul _ _ _,
-          show Wᴴ * (1/2 : ℝ) • (S * T' * S) = (1/2 : ℝ) • (Wᴴ * (S * T' * S))
-            from Matrix.mul_smul _ _ _,
-          show (1/2 : ℝ) • (Wᴴ * T') * W = (1/2 : ℝ) • (Wᴴ * T' * W)
-            from Matrix.smul_mul _ _ _,
-          show (1/2 : ℝ) • (Wᴴ * (S * T' * S)) * W = (1/2 : ℝ) • (Wᴴ * (S * T' * S) * W)
-            from Matrix.smul_mul _ _ _,
-          show Wᴴ * (S * T' * S) * W = (Wᴴ * S) * T' * (S * W) from by
-            simp only [Matrix.mul_assoc],
-          hWhS, hSW]
-      module
-    have hWMW_herm : (Wᴴ * M * W).IsHermitian :=
-      isHermitian_conjTranspose_mul_mul (B := W) (A := M) hM_herm'
-    have h_comp := cfc_compression_of_commuting W M hM_herm' hWW hM_comm f hWMW_herm
-    rw [hWMW] at h_comp
-    have h_compress := compression_le hconv_app W
-    rw [h_comp] at h_compress
-    have h_half : (1 - 1 / 2 : ℝ) = (1 / 2 : ℝ) := by norm_num
-    calc cfc f (Wᴴ * T' * W)
-        ≤ Wᴴ * ((1 / 2 : ℝ) • cfc f T' + (1 - 1 / 2 : ℝ) • cfc f (S * T' * S)) * W :=
-          h_compress
-      _ = Wᴴ * cfc f T' * W := by
-          rw [h_half, ← hcfc_conj, Matrix.mul_add, Matrix.add_mul,
-              show Wᴴ * (1/2 : ℝ) • cfc f T' = (1/2 : ℝ) • (Wᴴ * cfc f T')
-                from Matrix.mul_smul _ _ _,
-              show Wᴴ * (1/2 : ℝ) • (S * cfc f T' * S) =
-                  (1/2 : ℝ) • (Wᴴ * (S * cfc f T' * S))
-                from Matrix.mul_smul _ _ _,
-              show (1/2 : ℝ) • (Wᴴ * cfc f T') * W = (1/2 : ℝ) • (Wᴴ * cfc f T' * W)
-                from Matrix.smul_mul _ _ _,
-              show (1/2 : ℝ) • (Wᴴ * (S * cfc f T' * S)) * W =
-                  (1/2 : ℝ) • (Wᴴ * (S * cfc f T' * S) * W)
-                from Matrix.smul_mul _ _ _,
-              show Wᴴ * (S * cfc f T' * S) * W = (Wᴴ * S) * cfc f T' * (S * W) from by
-                simp only [Matrix.mul_assoc],
-              hWhS, hSW]
-          module
-  rw [hWTW] at h_jensen
-  rw [hWfTW'] at h_jensen
-  calc cfc f (Vᴴ * T * V)
-      ≤ Vᴴ * cfc f T * V + (f 0 : ℂ) • (Dᴴ * D) := h_jensen
-    _ ≤ Vᴴ * cfc f T * V + 0 := add_le_add (le_refl _) hf0_term_le
-    _ = Vᴴ * cfc f T * V := by simp
+  have h := hf.cfc_sum_le_square W X hX hW
+  have hc₁ : (cfc f (fromBlocks c₁ 0 0 c₂)).toBlocks₁₁ = cfc f c₁ := by
+    rw [cfc_fromBlocks_zero_zero f hck.1 hcm.1, toBlocks_fromBlocks₁₁]
+  have hcT (i : ι) : (cfc f (fromBlocks (T i) 0 0 c₂)).toBlocks₁₁ = cfc f (T i) := by
+    rw [cfc_fromBlocks_zero_zero f (hT i).1 hcm.1, toBlocks_fromBlocks₁₁]
+  rw [hsum X, hsum fun o => cfc f (X o)] at h
+  simp only [X, Option.elim_none, Option.elim_some, toBlocks_fromBlocks₁₁, hc₁, hcT] at h
+  rw [cfc_fromBlocks_zero_zero f hck.1
+    (isSelfAdjoint_sum_conjTranspose_mul_mul A fun i => (hT i).1)] at h
+  simpa using toBlocks₂₂_mono h
 
-private lemma fromRows_defect_sqrt {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (hAB : Aᴴ * A + Bᴴ * B ≤ (1 : Matrix m m ℂ)) :
-    let V := Matrix.fromRows A B
-    let Δ := (1 : Matrix m m ℂ) - Vᴴ * V
-    let D := matrixSqrt Δ (Matrix.PosSemidef.one_sub_fromRows (A := A) (B := B) hAB)
-    Dᴴ * D = Δ := by
-  intro V Δ D
-  have hΔ : Δ.PosSemidef := by
-    simpa [Δ, V] using Matrix.PosSemidef.one_sub_fromRows (A := A) (B := B) hAB
-  calc
-    Dᴴ * D = D * D := by
-      have hherm : D.IsHermitian := by
-        simpa [D, Δ, V] using matrixSqrt_isHermitian hΔ
-      simp [hherm.eq]
-    _ = Δ := by
-      simpa [D] using matrixSqrt_mul_self_posSemidef hΔ
-
-/-- The compression V†f(T)V for block diagonal T equals
-    A†f(T₁)A + B†f(T₂)B when V = [A; B] and T = T₁ ⊕ T₂. -/
-private lemma compression_of_fromBlocks_cfc {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (T₁ T₂ : Matrix m m ℂ)
-    (hT₁ : T₁.PosSemidef) (hT₂ : T₂.PosSemidef) (f : ℝ → ℝ) :
-    let V := Matrix.fromRows A B
-    let T := Matrix.fromBlocks T₁ 0 0 T₂
-    Vᴴ * cfc f T * V = Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := by
+/-- **Jensen's operator inequality for matrices, sub-unital form** (Hansen–Pedersen 1982,
+Theorem 2.1): for `f` matrix convex on `s ∋ 0` with `f(0) ≤ 0`, a finite family
+`Aᵢ : Matrix k m ℂ` with `Σᵢ Aᵢ† Aᵢ ≤ I` and self-adjoint `Tᵢ` with spectrum in `s`,
+`f(Σᵢ Aᵢ† Tᵢ Aᵢ) ≤ Σᵢ Aᵢ† f(Tᵢ) Aᵢ`. The weights may be rectangular. -/
+theorem IsMatrixConvexOn.cfc_sum_le_of_le_one {s : Set ℝ}
+    {f : ℝ → ℝ} (hf : IsMatrixConvexOn s f) (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0)
+    {ι k m : Type*} [Fintype ι] [Fintype k] [DecidableEq k] [Fintype m] [DecidableEq m]
+    (A : ι → Matrix k m ℂ) (T : ι → Matrix k k ℂ)
+    (hT : ∀ i, T i ∈ {X : Matrix k k ℂ | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s})
+    (hA : ∑ i, (A i)ᴴ * A i ≤ 1) :
+    cfc f (∑ i, (A i)ᴴ * T i * A i) ≤ ∑ i, (A i)ᴴ * cfc f (T i) * A i := by
   classical
-  intro V T
-  -- Use the CFC block diagonal formula.
-  have hT₁_sa : IsSelfAdjoint T₁ := by
-    simpa [IsSelfAdjoint, Matrix.IsHermitian, star_eq_conjTranspose] using hT₁.1
-  have hT₂_sa : IsSelfAdjoint T₂ := by
-    simpa [IsSelfAdjoint, Matrix.IsHermitian, star_eq_conjTranspose] using hT₂.1
-  have hfinite : (spectrum ℝ T₁ ∪ spectrum ℝ T₂).Finite :=
-    (Matrix.finite_real_spectrum (A := T₁)).union (Matrix.finite_real_spectrum (A := T₂))
-  have hcont : ContinuousOn f (spectrum ℝ T₁ ∪ spectrum ℝ T₂) :=
-    Set.Finite.continuousOn hfinite f
-  have hblock := cfc_fromBlocks_diag (m := m) (A := T₁) (D := T₂) hT₁_sa hT₂_sa f hcont
-  have hT_cfc : cfc f T = Matrix.fromBlocks (cfc f T₁) 0 0 (cfc f T₂) := by
-    simpa [T] using hblock
-  rw [hT_cfc]
-  simpa [V] using fromRows_compress_blockDiag
-    (A := A) (B := B) (T₁ := cfc f T₁) (T₂ := cfc f T₂)
+  have h0k := zero_mem_setOf_isSelfAdjoint_spectrum_subset (A := Matrix k k ℂ) h0
+  have h0m := zero_mem_setOf_isSelfAdjoint_spectrum_subset (A := Matrix m m ℂ) h0
+  let W : ι → Matrix (k ⊕ m) (k ⊕ m) ℂ := fun i => fromBlocks 0 (A i) 0 0
+  let X : ι → Matrix (k ⊕ m) (k ⊕ m) ℂ := fun i => fromBlocks (T i) 0 0 0
+  have hX (i : ι) : X i ∈ {Y : Matrix (k ⊕ m) (k ⊕ m) ℂ | IsSelfAdjoint Y ∧ spectrum ℝ Y ⊆ s} :=
+    fromBlocks_mem_setOf_isSelfAdjoint_spectrum_subset (hT i) h0m
+  have hsum (Y : ι → Matrix (k ⊕ m) (k ⊕ m) ℂ) :
+      ∑ i, (W i)ᴴ * Y i * W i = fromBlocks 0 0 0 (∑ i, (A i)ᴴ * (Y i).toBlocks₁₁ * A i) := by
+    simp only [W, fromBlocks_zero_conjTranspose_mul_mul, sum_fromBlocks_zero_zero_zero]
+  have h1 : (1 : Matrix (k ⊕ m) (k ⊕ m) ℂ).toBlocks₁₁ = 1 := by
+    rw [← fromBlocks_one, toBlocks_fromBlocks₁₁]
+  have hW : ∑ i, (W i)ᴴ * W i ≤ 1 := by
+    have h := hsum 1
+    simp only [Pi.one_apply, Matrix.mul_one, h1] at h
+    rw [h, Matrix.le_iff, show (1 : Matrix (k ⊕ m) (k ⊕ m) ℂ) - fromBlocks 0 0 0 (∑ i, (A i)ᴴ * A i) =
+        fromBlocks 1 0 0 0 + fromBlocks 0 0 0 (1 - ∑ i, (A i)ᴴ * A i) by
+      ext (a | a) (b | b) <;> simp [Matrix.one_apply]]
+    refine PosSemidef.add ?_ (posSemidef_fromBlocks_zero_zero_zero (Matrix.le_iff.1 hA))
+    simpa [fromBlocks_conjTranspose, fromBlocks_multiply] using
+      posSemidef_conjTranspose_mul_self (fromBlocks (1 : Matrix k k ℂ) 0 0 (0 : Matrix m m ℂ))
+  have h := hf.cfc_sum_le_of_le_one_square h0 hf0 W X hX hW
+  have hcT (i : ι) : (cfc f (fromBlocks (T i) 0 0 (0 : Matrix m m ℂ))).toBlocks₁₁ = cfc f (T i) := by
+    rw [cfc_fromBlocks_zero_zero f (hT i).1 h0m.1, toBlocks_fromBlocks₁₁]
+  rw [hsum X, hsum fun i => cfc f (X i)] at h
+  simp only [X, toBlocks_fromBlocks₁₁, hcT] at h
+  rw [cfc_fromBlocks_zero_zero f h0k.1
+    (isSelfAdjoint_sum_conjTranspose_mul_mul A fun i => (hT i).1)] at h
+  simpa using toBlocks₂₂_mono h
 
-/-- IsLownerConvex + f(0) ≤ 0 implies HPJ inequality (Matrix Convexity).
-Theorem 3.1 in Effros 2008, originally Hansen-Pedersen 1981 Theorem 2.1 (i)⟹(iii).
-
-The proof reduces the 2-term subhomogeneous case to:
-1. A single-term compression inequality: f(V†TV) ≤ V†f(T)V when V†V ≤ I
-2. The block diagonal CFC identity: V†f(T₁⊕T₂)V = A†f(T₁)A + B†f(T₂)B
-
-Step 1 uses the defect matrix D = √(I - V†V) and f(0) ≤ 0 to absorb the defect term.
-Step 2 is compression_of_fromBlocks_cfc (already proved). -/
-lemma isJensenConvex_of_isLownerConvex.{v}
-    {f : ℝ → ℝ} (hconv : IsLownerConvex.{v} f) (hf0 : f 0 ≤ 0) :
-    IsJensenConvex.{v} f := by
-  classical
-  intro m _ _ A B T₁ T₂ hT₁ hT₂ hAB hC
-  -- Step 1: Set up block diagonal T = T₁ ⊕ T₂ and V = fromRows A B
-  let V := Matrix.fromRows A B
-  let T := Matrix.fromBlocks T₁ 0 0 T₂
-  have hT_psd : T.PosSemidef := fromBlocks_posSemidef_diag hT₁ hT₂
-  -- Step 2: V†TV = A†T₁A + B†T₂B (block multiplication)
-  have hVTV : Vᴴ * T * V = Aᴴ * T₁ * A + Bᴴ * T₂ * B :=
-    fromRows_compress_blockDiag A B T₁ T₂
-  -- Step 3: V†f(T)V = A†f(T₁)A + B†f(T₂)B (block diagonal CFC)
-  have hVfTV : Vᴴ * cfc f T * V = Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B :=
-    compression_of_fromBlocks_cfc A B T₁ T₂ hT₁ hT₂ f
-  have hΔ := Matrix.PosSemidef.one_sub_fromRows A B hAB
-  let Δ := (1 : Matrix m m ℂ) - Vᴴ * V
-  let D := matrixSqrt Δ hΔ
-  have hDD : Dᴴ * D = Δ := fromRows_defect_sqrt A B hAB
-  have hsum : Vᴴ * V + Dᴴ * D = (1 : Matrix m m ℂ) := by
-    rw [hDD]; simp [Δ]
-  have hf0_neg : f 0 • (Dᴴ * D) ≤ (0 : Matrix m m ℂ) := by
-    have : (Dᴴ * D).PosSemidef := by
-      rw [hDD]; exact hΔ
-    exact Matrix.PosSemidef.smul_nonpos hf0 this
-  calc cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B)
-      = cfc f (Vᴴ * T * V) := by rw [hVTV]
-    _ ≤ Vᴴ * cfc f T * V := by
-        have hVV : Vᴴ * V ≤ 1 := by simpa [V, fromRows_conjTranspose_mul_self] using hAB
-        exact lownerConvex_compression_le hconv hf0 V hVV T hT_psd
-    _ = Aᴴ * cfc f T₁ * A + Bᴴ * cfc f T₂ * B := hVfTV
-
-/-- Matrix convexity of matrix inverse in the Löwner order. -/
-private lemma inv_lowner_convex_le {m : Type*} [Fintype m] [DecidableEq m]
-    {A B : Matrix m m ℂ} (hA : A.PosDef) (hB : B.PosDef)
-    {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
-    (t • A + (1 - t) • B)⁻¹ ≤ t • A⁻¹ + (1 - t) • B⁻¹ := by
-  classical
-  by_cases ht_zero : t = 0
-  · subst ht_zero
-    have h1 : ((0 : ℝ) • A + ((1 : ℝ) - 0) • B : Matrix m m ℂ) = B := by module
-    have h2 : ((0 : ℝ) • A⁻¹ + ((1 : ℝ) - 0) • B⁻¹ : Matrix m m ℂ) = B⁻¹ := by module
-    exact le_of_eq ((congrArg (·⁻¹) h1).trans h2.symm)
-  by_cases ht_one : t = 1
-  · subst ht_one
-    have h1 : ((1 : ℝ) • A + ((1 : ℝ) - 1) • B : Matrix m m ℂ) = A := by module
-    have h2 : ((1 : ℝ) • A⁻¹ + ((1 : ℝ) - 1) • B⁻¹ : Matrix m m ℂ) = A⁻¹ := by module
-    exact le_of_eq ((congrArg (·⁻¹) h1).trans h2.symm)
-  have ht_pos : 0 < t := lt_of_le_of_ne ht0 (Ne.symm ht_zero)
-  have h1t_pos : 0 < 1 - t := by
-    have ht1' : t < 1 := lt_of_le_of_ne ht1 ht_one
-    linarith
-  set C : Matrix m m ℂ := t • A + (1 - t) • B
-  have hC_pos : C.PosDef := hA.convex_comb hB ht_pos h1t_pos
-  let _ := hC_pos.isUnit.invertible
-  have hA_blk : (Matrix.fromBlocks A 1 1 A⁻¹).PosSemidef := fromBlocks_inv_posSemidef hA
-  have hB_blk : (Matrix.fromBlocks B 1 1 B⁻¹).PosSemidef := fromBlocks_inv_posSemidef hB
-  have hsum :
-      (t • Matrix.fromBlocks A 1 1 A⁻¹ + (1 - t) • Matrix.fromBlocks B 1 1 B⁻¹).PosSemidef := by
-    have hA_smul :
-        t • Matrix.fromBlocks A 1 1 A⁻¹ = ((t : ℂ)) • Matrix.fromBlocks A 1 1 A⁻¹ := by
-      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
-    have hB_smul :
-        (1 - t) • Matrix.fromBlocks B 1 1 B⁻¹ =
-          ((1 - t : ℝ) : ℂ) • Matrix.fromBlocks B 1 1 B⁻¹ := by
-      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
-    rw [hA_smul, hB_smul]
-    refine (Matrix.PosSemidef.smul hA_blk ?_).add (Matrix.PosSemidef.smul hB_blk ?_)
-    · exact_mod_cast ht0
-    · exact_mod_cast (by linarith : (0 : ℝ) ≤ 1 - t)
-  have hblocks_eq :
-      t • Matrix.fromBlocks A 1 1 A⁻¹ + (1 - t) • Matrix.fromBlocks B 1 1 B⁻¹ =
-        Matrix.fromBlocks C 1 1 (t • A⁻¹ + (1 - t) • B⁻¹) := by
-    ext i j
-    cases i with
-    | inl i =>
-        cases j with
-        | inl j =>
-            by_cases h : i = j <;>
-              simp [C, h, fromBlocks_apply₁₁, Matrix.add_apply, Matrix.smul_apply]
-        | inr j =>
-            by_cases h : i = j
-            · have hsum : (t : ℂ) + (1 - t) = (1 : ℂ) := by ring
-              simp [C, h, fromBlocks_apply₁₂, Matrix.add_apply, Matrix.smul_apply, hsum]
-            · simp [C, h, fromBlocks_apply₁₂, Matrix.add_apply, Matrix.smul_apply]
-    | inr i =>
-        cases j with
-        | inl j =>
-            by_cases h : i = j
-            · have hsum : (t : ℂ) + (1 - t) = (1 : ℂ) := by ring
-              simp [C, h, fromBlocks_apply₂₁, Matrix.add_apply, Matrix.smul_apply, hsum]
-            · simp [C, h, fromBlocks_apply₂₁, Matrix.add_apply, Matrix.smul_apply]
-        | inr j =>
-            by_cases h : i = j <;>
-              simp [C, h, fromBlocks_apply₂₂, Matrix.add_apply, Matrix.smul_apply]
-  have hsum' : (Matrix.fromBlocks C 1 1 (t • A⁻¹ + (1 - t) • B⁻¹)).PosSemidef := by
-    simpa [hblocks_eq] using hsum
-  have hsum'' :
-      (Matrix.fromBlocks C 1 (1 : Matrix m m ℂ)ᴴ (t • A⁻¹ + (1 - t) • B⁻¹)).PosSemidef := by
-    simpa using hsum'
-  have hSchur :
-      (t • A⁻¹ + (1 - t) • B⁻¹ - (1 : Matrix m m ℂ)ᴴ * C⁻¹ * (1 : Matrix m m ℂ)).PosSemidef :=
-    (Matrix.PosDef.fromBlocks₁₁ (B := (1 : Matrix m m ℂ)) (D := t • A⁻¹ + (1 - t) • B⁻¹) hC_pos).1
-      hsum''
-  rw [Matrix.le_iff]
-  simpa [C] using hSchur
-
-/-- Matrix concavity of `X ↦ 1 - r * (X + rI)⁻¹` for `r > 0`. -/
-private lemma resolvent_lowner_concave_le {m : Type*} [Fintype m] [DecidableEq m]
-    {A B : Matrix m m ℂ} (hA : A.PosSemidef) (hB : B.PosSemidef)
-    {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) {r : ℝ} (hr : 0 < r) :
-    t • (1 - r • (A + r • (1 : Matrix m m ℂ))⁻¹) +
-      (1 - t) • (1 - r • (B + r • (1 : Matrix m m ℂ))⁻¹)
-        ≤ 1 - r • ((t • A + (1 - t) • B) + r • (1 : Matrix m m ℂ))⁻¹ := by
-  classical
-  set A' : Matrix m m ℂ := A + r • (1 : Matrix m m ℂ)
-  set B' : Matrix m m ℂ := B + r • (1 : Matrix m m ℂ)
-  set C : Matrix m m ℂ := t • A + (1 - t) • B
-  set C' : Matrix m m ℂ := C + r • (1 : Matrix m m ℂ)
-  have hA' : A'.PosDef := PosSemidef.add_smul_one_posDef hA hr
-  have hB' : B'.PosDef := PosSemidef.add_smul_one_posDef hB hr
-  have hconv : C'⁻¹ ≤ t • A'⁻¹ + (1 - t) • B'⁻¹ := by
-    have hA'' : A'.PosDef := hA'
-    have hB'' : B'.PosDef := hB'
-    have hC' : C' = t • A' + (1 - t) • B' := by
-      dsimp [A', B', C', C]
-      module
-    simpa [hC'] using inv_lowner_convex_le hA'' hB'' ht0 ht1
-  have hconv_psd : (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹).PosSemidef := by
-    simpa [Matrix.le_iff] using hconv
-  have hconv_psd' : (r • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹)).PosSemidef := by
-    have hr_smul :
-        r • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹) =
-          ((r : ℂ)) • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹) := by
-      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
-    rw [hr_smul]
-    exact hconv_psd.smul (by exact_mod_cast (show (0 : ℝ) ≤ r by linarith))
-  rw [Matrix.le_iff]
-  -- Reduce to the PSD of the inverse convexity difference.
-  have hcalc :
-      (1 - r • C'⁻¹) - (t • (1 - r • A'⁻¹) + (1 - t) • (1 - r • B'⁻¹)) =
-        r • (t • A'⁻¹ + (1 - t) • B'⁻¹ - C'⁻¹) := by
-    module
-  simpa [hcalc, A', B', C', C] using hconv_psd'
-
-section RpowOperatorConcaveAux
-
-
-/-- Core operator concavity lemma for matrices.
-Uses the integral representation of xˢ and resolvent operator concavity.
-
-The key mathematical fact: For 0 < s ≤ 1, the function x ↦ x^s is operator
-concave on positive semidefinite matrices. This means:
-  (tA + (1-t)B)^s ≥ t·A^s + (1-t)·B^s
-for any PSD matrices A, B and t ∈ [0,1].
-
-**Proof Strategy**:
-1. Use the integral representation of xˢ via `exists_measure_nnrpow_eq_integral_cfcₙ_rpowIntegrand₀₁`.
-2. Identify the integrand with the resolvent form `1 - u * (x + u)⁻¹` using CFC.
-3. Apply the resolvent operator concavity inequality pointwise in u.
-4. Integrate and rewrite with `CFC.rpow_eq_cfc_real` to conclude the inequality. -/
-private lemma rpow_operator_concave_le {m : Type*} [Fintype m] [DecidableEq m]
-    {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1)
-    (A B : Matrix m m ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
-    (t : ℝ) (ht0 : 0 ≤ t) (ht1 : t ≤ 1)
-    (hC : (t • A + (1 - t) • B).IsHermitian) :
-    t • A ^ s + (1 - t) • B ^ s ≤ (t • A + (1 - t) • B) ^ s := by
-  classical
-  by_cases hs_eq : s = 1
-  · subst hs_eq
-    have hA0 : (0 : Matrix m m ℂ) ≤ A := by simpa [Matrix.le_iff] using hA
-    have hB0 : (0 : Matrix m m ℂ) ≤ B := by simpa [Matrix.le_iff] using hB
-    have hC0 : (0 : Matrix m m ℂ) ≤ t • A + (1 - t) • B := by
-      simpa [Matrix.le_iff] using (hA.real_smul ht0).add (hB.real_smul (by linarith))
-    simp only [CFC.rpow_one (a := A) hA0, CFC.rpow_one (a := B) hB0,
-      CFC.rpow_one (a := t • A + (1 - t) • B) hC0, le_refl]
-  -- Equip `Matrix m m ℂ` with the `L²`-operator-norm C⋆-algebra structure for the integral
-  -- representation below. Its topology is (reducibly) the product topology, so the Bochner
-  -- integrals and `ContinuousENorm` agree with the ambient topology on matrices.
-  let : CStarAlgebra (Matrix m m ℂ) := Matrix.instCStarAlgebra
-  let nucfc : NonUnitalContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint := by
-    let : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
-      IsStarNormal.instContinuousFunctionalCalculus
-    let : ContinuousFunctionalCalculus ℝ (Matrix m m ℂ) IsSelfAdjoint :=
-      IsSelfAdjoint.instContinuousFunctionalCalculus
-    exact ContinuousFunctionalCalculus.toNonUnital
-  let scc : SMulCommClass ℝ (Matrix m m ℂ) (Matrix m m ℂ) :=
-    Matrix.Semiring.smulCommClass
-  let ist : IsScalarTower ℝ (Matrix m m ℂ) (Matrix m m ℂ) := inferInstance
-  let sor : StarOrderedRing (Matrix m m ℂ) := Matrix.instStarOrderedRing
-  let nsc : NonnegSpectrumClass ℝ (Matrix m m ℂ) := Matrix.instNonnegSpectrumClass
-  -- `integral_mono_ae` requires `ClosedIciTopology` on the target.  The Löwner
-  -- order on `Matrix m m ℂ` makes `Set.Ici a` closed because `PosSemidef` is a
-  -- closed condition: it is the intersection of `IsHermitian` (closed under
-  -- `star`) and `∀ y, 0 ≤ star y ⬝ᵥ M.mulVec y` (each is a closed condition
-  -- since the dot-product map is continuous).
-  let cit : ClosedIciTopology (Matrix m m ℂ) := by
-    refine ⟨fun a => ?_⟩
-    have hSet : Set.Ici a = {M : Matrix m m ℂ | (M - a).PosSemidef} := by
-      ext M; exact Matrix.le_iff
-    rw [hSet]
-    have hcont : Continuous fun M : Matrix m m ℂ => M - a := by fun_prop
-    suffices hPSD : IsClosed {M : Matrix m m ℂ | M.PosSemidef} from
-      hPSD.preimage hcont
-    have heq : {M : Matrix m m ℂ | M.PosSemidef} =
-        {M | M.IsHermitian} ∩ ⋂ y : m → ℂ, {M | 0 ≤ star y ⬝ᵥ M.mulVec y} := by
-      ext M
-      simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter]
-      exact Matrix.posSemidef_iff_dotProduct_mulVec
-    rw [heq]
-    refine IsClosed.inter ?_ ?_
-    · -- {M | M.IsHermitian} = {M | M.conjTranspose = M}
-      exact isClosed_eq (by fun_prop) continuous_id
-    · refine isClosed_iInter (fun y => ?_)
-      exact isClosed_le continuous_const (by fun_prop)
-  have hs_lt : s < 1 := lt_of_le_of_ne hs1 hs_eq
-  let q : ℝ≥0 := ⟨s, le_of_lt hs0⟩
-  have hq : (q : ℝ) ∈ Set.Ioo (0 : ℝ) 1 := ⟨hs0, hs_lt⟩
-  obtain ⟨μ, hμ⟩ :=
-    @CFC.exists_measure_nnrpow_eq_integral_cfcₙ_rpowIntegrand₀₁ (Matrix m m ℂ)
-      inferInstance inferInstance inferInstance scc ist inferInstance sor
-      nsc nucfc inferInstance q hq
-  set C : Matrix m m ℂ := t • A + (1 - t) • B
-  have hA0 : (0 : Matrix m m ℂ) ≤ A := by
-    simpa [Matrix.le_iff] using hA
-  have hB0 : (0 : Matrix m m ℂ) ≤ B := by
-    simpa [Matrix.le_iff] using hB
-  have hCpsd : C.PosSemidef := by
-    have hA_smul : t • A = ((t : ℂ)) • A := by
-      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
-    have hB_smul : (1 - t) • B = ((1 - t : ℝ) : ℂ) • B := by
-      ext i j; simp [Matrix.smul_apply, Complex.real_smul]
-    refine (Matrix.PosSemidef.add ?_ ?_)
-    · rw [show t • A = ((t : ℂ)) • A from hA_smul]
-      exact hA.smul (by exact_mod_cast ht0)
-    · rw [show (1 - t) • B = ((1 - t : ℝ) : ℂ) • B from hB_smul]
-      exact hB.smul (by exact_mod_cast (show (0 : ℝ) ≤ 1 - t by linarith))
-  have hC0 : (0 : Matrix m m ℂ) ≤ C := by
-    simpa [Matrix.le_iff, C] using hCpsd
-  have hA_int : IntegrableOn (fun u => cfcₙ (rpowIntegrand₀₁ q u) A) (Ioi 0) μ :=
-    (hμ A hA0).1
-  have hB_int : IntegrableOn (fun u => cfcₙ (rpowIntegrand₀₁ q u) B) (Ioi 0) μ :=
-    (hμ B hB0).1
-  have hC_int : IntegrableOn (fun u => cfcₙ (rpowIntegrand₀₁ q u) C) (Ioi 0) μ :=
-    (hμ C hC0).1
-  have h_integrand_le :
-      (fun u => t • cfcₙ (rpowIntegrand₀₁ q u) A +
-        (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B) ≤ᵐ[μ.restrict (Ioi 0)]
-        fun u => cfcₙ (rpowIntegrand₀₁ q u) C := by
-    filter_upwards [ae_restrict_mem measurableSet_Ioi] with u hu
-    have hu' : 0 < u := hu
-    -- Express the integrand via the resolvent concavity lemma.
-    have hcont_Ici : ContinuousOn (fun x => rpowIntegrand₀₁ (q : ℝ) u x) (Ici 0) := by
-      have hcont_add : ContinuousOn (fun x => u + x) (Ici 0) := by
-        fun_prop
-      have hne : ∀ x ∈ Ici 0, u + x ≠ 0 := by
-        intro x hx
-        have hx' : 0 ≤ x := hx
-        linarith
-      have hcont_inv : ContinuousOn (fun x => (u + x)⁻¹) (Ici 0) :=
-        ContinuousOn.inv₀ hcont_add hne
-      have hcont_sub : ContinuousOn (fun x => u⁻¹ - (u + x)⁻¹) (Ici 0) := by
-        exact ContinuousOn.sub continuousOn_const hcont_inv
-      exact ContinuousOn.mul continuousOn_const hcont_sub
-    have hA_spec : quasispectrum ℝ A ⊆ Ici 0 := by
-      intro x hx
-      exact (StarOrderedRing.nonneg_iff_quasispectrum_nonneg (A := Matrix m m ℂ) A).1 hA0 x hx
-    have hB_spec : quasispectrum ℝ B ⊆ Ici 0 := by
-      intro x hx
-      exact (StarOrderedRing.nonneg_iff_quasispectrum_nonneg (A := Matrix m m ℂ) B).1 hB0 x hx
-    have hC_spec : quasispectrum ℝ C ⊆ Ici 0 := by
-      intro x hx
-      exact (StarOrderedRing.nonneg_iff_quasispectrum_nonneg (A := Matrix m m ℂ) C).1 hC0 x hx
-    have hcont_res : ContinuousOn (fun x : ℝ => 1 - u * (x + u)⁻¹) (Ici 0) := by
-      have hcont_add : ContinuousOn (fun x : ℝ => x + u) (Ici 0) := by fun_prop
-      have hne : ∀ x ∈ Ici (0 : ℝ), x + u ≠ 0 := by
-        intro x hx; have hx' : 0 ≤ x := hx; linarith
-      exact continuousOn_const.sub
-        (continuousOn_const.mul (ContinuousOn.inv₀ hcont_add hne))
-    have hAspec' : spectrum ℝ A ⊆ Ici 0 := by
-      rw [hA.1.spectrum_real_eq_range_eigenvalues]
-      rintro _ ⟨i, rfl⟩; exact hA.eigenvalues_nonneg i
-    have hBspec' : spectrum ℝ B ⊆ Ici 0 := by
-      rw [hB.1.spectrum_real_eq_range_eigenvalues]
-      rintro _ ⟨i, rfl⟩; exact hB.eigenvalues_nonneg i
-    have hCspec' : spectrum ℝ C ⊆ Ici 0 := by
-      rw [hCpsd.1.spectrum_real_eq_range_eigenvalues]
-      rintro _ ⟨i, rfl⟩; exact hCpsd.eigenvalues_nonneg i
-    have hA_eq :
-        cfcₙ (rpowIntegrand₀₁ q u) A = cfc (rpowIntegrand₀₁ (q : ℝ) u) A := by
-      simpa [Real.rpowIntegrand₀₁_zero_right] using
-        (cfcₙ_eq_cfc (a := A) (f := fun x => rpowIntegrand₀₁ (q : ℝ) u x)
-          (hf := hcont_Ici.mono hA_spec) (hf0 := Real.rpowIntegrand₀₁_zero_right))
-    have hB_eq :
-        cfcₙ (rpowIntegrand₀₁ q u) B = cfc (rpowIntegrand₀₁ (q : ℝ) u) B := by
-      simpa [Real.rpowIntegrand₀₁_zero_right] using
-        (cfcₙ_eq_cfc (a := B) (f := fun x => rpowIntegrand₀₁ (q : ℝ) u x)
-          (hf := hcont_Ici.mono hB_spec) (hf0 := Real.rpowIntegrand₀₁_zero_right))
-    have hC_eq :
-        cfcₙ (rpowIntegrand₀₁ q u) C = cfc (rpowIntegrand₀₁ (q : ℝ) u) C := by
-      simpa [Real.rpowIntegrand₀₁_zero_right] using
-        (cfcₙ_eq_cfc (a := C) (f := fun x => rpowIntegrand₀₁ (q : ℝ) u x)
-          (hf := hcont_Ici.mono hC_spec) (hf0 := Real.rpowIntegrand₀₁_zero_right))
-    have hfun :
-        (fun x : ℝ => rpowIntegrand₀₁ (q : ℝ) u x) =
-          fun x => u ^ (s - 1) * (1 - u * (x + u)⁻¹) := by
-      funext x
-      have hu0 : u ≠ 0 := ne_of_gt hu'
-      have hpow : u ^ s = u ^ (s - 1) * u := by
-        have h := Real.rpow_add_one hu0 (s - 1)
-        simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc] using h
-      have hx : u + x = x + u := by ac_rfl
-      calc
-        rpowIntegrand₀₁ (q : ℝ) u x = u ^ s * (u⁻¹ - (u + x)⁻¹) := rfl
-        _ = u ^ (s - 1) * (u * (u⁻¹ - (u + x)⁻¹)) := by
-              simp [hpow, mul_assoc]
-        _ = u ^ (s - 1) * (1 - u * (x + u)⁻¹) := by
-              have hmul : u * (u⁻¹ - (u + x)⁻¹) = 1 - u * (x + u)⁻¹ := by
-                calc
-                  u * (u⁻¹ - (u + x)⁻¹) = u * u⁻¹ - u * (u + x)⁻¹ := by
-                    simp [mul_sub]
-                  _ = 1 - u * (x + u)⁻¹ := by
-                    simp [hu0, hx]
-              simp [hmul]
-    have hA_res :
-        cfc (fun x => 1 - u * (x + u)⁻¹) A =
-          (1 : Matrix m m ℂ) - (u : ℂ) • (A + (u : ℂ) • 1)⁻¹ :=
-      cfc_resolvent (m := m) hA hu'
-    have hB_res :
-        cfc (fun x => 1 - u * (x + u)⁻¹) B =
-          (1 : Matrix m m ℂ) - (u : ℂ) • (B + (u : ℂ) • 1)⁻¹ :=
-      cfc_resolvent (m := m) hB hu'
-    have hC_res :
-        cfc (fun x => 1 - u * (x + u)⁻¹) C =
-          (1 : Matrix m m ℂ) - (u : ℂ) • (C + (u : ℂ) • 1)⁻¹ :=
-      cfc_resolvent (m := m) hCpsd hu'
-    have hA_int' :
-        cfc (fun x => rpowIntegrand₀₁ (q : ℝ) u x) A =
-          (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) A := by
-      rw [hfun, cfc_const_mul (R := ℝ) (u ^ (s - 1)) (fun x => 1 - u * (x + u)⁻¹) A
-        (hcont_res.mono hAspec')]
-    have hB_int' :
-        cfc (fun x => rpowIntegrand₀₁ (q : ℝ) u x) B =
-          (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) B := by
-      rw [hfun, cfc_const_mul (R := ℝ) (u ^ (s - 1)) (fun x => 1 - u * (x + u)⁻¹) B
-        (hcont_res.mono hBspec')]
-    have hC_int' :
-        cfc (fun x => rpowIntegrand₀₁ (q : ℝ) u x) C =
-          (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) C := by
-      rw [hfun, cfc_const_mul (R := ℝ) (u ^ (s - 1)) (fun x => 1 - u * (x + u)⁻¹) C
-        (hcont_res.mono hCspec')]
-    have hres_le :
-        t • ((1 : Matrix m m ℂ) - (u : ℂ) • (A + (u : ℂ) • 1)⁻¹) +
-          (1 - t) • ((1 : Matrix m m ℂ) - (u : ℂ) • (B + (u : ℂ) • 1)⁻¹)
-            ≤ (1 : Matrix m m ℂ) - (u : ℂ) • (C + (u : ℂ) • 1)⁻¹ := by
-      simpa [C] using
-        (resolvent_lowner_concave_le (m := m) hA hB ht0 ht1 (r := u) hu')
-    -- Scale the resolvent inequality by the positive factor u^(s-1).
-    have hscale :
-        (u ^ (s - 1) : ℝ) •
-          (t • ((1 : Matrix m m ℂ) - (u : ℂ) • (A + (u : ℂ) • 1)⁻¹) +
-            (1 - t) • ((1 : Matrix m m ℂ) - (u : ℂ) • (B + (u : ℂ) • 1)⁻¹))
-            ≤ (u ^ (s - 1) : ℝ) •
-              ((1 : Matrix m m ℂ) - (u : ℂ) • (C + (u : ℂ) • 1)⁻¹) := by
-      have hnonneg : 0 ≤ u ^ (s - 1) := by positivity
-      rw [Matrix.le_iff]
-      have h := (Matrix.le_iff.mp hres_le).real_smul hnonneg
-      convert h using 1
-      exact (smul_sub _ _ _).symm
-    -- Replace with the cfc resolvent form.
-    have hscale' :
-        (u ^ (s - 1) : ℝ) •
-          (t • cfc (fun x => 1 - u * (x + u)⁻¹) A +
-            (1 - t) • cfc (fun x => 1 - u * (x + u)⁻¹) B)
-            ≤ (u ^ (s - 1) : ℝ) •
-              cfc (fun x => 1 - u * (x + u)⁻¹) C := by
-      have hscale' := hscale
-      rw [hA_res.symm, hB_res.symm, hC_res.symm] at hscale'
-      exact hscale'
-    have hscale'' :
-        t • (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) A +
-        (1 - t) • (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) B ≤
-        (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) C := by
-      have e : (u ^ (s - 1) : ℝ) • (t • cfc (fun x => 1 - u * (x + u)⁻¹) A +
-            (1 - t) • cfc (fun x => 1 - u * (x + u)⁻¹) B) =
-          t • (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) A +
-          (1 - t) • (u ^ (s - 1) : ℝ) • cfc (fun x => 1 - u * (x + u)⁻¹) B := by
-        module
-      rw [← e]; exact hscale'
-    simpa [hA_eq, hB_eq, hC_eq, hA_int', hB_int', hC_int'] using hscale''
-  have hle_integral :
-      t • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ) +
-        (1 - t) • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ)
-        ≤ ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := by
-    have hAi : Integrable (fun u => cfcₙ (rpowIntegrand₀₁ q u) A) (μ.restrict (Ioi 0)) :=
-      hA_int.integrable
-    have hBi : Integrable (fun u => cfcₙ (rpowIntegrand₀₁ q u) B) (μ.restrict (Ioi 0)) :=
-      hB_int.integrable
-    have hA_smul : Integrable (fun u => t • cfcₙ (rpowIntegrand₀₁ q u) A)
-        (μ.restrict (Ioi 0)) := hAi.smul (𝕜 := ℝ) t
-    have hB_smul : Integrable (fun u => (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B)
-        (μ.restrict (Ioi 0)) := hBi.smul (𝕜 := ℝ) (1 - t)
-    have hleft_int :
-        Integrable (fun u =>
-          t • cfcₙ (rpowIntegrand₀₁ q u) A +
-            (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B) (μ.restrict (Ioi 0)) :=
-      hA_smul.add hB_smul
-    have hright_int :
-        Integrable (fun u => cfcₙ (rpowIntegrand₀₁ q u) C) (μ.restrict (Ioi 0)) :=
-      hC_int
-    have hmono := integral_mono_ae hleft_int hright_int h_integrand_le
-    have hleft_eq :
-        ∫ u in Ioi 0, t • cfcₙ (rpowIntegrand₀₁ q u) A +
-          (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B ∂μ =
-          t • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ) +
-            (1 - t) • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ) := by
-      calc
-        ∫ u in Ioi 0, t • cfcₙ (rpowIntegrand₀₁ q u) A +
-            (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B ∂μ =
-          ∫ u in Ioi 0, t • cfcₙ (rpowIntegrand₀₁ q u) A ∂μ +
-            ∫ u in Ioi 0, (1 - t) • cfcₙ (rpowIntegrand₀₁ q u) B ∂μ := by
-            refine integral_add ?_ ?_
-            · exact hA_int.smul t
-            · exact hB_int.smul (1 - t)
-        _ = t • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ) +
-            (1 - t) • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ) := by
-            congr 1
-            · exact hAi.integral_smul (R := ℝ) t
-            · exact hBi.integral_smul (R := ℝ) (1 - t)
-    have hmono' :
-        t • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ) +
-          (1 - t) • (∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ) ≤
-          ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := by
-      simpa [hleft_eq] using hmono
-    exact hmono'
-  have hq_pos : 0 < (q : ℝ) := by exact_mod_cast hs0
-  have hqs : (q : ℝ) = s := rfl
-  have hA_eq_int :
-      A ^ s = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ := by
-    have h1 : A ^ q = A ^ (q : ℝ) :=
-      CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := A) (x := q) hq_pos
-    have h2 : A ^ q = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) A ∂μ := (hμ A hA0).2
-    rw [← hqs, ← h1]; exact h2
-  have hB_eq_int :
-      B ^ s = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ := by
-    have h1 : B ^ q = B ^ (q : ℝ) :=
-      CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := B) (x := q) hq_pos
-    have h2 : B ^ q = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) B ∂μ := (hμ B hB0).2
-    rw [← hqs, ← h1]; exact h2
-  have hC_eq_int :
-      C ^ s = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := by
-    have h1 : C ^ q = C ^ (q : ℝ) :=
-      CFC.nnrpow_eq_rpow (A := Matrix m m ℂ) (a := C) (x := q) hq_pos
-    have h2 : C ^ q = ∫ u in Ioi 0, cfcₙ (rpowIntegrand₀₁ q u) C ∂μ := (hμ C hC0).2
-    rw [← hqs, ← h1]; exact h2
-  -- Conclude from the integral inequality.
-  have hfinal : t • A ^ s + (1 - t) • B ^ s ≤ C ^ s := by
-    simpa [hA_eq_int, hB_eq_int, hC_eq_int] using hle_integral
-  exact hfinal
-
-end RpowOperatorConcaveAux
-
-/-- The power function t^s (0 < s ≤ 1) is Löwner concave.
-This means: (λA + (1-λ)B)^s ≥ λ·A^s + (1-λ)·B^s in Löwner order.
-
-This is a classical result (Bhatia, Theorem V.2.5) proven via the integral
-representation of rpow combined with operator concavity of each integrand.
-Here we use Mathlib's CFC (continuous functional calculus) infrastructure.
-
-Reference: Bhatia, "Matrix Analysis", Theorem V.2.5 -/
-lemma rpow_isLownerConcave {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1) :
-    IsLownerConcave (fun t => t ^ s) := by
-  unfold IsLownerConcave
-  intro m _ _ A B hA hB t ht0 ht1 hC
-  have hA0 : (0 : Matrix m m ℂ) ≤ A := by simpa [Matrix.le_iff] using hA
-  have hB0 : (0 : Matrix m m ℂ) ≤ B := by simpa [Matrix.le_iff] using hB
-  have hC0 : (0 : Matrix m m ℂ) ≤ t • A + (1 - t) • B := by
-    simpa [Matrix.le_iff] using (hA.real_smul ht0).add (hB.real_smul (by linarith))
-  change cfc (fun x : ℝ => -(x ^ s)) (t • A + (1 - t) • B) ≤
-      t • cfc (fun x : ℝ => -(x ^ s)) A + (1 - t) • cfc (fun x : ℝ => -(x ^ s)) B
-  have eA : cfc (fun x : ℝ => -(x ^ s)) A = -(A ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := A) (ha := hA0)]
-  have eB : cfc (fun x : ℝ => -(x ^ s)) B = -(B ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := B) (ha := hB0)]
-  have eC : cfc (fun x : ℝ => -(x ^ s)) (t • A + (1 - t) • B) = -((t • A + (1 - t) • B) ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := t • A + (1 - t) • B) (ha := hC0)]
-  rw [eA, eB, eC]
-  have key := rpow_operator_concave_le hs0 hs1 A B hA hB t ht0 ht1 hC
-  rw [Matrix.le_iff] at key ⊢
-  convert key using 1
-  module
-
-/-- The negated power function -t^s (0 < s ≤ 1) is Löwner convex.
-This is the dual statement of rpow_isLownerConcave. -/
-lemma neg_rpow_isLownerConvex {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1) :
-    IsLownerConvex (fun t => -(t ^ s)) :=
-  rpow_isLownerConcave hs0 hs1
-
-/-- The function `f(t) = −t^s` is Jensen convex for `0 < s ≤ 1`.
-This follows from Löwner concavity of t^s together with the equivalence
-IsLownerConvex ↔ IsJensenConvex. -/
-lemma neg_rpow_isJensenConvex.{v} {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1) :
-    IsJensenConvex.{v} (fun t => -(t ^ s)) := by
-  apply isJensenConvex_of_isLownerConvex.{v} (neg_rpow_isLownerConvex hs0 hs1)
-  simp only [Real.zero_rpow (ne_of_gt hs0), neg_zero]
-  exact le_refl 0
-
-/-- HPJ subhomogeneous inequality: for `IsJensenConvex` f with f(0) ≤ 0 and
-A†A + B†B ≤ I, we have f(A† T₁ A + B† T₂ B)
-≤ A† f(T₁) A + B† f(T₂) B. -/
-lemma hpj_subhomogeneous.{v} {f : ℝ → ℝ}
-  (hconv : IsJensenConvex.{v} f) (hf0 : f 0 ≤ 0)
-  {m : Type v} [Fintype m] [DecidableEq m]
-    (A B T₁ T₂ : Matrix m m ℂ)
-    (hT₁ : T₁.PosSemidef) (hT₂ : T₂.PosSemidef)
-    (hAB : Aᴴ * A + Bᴴ * B ≤ (1 : Matrix m m ℂ))
-    (hC : (Aᴴ * T₁ * A + Bᴴ * T₂ * B).IsHermitian) :
-    let fT₁ := cfc f T₁
-    let fT₂ := cfc f T₂
-    let fC := cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B)
-    fC ≤ Aᴴ * fT₁ * A + Bᴴ * fT₂ * B := by
-  have _ := hf0
-  exact hconv m A B T₁ T₂ hT₁ hT₂ hAB hC
-
-/-- HPJ affine inequality: the case AᴴA + BᴴB = I. -/
-lemma hpj_affine.{v} {f : ℝ → ℝ}
-  (hconv : IsJensenConvex.{v} f)
-  {m : Type v} [Fintype m] [DecidableEq m]
-    (A B T₁ T₂ : Matrix m m ℂ)
-    (hT₁ : T₁.PosSemidef) (hT₂ : T₂.PosSemidef)
-    (hAB : Aᴴ * A + Bᴴ * B = (1 : Matrix m m ℂ))
-    (hC : (Aᴴ * T₁ * A + Bᴴ * T₂ * B).IsHermitian) :
-    let fT₁ := cfc f T₁
-    let fT₂ := cfc f T₂
-    let fC := cfc f (Aᴴ * T₁ * A + Bᴴ * T₂ * B)
-    fC ≤ Aᴴ * fT₁ * A + Bᴴ * fT₂ * B := by
-  have hAB' : Aᴴ * A + Bᴴ * B ≤ (1 : Matrix m m ℂ) := by
-    simp [hAB]
-  exact hconv m A B T₁ T₂ hT₁ hT₂ hAB' hC
+namespace Matrix
 
 /-! ### Consequences for the CFC real power
 
-Positive semidefiniteness of real powers, unfolded operator concavity, and
-monotonicity of the trace pairing. Together with Löwner–Heinz monotonicity
+Unfolded operator concavity of real powers and monotonicity of the trace pairing (positive
+semidefiniteness of real powers is `Matrix.posSemidef_rpow` in `HermitianFunctionalCalculus.lean`).
+Together with Löwner–Heinz monotonicity
 (`Matrix.rpow_le_rpow` in `LiebConcavity.lean`, a wrapper around Mathlib's
 `CFC.rpow_le_rpow`), they extend Lieb's joint concavity from the boundary case
 `p + q = 1` to the full region `p + q ≤ 1`
 (`Matrix.lieb_joint_concavity_general`). -/
 
-/-- The CFC real power of any matrix is positive semidefinite.
-(`CFC.rpow_nonneg` is unconditional: on non-PSD input the CFC returns a junk
-value that is still `0 ≤ ·`.) -/
-lemma posSemidef_rpow {m : Type*} [Fintype m] [DecidableEq m]
-    (A : Matrix m m ℂ) (s : ℝ) : (A ^ s).PosSemidef := by
-  have h : (0 : Matrix m m ℂ) ≤ A ^ s := CFC.rpow_nonneg
-  rw [Matrix.le_iff, sub_zero] at h
-  exact h
-
-/-- Operator concavity of `x ↦ xˢ` for `0 < s ≤ 1`, in unfolded form:
+/-- Operator concavity of `x ↦ xˢ` for `0 ≤ s ≤ 1`, in unfolded form:
 `t • Aˢ + (1 - t) • Bˢ ≤ (t • A + (1 - t) • B)ˢ` on positive semidefinite
-matrices. Public form of the integral-representation core lemma. -/
+matrices (Mathlib's `CFC.concaveOn_rpow`). -/
 lemma rpow_concavity_le {m : Type*} [Fintype m] [DecidableEq m]
-    {s : ℝ} (hs0 : 0 < s) (hs1 : s ≤ 1)
+    {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     {A B : Matrix m m ℂ} (hA : A.PosSemidef) (hB : B.PosSemidef)
     {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
-    t • A ^ s + (1 - t) • B ^ s ≤ (t • A + (1 - t) • B) ^ s :=
-  rpow_operator_concave_le hs0 hs1 A B hA hB t ht0 ht1
-    ((hA.real_smul ht0).add (hB.real_smul (by linarith))).1
+    t • A ^ s + (1 - t) • B ^ s ≤ (t • A + (1 - t) • B) ^ s := by
+  open scoped Matrix.Norms.L2Operator in
+  exact (CFC.concaveOn_rpow ⟨hs0, hs1⟩).2 hA.nonneg hB.nonneg ht0 (sub_nonneg.2 ht1)
+    (add_sub_cancel t 1)
 
 /-- Monotonicity of the trace pairing against a positive semidefinite matrix:
-`X ≤ Y` implies `Re Tr(X·M) ≤ Re Tr(Y·M)` for `M` positive semidefinite.
-Proved by conjugating with `M^{1/2}` and applying `trace_mono`. -/
+`X ≤ Y` implies `Re Tr(X·M) ≤ Re Tr(Y·M)` for `M` positive semidefinite: `Tr((Y - X) M) ≥ 0` as
+`Y - X` and `M` are positive semidefinite (`Matrix.PosSemidef.trace_mul_nonneg`). -/
 lemma trace_mul_mono_of_posSemidef {m : Type*} [Fintype m]
     {X Y M : Matrix m m ℂ} (hXY : X ≤ Y) (hM : M.PosSemidef) :
     (X * M).trace.re ≤ (Y * M).trace.re := by
-  classical
-  set S : Matrix m m ℂ := matrixSqrt M hM with hS_def
-  have hSH : Sᴴ = S := matrixSqrt_isHermitian hM
-  have hSS : S * S = M := matrixSqrt_mul_self_posSemidef hM
-  have hkey : ∀ Z : Matrix m m ℂ, (Z * M).trace = (Sᴴ * Z * S).trace := by
-    intro Z
-    rw [hSH, ← hSS, ← Matrix.mul_assoc, Matrix.trace_mul_comm, ← Matrix.mul_assoc]
-  have h := trace_mono (compression_le hXY S)
-  rwa [← hkey X, ← hkey Y] at h
+  have h := (Complex.le_def.1 ((Matrix.le_iff.1 hXY).trace_mul_nonneg hM)).1
+  rwa [Matrix.sub_mul, trace_sub, Complex.sub_re, Complex.zero_re, sub_nonneg] at h
 
 end Matrix

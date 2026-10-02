@@ -9,6 +9,7 @@ public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
+public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
 
 /-!
 # Von Neumann Entropy
@@ -39,8 +40,9 @@ properties.
 * `DensityMatrix.vonNeumannEntropy_concave` — concavity, two-point form;
   `DensityMatrix.vonNeumannEntropy_concave_sum` — the finite form
   `Σᵢ wᵢ S(ρᵢ) ≤ S(Σᵢ wᵢ ρᵢ)`.
-* `DensityMatrix.vonNeumannEntropy_map_starAlgEquiv`, `DensityMatrix.vonNeumannEntropy_mapEquiv` —
-  invariance under `⋆`-algebra equivalences and reindexing.
+* `DensityMatrix.vonNeumannEntropy_map_ofStarAlgEquiv`,
+  `DensityMatrix.vonNeumannEntropy_map_reindex` — invariance under the channels of `⋆`-algebra
+  equivalences and of reindexing.
 -/
 
 @[expose] public section
@@ -88,37 +90,16 @@ lemma hasDerivAt_sum_rpow {α : Type*} [Fintype α] (evs : α → ℝ) (hev : �
   rw [heq]
   exact hsum
 
-/-- Trace-rpow concavity: for 0 < s ≤ 1 and positive semidefinite A, B,
+/-- Trace-rpow concavity: for 0 ≤ s ≤ 1 and positive semidefinite A, B,
     p ⋅ Tr (Aˢ) + (1−p) ⋅ Tr (Bˢ) ≤ Tr ((pA + (1−p)B)ˢ).
-    This follows from Löwner-order concavity (`rpow_isLownerConcave`) plus the
-    trace-monotonicity of the Hermitian order. -/
+    This follows from the operator concavity of `A ↦ Aˢ` (Mathlib's `CFC.concaveOn_rpow`,
+    unfolded as `rpow_concavity_le`) plus the trace-monotonicity of the Hermitian order. -/
 lemma re_trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
-    (s : ℝ) (hs0 : 0 < s) (hs1 : s ≤ 1) :
+    (s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     p * (Tr (A ^ s)).re + (1 - p) * (Tr (B ^ s)).re ≤ (Tr ((p • A + (1 - p) • B) ^ s)).re := by
-  have hpsd_mix : (p • A + (1 - p) • B).PosSemidef :=
-    (hA.real_smul hp).add (hB.real_smul (by linarith))
-  have hlowner := rpow_isLownerConcave hs0 hs1 n A B hA hB p hp hp1 hpsd_mix.1
-  simp only [] at hlowner
-  have hA0 : (0 : Matrix n n ℂ) ≤ A := by rw [Matrix.le_iff, sub_zero]; exact hA
-  have hB0 : (0 : Matrix n n ℂ) ≤ B := by rw [Matrix.le_iff, sub_zero]; exact hB
-  have hM0 : (0 : Matrix n n ℂ) ≤ p • A + (1 - p) • B := by
-    rw [Matrix.le_iff, sub_zero]; exact hpsd_mix
-  have eA : cfc (fun x : ℝ => -(x ^ s)) A = -(A ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := A) (ha := hA0)]
-  have eB : cfc (fun x : ℝ => -(x ^ s)) B = -(B ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := B) (ha := hB0)]
-  have eM : cfc (fun x : ℝ => -(x ^ s)) (p • A + (1 - p) • B) =
-      -((p • A + (1 - p) • B) ^ s) := by
-    rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := p • A + (1 - p) • B) (ha := hM0)]
-  rw [eA, eB, eM] at hlowner
-  have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s := by
-    have heq : p • -A ^ s + (1 - p) • -B ^ s = -(p • A ^ s + (1 - p) • B ^ s) := by
-      have h1 : p • -A ^ s = -(p • A ^ s) := smul_neg p (A ^ s)
-      have h2 : (1 - p) • -B ^ s = -((1 - p) • B ^ s) := smul_neg (1 - p) (B ^ s)
-      rw [h1, h2, ← neg_add]
-    rw [heq] at hlowner
-    rwa [neg_le_neg_iff] at hlowner
+  have hlowner' : p • A ^ s + (1 - p) • B ^ s ≤ (p • A + (1 - p) • B) ^ s :=
+    rpow_concavity_le hs0 hs1 hA hB hp hp1
   rw [Matrix.le_iff] at hlowner'
   have htrace := (Complex.nonneg_iff.mp hlowner'.trace_nonneg).1
   have htr1 : Tr (p • A ^ s) = (p : ℝ) • Tr (A ^ s) := Matrix.trace_smul (p : ℝ) (A ^ s)
@@ -322,10 +303,10 @@ theorem vonNeumannEntropy_eq_log_card_iff [Nonempty n] (ρ : DensityMatrix n) :
 `S(Σᵢ wᵢ ρᵢ) ≥ Σᵢ wᵢ S(ρᵢ)` is `DensityMatrix.vonNeumannEntropy_concave_sum`.
 
 **Proof**: We use the Löwner-order concavity of A ↦ Aˢ for 0 < s ≤ 1
-(from `rpow_isLownerConcave`). Define g(s) := Tr (ρ_mixˢ)
+(`CFC.concaveOn_rpow`, through `re_trace_rpow_concave`). Define g(s) := Tr (ρ_mixˢ)
 − p Tr (ρ₁ˢ) − (1−p) Tr (ρ₂ˢ).
 
-- **Non-negativity**: For s ∈ (0,1], Löwner concavity gives
+- **Non-negativity**: For s ∈ (0,1], operator concavity gives
   p ρ₁ˢ + (1−p) ρ₂ˢ ≤ ρ_mixˢ in Löwner order,
   so taking traces gives g(s) ≥ 0.
 - **Boundary**: g(1) = 0 since all density matrices have trace 1.
@@ -346,7 +327,7 @@ theorem vonNeumannEntropy_concave (ρ₁ ρ₂ : DensityMatrix n) (p : ℝ) (hp 
     (p * (ρ₁.toMatrix ^ s).trace.re + (1 - p) * (ρ₂.toMatrix ^ s).trace.re)
   have g_nonneg : ∀ s ∈ Set.Ioc (0 : ℝ) 1, 0 ≤ g s := by
     intro s hs
-    exact sub_nonneg.mpr (re_trace_rpow_concave ρ₁.toMatrix ρ₂.toMatrix hpsd₁ hpsd₂ p hp hp1 s hs.1 hs.2)
+    exact sub_nonneg.mpr (re_trace_rpow_concave ρ₁.toMatrix ρ₂.toMatrix hpsd₁ hpsd₂ p hp hp1 s hs.1.le hs.2)
   have hg_one : g 1 = 0 := by
     simp only [g]
     rw [CFC.rpow_one _ (by simpa [Matrix.le_iff, sub_zero] using hpsd_mix),
@@ -436,9 +417,10 @@ theorem vonNeumannEntropy_concave_sum {ι : Type*} (s : Finset ι) (ρ : ι → 
 /-! ### Isomorphism invariance
 
 For a `*-`algebra equivalence `φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ`, von Neumann entropy is
-invariant: `S(ρ.map φ) = S(ρ)`. Every such `φ` is conjugation by a unitary (Skolem–Noether), so in
-quantum-information terms this is the **unitary invariance of von Neumann entropy**. Such a `φ`
-preserves the trace (`Matrix.trace_map`). -/
+invariant under its channel `Matrix.QuantumChannel.ofStarAlgEquiv φ`:
+`S(ρ.map (.ofStarAlgEquiv φ)) = S(ρ)`. Every such `φ` is conjugation by a unitary
+(Skolem–Noether), so in quantum-information terms this is the **unitary invariance of von Neumann
+entropy**. -/
 
 section IsomorphismInvariance
 
@@ -446,30 +428,31 @@ variable {m : Type*} [Fintype m] [DecidableEq m]
 
 /-- **Von Neumann entropy is invariant under `*-`algebra equivalence**,
 for every density matrix (no positive-definiteness required). -/
-lemma vonNeumannEntropy_map_starAlgEquiv
+lemma vonNeumannEntropy_map_ofStarAlgEquiv
     (ρ : DensityMatrix m)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
-    S(ρ.map φ) = S(ρ) := by
+    S(ρ.map (.ofStarAlgEquiv φ)) = S(ρ) := by
   unfold vonNeumannEntropy
-  have h_log_eq : cfc Real.log (ρ.map φ).toMatrix =
+  have h_log_eq : cfc Real.log (ρ.map (.ofStarAlgEquiv φ)).toMatrix =
       φ (cfc Real.log ρ.toMatrix) := by
-    change cfc Real.log (φ ρ.toMatrix) = _
+    rw [DensityMatrix.map_toMatrix, Matrix.QuantumChannel.coe_ofStarAlgEquiv]
     exact cfc_log_map_starAlgEquiv ρ.isHermitian φ
-  have h_tr : Tr ((ρ.map φ).toMatrix *
-        cfc Real.log (ρ.map φ).toMatrix) =
+  have h_tr : Tr ((ρ.map (.ofStarAlgEquiv φ)).toMatrix *
+        cfc Real.log (ρ.map (.ofStarAlgEquiv φ)).toMatrix) =
       Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix) := by
-    rw [h_log_eq, DensityMatrix.map_toMatrix, ← map_mul, Matrix.trace_map]
-  change -(Tr ((ρ.map φ).toMatrix *
-      cfc Real.log (ρ.map φ).toMatrix)).re =
+    rw [h_log_eq, DensityMatrix.map_toMatrix, Matrix.QuantumChannel.coe_ofStarAlgEquiv, ← map_mul,
+      Matrix.trace_map]
+  change -(Tr ((ρ.map (.ofStarAlgEquiv φ)).toMatrix *
+      cfc Real.log (ρ.map (.ofStarAlgEquiv φ)).toMatrix)).re =
     -(Tr (ρ.toMatrix * cfc Real.log ρ.toMatrix)).re
   rw [h_tr]
 
-/-- **`vonNeumannEntropy` is invariant under reindex**: `S(ρ.mapEquiv e) = S(ρ)` for every
-density matrix `ρ` and equivalence `e`. Specialisation of
-`vonNeumannEntropy_map_starAlgEquiv` to `Matrix.reindexStarAlgEquiv`. -/
-lemma vonNeumannEntropy_mapEquiv (ρ : DensityMatrix m) (e : n ≃ m) :
-    S(ρ.mapEquiv e) = S(ρ) :=
-  vonNeumannEntropy_map_starAlgEquiv ρ _
+/-- **`vonNeumannEntropy` is invariant under reindexing**: `S(ρ.map (.reindex e)) = S(ρ)` for
+every density matrix `ρ` and equivalence `e`. Specialisation of
+`vonNeumannEntropy_map_ofStarAlgEquiv` to `Matrix.reindexStarAlgEquiv`. -/
+lemma vonNeumannEntropy_map_reindex (ρ : DensityMatrix m) (e : m ≃ n) :
+    S(ρ.map (.reindex e)) = S(ρ) :=
+  vonNeumannEntropy_map_ofStarAlgEquiv ρ _
 
 end IsomorphismInvariance
 

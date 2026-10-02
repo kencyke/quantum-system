@@ -12,7 +12,7 @@ public import Mathlib.Analysis.Matrix.Order
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
 /-!
-# `StarAlgEquiv` instances for matrix algebras
+# `StarAlgEquiv` instances and positive maps for matrix algebras
 
 Provides
 
@@ -24,11 +24,12 @@ Provides
   `reindexStarAlgEquiv`.
 * `Matrix.trace_conjStarAlgAut` — trace is preserved under unitary conjugation
   `Unitary.conjStarAlgAut` on a matrix algebra.
-* `Matrix.IsHermitian.map_starAlgEquiv` / `Matrix.PosSemidef.map_starAlgEquiv` /
-  `Matrix.PosDef.map_starAlgEquiv` — preservation of Hermitian / positive
-  (semi)definite under a `*-`algebra equivalence between complex matrix algebras.
+* `Matrix.PosSemidef.map` — positive maps between complex matrix algebras, among them
+  `*-`algebra equivalences and completely positive maps, preserve positive semidefiniteness.
+* `Matrix.IsHermitian.map_starAlgEquiv` / `Matrix.PosDef.map_starAlgEquiv` — preservation of
+  Hermitian / positive definite under a `*-`algebra equivalence between complex matrix algebras.
 * `Matrix.PosSemidef.mapEquiv` / `Matrix.PosDef.mapEquiv` — reindex specialisations of
-  the `map_starAlgEquiv` preservation lemmas.
+  `Matrix.PosSemidef.map` and `Matrix.PosDef.map_starAlgEquiv`.
 
 `Unitary.conjStarAlgAut S R u : R ≃⋆ₐ[S] R` already exists upstream in
 `Mathlib.Algebra.Star.UnitaryStarAlgAut`, so this file does not redefine it; only the
@@ -121,27 +122,18 @@ theorem IsHermitian.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.IsHermitian)
   unfold IsHermitian
   rw [← star_eq_conjTranspose, ← map_star, show star M = Mᴴ from rfl, hM]
 
-omit [DecidableEq m] [DecidableEq n] in
-/-- `*-`algebra equivalences preserve positive-semidefiniteness on matrix algebras over `ℂ`.
-
-The proof goes via the eigenvalue characterisation of `PosSemidef`: any `*`-algebra equivalence
-preserves the spectrum, and on Hermitian matrices the eigenvalues are exactly the real spectrum,
-so non-negativity is preserved. -/
-theorem PosSemidef.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.PosSemidef)
-    (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
-    (φ M).PosSemidef := by
-  classical
-  -- Image is hermitian.
-  have hφM_herm : (φ M).IsHermitian := IsHermitian.map_starAlgEquiv hM.isHermitian φ
-  -- Reduce to spectrum-non-negativity using `posSemidef_iff_isHermitian_and_spectrum_nonneg`.
-  rw [posSemidef_iff_isHermitian_and_spectrum_nonneg]
-  refine ⟨hφM_herm, ?_⟩
-  rw [posSemidef_iff_isHermitian_and_spectrum_nonneg] at hM
-  -- `*-`-algebra equivalences preserve the spectrum.
-  have hspec : spectrum ℂ (φ M) = spectrum ℂ M :=
-    AlgEquiv.spectrum_eq φ.toAlgEquiv M
-  rw [hspec]
-  exact hM.2
+/-- A positive map `φ : M_n(ℂ) → M_m(ℂ)`, of any `OrderHomClass` for the Löwner order, sends
+positive semidefinite matrices to positive semidefinite matrices. This covers `*-`algebra
+equivalences (order isomorphisms of the Löwner order), positive linear maps (`E₁ →ₚ[R] E₂`) and
+completely positive maps (an `OrderHomClass` through the `CompletelyPositiveMapClass` instance).
+Hermiticity is preserved by every `StarHomClass` (`IsSelfAdjoint.map`). -/
+theorem PosSemidef.map {n m F : Type*} [Finite n] [Finite m]
+    [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] [ZeroHomClass F (Matrix n n ℂ) (Matrix m m ℂ)]
+    [OrderHomClass F (Matrix n n ℂ) (Matrix m m ℂ)] {A : Matrix n n ℂ} (hA : A.PosSemidef)
+    (φ : F) : (φ A).PosSemidef := by
+  have := Fintype.ofFinite n
+  have := Fintype.ofFinite m
+  exact Matrix.nonneg_iff_posSemidef.mp (map_nonneg φ hA.nonneg)
 
 omit [DecidableEq m] [DecidableEq n] in
 /-- `*-`algebra equivalences preserve positive-definiteness: PSD + invertibility, both of
@@ -150,25 +142,24 @@ theorem PosDef.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.PosDef)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
     (φ M).PosDef := by
   classical
-  refine (hM.posSemidef.map_starAlgEquiv φ).posDef_iff_isUnit.mpr ?_
+  refine (hM.posSemidef.map φ).posDef_iff_isUnit.mpr ?_
   exact φ.toAlgEquiv.toAlgHom.isUnit_map hM.isUnit
 
 /-! ### Reindex specialisations
 
-`Equiv`-flavoured restatements derived from `PosSemidef.map_starAlgEquiv` and
+`Equiv`-flavoured restatements derived from `PosSemidef.map` and
 `PosDef.map_starAlgEquiv`, useful when an index-set bijection `e : n ≃ m`
 is naturally available (e.g. from region index-set equivalences). -/
 
 omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 /-- `Matrix.PosSemidef` is preserved by reindexing the index set via a bijection.
-    Specialisation of `PosSemidef.map_starAlgEquiv` to `reindexStarAlgEquiv`. -/
+    Specialisation of `PosSemidef.map` to `reindexStarAlgEquiv`. -/
 lemma PosSemidef.mapEquiv [Finite m] {M : Matrix m m ℂ} (hM : M.PosSemidef) (e : n ≃ m) :
     (M.submatrix e e).PosSemidef := by
   classical
   let := Fintype.ofFinite m
   let : Fintype n := Fintype.ofEquiv m e.symm
-  exact Matrix.PosSemidef.map_starAlgEquiv hM
-    (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
+  exact hM.map (Matrix.reindexStarAlgEquiv (R := ℂ) e.symm)
 
 omit [Fintype m] [Fintype n] [DecidableEq m] [DecidableEq n] in
 /-- `Matrix.PosDef` is preserved by reindexing the index set via a bijection.

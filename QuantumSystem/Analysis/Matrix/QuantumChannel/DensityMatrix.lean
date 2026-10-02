@@ -12,40 +12,46 @@ public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
 # Action of a quantum channel on a density matrix
 
 A quantum channel `Φ : QuantumChannel n m` sends a density matrix on `ℂⁿ` to one on `ℂᵐ` by
-`ρ ↦ Φ.val ρ`. Complete positivity gives positive semidefiniteness and trace preservation gives
-trace one.
+`ρ ↦ ρ.map Φ`, the matrix `Φ ρ` with its positivity and trace. Complete positivity gives
+positive semidefiniteness and trace preservation gives trace one.
 
 ## Main definitions
 
-* `Matrix.QuantumChannel.apply`: the induced map on density matrices.
+* `DensityMatrix.map`: the induced map on density matrices. Unitary conjugation and reindexing
+  are the channels `Matrix.QuantumChannel.ofStarAlgEquiv` and `Matrix.QuantumChannel.reindex`.
 
-## Instances
-
-* `CoeFun (QuantumChannel n m) (fun _ => DensityMatrix n → DensityMatrix m)` lets a channel be
-  written as a function on density matrices.
+The coercion of `Φ` to a function is its action `M_n(ℂ) → M_m(ℂ)` on matrices (the `FunLike`
+instance of `Matrix.QuantumChannel`), so the action on density matrices is spelled
+`ρ.map Φ`.
 -/
 
 @[expose] public section
 
-namespace Matrix
+namespace DensityMatrix
 
-variable {n m : Type*} [Fintype n] [Fintype m]
+variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 
 open scoped ComplexOrder
 
-/-- Apply a quantum channel to a density matrix. -/
-noncomputable def QuantumChannel.apply [DecidableEq n] [DecidableEq m]
-    (Φ : QuantumChannel n m) (ρ : DensityMatrix n) :
+/-- The image `Φ(ρ)` of a density matrix `ρ` under a quantum channel `Φ`.
+
+Positivity and trace preservation alone already send density matrices to density matrices; the
+map is nevertheless defined for channels only, since a physical operation on the system must send
+the states of the system together with any environment `R` to states, i.e. `id_R ⊗ Φ` must be
+positive as well, which is complete positivity. The transpose `ρ ↦ ρᵀ` is positive and
+trace-preserving but not completely positive: `id ⊗ T` (the partial transpose) sends a maximally
+entangled state to a matrix with a negative eigenvalue. -/
+noncomputable def map (ρ : DensityMatrix n) (Φ : Matrix.QuantumChannel n m) :
     DensityMatrix m where
-  toMatrix := Φ.val ↑ρ
-  posSemidef := Φ.property.completelyPositive.posSemidef_map ρ.posSemidef
+  toMatrix := Φ ↑ρ
+  posSemidef := Φ.posSemidef_apply ρ.posSemidef
   trace_eq_one := by
-    rw [Φ.property.tracePreserving]
+    rw [Φ.trace_map]
     exact ρ.trace_eq_one
 
-/-- Quantum channels can be applied as functions from density matrices to density matrices. -/
-noncomputable instance [DecidableEq n] [DecidableEq m] : CoeFun (QuantumChannel n m)
-    (fun _ => DensityMatrix n → DensityMatrix m) where
-  coe := QuantumChannel.apply
+/-- The matrix of `ρ.map Φ` is `Φ` applied to the matrix of `ρ`. -/
+@[simp] lemma map_toMatrix (ρ : DensityMatrix n) (Φ : Matrix.QuantumChannel n m) :
+    (ρ.map Φ).toMatrix = Φ ρ.toMatrix :=
+  rfl
 
-end Matrix
+end DensityMatrix
