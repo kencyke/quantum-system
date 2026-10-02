@@ -13,7 +13,7 @@ public import QuantumSystem.Notation
 # Lieb's Concavity Theorem via Effros's Matrix Convexity Approach
 
 This file provides definitions related to Lieb's concavity theorem and establishes it
-via the Effros Löwner convexity approach (2008), which avoids complex interpolation.
+via Effros's matrix convexity approach (2009), which avoids complex interpolation.
 
 ## Mathematical Background
 
@@ -52,15 +52,15 @@ phrased with a plain `Tr`.
 The last row is the general two-exponent form of Lieb 1973 (Adv. Math. 11,
 267–288); see also Carlen–Lieb, arXiv:0710.4167.
 
-### Proof Strategy (Effros 2008)
+### Proof Strategy (Effros 2009)
 The proof proceeds via:
-1. **Matrix concavity of t^s**: For 0 < s ≤ 1, the map A ↦ A^s is Löwner concave
-   (equivalently, f(t) = -t^s is Löwner convex). This follows from Löwner-Heinz.
-2. **Hansen-Pedersen-Jensen (HPJ) inequality**: For Löwner convex f and matrices
-   A, B with A*A + B*B = I: f(A*T₁A + B*T₂B) ≤ A*f(T₁)A + B*f(T₂)B.
+1. **Matrix concavity of t^s**: For 0 < s ≤ 1, the map A ↦ A^s is operator concave
+   (equivalently, f(t) = -t^s is operator convex). This is Mathlib's `CFC.concaveOn_rpow`.
+2. **Jensen's operator inequality** (Hansen–Pedersen, `IsMatrixConvexOn.cfc_affine_le`): for
+   matrix convex f and A, B with A*A + B*B = I: f(A*T₁A + B*T₂B) ≤ A*f(T₁)A + B*f(T₂)B.
 3. **Matrix perspective**: The noncommutative perspective
    g(L,R) = R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2} is jointly convex in positive semidefinite L
-   and positive definite R when f is Löwner convex (`Matrix.matrixPerspective_joint_convex`);
+   and positive definite R when f is matrix convex (`Matrix.matrixPerspective_joint_convex`);
    L and R need not commute.
 4. **Left/right multiplication**: For L(X) = AX and R(X) = XB (operators on M_n),
    apply the perspective with f(t) = -t^s to obtain joint concavity of
@@ -68,7 +68,8 @@ The proof proceeds via:
 
 ## References
 
-* Effros, *A Matrix Convexity Approach to Some Celebrated Quantum Inequalities* (2008)
+* Effros, *A Matrix Convexity Approach to Some Celebrated Quantum Inequalities*,
+  Proc. Natl. Acad. Sci. USA 106 (2009), 1006–1008
 * Lieb, *Convex trace functions and the Wigner-Yanase-Dyson conjecture* (1973)
 -/
 @[expose] public section
@@ -125,7 +126,7 @@ and v = vec(K†) equals -Tr(A^p K† B^{1-p} K).
 
 This is the key spectral identity connecting the matrix perspective
 on left/right multiplication operators to the Lieb joint function.
-See Effros (2008), Corollary 2.4 (proof).
+See Effros (2009), Corollary 2.4 (proof).
 
 The proof is technical but the key insight is:
 - For commuting L = leftMulMatrix A and R = rightMulMatrix B,
@@ -137,7 +138,7 @@ The proof is technical but the key insight is:
 The simplification uses functional calculus on Kronecker products
 (`Matrix.matrixPerspective_neg_leftRight_eq`). -/
 private lemma matrixPerspective_inner_eq_neg_liebJointFunction {m : Type*} [Fintype m] [DecidableEq m]
-    (K : Matrix m m ℂ) (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
+    (K : Matrix m m ℂ) (p : ℝ) (hp1 : p ≤ 1)
     (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) :
     let v : (m × m) → ℂ := fun x => Kᴴ x.1 x.2
     (star v ⬝ᵥ (matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) *ᵥ v)).re =
@@ -147,7 +148,7 @@ private lemma matrixPerspective_inner_eq_neg_liebJointFunction {m : Type*} [Fint
   have h_persp :
       matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) =
       -(𝐋 (A ^ p) * 𝐑 (B ^ (1 - p))) :=
-    Matrix.matrixPerspective_neg_leftRight_eq A B hA hB p hp
+    Matrix.matrixPerspective_neg_leftRight_eq A B hA hB p
   -- Compute the quadratic form
   rw [h_persp, Matrix.neg_mulVec, dotProduct_neg, Complex.neg_re]
   congr 1
@@ -176,7 +177,7 @@ The key is that the Lieb function Tr(A^p K† B^{1-p} K) equals the HS inner pro
 ⟨A^p K† B^{1-p}, K†⟩, and operator concavity of x^p implies joint concavity via
 the left/right multiplication operator structure.
 
-This proof uses the Effros approach: for Löwner convex f(t) = -t^p, the perspective
+This proof uses the Effros approach: for operator convex f(t) = -t^p, the perspective
 function g(L,R) = f(L/R)R is jointly convex for commuting operators L, R.
 Applied to left/right multiplication operators L_A and R_B (which commute), the
 HS inner product ⟨g(L_A, R_B)(K†), K†⟩ = -Tr(A^p K† B^{1-p} K) is jointly convex,
@@ -189,14 +190,15 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     w₁ * (liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re +
     w₂ * (liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re ≤
     (liebJointFunction K p
-      (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.real_smul hw₁).add (hA₂.posSemidef.real_smul hw₂))
+      (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.smul hw₁).add (hA₂.posSemidef.smul hw₂))
       (w₁ • B₁ + w₂ • B₂)
-        ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
+        ((hB₁.posSemidef.smul hw₁).add (hB₂.posSemidef.smul hw₂))).re := by
   classical
   /- Proof by Effros's Matrix Perspective Approach -/
   -- 1. Setup the function f(x) = -x^p, which is Matrix Convex.
   let f : ℝ → ℝ := fun x => -(x ^ p)
-  have hconv : IsLownerConvexOn (Set.Ici 0) f := neg_rpow_isLownerConvexOn hp0.le hp1.le
+  have hconv : IsMatrixConvexOn (Set.Ici 0) f :=
+    (isOperatorConvexOn_neg_rpow.{0} hp0.le hp1.le).isMatrixConvexOn
   -- 2. Define Left and Right multiplication operators
   let L₁ := 𝐋 A₁
   let L₂ := 𝐋 A₂
@@ -236,12 +238,12 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   have h_ident1 : (star v ⬝ᵥ (term1 *ᵥ v)).re =
       -(liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re := by
     exact
-      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₁ B₁
+      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp1) A₁ B₁
         hA₁ hB₁
   have h_ident2 : (star v ⬝ᵥ (term2 *ᵥ v)).re =
       -(liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re := by
     exact
-      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp0) (le_of_lt hp1) A₂ B₂
+      matrixPerspective_inner_eq_neg_liebJointFunction K p (le_of_lt hp1) A₂ B₂
         hA₂ hB₂
   have hA_comb : (w₁ • A₁ + w₂ • A₂).PosDef := PosDef.convex_comb_nonneg hA₁ hA₂ hw₁ hw₂ hw
   have hB_comb : (w₁ • B₁ + w₂ • B₂).PosDef := PosDef.convex_comb_nonneg hB₁ hB₂ hw₁ hw₂ hw
@@ -249,9 +251,9 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   -- applied to the convex combinations, after identifying L = leftMulMatrix(w₁A₁+w₂A₂)
   -- and R = rightMulMatrix(w₁B₁+w₂B₂) via linearity of leftMulMatrix/rightMulMatrix.
   have h_ident_comb : (star v ⬝ᵥ (term_comb *ᵥ v)).re = -(liebJointFunction K p
-      (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.real_smul hw₁).add (hA₂.posSemidef.real_smul hw₂))
+      (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.smul hw₁).add (hA₂.posSemidef.smul hw₂))
       (w₁ • B₁ + w₂ • B₂)
-        ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
+        ((hB₁.posSemidef.smul hw₁).add (hB₂.posSemidef.smul hw₂))).re := by
     have hLlin : L = 𝐋 (w₁ • A₁ + w₂ • A₂) := by
       ext ij kl
       rcases ij with ⟨i, j⟩
@@ -279,7 +281,7 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     -- The matrixPerspective_inner_eq_neg_liebJointFunction lemma gives us
     -- the result for general positive definite matrices.
     have h_apply := matrixPerspective_inner_eq_neg_liebJointFunction K p
-        (le_of_lt hp0) (le_of_lt hp1)
+        (le_of_lt hp1)
         (w₁ • A₁ + w₂ • A₂) (w₁ • B₁ + w₂ • B₂) hA_comb hB_comb
     -- The term_comb uses L and R which equal leftMulMatrix/rightMulMatrix of convex combs.
     -- After substitution, the goal matches h_apply.
@@ -294,24 +296,15 @@ private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
   -- After the simp rewrites, `h_vec_nonneg` is
   --   0 ≤ (star v ⬝ᵥ (w₁ • term1) *ᵥ v + star v ⬝ᵥ (w₂ • term2) *ᵥ v
   --          - star v ⬝ᵥ term_comb *ᵥ v).re
-  -- Push the real scalars out of `mulVec` and `dotProduct` via the ℂ-coercion
-  -- (since `PosSMulMono ℝ ℂ` is unavailable, we route through `Complex.real_smul`).
-  have hsmul₁ : star v ⬝ᵥ (w₁ • term1) *ᵥ v = (w₁ : ℂ) * (star v ⬝ᵥ term1 *ᵥ v) := by
-    rw [show (w₁ • term1 : Matrix (m × m) (m × m) ℂ) = (w₁ : ℂ) • term1 from by
-      ext i j; simp [Complex.real_smul]]
-    rw [Matrix.smul_mulVec, dotProduct_smul]; rfl
-  have hsmul₂ : star v ⬝ᵥ (w₂ • term2) *ᵥ v = (w₂ : ℂ) * (star v ⬝ᵥ term2 *ᵥ v) := by
-    rw [show (w₂ • term2 : Matrix (m × m) (m × m) ℂ) = (w₂ : ℂ) • term2 from by
-      ext i j; simp [Complex.real_smul]]
-    rw [Matrix.smul_mulVec, dotProduct_smul]; rfl
-  rw [hsmul₁, hsmul₂] at h_vec_nonneg
+  -- Push the real scalars out of `mulVec` and `dotProduct`.
+  rw [Matrix.smul_mulVec, dotProduct_smul, Matrix.smul_mulVec, dotProduct_smul]
+    at h_vec_nonneg
   have h_vec_re' :
       0 ≤
         (w₁ * (star v ⬝ᵥ (term1 *ᵥ v)).re + w₂ * (star v ⬝ᵥ (term2 *ᵥ v)).re -
           (star v ⬝ᵥ (term_comb *ᵥ v)).re) := by
     have := (Complex.nonneg_iff.mp h_vec_nonneg).1
-    simpa [Complex.add_re, Complex.sub_re, Complex.mul_re,
-      Complex.ofReal_re, Complex.ofReal_im] using this
+    simpa [Complex.add_re, Complex.sub_re, Complex.smul_re] using this
   rw [h_ident1, h_ident2, h_ident_comb] at h_vec_re'
   linarith
 
@@ -325,41 +318,31 @@ private lemma lieb_joint_concavity {m : Type*} [Fintype m] [DecidableEq m]
     w₁ * (liebJointFunction K p A₁ hA₁.posSemidef B₁ hB₁.posSemidef).re +
     w₂ * (liebJointFunction K p A₂ hA₂.posSemidef B₂ hB₂.posSemidef).re ≤
     (liebJointFunction K p
-      (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.real_smul hw₁).add (hA₂.posSemidef.real_smul hw₂))
+      (w₁ • A₁ + w₂ • A₂) ((hA₁.posSemidef.smul hw₁).add (hA₂.posSemidef.smul hw₂))
       (w₁ • B₁ + w₂ • B₂)
-        ((hB₁.posSemidef.real_smul hw₁).add (hB₂.posSemidef.real_smul hw₂))).re := by
+        ((hB₁.posSemidef.smul hw₁).add (hB₂.posSemidef.smul hw₂))).re := by
   -- Handle boundary cases p = 0 and p = 1 separately
   rcases eq_or_lt_of_le hp0 with rfl | hp0'
   · -- p = 0: Tr(K†BK) is linear in B, so equality holds
     rw [liebJointFunction_zero_eq, liebJointFunction_zero_eq, liebJointFunction_zero_eq]
-    have hcast : ∀ (w : ℝ) (M : Matrix m m ℂ), (w • M : Matrix m m ℂ) = (w : ℂ) • M := by
-      intro w M; ext i j; simp [Complex.real_smul]
     have h_linear : (Kᴴ * (w₁ • B₁ + w₂ • B₂) * K).trace =
-        (w₁ : ℂ) * (Kᴴ * B₁ * K).trace + (w₂ : ℂ) * (Kᴴ * B₂ * K).trace := by
-      rw [Matrix.mul_add, Matrix.add_mul, hcast w₁ B₁, hcast w₂ B₂]
-      rw [Matrix.mul_smul, Matrix.smul_mul, Matrix.mul_smul, Matrix.smul_mul]
-      rw [trace_add, trace_smul, trace_smul]
-      simp [smul_eq_mul]
+        w₁ • (Kᴴ * B₁ * K).trace + w₂ • (Kᴴ * B₂ * K).trace := by
+      rw [Matrix.mul_add, Matrix.add_mul, Matrix.mul_smul, Matrix.smul_mul, Matrix.mul_smul,
+        Matrix.smul_mul, trace_add, trace_smul, trace_smul]
     rw [h_linear]
-    simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul,
-      sub_zero]
+    simp only [Complex.add_re, Complex.smul_re, smul_eq_mul]
     exact le_refl _
   rcases eq_or_lt_of_le hp1 with rfl | hp1'
   · -- p = 1: Tr(AK†K) is linear in A, so equality holds
     rw [liebJointFunction_one_eq, liebJointFunction_one_eq, liebJointFunction_one_eq]
-    have hcast : ∀ (w : ℝ) (M : Matrix m m ℂ), (w • M : Matrix m m ℂ) = (w : ℂ) • M := by
-      intro w M; ext i j; simp [Complex.real_smul]
     have h_linear : ((w₁ • A₁ + w₂ • A₂) * Kᴴ * K).trace =
-        (w₁ : ℂ) * (A₁ * Kᴴ * K).trace + (w₂ : ℂ) * (A₂ * Kᴴ * K).trace := by
-      rw [Matrix.add_mul, Matrix.add_mul, hcast w₁ A₁, hcast w₂ A₂]
-      rw [Matrix.smul_mul, Matrix.smul_mul, Matrix.smul_mul, Matrix.smul_mul]
-      rw [trace_add, trace_smul, trace_smul]
-      simp [smul_eq_mul]
+        w₁ • (A₁ * Kᴴ * K).trace + w₂ • (A₂ * Kᴴ * K).trace := by
+      rw [Matrix.add_mul, Matrix.add_mul, Matrix.smul_mul, Matrix.smul_mul, Matrix.smul_mul,
+        Matrix.smul_mul, trace_add, trace_smul, trace_smul]
     rw [h_linear]
-    simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, zero_mul,
-      sub_zero]
+    simp only [Complex.add_re, Complex.smul_re, smul_eq_mul]
     exact le_refl _
-  -- For 0 < p < 1, apply Effros's Löwner convexity approach
+  -- For 0 < p < 1, apply Effros's matrix convexity approach
   exact lieb_concavity_effros A₁ A₂ B₁ B₂ hA₁ hA₂ hB₁ hB₂ K p hp0' hp1' w₁ w₂ hw₁ hw₂ hw
 
 /-- For a positive semidefinite matrix A and real p, the map
@@ -384,7 +367,8 @@ private lemma rpow_tendsto_smul_one {m : Type*} [Fintype m] [DecidableEq m]
       obtain ⟨i, rfl⟩ := hy_spec
       left; simp only [id, ne_eq]; linarith [hA.eigenvalues_nonneg i]
     rw [CFC.rpow_eq_cfc_real (a := A + (ε : ℂ) • 1)
-          (ha := by simpa [Matrix.le_iff] using (hA.add_smul_one_posDef hε).posSemidef),
+          (ha := by simpa [Matrix.le_iff] using (Matrix.PosDef.posSemidef_add hA
+            (Matrix.PosDef.one.smul (Complex.zero_lt_real.2 hε))).posSemidef),
         ← hcfc_shift, ← cfc_comp' (fun x => x ^ p) (fun x => x + ε) A hcont_p]
   -- Build the tendsto for the cfc version via uniform convergence on the finite spectrum.
   have htend_cfc : Filter.Tendsto (fun ε : ℝ => cfc (fun x : ℝ => (x + ε) ^ p) A)
@@ -438,8 +422,8 @@ For positive semidefinite matrices A₁, A₂, B₁, B₂ and any matrix K, the 
   ≤ Tr((w₁ A₁ + w₂ A₂)ᵖ K† (w₁ B₁ + w₂ B₂)¹⁻ᵖ K)
 
 **Proof**: For each ε > 0, apply `lieb_joint_concavity` to (Aᵢ + ε I, Bᵢ + ε I)
-which are positive definite (by `PosSemidef.add_smul_one_posDef`). The inequality is preserved in the
-limit ε → 0⁺ by CFC continuity (`rpow_tendsto_smul_one`).
+which are positive definite (by `Matrix.PosDef.posSemidef_add` and `Matrix.PosDef.smul`). The
+inequality is preserved in the limit ε → 0⁺ by CFC continuity (`rpow_tendsto_smul_one`).
 
 Subsumed as a statement by `lieb_joint_concavity_general` (take `q := 1 - p`),
 hence `private`, but **kept**: it is the proof input to
@@ -454,8 +438,8 @@ private theorem lieb_joint_concavity_semidef {m : Type*} [Fintype m] [DecidableE
     w₁ * (liebJointFunction K p A₁ hA₁ B₁ hB₁).re +
     w₂ * (liebJointFunction K p A₂ hA₂ B₂ hB₂).re ≤
     (liebJointFunction K p
-      (w₁ • A₁ + w₂ • A₂) ((hA₁.real_smul hw₁).add (hA₂.real_smul hw₂))
-      (w₁ • B₁ + w₂ • B₂) ((hB₁.real_smul hw₁).add (hB₂.real_smul hw₂))).re := by
+      (w₁ • A₁ + w₂ • A₂) ((hA₁.smul hw₁).add (hA₂.smul hw₂))
+      (w₁ • B₁ + w₂ • B₂) ((hB₁.smul hw₁).add (hB₂.smul hw₂))).re := by
   -- For each ε > 0, Aᵢ + ε•1 is PosDef; the inequality holds by lieb_joint_concavity
   -- Use unfolded form to avoid PosSemidef proof dependencies in the type
   have hε_ineq : ∀ ε : ℝ, 0 < ε →
@@ -464,36 +448,21 @@ private theorem lieb_joint_concavity_semidef {m : Type*} [Fintype m] [DecidableE
       ((w₁ • A₁ + w₂ • A₂ + (ε:ℂ) • 1) ^ p * Kᴴ *
        (w₁ • B₁ + w₂ • B₂ + (ε:ℂ) • 1) ^ (1 - p) * K).trace.re := by
     intro ε hε
-    -- Key: w₁•(Aᵢ + ε•1) + w₂•(Aᵢ + ε•1) = w₁•Aᵢ + w₂•Aᵢ + ε•1 (using w₁ + w₂ = 1)
-    -- Convert real smul to complex smul to enable distributivity rewrites
-    have hcast : ∀ (w : ℝ) (M : Matrix m m ℂ), (w • M : Matrix m m ℂ) = (w : ℂ) • M := by
-      intro w M; ext i j; simp [Complex.real_smul]
-    have hsum_smul_one : (w₁ : ℂ) • ((ε:ℂ) • (1 : Matrix m m ℂ)) +
-        (w₂ : ℂ) • ((ε:ℂ) • 1) = (ε:ℂ) • 1 := by
-      have heqcast : (w₁ : ℂ) + (w₂ : ℂ) = ((w₁ + w₂ : ℝ) : ℂ) := by push_cast; ring
-      rw [← add_smul, heqcast, hw, Complex.ofReal_one, one_smul]
+    -- Key: w₁•(A₁ + ε•1) + w₂•(A₂ + ε•1) = w₁•A₁ + w₂•A₂ + ε•1 (using w₁ + w₂ = 1)
     have hcomb_A : w₁ • (A₁ + (ε:ℂ) • 1) + w₂ • (A₂ + (ε:ℂ) • 1) =
         w₁ • A₁ + w₂ • A₂ + (ε:ℂ) • 1 := by
-      rw [hcast w₁ (A₁ + _), hcast w₂ (A₂ + _), hcast w₁ A₁, hcast w₂ A₂,
-          smul_add, smul_add]
-      have heq : (w₁ : ℂ) • A₁ + (w₁ : ℂ) • ((ε:ℂ) • (1 : Matrix m m ℂ)) +
-            ((w₂ : ℂ) • A₂ + (w₂ : ℂ) • ((ε:ℂ) • 1)) =
-          (w₁ : ℂ) • A₁ + (w₂ : ℂ) • A₂ +
-            ((w₁ : ℂ) • ((ε:ℂ) • (1 : Matrix m m ℂ)) + (w₂ : ℂ) • ((ε:ℂ) • 1)) := by abel
-      rw [heq, hsum_smul_one]
+      rw [smul_add, smul_add, add_add_add_comm, ← add_smul w₁ w₂, hw, one_smul]
     have hcomb_B : w₁ • (B₁ + (ε:ℂ) • 1) + w₂ • (B₂ + (ε:ℂ) • 1) =
         w₁ • B₁ + w₂ • B₂ + (ε:ℂ) • 1 := by
-      rw [hcast w₁ (B₁ + _), hcast w₂ (B₂ + _), hcast w₁ B₁, hcast w₂ B₂,
-          smul_add, smul_add]
-      have heq : (w₁ : ℂ) • B₁ + (w₁ : ℂ) • ((ε:ℂ) • (1 : Matrix m m ℂ)) +
-            ((w₂ : ℂ) • B₂ + (w₂ : ℂ) • ((ε:ℂ) • 1)) =
-          (w₁ : ℂ) • B₁ + (w₂ : ℂ) • B₂ +
-            ((w₁ : ℂ) • ((ε:ℂ) • (1 : Matrix m m ℂ)) + (w₂ : ℂ) • ((ε:ℂ) • 1)) := by abel
-      rw [heq, hsum_smul_one]
+      rw [smul_add, smul_add, add_add_add_comm, ← add_smul w₁ w₂, hw, one_smul]
+    have hεI : ((ε : ℂ) • (1 : Matrix m m ℂ)).PosDef :=
+      Matrix.PosDef.one.smul (Complex.zero_lt_real.2 hε)
     have h := lieb_joint_concavity (A₁ + (ε:ℂ) • 1) (A₂ + (ε:ℂ) • 1)
                                    (B₁ + (ε:ℂ) • 1) (B₂ + (ε:ℂ) • 1)
-                                   (hA₁.add_smul_one_posDef hε) (hA₂.add_smul_one_posDef hε)
-                                   (hB₁.add_smul_one_posDef hε) (hB₂.add_smul_one_posDef hε)
+                                   (Matrix.PosDef.posSemidef_add hA₁ hεI)
+                                   (Matrix.PosDef.posSemidef_add hA₂ hεI)
+                                   (Matrix.PosDef.posSemidef_add hB₁ hεI)
+                                   (Matrix.PosDef.posSemidef_add hB₂ hεI)
                                    K p hp0 hp1 w₁ w₂ hw₁ hw₂ hw
     simp only [liebJointFunction] at h ⊢
     rw [← hcomb_A, ← hcomb_B]
@@ -521,14 +490,14 @@ private theorem lieb_joint_concavity_semidef {m : Type*} [Fintype m] [DecidableE
          (w₁ • B₁ + w₂ • B₂ + (ε:ℂ) • 1) ^ (1 - p) * K).trace.re)
       (nhdsWithin 0 (Set.Ioi 0))
       (nhds (liebJointFunction K p (w₁ • A₁ + w₂ • A₂)
-                ((hA₁.real_smul hw₁).add (hA₂.real_smul hw₂))
+                ((hA₁.smul hw₁).add (hA₂.smul hw₂))
                 (w₁ • B₁ + w₂ • B₂)
-                ((hB₁.real_smul hw₁).add (hB₂.real_smul hw₂))).re) := by
+                ((hB₁.smul hw₁).add (hB₂.smul hw₂))).re) := by
     simp only [liebJointFunction]
     apply (Complex.continuous_re.comp continuous_id.matrix_trace).continuousAt.tendsto.comp
-    exact ((rpow_tendsto_smul_one ((hA₁.real_smul hw₁).add (hA₂.real_smul hw₂))
+    exact ((rpow_tendsto_smul_one ((hA₁.smul hw₁).add (hA₂.smul hw₂))
             p hp0).mul_const Kᴴ).mul
-            (rpow_tendsto_smul_one ((hB₁.real_smul hw₁).add (hB₂.real_smul hw₂))
+            (rpow_tendsto_smul_one ((hB₁.smul hw₁).add (hB₂.smul hw₂))
               (1 - p) (by linarith)) |>.mul_const K
   -- Combine: lhs_limit ≤ rhs_limit via the ε-pointwise inequality
   apply le_of_tendsto_of_tendsto hconv_lhs hconv_rhs
@@ -676,38 +645,28 @@ private theorem lieb_joint_concavity_rect_semidef {n m : Type*} [Fintype n] [Dec
     w₁ * (liebJointFunction K p A₁ hA₁ B₁ hB₁).re +
     w₂ * (liebJointFunction K p A₂ hA₂ B₂ hB₂).re ≤
     (liebJointFunction K p
-      (w₁ • A₁ + w₂ • A₂) ((hA₁.real_smul hw₁).add (hA₂.real_smul hw₂))
-      (w₁ • B₁ + w₂ • B₂) ((hB₁.real_smul hw₁).add (hB₂.real_smul hw₂))).re := by
+      (w₁ • A₁ + w₂ • A₂) ((hA₁.smul hw₁).add (hA₂.smul hw₂))
+      (w₁ • B₁ + w₂ • B₂) ((hB₁.smul hw₁).add (hB₂.smul hw₂))).re := by
   -- Boundary cases p = 0 and p = 1: both sides are linear, giving equality
   rcases eq_or_lt_of_le hp0 with rfl | hp0'
   · -- p = 0: Tr(K†BK) is linear in B
     simp only [liebJointFunction_zero_eq]
-    have hcastB : ∀ (w : ℝ) (M : Matrix m m ℂ), (w • M : Matrix m m ℂ) = (w : ℂ) • M := by
-      intro w M; ext i j; simp [Complex.real_smul]
     have h_linear : (Kᴴ * (w₁ • B₁ + w₂ • B₂) * K).trace =
-        (w₁ : ℂ) * (Kᴴ * B₁ * K).trace + (w₂ : ℂ) * (Kᴴ * B₂ * K).trace := by
-      rw [Matrix.mul_add, Matrix.add_mul, hcastB w₁ B₁, hcastB w₂ B₂,
-          Matrix.mul_smul, Matrix.smul_mul,
-          Matrix.mul_smul, Matrix.smul_mul, trace_add, trace_smul, trace_smul]
-      simp [smul_eq_mul]
+        w₁ • (Kᴴ * B₁ * K).trace + w₂ • (Kᴴ * B₂ * K).trace := by
+      rw [Matrix.mul_add, Matrix.add_mul, Matrix.mul_smul, Matrix.smul_mul, Matrix.mul_smul,
+        Matrix.smul_mul, trace_add, trace_smul, trace_smul]
     rw [h_linear]
-    simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
-      zero_mul, sub_zero]
+    simp only [Complex.add_re, Complex.smul_re, smul_eq_mul]
     exact le_refl _
   rcases eq_or_lt_of_le hp1 with rfl | hp1'
   · -- p = 1: Tr(AK†K) is linear in A
     simp only [liebJointFunction_one_eq]
-    have hcastA : ∀ (w : ℝ) (M : Matrix n n ℂ), (w • M : Matrix n n ℂ) = (w : ℂ) • M := by
-      intro w M; ext i j; simp [Complex.real_smul]
     have h_linear : ((w₁ • A₁ + w₂ • A₂) * Kᴴ * K).trace =
-        (w₁ : ℂ) * (A₁ * Kᴴ * K).trace + (w₂ : ℂ) * (A₂ * Kᴴ * K).trace := by
-      rw [Matrix.add_mul, Matrix.add_mul, hcastA w₁ A₁, hcastA w₂ A₂,
-          Matrix.smul_mul, Matrix.smul_mul,
-          Matrix.smul_mul, Matrix.smul_mul, trace_add, trace_smul, trace_smul]
-      simp [smul_eq_mul]
+        w₁ • (A₁ * Kᴴ * K).trace + w₂ • (A₂ * Kᴴ * K).trace := by
+      rw [Matrix.add_mul, Matrix.add_mul, Matrix.smul_mul, Matrix.smul_mul, Matrix.smul_mul,
+        Matrix.smul_mul, trace_add, trace_smul, trace_smul]
     rw [h_linear]
-    simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
-      zero_mul, sub_zero]
+    simp only [Complex.add_re, Complex.smul_re, smul_eq_mul]
     exact le_refl _
   -- Interior case: embed in (n ⊕ m) block space and apply lieb_joint_concavity_semidef
   -- Define block matrices in (n ⊕ m) × (n ⊕ m) space
@@ -733,18 +692,18 @@ private theorem lieb_joint_concavity_rect_semidef {n m : Type*} [Fintype n] [Dec
   have hBcomb : w₁ • Bblock1 + w₂ • Bblock2 = fromBlocks 0 0 0 (w₁ • B₁ + w₂ • B₂) := by
     simp only [Bblock1, Bblock2, fromBlocks_smul_bot, fromBlocks_add, zero_add]
   have hAcomb_psd : (w₁ • Ablock1 + w₂ • Ablock2).PosSemidef :=
-    (hAb1.real_smul hw₁).add (hAb2.real_smul hw₂)
+    (hAb1.smul hw₁).add (hAb2.smul hw₂)
   have hBcomb_psd : (w₁ • Bblock1 + w₂ • Bblock2).PosSemidef :=
-    (hBb1.real_smul hw₁).add (hBb2.real_smul hw₂)
+    (hBb1.smul hw₁).add (hBb2.smul hw₂)
   have hidcomb : liebJointFunction Kblock p (w₁ • Ablock1 + w₂ • Ablock2) hAcomb_psd
       (w₁ • Bblock1 + w₂ • Bblock2) hBcomb_psd =
-      liebJointFunction K p (w₁ • A₁ + w₂ • A₂) ((hA₁.real_smul hw₁).add (hA₂.real_smul hw₂))
-        (w₁ • B₁ + w₂ • B₂) ((hB₁.real_smul hw₁).add (hB₂.real_smul hw₂)) := by
+      liebJointFunction K p (w₁ • A₁ + w₂ • A₂) ((hA₁.smul hw₁).add (hA₂.smul hw₂))
+        (w₁ • B₁ + w₂ • B₂) ((hB₁.smul hw₁).add (hB₂.smul hw₂)) := by
     simp only [liebJointFunction]
     conv_lhs => rw [hAcomb, hBcomb]
     have key2 := liebJointFunction_eq_block K p hp0' hp1'
-        (w₁ • A₁ + w₂ • A₂) ((hA₁.real_smul hw₁).add (hA₂.real_smul hw₂))
-        (w₁ • B₁ + w₂ • B₂) ((hB₁.real_smul hw₁).add (hB₂.real_smul hw₂))
+        (w₁ • A₁ + w₂ • A₂) ((hA₁.smul hw₁).add (hA₂.smul hw₂))
+        (w₁ • B₁ + w₂ • B₂) ((hB₁.smul hw₁).add (hB₂.smul hw₂))
     simp only [liebJointFunction] at key2
     exact key2
   -- Rewrite key inequality using the block identities
@@ -820,9 +779,9 @@ theorem lieb_joint_concavity_general {n m : Type*} [Fintype n] [DecidableEq n]
     w₂ * (Tr (A₂ ^ p * Kᴴ * B₂ ^ q * K)).re ≤
     (Tr ((w₁ • A₁ + w₂ • A₂) ^ p * Kᴴ * (w₁ • B₁ + w₂ • B₂) ^ q * K)).re := by
   have hSumA : (w₁ • A₁ + w₂ • A₂).PosSemidef :=
-    (hA₁.real_smul hw₁).add (hA₂.real_smul hw₂)
+    (hA₁.smul hw₁).add (hA₂.smul hw₂)
   have hSumB : (w₁ • B₁ + w₂ • B₂).PosSemidef :=
-    (hB₁.real_smul hw₁).add (hB₂.real_smul hw₂)
+    (hB₁.smul hw₁).add (hB₂.smul hw₂)
   -- Degenerate case `p = q = 0`: every power is `1` and both sides are `Tr (Kᴴ K)`.
   rcases eq_or_lt_of_le (by positivity : (0 : ℝ) ≤ p + q) with hpq0 | hs0
   · have hp0 : p = 0 := le_antisymm (by linarith) hp
@@ -915,31 +874,22 @@ open scoped QuantumInfo
 `.re` in `lieb_joint_concavity_general` loses nothing: the functional itself is
 `[0, ∞)`-valued, as in the literature statement.
 
-Proof: `Kᴴ Bᑫ K` is positive semidefinite with square root `S`, and
-`Tr(Aᵖ · S S) = Tr(S Aᵖ S) ≥ 0` since `S Aᵖ S` is positive semidefinite.
-No hypotheses on `A`, `B` are needed because the CFC power of any matrix is
-positive semidefinite (`posSemidef_rpow`). -/
+Proof: `Aᵖ` and `Kᴴ Bᑫ K` are positive semidefinite, and the trace of a product of positive
+semidefinite matrices is nonnegative (`Matrix.PosSemidef.trace_mul_nonneg`). No hypotheses on `A`,
+`B` are needed because the CFC power of any matrix is positive semidefinite (`posSemidef_rpow`). -/
 lemma trace_rpow_conj_rpow_nonneg {n m : Type*} [Fintype n] [DecidableEq n]
     [Fintype m] [DecidableEq m]
     (A : Matrix n n ℂ) (B : Matrix m m ℂ) (K : Matrix m n ℂ) (p q : ℝ) :
     0 ≤ Tr (A ^ p * Kᴴ * B ^ q * K) := by
-  classical
-  have hM : (Kᴴ * B ^ q * K).PosSemidef := (posSemidef_rpow B q).conjTranspose_mul_mul_same K
-  set S : Matrix n n ℂ := (Kᴴ * B ^ q * K) ^ (1 / 2 : ℝ) with hS_def
-  have hSH : Sᴴ = S := (posSemidef_rpow _ _).isHermitian
-  have hSS : S * S = Kᴴ * B ^ q * K := rpow_half_mul_rpow_half hM
-  have h_assoc : A ^ p * Kᴴ * B ^ q * K = A ^ p * (Kᴴ * B ^ q * K) := by
-    simp only [Matrix.mul_assoc]
-  have h_tr : Tr (A ^ p * Kᴴ * B ^ q * K) = Tr (Sᴴ * A ^ p * S) := by
-    rw [h_assoc, ← hSS, ← Matrix.mul_assoc, Matrix.trace_mul_comm, ← Matrix.mul_assoc, hSH]
-  rw [h_tr]
-  exact ((posSemidef_rpow A p).conjTranspose_mul_mul_same S).trace_nonneg
+  rw [show A ^ p * Kᴴ * B ^ q * K = A ^ p * (Kᴴ * B ^ q * K) by simp only [Matrix.mul_assoc]]
+  exact (posSemidef_rpow A p).trace_mul_nonneg
+    ((posSemidef_rpow B q).conjTranspose_mul_mul_same K)
 
-/-- Degree-1 homogeneity of rpow: (c ⋅ A)ˢ = cˢ ⋅ Aˢ for c ≥ 0, A PSD, s ≥ 0.
+/-- Homogeneity of rpow: (c ⋅ A)ˢ = cˢ ⋅ Aˢ for c ≥ 0, A PSD and every real s.
 Proved via spectral decomposition + `rpow_unitary_conj` + `diagonal_rpow` + `Real.mul_rpow`. -/
 lemma rpow_nonneg_smul {α : Type*} [Fintype α] [DecidableEq α]
     (c : ℝ) (hc : 0 ≤ c) (A : Matrix α α ℂ) (hA : A.PosSemidef)
-    (s : ℝ) (hs : 0 ≤ s) :
+    (s : ℝ) :
     (c • A) ^ s = (c ^ s : ℝ) • A ^ s := by
   set U := hA.1.eigenvectorUnitary.1
   set ev := hA.1.eigenvalues
@@ -970,18 +920,20 @@ lemma rpow_nonneg_smul {α : Type*} [Fintype α] [DecidableEq α]
     -- c • ((U * D) * Uᴴ) = (c • (U * D)) * Uᴴ = (U * (c • D)) * Uᴴ = (U * D') * Uᴴ
     rw [← smul_mul_assoc, ← mul_smul_comm, hsmul_diag]
   -- (c • A)^s = U * diag((c*ev)^s) * U†
-  have hcA_nonneg : 0 ≤ c • A := by rw [Matrix.le_iff, sub_zero]; exact hA.real_smul hc
+  have hcA_nonneg : 0 ≤ c • A := by rw [Matrix.le_iff, sub_zero]; exact hA.smul hc
   have h_lhs : (c • A) ^ s =
       U * diagonal (fun i => (((c * ev i) ^ s : ℝ) : ℂ)) * Uᴴ := by
     conv_lhs => rw [hcA_spec]
-    rw [rpow_unitary_conj hU_mem hs hcD_le (hM' := by simpa [Matrix.le_iff, hcA_spec] using hcA_nonneg),
-        diagonal_rpow _ hcev_nn s hs]
+    rw [rpow_unitary_conj hU_mem hcD_le
+          (hM' := by simpa [Matrix.le_iff, hcA_spec] using hcA_nonneg),
+        diagonal_rpow _ hcev_nn s]
   -- A^s = U * diag(ev^s) * U†
   have h_rhs : A ^ s =
       U * diagonal (fun i => ((ev i ^ s : ℝ) : ℂ)) * Uᴴ := by
     conv_lhs => rw [hspec]
-    rw [rpow_unitary_conj hU_mem hs hD_le (hM' := by rw [← hspec]; rw [Matrix.le_iff, sub_zero]; exact hA),
-        diagonal_rpow _ hev_nn s hs]
+    rw [rpow_unitary_conj hU_mem hD_le
+          (hM' := by rw [← hspec]; rw [Matrix.le_iff, sub_zero]; exact hA),
+        diagonal_rpow _ hev_nn s]
   -- (c * ev_i)^s = c^s * ev_i^s by Real.mul_rpow
   rw [h_lhs, h_rhs]
   -- Goal: (U * diag((c*ev)^s) * U†) = c^s • (U * diag(ev^s) * U†)
@@ -1005,12 +957,11 @@ lemma rpow_nonneg_smul {α : Type*} [Fintype α] [DecidableEq α]
 lemma Fs_homogeneous {α : Type*} [Fintype α] [DecidableEq α]
     (c : ℝ) (hc : 0 ≤ c)
     (A B : Matrix α α ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
-    (s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
+    (s : ℝ) :
     (Tr ((c • A) ^ s * (c • B) ^ (1 - s))).re =
     c * (Tr (A ^ s * B ^ (1 - s))).re := by
-  have h1s : 0 ≤ 1 - s := by linarith
-  rw [rpow_nonneg_smul c hc A hA s hs0,
-      rpow_nonneg_smul c hc B hB (1 - s) h1s]
+  rw [rpow_nonneg_smul c hc A hA s,
+      rpow_nonneg_smul c hc B hB (1 - s)]
   -- (c^s • A^s) * (c^{1-s} • B^{1-s}) = c^s * c^{1-s} • (A^s * B^{1-s})
   rw [show (c ^ s : ℝ) • A ^ s * ((c ^ (1 - s) : ℝ) • B ^ (1 - s)) =
     ((c ^ s * c ^ (1 - s) : ℝ) : ℝ) • (A ^ s * B ^ (1 - s)) from by
@@ -1025,10 +976,7 @@ lemma Fs_homogeneous {α : Type*} [Fintype α] [DecidableEq α]
       rw [← Real.rpow_add hc_pos, show s + (1 - s) = 1 by ring, Real.rpow_one]
   rw [this]
   -- Goal: (c • (A^s * B^{1-s})).trace.re = c * (A^s * B^{1-s}).trace.re
-  -- Route through `(c : ℂ) • _` since `PosSMulMono ℝ ℂ` is unavailable.
-  rw [show (c • (A ^ s * B ^ (1 - s)) : Matrix α α ℂ) =
-      (c : ℂ) • (A ^ s * B ^ (1 - s)) from by ext i j; simp [Complex.real_smul]]
-  rw [Matrix.trace_smul]; simp
+  rw [Matrix.trace_smul, Complex.smul_re, smul_eq_mul]
 
 /-- Weighted multi-term Lieb concavity (K = I, square matrices):
   ∑ᵢ wᵢ Tr (Aᵢˢ Bᵢ¹⁻ˢ) ≤ Tr ((∑ᵢ wᵢ Aᵢ)ˢ (∑ᵢ wᵢ Bᵢ)¹⁻ˢ)
@@ -1060,10 +1008,10 @@ lemma lieb_concavity_weighted {r : ℕ} {α : Type*} [Fintype α] [DecidableEq �
     -- PSD of weighted sums
     have hSA_psd : (∑ i : Fin r, w' i • A' i).PosSemidef :=
       posSemidef_sum Finset.univ fun i _ =>
-        (hA (Fin.castSucc i)).real_smul (hw_nn (Fin.castSucc i))
+        (hA (Fin.castSucc i)).smul (hw_nn (Fin.castSucc i))
     have hSB_psd : (∑ i : Fin r, w' i • B' i).PosSemidef :=
       posSemidef_sum Finset.univ fun i _ =>
-        (hB (Fin.castSucc i)).real_smul (hw_nn (Fin.castSucc i))
+        (hB (Fin.castSucc i)).smul (hw_nn (Fin.castSucc i))
     have hAr_psd : Ar.PosSemidef := hA (Fin.last r)
     have hBr_psd : Br.PosSemidef := hB (Fin.last r)
     -- Case split: W = 0 → trivial; W > 0 → IH with wᵢ/W then 2-term concavity
@@ -1076,19 +1024,15 @@ lemma lieb_concavity_weighted {r : ℕ} {α : Type*} [Fintype α] [DecidableEq �
       have hwr_one : wr = 1 := by linarith
       have hA_zero : ∑ i : Fin r, w' i • A' i = 0 := by
         apply Finset.sum_eq_zero; intro i _
-        rw [hw'_zero i]; ext; simp
+        rw [hw'_zero i, zero_smul]
       have hB_zero : ∑ i : Fin r, w' i • B' i = 0 := by
         apply Finset.sum_eq_zero; intro i _
-        rw [hw'_zero i]; ext; simp
+        rw [hw'_zero i, zero_smul]
       have hF_zero : ∑ i : Fin r, w' i * ((A' i) ^ s * (B' i) ^ (1 - s)).trace.re = 0 := by
         apply Finset.sum_eq_zero; intro i _; simp [hw'_zero i]
       -- Unfold the set definitions so simp can match
       simp only [w', A', B', Ar, Br, wr] at hwr_one hA_zero hB_zero hF_zero ⊢
       rw [hwr_one, hF_zero, hA_zero, hB_zero]
-      rw [show (1 : ℝ) • A (Fin.last r) = A (Fin.last r) from by
-        ext; simp]
-      rw [show (1 : ℝ) • B (Fin.last r) = B (Fin.last r) from by
-        ext; simp]
       simp
     · -- W > 0
       have hW_pos : 0 < W := lt_of_le_of_ne hW_nn (Ne.symm hW)
@@ -1099,46 +1043,28 @@ lemma lieb_concavity_weighted {r : ℕ} {α : Type*} [Fintype α] [DecidableEq �
       -- IH with normalized weights
       have ih' := ih A' B' (fun i => hA (Fin.castSucc i)) (fun i => hB (Fin.castSucc i))
         (fun i => w' i / W) hw'_nn hw'_sum
-      -- Factor out 1/W from weighted sums
-      -- `Finset.smul_sum`/`smul_smul` over `ℝ • Matrix _ _ ℂ` are unavailable
-      -- (no `PosSMulMono ℝ ℂ`); decompose via `ext` and reduce to `ℝ`-arithmetic.
+      -- Factor out 1/W from the weighted sums.
       have hSA_div : ∑ i : Fin r, (w' i / W) • A' i =
           (1 / W) • ∑ i : Fin r, w' i • A' i := by
-        ext j k
-        simp only [Matrix.sum_apply, Matrix.smul_apply, Complex.real_smul]
-        rw [Finset.mul_sum]
-        refine Finset.sum_congr rfl ?_
-        intro i _
-        push_cast; ring
+        simp_rw [Finset.smul_sum, smul_smul, one_div_mul_eq_div]
       have hSB_div : ∑ i : Fin r, (w' i / W) • B' i =
           (1 / W) • ∑ i : Fin r, w' i • B' i := by
-        ext j k
-        simp only [Matrix.sum_apply, Matrix.smul_apply, Complex.real_smul]
-        rw [Finset.mul_sum]
-        refine Finset.sum_congr rfl ?_
-        intro i _
-        push_cast; ring
+        simp_rw [Finset.smul_sum, smul_smul, one_div_mul_eq_div]
       -- 2-term Lieb concavity with X = (1/W)•Σw'A, Y = (1/W)•Σw'B
       have hX_psd : ((1 / W) • ∑ i : Fin r, w' i • A' i).PosSemidef :=
-        hSA_psd.real_smul (div_nonneg zero_le_one hW_nn)
+        hSA_psd.smul (div_nonneg zero_le_one hW_nn)
       have hY_psd : ((1 / W) • ∑ i : Fin r, w' i • B' i).PosSemidef :=
-        hSB_psd.real_smul (div_nonneg zero_le_one hW_nn)
+        hSB_psd.smul (div_nonneg zero_le_one hW_nn)
       have h2 := lieb_joint_concavity_general
         ((1 / W) • ∑ i : Fin r, w' i • A' i) Ar hX_psd hAr_psd
         ((1 / W) • ∑ i : Fin r, w' i • B' i) Br hY_psd hBr_psd
         1 s (1 - s) hs0 (by linarith) (by linarith) W wr hW_nn hwr_nn hW_eq
       simp only [conjTranspose_one, Matrix.mul_one] at h2
-      -- Simplify W • (1/W • X) = X via the ℂ-coercion (no `PosSMulMono ℝ ℂ`).
+      -- Simplify W • (1/W • X) = X.
       have hWX_A : W • ((1 / W) • ∑ i : Fin r, w' i • A' i) = ∑ i : Fin r, w' i • A' i := by
-        ext j k
-        simp only [Matrix.smul_apply, Complex.real_smul]
-        push_cast
-        field_simp
+        rw [smul_smul, mul_one_div_cancel hW, one_smul]
       have hWX_B : W • ((1 / W) • ∑ i : Fin r, w' i • B' i) = ∑ i : Fin r, w' i • B' i := by
-        ext j k
-        simp only [Matrix.smul_apply, Complex.real_smul]
-        push_cast
-        field_simp
+        rw [smul_smul, mul_one_div_cancel hW, one_smul]
       rw [hWX_A, hWX_B] at h2
       -- Combine h2 (2-term concavity) with IH (normalized weights)
       have ih_simple : ∑ i : Fin r, (w' i / W) * ((A' i) ^ s * (B' i) ^ (1 - s)).trace.re ≤
@@ -1208,7 +1134,7 @@ lemma lieb_concavity_sum {r : ℕ} {α : Type*} [Fintype α] [DecidableEq α]
   rw [show ∑ i : Fin (r + 1), (1 / rr) • A i = (1 / rr) • ∑ i, A i from Finset.smul_sum.symm,
       show ∑ i : Fin (r + 1), (1 / rr) • B i = (1 / rr) • ∑ i, B i from Finset.smul_sum.symm]
     at hw
-  rw [Fs_homogeneous (1 / rr) (by positivity) _ _ hSA hSB s hs0 hs1] at hw
+  rw [Fs_homogeneous (1 / rr) (by positivity) _ _ hSA hSB s] at hw
   -- hw: (1/rr) * Σ Fᵢ ≤ (1/rr) * F(ΣA, ΣB)
   exact le_of_mul_le_mul_left hw (by positivity : (0 : ℝ) < 1 / rr)
 

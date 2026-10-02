@@ -235,7 +235,8 @@ noncomputable def maximallyMixed : DensityMatrix n where
 theorem maximallyMixed_posDef : (maximallyMixed (n := n)).toMatrix.PosDef := by
   rw [maximallyMixed_toMatrix]
   have hzero : (0 : Matrix n n ℂ).PosSemidef := Matrix.PosSemidef.zero
-  have hreg := PosSemidef.add_smul_one_posDef hzero (card_inv_re_pos (n := n))
+  have hreg := Matrix.PosDef.posSemidef_add hzero
+    (Matrix.PosDef.one.smul (Complex.zero_lt_real.2 (card_inv_re_pos (n := n))))
   rw [zero_add] at hreg
   rwa [card_inv_eq_re_ofReal]
 

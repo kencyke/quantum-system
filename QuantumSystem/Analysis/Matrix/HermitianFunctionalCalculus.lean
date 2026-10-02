@@ -27,9 +27,11 @@ calculus `cfc`; the spectral expansion `cfc f A = U diag(f(λᵢ)) Uᴴ` is `cfc
 - `trace_cfc`, `trace_mul_cfc`: trace formulas `Tr(f(A)) = ∑ f(λᵢ)` and `Tr(A·f(A)) = ∑ λᵢ f(λᵢ)`.
 - `cfc_isHermitian`, `mul_cfc_isHermitian`: `f(A)` and `A·f(A)` are Hermitian for real `f`.
 - `cfc_add_const_eq`, `cfc_inv_add_const`, `cfc_resolvent`: affine / resolvent identities.
-- `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry commuting with `M`.
-- `cfc_fromBlocks_diag`, `cfc_blockDiagonal`: `f(⊕ᵢ Tᵢ) = ⊕ᵢ f(Tᵢ)` for block diagonal matrices;
-  `spectrum_blockDiagonal_subset`: the spectrum of `⊕ᵢ Tᵢ` lies in the union of the spectra.
+- `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry `V` whose range
+  projection `V Vᴴ` commutes with `M`; `rpow_conj_isometry`: `(V A Vᴴ)ˢ = V Aˢ Vᴴ` for an
+  isometry `V`, `A ⪰ 0` and `s > 0`.
+- `cfc_fromBlocks_diag`, `cfc_fromBlocks_diag'`: `f(A ⊕ D) = f(A) ⊕ f(D)` for block diagonal
+  matrices.
 - `cfc_map_starAlgEquiv`: `cfc f` commutes with `*-`algebra equivalences of matrix algebras on
   Hermitian matrices (any `f`, finite spectrum).
 - Matrix logarithm `cfc Real.log`: `cfc_spectral_eq`, `cfc_log_spectral_eq`, `cfc_log_map_starAlgEquiv`.
@@ -139,7 +141,8 @@ lemma cfc_inv_add_const {m : Type*} [Fintype m] [DecidableEq m]
   have hcfcinv : cfc (fun x : ℝ => (x + t)⁻¹) A = Ring.inverse (cfc (fun x : ℝ => x + t) A) := by
     simpa using (cfc_inv (A := Matrix m m ℂ) (f := fun x : ℝ => x + t) (a := A) hneq)
   have hcfcaff : cfc (fun x : ℝ => x + t) A = A + (t : ℂ) • 1 := cfc_add_const_eq hA' t
-  have hposdef : (A + (t : ℂ) • 1).PosDef := PosSemidef.add_smul_one_posDef hA ht
+  have hposdef : (A + (t : ℂ) • 1).PosDef :=
+    Matrix.PosDef.posSemidef_add hA (Matrix.PosDef.one.smul (Complex.zero_lt_real.2 ht))
   have hunit : IsUnit (A + (t : ℂ) • 1) := hposdef.isUnit
   let _ := hunit.invertible
   have hcfcaff_inv : Ring.inverse (cfc (fun x : ℝ => x + t) A) = (A + (t : ℂ) • 1)⁻¹ := by
@@ -420,66 +423,15 @@ lemma cfc_fromBlocks_diag' {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
   rw [h_prod] at h_map
   exact h_map.symm
 
-/-- Block diagonal embedding of a finite family of matrices as a star algebra homomorphism,
-`(Tᵢ)ᵢ ↦ blockDiagonal T`. -/
-noncomputable def blockDiagonalStarAlgHom (m ι : Type*) [Fintype m] [DecidableEq m] [Fintype ι]
-    [DecidableEq ι] : (ι → Matrix m m ℂ) →⋆ₐ[ℝ] Matrix (m × ι) (m × ι) ℂ where
-  toRingHom := blockDiagonalRingHom m ι ℂ
-  commutes' r := by
-    change blockDiagonal (algebraMap ℝ (ι → Matrix m m ℂ) r) = algebraMap ℝ _ r
-    rw [Algebra.algebraMap_eq_smul_one, Algebra.algebraMap_eq_smul_one, blockDiagonal_smul,
-      blockDiagonal_one]
-  map_star' T := by
-    change blockDiagonal (star T) = star (blockDiagonal T)
-    rw [star_eq_conjTranspose, blockDiagonal_conjTranspose]
-    rfl
+/-! ### Compressions by isometries
 
-/-- The spectrum of a block diagonal matrix lies in the union of the spectra of its blocks. -/
-lemma spectrum_blockDiagonal_subset {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι]
-    [DecidableEq ι] (T : ι → Matrix m m ℂ) :
-    spectrum ℝ (blockDiagonal T) ⊆ ⋃ i, spectrum ℝ (T i) := by
-  rw [← Pi.spectrum_eq]
-  exact AlgHom.spectrum_apply_subset (blockDiagonalStarAlgHom m ι) T
+For an isometry `V` (`Vᴴ V = 1`) and a matrix `M` commuting with `V Vᴴ`, compression by `V`
+commutes with powers, polynomials and the continuous functional calculus
+(`Matrix.cfc_compression_of_commuting`), so `(V A Vᴴ)ˢ = V Aˢ Vᴴ` for `A ⪰ 0` and `s > 0`
+(`Matrix.rpow_conj_isometry`).
+-/
 
-/-- CFC of a block diagonal matrix is the block diagonal of the CFC of the blocks:
-`f(⊕ᵢ Tᵢ) = ⊕ᵢ f(Tᵢ)`. -/
-lemma cfc_blockDiagonal {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι] [DecidableEq ι]
-    (T : ι → Matrix m m ℂ) (hT : ∀ i, IsSelfAdjoint (T i)) (f : ℝ → ℝ) :
-    cfc f (blockDiagonal T) = blockDiagonal fun i => cfc f (T i) := by
-  let : NormedRing (Matrix m m ℂ) := Matrix.linftyOpNormedRing
-  let : NormedAlgebra ℝ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  let : NormedAlgebra ℂ (Matrix m m ℂ) := Matrix.linftyOpNormedAlgebra
-  let : CStarAlgebra (Matrix m m ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := m) (A := ℂ)
-  let : ContinuousFunctionalCalculus ℂ (Matrix m m ℂ) IsStarNormal :=
-    IsStarNormal.instContinuousFunctionalCalculus
-  let : CStarAlgebra (ι → Matrix m m ℂ) := inferInstance
-  let : ContinuousFunctionalCalculus ℂ (ι → Matrix m m ℂ) IsStarNormal :=
-    IsStarNormal.instContinuousFunctionalCalculus
-  let : ContinuousFunctionalCalculus ℝ (ι → Matrix m m ℂ) IsSelfAdjoint :=
-    IsSelfAdjoint.instContinuousFunctionalCalculus
-  have hcont : Continuous (blockDiagonalStarAlgHom m ι) :=
-    Continuous.matrix_blockDiagonal continuous_id
-  have hfin : (⋃ i, spectrum ℝ (T i)).Finite :=
-    Set.finite_iUnion fun i => Matrix.finite_real_spectrum (A := T i)
-  have hTsa : IsSelfAdjoint T := by
-    rw [IsSelfAdjoint]; funext i; exact (hT i).star_eq
-  have h_map := StarAlgHom.map_cfc (blockDiagonalStarAlgHom m ι) f T (by
-    rw [Pi.spectrum_eq]; exact hfin.continuousOn f) hcont hTsa
-  have h_pi := cfc_map_pi (S := ℝ) f T (hfin.continuousOn f) hTsa hT
-  rw [h_pi] at h_map
-  exact h_map.symm
-
-/-! ### Block-matrix tools for Jensen's operator inequality
-
-Löwner convexity on an interval `s ∋ 0` with `f 0 ≤ 0` is equivalent to the sub-unital Jensen
-inequality (`Matrix.isLownerConvexOn_and_map_zero_nonpos_iff` in `Order.lean`). The proof uses the block diagonal technique: embed
-the 2-term HPJ problem into a larger space using block matrices. This section provides the
-block-matrix identities.
-
-Reference: Hansen-Pedersen (2003), "Jensen's Operator Inequality" -/
-
-section JensenConvexity
+section Compression
 
 -- Helper: V†M^k V = (V†MV)^k when PM = MP and V†V = I
 -- where P = VV†.
@@ -800,8 +752,8 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
           (U : Matrix m m ℂ) * diagonal (fun i => (ev i : ℂ)) * (U : Matrix m m ℂ)ᴴ := by
         rw [← hspec]; simpa [Matrix.le_iff] using hM_psd
       conv_lhs => rw [hspec]
-      rw [rpow_unitary_conj U.2 hs.le hev_nneg_cast hM'_nonneg,
-          diagonal_rpow ev hev_nonneg s hs.le]
+      rw [rpow_unitary_conj U.2 hev_nneg_cast hM'_nonneg,
+          diagonal_rpow ev hev_nonneg s]
     have hUstarU : (U : Matrix m m ℂ)ᴴ * U = 1 := by
       have := Unitary.coe_star_mul_self U
       simp only [star_eq_conjTranspose] at this
@@ -875,7 +827,7 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
   -- Conclusion: M^s = M^s * V * V† = V * A^s * V†
   rw [hMsP_eq, show P = V * Vᴴ from hP_def, ← Matrix.mul_assoc, hMsV]
 
-end JensenConvexity
+end Compression
 
 /-! ### Spectral Decomposition Identities -/
 

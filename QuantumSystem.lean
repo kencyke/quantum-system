@@ -43,6 +43,7 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.Analysis.CStarAlgebra.KadisonSchwarz
+public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvex
 public import QuantumSystem.Analysis.Entropy.Araki.Basic
 public import QuantumSystem.Analysis.Entropy.Araki.Commutative
 public import QuantumSystem.Analysis.Entropy.Araki.Matrix
@@ -86,7 +87,7 @@ public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Unital
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal

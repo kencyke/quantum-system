@@ -90,8 +90,8 @@ lemma hasDerivAt_sum_rpow {α : Type*} [Fintype α] (evs : α → ℝ) (hev : �
 
 /-- Trace-rpow concavity: for 0 ≤ s ≤ 1 and positive semidefinite A, B,
     p ⋅ Tr (Aˢ) + (1−p) ⋅ Tr (Bˢ) ≤ Tr ((pA + (1−p)B)ˢ).
-    This follows from the Löwner–Heinz concavity of `A ↦ Aˢ` (`rpow_isLownerConcaveOn`, unfolded
-    as `rpow_concavity_le`) plus the trace-monotonicity of the Hermitian order. -/
+    This follows from the operator concavity of `A ↦ Aˢ` (Mathlib's `CFC.concaveOn_rpow`,
+    unfolded as `rpow_concavity_le`) plus the trace-monotonicity of the Hermitian order. -/
 lemma re_trace_rpow_concave (A B : Matrix n n ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
     (p : ℝ) (hp : 0 ≤ p) (hp1 : p ≤ 1)
     (s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
@@ -301,10 +301,10 @@ theorem vonNeumannEntropy_eq_log_card_iff [Nonempty n] (ρ : DensityMatrix n) :
 `S(Σᵢ wᵢ ρᵢ) ≥ Σᵢ wᵢ S(ρᵢ)` is `DensityMatrix.vonNeumannEntropy_concave_sum`.
 
 **Proof**: We use the Löwner-order concavity of A ↦ Aˢ for 0 < s ≤ 1
-(`rpow_isLownerConcaveOn`, through `re_trace_rpow_concave`). Define g(s) := Tr (ρ_mixˢ)
+(`CFC.concaveOn_rpow`, through `re_trace_rpow_concave`). Define g(s) := Tr (ρ_mixˢ)
 − p Tr (ρ₁ˢ) − (1−p) Tr (ρ₂ˢ).
 
-- **Non-negativity**: For s ∈ (0,1], Löwner concavity gives
+- **Non-negativity**: For s ∈ (0,1], operator concavity gives
   p ρ₁ˢ + (1−p) ρ₂ˢ ≤ ρ_mixˢ in Löwner order,
   so taking traces gives g(s) ≥ 0.
 - **Boundary**: g(1) = 0 since all density matrices have trace 1.

@@ -13,9 +13,11 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalcul
 /-!
 # Effros's matrix perspective
 
-This file formalises Effros's (2008) matrix-perspective route to Lieb's joint concavity theorem.
-The operator-convexity inputs (Löwner convexity, Jensen's operator inequality) are in
-`QuantumSystem/Analysis/Matrix/Order.lean`.
+This file formalises Effros's (2009) matrix-perspective route to Lieb's joint concavity theorem.
+The convexity input is matrix convexity (`IsMatrixConvexOn`, defined in
+`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/ContinuousFunctionalCalculus/OperatorConvex.lean`)
+through Jensen's operator inequality for matrices (`IsMatrixConvexOn.cfc_affine_le` in
+`QuantumSystem/Analysis/Matrix/Order.lean`); no continuity of `f` is required.
 
 ## Main definitions
 
@@ -26,16 +28,18 @@ The operator-convexity inputs (Löwner convexity, Jensen's operator inequality) 
 ## Main results
 
 * `Matrix.matrixPerspective_joint_convex`: **Effros's theorem**, joint convexity of the matrix
-  perspective of an `f` Löwner convex on `[0, ∞)`, on positive semidefinite `L` and positive
-  definite `R`; `Matrix.matrixPerspective_joint_convex_of_posDef`: for `f` Löwner convex on
-  `(0, ∞)` (such as `-log`, `t⁻¹`), on positive definite `L` and `R`;
-  `Matrix.matrixPerspective_joint_convex_of_mem`: for `f` Löwner convex on any interval `s`.
+  perspective of an `f` matrix convex on `[0, ∞)`, on positive semidefinite `L` and positive
+  definite `R`; `Matrix.matrixPerspective_joint_convex_of_posDef`: for `f` matrix convex on
+  `(0, ∞)` (such as `-log`, `t⁻¹`: `isOperatorConvexOn_neg_log`, `isOperatorConvexOn_inv`), on
+  positive definite `L` and `R`;
+  `Matrix.matrixPerspective_joint_convex_of_mem`: for `f` matrix convex on any `s`.
 * `Matrix.matrixPerspective_neg_leftRight_eq`: for `f(x) = -xᵖ`, the perspective of `(𝐋 A, 𝐑 B)`
   is `-(𝐋 (Aᵖ) · 𝐑 (B¹⁻ᵖ))`, which turns Effros's theorem into Lieb's concavity theorem.
 
 ## References
 
-* Effros, *A Matrix Convexity Approach to Some Celebrated Quantum Inequalities* (2008)
+* Effros, *A Matrix Convexity Approach to Some Celebrated Quantum Inequalities*,
+  Proc. Natl. Acad. Sci. USA 106 (2009), 1006–1008
 * Hansen, Pedersen, *Jensen's operator inequality* (2003)
 -/
 @[expose] public section
@@ -77,11 +81,11 @@ noncomputable def rightMulMatrix {m : Type*} [Fintype m] [DecidableEq m]
     (B : Matrix m m ℂ) : Matrix (m × m) (m × m) ℂ :=
   LinearMap.toMatrix (matrixBasis m) (matrixBasis m) (rightMul B)
 
-/-- Shorthand for `leftMulMatrix`. Corresponds to L_A in Effros (2008). Active inside
+/-- Shorthand for `leftMulMatrix`. Corresponds to L_A in Effros (2009). Active inside
 `namespace Matrix` or after `open scoped Matrix`. -/
 scoped notation "𝐋" => leftMulMatrix
 
-/-- Shorthand for `rightMulMatrix`. Corresponds to R_B in Effros (2008). Active inside
+/-- Shorthand for `rightMulMatrix`. Corresponds to R_B in Effros (2009). Active inside
 `namespace Matrix` or after `open scoped Matrix`. -/
 scoped notation "𝐑" => rightMulMatrix
 
@@ -333,7 +337,8 @@ lemma leftMulMatrix_posSemidef {m : Type*} [Fintype m] [DecidableEq m]
     (𝐋 A).PosSemidef := by
   classical
   simpa [leftMulMatrix_eq_kronecker_one] using
-    (Matrix.PosSemidef.kronecker (m := m) (x := A) (y := (1 : Matrix m m ℂ)) hA posSemidef_one)
+    (Matrix.PosSemidef.kronecker (m := m) (x := A) (y := (1 : Matrix m m ℂ)) hA
+      Matrix.PosSemidef.one)
 
 /-- `rightMulMatrix` preserves positive definiteness. -/
 lemma rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
@@ -342,11 +347,13 @@ lemma rightMulMatrix_posDef {m : Type*} [Fintype m] [DecidableEq m]
   classical
   have hB' : Bᵀ.PosDef := hB.transpose
   simpa [rightMulMatrix_eq_one_kronecker_transpose] using
-    (Matrix.PosDef.kronecker (m := m) (x := (1 : Matrix m m ℂ)) (y := Bᵀ) posDef_one hB')
+    (Matrix.PosDef.kronecker (m := m) (x := (1 : Matrix m m ℂ)) (y := Bᵀ) Matrix.PosDef.one hB')
 
 /-- Matrix perspective `R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}` of a function `f`, using the
-Kubo–Ando style formula. It is meant for positive semidefinite `L` and positive definite `R`;
-the theorems about it assume these. -/
+Kubo–Ando style formula. It is meant for positive definite `R`. Effros's theorem
+(`Matrix.matrixPerspective_joint_convex_of_mem`) assumes only that `R^{-1/2} L R^{-1/2}` is
+self-adjoint with spectrum in the interval on which `f` is matrix convex; this is `L ⪰ 0` for
+`[0, ∞)` and `L ≻ 0` for `(0, ∞)`, while for `ℝ` any self-adjoint `L` is allowed. -/
 noncomputable def matrixPerspective {m : Type*} [Fintype m] [DecidableEq m]
     (f : ℝ → ℝ) (L R : Matrix m m ℂ) : Matrix m m ℂ :=
   let Rinv := R ^ (-1 / 2 : ℝ)
@@ -413,17 +420,17 @@ lemma perspective_sandwich_eq {n : Type*} [Fintype n]
     exact (IsScalarTower.algebraMap_smul ℂ w₂ _).symm
   rw [mul_sub, sub_mul, mul_add, add_mul, h₁, h₂, hZ]
 
-/-- **Effros's theorem** for `f` Löwner convex on an interval `s`: the matrix perspective
+/-- **Effros's theorem** for `f` matrix convex on `s`: the matrix perspective
 `(L, R) ↦ R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}` is jointly convex on the pairs of a positive
 definite `R` and a self-adjoint `L` with `R^{-1/2} L R^{-1/2}` of spectrum in `s`. For
 `s = [0, ∞)` the condition is `L ⪰ 0`
 (`Matrix.matrixPerspective_joint_convex`), for `s = (0, ∞)` it is `L ≻ 0`
 (`Matrix.matrixPerspective_joint_convex_of_posDef`).
 No condition on `f(0)` is needed: the weights `Aᵢ = (wᵢRᵢ)^{1/2} R^{-1/2}` satisfy
-`A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `IsLownerConvexOn.cfc_affine_le`
+`A₁†A₁ + A₂†A₂ = I` exactly, so the affine Jensen inequality `IsMatrixConvexOn.cfc_affine_le`
 applies. -/
 theorem matrixPerspective_joint_convex_of_mem.{v} {m : Type v} [Fintype m] [DecidableEq m]
-    {s : Set ℝ} {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} s f)
+    {s : Set ℝ} {f : ℝ → ℝ} (hconv : IsMatrixConvexOn s f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
     (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
     (hL₁ : (R₁ ^ (-1 / 2 : ℝ))ᴴ * L₁ * R₁ ^ (-1 / 2 : ℝ) ∈
@@ -546,10 +553,10 @@ theorem matrixPerspective_joint_convex_of_mem.{v} {m : Type v} [Fintype m] [Deci
   simpa [L, R] using hfinal
 
 /-- **Effros's theorem**: the matrix perspective `(L, R) ↦ R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}`
-of an `f` Löwner convex on `[0, ∞)` is jointly convex on positive semidefinite `L` and positive
+of an `f` matrix convex on `[0, ∞)` is jointly convex on positive semidefinite `L` and positive
 definite `R`. -/
 theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Set.Ici 0) f)
+    {f : ℝ → ℝ} (hconv : IsMatrixConvexOn (Set.Ici 0) f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
     (hL₁ : L₁.PosSemidef) (hL₂ : L₂.PosSemidef)
     (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
@@ -560,11 +567,11 @@ theorem matrixPerspective_joint_convex.{v} {m : Type v} [Fintype m] [DecidableEq
     (hL₁.conjTranspose_mul_mul_same _).mem_setOf_isSelfAdjoint_spectrum_subset_Ici
     (hL₂.conjTranspose_mul_mul_same _).mem_setOf_isSelfAdjoint_spectrum_subset_Ici hw₁ hw₂ hw
 
-/-- **Effros's theorem** on `(0, ∞)`: the matrix perspective of an `f` Löwner convex on `(0, ∞)`,
-such as `-log` or `t⁻¹` (`Matrix.log_isLownerConcaveOn`, `Matrix.inv_isLownerConvexOn`), is
-jointly convex on positive definite `L` and `R`. -/
+/-- **Effros's theorem** on `(0, ∞)`: the matrix perspective of an `f` matrix convex on `(0, ∞)`,
+such as `-log` or `t⁻¹` (`isOperatorConvexOn_neg_log.{0}.isMatrixConvexOn`,
+`isOperatorConvexOn_inv.{0}.isMatrixConvexOn`), is jointly convex on positive definite `L` and `R`. -/
 theorem matrixPerspective_joint_convex_of_posDef.{v} {m : Type v} [Fintype m] [DecidableEq m]
-    {f : ℝ → ℝ} (hconv : IsLownerConvexOn.{v} (Set.Ioi 0) f)
+    {f : ℝ → ℝ} (hconv : IsMatrixConvexOn (Set.Ioi 0) f)
     {L₁ L₂ R₁ R₂ : Matrix m m ℂ}
     (hL₁ : L₁.PosDef) (hL₂ : L₂.PosDef)
     (hR₁ : R₁.PosDef) (hR₂ : R₂.PosDef)
@@ -624,11 +631,11 @@ lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
   rw [mul_assoc, hRhalf_sq]  -- mul_assoc: (L * R^{-1/2}) * R^{-1/2} → L * (R^{-1/2} * R^{-1/2})
 
 /-- The inner matrix of the perspective, raised to the power `p` and multiplied by `R`,
-equals `L_{A^p} · R_{B^{1-p}}` for PD matrices `A`, `B` and `p ≥ 0`.
+equals `L_{A^p} · R_{B^{1-p}}` for PD matrices `A`, `B` and every real `p`.
 Here `L = L_A`, `R = R_B` are left/right multiplication operators, and
 `S = R^{-1/2}` so that `Sᴴ * L * S` is the inner matrix of the perspective. -/
 lemma perspective_inner_rpow_mul_eq_leftRight {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p) :
+    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) :
     let L := 𝐋 A
     let R := 𝐑 B
     let S := R ^ (-1 / 2 : ℝ)
@@ -659,7 +666,7 @@ lemma perspective_inner_rpow_mul_eq_leftRight {m : Type*} [Fintype m] [Decidable
     rw [hLRinv_kron]
     exact PosSemidef.rpow_kronecker hA.posSemidef hBinvT_psd p
   have hBinvT_rpow_mul : ((B⁻¹)ᵀ) ^ p * Bᵀ = (B ^ (1 - p))ᵀ :=
-    inv_transpose_rpow_mul_transpose_eq B hB p hp
+    inv_transpose_rpow_mul_transpose_eq B hB p
   rw [hinner_eq, hLRinv_rpow]
   change ((A ^ p) ⊗ₖ (((B⁻¹)ᵀ) ^ p)) * 𝐑 B =
       𝐋 (A ^ p) * 𝐑 (B ^ (1 - p))
@@ -671,7 +678,7 @@ lemma perspective_inner_rpow_mul_eq_leftRight {m : Type*} [Fintype m] [Decidable
 /-- The p-th power of the inner matrix of the perspective commutes with `R^{1/2}`.
 This follows from the fact that `L ⊗ I` and `I ⊗ Bᵀ` commute. -/
 lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [DecidableEq m]
-  (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (_hp : 0 ≤ p) :
+  (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) :
     let L := 𝐋 A
     let R := 𝐑 B
     let S := R ^ (-1 / 2 : ℝ)
@@ -707,11 +714,11 @@ lemma perspective_inner_rpow_comm_sqrt_leftRight {m : Type*} [Fintype m] [Decida
     (hLRinv_comm_R.symm.cfc_real (· ^ p) |>.symm.cfc_real (· ^ (1 / 2 : ℝ))).eq.symm
 
 /-- The matrix perspective with f(x) = −xᵖ on left/right multiplication matrices
-equals −(L_{Aᵖ} · R_{B¹⁻ᵖ}) for PD matrices A, B and p ≥ 0.
+equals −(L_{Aᵖ} · R_{B¹⁻ᵖ}) for PD matrices A, B and every real p.
 Here L = L_A, R = R_B, S = R^(⁻¹⁄₂), T = R^(¹⁄₂), and the perspective is
 T · f(S* L S) · T. -/
 lemma matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq m]
-    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) (hp : 0 ≤ p) :
+    (A B : Matrix m m ℂ) (hA : A.PosDef) (hB : B.PosDef) (p : ℝ) :
     matrixPerspective (fun x => -(x ^ p)) (𝐋 A) (𝐑 B) =
       -(𝐋 (A ^ p) * 𝐑 (B ^ (1 - p))) := by
   set L := 𝐋 A
@@ -726,13 +733,13 @@ lemma matrixPerspective_neg_leftRight_eq {m : Type*} [Fintype m] [DecidableEq m]
   have hRhalf_sq : T * T = R := rpow_half_mul_rpow_half (rightMulMatrix_posDef hB).posSemidef
   have hinnerp_comm_Rhalf : (Sᴴ * L * S) ^ p * T = T * (Sᴴ * L * S) ^ p := by
     simpa [L, R, S, T] using
-      perspective_inner_rpow_comm_sqrt_leftRight A B hA hB p hp
+      perspective_inner_rpow_comm_sqrt_leftRight A B hA hB p
   have hpersp_simp : T * ((Sᴴ * L * S) ^ p) * T = (Sᴴ * L * S) ^ p * R := by
     rw [hinnerp_comm_Rhalf.symm, mul_assoc, hRhalf_sq]
   have hinnerp_R_eq : (Sᴴ * L * S) ^ p * R =
       𝐋 (A ^ p) * 𝐑 (B ^ (1 - p)) := by
     simpa [L, R, S] using
-      perspective_inner_rpow_mul_eq_leftRight A B hA hB p hp
+      perspective_inner_rpow_mul_eq_leftRight A B hA hB p
   unfold matrixPerspective
   dsimp only
   rw [hfun_neg, Matrix.mul_neg, Matrix.neg_mul]
