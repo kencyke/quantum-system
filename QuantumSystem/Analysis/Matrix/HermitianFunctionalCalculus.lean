@@ -30,7 +30,7 @@ calculus `cfc`; the spectral expansion `cfc f A = U diag(f(λᵢ)) Uᴴ` is `cfc
 - `cfc_add_const_eq`, `cfc_inv_add_const`, `cfc_resolvent`: affine / resolvent identities.
 - `cfc_compression_of_commuting`: `Vᴴ f(M) V = f(Vᴴ M V)` for an isometry `V` whose range
   projection `V Vᴴ` commutes with `M`; `rpow_conj_isometry`: `(V A Vᴴ)ˢ = V Aˢ Vᴴ` for an
-  isometry `V`, `A ⪰ 0` and `s > 0`.
+  isometry `V`, `A ⪰ 0` and `s ≠ 0`.
 - `cfc_fromBlocks_diag`, `cfc_fromBlocks_diag'`: `f(A ⊕ D) = f(A) ⊕ f(D)` for block diagonal
   matrices.
 - `cfc_map_starAlgEquiv`: `cfc f` commutes with `*-`algebra equivalences of matrix algebras on
@@ -428,8 +428,9 @@ lemma cfc_fromBlocks_diag' {n m : Type*} [Fintype n] [DecidableEq n] [Fintype m]
 
 For an isometry `V` (`Vᴴ V = 1`) and a matrix `M` commuting with `V Vᴴ`, compression by `V`
 commutes with powers, polynomials and the continuous functional calculus
-(`Matrix.cfc_compression_of_commuting`), so `(V A Vᴴ)ˢ = V Aˢ Vᴴ` for `A ⪰ 0` and `s > 0`
-(`Matrix.rpow_conj_isometry`).
+(`Matrix.cfc_compression_of_commuting`), so `(V A Vᴴ)ˢ = V Aˢ Vᴴ` for `A ⪰ 0` and `s ≠ 0`
+(`Matrix.rpow_conj_isometry`). At `s = 0` the identity fails for a non-unitary `V`: the left side
+is `1` and the right side the range projection `V Vᴴ`.
 -/
 
 section Compression
@@ -691,14 +692,18 @@ lemma cfc_compression_of_commuting {n m : Type*}
     _ = hVM.cfc f := by rw [← h_cfc_f_eq_p_VM]
     _ = cfc f (Vᴴ * M * V) := by rw [← h_cfc_VM]
 
-/-- For an isometry V (V†V = I), PSD A, and s > 0: (VAV†)^s = V A^s V†.
+/-- For an isometry V (V†V = I), PSD A, and s ≠ 0: (VAV†)^s = V A^s V†.
+
+For `s < 0` both sides are powers on the support: the real power of a matrix follows the
+convention `0 ^ s = 0` for `s ≠ 0`, so `A ^ s` is the generalised (Moore–Penrose type) inverse
+power, and `V A Vᴴ` need not be invertible.
 
 **Proof**: Uses `cfc_compression_of_commuting` to get V†(VAV†)^s V = A^s,
 then shows (VAV†)^s annihilates the complement (1 - VV†) via kernel preservation. -/
 lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
     [DecidableEq n] [DecidableEq m]
     (V : Matrix m n ℂ) (hV : Vᴴ * V = 1)
-    (A : Matrix n n ℂ) (hA : A.PosSemidef) (s : ℝ) (hs : 0 < s) :
+    (A : Matrix n n ℂ) (hA : A.PosSemidef) (s : ℝ) (hs : s ≠ 0) :
     (V * A * Vᴴ) ^ s = V * (A ^ s) * Vᴴ := by
   set M := V * A * Vᴴ with hM_def
   set P := V * Vᴴ with hP_def
@@ -785,7 +790,7 @@ lemma rpow_conj_isometry {n m : Type*} [Fintype n] [Fintype m]
       rcases mul_eq_zero.mp (hDQ_entry i j) with h | h
       · -- ev_i = 0 → ev_i^s = 0^s = 0
         have hevi_zero : ev i = 0 := by exact_mod_cast h
-        simp [hevi_zero, Real.zero_rpow (ne_of_gt hs)]
+        simp [hevi_zero, Real.zero_rpow hs]
       · -- Q_{i,j} = 0
         simp [h]
     -- M^s * (1-P) = U * D_s * U† * (1-P) = U * (D_s * Q) = U * 0 = 0
