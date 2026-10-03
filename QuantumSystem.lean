@@ -53,12 +53,13 @@ public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Stinespring
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.TensorProduct
 public import QuantumSystem.Analysis.Entropy.Araki.Basic
 public import QuantumSystem.Analysis.Entropy.Araki.Commutative
-public import QuantumSystem.Analysis.Entropy.Araki.Matrix
+public import QuantumSystem.Analysis.Entropy.Araki.FiniteDimensional
 public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.Araki.Multiplication
 public import QuantumSystem.Analysis.Entropy.Araki.Vector
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
-public import QuantumSystem.Analysis.Entropy.Umegaki.Spectral
+public import QuantumSystem.Analysis.Entropy.Umegaki.JointConvexity
+public import QuantumSystem.Analysis.Entropy.Umegaki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
 public import QuantumSystem.Analysis.Entropy.VonNeumann.StrongSubadditivity

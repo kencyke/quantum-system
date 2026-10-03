@@ -31,12 +31,15 @@ The spectral theorem gives ρ = U diag(λ₁, ..., λₙ) U* where λᵢ ≥ 0 a
 The Von Neumann entropy is:
   S(ρ) = -Tr(ρ log ρ) = -Σᵢ λᵢ log λᵢ
 
-Umegaki's relative entropy (`Matrix.umegakiEntropy`) is:
+Umegaki's relative entropy of the functionals with densities ρ and σ is:
   D(ρ ∥ σ) = Tr(ρ (log ρ - log σ)) if supp ρ ⊆ supp σ, and +∞ otherwise
 
-where log ρ and log σ are matrix logarithms computed via the continuous functional
-calculus (CFC), applied to each matrix's own spectral decomposition. This is the
-operator-algebraically correct definition, including the non-commuting case.
+where log ρ and log σ are logarithms computed via the continuous functional calculus (CFC),
+applied to each operator's own spectral decomposition, including the non-commuting case. In this
+library it is `umegakiEntropy`, defined for positive functionals on `B(H)` (not only states) as
+Araki's relative entropy; the formula above is the theorem `umegakiEntropy_eq_ite`. Likewise the
+von Neumann entropy is `State.vonNeumannEntropy`, with `S(ω) = -Σᵢ λᵢ log λᵢ` as
+`State.vonNeumannEntropy_eq_sum_negMulLog`.
 
 ## References
 
@@ -170,7 +173,7 @@ noncomputable def mix (ρ₁ ρ₂ : DensityMatrix n)
 /-! ### Maximally mixed state
 
 The uniform state `π = I/d` is the unique state whose entropy attains the
-maximum `log d` (`DensityMatrix.vonNeumannEntropy_eq_log_card_iff`). -/
+maximum `log d` (`State.vonNeumannEntropy_eq_log_finrank_iff`, stated for states on `B(H)`). -/
 
 section MaximallyMixed
 
