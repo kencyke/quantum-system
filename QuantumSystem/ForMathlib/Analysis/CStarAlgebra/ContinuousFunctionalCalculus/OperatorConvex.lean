@@ -5,10 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.InnerProductSpace.StarOrder
-public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
+public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.Analysis.CStarAlgebra.Hom
+public import Mathlib.Analysis.Convex.Continuous
+public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.Matrix.Order
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Order
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
@@ -24,8 +25,10 @@ alone gives *matrix convexity* (`IsMatrixConvexOn`; Bhatia, Chapter V; Effros), 
 continuity, since matrices have finite spectra. For `f` continuous on `s` the two agree, but they
 differ on discontinuous functions: on `[0, ∞)`, `f(0) = 1` and `f(t) = 0` for `t > 0` gives the
 projection `f(A)` onto `ker A`, and is matrix convex (`isMatrixConvexOn_indicator_zero`) but not
-operator convex (`not_isOperatorConvexOn_indicator_zero`). The separation is one of conventions: the
-obstruction is the continuity that operator convexity requires (Hansen–Pedersen), while the
+operator convex (`not_isOperatorConvexOn_indicator_zero`). The separation is one of conventions at
+the endpoints of `s`: a matrix convex function is convex (`IsMatrixConvexOn.convexOn_real`), hence
+continuous on the interior of `s` (`IsMatrixConvexOn.continuousOn_interior`), and the obstruction is
+the continuity at the endpoints that operator convexity requires (Hansen–Pedersen), while the
 argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is algebraic. Bhatia's operator
 convexity is matrix convexity in every size, without continuity. Both notions are kept. This file
 proves the specialisation `IsOperatorConvexOn.isMatrixConvexOn` (operator convex ⇒ matrix convex),
@@ -77,7 +80,9 @@ in `QuantumSystem/Analysis/Matrix/Order.lean` (`IsMatrixConvexOn.cfc_sum_le`).
   C⋆-algebra. The converses of Hansen–Pedersen, from Jensen's inequality back to operator
   convexity, are not stated.
 * `IsOperatorConvexOn.isMatrixConvexOn`: an operator convex function is matrix convex;
-  `IsMatrixConvexOn.ordConnected`: a matrix convex function is defined on an interval.
+  `IsMatrixConvexOn.ordConnected`: a matrix convex function is defined on an interval;
+  `IsMatrixConvexOn.convexOn_real`, `IsMatrixConvexOn.continuousOn_interior`: it is convex, hence
+  continuous on the interior of its domain (`ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset`).
 * `IsMatrixConvexOn.convexOn_continuousLinearMap`: a continuous matrix convex function is convex on
   the self-adjoint operators on every complex Hilbert space.
 * `isOperatorConvexOn_neg_rpow`: `-tᵖ` (`0 ≤ p ≤ 1`) is operator convex on `[0, ∞)`
@@ -200,6 +205,21 @@ theorem Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset [StarModu
   rw [Algebra.smul_def, Algebra.smul_def, ← map_mul, ← map_mul, ← map_add, spectrum.scalar_eq]
     at h'
   exact h' rfl
+
+/-- If `cfc f` is convex on the self-adjoint elements with spectrum in `s` of a nontrivial algebra,
+then `f` is convex on `s`: the domain contains the scalars `algebraMap ℝ A r`, `r ∈ s`, on which
+`cfc f` is `f` (`cfc_algebraMap`), and the order on the scalars is that of `ℝ`. -/
+theorem ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
+    [Nontrivial A] {s : Set ℝ} {f : ℝ → ℝ}
+    (h : ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) : ConvexOn ℝ s f := by
+  refine ⟨convex_iff_ordConnected.2
+    (Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset h.1), ?_⟩
+  intro r hr r' hr' α β hα hβ hαβ
+  have h' := h.2 (algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset hr)
+    (algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset hr') hα hβ hαβ
+  simp only [Algebra.smul_def, ← map_mul, ← map_add, cfc_algebraMap] at h'
+  rw [algebraMap_le_iff_le_spectrum (IsSelfAdjoint.algebraMap _ (.all _)), spectrum.scalar_eq] at h'
+  simpa [smul_eq_mul] using h' _ rfl
 
 /-- Scalar bounds `lo ≤ a ≤ hi` with `lo, hi` in an order-connected `s` confine the spectrum of a
 self-adjoint `a` to `s`. -/
@@ -619,11 +639,12 @@ Gelfand–Naimark and is proved outside `ForMathlib`, in
 the examples below are proved uniformly in every C⋆-algebra and hold in every universe.
 
 The field `continuousOn` follows the definition of Hansen–Pedersen; Bhatia's operator convexity,
-which asks for no continuity, is `IsMatrixConvexOn`. It
-is not independent of `convexOn`: Mathlib's junk value `cfc f a = 0` for `f` discontinuous on the
-spectrum of `a` makes convexity in every C⋆-algebra force continuity, but that derivation has no
-mathematical content, so continuity is kept as a field. When `s` has at most one point the domain
-is at most a scalar and both predicates hold for every `f` continuous on `s`. -/
+which asks for no continuity, is `IsMatrixConvexOn`. The field is independent of `convexOn` only at
+the endpoints of `s`: convexity gives continuity on the interior
+(`IsMatrixConvexOn.continuousOn_interior`), but not at an endpoint, where the indicator of `{0}` on
+`[0, ∞)` is matrix convex and discontinuous (`isMatrixConvexOn_indicator_zero`,
+`not_isOperatorConvexOn_indicator_zero`). When `s` has at most one point the domain is at most a
+scalar and both predicates hold for every `f` continuous on `s`. -/
 structure IsOperatorConvexOn (s : Set ℝ) (f : ℝ → ℝ) : Prop where
   /-- `f` is continuous on `s`. -/
   continuousOn : ContinuousOn f s
@@ -667,6 +688,17 @@ lemma IsOperatorConvexOn.isMatrixConvexOn (hf : IsOperatorConvexOn.{u} s f) :
 /-- The set `s` of a matrix convex function is an interval: its domain in `M_1(ℂ)` is convex. -/
 lemma IsMatrixConvexOn.ordConnected (hf : IsMatrixConvexOn s f) : s.OrdConnected :=
   Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset (hf 1).1
+
+/-- A matrix convex function is convex: its domain in `M_1(ℂ)` contains the scalars. -/
+lemma IsMatrixConvexOn.convexOn_real (hf : IsMatrixConvexOn s f) : ConvexOn ℝ s f :=
+  ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset (hf 1)
+
+/-- A matrix convex function is continuous on the interior of its domain, as every convex function
+on an interval is (`ConvexOn.continuousOn_interior`). Continuity at the endpoints does not follow:
+`isMatrixConvexOn_indicator_zero`. -/
+lemma IsMatrixConvexOn.continuousOn_interior (hf : IsMatrixConvexOn s f) :
+    ContinuousOn f (interior s) :=
+  hf.convexOn_real.continuousOn_interior
 
 end MatrixPredicates
 
@@ -903,8 +935,9 @@ lemma isMatrixConvexOn_inv : IsMatrixConvexOn (Ioi 0) (fun t => t⁻¹) :=
 The indicator `f = 1_{\{0\}}` of `{0}` on `[0, ∞)` sends `A ⪰ 0` to the projection `f(A)` onto
 `ker A`. For `A, B ⪰ 0` and `a, b > 0`, `ker(a A + b B) = ker A ∩ ker B`, so the projection onto
 `ker(a A + b B)` lies below those onto `ker A` and `ker B`, and `f` is matrix convex. It is not
-continuous at `0`, so it is not operator convex: the obstruction is the continuity in the
-definition of `IsOperatorConvexOn`, not the kernel argument.
+continuous at the endpoint `0`, so it is not operator convex: the obstruction is the continuity in
+the definition of `IsOperatorConvexOn`, not the kernel argument. In the interior `(0, ∞)` matrix
+convexity does give continuity (`IsMatrixConvexOn.continuousOn_interior`), and `f` is `0` there.
 -/
 
 section IndicatorZero
