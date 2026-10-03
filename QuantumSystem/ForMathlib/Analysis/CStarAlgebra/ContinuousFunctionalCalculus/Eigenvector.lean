@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+public import Mathlib.Analysis.InnerProductSpace.Trace
 
 /-!
 # The continuous functional calculus on eigenvectors
@@ -16,6 +17,13 @@ continuous functional calculus acts on `u` as multiplication by the value at the
 `cfc f a u = f ζ • u`. The proof runs the Stone–Weierstrass induction over `C(σ(a), ℂ)`; the
 `star` case uses that `u` is also an eigenvector of `a†`, for `ζ̄`, by normality.
 
+For a self-adjoint operator the same holds for the real calculus, `cfc f a u = f r • u` with
+`f : ℝ → ℝ`. On a finite-dimensional space the real spectrum is finite, so every `f` (in particular
+`Real.log`, discontinuous at `0`) is continuous on it, and an orthonormal eigenbasis `b` of `a` with
+eigenvalues `r` computes traces and quadratic forms: `tr (A ∘ cfc f a) = Σᵢ f(rᵢ) ⟪bᵢ, A bᵢ⟫` and
+`⟪x, a x⟫ = Σᵢ rᵢ ‖⟪bᵢ, x⟫‖²`. The eigenbasis is arbitrary, not Mathlib's chosen
+`LinearMap.IsSymmetric.eigenvectorBasis`, so that product and block bases can be used.
+
 ## Main results
 
 * `ContinuousLinearMap.mem_spectrum_of_apply_eq_smul` — an eigenvalue lies in the spectrum.
@@ -23,11 +31,18 @@ continuous functional calculus acts on `u` as multiplication by the value at the
 * `ContinuousLinearMap.IsStarNormal.adjoint_apply_eq_conj_smul` — `a u = ζ u` implies
   `a† u = ζ̄ u` for normal `a`.
 * `ContinuousLinearMap.cfc_apply_of_apply_eq_smul` — `a u = ζ u` implies `cfc f a u = f ζ • u`.
+* `ContinuousLinearMap.cfc_apply_of_apply_eq_ofReal_smul` — the real calculus of a self-adjoint
+  operator on an eigenvector.
+* `ContinuousLinearMap.finite_spectrum_real` — a self-adjoint operator on a finite-dimensional space
+  has finite real spectrum.
+* `ContinuousLinearMap.inner_apply_self_eq_sum`, `ContinuousLinearMap.trace_comp_eq_sum`,
+  `ContinuousLinearMap.trace_comp_cfc_eq_sum` — quadratic forms and traces in an orthonormal
+  eigenbasis.
 -/
 
 @[expose] public section
 
-open scoped ComplexConjugate
+open scoped ComplexConjugate InnerProductSpace
 
 /-- A normal element of a star algebra over `ℂ`, shifted by a scalar, is normal. -/
 theorem IsStarNormal.sub_algebraMap {A : Type*} [Ring A] [StarRing A] [Algebra ℂ A]
@@ -100,5 +115,68 @@ theorem cfc_apply_of_apply_eq_smul (ha : IsStarNormal a) (hu : a u = ζ • u) {
   rw [cfc_apply f a ha hf,
     cfcHom_apply_of_apply_eq_smul ha hu (mem_spectrum_of_apply_eq_smul hu hu0)]
   rfl
+
+/-- For a self-adjoint operator `a` and an eigenvector `u` with real eigenvalue `r`,
+`cfc f a u = f r • u` for every real function `f` continuous on the spectrum of `a`. -/
+theorem cfc_apply_of_apply_eq_ofReal_smul (ha : IsSelfAdjoint a) {r : ℝ} (hu : a u = (r : ℂ) • u)
+    {f : ℝ → ℝ} (hf : ContinuousOn f (spectrum ℝ a)) : cfc f a u = (f r : ℂ) • u := by
+  rw [cfc_real_eq_complex f ha]
+  have hmaps : Set.MapsTo Complex.re (spectrum ℂ a) (spectrum ℝ a) := fun x hx =>
+    ha.spectrumRestricts.image ▸ Set.mem_image_of_mem _ hx
+  refine (cfc_apply_of_apply_eq_smul ha.isStarNormal hu ?_).trans (by simp)
+  exact Complex.continuous_ofReal.comp_continuousOn
+    (hf.comp Complex.continuous_re.continuousOn hmaps)
+
+/-- A self-adjoint operator on a finite-dimensional space has finite real spectrum; hence every
+real function, `Real.log` included, is continuous on it (`Set.Finite.continuousOn`). -/
+theorem finite_spectrum_real [FiniteDimensional ℂ E] (ha : IsSelfAdjoint a) :
+    (spectrum ℝ a).Finite := by
+  have h : (spectrum ℂ a).Finite := by
+    rw [ContinuousLinearMap.spectrum_eq]
+    exact Module.End.finite_spectrum _
+  rw [← ha.spectrumRestricts.image]
+  exact h.image _
+
+variable {ι : Type*} [Fintype ι]
+
+omit [CompleteSpace E] in
+/-- In an orthonormal eigenbasis `b` of `a` with eigenvalues `r`, `⟪bᵢ, a x⟫ = rᵢ ⟪bᵢ, x⟫`. -/
+theorem inner_apply_eq_mul (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
+    (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (i : ι) (x : E) :
+    ⟪b i, a x⟫_ℂ = (r i : ℂ) * ⟪b i, x⟫_ℂ := by
+  conv_lhs => rw [← b.sum_repr' x]
+  simp only [map_sum, map_smul, hb, smul_smul]
+  rw [b.orthonormal.inner_right_sum _ (Finset.mem_univ i), mul_comm]
+
+omit [CompleteSpace E] in
+/-- The quadratic form in an orthonormal eigenbasis: `⟪x, a x⟫ = Σᵢ rᵢ ‖⟪bᵢ, x⟫‖²`. -/
+theorem inner_apply_self_eq_sum (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
+    (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (x : E) :
+    ⟪x, a x⟫_ℂ = ((∑ i, r i * ‖⟪b i, x⟫_ℂ‖ ^ 2 : ℝ) : ℂ) := by
+  rw [← b.sum_inner_mul_inner x (a x)]
+  push_cast
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [inner_apply_eq_mul b hb, ← inner_conj_symm, mul_left_comm, RCLike.conj_mul]
+  simp
+
+omit [CompleteSpace E] in
+/-- The trace in an orthonormal eigenbasis: `tr (A ∘ a) = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
+theorem trace_comp_eq_sum [FiniteDimensional ℂ E] (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
+    (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (A : E →L[ℂ] E) :
+    LinearMap.trace ℂ E (A ∘L a) = ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
+  rw [LinearMap.trace_eq_sum_inner _ b]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp only [ContinuousLinearMap.coe_comp, ContinuousLinearMap.coe_coe, Function.comp_apply, hb,
+    map_smul, inner_smul_right]
+
+/-- The trace against the real functional calculus of a self-adjoint operator, in an orthonormal
+eigenbasis: `tr (A ∘ cfc f a) = Σᵢ f(rᵢ) ⟪bᵢ, A bᵢ⟫`. No continuity of `f` is needed, the spectrum
+being finite. -/
+theorem trace_comp_cfc_eq_sum [FiniteDimensional ℂ E] (ha : IsSelfAdjoint a)
+    (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ} (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (f : ℝ → ℝ)
+    (A : E →L[ℂ] E) :
+    LinearMap.trace ℂ E (A ∘L cfc f a) = ∑ i, (f (r i) : ℂ) * ⟪b i, A (b i)⟫_ℂ :=
+  trace_comp_eq_sum b
+    (fun i => cfc_apply_of_apply_eq_ofReal_smul ha (hb i) ((finite_spectrum_real ha).continuousOn f)) A
 
 end ContinuousLinearMap

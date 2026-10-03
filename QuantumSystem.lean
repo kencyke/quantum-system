@@ -88,6 +88,7 @@ public import QuantumSystem.Analysis.UnboundedOperator.SpectralCalculus
 public import QuantumSystem.Analysis.UnboundedOperator.SpectralMeasure
 public import QuantumSystem.Analysis.UnboundedOperator.VonNeumann
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
+public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
@@ -131,6 +132,7 @@ public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Resolvent
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.Data.EReal.BigOperators
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.Fintype
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap

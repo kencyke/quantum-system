@@ -28,7 +28,9 @@ its adjoint `a† ⊕ b†`, and the corner of that commutation is `V a† = b�
 
 * `ContinuousLinearMap.comp_adjoint_eq_adjoint_comp` — Fuglede–Putnam–Rosenblum for operators
   between Hilbert spaces: `V a = b V` with `a`, `b` normal implies `V a† = b† V`.
-* `ContinuousLinearMap.comp_cfc_eq_cfc_comp` — `V a = b V` implies `V (cfc f a) = (cfc f b) V`.
+* `ContinuousLinearMap.comp_cfc_eq_cfc_comp` — `V a = b V` implies `V (cfc f a) = (cfc f b) V`;
+  `ContinuousLinearMap.comp_cfc_eq_cfc_comp_real` — the same for the real calculus of
+  self-adjoint operators.
 -/
 
 @[expose] public section
@@ -143,5 +145,21 @@ theorem comp_cfc_eq_cfc_comp (ha : IsStarNormal a) (hb : IsStarNormal b) (h₁ :
     hfa.union_of_isClosed hfb (spectrum.isClosed a) (spectrum.isClosed b)
   rw [cfc_apply f a ha hfa, cfc_apply f b hb hfb]
   exact key ⟨K.domRestrict f, hK.domRestrict⟩
+
+/-- `V a = b V` for self-adjoint `a` and `b` implies `V (cfc f a) = (cfc f b) V` for the real
+functional calculus, `f : ℝ → ℝ` continuous on the real spectra
+(`ContinuousLinearMap.comp_cfc_eq_cfc_comp` through `cfc_real_eq_complex`). -/
+theorem comp_cfc_eq_cfc_comp_real (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b)
+    (h : V ∘L a = b ∘L V) {f : ℝ → ℝ} (hfa : ContinuousOn f (spectrum ℝ a))
+    (hfb : ContinuousOn f (spectrum ℝ b)) : V ∘L cfc f a = cfc f b ∘L V := by
+  have hc : ∀ {c : F →L[ℂ] F}, IsSelfAdjoint c → ContinuousOn f (spectrum ℝ c) →
+      ContinuousOn (fun z : ℂ => (f z.re : ℂ)) (spectrum ℂ c) := fun hc hf =>
+    Complex.continuous_ofReal.comp_continuousOn (hf.comp Complex.continuous_re.continuousOn
+      fun x hx => hc.spectrumRestricts.image ▸ Set.mem_image_of_mem _ hx)
+  have hc' : ContinuousOn (fun z : ℂ => (f z.re : ℂ)) (spectrum ℂ a) :=
+    Complex.continuous_ofReal.comp_continuousOn (hfa.comp Complex.continuous_re.continuousOn
+      fun x hx => ha.spectrumRestricts.image ▸ Set.mem_image_of_mem _ hx)
+  rw [cfc_real_eq_complex f ha, cfc_real_eq_complex f hb]
+  exact comp_cfc_eq_cfc_comp ha.isStarNormal hb.isStarNormal h hc' (hc hb hfb)
 
 end ContinuousLinearMap
