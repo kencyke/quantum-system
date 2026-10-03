@@ -9,19 +9,20 @@ public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.Analysis.Matrix.Order
 
 /-!
-# Positivity of block matrices of complex matrices
+# Flattening block matrices and their positivity
 
-A `k × k` block matrix `M : CStarMatrix k k (Matrix n n ℂ)` with entries in the C⋆-algebra
-`Matrix n n ℂ` carries the star order of the C⋆-algebra `CStarMatrix k k (Matrix n n ℂ)`. This
-file identifies that order with the Löwner order, positive semidefiniteness of the flattened matrix
-`Matrix.comp k k n n ℂ M : Matrix (k × n) (k × n) ℂ`.
-
-The C⋆-structure on `Matrix n n ℂ` is the one of `Matrix.Norms.L2Operator` and the order is the
-one of `MatrixOrder`; both are scoped instances.
+Flattening a `k × k` block matrix with entries in `Matrix n n R`, `Matrix.comp`, is a
+⋆-algebra isomorphism `Matrix k k (Matrix n n R) ≃⋆ₐ Matrix (k × n) (k × n) R`, and also of the
+C⋆-algebra of block matrices, `CStarMatrix k k (Matrix n n R) ≃⋆ₐ[ℂ] Matrix (k × n) (k × n) R`.
+For complex matrices, with the C⋆-structure of `Matrix.Norms.L2Operator` and the order of
+`MatrixOrder` (both scoped), this identifies the order of the C⋆-algebra of block matrices with
+positive semidefiniteness of the flattened `kn × kn` matrix.
 
 ## Main definitions
 
 * `Matrix.compStarAlgEquiv`: `Matrix.comp` as a `StarAlgEquiv`.
+* `CStarMatrix.compStarAlgEquiv`: flattening of `CStarMatrix k k (Matrix n n R)` as a
+  `StarAlgEquiv`.
 
 ## Main statements
 
@@ -67,17 +68,27 @@ namespace CStarMatrix
 
 open scoped Matrix.Norms.L2Operator MatrixOrder ComplexOrder
 
+/-- Flattening as a ⋆-algebra isomorphism of the C⋆-algebra of block matrices
+`CStarMatrix k k (Matrix n n R)` onto `Matrix (k × n) (k × n) R`: the inverse of
+`CStarMatrix.ofMatrixStarAlgEquiv` followed by `Matrix.compStarAlgEquiv`. -/
+def compStarAlgEquiv (k n R : Type*) [Fintype k] [Fintype n] [DecidableEq n] [Semiring R]
+    [StarRing R] [SMul ℂ R] : CStarMatrix k k (Matrix n n R) ≃⋆ₐ[ℂ] Matrix (k × n) (k × n) R :=
+  ofMatrixStarAlgEquiv.symm.trans (Matrix.compStarAlgEquiv k n R ℂ)
+
+@[simp]
+theorem compStarAlgEquiv_apply {k n R : Type*} [Fintype k] [Fintype n] [DecidableEq n] [Semiring R]
+    [StarRing R] [SMul ℂ R] (M : CStarMatrix k k (Matrix n n R)) :
+    compStarAlgEquiv k n R M = Matrix.comp k k n n R M := rfl
+
 variable {k n : Type*} [Fintype k] [Fintype n] [DecidableEq n]
 
 /-- A block matrix of complex matrices is nonnegative in the C⋆-algebra
 `CStarMatrix k k (Matrix n n ℂ)` iff its flattening is positive semidefinite. Both orders are
 the star orders (`StarOrderedRing`: the nonnegative elements form the additive submonoid generated
-by the `star x * x`), so the star algebra isomorphism `Matrix.comp` identifies them. -/
+by the `star x * x`), so the star algebra isomorphism `CStarMatrix.compStarAlgEquiv` identifies them. -/
 theorem nonneg_iff_posSemidef_comp {M : CStarMatrix k k (Matrix n n ℂ)} :
     0 ≤ M ↔ (Matrix.comp k k n n ℂ M).PosSemidef := by
-  let f : CStarMatrix k k (Matrix n n ℂ) ≃⋆ₐ[ℂ] Matrix (k × n) (k × n) ℂ :=
-    ofMatrixStarAlgEquiv.symm.trans (Matrix.compStarAlgEquiv k n ℂ ℂ)
-  rw [← Matrix.nonneg_iff_posSemidef, ← map_le_map_iff f, map_zero]
+  rw [← Matrix.nonneg_iff_posSemidef, ← map_le_map_iff (compStarAlgEquiv k n ℂ), map_zero]
   rfl
 
 end CStarMatrix

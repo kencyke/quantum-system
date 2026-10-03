@@ -49,7 +49,7 @@ continuity on the finite spectra of matrices is automatic.
 
 The square inequalities come from `cfc_sum_le_of_convexOn_cstarMatrix`, applied to the C⋆-algebra
 `Matrix m m ℂ` with the ⋆-isomorphism `CStarMatrix ι ι (Matrix m m ℂ) ≃⋆ₐ Matrix (ι × m) (ι × m) ℂ`
-(`Matrix.compStarAlgEquiv`), where matrix convexity supplies the convexity of `cfc f` and
+(`CStarMatrix.compStarAlgEquiv`), where matrix convexity supplies the convexity of `cfc f` and
 finiteness of the spectrum (`Matrix.finite_real_spectrum`) the continuity. The rectangular
 inequalities pad `Aᵢ` to `(0 Aᵢ; 0 0)` in `Matrix (k ⊕ m) (k ⊕ m) ℂ` and read off the lower right
 block.
@@ -178,7 +178,7 @@ private theorem IsMatrixConvexOn.cfc_sum_le_square (hf : IsMatrixConvexOn s f) {
   classical
   open scoped Matrix.Norms.L2Operator in
   exact cfc_sum_le_of_convexOn_cstarMatrix (A := Matrix m m ℂ) (B := Matrix (ι × m) (ι × m) ℂ)
-    (CStarMatrix.ofMatrixStarAlgEquiv.symm.trans (Matrix.compStarAlgEquiv ι m ℂ ℂ))
+    (CStarMatrix.compStarAlgEquiv ι m ℂ)
     (EquivLike.injective _) (hf.convexOn (ι × m)) (fun _ _ _ => finite_real_spectrum.continuousOn f) A T hT hA
 
 /-- **Jensen's operator inequality for matrices**, two-term case (Hansen–Pedersen 2003): for `f`
