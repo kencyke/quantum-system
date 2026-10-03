@@ -66,7 +66,6 @@ public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
 public import QuantumSystem.Analysis.Matrix.Order
-public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
@@ -135,7 +134,6 @@ public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.Count
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
-public import QuantumSystem.ForMathlib.RingTheory.RootsOfUnity.Complex
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.Notation
