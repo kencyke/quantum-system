@@ -19,7 +19,9 @@ tensors it is `tr₂(A ⊗ B) = tr(B) • A` (`ContinuousLinearMap.traceRight_ma
 of a unital ⋆-homomorphism it is completely positive and trace preserving with no further proof:
 it is a quantum channel (`QuantumChannel.traceRight`). For an orthonormal basis `(eₐ)` of `K` it
 is the Kraus map `X ↦ Σₐ ιₐ† X ιₐ` of the insertions `ιₐ : x ↦ x ⊗ eₐ`
-(`ContinuousLinearMap.traceRight_eq_sum`).
+(`ContinuousLinearMap.traceRight_eq_sum`). The partial trace over the left factor
+`tr₁ = ContinuousLinearMap.traceLeft H K : B(H ⊗ K) → B(K)` is, likewise, the trace dual of
+`B ↦ 1 ⊗ B` (`ContinuousLinearMap.trace_comp_traceLeft`, `QuantumChannel.traceLeft`).
 
 For an operator `V : H → K ⊗ E`, the Heisenberg picture `Φ*(B) = V† (B ⊗ 1) V` and the Schrödinger
 picture `Φ(A) = tr₂(V A V†)` of a map `Φ : B(H) → B(K)` are equivalent
@@ -28,14 +30,16 @@ between the two pictures.
 
 ## Conventions
 
-The traced-out system is the **right** factor. This is the convention of Watrous's Stinespring
-form `Φ(X) = Tr_Z (A X A*)` with `A : X → Y ⊗ Z`, and of the matrix partial trace
-`Matrix.traceRight`.
+The partial trace `tr₂` of the Stinespring form traces out the **right** factor. This is the
+convention of Watrous's Stinespring form `Φ(X) = Tr_Z (A X A*)` with `A : X → Y ⊗ Z`, and of the
+matrix partial trace `Matrix.traceRight`.
 
 ## Main definitions
 
 * `ContinuousLinearMap.traceRight H K`: the partial trace `B(H ⊗ K) → B(H)`.
 * `QuantumChannel.traceRight H K`: the partial trace as a quantum channel.
+* `ContinuousLinearMap.traceLeft H K`, `QuantumChannel.traceLeft H K`: the partial trace
+  `B(H ⊗ K) → B(K)` over the left factor.
 
 ## Main statements
 
@@ -43,6 +47,7 @@ form `Φ(X) = Tr_Z (A X A*)` with `A : X → Y ⊗ Z`, and of the matrix partial
   `tr(A ∘ tr₂(X)) = tr((A ⊗ 1) ∘ X)`.
 * `ContinuousLinearMap.traceRight_mapL`: `tr₂(A ⊗ B) = tr(B) • A`.
 * `ContinuousLinearMap.trace_traceRight`: `tr(tr₂(X)) = tr(X)`.
+* `ContinuousLinearMap.traceLeft_mapL`: `tr₁(A ⊗ B) = tr(A) • B`.
 * `ContinuousLinearMap.traceRight_eq_sum`: `tr₂(X) = Σₐ ιₐ† X ιₐ`.
 * `ContinuousLinearMap.traceDual_eq_iff_traceRight`: `Φ*(B) = V† (B ⊗ 1) V` for all `B` iff
   `Φ(A) = tr₂(V A V†)` for all `A`.
@@ -157,6 +162,47 @@ theorem traceDual_eq_iff_traceRight {F : Type*} [FunLike F (H →L[ℂ] H) (K �
     intro A
     rw [h, key, trace_comp_comm']
 
+variable (H K) in
+/-- The **partial trace** `tr₁ : B(H ⊗ K) → B(K)` over the left factor: the trace dual of the
+ampliation `B ↦ 1 ⊗ B`, so that `tr(B ∘ tr₁(X)) = tr((1 ⊗ B) ∘ X)`
+(`ContinuousLinearMap.trace_comp_traceLeft`). -/
+noncomputable def traceLeft : (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) →ₗ[ℂ] (K →L[ℂ] K) :=
+  traceDual (lTensorStarAlgHom ℂ K H)
+
+/-- **The defining duality** of the partial trace over the left factor:
+`tr(B ∘ tr₁(X)) = tr((1 ⊗ B) ∘ X)`. -/
+theorem trace_comp_traceLeft (B : K →L[ℂ] K) (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
+    LinearMap.trace ℂ K (B ∘L traceLeft H K X) =
+      LinearMap.trace ℂ (H ⊗[ℂ] K) (B.lTensor H ∘L X) :=
+  (trace_comp_traceDual (lTensorStarAlgHom ℂ K H) B X).symm
+
+/-- The partial trace over the left factor is characterised by its duality: `Y = tr₁(X)` iff
+`tr(B ∘ Y) = tr((1 ⊗ B) ∘ X)` for all `B`. -/
+theorem eq_traceLeft_iff (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) (Y : K →L[ℂ] K) :
+    Y = traceLeft H K X ↔ ∀ B : K →L[ℂ] K,
+      LinearMap.trace ℂ K (B ∘L Y) = LinearMap.trace ℂ (H ⊗[ℂ] K) (B.lTensor H ∘L X) :=
+  eq_traceDual_iff (lTensorStarAlgHom ℂ K H) X Y
+
+/-- The partial trace over the left factor of an operator tensor: `tr₁(A ⊗ B) = tr(A) • B`. -/
+theorem traceLeft_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
+    traceLeft H K (mapL A B) = LinearMap.trace ℂ H A • B := by
+  rw [eq_comm, eq_traceLeft_iff]
+  intro C
+  rw [comp_smul, toLinearMap_smul, map_smul, lTensor_comp_mapL, toLinearMap_mapL,
+    LinearMap.trace_tensorProduct', smul_eq_mul]
+
+/-- The partial trace over the left factor preserves the trace: `tr(tr₁(X)) = tr(X)`. -/
+@[simp] theorem trace_traceLeft (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
+    LinearMap.trace ℂ K (traceLeft H K X) = LinearMap.trace ℂ (H ⊗[ℂ] K) X := by
+  have h := trace_comp_traceLeft (1 : K →L[ℂ] K) X
+  rwa [lTensor_one, ← mul_def, ← mul_def, one_mul, one_mul] at h
+
+/-- The trace dual of the partial trace over the left factor is the ampliation,
+`tr₁* (B) = 1 ⊗ B` (`ContinuousLinearMap.traceDual_traceDual`). -/
+@[simp] theorem traceDual_traceLeft (B : K →L[ℂ] K) :
+    traceDual (traceLeft H K) B = B.lTensor H :=
+  traceDual_traceDual (lTensorStarAlgHom ℂ K H) B
+
 end ContinuousLinearMap
 
 namespace QuantumChannel
@@ -173,6 +219,19 @@ noncomputable def traceRight : QuantumChannel (H ⊗[ℂ] K) H where
 /-- The partial-trace channel acts as the partial trace. -/
 @[simp] lemma traceRight_apply (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
     traceRight H K X = ContinuousLinearMap.traceRight H K X :=
+  rfl
+
+variable (H K) in
+/-- The **partial trace** `tr₁ : B(H ⊗ K) → B(K)` over the left factor as a quantum channel: the
+trace dual of the unital ⋆-homomorphism `B ↦ 1 ⊗ B`. -/
+noncomputable def traceLeft : QuantumChannel (H ⊗[ℂ] K) K where
+  toCompletelyPositiveMap :=
+    CompletelyPositiveMap.traceDual (ContinuousLinearMap.lTensorStarAlgHom ℂ K H)
+  isTracePreserving' := ContinuousLinearMap.trace_traceLeft
+
+/-- The partial-trace channel over the left factor acts as the partial trace. -/
+@[simp] lemma traceLeft_apply (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
+    traceLeft H K X = ContinuousLinearMap.traceLeft H K X :=
   rfl
 
 end QuantumChannel

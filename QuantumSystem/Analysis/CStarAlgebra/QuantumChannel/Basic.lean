@@ -171,19 +171,12 @@ lemma comp_apply (Ψ : QuantumChannel K L) (Φ : QuantumChannel H K) (A : H →L
 
 /-- A `⋆`-algebra equivalence `φ : B(H) ≃⋆ₐ B(K)` is a quantum channel: it is completely
 positive as a `⋆`-homomorphism (`NonUnitalStarAlgHomClass.instCompletelyPositiveMapClass`), and
-it preserves the trace as an algebra isomorphism of the endomorphism algebras
-(`LinearMap.trace_map`). By Skolem–Noether every such `φ` is conjugation by a unitary, so these are
-the unitary channels; that characterisation is not formalised here. -/
+it preserves the trace as an algebra isomorphism (`ContinuousLinearMap.trace_map`). By
+Skolem–Noether every such `φ` is conjugation by a unitary, so these are the unitary channels; that
+characterisation is not formalised here. -/
 noncomputable def ofStarAlgEquiv (φ : (H →L[ℂ] H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : QuantumChannel H K where
   toCompletelyPositiveMap := CompletelyPositiveMapClass.toCompletelyPositiveLinearMap φ
-  isTracePreserving' A := by
-    have h₁ : Module.End.toContinuousLinearMap H (A : H →ₗ[ℂ] H) = A := by ext; rfl
-    have h₂ : (Module.End.toContinuousLinearMap K).symm (φ A) = (φ A : K →ₗ[ℂ] K) := by
-      rw [AlgEquiv.symm_apply_eq]; ext; rfl
-    have h := LinearMap.trace_map (((Module.End.toContinuousLinearMap H).trans
-      φ.toAlgEquiv).trans (Module.End.toContinuousLinearMap K).symm) (A : H →ₗ[ℂ] H)
-    rw [AlgEquiv.trans_apply, AlgEquiv.trans_apply, h₁] at h
-    exact (congrArg _ h₂).symm.trans h
+  isTracePreserving' := ContinuousLinearMap.trace_map φ
 
 /-- The channel of a `⋆`-algebra equivalence `φ` is `φ` as a function. -/
 @[simp] lemma coe_ofStarAlgEquiv (φ : (H →L[ℂ] H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
