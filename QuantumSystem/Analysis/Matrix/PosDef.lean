@@ -35,14 +35,14 @@ lemma PosDef.convex_comb {m : Type*} [Finite m]
   classical
   let := Fintype.ofFinite m
   refine Matrix.PosDef.of_dotProduct_mulVec_pos ?_ ?_
-  · exact (hA.1.smul_real t).add (hB.1.smul_real (1 - t))
+  · exact hA.1.convex_combination hB.1 t
   · intro x hx
     have hApos := hA.dotProduct_mulVec_pos hx
     have hBpos := hB.dotProduct_mulVec_pos hx
     have hA_re : 0 < (star x ⬝ᵥ (A *ᵥ x)).re := (RCLike.pos_iff.mp hApos).1
     have hB_re : 0 < (star x ⬝ᵥ (B *ᵥ x)).re := (RCLike.pos_iff.mp hBpos).1
     have hC_im : (star x ⬝ᵥ ((t • A + (1 - t) • B) *ᵥ x)).im = 0 := by
-      exact (hA.1.smul_real t).add (hB.1.smul_real (1 - t)) |>.quadForm_im_eq_zero x
+      exact hA.1.convex_combination hB.1 t |>.quadForm_im_eq_zero x
     have hC_re :
         (star x ⬝ᵥ ((t • A + (1 - t) • B) *ᵥ x)).re =
           t * (star x ⬝ᵥ (A *ᵥ x)).re + (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re := by
