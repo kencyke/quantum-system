@@ -25,19 +25,13 @@ namespace UnitalCStarAlgebra
 variable {B : Type*} [CStarAlgebra B]
 
 /-- The norm of a character on a C*-algebra equals 1.
-A character φ satisfies φ(1) = 1, which gives ‖φ‖ ≥ 1, and φ(x) ∈ spectrum(x) gives ‖φ‖ ≤ 1. -/
+A character φ satisfies φ(1) = 1, which gives ‖φ‖ ≥ 1, and `norm_apply_le_self` gives ‖φ‖ ≤ 1. -/
 lemma norm_character_eq_one [Nontrivial B]
     (φ : WeakDual.characterSpace ℂ B) : ‖WeakDual.toStrongDual φ.val‖ = 1 := by
   apply le_antisymm
-  · -- ‖φ‖ ≤ 1: φ x ∈ spectrum x implies |φ x| ≤ spectralRadius x ≤ ‖x‖
-    apply ContinuousLinearMap.opNorm_le_bound _ zero_le_one
-    intro x
-    have h_mem : φ x ∈ spectrum ℂ x := WeakDual.CharacterSpace.apply_mem_spectrum φ x
-    have h_rad : (‖φ x‖₊ : ENNReal) ≤ spectralRadius ℂ x := by
-      rw [spectralRadius_eq_of_unital]
-      exact le_iSup₂_of_le (φ x) h_mem le_rfl
-    have h_le : (‖φ x‖₊ : ENNReal) ≤ ‖x‖₊ := h_rad.trans (spectralRadius_le_nnnorm x)
-    simp only [one_mul]; exact mod_cast h_le
+  · -- ‖φ‖ ≤ 1: `φ x ∈ spectrum x` gives `‖φ x‖ ≤ ‖x‖`.
+    exact ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+      simpa using AlgHom.norm_apply_le_self φ x
   · -- ‖φ‖ ≥ 1: since φ(1) = 1 and ‖1‖ = 1
     have h_le := (WeakDual.toStrongDual φ.val).le_opNorm 1
     simp only [WeakDual.toStrongDual_apply, norm_one, mul_one] at h_le
