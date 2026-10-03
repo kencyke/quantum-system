@@ -7,7 +7,6 @@ module
 
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 public import QuantumSystem.Notation
 
 /-!
@@ -22,16 +21,20 @@ independent (`Matrix.rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock`).
 `tr₂ = Matrix.traceRight` traces out the environment.
 
 This is the Schrödinger-picture form of Stinespring's dilation (Watrous, Theorem 2.22 and
-Corollary 2.27). Stinespring's original Heisenberg-picture statement, that the trace dual is
-`Φ*(B) = Vᴴ (B ⊗ 1) V`, is `CompletelyPositiveMap.exists_traceDual_eq_stinespringMatrix`. For a
-fixed `V` the two pictures are equivalent (`Matrix.traceDual_eq_iff_stinespring`).
+Corollary 2.27). Stinespring's original Heisenberg-picture statement is about the trace dual
+`Φ*`, which is defined once, for bounded operators (`ContinuousLinearMap.traceDual`): for the
+operator form `Ψ : B(ℂⁿ) → B(ℂᵐ)` of `Φ`, `Ψ(A') = Φ(A)'` with `A' = Matrix.toEuclideanCLM A`,
+the trace dual is `Ψ*(B') = (Vᴴ (B ⊗ 1) V)'`
+(`CompletelyPositiveMap.exists_traceDual_eq_stinespringMatrix`). For a fixed `V` the two pictures
+are equivalent (`Matrix.traceDual_eq_iff_stinespring`), by the trace duality
+`tr(Ψ(A') ∘ B') = tr(A' ∘ Ψ*(B'))` and `tr(A' ∘ B') = Tr (A B)` (`Matrix.trace_toEuclideanCLM`).
 
 Quantum channels, and the isometry `V† V = 1` of their Stinespring dilations, are treated only for
 bounded operators on finite-dimensional Hilbert spaces
 (`QuantumChannel.exists_coe_eq_iff_exists_stinespring`, and in the Heisenberg picture
 `QuantumChannel.exists_traceDual_eq_stinespring`, in
 `QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/Stinespring.lean`); matrices reach them through
-`Matrix.toEuclideanCLM : M_n(ℂ) ≃ B(ℂⁿ)`, and no matrix restatement is provided.
+`Matrix.toEuclideanCLM : M_n(ℂ) ≃ B(ℂⁿ)`.
 
 ## Kraus blocks
 
@@ -80,8 +83,8 @@ operator algebras of arbitrary Hilbert spaces are `SchwarzMap.ofKraus`
 * `Matrix.conjTranspose_mul_self_eq_sum_krausBlock`: `Vᴴ V = Σᵢ Kᵢᴴ Kᵢ`.
 * `Matrix.traceRight_mul_mul_conjTranspose`: `tr₂(V A Vᴴ) = Σᵢ Kᵢ A Kᵢᴴ`, the sum of the diagonal
   blocks of `V A Vᴴ`.
-* `Matrix.traceDual_eq_iff_stinespring`: for a fixed `V`, the trace dual is
-  `Φ*(B) = Vᴴ (B ⊗ 1) V` for all `B` iff `Φ(A) = tr₂(V A Vᴴ)` for all `A`.
+* `Matrix.traceDual_eq_iff_stinespring`: for a fixed `V`, the trace dual of the operator form `Ψ`
+  of `Φ` is `Ψ*(B') = (Vᴴ (B ⊗ 1) V)'` for all `B` iff `Φ(A) = tr₂(V A Vᴴ)` for all `A`.
 * `Matrix.rank_choiMatrix_le_card_of_stinespring`: **minimality**: every `V` with
   `Φ(A) = tr₂(V A Vᴴ)` has an environment with at least `rank J(Φ)` elements;
   `Matrix.rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock`: with equality iff its Kraus
@@ -89,8 +92,8 @@ operator algebras of arbitrary Hilbert spaces are `SchwarzMap.ofKraus`
 * `CompletelyPositiveMap.exists_stinespringMatrix`: a CP map is `A ↦ tr₂(V A Vᴴ)` for some `V`
   with environment `Fin (rank J(φ))`.
 * `CompletelyPositiveMap.exists_traceDual_eq_stinespringMatrix`: **Stinespring's theorem,
-  Heisenberg picture**: the trace dual of a CP map is `B ↦ Vᴴ (B ⊗ 1) V` for some `V` with
-  environment `Fin (rank J(φ))`.
+  Heisenberg picture**: the trace dual of the operator form of a CP map is `B' ↦ (Vᴴ (B ⊗ 1) V)'`
+  for some `V` with environment `Fin (rank J(φ))`.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_stinespringMatrix`: **Stinespring's
   theorem**: a linear map is completely positive iff it is `A ↦ tr₂(V A Vᴴ)` for some `V`.
 
@@ -160,10 +163,13 @@ end KrausBlock
 
 section Heisenberg
 
-variable [DecidableEq n] {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
-  [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix m m ℂ)]
+variable [DecidableEq n] [DecidableEq m] {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
+  {G : Type*} [FunLike G (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
+    (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)]
+  [LinearMapClass G ℂ (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
+    (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)]
 
-omit [DecidableEq n] in
+omit [DecidableEq n] [DecidableEq m] in
 /-- The Stinespring pairing: `Tr (tr₂(V A Vᴴ) B) = Tr (A Vᴴ (B ⊗ 1) V)`. -/
 lemma trace_traceRight_mul_mul_conjTranspose_mul {ι : Type*} [Fintype ι] [DecidableEq ι]
     (V : Matrix (m × ι) n ℂ) (A : Matrix n n ℂ) (B : Matrix m m ℂ) :
@@ -173,25 +179,39 @@ lemma trace_traceRight_mul_mul_conjTranspose_mul {ι : Type*} [Fintype ι] [Deci
   rw [Matrix.trace_mul_comm V]
   simp only [Matrix.mul_assoc]
 
-/-- Heisenberg and Schrödinger pictures of conjugation by a matrix `V`: the trace dual of `Φ` is
-`Φ*(B) = Vᴴ (B ⊗ 1) V` for all `B` iff `Φ(A) = tr₂(V A Vᴴ)` for all `A`. -/
-theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
+/-- Heisenberg and Schrödinger pictures of conjugation by a matrix `V`: if `Ψ : B(ℂⁿ) → B(ℂᵐ)` is
+the operator form of `Φ : M_n(ℂ) → M_m(ℂ)`, `Ψ(A') = Φ(A)'` for the operator
+`A' = Matrix.toEuclideanCLM A` of each matrix `A`, then the trace dual of `Ψ` is
+`Ψ*(B') = (Vᴴ (B ⊗ 1) V)'` for all `B` iff `Φ(A) = tr₂(V A Vᴴ)` for all `A`. Both sides pair
+`A` against `B` in the trace: `tr(Ψ(A') ∘ B') = Tr (Φ(A) B)` and
+`tr(A' ∘ Ψ*(B')) = Tr (A Vᴴ (B ⊗ 1) V)`. -/
+theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
+    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A))
     (V : Matrix (m × ι) n ℂ) :
-    (∀ B, traceDual Φ B = Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V) ↔
+    (∀ B, ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (n := m) (𝕜 := ℂ) B) =
+        toEuclideanCLM (n := n) (𝕜 := ℂ) (Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V)) ↔
       ∀ A, Φ A = traceRight (V * A * Vᴴ) := by
   constructor
-  · intro h A
+  · intro hΨ A
     refine Matrix.ext_iff_trace_mul_right.mpr fun B => ?_
-    rw [trace_mul_traceDual, h, trace_traceRight_mul_mul_conjTranspose_mul]
+    rw [← trace_toEuclideanCLM_comp_toEuclideanCLM, ← h,
+      ContinuousLinearMap.trace_comp_traceDual, hΨ, trace_toEuclideanCLM_comp_toEuclideanCLM,
+      trace_traceRight_mul_mul_conjTranspose_mul]
   · intro hV B
-    refine Matrix.ext_iff_trace_mul_left.mpr fun A => ?_
-    rw [← trace_mul_traceDual, hV, trace_traceRight_mul_mul_conjTranspose_mul]
+    rw [eq_comm, ContinuousLinearMap.eq_traceDual_iff]
+    intro X
+    obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (n := n) (𝕜 := ℂ)) X
+    rw [h, trace_toEuclideanCLM_comp_toEuclideanCLM, trace_toEuclideanCLM_comp_toEuclideanCLM, hV,
+      trace_traceRight_mul_mul_conjTranspose_mul]
 
-/-- If `Φ(A) = tr₂(V A Vᴴ)` for all `A`, then the trace dual of `Φ` is `Φ*(B) = Vᴴ (B ⊗ 1) V`. -/
-theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F}
+/-- If `Φ(A) = tr₂(V A Vᴴ)` for all `A`, then the trace dual of the operator form `Ψ` of `Φ` is
+`Ψ*(B') = (Vᴴ (B ⊗ 1) V)'`. -/
+theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
+    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A))
     (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = traceRight (V * A * Vᴴ)) (B : Matrix m m ℂ) :
-    traceDual Φ B = Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V :=
-  (traceDual_eq_iff_stinespring V).2 hV B
+    ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (n := m) (𝕜 := ℂ) B) =
+      toEuclideanCLM (n := n) (𝕜 := ℂ) (Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V) :=
+  (traceDual_eq_iff_stinespring h V).2 hV B
 
 end Heisenberg
 
@@ -223,16 +243,25 @@ theorem exists_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
   exact ⟨V, fun A => by rw [traceRight_mul_mul_conjTranspose, hK]; simp only [hV]⟩
 
 open scoped Matrix.Norms.L2Operator MatrixOrder Kronecker in
-/-- **Stinespring's theorem, Heisenberg picture**, for matrix algebras: the trace dual of a
-completely positive map `φ : M_n(ℂ) → M_m(ℂ)` is `φ*(B) = Vᴴ (B ⊗ 1) V` for some
+/-- **Stinespring's theorem, Heisenberg picture**, for matrix algebras: if `ψ : B(ℂⁿ) → B(ℂᵐ)` is
+the operator form of a completely positive map `φ : M_n(ℂ) → M_m(ℂ)`, `ψ(A') = φ(A)'` with
+`A' = Matrix.toEuclideanCLM A`, then its trace dual is `ψ*(B') = (Vᴴ (B ⊗ 1) V)'` for some
 `V : ℂⁿ → ℂᵐ ⊗ ℂ^E` with environment `E = Fin r` of the minimal dimension `r = rank J(φ)`
 (`Matrix.rank_choiMatrix_le_card_of_stinespring`), at most `nm`: the Schrödinger form
-`CompletelyPositiveMap.exists_stinespringMatrix` read through `Matrix.traceDual_eq_iff_stinespring`. -/
-theorem exists_traceDual_eq_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
-    ∃ V : Matrix (m × Fin (choiMatrix φ).rank) n ℂ, ∀ B, Matrix.traceDual φ B =
-      Vᴴ * (B ⊗ₖ (1 : Matrix (Fin (choiMatrix φ).rank) (Fin (choiMatrix φ).rank) ℂ)) * V := by
+`CompletelyPositiveMap.exists_stinespringMatrix` read through `Matrix.traceDual_eq_iff_stinespring`.
+The operator form of `φ` is `CompletelyPositiveMap.arrowCongr toEuclideanCLM toEuclideanCLM φ`. -/
+theorem exists_traceDual_eq_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix m m ℂ)
+    {G : Type*} [FunLike G (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
+      (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)]
+    [LinearMapClass G ℂ (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
+      (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)] {ψ : G}
+    (h : ∀ A, ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (φ A)) :
+    ∃ V : Matrix (m × Fin (choiMatrix φ).rank) n ℂ, ∀ B,
+      ContinuousLinearMap.traceDual ψ (toEuclideanCLM (n := m) (𝕜 := ℂ) B) =
+        toEuclideanCLM (n := n) (𝕜 := ℂ) (Vᴴ *
+          (B ⊗ₖ (1 : Matrix (Fin (choiMatrix φ).rank) (Fin (choiMatrix φ).rank) ℂ)) * V) := by
   obtain ⟨V, hV⟩ := φ.exists_stinespringMatrix
-  exact ⟨V, (traceDual_eq_iff_stinespring V).2 hV⟩
+  exact ⟨V, (traceDual_eq_iff_stinespring h V).2 hV⟩
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Stinespring's theorem** for matrix algebras: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is
