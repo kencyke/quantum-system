@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.LocalNet.InfiniteRegion
+public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 
 /-!
 # Witnesses for the local-net interfaces

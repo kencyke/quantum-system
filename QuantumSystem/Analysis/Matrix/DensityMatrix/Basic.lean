@@ -7,7 +7,6 @@ module
 
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.Notation
 
 /-!
@@ -38,8 +37,8 @@ where log ρ and log σ are logarithms computed via the continuous functional ca
 applied to each operator's own spectral decomposition, including the non-commuting case. In this
 library it is `umegakiEntropy`, defined for positive functionals on `B(H)` (not only states) as
 Araki's relative entropy; the formula above is the theorem `umegakiEntropy_eq_ite`. Likewise the
-von Neumann entropy is `State.vonNeumannEntropy`, with `S(ω) = -Σᵢ λᵢ log λᵢ` as
-`State.vonNeumannEntropy_eq_sum_negMulLog`.
+von Neumann entropy is `vonNeumannEntropy`, with `S(ω) = -Σᵢ λᵢ log λᵢ` as
+`vonNeumannEntropy_eq_sum_negMulLog`.
 
 ## References
 

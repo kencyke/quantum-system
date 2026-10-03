@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Analysis.Normed.Operator.Extend
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
-public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
@@ -16,10 +15,10 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubsp
 
 A GNS triplet `(π, H, ξ)` for a positive linear functional `f` on a (possibly non-unital)
 C*-algebra `A` is a C*-representation `π` of `A` on a Hilbert space `H` together with a cyclic
-vector `ξ` satisfying `f a = ⟪ξ, π a ξ⟫`.  A state `ω` is the case `f = ω.toPositiveLinearMap`,
+vector `ξ` satisfying `f a = ⟪ξ, π a ξ⟫`.  A state `ω` is the case `f = PositiveLinearMap.ofClass ω`,
 with `‖f‖ₒₚ = 1`; the only state-specific facts are that `ξ` is then a unit
 vector (`norm_ξ_eq_one`) and that `π ≠ 0`, since a state is nonzero
-(`π_eq_zero_iff`, `State.toPositiveLinearMap_ne_zero`).
+(`π_eq_zero_iff`, `State.ofClass_ne_zero`).
 
 ## Main definitions and results
 
@@ -183,9 +182,9 @@ theorem norm_ξ : ‖T.ξ‖ = √‖f‖ₒₚ := by
   rw [← T.norm_ξ_sq, Real.sqrt_sq (norm_nonneg _)]
 
 /-- The cyclic vector of a GNS triplet of a state is a unit vector. -/
-theorem norm_ξ_eq_one {ω : State A} (T : Representation ω.toPositiveLinearMap) :
+theorem norm_ξ_eq_one {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω)) :
     ‖T.ξ‖ = 1 := by
-  rw [T.norm_ξ, ω.norm_eq_one, Real.sqrt_one]
+  rw [T.norm_ξ, ω.opNorm_ofClass_eq_one, Real.sqrt_one]
 
 end ApproximateUnit
 

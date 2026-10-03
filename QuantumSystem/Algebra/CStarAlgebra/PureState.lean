@@ -21,7 +21,8 @@ quasi-state space of `A`, viewed inside `WeakDual ℂ A`.
 ## Main definitions
 
 * `IsPureState φ`: `φ` is a nonzero extreme point of `QuasiStateSpace A`.
-* `IsPureState.toState`: the state underlying a pure state.
+* `IsPureState.toState`: the state underlying a pure state; pure states lie in the state space
+  (`IsPureState.mem_stateSpace`), so this is the inclusion.
 * `PureState A`: the subtype of pure states, with `PureState.toState`.
 -/
 
@@ -265,10 +266,17 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
     exact h_ne_zero rfl
   exact h_not_ext h_ext
 
-/-- The state underlying a pure state: the functional itself, which is positive and has norm
-one (`IsPureState.norm_eq_one`). -/
-noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State A :=
-  State.ofContinuousLinearMap (WeakDual.toStrongDual φ) h.1.1.1 (norm_eq_one h)
+omit [StarOrderedRing A] in
+/-- A pure state is a state: it is positive and has norm one (`IsPureState.norm_eq_one`). -/
+lemma mem_stateSpace {φ : WeakDual ℂ A} (h : IsPureState φ) : φ ∈ StateSpace A :=
+  mem_stateSpace_iff.mpr ⟨h.1.1.1, norm_eq_one h⟩
+
+omit [StarOrderedRing A] in
+/-- The state underlying a pure state: the functional itself, as an element of the state space
+(`IsPureState.mem_stateSpace`). -/
+def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State A :=
+  ⟨φ, h.mem_stateSpace⟩
+
 /-- For any non-zero element `a`, there exists a pure state `φ` **norming** `a`:
 `φ (star a * a) = ‖a‖ ^ 2`, viewed in `ℂ`.
 
@@ -444,7 +452,7 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing
 
 This is the *only* spelling of the map `PureState A → State A`; there is deliberately no
 coercion instance alongside it, so that every downstream result is stated in the same form. -/
-noncomputable def toState (ψ : PureState A) : State A :=
+def toState (ψ : PureState A) : State A :=
   IsPureState.toState ψ.property
 
 @[simp]

@@ -139,8 +139,10 @@ theorem vonNeumannEntropy_strong_subadditivity :
   have hprod : ∀ X, ω.traceRight.tensorProduct ω.traceLeft (j X) =
       ω.traceRight.traceLeft.tensorProduct ω.traceLeft X := fun X => by
     have h := ext_mapL (𝕜 := ℂ) (E := H_B) (F := H_B) (G := H_C) (H := H_C) (M := ℂ)
-      (u := (ω.traceRight.tensorProduct ω.traceLeft).toLinearMap ∘ₗ j.toLinearMap)
-      (v := (ω.traceRight.traceLeft.tensorProduct ω.traceLeft).toLinearMap) fun Y Z => by
+      (u := (PositiveLinearMap.ofClass (ω.traceRight.tensorProduct ω.traceLeft)).toLinearMap ∘ₗ
+        j.toLinearMap)
+      (v := (PositiveLinearMap.ofClass (ω.traceRight.traceLeft.tensorProduct ω.traceLeft)).toLinearMap)
+      fun Y Z => by
       change ω.traceRight.tensorProduct ω.traceLeft (j (mapL Y Z)) =
         ω.traceRight.traceLeft.tensorProduct ω.traceLeft (mapL Y Z)
       rw [CompletelyPositiveMap.lTensorTensor_mapL, tensorProduct_mapL, tensorProduct_mapL,

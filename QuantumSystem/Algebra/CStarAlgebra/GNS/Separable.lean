@@ -5,8 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.Hom
-public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
+public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
+public import QuantumSystem.Algebra.CStarAlgebra.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.DirectSum
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 
@@ -54,10 +54,10 @@ namespace Representation
 
 /-- A norming state gives an orbit vector of full length: if `ω (star x * x) = ‖x‖ ^ 2`
 then `‖T.π x T.ξ‖ = ‖x‖`. -/
-lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation ω.toPositiveLinearMap) {x : A}
+lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω)) {x : A}
     (hx : ω (star x * x) = ((‖x‖ ^ 2 : ℝ) : ℂ)) :
     ‖T.π x T.ξ‖ = ‖x‖ := by
-  rw [T.norm_apply_cyclic, State.coe_toPositiveLinearMap, hx]
+  rw [T.norm_apply_cyclic, PositiveLinearMap.coe_ofClass, hx]
   simp
 
 /-- The Hilbert space of a GNS triplet over a **separable** C\*-algebra is separable.
@@ -105,7 +105,7 @@ variable (A) in
 dense sequence of `A`, at a pure state norming that member. -/
 noncomputable def normingFamily [SeparableSpace A] : SectorFamily.{u, u, 0} A where
   Index := NormingIndex A
-  rep i := (GNS.Representation.canonical (normingState i).toState.toPositiveLinearMap).toCStarRep
+  rep i := (GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i).toState)).toCStarRep
 
 /-- Each summand of the norming family is separable. -/
 instance [SeparableSpace A] (i : NormingIndex A) :
@@ -148,7 +148,7 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
     linarith
   set i : NormingIndex A := ⟨n, hb_ne⟩ with hi
   have helem : i.elem = denseSeq A n := rfl
-  set T := GNS.Representation.canonical (normingState i).toState.toPositiveLinearMap with hT
+  set T := GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i).toState) with hT
   -- The representation at `i` norms `i.elem`.
   have hnorm : ‖T.π i.elem T.ξ‖ = ‖i.elem‖ :=
     T.norm_apply_cyclic_of_norming (normingState_spec i)

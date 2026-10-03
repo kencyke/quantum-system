@@ -12,37 +12,42 @@ public import QuantumSystem.Analysis.Entropy.Umegaki.JointConvexity
 # Von Neumann entropy
 
 Let `H` be a finite-dimensional complex Hilbert space. The **von Neumann entropy** of a state `ω`
-on `B(H) = H →L[ℂ] H` with density `ρ_ω` (`ContinuousLinearMap.density`, `ω(A) = tr(ρ_ω A)`) is
-`S(ω) = -tr ρ_ω log ρ_ω`, and its core properties are derived from Umegaki's relative entropy
-through `D(ω ‖ tr) = -S(ω)` (`State.umegakiEntropy_trace_eq_neg_vonNeumannEntropy`).
+on `B(H) = H →L[ℂ] H` with density `ρ_ω`
+(`ContinuousLinearMap.density`, `ω(A) = tr(ρ_ω A)`) is `S(ω) = -tr ρ_ω log ρ_ω`, and its core
+properties are derived from Umegaki's relative entropy through `D(ω ‖ tr) = -S(ω)`
+(`State.umegakiEntropy_trace_eq_neg_vonNeumannEntropy`). Concavity is stated with Mathlib's
+`ConcaveOn` on the state space `StateSpace (H →L[ℂ] H)`, a convex subset of the dual; for this
+`S` is defined as a total function on all linear functionals, its value being meaningful only for
+positive ones (off the self-adjoint ones, `CFC.log` and hence `S` take the junk value `0`).
 
 ## Conventions
 
 * Logarithms are natural, so the unit is the nat; `log` is Mathlib's `CFC.log`. With
   `Real.log 0 = 0`, the kernel of `ρ_ω` contributes `0 · log 0 = 0`, so `S(ω) = -Σᵢ λᵢ log λᵢ`
-  over the eigenvalues `λᵢ` of `ρ_ω` (`State.vonNeumannEntropy_eq_sum_negMulLog`).
+  over the eigenvalues `λᵢ` of `ρ_ω` (`vonNeumannEntropy_eq_sum_negMulLog`).
 * `d = finrank ℂ H` is the dimension, and `τ = tr / d` the maximally mixed state
   (`State.maximallyMixed`).
 
 ## Main definitions
 
-* `State.vonNeumannEntropy ω` — `S(ω) = -Re tr(ρ_ω log ρ_ω) ∈ ℝ`, with notation `S(ω)` in scope
-  `QuantumInfo`.
+* `vonNeumannEntropy ω` — `S(ω) = -Re tr(ρ_ω log ρ_ω) ∈ ℝ`, meaningful for positive functionals
+  `ω` on `B(H)` (a total function on all of them), with notation `S(ω)` in scope `QuantumInfo`.
 * `State.maximallyMixed H` — the maximally mixed state `τ(A) = tr A / d`, for nontrivial `H`
   (`State.nontrivial`: every `H` carrying a state is nontrivial).
 
 ## Main results
 
-* `State.vonNeumannEntropy_eq_neg_re_apply`, `State.re_apply_log_density` —
+* `vonNeumannEntropy_eq_neg_re_apply`, `re_apply_log_density` —
   `S(ω) = -Re ω(log ρ_ω)`.
 * `State.umegakiEntropy_trace_eq_neg_vonNeumannEntropy` — `D(ω ‖ tr) = -S(ω)`;
   `State.umegakiEntropy_maximallyMixed` — `D(ω ‖ τ) = log d - S(ω)`.
-* `State.vonNeumannEntropy_eq_sum_negMulLog` — `S(ω) = Σᵢ negMulLog λᵢ`.
+* `vonNeumannEntropy_eq_sum_negMulLog` — `S(ω) = Σᵢ negMulLog λᵢ`.
 * `State.vonNeumannEntropy_nonneg` — `0 ≤ S(ω)`.
 * `State.vonNeumannEntropy_le_log_finrank` — `S(ω) ≤ log d`;
   `State.vonNeumannEntropy_maximallyMixed` — `S(τ) = log d`;
   `State.vonNeumannEntropy_eq_log_finrank_iff` — the maximum is attained only at `τ`.
-* `State.vonNeumannEntropy_concave` — concavity `Σᵢ wᵢ S(ωᵢ) ≤ S(Σᵢ wᵢ ωᵢ)`.
+* `StateSpace.concaveOn_vonNeumannEntropy` — `S` is concave on the state space
+  `StateSpace (H →L[ℂ] H)`.
 * `State.vonNeumannEntropy_comp_starAlgEquiv` — invariance under `⋆`-isomorphisms, in particular
   unitary conjugations.
 
@@ -60,21 +65,35 @@ open scoped InnerProductSpace ComplexOrder QuantumInfo NNReal
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [FiniteDimensional ℂ H]
 
-namespace State
+section Generic
 
-/-- The **von Neumann entropy** `S(ω) = -tr ρ_ω log ρ_ω` of a state on `B(H)`, with `ρ_ω` its
-density. The trace is real, `ρ_ω log ρ_ω` being self-adjoint, so `.re` loses nothing. -/
-noncomputable def vonNeumannEntropy (ω : State (H →L[ℂ] H)) : ℝ :=
+variable {G : Type*} [FunLike G (H →L[ℂ] H) ℂ] [LinearMapClass G ℂ (H →L[ℂ] H) ℂ]
+
+/-- The **von Neumann entropy** `S(ω) = -tr ρ_ω log ρ_ω` of a state `ω` on `B(H)`, with `ρ_ω` its
+density (`ContinuousLinearMap.density`). The formula is meaningful for positive functionals: then
+`ρ_ω log ρ_ω` is self-adjoint, the trace is real, and `.re` loses nothing. It is extended to every
+linear functional only so that it is a total function on the dual `WeakDual ℂ (H →L[ℂ] H)`, whose
+restriction to the state space is concave (`StateSpace.concaveOn_vonNeumannEntropy`); off the
+positive functionals its value is junk. -/
+noncomputable def vonNeumannEntropy (ω : G) : ℝ :=
   -(LinearMap.trace ℂ H (density ω ∘L CFC.log (density ω))).re
 
-end State
+end Generic
 
-/-- `S(ω)` is the von Neumann entropy `State.vonNeumannEntropy ω`. -/
-scoped[QuantumInfo] notation "S(" ω ")" => State.vonNeumannEntropy ω
+/-- `S(ω)` is the von Neumann entropy `vonNeumannEntropy ω`. -/
+scoped[QuantumInfo] notation "S(" ω ")" => vonNeumannEntropy ω
 
-namespace State
+section Generic
 
-variable (ω : State (H →L[ℂ] H))
+variable {G : Type*} [FunLike G (H →L[ℂ] H) ℂ] [LinearMapClass G ℂ (H →L[ℂ] H) ℂ]
+
+/-- The von Neumann entropy depends only on the values of the functional. -/
+theorem vonNeumannEntropy_congr {G' : Type*} [FunLike G' (H →L[ℂ] H) ℂ]
+    [LinearMapClass G' ℂ (H →L[ℂ] H) ℂ] {ω : G} {ω' : G'} (h : ∀ A, ω A = ω' A) :
+    S(ω) = S(ω') := by
+  rw [vonNeumannEntropy, vonNeumannEntropy, density_eq_density_iff.mpr h]
+
+variable (ω : G)
 
 /-- `S(ω) = -Re ω(log ρ_ω)`. -/
 theorem vonNeumannEntropy_eq_neg_re_apply : S(ω) = -(ω (CFC.log (density ω))).re := by
@@ -84,10 +103,10 @@ theorem vonNeumannEntropy_eq_neg_re_apply : S(ω) = -(ω (CFC.log (density ω)))
 theorem re_apply_log_density : (ω (CFC.log (density ω))).re = -S(ω) := by
   rw [vonNeumannEntropy_eq_neg_re_apply, neg_neg]
 
-/-- **Eigenvalue form**: `S(ω) = Σᵢ negMulLog λᵢ = -Σᵢ λᵢ log λᵢ` for an orthonormal eigenbasis
-`b` of `ρ_ω` with eigenvalues `λ`. -/
-theorem vonNeumannEntropy_eq_sum_negMulLog {ι : Type*} [Fintype ι] {b : OrthonormalBasis ι ℂ H}
-    {r : ι → ℝ} (hb : ∀ i, density ω (b i) = (r i : ℂ) • b i) :
+/-- **Eigenvalue form**: `S(ω) = Σᵢ negMulLog λᵢ = -Σᵢ λᵢ log λᵢ` for a positive functional `ω`
+and an orthonormal eigenbasis `b` of `ρ_ω` with eigenvalues `λ`. -/
+theorem vonNeumannEntropy_eq_sum_negMulLog [OrderHomClass G (H →L[ℂ] H) ℂ] {ι : Type*} [Fintype ι]
+    {b : OrthonormalBasis ι ℂ H} {r : ι → ℝ} (hb : ∀ i, density ω (b i) = (r i : ℂ) • b i) :
     S(ω) = ∑ i, Real.negMulLog (r i) := by
   have hsa := IsSelfAdjoint.of_nonneg (density_nonneg ω)
   rw [vonNeumannEntropy, CFC.log, trace_comp_cfc_eq_sum hsa b hb]
@@ -96,6 +115,16 @@ theorem vonNeumannEntropy_eq_sum_negMulLog {ι : Type*} [Fintype ι] {b : Orthon
   simp_rw [h, ← Complex.ofReal_mul, ← Complex.ofReal_sum, Complex.ofReal_re, Real.negMulLog,
     ← Finset.sum_neg_distrib]
   exact Finset.sum_congr rfl fun i _ => by ring
+
+end Generic
+
+namespace State
+
+variable (ω : State (H →L[ℂ] H))
+
+/-- The entropy of a state is that of its underlying element of the dual. -/
+@[simp] theorem vonNeumannEntropy_val : S(ω.val) = S(ω) :=
+  vonNeumannEntropy_congr fun _ => rfl
 
 /-- **Nonnegativity**: `0 ≤ S(ω)`, since the eigenvalues of `ρ_ω` lie in `[0, 1]`. -/
 theorem vonNeumannEntropy_nonneg : 0 ≤ S(ω) := by
@@ -156,12 +185,12 @@ theorem umegakiEntropy_maximallyMixed :
     D(ω ∥ maximallyMixed H) = ((Real.log (Module.finrank ℂ H) - S(ω) : ℝ) : EReal) := by
   have hd : (0 : ℝ≥0) < (Module.finrank ℂ H : ℝ≥0)⁻¹ :=
     inv_pos.mpr (Nat.cast_pos.mpr Module.finrank_pos)
-  rw [umegakiEntropy_congr ω (maximallyMixed H) (ψ₁ := (ω : (H →L[ℂ] H) →ₚ[ℂ] ℂ))
+  rw [umegakiEntropy_congr ω (maximallyMixed H) (ψ₁ := PositiveLinearMap.ofClass ω)
       (φ₁ := (Module.finrank ℂ H : ℝ≥0)⁻¹ • tracePositiveLinearMap ℂ H) (fun _ => rfl)
       (fun _ => rfl), umegakiEntropy_smul_right hd,
-    umegakiEntropy_congr (ω : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (tracePositiveLinearMap ℂ H) (ψ₁ := ω)
+    umegakiEntropy_congr (PositiveLinearMap.ofClass ω) (tracePositiveLinearMap ℂ H) (ψ₁ := ω)
       (φ₁ := tracePositiveLinearMap ℂ H) (fun _ => rfl) (fun _ => rfl),
-    umegakiEntropy_trace_eq_neg_vonNeumannEntropy, coe_toPositiveLinearMap, apply_one,
+    umegakiEntropy_trace_eq_neg_vonNeumannEntropy, PositiveLinearMap.coe_ofClass, apply_one,
     Complex.one_re, one_mul, NNReal.coe_inv, NNReal.coe_natCast, Real.log_inv, ← EReal.coe_sub]
   congr 1
   ring
@@ -200,31 +229,48 @@ end State
 
 /-! ### Concavity and invariance -/
 
-namespace State
+namespace StateSpace
 
-/-- **Concavity** of the von Neumann entropy: `Σᵢ wᵢ S(ωᵢ) ≤ S(Σᵢ wᵢ ωᵢ)` for a convex
-combination of states. With `S = -D(· ‖ tr)` and `tr = Σᵢ wᵢ tr`, this is joint convexity of
-Umegaki's relative entropy (`umegakiEntropy_jointly_convex`). -/
-theorem vonNeumannEntropy_concave {ι : Type*} (s : Finset ι) (w : ι → ℝ≥0)
-    (hw : ∑ i ∈ s, w i = 1) (ω : ι → State (H →L[ℂ] H)) :
-    ∑ i ∈ s, (w i : ℝ) * S(ω i) ≤ S(convexCombination s w hw ω) := by
-  have htr : tracePositiveLinearMap ℂ H = ∑ i ∈ s, w i • tracePositiveLinearMap ℂ H := by
+/-- **Concavity** of the von Neumann entropy on the state space:
+`S(a ω₁ + b ω₂) ≥ a S(ω₁) + b S(ω₂)`. With `S = -D(· ‖ tr)` and `tr = a tr + b tr`, this is joint
+convexity of Umegaki's relative entropy (`umegakiEntropy_jointly_convex`). The finite form
+`Σᵢ wᵢ S(ωᵢ) ≤ S(Σᵢ wᵢ ωᵢ)` is Jensen's inequality `ConcaveOn.le_map_sum`. -/
+theorem concaveOn_vonNeumannEntropy :
+    ConcaveOn ℝ (StateSpace (H →L[ℂ] H))
+      (vonNeumannEntropy : WeakDual ℂ (H →L[ℂ] H) → ℝ) := by
+  refine ⟨StateSpace.convex, fun x hx y hy a b ha hb hab => ?_⟩
+  let ω : Fin 2 → State (H →L[ℂ] H) := ![⟨x, hx⟩, ⟨y, hy⟩]
+  let w : Fin 2 → ℝ≥0 := ![⟨a, ha⟩, ⟨b, hb⟩]
+  let ωc : State (H →L[ℂ] H) := ⟨a • x + b • y, StateSpace.convex hx hy ha hb hab⟩
+  have hw : ∑ i, w i = 1 := by rw [Fin.sum_univ_two]; exact NNReal.eq hab
+  have htr : tracePositiveLinearMap ℂ H = ∑ i, w i • tracePositiveLinearMap ℂ H := by
     rw [← Finset.sum_smul, hw, one_smul]
-  have h := umegakiEntropy_jointly_convex s w (fun i => (ω i : _ →ₚ[ℂ] ℂ))
+  have h := umegakiEntropy_jointly_convex Finset.univ w (fun i => PositiveLinearMap.ofClass (ω i))
     (fun _ => tracePositiveLinearMap ℂ H)
-  rw [← htr, umegakiEntropy_congr (∑ i ∈ s, w i • (ω i : _ →ₚ[ℂ] ℂ)) (tracePositiveLinearMap ℂ H)
-    (ψ₁ := convexCombination s w hw ω) (φ₁ := tracePositiveLinearMap ℂ H) (fun _ => rfl)
-    (fun _ => rfl), umegakiEntropy_trace_eq_neg_vonNeumannEntropy] at h
-  have hi : ∀ i, D((ω i : (H →L[ℂ] H) →ₚ[ℂ] ℂ) ∥ tracePositiveLinearMap ℂ H) =
+  rw [← htr, umegakiEntropy_congr (∑ i, w i • PositiveLinearMap.ofClass (ω i))
+    (tracePositiveLinearMap ℂ H) (ψ₁ := ωc) (φ₁ := tracePositiveLinearMap ℂ H)
+    (fun _ => by simp only [Fin.sum_univ_two]; rfl) (fun _ => rfl),
+    State.umegakiEntropy_trace_eq_neg_vonNeumannEntropy] at h
+  have hi : ∀ i, D(PositiveLinearMap.ofClass (ω i) ∥ tracePositiveLinearMap ℂ H) =
       ((-S(ω i) : ℝ) : EReal) := fun i => by
-    rw [umegakiEntropy_congr (ω i : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (tracePositiveLinearMap ℂ H)
+    rw [umegakiEntropy_congr (PositiveLinearMap.ofClass (ω i)) (tracePositiveLinearMap ℂ H)
       (ψ₁ := ω i) (φ₁ := tracePositiveLinearMap ℂ H) (fun _ => rfl) (fun _ => rfl),
-      umegakiEntropy_trace_eq_neg_vonNeumannEntropy]
+      State.umegakiEntropy_trace_eq_neg_vonNeumannEntropy]
   simp_rw [hi, ← EReal.coe_mul] at h
   rw [← EReal.coe_finsetSum] at h
-  have h' : -S(convexCombination s w hw ω) ≤ ∑ i ∈ s, (w i : ℝ) * -S(ω i) := by exact_mod_cast h
-  simp only [mul_neg, Finset.sum_neg_distrib] at h'
+  have h' : -S(ωc) ≤ ∑ i, (w i : ℝ) * -S(ω i) := by exact_mod_cast h
+  have hx' : S(x) = S(ω 0) := State.vonNeumannEntropy_val (ω 0)
+  have hy' : S(y) = S(ω 1) := State.vonNeumannEntropy_val (ω 1)
+  have hc : S(a • x + b • y) = S(ωc) := State.vonNeumannEntropy_val ωc
+  have hw0 : ((w 0 : ℝ≥0) : ℝ) = a := rfl
+  have hw1 : ((w 1 : ℝ≥0) : ℝ) = b := rfl
+  simp only [Fin.sum_univ_two, mul_neg, hw0, hw1] at h'
+  rw [smul_eq_mul, smul_eq_mul, hx', hy', hc]
   linarith
+
+end StateSpace
+
+namespace State
 
 /-- **Invariance under `⋆`-isomorphisms**: `S(ω ∘ π) = S(ω)` for `π : B(K) ≃⋆ B(H)`, in particular
 for unitary conjugations. Both `D` and the trace are invariant

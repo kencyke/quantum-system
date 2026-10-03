@@ -130,30 +130,30 @@ namespace State
 noncomputable def tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
     State (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :=
   ofPositiveLinearMap (A := H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K)
-    ((ω₁ : (H →L[ℂ] H) →ₚ[ℂ] ℂ).tensorProduct (ω₂ : (K →L[ℂ] K) →ₚ[ℂ] ℂ)) (by
+    ((PositiveLinearMap.ofClass ω₁).tensorProduct (PositiveLinearMap.ofClass ω₂)) (by
     rw [one_def, ← mapL_id_id, PositiveLinearMap.tensorProduct_mapL, ← one_def, ← one_def]
     simp)
 
-@[simp] theorem coe_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
-    (ω₁.tensorProduct ω₂ : (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) →ₚ[ℂ] ℂ) =
-      (ω₁ : (H →L[ℂ] H) →ₚ[ℂ] ℂ).tensorProduct (ω₂ : (K →L[ℂ] K) →ₚ[ℂ] ℂ) :=
+@[simp] theorem ofClass_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
+    PositiveLinearMap.ofClass (ω₁.tensorProduct ω₂) =
+      (PositiveLinearMap.ofClass ω₁).tensorProduct (PositiveLinearMap.ofClass ω₂) :=
   rfl
 
 /-- **The product state on elementary tensors**: `(ω₁ ⊗ ω₂)(A ⊗ B) = ω₁(A) ω₂(B)`. -/
 @[simp] theorem tensorProduct_mapL (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K))
     (A : H →L[ℂ] H) (B : K →L[ℂ] K) : ω₁.tensorProduct ω₂ (mapL A B) = ω₁ A * ω₂ B :=
-  PositiveLinearMap.tensorProduct_mapL (ω₁ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (ω₂ : (K →L[ℂ] K) →ₚ[ℂ] ℂ) A B
+  PositiveLinearMap.tensorProduct_mapL (PositiveLinearMap.ofClass ω₁) (PositiveLinearMap.ofClass ω₂) A B
 
 /-- The density of the product state is the tensor product of the densities. -/
 theorem density_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
     density (ω₁.tensorProduct ω₂) = mapL (density ω₁) (density ω₂) := by
-  have h₁ : density (ω₁ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) = density ω₁ :=
+  have h₁ : density (PositiveLinearMap.ofClass ω₁) = density ω₁ :=
     density_eq_density_iff.mpr fun _ => rfl
-  have h₂ : density (ω₂ : (K →L[ℂ] K) →ₚ[ℂ] ℂ) = density ω₂ :=
+  have h₂ : density (PositiveLinearMap.ofClass ω₂) = density ω₂ :=
     density_eq_density_iff.mpr fun _ => rfl
   rw [← h₁, ← h₂, eq_comm, eq_density_iff]
-  exact fun Z => (PositiveLinearMap.tensorProduct_apply (ω₁ : (H →L[ℂ] H) →ₚ[ℂ] ℂ)
-    (ω₂ : (K →L[ℂ] K) →ₚ[ℂ] ℂ) Z).symm
+  exact fun Z => (PositiveLinearMap.tensorProduct_apply (PositiveLinearMap.ofClass ω₁)
+    (PositiveLinearMap.ofClass ω₂) Z).symm
 
 end State
 

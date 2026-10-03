@@ -26,7 +26,7 @@ Notations and abbreviations for quantum information theory.
 <tr><td><code>ρ ⊗ σ</code></td><td><code>DensityMatrix.kronecker ρ σ</code></td>
   <td><code>open scoped Kronecker</code></td>
   <td><code>Analysis/Matrix/DensityMatrix/Kronecker.lean</code></td></tr>
-<tr><td><code>S(ω)</code></td><td><code>State.vonNeumannEntropy ω</code></td>
+<tr><td><code>S(ω)</code></td><td><code>vonNeumannEntropy ω</code></td>
   <td><code>open scoped QuantumInfo</code></td>
   <td><code>Analysis/Entropy/VonNeumann/Basic.lean</code></td></tr>
 <tr><td><code>D(ψ ∥ φ)</code></td><td><code>umegakiEntropy ψ φ</code></td>

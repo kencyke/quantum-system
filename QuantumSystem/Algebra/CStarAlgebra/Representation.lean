@@ -53,7 +53,7 @@ two Mathlib objects, and the canonical GNS triplet `GNS.Representation.canonical
 `GNS.Representation f` (defined in
 `QuantumSystem/Algebra/CStarAlgebra/GNS/Representation.lean`) is the GNS
 triplet `(H, π, ξ)` for a specific positive functional `f : A →ₚ[ℂ] ℂ` (a
-state `ω` being the case `f = ω.toPositiveLinearMap`), adding a cyclic
+state `ω` being the case `f = PositiveLinearMap.ofClass ω`), adding a cyclic
 vector `ξ` and the GNS identity `f a = ⟪ξ, π a ξ⟫` on top of the data of a
 `CStarRep A`.
 A GNS triplet is a `CStarRep` with extra data: the structure projection
