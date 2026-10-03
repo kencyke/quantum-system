@@ -55,6 +55,8 @@ between C⋆-algebras are bounded.
 * `KPositiveMapClass.of_le`, `KPositiveMapClass.orderHomClass` — a `k`-positive map is
   `j`-positive for `j ≤ k`, and positive for `k ≥ 1`; for `k = 2` this is the instance
   `KPositiveMapClass.instOrderHomClass`.
+* `KPositiveMapClass.map_nonneg_of_card_le` — a `k`-positive map preserves the nonnegativity of
+  block matrices indexed by any finite type with at most `k` elements.
 * `KPositiveMapClass.star_map_mul_le_norm_smul` — the Cauchy–Schwarz inequality
   `φ(x⋆ y)⋆ φ(x⋆ y) ≤ ‖φ(x⋆ x)‖ • φ(y⋆ y)` for `2`-positive maps.
 * `KPositiveMapClass.le_norm_smul_map_star_mul` — the Kadison–Schwarz inequality
@@ -298,6 +300,20 @@ theorem of_le {k j : ℕ} [KPositiveMapClass F k A₁ A₂] (hjk : j ≤ k) :
     convert h using 1
     refine CStarMatrix.ext fun a b => ?_
     simp [CStarMatrix.map_apply, CStarMatrix.ofMatrix_apply, hg]
+
+/-- A `k`-positive map preserves the nonnegativity of block matrices indexed by any finite type `ι`
+with at most `k` elements: reindex along `ι ≃ Fin (card ι)` (`CStarMatrix.submatrix_nonneg`) and use
+`card ι`-positivity (`KPositiveMapClass.of_le`). -/
+theorem map_nonneg_of_card_le {k : ℕ} [KPositiveMapClass F k A₁ A₂] (φ : F) {ι : Type*}
+    [Fintype ι] (hι : Fintype.card ι ≤ k) {M : CStarMatrix ι ι A₁} (hM : 0 ≤ M) :
+    0 ≤ M.map φ := by
+  have := of_le (F := F) hι
+  let e := Fintype.equivFin ι
+  have h := CStarMatrix.submatrix_nonneg
+    (map_cstarMatrix_nonneg' φ _ (CStarMatrix.submatrix_nonneg hM e.symm)) e
+  convert h using 1
+  refine CStarMatrix.ext fun i j => ?_
+  simp [CStarMatrix.map_apply, CStarMatrix.ofMatrix_apply]
 
 /-- A `k`-positive map with `k ≥ 1` is positive: it is `1`-positive (`KPositiveMapClass.of_le`), and
 a nonnegative `a = b⋆ b` is the entry of the nonnegative `1 × 1` matrix `[b]⋆ [b]`, whose image under

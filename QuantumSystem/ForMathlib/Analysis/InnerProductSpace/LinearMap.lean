@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.InnerProductSpace.LinearMap
+public import Mathlib.Analysis.InnerProductSpace.Positive
 
 /-!
 # Polarization with the operator on the right
@@ -21,6 +22,8 @@ consequence, the norm of an operator is at most twice its numerical radius.
   `⟪x, G y⟫ = ¼ (q(x+y) - q(x-y)) + i ¼ (q(x-iy) - q(x+iy))` with `q(u) = ⟪u, G u⟫`.
 * `ContinuousLinearMap.norm_apply_le_of_norm_inner_self_le` — if `|⟪w, A w⟫| ≤ M ‖w‖²` for every
   `w`, then `‖A y‖ ≤ 2 M ‖y‖`.
+* `ContinuousLinearMap.nonneg_iff_inner_nonneg` — on a complex inner product space an operator is
+  nonnegative iff its quadratic form is, `0 ≤ ⟪x, T x⟫` in `ℂ`; self-adjointness comes for free.
 -/
 
 @[expose] public section
@@ -92,3 +95,17 @@ lemma ContinuousLinearMap.norm_apply_le_of_norm_inner_self_le (A : E →L[ℂ] E
   have : t * ‖A y‖ ^ 2 = ‖y‖ * ‖A y‖ := by rw [sq, ← mul_assoc, ht]
   rw [this, ht] at h
   nlinarith
+
+open scoped ComplexOrder in
+/-- On a complex inner product space an operator is nonnegative (positive in the Loewner order)
+iff its quadratic form is nonnegative, `0 ≤ ⟪x, T x⟫` in the order of `ℂ`; self-adjointness comes
+for free, since the quadratic form is real (`ContinuousLinearMap.isPositive_iff_complex`). -/
+theorem ContinuousLinearMap.nonneg_iff_inner_nonneg {T : E →L[ℂ] E} :
+    0 ≤ T ↔ ∀ x, 0 ≤ ⟪x, T x⟫_ℂ := by
+  refine ⟨fun h x => (nonneg_iff_isPositive.1 h).inner_nonneg_right x, fun h => ?_⟩
+  rw [nonneg_iff_isPositive, isPositive_iff_complex]
+  intro x
+  obtain ⟨h₁, h₂⟩ := Complex.nonneg_iff.mp (h x)
+  rw [← inner_conj_symm]
+  generalize ⟪x, T x⟫_ℂ = z at h₁ h₂ ⊢
+  exact ⟨Complex.ext (by simp) (by simp [← h₂]), by simpa using h₁⟩

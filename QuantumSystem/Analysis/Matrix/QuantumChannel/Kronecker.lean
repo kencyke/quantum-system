@@ -39,13 +39,12 @@ With the identity channel this is the channel `id_A ⊗ Tr_C` that takes a tripa
 ## TODO
 
 The tensor product here is stated only for matrix algebras, through the Kronecker isomorphism.
-It should be abstracted in two stages, without transporting along orthonormal bases:
+Its abstraction to the bounded operators on finite-dimensional Hilbert spaces, without bases, is
+`CompletelyPositiveMap.tensorProduct` and `QuantumChannel.tensorProduct`
+(`QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/TensorProduct.lean`); this file is to be
+deleted together with the matrix channel type `Matrix.QuantumChannel`, once its consumers have
+moved to that abstraction. The remaining stage is:
 
-* **Bounded operators on finite-dimensional Hilbert spaces.** For completely positive maps
-  `Φ : B(H) → B(K)` and `Ψ : B(H') → B(K')`, define `Φ ⊗ Ψ : B(H ⊗ H') → B(K ⊗ K')` on Mathlib's
-  inner product space `H ⊗[ℂ] H'`, determined by `(Φ ⊗ Ψ)(A ⊗ B) = Φ(A) ⊗ Ψ(B)` with the operator
-  tensor product `ContinuousLinearMap.tensor`. Complete positivity needs the Kraus or Choi
-  representation for maps on `B(H)`, which exists here only for matrices.
 * **General C⋆-algebras.** For completely positive maps `φ : A₁ → A₂` and `ψ : B₁ → B₂`, define
   `φ ⊗ ψ : A₁ ⊗_min B₁ → A₂ ⊗_min B₂` on the minimal (spatial) C⋆-tensor product, and prove it
   completely positive through the Stinespring dilation
@@ -129,7 +128,7 @@ noncomputable def kronecker (Φ : QuantumChannel n m) (Ψ : QuantumChannel n' m'
   map_cstarMatrix_nonneg' k M hM := by
     obtain ⟨K, hK, -⟩ := Φ.exists_kraus
     obtain ⟨L, hL, -⟩ := Ψ.exists_kraus
-    exact (CompletelyPositiveMap.ofKraus _ _
+    exact (CompletelyPositiveMap.ofMatrixKraus _ _
       (kroneckerLinearMap_eq_sum_kraus hK hL)).map_cstarMatrix_nonneg' k M hM
   isTracePreserving' := by
     obtain ⟨K, hK, hKK⟩ := Φ.exists_kraus

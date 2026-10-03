@@ -82,7 +82,7 @@ lemma isTracePreserving_of_kraus {Φ : F} {ι : Type*} [Fintype ι] {K : ι → 
 noncomputable def QuantumChannel.ofKraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*}
     [Fintype ι] (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ i, K i * A * (K i)ᴴ)
     (hKK : ∑ i, (K i)ᴴ * K i = 1) : QuantumChannel n m :=
-  ⟨.ofKraus Φ K hK, isTracePreserving_of_kraus (Φ := Φ) hK hKK⟩
+  ⟨.ofMatrixKraus Φ K hK, isTracePreserving_of_kraus (Φ := Φ) hK hKK⟩
 
 /-- The quantum channel `Matrix.QuantumChannel.ofKraus Φ K hK hKK` is `Φ` as a function. -/
 @[simp] lemma QuantumChannel.coe_ofKraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*}

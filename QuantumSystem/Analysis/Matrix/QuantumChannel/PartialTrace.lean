@@ -27,7 +27,7 @@ Marginals of multipartite states are tensor products of these channels with the 
 
 * `Matrix.traceRight_eq_sum_kraus`, `Matrix.traceLeft_eq_sum_kraus`,
   `Matrix.reindex_eq_kraus`: Kraus representations of the partial traces and of reindexing; the
-  first two make the partial traces completely positive (`CompletelyPositiveMap.ofKraus`).
+  first two make the partial traces completely positive (`CompletelyPositiveMap.ofMatrixKraus`).
 
 ## References
 
@@ -108,13 +108,13 @@ lemma traceLeft_eq_sum_kraus {X Y : Type*} [Fintype X] [DecidableEq X] [Fintype 
 noncomputable def QuantumChannel.partialTraceRight {X Y : Type*} [Fintype X] [DecidableEq X]
     [Fintype Y] [DecidableEq Y] :
     Matrix.QuantumChannel (X × Y) X :=
-  ⟨.ofKraus (traceRightLinearMap ℂ) traceRightKraus traceRight_eq_sum_kraus, trace_traceRight⟩
+  ⟨.ofMatrixKraus (traceRightLinearMap ℂ) traceRightKraus traceRight_eq_sum_kraus, trace_traceRight⟩
 
 /-- Left partial trace (trace out `X`) as a bundled `QuantumChannel`. -/
 noncomputable def QuantumChannel.partialTraceLeft {X Y : Type*} [Fintype X] [DecidableEq X]
     [Fintype Y] [DecidableEq Y] :
     Matrix.QuantumChannel (X × Y) Y :=
-  ⟨.ofKraus (traceLeftLinearMap ℂ) _ traceLeft_eq_sum_kraus, trace_traceLeft⟩
+  ⟨.ofMatrixKraus (traceLeftLinearMap ℂ) _ traceLeft_eq_sum_kraus, trace_traceLeft⟩
 
 /-- The right partial-trace channel acts as `Matrix.traceRight`. -/
 @[simp] lemma QuantumChannel.partialTraceRight_apply {X Y : Type*} [Fintype X] [DecidableEq X]

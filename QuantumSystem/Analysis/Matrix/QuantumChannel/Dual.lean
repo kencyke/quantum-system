@@ -5,10 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
-public import QuantumSystem.Analysis.CStarAlgebra.KadisonSchwarz
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Dual
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 
 /-!
@@ -20,7 +18,7 @@ non-increasing on positive semidefinite matrices, equivalently `Matrix.traceDual
 read on operators through the ⋆-isomorphisms `Matrix.toEuclideanCLM`, is a normal Schwarz map
 `Matrix.dualSchwarzMap φ hφ : B(ℂᵐ) → B(ℂⁿ)`, unital when `φ` is trace preserving, as a
 quantum channel is. The trace dual is `2`-positive by self-duality of the positive semidefinite
-cone (`KPositiveMap.traceDual`) and sub-unital, hence a Schwarz map by the Kadison–Schwarz
+cone (`KPositiveMap.matrixTraceDual`) and sub-unital, hence a Schwarz map by the Kadison–Schwarz
 inequality (`KPositiveMapClass.toSchwarzMap`); the ⋆-isomorphisms are Schwarz maps
 (`NonUnitalStarAlgHomClass.instSchwarzMapClass`). No Kraus representation of `φ` is chosen. It is
 the Heisenberg-picture channel along which the data-processing inequality for Araki's relative
@@ -28,15 +26,15 @@ entropy (`VonNeumannAlgebra.arakiEntropy_comp_le`) applies, and it transports th
 `Tr (ρ ·)` to `Tr (φ(ρ) ·)`: `Tr (ρ (Matrix.traceDual φ B)) = Tr (φ(ρ) B)`
 (`Matrix.trace_mul_traceDual`).
 
-The construction is stated for any type `F` of `2`-positive linear maps
-(`KPositiveMapClass F 2`), so that completely positive maps (`CompletelyPositiveMap`, through
+The Schwarz map is bundled with `SchwarzMap.onBoundedLinearOperators`
+(`QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/Dual.lean`). The construction is stated for
+any type `F` of `2`-positive linear maps (`KPositiveMapClass F 2`), so that completely positive
+maps (`CompletelyPositiveMap`, through
 `CompletelyPositiveMapClass.instKPositiveMapClass`) and `2`-positive maps (`KPositiveMap 2`) enter
 directly.
 
 ## Main definitions
 
-* `SchwarzMap.onBoundedLinearOperators T : SchwarzMap 𝓑(K) 𝓑(H)` — a Schwarz map
-  `B(K) → B(H)` between the bundled von Neumann algebras.
 * `Matrix.dualSchwarzMap φ hφ : SchwarzMap 𝓑(ℂᵐ) 𝓑(ℂⁿ)` — the trace dual of a
   `2`-positive map `φ` with `Matrix.traceDual φ 1 ≤ 1`; `Matrix.QuantumChannel.dualSchwarzMap Φ`
   for a quantum channel `Φ`.
@@ -57,29 +55,6 @@ directly.
 
 open ContinuousLinearMap
 open scoped VonNeumannAlgebra ComplexOrder
-
-namespace SchwarzMap
-
-variable {H K : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
-  [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
-
-/-- A Schwarz map `B(K) → B(H)` between operator algebras, as a Schwarz map between the bundled
-von Neumann algebras `𝓑(K) → 𝓑(H)`. Stated over variable Hilbert spaces, so that the order and
-`⋆`-structure of `↥𝓑(K)` are found generically. -/
-noncomputable def onBoundedLinearOperators (T : SchwarzMap (K →L[ℂ] K) (H →L[ℂ] H)) :
-    SchwarzMap 𝓑(K) 𝓑(H) where
-  toFun x := ⟨T x, VonNeumannAlgebra.mem_boundedLinearOperators _⟩
-  map_add' x y := Subtype.ext (map_add T (x : K →L[ℂ] K) y)
-  map_smul' c x := Subtype.ext (map_smul T c (x : K →L[ℂ] K))
-  le_map_star_mul' x := by
-    rw [← Subtype.coe_le_coe]
-    exact T.le_map_star_mul' (x : K →L[ℂ] K)
-
-/-- `T.onBoundedLinearOperators` acts as `T` on the underlying operators. -/
-@[simp] lemma coe_onBoundedLinearOperators_apply (T : SchwarzMap (K →L[ℂ] K) (H →L[ℂ] H))
-    (x : 𝓑(K)) : (T.onBoundedLinearOperators x : H →L[ℂ] H) = T x := rfl
-
-end SchwarzMap
 
 /-! ### The dual of a `2`-positive trace non-increasing map -/
 
@@ -120,7 +95,7 @@ open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in
 (`Matrix.traceDual_one_le_one_iff`), as a Schwarz map: the trace dual of `φ`
 (`Matrix.dualSchwarzMap_apply`) read on operators,
 `Matrix.toEuclideanCLM ∘ Matrix.traceDual φ ∘ Matrix.toEuclideanCLM⁻¹`. The trace dual is
-`2`-positive (`KPositiveMap.traceDual`) and sub-unital, hence a Schwarz map
+`2`-positive (`KPositiveMap.matrixTraceDual`) and sub-unital, hence a Schwarz map
 (`KPositiveMapClass.toSchwarzMap`), and the ⋆-isomorphisms are Schwarz maps. For a trace-preserving
 `φ` the hypothesis is `(Matrix.traceDual_one hφ).le` and the dual is unital
 (`Matrix.dualSchwarzMap_one`). -/
@@ -129,7 +104,7 @@ noncomputable def dualSchwarzMap [LinearMapClass F ℂ (Matrix n n ℂ) (Matrix 
     (hφ : Matrix.traceDual φ 1 ≤ 1) : SchwarzMap 𝓑(EuclideanSpace ℂ m) 𝓑(EuclideanSpace ℂ n) :=
   SchwarzMap.onBoundedLinearOperators <|
     (SchwarzMapClass.toSchwarzMap (Matrix.toEuclideanCLM (n := n) (𝕜 := ℂ))).comp <|
-      (KPositiveMapClass.toSchwarzMap (KPositiveMap.traceDual 2 φ) hφ).comp
+      (KPositiveMapClass.toSchwarzMap (KPositiveMap.matrixTraceDual 2 φ) hφ).comp
         (SchwarzMapClass.toSchwarzMap (Matrix.toEuclideanCLM (n := m) (𝕜 := ℂ)).symm)
 
 open scoped Matrix.Norms.L2Operator MatrixOrder CStarAlgebra in

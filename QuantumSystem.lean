@@ -44,6 +44,13 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.Analysis.CStarAlgebra.KadisonSchwarz
 public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvex
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Basic
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Choi
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Dual
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Kraus
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.PartialTrace
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Stinespring
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.TensorProduct
 public import QuantumSystem.Analysis.Entropy.Araki.Basic
 public import QuantumSystem.Analysis.Entropy.Araki.Commutative
 public import QuantumSystem.Analysis.Entropy.Araki.Matrix
@@ -85,6 +92,7 @@ public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.BoundedOperatorRepresentation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
@@ -108,6 +116,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.MatrixRepresen
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology

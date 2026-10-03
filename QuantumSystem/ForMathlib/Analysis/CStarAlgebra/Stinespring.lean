@@ -52,9 +52,14 @@ C⋆-algebras are automatically bounded.
 * `CompletelyPositiveMap.stinespringNonUnitalStarAlgHom` — the representation `π`
   (`CompletelyPositiveMap.stinespringStarAlgHom` in the unital case).
 * `CompletelyPositiveMap.stinespringOperator` — the operator `V : H →L[ℂ] K`.
+* `CStarMatrix.toPiLpStarAlgEquiv` — the ⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` between operator
+  matrices and operators on the Hilbert sum `Hⁿ`.
 
 ## Main statements
 
+* `CStarMatrix.nonneg_iff_sum_inner_apply_nonneg` — an operator matrix `N` on `Hⁿ` is nonnegative
+  iff `0 ≤ ∑ᵢⱼ ⟪ξᵢ, Nᵢⱼ ξⱼ⟫` for every `ξ`; this is how complete positivity of a map into `B(H)`
+  is tested against vectors.
 * `CompletelyPositiveMap.apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp` —
   **Stinespring's theorem** `φ a = V† π(a) V`.
 * `CompletelyPositiveMap.stinespringNonUnitalStarAlgHom_apply_stinespringOperator` —
@@ -210,6 +215,104 @@ theorem sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} (hN : 0 ≤
   | zero => simp [zero_apply]
   | add P Q _ _ hP hQ =>
     simpa [add_apply, inner_add_right, Finset.sum_add_distrib] using add_nonneg hP hQ
+
+omit [CompleteSpace H] in
+/-- The operator `ξ ↦ (Σⱼ Nᵢⱼ ξⱼ)ᵢ` of an operator matrix `N` on the Hilbert sum
+`Hⁿ = PiLp 2 (fun _ ↦ H)`, the underlying map of `CStarMatrix.toPiLpStarAlgEquiv`. -/
+noncomputable def toPiLpCLM (N : CStarMatrix n n (H →L[ℂ] H)) :
+    PiLp 2 (fun _ : n => H) →L[ℂ] PiLp 2 (fun _ : n => H) :=
+  (PiLp.continuousLinearEquiv 2 ℂ (fun _ : n => H)).symm.toContinuousLinearMap ∘L
+    ContinuousLinearMap.pi (fun i => ∑ j, N i j ∘L ContinuousLinearMap.proj j) ∘L
+      (PiLp.continuousLinearEquiv 2 ℂ (fun _ : n => H)).toContinuousLinearMap
+
+omit [CompleteSpace H] in
+/-- `toPiLpCLM N` acts on `ξ ∈ Hⁿ` as `(N ξ)ᵢ = Σⱼ Nᵢⱼ ξⱼ`. -/
+@[simp] lemma toPiLpCLM_apply (N : CStarMatrix n n (H →L[ℂ] H)) (ξ : PiLp 2 (fun _ : n => H))
+    (i : n) : (toPiLpCLM N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) := by
+  simp [toPiLpCLM]
+
+variable [DecidableEq n]
+
+/-- Operator matrices are the operators on the Hilbert sum `Hⁿ = PiLp 2 (fun _ ↦ H)`: the
+⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` sends `N` to `ξ ↦ (Σⱼ Nᵢⱼ ξⱼ)ᵢ`
+(`CStarMatrix.toPiLpStarAlgEquiv_apply`), and its inverse sends `T` to its blocks
+`Tᵢⱼ = projᵢ ∘ T ∘ injⱼ`. -/
+noncomputable def toPiLpStarAlgEquiv :
+    CStarMatrix n n (H →L[ℂ] H) ≃⋆ₐ[ℂ] (PiLp 2 (fun _ : n => H) →L[ℂ] PiLp 2 (fun _ : n => H)) where
+  toFun := toPiLpCLM
+  invFun T := ofMatrix (Matrix.of fun i j => PiLp.proj 2 (fun _ : n => H) i ∘L T ∘L
+    (PiLp.continuousLinearEquiv 2 ℂ (fun _ : n => H)).symm.toContinuousLinearMap ∘L
+      ContinuousLinearMap.single ℂ (fun _ : n => H) j)
+  left_inv N := by
+    ext i j x
+    simp [ofMatrix_apply, toPiLpCLM_apply, apply_ite]
+  right_inv T := by
+    ext x i
+    have hx : x = ∑ j, WithLp.toLp 2 (Pi.single j (x.ofLp j) : n → H) := by
+      ext k
+      simp [Pi.single_apply]
+    conv_rhs => rw [hx]
+    simp [ofMatrix_apply, toPiLpCLM_apply]
+  map_mul' N M := by
+    ext x i
+    simp only [toPiLpCLM_apply, mul_apply, _root_.mul_apply_eq_comp, FunLike.coe_sum,
+      Finset.sum_apply, map_sum]
+    exact Finset.sum_comm
+  map_add' N M := by
+    ext x i
+    simp [toPiLpCLM_apply, add_apply, Finset.sum_add_distrib]
+  map_star' N := by
+    rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.eq_adjoint_iff]
+    intro x y
+    simp only [PiLp.inner_apply, toPiLpCLM_apply, star_apply, ContinuousLinearMap.star_eq_adjoint,
+      sum_inner, inner_sum, ContinuousLinearMap.adjoint_inner_left]
+    exact Finset.sum_comm
+  map_smul' c N := by
+    ext x i
+    simp [toPiLpCLM_apply, smul_apply, Finset.smul_sum]
+
+/-- `toPiLpStarAlgEquiv N` acts on `ξ ∈ Hⁿ` as `(N ξ)ᵢ = Σⱼ Nᵢⱼ ξⱼ`. -/
+@[simp] lemma toPiLpStarAlgEquiv_apply (N : CStarMatrix n n (H →L[ℂ] H))
+    (ξ : PiLp 2 (fun _ : n => H)) (i : n) :
+    (toPiLpStarAlgEquiv (n := n) (H := H) N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) :=
+  toPiLpCLM_apply N ξ i
+
+omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [DecidableEq n] in
+/-- An operator matrix `N` on `Hⁿ` is nonnegative iff its quadratic form is nonnegative,
+`0 ≤ ∑ᵢⱼ ⟪ξᵢ, Nᵢⱼ ξⱼ⟫` for every `ξ ∈ Hⁿ`. The forward direction is
+`CStarMatrix.sum_inner_apply_nonneg`; conversely `N` is nonnegative as the operator
+`toPiLpStarAlgEquiv N` on the Hilbert sum `Hⁿ`, whose quadratic form this is. -/
+theorem nonneg_iff_sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} :
+    0 ≤ N ↔ ∀ ξ : n → H, 0 ≤ ∑ i, ∑ j, ⟪ξ i, N i j (ξ j)⟫_ℂ := by
+  classical
+  refine ⟨sum_inner_apply_nonneg, fun h => ?_⟩
+  rw [← map_le_map_iff (toPiLpStarAlgEquiv (n := n) (H := H)), map_zero,
+    ContinuousLinearMap.nonneg_iff_isPositive, ContinuousLinearMap.isPositive_iff_complex]
+  intro x
+  have hx : ⟪toPiLpStarAlgEquiv (n := n) (H := H) N x, x⟫_ℂ =
+      starRingEnd ℂ (∑ i, ∑ j, ⟪x.ofLp i, N i j (x.ofLp j)⟫_ℂ) := by
+    rw [← inner_conj_symm, PiLp.inner_apply]
+    simp [inner_sum]
+  obtain ⟨h₁, h₂⟩ := Complex.nonneg_iff.mp (h x.ofLp)
+  rw [hx]
+  generalize ∑ i, ∑ j, ⟪x.ofLp i, N i j (x.ofLp j)⟫_ℂ = z at h₁ h₂ ⊢
+  exact ⟨Complex.ext (by simp) (by simp [← h₂]), by simpa using h₁⟩
+
+omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [DecidableEq n] in
+/-- The block matrix `(|ξᵢ⟩⟨ξⱼ|)ᵢⱼ` of rank-one operators is nonnegative: it is the rank-one
+operator `|ξ⟩⟨ξ|` on `Hⁿ`, with quadratic form `|Σⱼ ⟪ξⱼ, ηⱼ⟫|²`. -/
+theorem rankOne_nonneg (ξ : n → H) :
+    0 ≤ (ofMatrix (Matrix.of fun i j => InnerProductSpace.rankOne ℂ (ξ i) (ξ j)) :
+      CStarMatrix n n (H →L[ℂ] H)) := by
+  classical
+  rw [nonneg_iff_sum_inner_apply_nonneg]
+  intro η
+  have h : ∑ i, ∑ j, ⟪η i, (ofMatrix (Matrix.of fun i j =>
+      InnerProductSpace.rankOne ℂ (ξ i) (ξ j)) : CStarMatrix n n (H →L[ℂ] H)) i j (η j)⟫_ℂ =
+      (∑ j, ⟪ξ j, η j⟫_ℂ) * starRingEnd ℂ (∑ j, ⟪ξ j, η j⟫_ℂ) := by
+    simp [ofMatrix_apply, Finset.mul_sum, map_sum, mul_comm]
+  rw [h, Complex.mul_conj]
+  exact_mod_cast Complex.normSq_nonneg _
 
 end Hilbert
 
