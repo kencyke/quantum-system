@@ -16,12 +16,15 @@ Mathlib's `CompletelyPositiveMap` (`A₁ →CP A₂`) comes with its `FunLike`, 
 is completely positive (`CompletelyPositiveMap.id`), and completely positive maps compose
 (`CompletelyPositiveMap.comp`), since applying `ψ ∘ φ` entrywise to a block matrix is applying `φ`
 and then `ψ`. Composition is associative and unital, so the C⋆-algebras with completely positive
-maps form a category (`CStarAlgCP`).
+maps form a category (`CStarAlgCP`). Completely positive maps transport along ⋆-isomorphisms of
+their domains and codomains (`CompletelyPositiveMap.arrowCongr`).
 
 ## Main definitions
 
 * `CompletelyPositiveMap.id` — the identity map as a completely positive map.
 * `CompletelyPositiveMap.comp` — the composition of completely positive maps.
+* `CompletelyPositiveMap.arrowCongr` — the transport `φ ↦ e₂ ∘ φ ∘ e₁⁻¹` along ⋆-isomorphisms
+  `e₁`, `e₂`.
 * `CStarAlgCP` — the category of (possibly non-unital) C⋆-algebras, with the star order, and
   completely positive maps.
 -/
@@ -82,6 +85,36 @@ lemma comp_apply (ψ : A₂ →CP A₃) (φ : A₁ →CP A₂) (a : A₁) : ψ.c
 lemma comp_assoc {A₄ : Type*} [NonUnitalCStarAlgebra A₄] [PartialOrder A₄] [StarOrderedRing A₄]
     (χ : A₃ →CP A₄) (ψ : A₂ →CP A₃) (φ : A₁ →CP A₂) :
     (χ.comp ψ).comp φ = χ.comp (ψ.comp φ) := rfl
+
+section ArrowCongr
+
+variable {B₁ B₂ : Type*} [NonUnitalCStarAlgebra B₁] [NonUnitalCStarAlgebra B₂] [PartialOrder B₁]
+  [PartialOrder B₂] [StarOrderedRing B₁] [StarOrderedRing B₂]
+
+/-- Completely positive maps transport along ⋆-isomorphisms `e₁ : A₁ ≃ B₁` of the domains and
+`e₂ : A₂ ≃ B₂` of the codomains, `φ ↦ e₂ ∘ φ ∘ e₁⁻¹`: ⋆-homomorphisms are completely positive
+(`NonUnitalStarAlgHomClass.instCompletelyPositiveMapClass`), and so are composites. -/
+def arrowCongr (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂) : (A₁ →CP A₂) ≃ (B₁ →CP B₂) where
+  toFun φ := ((e₂ : A₂ →CP B₂).comp φ).comp e₁.symm
+  invFun ψ := ((e₂.symm : B₂ →CP A₂).comp ψ).comp e₁
+  left_inv φ := ext fun a => by
+    change e₂.symm (e₂ (φ (e₁.symm (e₁ a)))) = φ a
+    simp
+  right_inv ψ := ext fun b => by
+    change e₂ (e₂.symm (ψ (e₁ (e₁.symm b)))) = ψ b
+    simp
+
+/-- The transported map `arrowCongr e₁ e₂ φ` sends `b` to `e₂ (φ (e₁⁻¹ b))`. -/
+@[simp] lemma arrowCongr_apply (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂) (φ : A₁ →CP A₂) (b : B₁) :
+    arrowCongr e₁ e₂ φ b = e₂ (φ (e₁.symm b)) :=
+  rfl
+
+/-- The inverse transport `(arrowCongr e₁ e₂).symm ψ` sends `a` to `e₂⁻¹ (ψ (e₁ a))`. -/
+@[simp] lemma arrowCongr_symm_apply (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂) (ψ : B₁ →CP B₂)
+    (a : A₁) : (arrowCongr e₁ e₂).symm ψ a = e₂.symm (ψ (e₁ a)) :=
+  rfl
+
+end ArrowCongr
 
 end CompletelyPositiveMap
 

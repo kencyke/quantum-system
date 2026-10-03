@@ -43,6 +43,8 @@ between C⋆-algebras are bounded.
   together with `LinearMapClass`; unlike that class, `A₁` and `A₂` are `outParam`s, so that
   `KPositiveMapClass.le_map_star_mul φ hφ a` elaborates without an expected type.
 * `KPositiveMap.ofLE` — a `k`-positive map as a `j`-positive map, `j ≤ k`.
+* `KPositiveMap.arrowCongr` — the transport `φ ↦ e₂ ∘ φ ∘ e₁⁻¹` of `k`-positive maps along
+  ⋆-isomorphisms `e₁`, `e₂`.
 
 ## Main results
 
@@ -355,6 +357,50 @@ def ofLE (φ : KPositiveMap k A₁ A₂) (hjk : j ≤ k) : KPositiveMap j A₁ A
 /-- `KPositiveMap.ofLE φ hjk` is `φ` as a function. -/
 @[simp] lemma coe_ofLE (φ : KPositiveMap k A₁ A₂) (hjk : j ≤ k) : ⇑(φ.ofLE hjk) = φ :=
   rfl
+
+section ArrowCongr
+
+variable {B₁ B₂ : Type*} [NonUnitalCStarAlgebra B₁] [NonUnitalCStarAlgebra B₂] [PartialOrder B₁]
+  [PartialOrder B₂] [StarOrderedRing B₁] [StarOrderedRing B₂]
+
+/-- `k`-positive maps transport along ⋆-isomorphisms `e₁ : A₁ ≃ B₁` of the domains and
+`e₂ : A₂ ≃ B₂` of the codomains, `φ ↦ e₂ ∘ φ ∘ e₁⁻¹`: applying it entrywise to a `k × k` matrix
+applies `e₁⁻¹`, `φ` and `e₂` in turn, and ⋆-homomorphisms are completely positive
+(`NonUnitalStarAlgHomClass.instCompletelyPositiveMapClass`). -/
+def arrowCongr (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂) :
+    KPositiveMap k A₁ A₂ ≃ KPositiveMap k B₁ B₂ where
+  toFun φ :=
+    { toFun b := e₂ (φ (e₁.symm b))
+      map_add' _ _ := by simp
+      map_smul' _ _ := by simp
+      map_cstarMatrix_nonneg' M hM :=
+        CompletelyPositiveMapClass.map_cstarMatrix_nonneg' e₂ k _ (φ.map_cstarMatrix_nonneg' _
+          (CompletelyPositiveMapClass.map_cstarMatrix_nonneg' e₁.symm k M hM)) }
+  invFun ψ :=
+    { toFun a := e₂.symm (ψ (e₁ a))
+      map_add' _ _ := by simp
+      map_smul' _ _ := by simp
+      map_cstarMatrix_nonneg' M hM :=
+        CompletelyPositiveMapClass.map_cstarMatrix_nonneg' e₂.symm k _ (ψ.map_cstarMatrix_nonneg' _
+          (CompletelyPositiveMapClass.map_cstarMatrix_nonneg' e₁ k M hM)) }
+  left_inv φ := DFunLike.ext _ _ fun a => by
+    change e₂.symm (e₂ (φ (e₁.symm (e₁ a)))) = φ a
+    simp
+  right_inv ψ := DFunLike.ext _ _ fun b => by
+    change e₂ (e₂.symm (ψ (e₁ (e₁.symm b)))) = ψ b
+    simp
+
+/-- The transported map `arrowCongr e₁ e₂ φ` sends `b` to `e₂ (φ (e₁⁻¹ b))`. -/
+@[simp] lemma arrowCongr_apply (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂) (φ : KPositiveMap k A₁ A₂)
+    (b : B₁) : arrowCongr e₁ e₂ φ b = e₂ (φ (e₁.symm b)) :=
+  rfl
+
+/-- The inverse transport `(arrowCongr e₁ e₂).symm ψ` sends `a` to `e₂⁻¹ (ψ (e₁ a))`. -/
+@[simp] lemma arrowCongr_symm_apply (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂)
+    (ψ : KPositiveMap k B₁ B₂) (a : A₁) : (arrowCongr e₁ e₂).symm ψ a = e₂.symm (ψ (e₁ a)) :=
+  rfl
+
+end ArrowCongr
 
 end KPositiveMap
 
