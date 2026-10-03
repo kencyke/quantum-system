@@ -91,9 +91,8 @@ activate them with `open scoped VonNeumannAlgebra`.
 | `p ≼[N] q` | `VonNeumannAlgebra.MvNSub N p q` | `open scoped VonNeumannAlgebra` |
 | `𝓑(H)` | `VonNeumannAlgebra.boundedLinearOperators H` | `open scoped VonNeumannAlgebra` |
 
-The `𝓑(H)` glyph overloads the type-level notation `𝓑(H) = H →L[ℂ] H` of
-`ForMathlib.Analysis.CStarAlgebra.HilbertSpace`; the two denote the same object B(H) at different
-levels and are related by `boundedLinearOperators.starAlgEquiv`. The expected type disambiguates.
+The von Neumann algebra `𝓑(H)` and the operator type `H →L[ℂ] H` denote the same object B(H) at
+different levels and are related by `boundedLinearOperators.starAlgEquiv`.
 -/
 
 @[expose] public section
@@ -116,11 +115,10 @@ noncomputable def boundedLinearOperators (H : Type*) [NormedAddCommGroup H]
     Set.Subset.antisymm (Set.subset_univ _) Set.subset_centralizer_centralizer
 
 /-- `𝓑(H)` denotes the von Neumann algebra of all bounded operators on `H`
-(`VonNeumannAlgebra.boundedLinearOperators H`). This overloads the type-level notation
-`𝓑(H) = H →L[ℂ] H` of `ForMathlib.Analysis.CStarAlgebra.HilbertSpace`: the two denote the same
-mathematical object B(H) at different levels (the operator *type* vs. the bundled *von Neumann
-algebra* of all operators), and the expected type disambiguates. The two levels are related by the
-canonical `⋆`-isomorphism `boundedLinearOperators.starAlgEquiv`. -/
+(`VonNeumannAlgebra.boundedLinearOperators H`). It and the operator type `H →L[ℂ] H` denote the
+same mathematical object B(H) at different levels (the bundled *von Neumann algebra* of all
+operators vs. the operator *type*), related by the canonical `⋆`-isomorphism
+`boundedLinearOperators.starAlgEquiv`. -/
 scoped notation:max "𝓑(" H ")" => VonNeumannAlgebra.boundedLinearOperators H
 
 /-- The carrier of `𝓑(H)` is all of `H →L[ℂ] H`. -/
@@ -133,7 +131,7 @@ scoped notation:max "𝓑(" H ")" => VonNeumannAlgebra.boundedLinearOperators H
 
 /-- **The two levels of `𝓑(H)` agree.** The underlying `⋆`-subalgebra of the bundled von Neumann
 algebra `𝓑(H)`, coerced to a type, is canonically `⋆`-isomorphic to the operator type
-`H →L[ℂ] H` (itself the type-level `𝓑(H)` of `ForMathlib.Analysis.CStarAlgebra.HilbertSpace`).
+`H →L[ℂ] H`.
 This is the `⋆`-algebra analogue of `Subalgebra.topEquiv` / `Submodule.topEquiv`, making explicit
 that the notation overload denotes one and the same object B(H). The equivalence is phrased on
 `(𝓑(H)).toStarSubalgebra` because Mathlib equips the `⋆`-subalgebra — not the bundled

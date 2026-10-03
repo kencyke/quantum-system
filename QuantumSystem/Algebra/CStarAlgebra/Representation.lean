@@ -6,7 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Bundled `*`-representations of a C\*-algebra on a complex Hilbert space
@@ -14,7 +15,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 This file introduces the type `CStarRep A` of (non-unital) `*`-representations
 of a non-unital C\*-algebra `A` on a complex Hilbert space, packaged as the
 pair `(H, π)` of a carrier and a non-unital star-algebra homomorphism into
-the C\*-algebra of bounded linear operators `𝓑(H)`.
+the C\*-algebra of bounded linear operators `H →L[ℂ] H`.
 
 `CStarRep A` is a foundational, sector-agnostic notion: it is the generic
 data of a C\*-algebra representation, with no choice of cyclic vector or
@@ -64,8 +65,8 @@ applies to GNS triplets directly.
 ## Main definitions
 
 * `CStarRep A` — a bundled non-unital `*`-representation
-  `π : A →⋆ₙₐ[ℂ] 𝓑(H)` together with the carrier `H` and its
-  `ComplexHilbertSpace` instance.
+  `π : A →⋆ₙₐ[ℂ] (H →L[ℂ] H)` together with the carrier `H` and its complex Hilbert space
+  structure.
 * `CStarRep.adjoint_π` — `(π a)† = π (a*)`.
 * `CStarRep.orbit R v` — the orbit map `a ↦ π a v` of a vector, as a
   continuous linear map `A →L[ℂ] H`.
@@ -73,7 +74,7 @@ applies to GNS triplets directly.
 
 @[expose] public section
 
-open scoped ComplexHilbertSpace InnerProduct
+open scoped InnerProduct
 
 universe u v
 
@@ -85,8 +86,9 @@ variable {A : Type u} [NonUnitalCStarAlgebra A]
 Fields:
 
 * `H` — the underlying type of the Hilbert space.
-* `[hilbert]` — evidence that `H` is a complex Hilbert space.
-* `π` — a non-unital `*`-representation `A →⋆ₙₐ[ℂ] 𝓑(H)`.
+* `[normedAddCommGroup]`, `[innerProductSpace]`, `[completeSpace]` — the complex Hilbert space
+  structure of `H`, as Mathlib's unbundled instances.
+* `π` — a non-unital `*`-representation `A →⋆ₙₐ[ℂ] (H →L[ℂ] H)`.
 
 This is the underlying data of a representation without any choice of a
 cyclic vector or attachment to a particular state.  For a GNS triplet
@@ -94,12 +96,17 @@ attached to a fixed positive functional, see `GNS.Representation`. -/
 structure CStarRep (A : Type u) [NonUnitalCStarAlgebra A] where
   /-- The Hilbert space on which the representation acts. -/
   H : Type v
-  /-- The complex Hilbert space structure on `H`. -/
-  [hilbert : ComplexHilbertSpace H]
-  /-- The non-unital `*`-representation `A →⋆ₙₐ[ℂ] 𝓑(H)`. -/
-  π : A →⋆ₙₐ[ℂ] 𝓑(H)
+  /-- The norm of `H`. -/
+  [normedAddCommGroup : NormedAddCommGroup H]
+  /-- The complex inner product of `H`. -/
+  [innerProductSpace : InnerProductSpace ℂ H]
+  /-- The completeness of `H`. -/
+  [completeSpace : CompleteSpace H]
+  /-- The non-unital `*`-representation `A →⋆ₙₐ[ℂ] (H →L[ℂ] H)`. -/
+  π : A →⋆ₙₐ[ℂ] (H →L[ℂ] H)
 
-attribute [instance] CStarRep.hilbert
+attribute [instance] CStarRep.normedAddCommGroup CStarRep.innerProductSpace
+  CStarRep.completeSpace
 
 namespace CStarRep
 

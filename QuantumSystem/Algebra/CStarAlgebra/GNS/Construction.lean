@@ -16,7 +16,7 @@ construction produces the *GNS triplet* `(𝓗[ω], π[ω], ξ[ω])`:
 
 * `𝓗[ω]` — the GNS Hilbert space, the completion of `A` for the semi-inner product
   `⟪a, b⟫ = ω (a* b)`;
-* `π[ω] : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω])` — the GNS representation, induced by left multiplication;
+* `π[ω] : A →⋆ₙₐ[ℂ] (𝓗[ω] →L[ℂ] 𝓗[ω])` — the GNS representation, induced by left multiplication;
 * `ξ[ω] : 𝓗[ω]` — the cyclic unit vector, characterised by `⟪ξ[ω], [a]⟫ = ω a`.
 
 All three are the GNS construction of a general positive linear functional, applied to the
@@ -55,7 +55,7 @@ canonical map `a ↦ [a]` is `(PositiveLinearMap.ofClass ω).gnsMk`.
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexOrder ComplexHilbertSpace
+open scoped InnerProductSpace ComplexOrder
 open PositiveLinearMap
 
 /-! ### The GNS representation of a positive functional, bundled -/
@@ -64,11 +64,6 @@ namespace PositiveLinearMap
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable (f : A →ₚ[ℂ] ℂ)
-
-noncomputable instance : ComplexHilbertSpace f.GNS where
-  toNormedAddCommGroup := inferInstance
-  toInnerProductSpace := inferInstance
-  toCompleteSpace := inferInstance
 
 /-- Mathlib's GNS representation `(f.GNS, f.gnsNonUnitalStarAlgHom)` bundled as a `CStarRep`.
 
@@ -97,9 +92,9 @@ scoped[GNS] notation:max "𝓗[" ω "]" => State.gnsSpace ω
 
 open scoped GNS
 
-/-- The GNS representation `π[ω] : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω])`, induced by left multiplication:
+/-- The GNS representation `π[ω] : A →⋆ₙₐ[ℂ] (𝓗[ω] →L[ℂ] 𝓗[ω])`, induced by left multiplication:
 Mathlib's `PositiveLinearMap.gnsNonUnitalStarAlgHom`. -/
-noncomputable abbrev gnsRep : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω]) := (PositiveLinearMap.ofClass ω).gnsNonUnitalStarAlgHom
+noncomputable abbrev gnsRep : A →⋆ₙₐ[ℂ] (𝓗[ω] →L[ℂ] 𝓗[ω]) := (PositiveLinearMap.ofClass ω).gnsNonUnitalStarAlgHom
 
 /-- Notation `π[ω]` for the GNS representation `State.gnsRep ω`. -/
 scoped[GNS] notation:max "π[" ω "]" => State.gnsRep ω

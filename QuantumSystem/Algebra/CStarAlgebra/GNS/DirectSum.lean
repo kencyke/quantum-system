@@ -30,12 +30,12 @@ repeated once per pure state realising it.
 * `GNS.DirectSum.repRangeEquiv` — `A` is `*`-isomorphic onto that image.
 * `GNS.DirectSum.rep_actsNondegenerately` — `rep A` is non-degenerate.
 * `GNS.DirectSum.rep_π_one`, `GNS.DirectSum.repStarAlgHom` — for unital `A`, `rep A` is unital,
-  hence a faithful isometric unital `*`-homomorphism `A →⋆ₐ[ℂ] 𝓑(H)`.
+  hence a faithful isometric unital `*`-homomorphism `A →⋆ₐ[ℂ] (H →L[ℂ] H)`.
 -/
 
 @[expose] public section
 
-open scoped ComplexHilbertSpace ComplexOrder InnerProductSpace
+open scoped ComplexOrder InnerProductSpace
 
 universe u
 
@@ -83,10 +83,10 @@ theorem rep_injective : Function.Injective (rep A).π :=
 theorem rep_isometry : Isometry (rep A).π :=
   (pureStateFamily A).directSumRep_isometry_of (pureStateFamily_separatesPoints A)
 
-/-- The image of `A` under the direct sum representation is norm closed in `𝓑(H)`, so it is a
+/-- The image of `A` under the direct sum representation is norm closed in `H →L[ℂ] H`, so it is a
 C\*-subalgebra. -/
 theorem rep_isClosed_range :
-    IsClosed (NonUnitalStarAlgHom.range (rep A).π : Set 𝓑((rep A).H)) :=
+    IsClosed (NonUnitalStarAlgHom.range (rep A).π : Set ((rep A).H →L[ℂ] (rep A).H)) :=
   (pureStateFamily A).directSumRep_isClosed_range_of (pureStateFamily_separatesPoints A)
 
 /-- The direct sum representation acts non-degenerately, since each GNS representation is
@@ -97,21 +97,21 @@ The non-unital Gelfand–Naimark theorem (`CStarRep.exists_isometric`) does not 
 non-degeneracy is the only input to `rep_π_one`, hence to
 `CStarRep.exists_isometric_unital`. -/
 theorem rep_actsNondegenerately :
-    InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → 𝓑((rep A).H))) :=
+    InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → ((rep A).H →L[ℂ] (rep A).H))) :=
   (pureStateFamily A).directSumRep_actsNondegenerately_of fun ψ =>
     (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).actsNondegenerately
 
 variable (A) in
 /-- The direct sum representation, corestricted to its image, is a `*`-isomorphism
-of `A` onto the C\*-subalgebra `NonUnitalStarAlgHom.range (rep A).π` of `𝓑(H)`. -/
+of `A` onto the C\*-subalgebra `NonUnitalStarAlgHom.range (rep A).π` of `H →L[ℂ] H`. -/
 noncomputable def repRangeEquiv : A ≃⋆ₐ[ℂ] NonUnitalStarAlgHom.range (rep A).π :=
   StarAlgEquiv.ofBijective (NonUnitalStarAlgHom.rangeRestrict (rep A).π)
     ⟨fun _ _ h => rep_injective (congrArg Subtype.val h), by rintro ⟨_, x, rfl⟩; exact ⟨x, rfl⟩⟩
 
 /-- The `*`-isomorphism of `A` onto the image of the direct sum representation is
-isometric: it preserves the norm inherited from `𝓑(H)`. -/
+isometric: it preserves the norm inherited from `H →L[ℂ] H`. -/
 theorem norm_repRangeEquiv (a : A) :
-    ‖((repRangeEquiv A a : NonUnitalStarAlgHom.range (rep A).π) : 𝓑((rep A).H))‖ = ‖a‖ :=
+    ‖((repRangeEquiv A a : NonUnitalStarAlgHom.range (rep A).π) : ((rep A).H →L[ℂ] (rep A).H))‖ = ‖a‖ :=
   NonUnitalStarAlgHom.norm_map _ rep_injective a
 
 section Unital
@@ -138,7 +138,7 @@ each `StarOrderedRing` order on `A` yields its own representation, and `rep A` f
 orders need not be definitionally equal.  `CStarAlgebra.spectralOrder` is the default choice,
 and the existence theorems (`CStarRep.exists_isometric_unital`) fix it internally, so their
 statements do not depend on an order. -/
-noncomputable def repStarAlgHom : A →⋆ₐ[ℂ] 𝓑((rep A).H) :=
+noncomputable def repStarAlgHom : A →⋆ₐ[ℂ] ((rep A).H →L[ℂ] (rep A).H) :=
   { (rep A).π with
     map_one' := rep_π_one
     commutes' := fun r => by

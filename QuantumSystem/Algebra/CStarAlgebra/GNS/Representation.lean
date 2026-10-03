@@ -39,7 +39,7 @@ vector (`norm_ξ_eq_one`) and that `π ≠ 0`, since a state is nonzero
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexHilbertSpace InnerProduct ComplexOrder
+open scoped InnerProductSpace InnerProduct ComplexOrder
 
 namespace GNS
 
@@ -55,7 +55,7 @@ positive functional" at the type level.
 Inherited fields (from `CStarRep A`):
 * `H` : the underlying type of the Hilbert space.
 * `[hilbert]` : evidence that `H` is a complex Hilbert space.
-* `π : A →⋆ₙₐ[ℂ] 𝓑(H)` : a non‑unital *-representation of `A` on `H`.
+* `π : A →⋆ₙₐ[ℂ] (H →L[ℂ] H)` : a non‑unital *-representation of `A` on `H`.
 
 GNS-specific fields:
 * `ξ : H` : a cyclic vector; its norm is automatically `√‖f‖ₒₚ` (`norm_ξ`), so it is a unit
@@ -87,7 +87,7 @@ Cyclicity is what makes this work.  If `π a x = 0` for every `a`, then
 `⟪x, π a ξ⟫ = ⟪π (star a) x, ξ⟫ = 0`, so the continuous functional `⟪x, ·⟫` vanishes on the dense
 orbit of the cyclic vector, hence everywhere, and in particular `⟪x, x⟫ = 0`. -/
 theorem actsNondegenerately (T : Representation f) :
-    InnerProductSpace.ActsNondegenerately (Set.range (T.π : A → 𝓑(T.H))) := by
+    InnerProductSpace.ActsNondegenerately (Set.range (T.π : A → (T.H →L[ℂ] T.H))) := by
   intro x hx
   have h_orbit : Set.EqOn (fun y => ⟪x, y⟫_ℂ) (fun _ => 0) (Set.range (T.orbit T.ξ)) := by
     rintro _ ⟨a, rfl⟩

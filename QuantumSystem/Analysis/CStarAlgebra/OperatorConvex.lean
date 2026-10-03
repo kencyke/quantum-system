@@ -35,7 +35,7 @@ convexity to matrix convexity, `IsOperatorConvexOn.isMatrixConvexOn`, are in
 A unital C⋆-algebra `A` is represented faithfully on a Hilbert space by the unital
 `*`-homomorphism `GNS.DirectSum.repStarAlgHom A` (Gelfand–Naimark). A faithful unital
 `*`-homomorphism commutes with the continuous functional calculus and preserves the spectrum,
-hence reflects the order, which transfers the inequality from `𝓑(H)` to `A`
+hence reflects the order, which transfers the inequality from `H →L[ℂ] H` to `A`
 (`ConvexOn.cfc_of_injective`). Only this transfer
 needs the GNS construction of the project, and it is the reason this file lives outside
 `ForMathlib/`.
@@ -43,7 +43,7 @@ needs the GNS construction of the project, and it is the reason this file lives 
 ## References
 
 The equivalence is standard; cf. Hansen–Pedersen 1982, where operator convexity is defined on
-`𝓑(H)`, and Bhatia, Chapter V, where it is defined on the matrices of every size.
+`H →L[ℂ] H`, and Bhatia, Chapter V, where it is defined on the matrices of every size.
 
 * F. Hansen, G. K. Pedersen, *Jensen's inequality for operators and Löwner's theorem*,
   Math. Ann. 258 (1982), 229–241
@@ -53,7 +53,7 @@ The equivalence is standard; cf. Hansen–Pedersen 1982, where operator convexit
 @[expose] public section
 
 open Set Polynomial
-open scoped InnerProductSpace InnerProduct ComplexHilbertSpace
+open scoped InnerProductSpace InnerProduct
 
 /-! ### Every C⋆-algebra -/
 

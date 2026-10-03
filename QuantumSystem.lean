@@ -101,7 +101,6 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctiona
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Matrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap

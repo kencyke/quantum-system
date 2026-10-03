@@ -42,7 +42,7 @@ The theorem these serve is `CStarRep.exists_isometric_separable`, in
 
 open TopologicalSpace
 
-open scoped InnerProductSpace ComplexHilbertSpace ComplexOrder
+open scoped InnerProductSpace ComplexOrder
 
 universe u
 
@@ -200,7 +200,7 @@ variable (A) in
 /-- The image of the norming representation is norm closed, so it is a C\*-subalgebra of
 the bounded operators on a separable Hilbert space. -/
 theorem normingRep_isClosed_range [SeparableSpace A] :
-    IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set 𝓑((normingRep A).H)) :=
+    IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set ((normingRep A).H →L[ℂ] (normingRep A).H)) :=
   (normingFamily A).directSumRep_isClosed_range_of (normingFamily_separatesPoints A)
 
 end Norming
