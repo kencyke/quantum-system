@@ -6,7 +6,6 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Separable
-public import QuantumSystem.Algebra.CStarAlgebra.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Conjugation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.DirectSum
@@ -16,8 +15,9 @@ public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.RadonNikodym
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
-public import QuantumSystem.Algebra.CStarAlgebra.State
+public import QuantumSystem.Algebra.CStarAlgebra.State.Basic
 public import QuantumSystem.Algebra.CStarAlgebra.State.Faithful
+public import QuantumSystem.Algebra.CStarAlgebra.State.Pure
 public import QuantumSystem.Algebra.LocalNet.Covariance
 public import QuantumSystem.Algebra.LocalNet.Examples
 public import QuantumSystem.Algebra.LocalNet.InfiniteRegion

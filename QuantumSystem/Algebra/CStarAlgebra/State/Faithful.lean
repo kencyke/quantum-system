@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Algebra.CStarAlgebra.State
+public import QuantumSystem.Algebra.CStarAlgebra.State.Basic
 
 /-!
 # Faithful states

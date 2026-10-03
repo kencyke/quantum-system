@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
-public import QuantumSystem.Algebra.CStarAlgebra.PureState
+public import QuantumSystem.Algebra.CStarAlgebra.State.Pure
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
 
 /-!
