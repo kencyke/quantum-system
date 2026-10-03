@@ -8,9 +8,9 @@ module
 public import Mathlib.Analysis.Convex.KreinMilman
 public import Mathlib.Analysis.LocallyConvex.WeakDual
 public import Mathlib.Analysis.Normed.Module.HahnBanach
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.Algebra.CStarAlgebra.State
-public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 
 /-!
 # Pure states on a C*-algebra

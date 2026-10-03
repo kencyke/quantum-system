@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 
@@ -16,7 +16,7 @@ A *state* on a (possibly non-unital) C\*-algebra `A` is a positive linear functi
 `ω : A → ℂ` of norm one (Bratteli–Robinson, §2.3.2; Murphy, §3.3).
 
 As in Bratteli–Robinson, a state is an element of the dual: `State A` is the subtype of the state
-space `StateSpace A ⊆ WeakDual ℂ A` (`QuantumSystem.Algebra.CStarAlgebra.QuasiState`), the convex
+space `StateSpace A ⊆ WeakDual ℂ A` (`QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace`), the convex
 set of positive functionals of norm one. Convexity statements about states (such as the concavity
 of the von Neumann entropy) are stated on `StateSpace A` with Mathlib's `Convex`/`ConcaveOn`, and
 pure states (`PureState A`) are elements of the same dual.

@@ -7,7 +7,6 @@ public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Separable
 public import QuantumSystem.Algebra.CStarAlgebra.PureState
-public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
 public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Conjugation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.DirectSum
@@ -106,6 +105,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.HilbertSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Matrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification

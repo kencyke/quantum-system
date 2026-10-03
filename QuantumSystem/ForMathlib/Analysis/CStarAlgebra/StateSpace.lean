@@ -16,13 +16,24 @@ positive cone to nonnegative numbers, `0 ≤ a → 0 ≤ φ a` — the defining 
 positive linear maps `A →ₚ[ℂ] ℂ` (`PositiveLinearMap.mk₀`).  As in Mathlib, the order on `A` is a
 type-class parameter; for a C\*-algebra with no preferred order, `CStarAlgebra.spectralOrder` can
 be installed locally.  The quasi-state space is convex and
-weak-\* compact, which is what the Krein–Milman argument for pure states needs.
+weak-\* compact (Banach–Alaoglu), which is what the Krein–Milman argument for pure states needs.
 
 The **state space** `StateSpace A` is the subset of positive functionals of norm exactly one
 (Bratteli–Robinson, §2.3.2). It is convex (`StateSpace.convex`): along an increasing approximate
 unit `e`, a positive functional `φ` has `φ e → ‖φ‖` (`PositiveContinuousLinearMap.tendsto_nhds_opNorm`),
 so `(sφ + tψ)(e) → s + t = 1` gives the norm of a convex combination, also for non-unital `A`.
-The states `State A` are the elements of `StateSpace A`.
+
+## Main definitions
+
+* `QuasiStateSpace A` — the positive functionals of norm at most one.
+* `StateSpace A` — the positive functionals of norm one.
+
+## Main results
+
+* `QuasiStateSpace.convex`, `QuasiStateSpace.compact` — the quasi-state space is convex and
+  weak-\* compact.
+* `StateSpace.convex` — the state space is convex.
+* `StateSpace.tendsto_approximateUnit` — `φ e → 1` along an increasing approximate unit.
 
 ## TODO
 
