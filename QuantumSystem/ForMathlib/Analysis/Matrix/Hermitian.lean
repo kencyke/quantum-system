@@ -28,8 +28,6 @@ semidefinite `A` and `B` derived from them, are over any `RCLike` field.
   Hermiticity.
 - `IsHermitian.toEuclideanCLM_eigenvectorBasis`: an eigenvector of a Hermitian matrix is an
   eigenvector of the operator it defines on `ℂⁿ`.
-- `PosSemidef.trace_mul_eq_sum_inner`: `Tr (ρ A) = Σᵢ rᵢ ⟪fᵢ, A fᵢ⟫` in the eigenvector basis of a
-  positive semidefinite `ρ`.
 - `IsHermitian.eq_sum_eigenvalues_smul_vecMulVec`: the spectral decomposition
   `A = Σⱼ λⱼ uⱼ uⱼᴴ` of a Hermitian matrix.
 - `posSemidef_iff_dotProduct_mulVec_complex`: over `ℂ` a matrix is positive semidefinite
@@ -140,27 +138,6 @@ lemma IsHermitian.toEuclideanCLM_eigenvectorBasis {A : Matrix n n ℂ} (hA : A.I
   have := congrFun (hA.mulVec_eigenvectorBasis i) k
   rw [RCLike.real_smul_eq_coe_smul (K := ℂ)] at this
   exact this
-
-variable {ρ : Matrix n n ℂ} (hρ : ρ.PosSemidef)
-
-/-- `Tr (ρ A) = Σᵢ rᵢ ⟪fᵢ, A fᵢ⟫` in the eigenvector basis of `ρ`. -/
-lemma PosSemidef.trace_mul_eq_sum_inner (A : Matrix n n ℂ) :
-    Matrix.trace (ρ * A) = ∑ i, ((hρ.1.eigenvalues i : ℝ) : ℂ) *
-      ⟪hρ.1.eigenvectorBasis i,
-        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ := by
-  have h : Matrix.trace (ρ * A) =
-      LinearMap.trace ℂ _ (Matrix.toEuclideanLin (ρ * A)) := by
-    rw [LinearMap.trace_eq_matrix_trace ℂ (EuclideanSpace.basisFun n ℂ).toBasis,
-      Matrix.toEuclideanLin_eq_toLin_orthonormal, LinearMap.toMatrix_toLin]
-  rw [h, LinearMap.trace_eq_sum_inner _ hρ.1.eigenvectorBasis]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  change ⟪_, Matrix.toEuclideanCLM (𝕜 := ℂ) (ρ * A) _⟫_ℂ = _
-  rw [map_mul]
-  calc _ = ⟪Matrix.toEuclideanCLM (𝕜 := ℂ) ρ (hρ.1.eigenvectorBasis i),
-        Matrix.toEuclideanCLM (𝕜 := ℂ) A (hρ.1.eigenvectorBasis i)⟫_ℂ :=
-        (Matrix.isSymmetric_toEuclideanLin_iff.mpr hρ.1 _ _).symm
-    _ = _ := by
-      rw [hρ.1.toEuclideanCLM_eigenvectorBasis, inner_smul_left, Complex.conj_ofReal]
 
 end Eigenbasis
 

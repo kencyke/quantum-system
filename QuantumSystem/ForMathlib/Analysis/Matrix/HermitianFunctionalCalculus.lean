@@ -27,8 +27,6 @@ diagonal matrices and of unitary conjugates are the special case `f = (· ^ p)`.
   for `0 ≤ M` and `(diag d) ^ p` for `0 ≤ d`, for every real `p`;
   `Matrix.inv_transpose_rpow_mul_transpose_eq` — `((B⁻¹)ᵀ) ^ p · Bᵀ = (B ^ (1 - p))ᵀ` for
   positive definite `B`.
-* `Matrix.trace_mul_cfc_unitary_conj_diagonal` —
-  `Tr(ρ · f(W · diag d · Wᴴ)) = ∑ₖ f(dₖ) (Wᴴ ρ W)ₖₖ`.
 * `Matrix.cfc_kronecker_eq_add` — `f(A ⊗ B) = g₁(A) ⊗ h₁(B) + g₂(A) ⊗ h₂(B)` for Hermitian
   `A, B` whenever `f(xy) = g₁(x) h₁(y) + g₂(x) h₂(y)` on the spectra; special cases
   `Matrix.cfc_kronecker` (multiplicative `f`), `Matrix.cfc_kronecker_one`,
@@ -166,23 +164,6 @@ lemma cfc_unitary_conj_diagonal
     funext i
     simp [Complex.conj_ofReal]
   rw [cfc_unitary_conj W.2 h_diag_sa f, cfc_diagonal f d]
-
-/-- **Trace against a unitary diagonalisation.** For `σ = W · diag d · Wᴴ` with `W` unitary,
-`Tr(ρ · f(σ)) = ∑ₖ f(dₖ) · (Wᴴ ρ W)ₖₖ` for every `f : ℝ → ℝ` and every matrix `ρ`. -/
-lemma trace_mul_cfc_unitary_conj_diagonal
-    {k : Type*} [Fintype k] [DecidableEq k]
-    (W : unitary (Matrix k k ℂ)) (f : ℝ → ℝ) (d : k → ℝ) (ρ : Matrix k k ℂ) :
-    (ρ * cfc f
-        ((W : Matrix k k ℂ) *
-          diagonal (fun i => ((d i : ℝ) : ℂ)) * (W : Matrix k k ℂ)ᴴ)).trace =
-      ∑ i, ((f (d i) : ℝ) : ℂ) * ((W : Matrix k k ℂ)ᴴ * ρ * (W : Matrix k k ℂ)) i i := by
-  rw [cfc_unitary_conj_diagonal W f d]
-  set Wm : Matrix k k ℂ := (W : Matrix k k ℂ)
-  set D : Matrix k k ℂ := diagonal (fun i => ((f (d i) : ℝ) : ℂ)) with hD
-  have h1 : ρ * (Wm * D * Wmᴴ) = (ρ * Wm * D) * Wmᴴ := by simp only [Matrix.mul_assoc]
-  rw [h1, Matrix.trace_mul_comm, ← Matrix.mul_assoc, ← Matrix.mul_assoc]
-  simp only [Matrix.trace, Matrix.diag, hD, mul_diagonal]
-  exact Finset.sum_congr rfl fun i _ => mul_comm _ _
 
 /-! ### Real powers
 

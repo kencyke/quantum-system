@@ -91,7 +91,6 @@ public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
-public import QuantumSystem.ForMathlib.Analysis.Calculus.Deriv.Sign
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.BoundedOperatorRepresentation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
@@ -126,7 +125,6 @@ public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
 public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
-public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ProdLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
@@ -137,7 +135,6 @@ public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.Fintype
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PosDef
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace

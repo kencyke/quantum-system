@@ -56,9 +56,9 @@ The textbook symbols `⊗̂` (completed tensor) and `⊗ₕ` (pure tensor) live 
 
 ## Main results
 
-* `UniformSpace.Completion.surjective_toComplL`, `FiniteDimensional.completion`,
-  `Module.finrank_completion_le` — a finite-dimensional seminormed space surjects onto its
-  completion, which is finite-dimensional of at most the same dimension.
+* `UniformSpace.Completion.surjective_toComplL`, `FiniteDimensional.completion` — a
+  finite-dimensional seminormed space surjects onto its completion, which is therefore
+  finite-dimensional.
 * `HilbertTensor.inner_tmul` — the inner product on pure tensors factorises.
 * `HilbertTensor.add_tmul` / `tmul_add` / `tmul_smul_left` / `smul_tmul_right` — `tmul` is
   bilinear.
@@ -80,8 +80,8 @@ open scoped TensorProduct
 These are general facts about `UniformSpace.Completion`; they are the analytic inputs to the
 constructions below. The completion of a linear isometric equivalence of normed spaces extends it to
 the completions, and a finite-dimensional seminormed space surjects onto its completion
-(`UniformSpace.Completion.surjective_toComplL`), which is therefore finite-dimensional of at most
-the same dimension (`FiniteDimensional.completion`, `Module.finrank_completion_le`). -/
+(`UniformSpace.Completion.surjective_toComplL`), which is therefore finite-dimensional
+(`FiniteDimensional.completion`). -/
 
 section Completion
 
@@ -152,14 +152,6 @@ lemma FiniteDimensional.completion {𝕜 E : Type*} [NontriviallyNormedField �
     [SeminormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
     FiniteDimensional 𝕜 (Completion E) :=
   Module.Finite.of_surjective (Completion.toComplL : E →L[𝕜] Completion E).toLinearMap
-    Completion.surjective_toComplL
-
-/-- The completion of a finite-dimensional seminormed space has dimension at most that of the
-space. -/
-lemma Module.finrank_completion_le {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
-    [SeminormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
-    Module.finrank 𝕜 (Completion E) ≤ Module.finrank 𝕜 E :=
-  LinearMap.finrank_le_finrank_of_surjective (f := (Completion.toComplL : E →L[𝕜] Completion E))
     Completion.surjective_toComplL
 
 end Completion

@@ -440,11 +440,6 @@ lemma ofPreStinespring_toPreStinespring (z : A ⊗[ℂ] H) :
 instance [FiniteDimensional ℂ A] [FiniteDimensional ℂ H] : FiniteDimensional ℂ φ.PreStinespring :=
   inferInstanceAs (Module.Finite ℂ (A ⊗[ℂ] H))
 
-/-- The pre-Stinespring space `A ⊗[ℂ] H` has dimension `dim A · dim H`. -/
-lemma finrank_preStinespring :
-    Module.finrank ℂ φ.PreStinespring = Module.finrank ℂ A * Module.finrank ℂ H :=
-  Module.finrank_tensorProduct
-
 /-- The semi-inner product `⟪z, w⟫ = stinespringForm z w` on the pre-Stinespring space. -/
 noncomputable abbrev preStinespringCore : PreInnerProductSpace.Core ℂ φ.PreStinespring where
   inner z w := φ.stinespringForm (φ.ofPreStinespring z) (φ.ofPreStinespring w)
