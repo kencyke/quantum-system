@@ -16,7 +16,9 @@ For a linear map `Φ : M_n(ℂ) → M_m(ℂ)` the following are equivalent:
 1. `Φ` is completely positive;
 2. `Φ` is `k`-positive (`KPositiveMap`) for some `k ≥ min(n, m)`: applied entrywise, it preserves
    nonnegativity in the C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)` of `k × k` block
-   matrices, for the single block size `k`;
+   matrices, for the single block size `k`; equivalently `id_k ⊗ Φ` is positive, the flattened
+   `kn × kn` matrices staying positive semidefinite
+   (`KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`);
 3. its Choi matrix `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)` is positive semidefinite;
 4. `Φ` has a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` with at most `nm` operators; indeed with
    exactly `rank J(Φ)` operators, the minimal number: every Kraus representation of `Φ` has at
@@ -47,6 +49,8 @@ Hilbert spaces (`QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/Choi.lean` a
 * `Matrix.choiMatrix_eq_toMatrix_choi`: the Choi matrix is the matrix of the Choi operator of the
   operator form; hence `Matrix.posSemidef_choiMatrix_iff_nonneg_choi` and
   `Matrix.rank_choiMatrix_eq_finrank_range_choi`.
+* `KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`: `k`-positivity is positivity of
+  `id_k ⊗ Φ` on flattened `kn × kn` matrices.
 * `Matrix.rank_choiMatrix_le_card_of_kraus`: every Kraus representation has at least `rank J(Φ)`
   operators; `Matrix.rank_choiMatrix_eq_card_iff_linearIndependent`: exactly `rank J(Φ)` iff the
   Kraus operators are linearly independent.
@@ -55,7 +59,9 @@ Hilbert spaces (`QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/Choi.lean` a
 some `φ : Matrix n n ℂ →CP Matrix m m ℂ`:
 
 * `CompletelyPositiveMap.exists_coe_eq_iff_posSemidef_choiMatrix`: 1 ⟺ 3.
-* `CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`: 1 ⟺ 2.
+* `CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`: 1 ⟺ 2;
+  `CompletelyPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`: the same with `id_k ⊗ Φ`
+  positive on flattened matrices, Choi's original form.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_kraus`: 1 ⟺ 4.
 
 The two directions separately, for a completely positive map `φ` (1 ⇒ 2, 4) and for a linear map
@@ -212,6 +218,39 @@ end ChoiOperator
 
 end Matrix
 
+/-! ### `k`-positivity in matrix form -/
+
+namespace KPositiveMap
+
+open Matrix
+open scoped ComplexOrder CStarAlgebra
+
+variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **`k`-positivity in Choi's form**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is `k`-positive iff
+`id_k ⊗ Φ` is positive, that is, applying `Φ` entrywise to a `k × k` block matrix `X` whose
+flattening is a positive semidefinite `kn × kn` matrix gives a block matrix whose flattening is a
+positive semidefinite `km × km` matrix. The order of `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)`
+in the definition of `KPositiveMap` is positive semidefiniteness of the flattening
+(`CStarMatrix.nonneg_iff_posSemidef_comp`). -/
+theorem exists_coe_eq_iff_forall_posSemidef_comp_map (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) (k : ℕ) :
+    (∃ ψ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ),
+        (ψ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∀ X : Matrix (Fin k) (Fin k) (Matrix n n ℂ), (Matrix.comp _ _ n n ℂ X).PosSemidef →
+        (Matrix.comp _ _ m m ℂ (X.map Φ)).PosSemidef := by
+  constructor
+  · rintro ⟨ψ, rfl⟩ X hX
+    exact CStarMatrix.nonneg_iff_posSemidef_comp.1 <|
+      ψ.map_cstarMatrix_nonneg' (CStarMatrix.ofMatrix X)
+        (CStarMatrix.nonneg_iff_posSemidef_comp.2 hX)
+  · intro h
+    refine ⟨⟨Φ, fun M hM => ?_⟩, rfl⟩
+    rw [CStarMatrix.nonneg_iff_posSemidef_comp] at hM ⊢
+    exact h M hM
+
+end KPositiveMap
+
 /-! ### Choi's theorem for completely positive maps -/
 
 namespace CompletelyPositiveMap
@@ -304,7 +343,9 @@ theorem exists_coe_eq_iff_posSemidef_choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ]
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**, `min(n, m)`-positivity form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is
 completely positive iff it is `k`-positive, i.e. applied entrywise it preserves nonnegativity in the
-C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)` (`KPositiveMap`), for a single block size
+C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)` (`KPositiveMap`), equivalently `id_k ⊗ Φ`
+is positive on flattened `kn × kn` matrices
+(`CompletelyPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`), for a single block size
 `k ≥ min(n, m)`. Its operator form is then `k`-positive (`KPositiveMap.arrowCongr`), hence
 completely positive (`CompletelyPositiveMap.ofKPositiveMap`). -/
 theorem exists_coe_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
@@ -319,6 +360,21 @@ theorem exists_coe_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] M
       (KPositiveMap.arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ)) ψ)
       (by simpa [finrank_euclideanSpace] using hk), LinearMap.ext fun X => ?_⟩
   simp
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **Choi's theorem** in Choi's original form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely
+positive iff `id_k ⊗ Φ` is positive for a single block size `k ≥ min(n, m)`, that is, it sends
+`k × k` block matrices with positive semidefinite `kn × kn` flattening to block matrices with
+positive semidefinite `km × km` flattening
+(`CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`,
+`KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`). -/
+theorem exists_coe_eq_iff_forall_posSemidef_comp_map (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
+    {k : ℕ} (hk : min (Fintype.card n) (Fintype.card m) ≤ k) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∀ X : Matrix (Fin k) (Fin k) (Matrix n n ℂ), (Matrix.comp _ _ n n ℂ X).PosSemidef →
+        (Matrix.comp _ _ m m ℂ (X.map Φ)).PosSemidef :=
+  (exists_coe_eq_iff_exists_kPositiveMap Φ hk).trans
+    (KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map Φ k)
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi–Kraus theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive iff it has
