@@ -5,11 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Normed.Module.WeakDual
-public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 
 /-!
-# The quasi-state space
+# The quasi-state space and the state space
 
 The quasi-state space of a C\*-algebra `A` is the set of positive continuous linear functionals of
 norm at most one, as a subset of the weak-\* dual.  A functional is *positive* when it sends the
@@ -18,11 +17,24 @@ positive linear maps `A →ₚ[ℂ] ℂ` (`PositiveLinearMap.mk₀`).  As in Mat
 type-class parameter; for a C\*-algebra with no preferred order, `CStarAlgebra.spectralOrder` can
 be installed locally.  The quasi-state space is convex and
 weak-\* compact, which is what the Krein–Milman argument for pure states needs.
+
+The **state space** `StateSpace A` is the subset of positive functionals of norm exactly one
+(Bratteli–Robinson, §2.3.2). It is convex (`StateSpace.convex`): along an increasing approximate
+unit `e`, a positive functional `φ` has `φ e → ‖φ‖` (`PositiveContinuousLinearMap.tendsto_nhds_opNorm`),
+so `(sφ + tψ)(e) → s + t = 1` gives the norm of a convex combination, also for non-unital `A`.
+The states `State A` are the elements of `StateSpace A`.
+
+## TODO
+
+On a unital `A`, the state space is the set of positive functionals with `φ 1 = 1`, hence weak-\*
+closed and compact; on a non-unital `A` it is in general not weak-\* closed. Add these when a
+result needs them.
 -/
 
 @[expose] public section
 
-open scoped ComplexOrder
+open scoped ComplexOrder Topology
+open Filter
 
 section QuasiStateSpace
 
@@ -74,3 +86,61 @@ lemma non_empty : (0 : WeakDual ℂ A) ∈ QuasiStateSpace A := by
 end QuasiStateSpace
 
 end QuasiStateSpace
+
+section StateSpace
+
+variable (A : Type*) [NonUnitalCStarAlgebra A] [PartialOrder A]
+
+/-- The **state space** of a C\*-algebra `A`: the positive continuous linear functionals
+(`0 ≤ a → 0 ≤ φ a`) with norm exactly `1` (Bratteli–Robinson, §2.3.2). -/
+def StateSpace : Set (WeakDual ℂ A) :=
+  { φ | ∀ a : A, 0 ≤ a → 0 ≤ φ a } ∩ (WeakDual.toStrongDual ⁻¹' Metric.sphere 0 1)
+
+variable {A}
+
+/-- `φ` is in the state space iff it is positive and of norm one. -/
+lemma mem_stateSpace_iff {φ : WeakDual ℂ A} :
+    φ ∈ StateSpace A ↔ (∀ a : A, 0 ≤ a → 0 ≤ φ a) ∧ ‖WeakDual.toStrongDual φ‖ = 1 := by
+  simp [StateSpace]
+
+namespace StateSpace
+
+/-- Every state is a quasi-state. -/
+lemma subset_quasiStateSpace : StateSpace A ⊆ QuasiStateSpace A :=
+  fun _ hφ => ⟨hφ.1, Metric.sphere_subset_closedBall (α := StrongDual ℂ A) hφ.2⟩
+
+variable [StarOrderedRing A]
+
+/-- A state evaluated along an increasing approximate unit converges to `1`: `φ e → ‖φ‖ = 1`
+(`PositiveContinuousLinearMap.tendsto_nhds_opNorm`). -/
+lemma tendsto_approximateUnit {φ : WeakDual ℂ A} (hφ : φ ∈ StateSpace A) {l : Filter A}
+    (hl : l.IsIncreasingApproximateUnit) : Tendsto (fun e : A => φ e) l (𝓝 1) := by
+  have h : Tendsto (fun e : A => φ e) l (𝓝 (‖WeakDual.toStrongDual φ‖ : ℂ)) :=
+    (PositiveContinuousLinearMap.mk₀ (WeakDual.toStrongDual φ) hφ.1).tendsto_nhds_opNorm hl
+  rwa [(mem_stateSpace_iff.mp hφ).2, Complex.ofReal_one] at h
+
+/-- **The state space is convex.** Along an increasing approximate unit `e`,
+`(sφ + tψ)(e) → s + t = 1`, and the limit is the norm of the positive functional `sφ + tψ`; the
+algebra need not be unital. -/
+lemma convex : Convex ℝ (StateSpace A) := by
+  intro φ hφ ψ hψ s t hs ht hst
+  have hpos : ∀ a : A, 0 ≤ a → 0 ≤ (s • φ + t • ψ) a := fun a ha => by
+    change 0 ≤ (s : ℂ) * φ a + (t : ℂ) * ψ a
+    exact add_nonneg (mul_nonneg (Complex.zero_le_real.mpr hs) (hφ.1 a ha))
+      (mul_nonneg (Complex.zero_le_real.mpr ht) (hψ.1 a ha))
+  refine mem_stateSpace_iff.mpr ⟨hpos, ?_⟩
+  have hl := CStarAlgebra.increasingApproximateUnit A
+  have h1 : Tendsto (fun e : A => (s • φ + t • ψ) e) (CStarAlgebra.approximateUnit A)
+      (𝓝 (‖WeakDual.toStrongDual (s • φ + t • ψ)‖ : ℂ)) :=
+    (PositiveContinuousLinearMap.mk₀ (WeakDual.toStrongDual (s • φ + t • ψ)) hpos
+      ).tendsto_nhds_opNorm hl
+  have h2 : Tendsto (fun e : A => (s • φ + t • ψ) e) (CStarAlgebra.approximateUnit A) (𝓝 1) := by
+    have h := ((tendsto_approximateUnit hφ hl).const_mul (s : ℂ)).add
+      ((tendsto_approximateUnit hψ hl).const_mul (t : ℂ))
+    rw [mul_one, mul_one, ← Complex.ofReal_add, hst, Complex.ofReal_one] at h
+    exact h
+  exact_mod_cast tendsto_nhds_unique h1 h2
+
+end StateSpace
+
+end StateSpace
