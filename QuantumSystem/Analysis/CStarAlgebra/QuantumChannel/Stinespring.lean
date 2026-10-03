@@ -61,11 +61,14 @@ The environment is the **right** factor of `K ⊗ E` and is removed by the parti
   equality iff its Kraus blocks are linearly independent.
 * `CompletelyPositiveMap.exists_stinespring`: **Stinespring's theorem**: a CP map is
   `A ↦ tr₂(V A V†)` for some `V : H → K ⊗ ℂʳ`, `r = rank J_b(φ)`.
+* `CompletelyPositiveMap.exists_traceDual_eq_stinespring`: **Stinespring's theorem, Heisenberg
+  picture**: the trace dual of a CP map is `B ↦ V† (B ⊗ 1) V` for the same kind of `V`.
 * `CompletelyPositiveMap.exists_kraus_finrank_range_choi`: a CP map has a Kraus representation with
   exactly `rank J_b(φ)` operators; this rank does not depend on `b`
   (`CompletelyPositiveMap.finrank_range_choi_congr`).
-* `QuantumChannel.exists_stinespring`, `QuantumChannel.exists_kraus_finrank_range_choi`: the same
-  for quantum channels, with `V† V = 1` and `Σₐ Tₐ† Tₐ = 1`.
+* `QuantumChannel.exists_traceDual_eq_stinespring`, `QuantumChannel.exists_stinespring`,
+  `QuantumChannel.exists_kraus_finrank_range_choi`: the same for quantum channels, with `V† V = 1`
+  and `Σₐ Tₐ† Tₐ = 1`.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_stinespring`,
   `CompletelyPositiveMap.exists_coe_eq_iff_exists_kraus_finrank_range_choi`,
   `QuantumChannel.exists_coe_eq_iff_exists_stinespring`,
@@ -274,6 +277,20 @@ theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (φ : (H →L[ℂ] H)
   subst hd
   exact ⟨V, hV⟩
 
+/-- **Stinespring's theorem, Heisenberg picture**: the trace dual of a completely positive map
+`φ : B(H) → B(K)` is `φ*(B) = V† (B ⊗ 1) V` for some `V : H → K ⊗ ℂʳ` with environment of the
+minimal dimension `r = rank J_b(φ)`
+(`ContinuousLinearMap.finrank_range_choi_le_finrank_of_stinespring`): the Schrödinger form `CompletelyPositiveMap.exists_stinespring`
+read through `ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
+theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H)
+    (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
+    ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
+        (Fin (Module.finrank ℂ (LinearMap.range (choi b φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+      ∀ B : K →L[ℂ] K, ContinuousLinearMap.traceDual φ B = adjoint V ∘L B.rTensor _ ∘L V := by
+  have h := exists_stinespring b φ
+  obtain ⟨V, hV⟩ := h
+  exact ⟨V, (traceDual_eq_iff_traceRight V).2 hV⟩
+
 /-- A completely positive map `φ : B(H) → B(K)` has a Kraus representation `φ(A) = Σₐ Tₐ A Tₐ†`
 with exactly `rank J_b(φ)` operators, the minimal number
 (`ContinuousLinearMap.finrank_range_choi_le_card`): the Kraus blocks of the Stinespring operator
@@ -349,21 +366,36 @@ noncomputable def ofStinespring (V : H →L[ℂ] K ⊗[ℂ] E) (hV : adjoint V �
     (A : H →L[ℂ] H) : ofStinespring V hV A = ContinuousLinearMap.traceRight K E (V ∘L A ∘L adjoint V) :=
   CompletelyPositiveMap.ofStinespring_apply V A
 
+/-- **Stinespring's theorem, Heisenberg picture**, for quantum channels: the trace dual of a
+quantum channel `Φ : B(H) → B(K)` is the unital map `Φ*(B) = V† (B ⊗ 1) V` for an isometry
+`V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J_b(Φ)`. The isometry is
+`V† V = V† (1 ⊗ 1) V = Φ*(1) = 1` (`QuantumChannel.traceDual_one`). -/
+theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
+    ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
+        (Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+      adjoint V ∘L V = 1 ∧
+        ∀ B : K →L[ℂ] K, ContinuousLinearMap.traceDual Φ B = adjoint V ∘L B.rTensor _ ∘L V := by
+  have h := CompletelyPositiveMap.exists_traceDual_eq_stinespring b Φ.toCompletelyPositiveMap
+  obtain ⟨V, hV⟩ := h
+  refine ⟨V, ?_, hV⟩
+  have h1 : ContinuousLinearMap.traceDual Φ 1 = adjoint V ∘L (1 : K →L[ℂ] K).rTensor _ ∘L V :=
+    hV 1
+  simp only [traceDual_one Φ, rTensor_one] at h1
+  simp only [one_def, id_comp] at h1
+  exact h1.symm
+
 /-- **Stinespring's theorem** for quantum channels: a quantum channel `Φ : B(H) → B(K)` is
-`Φ(A) = tr₂(V A V†)` for an isometry `V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J_b(Φ)`. The
-isometry is `V† V = V† (1 ⊗ 1) V = Φ*(1) = 1`. -/
+`Φ(A) = tr₂(V A V†)` for an isometry `V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J_b(Φ)`: the
+Heisenberg form `QuantumChannel.exists_traceDual_eq_stinespring` read through
+`ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
 theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
         (Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
       adjoint V ∘L V = 1 ∧ ∀ A, Φ A = ContinuousLinearMap.traceRight K (EuclideanSpace ℂ (Fin _))
         (V ∘L A ∘L adjoint V) := by
-  have h := CompletelyPositiveMap.exists_stinespring b Φ.toCompletelyPositiveMap
-  obtain ⟨V, hV⟩ := h
-  refine ⟨V, ?_, hV⟩
-  have h := (traceDual_eq_iff_traceRight (Φ := Φ) V).2 hV 1
-  simp only [traceDual_one Φ, rTensor_one] at h
-  simp only [one_def, id_comp] at h
-  exact h.symm
+  have h := exists_traceDual_eq_stinespring b Φ
+  obtain ⟨V, hVV, hV⟩ := h
+  exact ⟨V, hVV, (traceDual_eq_iff_traceRight V).1 hV⟩
 
 /-- A quantum channel `Φ : B(H) → B(K)` has a Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` with
 exactly `rank J_b(Φ)` operators, satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`

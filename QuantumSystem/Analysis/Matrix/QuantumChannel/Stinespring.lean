@@ -28,7 +28,8 @@ fixed `V` the two pictures are equivalent (`Matrix.traceDual_eq_iff_stinespring`
 
 Quantum channels, and the isometry `V† V = 1` of their Stinespring dilations, are treated only for
 bounded operators on finite-dimensional Hilbert spaces
-(`QuantumChannel.exists_coe_eq_iff_exists_stinespring` in
+(`QuantumChannel.exists_coe_eq_iff_exists_stinespring`, and in the Heisenberg picture
+`QuantumChannel.exists_traceDual_eq_stinespring`, in
 `QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/Stinespring.lean`); matrices reach them through
 `Matrix.toEuclideanCLM : M_n(ℂ) ≃ B(ℂⁿ)`, and no matrix restatement is provided.
 
