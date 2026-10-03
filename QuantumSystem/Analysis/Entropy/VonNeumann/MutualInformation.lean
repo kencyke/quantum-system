@@ -41,6 +41,13 @@ The **product** `ψ ⊗ φ` of positive functionals on `B(H)` and `B(K)` is the 
 * `State.umegakiEntropy_eq_mutualInformation` — `D(ω ‖ ω_A ⊗ ω_B) = I(A:B)`.
 * `State.mutualInformation_nonneg` — `0 ≤ I(A:B)`, subadditivity `S(ω) ≤ S(ω_A) + S(ω_B)`.
 
+## TODO
+
+The product state and the marginals are stated on `B(H) ⊗ B(K) ≅ B(H ⊗ K)` (finite dimensions,
+`TensorProduct.mapLEquiv`). For general C\*-algebras the product state lives on the minimal
+C\*-tensor product, which Mathlib does not have yet; move them to `State` then. The marginals are
+instances of the restriction `State.comp` along the ampliations.
+
 ## Proof
 
 In the product `e_{ij} = aᵢ ⊗ fⱼ` of eigenbases of `ρ_A` and `ρ_B`, with eigenvalues `λᵢ`, `μⱼ`,

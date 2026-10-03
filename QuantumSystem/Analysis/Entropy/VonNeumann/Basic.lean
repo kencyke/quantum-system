@@ -51,6 +51,11 @@ positive ones (off the self-adjoint ones, `CFC.log` and hence `S` take the junk 
 * `State.vonNeumannEntropy_comp_starAlgEquiv` — invariance under `⋆`-isomorphisms, in particular
   unitary conjugations.
 
+## TODO
+
+`State.maximallyMixed H` is the unique tracial state of `B(H)`; prove this characterisation once
+tracial states are defined (see the TODO of `QuantumSystem.Algebra.CStarAlgebra.State.Basic`).
+
 ## Proofs
 
 The upper bound and its equality case are Klein's inequality and faithfulness of `D(ω ‖ τ)`;

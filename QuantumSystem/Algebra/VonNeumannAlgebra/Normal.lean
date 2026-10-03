@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.Projection
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Algebra.VonNeumannAlgebra.RadonNikodym
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Support
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
@@ -48,8 +49,10 @@ amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 * `VonNeumannAlgebra.IsNormal M ω` — `ω` is σ-weakly continuous on `M`.
 * `VonNeumannAlgebra.NormalFunctional M` — the normal positive functionals on `M`.
 * `VonNeumannAlgebra.IsNormal.vec` — a representing vector in `ℓ²(ℕ) ⊗̂ H`.
-* `VonNeumannAlgebra.vectorFunctional M ξ` — the vector functional `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`;
-  `VonNeumannAlgebra.NormalFunctional.ofVector M ξ` — the same as a normal functional.
+* `VonNeumannAlgebra.toCStarRep M` — the defining representation `M ⊆ B(H)` as a `CStarRep`.
+* `VonNeumannAlgebra.vectorFunctional M ξ` — the vector functional `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`, the
+  vector functional `CStarRep.vectorFunctional` of the defining representation as a positive
+  functional; `VonNeumannAlgebra.NormalFunctional.ofVector M ξ` — the same as a normal functional.
 * `VonNeumannAlgebra.amplifiedVectorFunctional M Ξ` — the functional `⟪Ξ, (1 ⊗ ·) Ξ⟫` on `M` for
   `Ξ ∈ H₁ ⊗̂ H`; `VonNeumannAlgebra.NormalFunctional.ofAmplifiedVector M Ξ` — the same as a normal
   functional, for `Ξ ∈ ℓ²(ℕ) ⊗̂ H`.
@@ -294,14 +297,22 @@ theorem apply_star_mul_self_eq {ω : M →ₚ[ℂ] ℂ} {Ξ : lp (fun _ : ℕ =>
     HilbertTensor.inner_amplifyRight_star_mul_self]
 
 variable (M) in
-/-- The **vector functional** `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`. -/
+/-- The **defining representation** of `M` on `H`, the inclusion `M ⊆ B(H)`, as a `CStarRep`. -/
+noncomputable def toCStarRep : CStarRep M :=
+  ⟨H, (inclₐ M).toNonUnitalStarAlgHom⟩
+
+/-- The defining representation acts by inclusion. -/
+@[simp]
+theorem toCStarRep_π_apply (x : M) (ξ : H) : M.toCStarRep.π x ξ = (x : H →L[ℂ] H) ξ :=
+  rfl
+
+variable (M) in
+/-- The **vector functional** `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`: the vector functional
+`CStarRep.vectorFunctional` of the defining representation `M.toCStarRep`, as a positive
+functional. -/
 noncomputable def vectorFunctional (ξ : H) : M →ₚ[ℂ] ℂ :=
-  PositiveLinearMap.mk₀
-    { toFun := fun x => ⟪ξ, (x : H →L[ℂ] H) ξ⟫_ℂ
-      map_add' := fun x y => by simp [inner_add_right]
-      map_smul' := fun c x => by simp [inner_smul_right] }
-    fun x hx => (ContinuousLinearMap.nonneg_iff_isPositive.mp
-      (show (0 : H →L[ℂ] H) ≤ x from hx)).inner_nonneg_right ξ
+  PositiveLinearMap.mk₀ (WeakDual.toStrongDual (M.toCStarRep.vectorFunctional ξ)).toLinearMap
+    (M.toCStarRep.vectorFunctional_nonneg ξ)
 
 /-- Evaluation of the vector functional: `ω_ξ(x) = ⟪ξ, x ξ⟫`. -/
 @[simp]
