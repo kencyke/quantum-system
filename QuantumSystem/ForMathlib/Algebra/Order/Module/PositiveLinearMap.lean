@@ -14,10 +14,13 @@ public import Mathlib.Data.FunLike.Module
 
 A nonnegative multiple `c • f` of a positive linear map `f : E₁ →ₚ[R] E₂` is again positive, so the
 positive linear maps form a module over `ℝ≥0` (they are a cone, not a vector space). This lets one
-write conic combinations `Σᵢ wᵢ • fᵢ` of positive maps, e.g. convex combinations of states.
+write conic combinations `Σᵢ wᵢ • fᵢ` of positive maps, e.g. weighted sums of positive functionals.
 
 Only `ℝ≥0` acts: a general action of a canonically ordered semiring would clash with Mathlib's
 `SMul ℕ (E₁ →ₚ[R] E₂)` instance for `ℕ`.
+
+Also `PositiveLinearMap.coe_ofClass`: the positive linear map `PositiveLinearMap.ofClass f` of an
+element `f` of a positive-linear-map class has the same underlying function as `f`.
 
 ## Main definitions
 
@@ -30,6 +33,14 @@ Only `ℝ≥0` acts: a general action of a canonically ordered semiring would cl
 open scoped NNReal
 
 namespace PositiveLinearMap
+
+/-- `PositiveLinearMap.ofClass f` has the same underlying function as `f`. -/
+@[simp]
+lemma coe_ofClass {F R E₁ E₂ : Type*} [Semiring R]
+    [AddCommMonoid E₁] [PartialOrder E₁] [AddCommMonoid E₂] [PartialOrder E₂]
+    [Module R E₁] [Module R E₂] [FunLike F E₁ E₂] [LinearMapClass F R E₁ E₂]
+    [OrderHomClass F E₁ E₂] (f : F) : ⇑(ofClass f : E₁ →ₚ[R] E₂) = f :=
+  rfl
 
 variable {R E₁ E₂ : Type*} [Semiring R]
   [AddCommMonoid E₁] [PartialOrder E₁] [AddCommMonoid E₂] [PartialOrder E₂]
