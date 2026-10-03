@@ -39,6 +39,17 @@ introduced for `φ ⊗ ψ`, which would clash with `TensorProduct`.
 * `CompletelyPositiveMap.traceRight_tensorProduct`, `QuantumChannel.traceRight_tensorProduct`:
   `tr₂ ∘ (φ ⊗ Ψ) = φ ∘ tr₂` for a trace-preserving `Ψ`.
 
+## TODO
+
+* **General C⋆-algebras.** For completely positive maps `φ : A₁ → A₂` and `ψ : B₁ → B₂`, define
+  `φ ⊗ ψ : A₁ ⊗_min B₁ → A₂ ⊗_min B₂` on the minimal (spatial) C⋆-tensor product, and prove it
+  completely positive through the Stinespring dilation
+  (`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/Stinespring.lean`, after representing `A₂` and
+  `B₂` faithfully on Hilbert spaces); the tensor product here is the case `A₁ = B(H₁)`,
+  `B₁ = B(H₂)`, `A₂ = B(K₁)`, `B₂ = B(K₂)` of finite-dimensional Hilbert spaces, where
+  `B(H₁) ⊗ B(H₂) = B(H₁ ⊗ H₂)` needs no completion. Mathlib gives `A ⊗[ℂ] B` only its
+  star-algebra structure; the C⋆-norm of `A ⊗_min B` is not yet available.
+
 ## References
 
 * Nielsen, Chuang, *Quantum Computation and Quantum Information*, §8.2.3

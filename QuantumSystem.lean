@@ -62,8 +62,6 @@ public import QuantumSystem.Analysis.Entropy.Umegaki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
 public import QuantumSystem.Analysis.Entropy.VonNeumann.MutualInformation
 public import QuantumSystem.Analysis.Entropy.VonNeumann.StrongSubadditivity
-public import QuantumSystem.Analysis.Matrix.DensityMatrix.Basic
-public import QuantumSystem.Analysis.Matrix.DensityMatrix.Kronecker
 public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Analysis.Matrix.HermitianFunctionalCalculus
 public import QuantumSystem.Analysis.Matrix.LiebConcavity
@@ -71,12 +69,6 @@ public import QuantumSystem.Analysis.Matrix.Order
 public import QuantumSystem.Analysis.Matrix.Pinching
 public import QuantumSystem.Analysis.Matrix.PosDef
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.DensityMatrix
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.Dual
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kraus
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.Kronecker
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.PartialTrace
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
 public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint

@@ -23,11 +23,15 @@ completely positive whenever `φ` is (`CompletelyPositiveMap.traceDual`). This i
 pairing `Σᵢⱼ tr(Qⱼᵢ Mᵢⱼ)` of the nonnegative block matrices `Q = (φ(|ξᵢ⟩⟨ξⱼ|))ᵢⱼ` and `M`.
 
 The trace dual of a `2`-positive map `φ` that is trace non-increasing on positive operators,
-equivalently `φ*(1) ≤ 1` (`ContinuousLinearMap.traceDual_one_le_one_iff`), is a normal Schwarz map
-`ContinuousLinearMap.dualSchwarzMap φ hφ : B(K) → B(H)`, unital when `φ` is trace preserving; for a
-quantum channel this is `QuantumChannel.dualSchwarzMap Φ`, the Heisenberg-picture channel. It is
-the map along which the data-processing inequality for Araki's relative entropy
-(`VonNeumannAlgebra.arakiEntropy_comp_le`) applies. No Kraus representation is chosen.
+equivalently `φ*(1) ≤ 1` (`ContinuousLinearMap.traceDual_one_le_one_iff`), is therefore a Schwarz
+map (`KPositiveMapClass.toSchwarzMap` applied to `KPositiveMap.traceDual 2 φ`), unital when `φ` is
+trace preserving (`isTracePreserving_iff_traceDual_one`). Transported to the bundled von Neumann
+algebras by `SchwarzMap.onBoundedLinearOperators`, it is normal
+(`VonNeumannAlgebra.isNormalMap_of_finiteDimensional`). For a quantum channel it is the Heisenberg
+picture of `Φ`, to which the data-processing inequality for Araki's relative entropy
+(`VonNeumannAlgebra.arakiEntropy_comp_le`) applies
+(`QuantumChannel.umegakiEntropy_comp_traceDual_le`).
+No Kraus representation is chosen.
 
 ## Main definitions
 
@@ -36,9 +40,6 @@ the map along which the data-processing inequality for Araki's relative entropy
   positive.
 * `SchwarzMap.onBoundedLinearOperators T : SchwarzMap 𝓑(K) 𝓑(H)` — a Schwarz map `B(K) → B(H)`
   between the bundled von Neumann algebras.
-* `ContinuousLinearMap.dualSchwarzMap φ hφ : SchwarzMap 𝓑(K) 𝓑(H)`: the trace dual of a
-  `2`-positive map with `φ*(1) ≤ 1` as a Schwarz map; `QuantumChannel.dualSchwarzMap Φ` for a
-  quantum channel.
 
 ## Main statements
 
@@ -46,9 +47,6 @@ the map along which the data-processing inequality for Araki's relative entropy
   matrices `Q` and `M`; `ContinuousLinearMap.trace_comp_nonneg`: `0 ≤ tr(A B)` for `A, B ≥ 0`.
 * `ContinuousLinearMap.traceDual_one_le_one_iff`: `φ*(1) ≤ 1` iff `φ` is trace non-increasing on
   positive operators.
-* `QuantumChannel.dualSchwarzMap_apply`, `QuantumChannel.dualSchwarzMap_one`,
-  `QuantumChannel.isNormalMap_dualSchwarzMap`: the dual channel acts as the trace dual, and it is
-  unital and normal.
 -/
 
 @[expose] public section
@@ -215,57 +213,5 @@ theorem traceDual_one_le_one_iff [OrderHomClass F (H →L[ℂ] H) (K →L[ℂ] K
     rw [h1, Complex.nonneg_iff, Complex.sub_re, Complex.sub_im, ← h₁.2, ← h₂.2, sub_self]
     exact ⟨sub_nonneg.2 (h _ hP), rfl⟩
 
-/-- The **dual** `φ* : B(K) → B(H)` of a `2`-positive map `φ : B(H) → B(K)` with `φ*(1) ≤ 1`, that
-is, a trace non-increasing one (`ContinuousLinearMap.traceDual_one_le_one_iff`), as a Schwarz map
-between the bundled von Neumann algebras: the trace dual is `2`-positive (`KPositiveMap.traceDual`)
-and sub-unital, hence a Schwarz map (`KPositiveMapClass.toSchwarzMap`). No Kraus representation of
-`φ` is chosen. -/
-noncomputable def dualSchwarzMap [KPositiveMapClass F 2 (H →L[ℂ] H) (K →L[ℂ] K)] (φ : F)
-    (hφ : traceDual φ 1 ≤ 1) : SchwarzMap 𝓑(K) 𝓑(H) :=
-  SchwarzMap.onBoundedLinearOperators <|
-    KPositiveMapClass.toSchwarzMap (KPositiveMap.traceDual 2 φ) hφ
-
-/-- The dual Schwarz map acts as the trace dual of `φ`. -/
-@[simp] theorem dualSchwarzMap_apply [KPositiveMapClass F 2 (H →L[ℂ] H) (K →L[ℂ] K)] (φ : F)
-    (hφ : traceDual φ 1 ≤ 1) (B : 𝓑(K)) :
-    (dualSchwarzMap φ hφ B : H →L[ℂ] H) = traceDual φ B :=
-  rfl
-
-/-- The dual of a trace-preserving map is unital. -/
-theorem dualSchwarzMap_one [KPositiveMapClass F 2 (H →L[ℂ] H) (K →L[ℂ] K)] (φ : F)
-    (hφ : IsTracePreserving φ) :
-    dualSchwarzMap φ (isTracePreserving_iff_traceDual_one.1 hφ).le 1 = 1 :=
-  Subtype.ext (isTracePreserving_iff_traceDual_one.1 hφ)
-
-/-- The dual Schwarz map is normal (finite dimensions). -/
-theorem isNormalMap_dualSchwarzMap [KPositiveMapClass F 2 (H →L[ℂ] H) (K →L[ℂ] K)] (φ : F)
-    (hφ : traceDual φ 1 ≤ 1) : VonNeumannAlgebra.IsNormalMap (dualSchwarzMap φ hφ) :=
-  VonNeumannAlgebra.isNormalMap_of_finiteDimensional _
-
 end ContinuousLinearMap
 
-/-! ### The dual of a quantum channel -/
-
-namespace QuantumChannel
-
-/-- The **dual channel** `Φ* : B(K) → B(H)` of a quantum channel, the Heisenberg picture of `Φ`,
-as a unital Schwarz map (`ContinuousLinearMap.dualSchwarzMap`, with `Φ*(1) = 1` by
-`QuantumChannel.traceDual_one`). -/
-noncomputable def dualSchwarzMap (Φ : QuantumChannel H K) : SchwarzMap 𝓑(K) 𝓑(H) :=
-  ContinuousLinearMap.dualSchwarzMap Φ Φ.traceDual_one.le
-
-/-- The dual channel acts as the trace dual of `Φ`. -/
-@[simp] theorem dualSchwarzMap_apply (Φ : QuantumChannel H K) (B : 𝓑(K)) :
-    (Φ.dualSchwarzMap B : H →L[ℂ] H) = ContinuousLinearMap.traceDual Φ B :=
-  rfl
-
-/-- The dual of a (trace-preserving) channel is unital. -/
-theorem dualSchwarzMap_one (Φ : QuantumChannel H K) : Φ.dualSchwarzMap 1 = 1 :=
-  Subtype.ext Φ.traceDual_one
-
-/-- The dual of a channel is normal (finite dimensions). -/
-theorem isNormalMap_dualSchwarzMap (Φ : QuantumChannel H K) :
-    VonNeumannAlgebra.IsNormalMap Φ.dualSchwarzMap :=
-  VonNeumannAlgebra.isNormalMap_of_finiteDimensional _
-
-end QuantumChannel

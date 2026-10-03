@@ -37,6 +37,8 @@ finite-dimensional quantum system.
   the right factor after swapping the two factors with `Equiv.prodComm`.
 * `Matrix.traceRight_kronecker`, `Matrix.traceLeft_kronecker` — the partial traces of a Kronecker
   product, `traceRight (X ⊗ Y) = Tr(Y) • X` and `traceLeft (X ⊗ Y) = Tr(X) • Y`.
+* `Matrix.trace_mul_kronecker_one_right` — the right partial trace is dual to `X ↦ X ⊗ 1`,
+  `Tr (ρ (X ⊗ 1)) = Tr (traceRight ρ X)`.
 -/
 
 @[expose] public section
@@ -156,6 +158,29 @@ variable {S : Type*} [CommSemiring S]
   ext i j
   simp only [traceLeft_apply, kroneckerMap_apply, smul_apply, smul_eq_mul, Matrix.trace,
     diag_apply, ← Finset.sum_mul]
+
+/-- **Duality of the right partial trace**: tracing `ρ` against the embedded observable `X ⊗ 1`
+is tracing its right partial trace against `X`, `Tr (ρ (X ⊗ 1)) = Tr (tr₂(ρ) X)`. -/
+lemma trace_mul_kronecker_one_right {n m : Type*} [Fintype n] [Fintype m] [DecidableEq m]
+    (ρ : Matrix (n × m) (n × m) S) (X : Matrix n n S) :
+    (ρ * (X ⊗ₖ (1 : Matrix m m S))).trace = (traceRight ρ * X).trace := by
+  unfold Matrix.trace
+  simp_rw [Matrix.diag_apply, Matrix.mul_apply, traceRight_apply]
+  rw [Fintype.sum_prod_type]
+  simp_rw [Fintype.sum_prod_type, Matrix.kronecker_apply, Matrix.one_apply]
+  have inner (a : n) (b : m) (a' : n) :
+      (∑ b' : m, ρ (a, b) (a', b') * (X a' a * (if b' = b then (1 : S) else 0))) =
+        ρ (a, b) (a', b) * X a' a := by
+    rw [Finset.sum_eq_single b]
+    · simp
+    · intro b' _ hb'
+      simp [hb']
+    · simp
+  simp_rw [inner]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun a' _ => ?_
+  rw [Finset.sum_mul]
 
 end Kronecker
 
