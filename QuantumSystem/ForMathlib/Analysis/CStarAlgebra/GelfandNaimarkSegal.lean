@@ -10,7 +10,6 @@ public import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.InnerProductSpace.Dual
 public import Mathlib.Analysis.Normed.Module.Normalize
-public import Mathlib.Analysis.Normed.Operator.Extend
 
 /-!
 # The cyclic vector of the GNS construction

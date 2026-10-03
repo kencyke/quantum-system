@@ -5,11 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
-public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.NonUnital
-public import Mathlib.Analysis.Matrix.HermitianFunctionalCalculus
 public import Mathlib.Analysis.Matrix.Order
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
 /-!
 # `StarAlgEquiv` instances and positive maps for matrix algebras

@@ -6,9 +6,6 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
-public import Mathlib.Analysis.Normed.Module.WeakDual
-public import Mathlib.Analysis.Real.Sqrt
-public import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 /-!
 # Norm computations in unital C*-algebras

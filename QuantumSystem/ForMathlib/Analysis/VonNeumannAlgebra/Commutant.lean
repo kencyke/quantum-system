@@ -8,9 +8,6 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
-public import Mathlib.Analysis.InnerProductSpace.Adjoint
-public import Mathlib.Algebra.Group.Center
-public import Mathlib.Algebra.Group.Equiv.Defs
 
 /-!
 # The commutant of a set, the generated von Neumann algebra, and unitary conjugation

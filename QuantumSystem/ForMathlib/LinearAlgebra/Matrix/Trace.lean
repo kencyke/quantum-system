@@ -5,7 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Data.Matrix.Composition
 public import Mathlib.LinearAlgebra.Matrix.Trace
 
 /-!
