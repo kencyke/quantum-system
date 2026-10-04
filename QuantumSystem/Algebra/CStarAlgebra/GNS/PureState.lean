@@ -6,14 +6,14 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
-public import QuantumSystem.Algebra.CStarAlgebra.PureState
+public import QuantumSystem.Algebra.CStarAlgebra.State.Pure
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
 
 /-!
 # Irreducibility of the GNS representation of a pure state
 
 For a pure state `ψ`, the canonical GNS representation
-`GNS.Representation.canonical ψ.toState.toPositiveLinearMap` is
+`GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)` is
 irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant subspace
 splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity forces
 one of them to vanish.
@@ -31,7 +31,7 @@ namespace GNS
 
 namespace Representation
 
-open scoped ComplexOrder ComplexConjugate CStarAlgebra InnerProduct NNReal ComplexHilbertSpace
+open scoped ComplexOrder ComplexConjugate CStarAlgebra InnerProduct NNReal
 open PositiveLinearMap
 
 local notation "⟪" x ", " y "⟫" => inner ℂ x y
@@ -77,19 +77,23 @@ lemma norm_sq_in_Icc (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁
   have h := norm_sq_decomposition T v₁ v₂ hξ horth
   exact ⟨sq_nonneg _, by linarith [sq_nonneg ‖v₂‖]⟩
 
+/-- **Purity forces a component of the cyclic vector to have norm `0` or `1`.** If the GNS
+cyclic vector of a pure state `ψ` splits as `ξ = v₁ + v₂` along a closed invariant submodule `W`
+(`v₁ ∈ W`, `v₂ ∈ Wᗮ`), then `‖v₁‖² ∈ {0, 1}`: otherwise `ψ` would be a proper convex combination
+of the two normalised vector functionals, contradicting its extremality. -/
 lemma trichotomy_from_purity {ψ : PureState A}
-    (W : ClosedSubmodule ℂ (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).H)
-    (hW : W ∈ (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).closedInvtSubmodule)
-    (v₁ v₂ : (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).H)
+    (W : ClosedSubmodule ℂ (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).H)
+    (hW : W ∈ (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).closedInvtSubmodule)
+    (v₁ v₂ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).H)
     (hv₁ : v₁ ∈ W.toSubmodule)
     (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
-    (hξ : (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).ξ = v₁ + v₂)
+    (hξ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
-  let T := GNS.Representation.canonical ψ.toState.toPositiveLinearMap
+  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)
   by_contra h_contra
   push Not at h_contra
-  have hψ : ‖ψ.toState.toPositiveLinearMap‖ₒₚ = 1 := ψ.toState.norm_eq_one
+  have hψ : ‖PositiveLinearMap.ofClass ψ.toState‖ₒₚ = 1 := ψ.toState.opNorm_ofClass_eq_one
   have h_in_Icc := hψ ▸ norm_sq_in_Icc T v₁ v₂ hξ horth
   have h_pos : 0 < ‖v₁‖ ^ 2 := lt_of_le_of_ne h_in_Icc.1 h_contra.1.symm
   have h_lt_one : ‖v₁‖ ^ 2 < 1 := lt_of_le_of_ne h_in_Icc.2 h_contra.2
@@ -138,7 +142,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
       apply ContinuousLinearMap.ext
       intro a
       have h_state := apply_eq_vectorFunctional_add T W hW v₁ v₂ hv₁ hv₂ hξ a
-      change ψ.toState.toPositiveLinearMap a = _
+      change PositiveLinearMap.ofClass ψ.toState a = _
       rw [h_state]
       -- Now everything is ℂ-linear, so `smul_apply` works and the normalizations cancel.
       have hrhs :
@@ -354,14 +358,14 @@ lemma eq_bot_of_norm_sq_eq_zero (T : Representation f)
 
 /-- **Main Theorem**: The GNS representation of a pure state is irreducible. -/
 theorem pureState_gns_isIrreducible {ψ : PureState A} :
-    (GNS.Representation.canonical ψ.toState.toPositiveLinearMap).IsIrreducible := by
-  let T := GNS.Representation.canonical ψ.toState.toPositiveLinearMap
-  refine ⟨T.π_ne_zero ψ.toState.toPositiveLinearMap_ne_zero, fun W hW => ?_⟩
+    (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).IsIrreducible := by
+  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)
+  refine ⟨T.π_ne_zero ψ.toState.ofClass_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
   rcases trichotomy_from_purity W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
   · exact Or.inr (eq_top_of_norm_sq_eq_opNorm T W hW v₁ v₂ hv₁ hξ horth
-      (h_one.trans ψ.toState.norm_eq_one.symm))
+      (h_one.trans ψ.toState.opNorm_ofClass_eq_one.symm))
 
 end Representation
 

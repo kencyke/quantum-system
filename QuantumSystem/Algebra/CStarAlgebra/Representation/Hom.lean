@@ -78,19 +78,25 @@ noncomputable def comp (S : Hom R₂ R₃) (T : Hom R₁ R₂) : Hom R₁ R₃ w
     rw [← hT] at hS
     exact hS
 
+/-- The bounded linear map underlying the identity intertwiner is `ContinuousLinearMap.id`. -/
 @[simp] lemma id_toContinuousLinearMap (R : CStarRep A) :
     (Hom.id R).toContinuousLinearMap = ContinuousLinearMap.id ℂ R.H := rfl
 
+/-- The bounded linear map underlying a composite intertwiner is the composite of the underlying
+maps. -/
 @[simp] lemma comp_toContinuousLinearMap (S : Hom R₂ R₃) (T : Hom R₁ R₂) :
     (S.comp T).toContinuousLinearMap =
       S.toContinuousLinearMap ∘L T.toContinuousLinearMap := rfl
 
+/-- The identity intertwiner is a left unit for composition. -/
 @[simp] lemma id_comp (T : Hom R₁ R₂) : (Hom.id R₂).comp T = T := by
   ext; simp
 
+/-- The identity intertwiner is a right unit for composition. -/
 @[simp] lemma comp_id (T : Hom R₁ R₂) : T.comp (Hom.id R₁) = T := by
   ext; simp
 
+/-- Composition of intertwiners is associative. -/
 lemma comp_assoc {R₄ : CStarRep A}
     (U : Hom R₃ R₄) (S : Hom R₂ R₃) (T : Hom R₁ R₂) :
     (U.comp S).comp T = U.comp (S.comp T) := by
@@ -107,6 +113,7 @@ noncomputable def toHom (U : UnitaryEquiv R₁ R₂) : Hom R₁ R₂ where
   toContinuousLinearMap := U.toLinearIsometryEquiv
   intertwines := U.intertwines
 
+/-- The bounded linear map underlying the intertwiner `U.toHom` is the unitary `U` itself. -/
 @[simp] lemma toHom_toContinuousLinearMap (U : UnitaryEquiv R₁ R₂) :
     U.toHom.toContinuousLinearMap = U.toLinearIsometryEquiv := rfl
 
@@ -114,6 +121,7 @@ noncomputable def toHom (U : UnitaryEquiv R₁ R₂) : Hom R₁ R₂ where
 @[simp] lemma symm_toHom (U : UnitaryEquiv R₁ R₂) :
     U.symm.toHom.toContinuousLinearMap = (U.toLinearIsometryEquiv.symm : R₂.H →L[ℂ] R₁.H) := rfl
 
+/-- The intertwiner of the identity unitary equivalence is the identity intertwiner. -/
 @[simp] lemma refl_toHom (R : CStarRep A) :
     (UnitaryEquiv.refl R).toHom = Hom.id R := by
   ext; rfl

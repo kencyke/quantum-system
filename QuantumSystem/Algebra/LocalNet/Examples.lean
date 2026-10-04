@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.LocalNet.InfiniteRegion
+public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 
 /-!
 # Witnesses for the local-net interfaces
@@ -13,8 +14,9 @@ public import QuantumSystem.Algebra.LocalNet.InfiniteRegion
 Every class and structure the local-net development introduces is inhabited here, by explicit
 construction. Without such witnesses the theorems of `LocalNet.Net`, `LocalNet.QuasiLocalAlgebra`
 and `LocalNet.SplitProperty` would be unfalsifiable: nobody could apply them, and no construction
-could contradict them. In particular the split property, being a `Prop`-valued hypothesis that
-nothing in the development proves, needs a model exhibited before it can be believed consistent.
+could contradict them. In particular the split property is a `Prop`-valued hypothesis which the
+development proves for no net in general (it fails for `diagonalNet` below), so a model with it
+must be exhibited before the hypothesis can be believed consistent.
 
 The witnesses are deliberately the smallest ones that are not degenerate in the way that matters.
 

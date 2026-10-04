@@ -5,20 +5,39 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.Matrix.QuantumChannel.CPTP
+public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
-public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Matrix
 
 /-!
 # The Choi–Kraus theorem
 
 For a linear map `Φ : M_n(ℂ) → M_m(ℂ)` the following are equivalent:
 1. `Φ` is completely positive;
-2. `Φ` is `n`-positive: `id_n ⊗ Φ` is positive, for the single block size `n`;
+2. `Φ` is `k`-positive (`KPositiveMap`) for some `k ≥ min(n, m)`: applied entrywise, it preserves
+   nonnegativity in the C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)` of `k × k` block
+   matrices, for the single block size `k`; equivalently `id_k ⊗ Φ` is positive, the flattened
+   `kn × kn` matrices staying positive semidefinite
+   (`KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`);
 3. its Choi matrix `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)` is positive semidefinite;
 4. `Φ` has a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` with at most `nm` operators; indeed with
    exactly `rank J(Φ)` operators, the minimal number: every Kraus representation of `Φ` has at
    least `rank J(Φ)` operators.
+
+## Derivation from bounded operators
+
+These are corollaries of the Choi–Kraus theorem for bounded operators on finite-dimensional
+Hilbert spaces (`QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/Choi.lean` and
+`QuantumSystem/Analysis/CStarAlgebra/QuantumChannel/Stinespring.lean`). The ⋆-isomorphism
+`Matrix.toEuclideanCLM : M_n(ℂ) ≃ B(ℂⁿ)` turns `Φ` into its **operator form**
+`Ψ : B(ℂⁿ) → B(ℂᵐ)`, `Ψ(A') = Φ(A)'` for the operator `A'` of each matrix `A`:
+* complete and `k`-positivity transport along it (`CompletelyPositiveMap.arrowCongr`,
+  `KPositiveMap.arrowCongr`);
+* a Kraus representation by matrices `Kₐ` is one by their operators `K'ₐ`
+  (`Matrix.toEuclideanCLM_mul_mul_conjTranspose`);
+* the Choi matrix `J(Φ)` is the matrix of the Choi operator `J_e(Ψ)` in the product `e ⊗ e'` of the
+  standard bases of `ℂⁿ` and `ℂᵐ` (`Matrix.choiMatrix_eq_toMatrix_choi`), so it has the positivity
+  and the rank of `J_e(Ψ)`.
 
 ## Main definitions
 
@@ -27,38 +46,40 @@ For a linear map `Φ : M_n(ℂ) → M_m(ℂ)` the following are equivalent:
 ## Main statements
 
 * `Matrix.choiMatrix_eq_sum_kronecker`: `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)`.
-* `Matrix.isCompletelyPositive_iff_posSemidef_comp_map`: complete positivity in matrix form,
-  `id_r ⊗ Φ` sends positive semidefinite `rn × rn` matrices to positive semidefinite `rm × rm`
-  matrices for every `r : ℕ` (block index `Fin r`);
-  `Matrix.IsCompletelyPositive.posSemidef_comp_map` gives the forward direction for block matrices
-  indexed by any finite type `k`.
-* `Matrix.isCompletelyPositive_of_kraus`: a map with a Kraus representation, indexed by any finite
-  type, is CP.
-* `Matrix.posSemidef_choiMatrix_of_posSemidef_comp_map`: the Choi matrix of an `n`-positive map is
-  positive semidefinite; `Matrix.IsCompletelyPositive.posSemidef_choiMatrix` is the CP case.
-* `Matrix.exists_kraus_of_posSemidef_choiMatrix`: a map with positive semidefinite Choi matrix has
-  a Kraus representation with `rank J(Φ)` operators.
+* `Matrix.choiMatrix_eq_toMatrix_choi`: the Choi matrix is the matrix of the Choi operator of the
+  operator form; hence `Matrix.posSemidef_choiMatrix_iff_nonneg_choi` and
+  `Matrix.rank_choiMatrix_eq_finrank_range_choi`.
+* `KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`: `k`-positivity is positivity of
+  `id_k ⊗ Φ` on flattened `kn × kn` matrices.
 * `Matrix.rank_choiMatrix_le_card_of_kraus`: every Kraus representation has at least `rank J(Φ)`
-  operators.
-* `Matrix.isCompletelyPositive_iff_posSemidef_choiMatrix`,
-  `Matrix.isCompletelyPositive_iff_posSemidef_comp_map_self`,
-  `Matrix.isCompletelyPositive_iff_exists_kraus`: Choi's theorem.
-* `Matrix.IsCompletelyPositive.exists_kraus_rank`: a CP map has a Kraus representation with
-  exactly `rank J(Φ)` operators, the minimal number by `Matrix.rank_choiMatrix_le_card_of_kraus`.
-* `Matrix.IsCompletelyPositive.exists_kraus`: a CP map has a Kraus representation with at most
-  `nm` operators.
+  operators; `Matrix.rank_choiMatrix_eq_card_iff_linearIndependent`: exactly `rank J(Φ)` iff the
+  Kraus operators are linearly independent.
+
+**Choi's theorem**, where a linear map `Φ` is completely positive when it is the linear map of
+some `φ : Matrix n n ℂ →CP Matrix m m ℂ`:
+
+* `CompletelyPositiveMap.exists_coe_eq_iff_posSemidef_choiMatrix`: 1 ⟺ 3.
+* `CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`: 1 ⟺ 2;
+  `CompletelyPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`: the same with `id_k ⊗ Φ`
+  positive on flattened matrices, Choi's original form.
+* `CompletelyPositiveMap.exists_coe_eq_iff_exists_kraus`: 1 ⟺ 4.
+
+The two directions separately, for a completely positive map `φ` (1 ⇒ 2, 4) and for a linear map
+`Φ` with the data of 4 (4 ⇒ 1):
+
+* `CompletelyPositiveMapClass.instKPositiveMapClass`: a completely positive map is `k`-positive for
+  every block size `k`.
+* `CompletelyPositiveMap.exists_kraus_rank`: a CP map has a Kraus representation with exactly
+  `rank J(φ)` operators, the minimal number by `Matrix.rank_choiMatrix_le_card_of_kraus`.
+* `CompletelyPositiveMap.exists_coe_eq_of_kraus`: a map with a Kraus representation, indexed by any
+  finite type, is CP.
 
 ## Implementation notes
 
-The Choi matrix uses Choi's ordering of the tensor factors, input first: `Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)`.
-Watrous uses the opposite order `Σᵢⱼ Φ(Eᵢⱼ) ⊗ Eᵢⱼ`; the two differ by a swap of tensor factors, a
-unitary conjugation, so positive semidefiniteness is unaffected.
-
-The Kraus representation is obtained from the spectral rank-one decomposition
-`J(Φ) = Σₐ vₐ vₐᴴ` of the Choi matrix into `rank J(Φ)` terms
-(`Matrix.PosSemidef.exists_eq_sum_vecMulVec_rank`), with `Kₐ b i = vₐ (i, b)`. Complete positivity
-of a Kraus map is checked on flattened block matrices, where `id_r ⊗ Φ` is conjugation by the
-matrices `1 ⊗ Kₐ`.
+The Choi matrix uses Choi's ordering of the tensor factors, input first: `Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)`, as
+the Choi operator `ContinuousLinearMap.choi` does. Watrous uses the opposite order
+`Σᵢⱼ Φ(Eᵢⱼ) ⊗ Eᵢⱼ`; the two differ by a swap of tensor factors, a unitary conjugation, so positive
+semidefiniteness is unaffected.
 
 ## References
 
@@ -72,180 +93,297 @@ matrices `1 ⊗ Kₐ`.
 namespace Matrix
 
 variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
+variable {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)]
 
 open scoped ComplexOrder Kronecker
 
 /-! ### The Choi matrix -/
 
 omit [Fintype n] [Fintype m] [DecidableEq m] in
-/-- The Choi matrix `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)` of a linear map `Φ : M_n(ℂ) → M_m(ℂ)`, indexed so that
+/-- The Choi matrix `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)` of a map `Φ : M_n(ℂ) → M_m(ℂ)`, indexed so that
 `J(Φ) ((i, b), (j, b')) = Φ(Eᵢⱼ) b b'`. -/
-def choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) : Matrix (n × m) (n × m) ℂ :=
+def choiMatrix (Φ : F) : Matrix (n × m) (n × m) ℂ :=
   of fun p q => Φ (single p.1 q.1 1) p.2 q.2
 
 omit [Fintype m] [DecidableEq m] in
 /-- The Choi matrix is `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)`. -/
-lemma choiMatrix_eq_sum_kronecker (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
+lemma choiMatrix_eq_sum_kronecker (Φ : F) :
     choiMatrix Φ = ∑ i, ∑ j, single i j (1 : ℂ) ⊗ₖ Φ (single i j 1) := by
   ext ⟨i, b⟩ ⟨j, b'⟩
   simp [choiMatrix, Matrix.sum_apply, kroneckerMap_apply, single_apply, ite_and]
 
-omit [Fintype m] [DecidableEq m] in
-/-- A linear map is recovered from its Choi matrix: `Φ(A) b b' = Σᵢⱼ Aᵢⱼ J(Φ) ((i, b), (j, b'))`. -/
-lemma apply_eq_sum_choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) (A : Matrix n n ℂ)
-    (b b' : m) : Φ A b b' = ∑ i, ∑ j, A i j * choiMatrix Φ (i, b) (j, b') := by
-  have (i j : n) : single i j (A i j) = A i j • single i j (1 : ℂ) := by
-    rw [smul_single, smul_eq_mul, mul_one]
-  conv_lhs => rw [matrix_eq_sum_single A]
-  simp only [this, map_sum, map_smul, Matrix.sum_apply, Matrix.smul_apply, smul_eq_mul]
-  rfl
+/-! ### The Choi matrix and the Choi operator -/
 
-/-! ### Complete positivity in matrix form -/
+section ChoiOperator
 
-open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- Complete positivity in matrix form: `id_k ⊗ Φ` sends positive semidefinite `kn × kn` matrices
-to positive semidefinite `km × km` matrices, for every finite index type `k`. -/
-theorem IsCompletelyPositive.posSemidef_comp_map {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) {k : Type*} [Finite k] {X : Matrix k k (Matrix n n ℂ)}
-    (hX : (Matrix.comp k k n n ℂ X).PosSemidef) : (Matrix.comp k k m m ℂ (X.map Φ)).PosSemidef := by
-  have := Fintype.ofFinite k
-  exact CStarMatrix.nonneg_iff_posSemidef_comp.mp <|
-    hΦ.toCompletelyPositiveMap.map_cstarMatrix_nonneg (CStarMatrix.ofMatrix X)
-      (CStarMatrix.nonneg_iff_posSemidef_comp.mpr hX)
+open InnerProductSpace TensorProduct
+open scoped TensorProduct InnerProductSpace
 
-/-- A linear map is completely positive iff `id_r ⊗ Φ` sends positive semidefinite `rn × rn`
-matrices to positive semidefinite `rm × rm` matrices, for every `r`. -/
-theorem isCompletelyPositive_iff_posSemidef_comp_map {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} :
-    IsCompletelyPositive Φ ↔ ∀ (r : ℕ) (X : Matrix (Fin r) (Fin r) (Matrix n n ℂ)),
-      (comp _ _ n n ℂ X).PosSemidef → (comp _ _ m m ℂ (X.map Φ)).PosSemidef :=
-  ⟨fun h _ _ hX => IsCompletelyPositive.posSemidef_comp_map h hX, fun h r M hM =>
-    CStarMatrix.nonneg_iff_posSemidef_comp.mpr
-      (h r M (CStarMatrix.nonneg_iff_posSemidef_comp.mp hM))⟩
+variable {G : Type*} [FunLike G (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
+  (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)]
 
-/-! ### Kraus maps are completely positive -/
+/-- The Choi matrix is the matrix of the Choi operator: if `Ψ : B(ℂⁿ) → B(ℂᵐ)` is the operator form
+of `Φ : M_n(ℂ) → M_m(ℂ)`, `Ψ(A') = Φ(A)'` for the operator `A' = Matrix.toEuclideanCLM A` of each
+matrix `A`, then `J(Φ)` is the matrix of the Choi operator `J_e(Ψ)` (`ContinuousLinearMap.choi`)
+in the product `e ⊗ e'` of the standard bases. Its entries are
+`⟪eᵢ ⊗ e'ₖ, J_e(Ψ) (eⱼ ⊗ e'ₗ)⟫ = ⟪e'ₖ, Ψ(|eᵢ⟩⟨eⱼ|) e'ₗ⟫ = Φ(Eᵢⱼ) k l`
+(`ContinuousLinearMap.adjoint_mkL_comp_choi_comp_mkL`, `Matrix.toEuclideanCLM_single`). -/
+theorem choiMatrix_eq_toMatrix_choi {Φ : F} {Ψ : G}
+    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    choiMatrix Φ =
+      LinearMap.toMatrix
+        ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis
+        ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis
+        (ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ :
+          EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m →ₗ[ℂ] EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m) := by
+  ext ⟨i, k⟩ ⟨j, l⟩
+  rw [LinearMap.toMatrix_apply, OrthonormalBasis.coe_toBasis_repr_apply,
+    OrthonormalBasis.repr_apply_apply, OrthonormalBasis.coe_toBasis,
+    OrthonormalBasis.tensorProduct_apply, OrthonormalBasis.tensorProduct_apply,
+    ContinuousLinearMap.coe_coe, ← mkL_apply_apply, ← mkL_apply_apply,
+    ← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.comp_apply,
+    ← ContinuousLinearMap.comp_apply, ContinuousLinearMap.comp_assoc,
+    ContinuousLinearMap.adjoint_mkL_comp_choi_comp_mkL]
+  simp [← toEuclideanCLM_single, h, choiMatrix, EuclideanSpace.inner_single_left]
 
-omit [Fintype m] [DecidableEq n] [DecidableEq m] in
-/-- Applying a Kraus map `Φ(A) = Σₐ Kₐ A Kₐᴴ` entrywise to a block matrix is conjugation of the
-flattened block matrix by `1 ⊗ Kₐ`, summed over `a`. -/
-private lemma comp_map_eq_sum_kronecker {s : Type*} [Fintype s] [DecidableEq s]
-    {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} {ι : Type*} [Fintype ι] {K : ι → Matrix m n ℂ}
-    (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) (M : CStarMatrix s s (Matrix n n ℂ)) :
-    comp s s m m ℂ (M.map Φ) =
-      ∑ a, ((1 : Matrix s s ℂ) ⊗ₖ K a) * comp s s n n ℂ M * ((1 : Matrix s s ℂ) ⊗ₖ K a)ᴴ := by
-  ext ⟨p, b⟩ ⟨q, b'⟩
-  change Φ (M p q) b b' = _
-  have hc : ∀ i j, comp s s n n ℂ M i j = M i.1 j.1 i.2 j.2 := fun _ _ => rfl
-  simp [hK, hc, mul_apply, kroneckerMap_apply, Fintype.sum_prod_type, one_apply, Matrix.sum_apply,
-    conjTranspose_apply, ite_mul, Finset.sum_mul, apply_ite (starRingEnd ℂ), mul_ite]
+/-- The Choi matrix is positive semidefinite iff the Choi operator `J_e(Ψ)` of the operator form
+`Ψ` is positive (`Matrix.choiMatrix_eq_toMatrix_choi`). -/
+theorem posSemidef_choiMatrix_iff_nonneg_choi {Φ : F} {Ψ : G}
+    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    (choiMatrix Φ).PosSemidef ↔ 0 ≤ ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ := by
+  rw [choiMatrix_eq_toMatrix_choi h, LinearMap.posSemidef_toMatrix_iff,
+    ContinuousLinearMap.isPositive_toLinearMap_iff, ContinuousLinearMap.nonneg_iff_isPositive]
 
-/-- A linear map with a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` is completely positive. -/
-theorem isCompletelyPositive_of_kraus {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} {ι : Type*}
-    [Fintype ι] (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
-    IsCompletelyPositive Φ := fun s M hM => by
-  rw [CStarMatrix.nonneg_iff_posSemidef_comp] at hM ⊢
-  rw [comp_map_eq_sum_kronecker hK]
-  exact posSemidef_sum _ fun a _ => hM.mul_mul_conjTranspose_same _
+/-- The rank of the Choi matrix is the rank of the Choi operator `J_e(Ψ)` of the operator form `Ψ`
+(`Matrix.choiMatrix_eq_toMatrix_choi`). -/
+theorem rank_choiMatrix_eq_finrank_range_choi {Φ : F} {Ψ : G}
+    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    (choiMatrix Φ).rank = Module.finrank ℂ (LinearMap.range
+      (ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ :
+        EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m →ₗ[ℂ] EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m)) := by
+  rw [choiMatrix_eq_toMatrix_choi h, rank_eq_finrank_range_toLin _
+    ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis
+    ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis,
+    toLin_toMatrix]
 
-/-! ### The Choi matrix of a completely positive map -/
-
-omit [Fintype n] [Fintype m] [DecidableEq m] in
-/-- The Choi matrix of an `n`-positive map is positive semidefinite: it is `id_n ⊗ Φ` applied to
-the block matrix `(Eᵢⱼ)ᵢⱼ`, whose flattening `ω ωᴴ` is `n` times the rank-one projection onto the
-normalised maximally entangled vector `ω / √n`, `ω = Σᵢ eᵢ ⊗ eᵢ`. Only the single block size `n`
-is used. -/
-theorem posSemidef_choiMatrix_of_posSemidef_comp_map [Finite n]
-    {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : ∀ X : Matrix n n (Matrix n n ℂ),
-      (comp n n n n ℂ X).PosSemidef → (comp n n m m ℂ (X.map Φ)).PosSemidef) :
-    (choiMatrix Φ).PosSemidef := by
-  let ω : n × n → ℂ := fun p => if p.1 = p.2 then 1 else 0
-  refine hΦ (of fun i j => single i j 1) ?_
-  convert posSemidef_vecMulVec_self_star ω using 1
-  ext ⟨i, a⟩ ⟨j, b⟩
-  change single i j (1 : ℂ) a b = _
-  by_cases hi : i = a <;> by_cases hj : j = b <;> simp [ω, vecMulVec_apply, hi, hj]
-
-/-- The Choi matrix of a completely positive map is positive semidefinite. -/
-theorem IsCompletelyPositive.posSemidef_choiMatrix {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) : (choiMatrix Φ).PosSemidef :=
-  posSemidef_choiMatrix_of_posSemidef_comp_map fun _ hX => hΦ.posSemidef_comp_map hX
-
-/-! ### Kraus representation from the Choi matrix -/
+/-- The operator form of a Kraus map `A ↦ Σₐ Kₐ A Kₐᴴ` is the Kraus map of the operators
+`K'ₐ : ℂⁿ →L ℂᵐ` of the `Kₐ` (`Matrix.toEuclideanCLM_mul_mul_conjTranspose`). -/
+private lemma toEuclideanCLM_sum_mul_mul_conjTranspose {ι : Type*} [Fintype ι]
+    (K : ι → Matrix m n ℂ) (A : Matrix n n ℂ) :
+    toEuclideanCLM (n := m) (𝕜 := ℂ) (∑ a, K a * A * (K a)ᴴ) =
+      CompletelyPositiveMap.ofKraus (fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a)))
+        (toEuclideanCLM (n := n) (𝕜 := ℂ) A) := by
+  rw [map_sum, CompletelyPositiveMap.ofKraus_apply]
+  simp only [toEuclideanCLM_mul_mul_conjTranspose]
 
 omit [DecidableEq m] in
-/-- A linear map whose Choi matrix is positive semidefinite has a Kraus representation
-`Φ(A) = Σₐ Kₐ A Kₐᴴ` with `rank J(Φ)` operators. -/
-theorem exists_kraus_of_posSemidef_choiMatrix {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : (choiMatrix Φ).PosSemidef) :
-    ∃ K : Fin (choiMatrix Φ).rank → Matrix m n ℂ, ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ := by
-  obtain ⟨v, hv⟩ := hΦ.exists_eq_sum_vecMulVec_rank
-  refine ⟨fun a => of fun b i => v a (i, b), fun A => ?_⟩
-  ext b b'
-  rw [apply_eq_sum_choiMatrix]
-  conv_lhs => rw [hv]
-  simp only [Matrix.sum_apply, mul_apply, vecMulVec_apply, conjTranspose_apply, of_apply,
-    Finset.mul_sum, Finset.sum_mul, Pi.star_apply, RCLike.star_def]
-  conv_rhs => rw [Finset.sum_comm]; enter [2, j]; rw [Finset.sum_comm]
-  rw [Finset.sum_comm]
-  refine Finset.sum_congr rfl fun _ _ => Finset.sum_congr rfl fun _ _ =>
-    Finset.sum_congr rfl fun _ _ => ?_
-  ring
-
-omit [DecidableEq m] in
-/-- Every Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` has at least `rank J(Φ)` operators: the Choi
-matrix is `W Wᴴ`, where the columns of `W` are the vectorised Kraus operators. -/
-theorem rank_choiMatrix_le_card_of_kraus {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} {ι : Type*}
-    [Fintype ι] (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
+/-- Every Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` has at least `rank J(Φ)` operators: its
+operators `K'ₐ` are a Kraus representation of the operator form
+(`ContinuousLinearMap.finrank_range_choi_le_card`). -/
+theorem rank_choiMatrix_le_card_of_kraus {Φ : F} {ι : Type*} [Fintype ι] (K : ι → Matrix m n ℂ)
+    (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
     (choiMatrix Φ).rank ≤ Fintype.card ι := by
-  let W : Matrix (n × m) ι ℂ := of fun p a => K a p.2 p.1
-  have hJ : choiMatrix Φ = W * Wᴴ := by
-    ext ⟨i, b⟩ ⟨j, b'⟩
-    simp [choiMatrix, hK, W, mul_apply, Matrix.sum_apply, conjTranspose_apply, single_apply,
-      ite_and, Finset.sum_ite_eq]
-  rw [hJ]
-  exact (rank_mul_le_left _ _).trans (rank_le_card_width W)
+  classical
+  set T : ι → EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ m :=
+    fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a))
+  have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (n := n) (𝕜 := ℂ) A) =
+      toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A) := by
+    rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
+  rw [rank_choiMatrix_eq_finrank_range_choi h]
+  exact ContinuousLinearMap.finrank_range_choi_le_card _ (CompletelyPositiveMap.ofKraus_apply T)
 
-/-! ### Choi's theorem -/
+omit [DecidableEq m] in
+/-- A Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` has exactly the minimal number `rank J(Φ)` of
+operators iff its Kraus operators are linearly independent: so are their operators `K'ₐ`, a Kraus
+representation of the operator form
+(`ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent`). -/
+theorem rank_choiMatrix_eq_card_iff_linearIndependent {Φ : F} {ι : Type*} [Fintype ι]
+    (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
+    (choiMatrix Φ).rank = Fintype.card ι ↔ LinearIndependent ℂ K := by
+  classical
+  set T : ι → EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ m :=
+    fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a))
+  have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (n := n) (𝕜 := ℂ) A) =
+      toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A) := by
+    rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
+  rw [rank_choiMatrix_eq_finrank_range_choi h,
+    ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent _
+      (CompletelyPositiveMap.ofKraus_apply T)]
+  exact LinearMap.linearIndependent_iff
+    ((LinearMap.toContinuousLinearMap : (EuclideanSpace ℂ n →ₗ[ℂ] EuclideanSpace ℂ m) ≃ₗ[ℂ] _).toLinearMap ∘ₗ
+      (toEuclideanLin : Matrix m n ℂ ≃ₗ[ℂ] _).toLinearMap)
+    (by simp)
 
-/-- **Choi's theorem**: a linear map is completely positive iff its Choi matrix is positive
-semidefinite. -/
-theorem isCompletelyPositive_iff_posSemidef_choiMatrix {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} :
-    IsCompletelyPositive Φ ↔ (choiMatrix Φ).PosSemidef :=
-  ⟨IsCompletelyPositive.posSemidef_choiMatrix, fun h =>
-    let ⟨K, hK⟩ := exists_kraus_of_posSemidef_choiMatrix h
-    isCompletelyPositive_of_kraus K hK⟩
-
-/-- **Choi's theorem**, `n`-positivity form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely
-positive iff it is `n`-positive, i.e. `id_n ⊗ Φ` sends positive semidefinite `n² × n²` matrices to
-positive semidefinite `nm × nm` matrices. -/
-theorem isCompletelyPositive_iff_posSemidef_comp_map_self
-    {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} :
-    IsCompletelyPositive Φ ↔ ∀ X : Matrix n n (Matrix n n ℂ),
-      (comp n n n n ℂ X).PosSemidef → (comp n n m m ℂ (X.map Φ)).PosSemidef :=
-  ⟨fun h _ hX => h.posSemidef_comp_map hX, fun h =>
-    isCompletelyPositive_iff_posSemidef_choiMatrix.mpr
-      (posSemidef_choiMatrix_of_posSemidef_comp_map h)⟩
-
-/-- A completely positive map has a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` with exactly
-`rank J(Φ)` operators. This is the minimal number (`Matrix.rank_choiMatrix_le_card_of_kraus`). -/
-theorem IsCompletelyPositive.exists_kraus_rank {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) :
-    ∃ K : Fin (choiMatrix Φ).rank → Matrix m n ℂ, ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ :=
-  exists_kraus_of_posSemidef_choiMatrix hΦ.posSemidef_choiMatrix
-
-/-- A completely positive map `Φ : M_n(ℂ) → M_m(ℂ)` has a Kraus representation
-`Φ(A) = Σₐ Kₐ A Kₐᴴ` with at most `nm` operators. -/
-theorem IsCompletelyPositive.exists_kraus {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
-    (hΦ : IsCompletelyPositive Φ) :
-    ∃ r ≤ Fintype.card n * Fintype.card m,
-      ∃ K : Fin r → Matrix m n ℂ, ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ :=
-  ⟨_, (rank_le_card_width (choiMatrix Φ)).trans_eq (Fintype.card_prod n m), hΦ.exists_kraus_rank⟩
-
-/-- **Choi–Kraus theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive iff it has
-a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` with at most `nm` operators. -/
-theorem isCompletelyPositive_iff_exists_kraus {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ} :
-    IsCompletelyPositive Φ ↔ ∃ r ≤ Fintype.card n * Fintype.card m,
-      ∃ K : Fin r → Matrix m n ℂ, ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ :=
-  ⟨IsCompletelyPositive.exists_kraus, fun ⟨_, _, K, hK⟩ => isCompletelyPositive_of_kraus K hK⟩
+end ChoiOperator
 
 end Matrix
+
+/-! ### `k`-positivity in matrix form -/
+
+namespace KPositiveMap
+
+open Matrix
+open scoped ComplexOrder CStarAlgebra
+
+variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **`k`-positivity in Choi's form**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is `k`-positive iff
+`id_k ⊗ Φ` is positive, that is, applying `Φ` entrywise to a `k × k` block matrix `X` whose
+flattening is a positive semidefinite `kn × kn` matrix gives a block matrix whose flattening is a
+positive semidefinite `km × km` matrix. The order of `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)`
+in the definition of `KPositiveMap` is positive semidefiniteness of the flattening
+(`CStarMatrix.nonneg_iff_posSemidef_comp`). -/
+theorem exists_coe_eq_iff_forall_posSemidef_comp_map (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) (k : ℕ) :
+    (∃ ψ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ),
+        (ψ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∀ X : Matrix (Fin k) (Fin k) (Matrix n n ℂ), (Matrix.comp _ _ n n ℂ X).PosSemidef →
+        (Matrix.comp _ _ m m ℂ (X.map Φ)).PosSemidef := by
+  constructor
+  · rintro ⟨ψ, rfl⟩ X hX
+    exact CStarMatrix.nonneg_iff_posSemidef_comp.1 <|
+      ψ.map_cstarMatrix_nonneg' (CStarMatrix.ofMatrix X)
+        (CStarMatrix.nonneg_iff_posSemidef_comp.2 hX)
+  · intro h
+    refine ⟨⟨Φ, fun M hM => ?_⟩, rfl⟩
+    rw [CStarMatrix.nonneg_iff_posSemidef_comp] at hM ⊢
+    exact h M hM
+
+end KPositiveMap
+
+/-! ### Choi's theorem for completely positive maps -/
+
+namespace CompletelyPositiveMap
+
+open Matrix
+open scoped ComplexOrder Kronecker CStarAlgebra
+
+variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
+
+/-- The operator form `A' ↦ Φ(A)'` of a linear map `Φ` of matrices, along the ⋆-isomorphisms
+`Matrix.toEuclideanCLM`. -/
+private lemma arrowCongr_toEuclideanCLM_apply (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
+    (A : Matrix n n ℂ) :
+    (toEuclideanCLM (n := n) (𝕜 := ℂ)).toAlgEquiv.toLinearEquiv.arrowCongr
+      (toEuclideanCLM (n := m) (𝕜 := ℂ)).toAlgEquiv.toLinearEquiv Φ
+      (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A) := by
+  simp
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- A linear map `Φ` of matrices is completely positive iff its operator form
+`Ψ : B(ℂⁿ) → B(ℂᵐ)` is: completely positive maps transport along the ⋆-isomorphisms
+`Matrix.toEuclideanCLM` (`CompletelyPositiveMap.arrowCongr`). -/
+private lemma exists_coe_eq_iff_toEuclideanCLM {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
+    {Ψ : (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) →ₗ[ℂ]
+      (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)}
+    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∃ ψ : (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) →CP
+          (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m),
+        (ψ : (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) →ₗ[ℂ]
+          (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)) = Ψ := by
+  constructor
+  · rintro ⟨φ, rfl⟩
+    refine ⟨arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ)) φ,
+      LinearMap.ext fun X => ?_⟩
+    obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (n := n) (𝕜 := ℂ)) X
+    rw [h]
+    simp
+  · rintro ⟨ψ, rfl⟩
+    refine ⟨(arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ))).symm ψ,
+      LinearMap.ext fun A => EquivLike.injective (toEuclideanCLM (n := m) (𝕜 := ℂ)) ?_⟩
+    rw [← h]
+    simp
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- A linear map with a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ`, indexed by any finite type, is
+completely positive: its operator form is the Kraus map of the operators of the `Kₐ`
+(`CompletelyPositiveMap.ofKraus`). -/
+theorem exists_coe_eq_of_kraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
+    (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
+    ∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ := by
+  refine (exists_coe_eq_iff_toEuclideanCLM (arrowCongr_toEuclideanCLM_apply Φ)).2
+    ⟨ofKraus fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a)),
+      LinearMap.ext fun X => ?_⟩
+  obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (n := n) (𝕜 := ℂ)) X
+  rw [arrowCongr_toEuclideanCLM_apply, hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
+  rfl
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- A completely positive map has a Kraus representation `φ(A) = Σₐ Kₐ A Kₐᴴ` with exactly
+`rank J(φ)` operators. This is the minimal number (`Matrix.rank_choiMatrix_le_card_of_kraus`). The
+`Kₐ` are the matrices of Kraus operators of the operator form of `φ`
+(`CompletelyPositiveMap.exists_kraus_finrank_range_choi`). -/
+theorem exists_kraus_rank (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
+    ∃ K : Fin (choiMatrix φ).rank → Matrix m n ℂ, ∀ A, φ A = ∑ a, K a * A * (K a)ᴴ := by
+  set ψ := arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ)) φ
+  have hψ (A : Matrix n n ℂ) : ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) =
+      toEuclideanCLM (n := m) (𝕜 := ℂ) (φ A) := by
+    simp [ψ]
+  rw [rank_choiMatrix_eq_finrank_range_choi hψ]
+  have hT := exists_kraus_finrank_range_choi (EuclideanSpace.basisFun n ℂ) ψ
+  obtain ⟨T, hT⟩ := hT
+  refine ⟨fun a => toEuclideanLin.symm (LinearMap.toContinuousLinearMap.symm (T a)),
+    fun A => EquivLike.injective (toEuclideanCLM (n := m) (𝕜 := ℂ)) ?_⟩
+  rw [← hψ, hT, toEuclideanCLM_sum_mul_mul_conjTranspose, ofKraus_apply]
+  simp only [LinearEquiv.apply_symm_apply]
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **Choi's theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive, i.e. it is the
+linear map of some `φ : M_n(ℂ) →CP M_m(ℂ)`, iff its Choi matrix `J(Φ)` is positive
+semidefinite: the Choi operator of its operator form is positive
+(`CompletelyPositiveMap.exists_coe_eq_iff_nonneg_choi`). -/
+theorem exists_coe_eq_iff_posSemidef_choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      (choiMatrix Φ).PosSemidef := by
+  rw [exists_coe_eq_iff_toEuclideanCLM (arrowCongr_toEuclideanCLM_apply Φ),
+    exists_coe_eq_iff_nonneg_choi (EuclideanSpace.basisFun n ℂ),
+    posSemidef_choiMatrix_iff_nonneg_choi (arrowCongr_toEuclideanCLM_apply Φ)]
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **Choi's theorem**, `min(n, m)`-positivity form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is
+completely positive iff it is `k`-positive, i.e. applied entrywise it preserves nonnegativity in the
+C⋆-algebra `CStarMatrix (Fin k) (Fin k) (Matrix n n ℂ)` (`KPositiveMap`), equivalently `id_k ⊗ Φ`
+is positive on flattened `kn × kn` matrices
+(`CompletelyPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`), for a single block size
+`k ≥ min(n, m)`. Its operator form is then `k`-positive (`KPositiveMap.arrowCongr`), hence
+completely positive (`CompletelyPositiveMap.ofKPositiveMap`). -/
+theorem exists_coe_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
+    {k : ℕ} (hk : min (Fintype.card n) (Fintype.card m) ≤ k) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∃ ψ : KPositiveMap k (Matrix n n ℂ) (Matrix m m ℂ),
+        (ψ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ := by
+  refine ⟨fun ⟨φ, hφ⟩ => ⟨⟨φ.toLinearMap, φ.map_cstarMatrix_nonneg' _⟩, hφ⟩, ?_⟩
+  rintro ⟨ψ, rfl⟩
+  refine (exists_coe_eq_iff_toEuclideanCLM (arrowCongr_toEuclideanCLM_apply _)).2
+    ⟨ofKPositiveMap
+      (KPositiveMap.arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ)) ψ)
+      (by simpa [finrank_euclideanSpace] using hk), LinearMap.ext fun X => ?_⟩
+  simp
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **Choi's theorem** in Choi's original form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely
+positive iff `id_k ⊗ Φ` is positive for a single block size `k ≥ min(n, m)`, that is, it sends
+`k × k` block matrices with positive semidefinite `kn × kn` flattening to block matrices with
+positive semidefinite `km × km` flattening
+(`CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`,
+`KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`). -/
+theorem exists_coe_eq_iff_forall_posSemidef_comp_map (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
+    {k : ℕ} (hk : min (Fintype.card n) (Fintype.card m) ≤ k) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∀ X : Matrix (Fin k) (Fin k) (Matrix n n ℂ), (Matrix.comp _ _ n n ℂ X).PosSemidef →
+        (Matrix.comp _ _ m m ℂ (X.map Φ)).PosSemidef :=
+  (exists_coe_eq_iff_exists_kPositiveMap Φ hk).trans
+    (KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map Φ k)
+
+open scoped Matrix.Norms.L2Operator MatrixOrder in
+/-- **Choi–Kraus theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive iff it has
+a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` with at most `nm` operators. -/
+theorem exists_coe_eq_iff_exists_kraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
+    (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
+      ∃ r ≤ Fintype.card n * Fintype.card m,
+        ∃ K : Fin r → Matrix m n ℂ, ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ :=
+  ⟨fun ⟨φ, hφ⟩ => hφ ▸ ⟨_, (rank_le_card_width (choiMatrix φ)).trans_eq (Fintype.card_prod n m),
+    φ.exists_kraus_rank⟩, fun ⟨_, _, K, hK⟩ => exists_coe_eq_of_kraus Φ K hK⟩
+
+end CompletelyPositiveMap

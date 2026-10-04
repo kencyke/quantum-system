@@ -8,9 +8,10 @@ module
 public import Mathlib.Analysis.Convex.KreinMilman
 public import Mathlib.Analysis.LocallyConvex.WeakDual
 public import Mathlib.Analysis.Normed.Module.HahnBanach
+public import QuantumSystem.Algebra.CStarAlgebra.State.Basic
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
-public import QuantumSystem.Algebra.CStarAlgebra.State
-public import QuantumSystem.Algebra.CStarAlgebra.QuasiState
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 
 /-!
 # Pure states on a C*-algebra
@@ -21,7 +22,8 @@ quasi-state space of `A`, viewed inside `WeakDual ℂ A`.
 ## Main definitions
 
 * `IsPureState φ`: `φ` is a nonzero extreme point of `QuasiStateSpace A`.
-* `IsPureState.toState`: the state underlying a pure state.
+* `IsPureState.toState`: the state underlying a pure state; pure states lie in the state space
+  (`IsPureState.mem_stateSpace`), so this is the inclusion.
 * `PureState A`: the subtype of pure states, with `PureState.toState`.
 -/
 
@@ -29,62 +31,8 @@ quasi-state space of `A`, viewed inside `WeakDual ℂ A`.
 
 open scoped ComplexOrder
 
--- The following typeclass instances are no longer auto-derivable in v4.30
--- (the priority-90 `Complex.Module` instances depend on `Module R ℝ`, which
--- doesn't fire when the surrounding code expects e.g. `SMulCommClass ℂ ℝ ℂ`
--- through `ContinuousLinearMap.isScalarTower`'s side conditions in module mode).
--- We provide explicit replacements via anonymous constructors.
-
-private instance smulCommClass_complex_real : SMulCommClass ℂ ℝ ℂ :=
-  ⟨fun a b c => by rw [Complex.real_smul, smul_eq_mul, Complex.real_smul]; ring⟩
-
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B]
-
-/-- Manual `IsScalarTower ℝ ℂ (A →L[ℂ] ℂ)`.  Avoids `ContinuousLinearMap.isScalarTower`,
-whose side conditions are not synthesizable in module mode. -/
-private instance instCLMScalarTower : IsScalarTower ℝ ℂ (A →L[ℂ] ℂ) where
-  smul_assoc r c f := by
-    apply ContinuousLinearMap.ext
-    intro x
-    change (r • c) • f x = r • c • f x
-    exact smul_assoc r c (f x)
-
-/-- The same instance transported to `WeakDual ℂ A`. -/
-private instance instWeakDualScalarTower : IsScalarTower ℝ ℂ (WeakDual ℂ A) where
-  smul_assoc r c f := by
-    apply ContinuousLinearMap.ext
-    intro x
-    change (r • c) • f x = r • c • f x
-    exact smul_assoc r c (f x)
-
-/-- `IsScalarTower ℝ ℂ (Unitization ℂ A)`. -/
-private instance instUnitScalarTower : IsScalarTower ℝ ℂ (Unitization ℂ A) where
-  smul_assoc r c x := by
-    rw [show (r • c : ℂ) = (r : ℂ) * c from rfl, mul_smul]
-    rfl
-
-instance : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
-  @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
-
-/-- `ContinuousSMul ℝ (WeakDual ℂ A)` via the existing `WeakDual.instContinuousSMul`,
-provided manually because the implicit `SMulCommClass ℂ ℝ ℂ` is otherwise hidden. -/
-private instance instContinuousSMulRealWeakDual : ContinuousSMul ℝ (WeakDual ℂ A) :=
-  @WeakDual.instContinuousSMul ℂ A _ _ _ _ _ _ _ ℝ _ _ smulCommClass_complex_real _ _
-
-/-- `LinearMap.CompatibleSMul` for `restrictScalars` from ℂ to ℝ on `WeakDual ℂ A → ℂ`.
-Provided explicitly because the auto-derivation via `IsScalarTower.compatibleSMul`
-fails to fire when the side `IsScalarTower ℝ ℂ (WeakDual ℂ A)` instance is private. -/
-private instance instCompatibleSMulWeakDual :
-    LinearMap.CompatibleSMul (WeakDual ℂ A) ℂ ℝ ℂ where
-  map_smul := fun f c x => by
-    have h1 : (c : ℝ) • x = (c : ℂ) • x := by
-      apply ContinuousLinearMap.ext; intro y
-      change c • x y = (c : ℂ) • x y
-      rw [Complex.real_smul, smul_eq_mul]
-    have h2 : (c : ℝ) • f x = (c : ℂ) • f x := by rw [Complex.real_smul]; rfl
-    change f ((c : ℝ) • x) = (c : ℝ) • f x
-    rw [h1, LinearMap.map_smul, h2]
 
 /-- A pure state is an extreme point of the quasi-state space, excluding zero. -/
 def IsPureState (φ : WeakDual ℂ A) : Prop :=
@@ -265,10 +213,17 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
     exact h_ne_zero rfl
   exact h_not_ext h_ext
 
-/-- The state underlying a pure state: the functional itself, which is positive and has norm
-one (`IsPureState.norm_eq_one`). -/
-noncomputable def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State A :=
-  State.ofContinuousLinearMap (WeakDual.toStrongDual φ) h.1.1.1 (norm_eq_one h)
+omit [StarOrderedRing A] in
+/-- A pure state is a state: it is positive and has norm one (`IsPureState.norm_eq_one`). -/
+lemma mem_stateSpace {φ : WeakDual ℂ A} (h : IsPureState φ) : φ ∈ StateSpace A :=
+  mem_stateSpace_iff.mpr ⟨h.1.1.1, norm_eq_one h⟩
+
+omit [StarOrderedRing A] in
+/-- The state underlying a pure state: the functional itself, as an element of the state space
+(`IsPureState.mem_stateSpace`). -/
+def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State A :=
+  ⟨φ, h.mem_stateSpace⟩
+
 /-- For any non-zero element `a`, there exists a pure state `φ` **norming** `a`:
 `φ (star a * a) = ‖a‖ ^ 2`, viewed in `ℂ`.
 
@@ -366,8 +321,6 @@ lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
   let F := {x ∈ S | ∀ z ∈ S, l z ≤ l x}
   have hF_nonempty : F.Nonempty := ⟨φ, hφ_mem, fun z hz => hφ_max hz⟩
   have hF_compact : IsCompact F := h_exposed.isCompact (QuasiStateSpace.compact A)
-  have : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
-    @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
   obtain ⟨ψ, hψ_mem_F, hψ_ext⟩ := hF_compact.extremePoints_nonempty hF_nonempty
   have hψ_ext_S : IsPureState ψ := by
     constructor
@@ -444,9 +397,10 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing
 
 This is the *only* spelling of the map `PureState A → State A`; there is deliberately no
 coercion instance alongside it, so that every downstream result is stated in the same form. -/
-noncomputable def toState (ψ : PureState A) : State A :=
+def toState (ψ : PureState A) : State A :=
   IsPureState.toState ψ.property
 
+/-- The state underlying a pure state evaluates as the pure state itself: `ψ.toState a = ψ.val a`. -/
 @[simp]
 lemma toState_apply (ψ : PureState A) (a : A) :
     ψ.toState a = ψ.val a := rfl

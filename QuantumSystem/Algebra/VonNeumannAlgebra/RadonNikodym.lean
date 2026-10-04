@@ -57,7 +57,7 @@ theorem exists_mem_commutant_of_apply_star_mul_self_le {ω : N →ₚ[ℂ] ℂ} 
     (hω : ∀ x : N, ‖ω (star x * x)‖ ≤ ‖(x : K →L[ℂ] K) ζ‖ ^ 2) :
     ∃ T ∈ N′, 0 ≤ T ∧ T ≤ 1 ∧ ∀ x : N, ω x = ⟪T ζ, (x : K →L[ℂ] K) ζ⟫_ℂ := by
   obtain ⟨T, hc, h0, h1, h⟩ :=
-    CStarAlgebra.exists_commute_of_apply_star_mul_self_le (ρ := inclₐ N) (f := ω) hω
+    CStarAlgebra.exists_commute_of_apply_star_mul_self_le (ρ := (inclₐ N).toNonUnitalStarAlgHom) (f := ω) hω
   exact ⟨T, mem_commutant_iff.mpr fun a ha => (hc ⟨a, ha⟩).eq.symm, h0, h1, h⟩
 
 /-- **Radon–Nikodym, vector form.** If `ω(x⋆x) ≤ ‖x ζ‖²` for all `x ∈ N`, then `ω` is the vector
@@ -66,7 +66,7 @@ theorem exists_mem_commutant_inner_eq_of_apply_star_mul_self_le {ω : N →ₚ[�
     (hω : ∀ x : N, ‖ω (star x * x)‖ ≤ ‖(x : K →L[ℂ] K) ζ‖ ^ 2) :
     ∃ R ∈ N′, 0 ≤ R ∧ ∀ x : N, ω x = ⟪R ζ, (x : K →L[ℂ] K) (R ζ)⟫_ℂ := by
   obtain ⟨R, hc, h0, h⟩ :=
-    CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := inclₐ N) (f := ω) hω
+    CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := (inclₐ N).toNonUnitalStarAlgHom) (f := ω) hω
   exact ⟨R, mem_commutant_iff.mpr fun a ha => (hc ⟨a, ha⟩).eq.symm, h0, h⟩
 
 end VonNeumannAlgebra

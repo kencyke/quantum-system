@@ -5,8 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.Hom
-public import QuantumSystem.Algebra.CStarAlgebra.GNS.PureState
+public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
+public import QuantumSystem.Algebra.CStarAlgebra.State.Pure
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.DirectSum
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 
@@ -42,7 +42,7 @@ The theorem these serve is `CStarRep.exists_isometric_separable`, in
 
 open TopologicalSpace
 
-open scoped InnerProductSpace ComplexHilbertSpace ComplexOrder
+open scoped InnerProductSpace ComplexOrder
 
 universe u
 
@@ -54,10 +54,10 @@ namespace Representation
 
 /-- A norming state gives an orbit vector of full length: if `ω (star x * x) = ‖x‖ ^ 2`
 then `‖T.π x T.ξ‖ = ‖x‖`. -/
-lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation ω.toPositiveLinearMap) {x : A}
+lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω)) {x : A}
     (hx : ω (star x * x) = ((‖x‖ ^ 2 : ℝ) : ℂ)) :
     ‖T.π x T.ξ‖ = ‖x‖ := by
-  rw [T.norm_apply_cyclic, State.coe_toPositiveLinearMap, hx]
+  rw [T.norm_apply_cyclic, PositiveLinearMap.coe_ofClass, hx]
   simp
 
 /-- The Hilbert space of a GNS triplet over a **separable** C\*-algebra is separable.
@@ -81,6 +81,7 @@ positions carry no information, since `0` is annihilated by every representation
 `A = 0` the index type is empty, which is the correct answer there. -/
 noncomputable def NormingIndex [SeparableSpace A] : Type := {n : ℕ // denseSeq A n ≠ 0}
 
+/-- The norming index type is countable, being a subtype of `ℕ`. -/
 instance [SeparableSpace A] : Countable (NormingIndex A) :=
   inferInstanceAs (Countable {n : ℕ // denseSeq A n ≠ 0})
 
@@ -89,6 +90,7 @@ noncomputable def NormingIndex.elem [SeparableSpace A] (i : NormingIndex A) : A 
   denseSeq A i.1
 
 omit [PartialOrder A] [StarOrderedRing A] in
+/-- The element at a norming index is nonzero, by the definition of `NormingIndex`. -/
 lemma NormingIndex.elem_ne_zero [SeparableSpace A] (i : NormingIndex A) : i.elem ≠ 0 := i.2
 
 /-- A pure state norming the element at a norming index. -/
@@ -96,6 +98,8 @@ noncomputable def normingState [SeparableSpace A] (i : NormingIndex A) : PureSta
   ⟨(IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose,
     (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.1⟩
 
+/-- The defining property of `normingState i`: it norms the element at `i`,
+`ψ (aᵢ* aᵢ) = ‖aᵢ‖ ^ 2`. -/
 lemma normingState_spec [SeparableSpace A] (i : NormingIndex A) :
     (normingState i).toState (star i.elem * i.elem) = ((‖i.elem‖ ^ 2 : ℝ) : ℂ) :=
   (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.2
@@ -105,7 +109,7 @@ variable (A) in
 dense sequence of `A`, at a pure state norming that member. -/
 noncomputable def normingFamily [SeparableSpace A] : SectorFamily.{u, u, 0} A where
   Index := NormingIndex A
-  rep i := (GNS.Representation.canonical (normingState i).toState.toPositiveLinearMap).toCStarRep
+  rep i := (GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i).toState)).toCStarRep
 
 /-- Each summand of the norming family is separable. -/
 instance [SeparableSpace A] (i : NormingIndex A) :
@@ -148,7 +152,7 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
     linarith
   set i : NormingIndex A := ⟨n, hb_ne⟩ with hi
   have helem : i.elem = denseSeq A n := rfl
-  set T := GNS.Representation.canonical (normingState i).toState.toPositiveLinearMap with hT
+  set T := GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i).toState) with hT
   -- The representation at `i` norms `i.elem`.
   have hnorm : ‖T.π i.elem T.ξ‖ = ‖i.elem‖ :=
     T.norm_apply_cyclic_of_norming (normingState_spec i)
@@ -178,10 +182,13 @@ of by the whole pure state space. -/
 noncomputable def normingRep [SeparableSpace A] : CStarRep.{u, u} A :=
   (normingFamily A).toCStarRep
 
+/-- The action of `normingRep A` unfolds to the block-diagonal representation
+`(normingFamily A).directSumRep`. -/
 @[simp]
 lemma normingRep_π [SeparableSpace A] :
     (normingRep A).π = (normingFamily A).directSumRep := rfl
 
+/-- The Hilbert space of the norming representation is separable. -/
 instance [SeparableSpace A] : SeparableSpace (normingRep A).H :=
   separableSpace_normingFamily_directSumHilbert
 
@@ -200,7 +207,7 @@ variable (A) in
 /-- The image of the norming representation is norm closed, so it is a C\*-subalgebra of
 the bounded operators on a separable Hilbert space. -/
 theorem normingRep_isClosed_range [SeparableSpace A] :
-    IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set 𝓑((normingRep A).H)) :=
+    IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set ((normingRep A).H →L[ℂ] (normingRep A).H)) :=
   (normingFamily A).directSumRep_isClosed_range_of (normingFamily_separatesPoints A)
 
 end Norming

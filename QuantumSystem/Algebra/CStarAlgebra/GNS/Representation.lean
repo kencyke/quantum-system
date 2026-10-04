@@ -5,8 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.Normed.Operator.Extend
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Construction
-public import QuantumSystem.Algebra.CStarAlgebra.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
@@ -15,10 +15,10 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubsp
 
 A GNS triplet `(π, H, ξ)` for a positive linear functional `f` on a (possibly non-unital)
 C*-algebra `A` is a C*-representation `π` of `A` on a Hilbert space `H` together with a cyclic
-vector `ξ` satisfying `f a = ⟪ξ, π a ξ⟫`.  A state `ω` is the case `f = ω.toPositiveLinearMap`,
+vector `ξ` satisfying `f a = ⟪ξ, π a ξ⟫`.  A state `ω` is the case `f = PositiveLinearMap.ofClass ω`,
 with `‖f‖ₒₚ = 1`; the only state-specific facts are that `ξ` is then a unit
 vector (`norm_ξ_eq_one`) and that `π ≠ 0`, since a state is nonzero
-(`π_eq_zero_iff`, `State.toPositiveLinearMap_ne_zero`).
+(`π_eq_zero_iff`, `State.ofClass_ne_zero`).
 
 ## Main definitions and results
 
@@ -39,7 +39,7 @@ vector (`norm_ξ_eq_one`) and that `π ≠ 0`, since a state is nonzero
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexHilbertSpace InnerProduct ComplexOrder
+open scoped InnerProductSpace InnerProduct ComplexOrder
 
 namespace GNS
 
@@ -55,7 +55,7 @@ positive functional" at the type level.
 Inherited fields (from `CStarRep A`):
 * `H` : the underlying type of the Hilbert space.
 * `[hilbert]` : evidence that `H` is a complex Hilbert space.
-* `π : A →⋆ₙₐ[ℂ] 𝓑(H)` : a non‑unital *-representation of `A` on `H`.
+* `π : A →⋆ₙₐ[ℂ] (H →L[ℂ] H)` : a non‑unital *-representation of `A` on `H`.
 
 GNS-specific fields:
 * `ξ : H` : a cyclic vector; its norm is automatically `√‖f‖ₒₚ` (`norm_ξ`), so it is a unit
@@ -87,7 +87,7 @@ Cyclicity is what makes this work.  If `π a x = 0` for every `a`, then
 `⟪x, π a ξ⟫ = ⟪π (star a) x, ξ⟫ = 0`, so the continuous functional `⟪x, ·⟫` vanishes on the dense
 orbit of the cyclic vector, hence everywhere, and in particular `⟪x, x⟫ = 0`. -/
 theorem actsNondegenerately (T : Representation f) :
-    InnerProductSpace.ActsNondegenerately (Set.range (T.π : A → 𝓑(T.H))) := by
+    InnerProductSpace.ActsNondegenerately (Set.range (T.π : A → (T.H →L[ℂ] T.H))) := by
   intro x hx
   have h_orbit : Set.EqOn (fun y => ⟪x, y⟫_ℂ) (fun _ => 0) (Set.range (T.orbit T.ξ)) := by
     rintro _ ⟨a, rfl⟩
@@ -182,9 +182,9 @@ theorem norm_ξ : ‖T.ξ‖ = √‖f‖ₒₚ := by
   rw [← T.norm_ξ_sq, Real.sqrt_sq (norm_nonneg _)]
 
 /-- The cyclic vector of a GNS triplet of a state is a unit vector. -/
-theorem norm_ξ_eq_one {ω : State A} (T : Representation ω.toPositiveLinearMap) :
+theorem norm_ξ_eq_one {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω)) :
     ‖T.ξ‖ = 1 := by
-  rw [T.norm_ξ, ω.norm_eq_one, Real.sqrt_one]
+  rw [T.norm_ξ, ω.opNorm_ofClass_eq_one, Real.sqrt_one]
 
 end ApproximateUnit
 

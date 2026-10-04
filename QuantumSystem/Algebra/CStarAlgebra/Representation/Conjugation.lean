@@ -69,30 +69,31 @@ Internally the underlying non-unital star-algebra homomorphism is the
 composition of `R.π` with the conjugation-by-`U` star-algebra
 equivalence `(R.H →L[ℂ] R.H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)` provided by
 `LinearIsometryEquiv.conjStarAlgEquiv`. -/
-noncomputable def conjBy (R : CStarRep A) {K : Type*} [ComplexHilbertSpace K]
+noncomputable def conjBy (R : CStarRep A) {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K) : CStarRep A where
   H := K
   π := U.conjStarAlgEquiv.toStarAlgHom.toNonUnitalStarAlgHom.comp R.π
 
-@[simp] lemma conjBy_H (R : CStarRep A) {K : Type*} [ComplexHilbertSpace K]
+/-- The carrier of the conjugated representation `R.conjBy U` is the target `K` of `U`. -/
+@[simp] lemma conjBy_H (R : CStarRep A) {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K) : (R.conjBy U).H = K := rfl
 
 /-- The action of the conjugated representation: `(R.conjBy U).π a` is
 the operator `U ∘L R.π a ∘L U.symm` on `K`. -/
 lemma conjBy_π_apply (R : CStarRep A) {K : Type*}
-    [ComplexHilbertSpace K] (U : R.H ≃ₗᵢ[ℂ] K) (a : A) :
+    [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K] (U : R.H ≃ₗᵢ[ℂ] K) (a : A) :
     (R.conjBy U).π a = (U : R.H →L[ℂ] K) ∘L R.π a ∘L (U.symm : K →L[ℂ] R.H) := rfl
 
 /-- The action of the conjugated representation on a vector: `(R.conjBy U).π a y = U (π a (U⁻¹ y))`. -/
 @[simp] lemma conjBy_π_apply_apply (R : CStarRep A) {K : Type*}
-    [ComplexHilbertSpace K] (U : R.H ≃ₗᵢ[ℂ] K) (a : A) (y : K) :
+    [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K] (U : R.H ≃ₗᵢ[ℂ] K) (a : A) (y : K) :
     (R.conjBy U).π a y = U (R.π a (U.symm y)) := rfl
 
 /-- The **canonical unitary equivalence** `R ≃ R.conjBy U`: the
 intertwining unitary is `U` itself, and the intertwining identity is
 `U ∘L R.π a = (U ∘L R.π a ∘L U.symm) ∘L U`. -/
 noncomputable def conjByUnitaryEquiv (R : CStarRep A) {K : Type*}
-    [ComplexHilbertSpace K] (U : R.H ≃ₗᵢ[ℂ] K) :
+    [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K] (U : R.H ≃ₗᵢ[ℂ] K) :
     CStarRep.UnitaryEquiv R (R.conjBy U) where
   toLinearIsometryEquiv := U
   intertwines a := by
@@ -114,7 +115,7 @@ of a reference inclusion (for instance the vacuum representation
 inclusion on every operator where the intertwining condition holds —
 i.e. on operators localised outside the DHR region. -/
 lemma conjBy_π_eq_of_intertwined {R : CStarRep A}
-    {K : Type*} [ComplexHilbertSpace K]
+    {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K)
     {a : A} {T : K →L[ℂ] K}
     (hUa : (U : R.H →L[ℂ] K) ∘L R.π a = T ∘L (U : R.H →L[ℂ] K)) :

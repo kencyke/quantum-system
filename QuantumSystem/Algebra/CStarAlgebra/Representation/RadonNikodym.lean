@@ -5,9 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
+public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.Normed.Operator.Extend
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
@@ -16,8 +18,9 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubsp
 /-!
 # Radon–Nikodym theorem for functionals dominated by a vector functional
 
-Let `ρ : A → B(K)` be a representation of a unital C⋆-algebra, `ζ ∈ K`, and `f` a positive
-functional on `A` dominated by the vector functional of `ζ`: `f(a⋆a) ≤ ‖ρ(a) ζ‖²` for all `a`.
+Let `ρ : A → B(K)` be a representation of a (not necessarily unital) C⋆-algebra, `ζ ∈ K`, and `f`
+a positive functional on `A` dominated by the vector functional of `ζ`: `f(a⋆a) ≤ ‖ρ(a) ζ‖²` for
+all `a`.
 Then there is `T` commuting with `ρ(A)` with `0 ≤ T ≤ 1` and `f(a) = ⟪T ζ, ρ(a) ζ⟫`
 (Sakai, *C\*-algebras and W\*-algebras*, 1.24.4; Bratteli–Robinson, *Operator Algebras and
 Quantum Statistical Mechanics 1*, Thm. 2.3.19); with `R = √T`, `f = ω_{R ζ}` is itself a vector
@@ -27,14 +30,17 @@ functional. The von Neumann algebra form (`T ∈ N′`) is
 The proof goes through the GNS representation `π_f` of `f` on `GNS(f)` (Mathlib's
 `PositiveLinearMap.GNS`): the domination makes `ρ(a) ζ ↦ [a]_f` a contraction from `[ρ(A) ζ]`,
 which extends by `0` on `[ρ(A) ζ]ᗮ` to `W : K → GNS(f)` with `W ρ(a) = π_f(a) W`, and `T = W†W`.
+The identity `f(a) = ⟪W ζ, [a]_f⟫` (`CStarAlgebra.inner_gnsIntertwiner_toGNSₗ`), which closes the
+argument, is obtained along an approximate unit `(e_α)` of `A`: `⟪W ζ, [e_α a]_f⟫ = f(e_α a)` for
+every self-adjoint `e_α`, and both sides converge. No unit of `A` and no non-degeneracy of `ρ` is
+needed.
 
-The statement is for a *unital* `⋆`-homomorphism `ρ : A →⋆ₐ[ℂ] B(K)` into the operators of a
-given Hilbert space `K`, not for a bundled `CStarRep A`: the proof uses `ρ 1 = 1`, which a
-non-unital `CStarRep` does not provide, and the von Neumann algebra application needs `K` to be
-the fixed space on which `N` acts. Stating it for an abstract `A` rather than for the subalgebra
-`↥N` directly also means every GNS object is elaborated through the single C⋆-algebra structure
-of `A`, whereas for `↥N` the functional's type and the GNS space would be built through different
-instance paths on the subtype.
+The statement is for a `⋆`-homomorphism `ρ : A →⋆ₙₐ[ℂ] B(K)` into the operators of a given Hilbert
+space `K`, not for a bundled `CStarRep A`: the von Neumann algebra application needs `K` to be the
+fixed space on which `N` acts. Stating it for an abstract `A` rather than for the subalgebra `↥N`
+directly also means every GNS object is elaborated through the single C⋆-algebra structure of `A`,
+whereas for `↥N` the functional's type and the GNS space would be built through different instance
+paths on the subtype.
 
 ## Main results
 
@@ -46,14 +52,14 @@ instance paths on the subtype.
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexOrder
+open scoped InnerProductSpace ComplexOrder Topology
 open InnerProductSpace (cyclicSubspace cyclicSubspace_le)
-open ContinuousLinearMap PositiveLinearMap
+open ContinuousLinearMap PositiveLinearMap Filter
 
 namespace CStarAlgebra
 
 variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
-variable {A : Type*} [CStarAlgebra A] (ρ : A →⋆ₐ[ℂ] (K →L[ℂ] K)) (ζ : K)
+variable {A : Type*} [NonUnitalCStarAlgebra A] (ρ : A →⋆ₙₐ[ℂ] (K →L[ℂ] K)) (ζ : K)
 
 /-- `[ρ(A) ζ]`, the cyclic subspace of `ζ` under the representation. -/
 noncomputable abbrev cyclicRange : Submodule ℂ K := (cyclicSubspace (Set.range ρ) ζ).toSubmodule
@@ -68,7 +74,7 @@ variable {ρ ζ}
 
 /-- The orbit `ρ(A) ζ` is dense in `[ρ(A) ζ]`. -/
 lemma denseRange_cyclicApplyₗ : DenseRange (cyclicApplyₗ ρ ζ) := by
-  set L : A →ₗ[ℂ] K := (ContinuousLinearMap.apply ℂ K ζ).toLinearMap ∘ₗ ρ.toLinearMap
+  set L : A →ₗ[ℂ] K := (ContinuousLinearMap.apply ℂ K ζ).toLinearMap ∘ₗ (ρ : A →ₗ[ℂ] (K →L[ℂ] K))
   have hle : cyclicSubspace (Set.range ρ) ζ ≤ (LinearMap.range L).closure :=
     cyclicSubspace_le fun _ ⟨a, ha⟩ =>
       Submodule.le_topologicalClosure _ ⟨a, by rw [← ha]; rfl⟩
@@ -114,15 +120,28 @@ noncomputable def toGNSₗ : A →ₗ[ℂ] f.GNS :=
 lemma toGNSₗ_apply (a : A) : toGNSₗ f a = ((f.toPreGNS a : f.PreGNS) : f.GNS) := rfl
 
 /-- `π_f(a) [b]_f = [a b]_f`. -/
-lemma gnsStarAlgHom_toGNSₗ (a b : A) : f.gnsStarAlgHom a (toGNSₗ f b) = toGNSₗ f (a * b) := by
-  change f.gnsNonUnitalStarAlgHom a ((f.toPreGNS b : f.PreGNS) : f.GNS) = _
-  rw [gnsNonUnitalStarAlgHom_apply_coe, leftMulMapPreGNS_apply]
+lemma gnsNonUnitalStarAlgHom_toGNSₗ (a b : A) :
+    f.gnsNonUnitalStarAlgHom a (toGNSₗ f b) = toGNSₗ f (a * b) := by
+  rw [toGNSₗ_apply, gnsNonUnitalStarAlgHom_apply_coe, leftMulMapPreGNS_apply]
   rfl
 
 /-- `⟪[a]_f, [b]_f⟫ = f(a⋆b)`. -/
 lemma inner_toGNSₗ (a b : A) : ⟪toGNSₗ f a, toGNSₗ f b⟫_ℂ = f (star a * b) := by
   rw [toGNSₗ_apply, toGNSₗ_apply, UniformSpace.Completion.inner_coe, preGNS_inner_def]
   rfl
+
+/-- `a ↦ [a]_f` is continuous: `‖[a]_f‖² = f(a⋆a) ≤ ‖f‖ ‖a‖²` (positive functionals are bounded,
+`PositiveLinearMap.exists_norm_apply_le`). -/
+lemma continuous_toGNSₗ : Continuous (toGNSₗ f) := by
+  obtain ⟨C, hC⟩ := f.exists_norm_apply_le
+  refine AddMonoidHomClass.continuous_of_bound (toGNSₗ f) (√C) fun a => ?_
+  rw [toGNSₗ_apply, UniformSpace.Completion.norm_coe, preGNS_norm_def']
+  calc √‖f (star (f.ofPreGNS (f.toPreGNS a)) * f.ofPreGNS (f.toPreGNS a))‖
+      = √‖f (star a * a)‖ := rfl
+    _ ≤ √(C * ‖a‖ ^ 2) := by
+        refine Real.sqrt_le_sqrt ((hC _).trans ?_)
+        rw [CStarRing.norm_star_mul_self, sq]
+    _ = √C * ‖a‖ := by rw [Real.sqrt_mul C.coe_nonneg, Real.sqrt_sq (norm_nonneg _)]
 
 variable {f}
 
@@ -173,23 +192,43 @@ lemma norm_gnsIntertwiner_le : ‖gnsIntertwiner ρ ζ f‖ ≤ 1 := by
 
 /-- **Intertwining.** `W ρ(a) = π_f(a) W`. -/
 lemma gnsIntertwiner_comp (a : A) :
-    gnsIntertwiner ρ ζ f ∘L ρ a = f.gnsStarAlgHom a ∘L gnsIntertwiner ρ ζ f := by
+    gnsIntertwiner ρ ζ f ∘L ρ a = f.gnsNonUnitalStarAlgHom a ∘L gnsIntertwiner ρ ζ f := by
   set W := gnsIntertwiner ρ ζ f
-  set D : K →L[ℂ] f.GNS := W ∘L ρ a - f.gnsStarAlgHom a ∘L W
+  set D : K →L[ℂ] f.GNS := W ∘L ρ a - f.gnsNonUnitalStarAlgHom a ∘L W
   have hle : cyclicSubspace (Set.range ρ) ζ ≤ ⟨LinearMap.ker (D : K →ₗ[ℂ] f.GNS), D.isClosed_ker⟩ :=
     cyclicSubspace_le fun T ⟨b, hb⟩ => by
       subst hb
-      change W (ρ a (ρ b ζ)) - f.gnsStarAlgHom a (W (ρ b ζ)) = 0
+      change W (ρ a (ρ b ζ)) - f.gnsNonUnitalStarAlgHom a (W (ρ b ζ)) = 0
       rw [← mul_apply_eq_comp, ← map_mul, gnsIntertwiner_apply hf, gnsIntertwiner_apply hf,
-        gnsStarAlgHom_toGNSₗ, sub_self]
+        gnsNonUnitalStarAlgHom_toGNSₗ, sub_self]
   have hP := (commute_starProjection_cyclicSubspace (ρ := ρ) (ζ := ζ) a).eq
   ext w
-  change W (ρ a w) = f.gnsStarAlgHom a (W w)
+  change W (ρ a w) = f.gnsNonUnitalStarAlgHom a (W w)
   have hD : D ((cyclicRange ρ ζ).starProjection w) = 0 := hle ((cyclicRange ρ ζ).starProjection_apply_mem w)
   change W (ρ a ((cyclicRange ρ ζ).starProjection w)) -
-    f.gnsStarAlgHom a (W ((cyclicRange ρ ζ).starProjection w)) = 0 at hD
+    f.gnsNonUnitalStarAlgHom a (W ((cyclicRange ρ ζ).starProjection w)) = 0 at hD
   rw [sub_eq_zero, ← gnsIntertwiner_starProjection] at hD
   rw [gnsIntertwiner_starProjection (w := ρ a w), ← mul_apply_eq_comp, ← hP, mul_apply_eq_comp, hD]
+
+/-- **`W ζ` is a GNS vector for `f`**: `⟪W ζ, [a]_f⟫ = f(a)`. Along an increasing approximate unit
+`(e_α)` of `A`, `⟪W ζ, [e_α a]_f⟫ = ⟪π_f(e_α) W ζ, [a]_f⟫ = ⟪W ρ(e_α) ζ, [a]_f⟫ = f(e_α a)`, and
+both ends converge to the two sides. In the unital case this is `W ζ = [1]_f`. -/
+lemma inner_gnsIntertwiner_toGNSₗ (a : A) :
+    ⟪gnsIntertwiner ρ ζ f ζ, toGNSₗ f a⟫_ℂ = f a := by
+  set W := gnsIntertwiner ρ ζ f
+  have hl := CStarAlgebra.increasingApproximateUnit A
+  obtain ⟨C, hC⟩ := f.exists_norm_apply_le
+  have hfc : Continuous f := AddMonoidHomClass.continuous_of_bound f C hC
+  have h₁ : Tendsto (fun e => f (e * a)) (CStarAlgebra.approximateUnit A) (𝓝 (f a)) :=
+    (hfc.tendsto a).comp (hl.tendsto_mul_right a)
+  have h₂ : Tendsto (fun e => ⟪W ζ, toGNSₗ f (e * a)⟫_ℂ) (CStarAlgebra.approximateUnit A)
+      (𝓝 ⟪W ζ, toGNSₗ f a⟫_ℂ) :=
+    ((continuous_const.inner (continuous_toGNSₗ f)).tendsto a).comp (hl.tendsto_mul_right a)
+  refine tendsto_nhds_unique h₂ (h₁.congr' ?_)
+  filter_upwards [hl.eventually_star_eq] with e he
+  rw [← gnsNonUnitalStarAlgHom_toGNSₗ, ← adjoint_inner_left, ← star_eq_adjoint, ← map_star, he,
+    ← ContinuousLinearMap.comp_apply, ← gnsIntertwiner_comp hf, ContinuousLinearMap.comp_apply,
+    gnsIntertwiner_apply hf, inner_toGNSₗ, he]
 
 end Intertwiner
 
@@ -212,10 +251,8 @@ theorem exists_commute_of_apply_star_mul_self_le (hf : ∀ a, ‖f (star a * a)�
     rw [norm_adjoint_comp_self]
     have := norm_gnsIntertwiner_le hf
     nlinarith [norm_nonneg W]
-  · rw [ContinuousLinearMap.comp_apply, adjoint_inner_left]
-    have hζ : ζ = ρ 1 ζ := by rw [map_one, one_apply_eq_self]
-    rw [hζ, gnsIntertwiner_apply hf, ← hζ, gnsIntertwiner_apply hf, inner_toGNSₗ, star_one,
-      one_mul]
+  · rw [ContinuousLinearMap.comp_apply, adjoint_inner_left, gnsIntertwiner_apply hf,
+      inner_gnsIntertwiner_toGNSₗ hf]
 
 /-- **Radon–Nikodym for a representation, vector form.** If `f(a⋆a) ≤ ‖ρ(a) ζ‖²` for all `a`,
 then `f` is the vector functional of `R ζ` for some positive `R` commuting with `ρ(A)`:

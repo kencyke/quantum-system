@@ -19,8 +19,8 @@ reducing the general case to the case with a cyclic vector.
 ## Main definitions
 
 * `Hn n`: the Hilbert space `H^n` as `PiLp 2 (Fin n → H)`.
-* `proj i`: the projection from `H^n` to the `i`-th component.
-* `single i`: the injection from `H` to the `i`-th component of `H^n`.
+* `single i`: the injection from `H` to the `i`-th component of `H^n`; the projection onto the
+  `i`-th component is Mathlib's `PiLp.proj 2 _ i`.
 * `diagonal T`: the diagonal action of `T` on `H^n`, i.e., `T` applied componentwise.
 * `matrixComponent S i j`: the `(i, j)`-th matrix entry of an operator `S` on `H^n`.
 * `diagonalStarAlgHom n`: the diagonal embedding as a `StarAlgHom`.
@@ -47,74 +47,31 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 /-- The Hilbert space `H^n` as `Fin n → H` with the L2 inner product. -/
 abbrev Hn (n : ℕ) := PiLp (2 : ℝ≥0∞) (fun _ : Fin n => H)
 
-/-- The projection from `H^n` to the `i`-th component `H`. -/
-noncomputable def proj {n : ℕ} (i : Fin n) : Hn (H := H) n →L[ℂ] H :=
-  PiLp.proj (p := (2 : ℝ≥0∞)) (𝕜 := ℂ) (β := fun _ : Fin n => H) i
-
-@[simp]
-lemma proj_apply {n : ℕ} (i : Fin n) (x : Hn (H := H) n) :
-    proj (H := H) (n := n) i x = x.ofLp i := by
-  simp [proj, PiLp.proj_apply]
-
-/-- The injection from `H` to the `i`-th component of `H^n`. -/
+/-- The injection from `H` to the `i`-th component of `H^n`: Mathlib's `ContinuousLinearMap.single`
+transported to the `L²` type copy `PiLp`. The `i`-th projection is `PiLp.proj 2 _ i`. -/
 noncomputable def single {n : ℕ} (i : Fin n) : H →L[ℂ] Hn (H := H) n :=
-  LinearMap.mkContinuous
-    { toFun := fun v => WithLp.toLp (2 : ℝ≥0∞) (fun k : Fin n => if k = i then v else 0)
-      map_add' := fun x y => by
-        apply PiLp.ext
-        intro k
-        by_cases hk : k = i
-        · simp [hk]
-        · simp [hk]
-      map_smul' := fun c x => by
-        apply PiLp.ext
-        intro k
-        by_cases hk : k = i
-        · simp [hk]
-        · simp [hk] }
-    1
-    (fun v => by
-      rw [one_mul, PiLp.norm_eq_of_L2]
-      rw [Finset.sum_eq_single i]
-      · simp only [LinearMap.coe_mk, AddHom.coe_mk, WithLp.ofLp_toLp, ite_true,
-          Real.sqrt_sq (norm_nonneg v)]
-        exact le_refl _
-      · intro j _ hji
-        simp only [LinearMap.coe_mk, AddHom.coe_mk, WithLp.ofLp_toLp, hji, ite_false, norm_zero,
-          OfNat.ofNat_ne_zero, ne_eq, not_false_eq_true, zero_pow]
-      · intro hi
-        exact (hi (Finset.mem_univ i)).elim)
+  (PiLp.continuousLinearEquiv (2 : ℝ≥0∞) ℂ (fun _ : Fin n => H)).symm.toContinuousLinearMap ∘L
+    ContinuousLinearMap.single ℂ (fun _ : Fin n => H) i
 
 @[simp]
-lemma single_apply {n : ℕ} (i : Fin n) (v : H) (k : Fin n) :
-    (single (H := H) (n := n) i v).ofLp k = if k = i then v else 0 := by
-  simp only [single, LinearMap.coe_mk, AddHom.coe_mk, LinearMap.mkContinuous_apply,
-    WithLp.ofLp_toLp]
+lemma single_apply {n : ℕ} (i : Fin n) (v : H) :
+    single (H := H) (n := n) i v = PiLp.single 2 i v := rfl
 
 /-- Diagonal action of an operator `T : H →L[ℂ] H` on `H^n`. -/
 noncomputable def diagonal {n : ℕ} (T : H →L[ℂ] H) : Hn (H := H) n →L[ℂ] Hn (H := H) n := by
   classical
-  exact ∑ i : Fin n, single (H := H) (n := n) i ∘L (T ∘L proj (H := H) (n := n) i)
+  exact ∑ i : Fin n, single (H := H) (n := n) i ∘L (T ∘L PiLp.proj 2 (fun _ : Fin n => H) i)
 
 @[simp]
 lemma diagonal_apply {n : ℕ} (T : H →L[ℂ] H) (x : Hn (H := H) n) (i : Fin n) :
     (diagonal (H := H) (n := n) T x).ofLp i = T (x.ofLp i) := by
   classical
-  unfold diagonal
-  rw [FunLike.coe_sum]
-  simp only [Finset.sum_apply, ContinuousLinearMap.coe_comp, Function.comp_apply, proj_apply]
-  simp only [WithLp.ofLp_sum, Finset.sum_apply]
-  rw [Finset.sum_eq_single i]
-  · rw [single_apply, ite_eq_left rfl]
-  · intro j _ hji
-    rw [single_apply, ite_eq_right (Ne.symm hji)]
-  · intro hi
-    exact (hi (Finset.mem_univ i)).elim
+  simp [diagonal, WithLp.ofLp_sum, Finset.sum_apply, Pi.single_apply]
 
 /-- The projection of an operator `S` on `H^n` to its `(i, j)`-th component in `B(H)`. -/
 noncomputable def matrixComponent {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n)
     (i j : Fin n) : H →L[ℂ] H :=
-  proj (H := H) (n := n) i ∘L (S ∘L single (H := H) (n := n) j)
+  PiLp.proj 2 (fun _ : Fin n => H) i ∘L (S ∘L single (H := H) (n := n) j)
 
 @[simp]
 lemma matrixComponent_apply {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n)
@@ -125,24 +82,16 @@ lemma matrixComponent_apply {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n
 lemma diagonal_single {n : ℕ} (T : H →L[ℂ] H) (j : Fin n) (v : H) :
     diagonal (H := H) (n := n) T (single (H := H) (n := n) j v) =
     single (H := H) (n := n) j (T v) := by
-  apply PiLp.ext
-  intro k
-  rw [diagonal_apply, single_apply, single_apply]
-  split_ifs with h
-  · rfl
-  · simp only [map_zero]
+  classical
+  refine PiLp.ext fun k => ?_
+  rw [diagonal_apply]
+  simp [apply_ite T]
 
 lemma single_sum_eq {n : ℕ} (x : Hn (H := H) n) :
     x = ∑ j : Fin n, single (H := H) (n := n) j (x.ofLp j) := by
-  apply PiLp.ext
-  intro l
-  simp only [WithLp.ofLp_sum, Finset.sum_apply]
-  rw [Finset.sum_eq_single l]
-  · rw [single_apply, ite_eq_left rfl]
-  · intro j _ hjl
-    rw [single_apply, ite_eq_right (Ne.symm hjl)]
-  · intro hl
-    exact (hl (Finset.mem_univ l)).elim
+  classical
+  refine PiLp.ext fun l => ?_
+  simp [WithLp.ofLp_sum, Finset.sum_apply, Pi.single_apply]
 
 /-- If `S` commutes with `diagonal T`, then its components satisfy a commutation relation. -/
 lemma commute_diagonal_iff {n : ℕ} (S : Hn (H := H) n →L[ℂ] Hn (H := H) n) (T : H →L[ℂ] H) :

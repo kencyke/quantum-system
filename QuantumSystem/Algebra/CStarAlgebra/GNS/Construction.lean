@@ -16,15 +16,15 @@ construction produces the *GNS triplet* `(𝓗[ω], π[ω], ξ[ω])`:
 
 * `𝓗[ω]` — the GNS Hilbert space, the completion of `A` for the semi-inner product
   `⟪a, b⟫ = ω (a* b)`;
-* `π[ω] : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω])` — the GNS representation, induced by left multiplication;
+* `π[ω] : A →⋆ₙₐ[ℂ] (𝓗[ω] →L[ℂ] 𝓗[ω])` — the GNS representation, induced by left multiplication;
 * `ξ[ω] : 𝓗[ω]` — the cyclic unit vector, characterised by `⟪ξ[ω], [a]⟫ = ω a`.
 
 All three are the GNS construction of a general positive linear functional, applied to the
-functional `ω.toPositiveLinearMap` underlying the state: the space and the representation are
+functional `PositiveLinearMap.ofClass ω` underlying the state: the space and the representation are
 Mathlib's `PositiveLinearMap.GNS` and `PositiveLinearMap.gnsNonUnitalStarAlgHom`, and the cyclic
 vector is `PositiveLinearMap.gnsVector`, whose norm is `√‖f‖ₒₚ` for a general positive functional
 `f`.  The only input specific to states is `‖ω‖ = 1`, which makes `ξ[ω]` a unit vector.  The
-canonical map `a ↦ [a]` is `ω.toPositiveLinearMap.gnsMk`.
+canonical map `a ↦ [a]` is `(PositiveLinearMap.ofClass ω).gnsMk`.
 
 ## Main definitions
 
@@ -32,7 +32,7 @@ canonical map `a ↦ [a]` is `ω.toPositiveLinearMap.gnsMk`.
   notations `𝓗[ω]`, `π[ω]`, `ξ[ω]` (activate with `open scoped GNS`).
 * `PositiveLinearMap.gnsCStarRep` — Mathlib's GNS representation of a positive functional,
   bundled as a `CStarRep`; for a state `ω`, the orbit map `a ↦ π[ω] a ξ[ω]` is
-  `ω.toPositiveLinearMap.gnsCStarRep.orbit`.
+  `(PositiveLinearMap.ofClass ω).gnsCStarRep.orbit`.
 
 ## Main results
 
@@ -55,7 +55,7 @@ canonical map `a ↦ [a]` is `ω.toPositiveLinearMap.gnsMk`.
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexOrder ComplexHilbertSpace
+open scoped InnerProductSpace ComplexOrder
 open PositiveLinearMap
 
 /-! ### The GNS representation of a positive functional, bundled -/
@@ -64,11 +64,6 @@ namespace PositiveLinearMap
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable (f : A →ₚ[ℂ] ℂ)
-
-noncomputable instance : ComplexHilbertSpace f.GNS where
-  toNormedAddCommGroup := inferInstance
-  toInnerProductSpace := inferInstance
-  toCompleteSpace := inferInstance
 
 /-- Mathlib's GNS representation `(f.GNS, f.gnsNonUnitalStarAlgHom)` bundled as a `CStarRep`.
 
@@ -90,23 +85,23 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing
 
 /-- The GNS Hilbert space `𝓗[ω]` of a state: Mathlib's `PositiveLinearMap.GNS`, the completion
 of `A` for the semi-inner product `⟪a, b⟫ = ω (a* b)`. -/
-abbrev gnsSpace : Type _ := ω.toPositiveLinearMap.GNS
+abbrev gnsSpace : Type _ := (PositiveLinearMap.ofClass ω).GNS
 
 /-- Notation `𝓗[ω]` for the GNS Hilbert space `State.gnsSpace ω`. -/
 scoped[GNS] notation:max "𝓗[" ω "]" => State.gnsSpace ω
 
 open scoped GNS
 
-/-- The GNS representation `π[ω] : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω])`, induced by left multiplication:
+/-- The GNS representation `π[ω] : A →⋆ₙₐ[ℂ] (𝓗[ω] →L[ℂ] 𝓗[ω])`, induced by left multiplication:
 Mathlib's `PositiveLinearMap.gnsNonUnitalStarAlgHom`. -/
-noncomputable abbrev gnsRep : A →⋆ₙₐ[ℂ] 𝓑(𝓗[ω]) := ω.toPositiveLinearMap.gnsNonUnitalStarAlgHom
+noncomputable abbrev gnsRep : A →⋆ₙₐ[ℂ] (𝓗[ω] →L[ℂ] 𝓗[ω]) := (PositiveLinearMap.ofClass ω).gnsNonUnitalStarAlgHom
 
 /-- Notation `π[ω]` for the GNS representation `State.gnsRep ω`. -/
 scoped[GNS] notation:max "π[" ω "]" => State.gnsRep ω
 
 /-- The cyclic vector `ξ[ω] ∈ 𝓗[ω]`: `PositiveLinearMap.gnsVector`, the Riesz representative of
 the functional `[a] ↦ ω a`. -/
-noncomputable abbrev gnsVector : 𝓗[ω] := ω.toPositiveLinearMap.gnsVector
+noncomputable abbrev gnsVector : 𝓗[ω] := (PositiveLinearMap.ofClass ω).gnsVector
 
 /-- Notation `ξ[ω]` for the cyclic vector `State.gnsVector ω`. -/
 scoped[GNS] notation:max "ξ[" ω "]" => State.gnsVector ω
@@ -116,30 +111,31 @@ lemma norm_gnsRep_le (a : A) : ‖π[ω] a‖ ≤ ‖a‖ :=
   NonUnitalStarAlgHom.norm_apply_le _ a
 
 /-- The fundamental identity `π[ω] a ξ[ω] = [a]`. -/
-lemma gnsRep_apply_gnsVector (a : A) : π[ω] a ξ[ω] = ω.toPositiveLinearMap.gnsMk a :=
-  ω.toPositiveLinearMap.gnsNonUnitalStarAlgHom_apply_gnsVector a
+lemma gnsRep_apply_gnsVector (a : A) : π[ω] a ξ[ω] = (PositiveLinearMap.ofClass ω).gnsMk a :=
+  (PositiveLinearMap.ofClass ω).gnsNonUnitalStarAlgHom_apply_gnsVector a
 
 /-- Cyclicity of `ξ[ω]`: the orbit `{π[ω] a ξ[ω] | a : A}` is dense in `𝓗[ω]`. -/
-lemma gnsVector_cyclic : DenseRange (ω.toPositiveLinearMap.gnsCStarRep.orbit ξ[ω]) :=
-  ω.toPositiveLinearMap.denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
+lemma gnsVector_cyclic : DenseRange ((PositiveLinearMap.ofClass ω).gnsCStarRep.orbit ξ[ω]) :=
+  (PositiveLinearMap.ofClass ω).denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
 
 /-- The GNS identity `ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫`. -/
 lemma gns_condition (a : A) : ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫_ℂ :=
-  ω.toPositiveLinearMap.apply_eq_inner_gnsNonUnitalStarAlgHom_gnsVector a
+  (PositiveLinearMap.ofClass ω).apply_eq_inner_gnsNonUnitalStarAlgHom_gnsVector a
 
 /-- Normalisation of the cyclic vector: `‖ξ[ω]‖ = 1`, since `‖ξ[ω]‖ = √‖ω‖ₒₚ` and
 `‖ω‖ₒₚ = 1`. -/
 lemma norm_gnsVector : ‖ξ[ω]‖ = 1 := by
   rw [gnsVector, PositiveLinearMap.norm_gnsVector, ← Real.sqrt_one]
   congr 1
-  exact ω.norm_eq_one
+  exact ω.opNorm_ofClass_eq_one
 
+/-- The cyclic vector of a state is nonzero, since `‖ξ[ω]‖ = 1`. -/
 lemma gnsVector_ne_zero : ξ[ω] ≠ 0 := by
   rw [← norm_ne_zero_iff, norm_gnsVector]
   exact one_ne_zero
 
 /-- The GNS space of a state is nonzero: it contains the unit vector `ξ[ω]`. -/
-instance nontrivial_gnsCStarRep_H : Nontrivial ω.toPositiveLinearMap.gnsCStarRep.H :=
+instance nontrivial_gnsCStarRep_H : Nontrivial (PositiveLinearMap.ofClass ω).gnsCStarRep.H :=
   nontrivial_of_ne ξ[ω] 0 ω.gnsVector_ne_zero
 
 /-! ### Multiplicative states -/
@@ -149,8 +145,8 @@ instance nontrivial_gnsCStarRep_H : Nontrivial ω.toPositiveLinearMap.gnsCStarRe
 `π[ω] a [b] - ω a • [b] = [a b - ω a • b]` has squared norm `ω (d* d) = |ω d|² = 0`
 for `d = a b - ω a • b`. -/
 lemma gnsCStarRep_π_eq_smul_one_of_map_mul (hω : ∀ a b, ω (a * b) = ω a * ω b) (a : A) :
-    ω.toPositiveLinearMap.gnsCStarRep.π a = ω a • 1 := by
-  let f := ω.toPositiveLinearMap
+    (PositiveLinearMap.ofClass ω).gnsCStarRep.π a = ω a • 1 := by
+  let f := PositiveLinearMap.ofClass ω
   change f.gnsNonUnitalStarAlgHom a = ω a • 1
   refine ContinuousLinearMap.ext fun v => ?_
   refine f.denseRange_gnsMk.induction_on v ?_ ?_
@@ -167,7 +163,7 @@ lemma gnsCStarRep_π_eq_smul_one_of_map_mul (hω : ∀ a b, ω (a * b) = ω a * 
 
 /-- A state is faithful iff the canonical map `a ↦ [a]` into `𝓗[ω]` is injective. -/
 theorem isFaithful_iff_injective_gnsMk :
-    ω.IsFaithful ↔ Function.Injective ω.toPositiveLinearMap.gnsMk := by
+    ω.IsFaithful ↔ Function.Injective (PositiveLinearMap.ofClass ω).gnsMk := by
   rw [injective_iff_map_eq_zero]
   simp only [gnsMk_eq_zero_iff]
   rfl
@@ -175,7 +171,7 @@ theorem isFaithful_iff_injective_gnsMk :
 /-- A state is faithful iff the cyclic vector separates the algebra, i.e. the orbit map
 `a ↦ π[ω] a ξ[ω]` is injective. -/
 theorem isFaithful_iff_separating :
-    ω.IsFaithful ↔ Function.Injective (ω.toPositiveLinearMap.gnsCStarRep.orbit ξ[ω]) := by
+    ω.IsFaithful ↔ Function.Injective ((PositiveLinearMap.ofClass ω).gnsCStarRep.orbit ξ[ω]) := by
   rw [ω.isFaithful_iff_injective_gnsMk]
   exact Iff.of_eq (congrArg Function.Injective (funext (gnsRep_apply_gnsVector ω)).symm)
 
@@ -213,10 +209,10 @@ open scoped GNS
 
 /-- On a unital algebra the GNS representation of a state is unital: `π[ω] 1 = 1`. -/
 lemma gnsRep_one : π[ω] 1 = 1 :=
-  ω.toPositiveLinearMap.gnsNonUnitalStarAlgHom_one
+  (PositiveLinearMap.ofClass ω).gnsNonUnitalStarAlgHom_one
 
 /-- On a unital algebra the cyclic vector is the class of the unit: `ξ[ω] = [1]`. -/
-lemma gnsVector_eq_gnsMk_one : ξ[ω] = ω.toPositiveLinearMap.gnsMk 1 :=
-  ω.toPositiveLinearMap.gnsVector_eq_gnsMk_one
+lemma gnsVector_eq_gnsMk_one : ξ[ω] = (PositiveLinearMap.ofClass ω).gnsMk 1 :=
+  (PositiveLinearMap.ofClass ω).gnsVector_eq_gnsMk_one
 
 end State

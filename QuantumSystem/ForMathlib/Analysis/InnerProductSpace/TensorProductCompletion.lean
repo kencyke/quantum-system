@@ -56,6 +56,9 @@ The textbook symbols `⊗̂` (completed tensor) and `⊗ₕ` (pure tensor) live 
 
 ## Main results
 
+* `UniformSpace.Completion.surjective_toComplL`, `FiniteDimensional.completion` — a
+  finite-dimensional seminormed space surjects onto its completion, which is therefore
+  finite-dimensional.
 * `HilbertTensor.inner_tmul` — the inner product on pure tensors factorises.
 * `HilbertTensor.add_tmul` / `tmul_add` / `tmul_smul_left` / `smul_tmul_right` — `tmul` is
   bilinear.
@@ -74,10 +77,11 @@ open scoped TensorProduct
 
 /-! ### Completion of a linear isometric equivalence and of a finite-dimensional space
 
-These are general facts about `UniformSpace.Completion` phrased for normed spaces; they are the
-analytic inputs to the constructions below. The completion of a linear isometric equivalence
-extends it to the completions, and the completion of a finite-dimensional space is again
-finite-dimensional. -/
+These are general facts about `UniformSpace.Completion`; they are the analytic inputs to the
+constructions below. The completion of a linear isometric equivalence of normed spaces extends it to
+the completions, and a finite-dimensional seminormed space surjects onto its completion
+(`UniformSpace.Completion.surjective_toComplL`), which is therefore finite-dimensional
+(`FiniteDimensional.completion`). -/
 
 section Completion
 
@@ -128,23 +132,27 @@ noncomputable def completion (f : E ≃ₗᵢ[𝕜] F) : Completion E ≃ₗᵢ[
 
 end LinearIsometryEquiv
 
-/-- The completion of a finite-dimensional normed space (over a complete field) is
-finite-dimensional. The coercion `toComplL : E → Completion E` is a linear map with dense range
-whose image is a finite-dimensional (hence closed) subspace, so it is surjective, and
-finite-dimensionality transfers along a surjection. -/
-lemma FiniteDimensional.completion {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
-    [NormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
-    FiniteDimensional 𝕜 (Completion E) := by
+/-- The coercion `E → Completion E` of a finite-dimensional seminormed space (over a complete
+field) is surjective: its image is a finite-dimensional, hence closed, subspace, and it is dense. -/
+lemma UniformSpace.Completion.surjective_toComplL {𝕜 E : Type*} [NontriviallyNormedField 𝕜]
+    [CompleteSpace 𝕜] [SeminormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
+    Function.Surjective (Completion.toComplL : E →L[𝕜] Completion E) := by
   set f : E →L[𝕜] Completion E := Completion.toComplL with hf
   have hdense : DenseRange f := by
     simpa [hf, Completion.coe_toComplL] using Completion.denseRange_coe (α := E)
   have hclosed : IsClosed (Set.range f) := by
     have h := (LinearMap.range (f : E →ₗ[𝕜] Completion E)).closed_of_finiteDimensional
     rwa [LinearMap.coe_range] at h
-  have hsurj : Function.Surjective f := by
-    have hu : Set.range f = Set.univ := by rw [← hclosed.closure_eq, hdense.closure_eq]
-    exact Set.range_eq_univ.mp hu
-  exact Module.Finite.of_surjective (f : E →ₗ[𝕜] Completion E) hsurj
+  have hu : Set.range f = Set.univ := by rw [← hclosed.closure_eq, hdense.closure_eq]
+  exact Set.range_eq_univ.mp hu
+
+/-- The completion of a finite-dimensional seminormed space (over a complete field) is
+finite-dimensional, since `toComplL : E → Completion E` is surjective. -/
+lemma FiniteDimensional.completion {𝕜 E : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜]
+    [SeminormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
+    FiniteDimensional 𝕜 (Completion E) :=
+  Module.Finite.of_surjective (Completion.toComplL : E →L[𝕜] Completion E).toLinearMap
+    Completion.surjective_toComplL
 
 end Completion
 

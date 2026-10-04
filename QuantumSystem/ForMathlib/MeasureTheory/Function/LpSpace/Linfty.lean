@@ -30,7 +30,7 @@ continuous functional calculus of `M_f` is composition: `g(M_f) = M_{g ∘ f}`, 
   `L²(μ, ℂ)`.
 * `MeasureTheory.Linfty.compBCF g f` — the element `g ∘ f` of `L∞` for a bounded continuous `g`.
 * `MeasureTheory.Linfty.indicatorConst hs c` — the indicator `c 1_s ∈ L∞` of any measurable set,
-  Mathlib's `indicatorConstLp` at `p = ∞` without the hypothesis `μ s ≠ ∞`.
+  of finite or infinite measure; Mathlib's `indicatorConstLp` requires `μ s ≠ ∞` for every `p`.
 
 ## Main results
 
@@ -192,22 +192,20 @@ section Indicator
 
 variable {E : Type*} [NormedAddCommGroup E] {s : Set α}
 
-/-- The indicator `c 1_s` of a measurable set as an element of `L∞`. This is Mathlib's
-`MeasureTheory.indicatorConstLp` at `p = ∞` without its hypothesis `μ s ≠ ∞`, which is spurious for
-`p = ∞`; the two agree when `μ s ≠ ∞`
-(`MeasureTheory.Linfty.indicatorConst_eq_indicatorConstLp`). -/
+/-- The indicator `c 1_s` of a measurable set as an element of `L∞`: the constant `c` lies in
+`L∞` (`MeasureTheory.memLp_top_const`) and so does its restriction to `s`
+(`MeasureTheory.MemLp.indicator`). Mathlib's `MeasureTheory.indicatorConstLp` requires `μ s ≠ ∞`
+for every `p`, a hypothesis that is spurious for `p = ∞`, so it cannot be used here.
+
+TODO (upstream): relax the hypothesis of `MeasureTheory.memLp_indicator_const` to
+`c = 0 ∨ μ s ≠ ∞ ∨ p = ∞`, generalise `MeasureTheory.indicatorConstLp` accordingly, and replace
+this definition by `indicatorConstLp ∞ hs _ c`. -/
 noncomputable def indicatorConst (hs : MeasurableSet s) (c : E) : Lp E ∞ μ :=
-  (memLp_top_of_bound (aestronglyMeasurable_const.indicator hs) ‖c‖
-    (Eventually.of_forall fun x => norm_indicator_le_norm_self (fun _ => c) x)).toLp _
+  ((memLp_top_const c).indicator hs).toLp _
 
 lemma coeFn_indicatorConst (hs : MeasurableSet s) (c : E) :
     ⇑(indicatorConst (μ := μ) hs c) =ᵐ[μ] s.indicator fun _ => c :=
   MemLp.coeFn_toLp _
-
-/-- For `μ s ≠ ∞`, `indicatorConst` is Mathlib's `indicatorConstLp` at `p = ∞`. -/
-lemma indicatorConst_eq_indicatorConstLp (hs : MeasurableSet s) (hμs : μ s ≠ ∞) (c : E) :
-    indicatorConst (μ := μ) hs c = indicatorConstLp ∞ hs hμs c :=
-  Lp.ext ((coeFn_indicatorConst hs c).trans indicatorConstLp_coeFn.symm)
 
 end Indicator
 

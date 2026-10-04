@@ -25,13 +25,13 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
 * **Argument order.** `arakiVec M ξ η` is `S(ω_ξ ‖ ω_η)`: the first argument `ω_ξ` is the state
   being measured, the second `ω_η` the reference. The relative modular operator takes them in the
   opposite order, `Δ_{η,ξ} = VonNeumannAlgebra.relativeModular M η ξ` (Ohya–Petz's `Δ(η, ξ)`).
-* **Finite dimensions.** For `M = B(ℂⁿ)` acting as `1 ⊗ B(ℂⁿ)` on `K ⊗̂ ℂⁿ` and `ξ`, `η`
-  purifications of positive semidefinite matrices `ρ`, `σ`, this is Umegaki's
-  `Tr ρ (log ρ - log σ)` (natural logarithm, unit nat), in the same
-  slot order as Umegaki's relative entropy `Matrix.umegakiEntropy ρ σ` (`D(ρ ∥ σ)`), which is
-  defined as `S(ω_ρ ‖ ω_σ)`: `VonNeumannAlgebra.arakiVec_purification` (and, for any representing
-  vectors, `VonNeumannAlgebra.arakiVec_eq_umegakiEntropy`); for normal functionals,
-  `VonNeumannAlgebra.arakiEntropy_normalFunctional`.
+* **Finite dimensions.** For `M = B(H)`, `H` finite-dimensional, acting as `1 ⊗ B(H)` on
+  `K ⊗̂ H` and `ξ`, `η` purifications of positive operators `ρ`, `σ`, this is the eigenvalue sum of
+  Umegaki's `tr ρ (log ρ - log σ)` (natural logarithm, unit nat), in the same slot order as
+  Umegaki's relative entropy `umegakiEntropy ψ φ` (`D(ψ ∥ φ)`), which is defined as `S(ψ ‖ φ)`:
+  `VonNeumannAlgebra.arakiVec_purification`; for normal functionals,
+  `VonNeumannAlgebra.arakiEntropy_boundedLinearOperators_eq_sum`
+  (`QuantumSystem.Analysis.Entropy.Araki.FiniteDimensional`).
 * **Commutative algebras.** On the diagonal algebra it is the Kullback–Leibler divergence
   `Σᵢ pᵢ log (pᵢ / qᵢ)` (`VonNeumannAlgebra.arakiVec_densityVec_fintype`), which pins the order: the
   first argument carries the weights `pᵢ` outside the logarithm. On the multiplication algebra

@@ -31,6 +31,8 @@ is inherited from the type I structure theorem
 * `VonNeumannAlgebra.IsSplitInclusion A B` — some type I factor `M` satisfies `A ≤ M ≤ B`.
 * `VonNeumannAlgebra.IsSplitInclusion.le` / `mono` — a split inclusion is an inclusion, and
   splitness survives shrinking `A` and enlarging `B`.
+* `VonNeumannAlgebra.IsSplitInclusion.commutant` / `isSplitInclusion_commutant_iff` — `A ≤ B` is
+  split iff `B′ ≤ A′` is, since the commutant of a type I factor is a type I factor.
 * `VonNeumannAlgebra.IsTypeIFactor.isSplitInclusion_of_le_of_le` — any inclusion sandwiching a
   type I factor is split.
 * `VonNeumannAlgebra.isSplitInclusion_self_iff` — the identity inclusion `M ≤ M` is split exactly
@@ -74,6 +76,19 @@ lemma IsSplitInclusion.mono {A A' B B' : VonNeumannAlgebra H} (hA : A' ≤ A) (h
     (h : IsSplitInclusion A B) : IsSplitInclusion A' B' :=
   let ⟨M, hM, h₁, h₂⟩ := h
   ⟨M, hM, hA.trans h₁, h₂.trans hB⟩
+
+/-- **Split inclusions pass to commutants**: if `A ≤ M ≤ B` with `M` a type I factor, then
+`B′ ≤ M′ ≤ A′`, and `M′` is a type I factor (`IsTypeIFactor.commutant`). -/
+theorem IsSplitInclusion.commutant {A B : VonNeumannAlgebra H} (h : IsSplitInclusion A B) :
+    IsSplitInclusion B.commutant A.commutant :=
+  let ⟨M, hM, h₁, h₂⟩ := h
+  ⟨M.commutant, hM.commutant, commutant_le h₂, commutant_le h₁⟩
+
+/-- `A ≤ B` is split iff the commutant inclusion `B′ ≤ A′` is split. -/
+theorem isSplitInclusion_commutant_iff {A B : VonNeumannAlgebra H} :
+    IsSplitInclusion B.commutant A.commutant ↔ IsSplitInclusion A B :=
+  ⟨fun h => by simpa only [VonNeumannAlgebra.commutant_commutant] using h.commutant,
+    IsSplitInclusion.commutant⟩
 
 /-- Any inclusion sandwiching a type I factor is split. -/
 lemma IsTypeIFactor.isSplitInclusion_of_le_of_le {M A B : VonNeumannAlgebra H}

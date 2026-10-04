@@ -23,7 +23,7 @@ For a sector family `F : SectorFamily A` on a non-unital C\*-algebra
 * `F.directSumHilbert` — the `ℓ²`-direct sum Hilbert space
   `⨁_{α : F.Index} (F.rep α).H`.
 * `F.directSumRep` — the block-diagonal universal representation
-  `A →⋆ₙₐ[ℂ] 𝓑(F.directSumHilbert)`.
+  `A →⋆ₙₐ[ℂ] (F.directSumHilbert →L[ℂ] F.directSumHilbert)`.
 * `F.directSumRep_norm_le` — the operator-norm bound
   `‖F.directSumRep a‖ ≤ ‖a‖`.
 
@@ -65,7 +65,7 @@ this file avoids the over-counting.
 @[expose] public section
 
 open ENNReal
-open scoped InnerProduct ComplexHilbertSpace
+open scoped InnerProduct
 
 namespace SectorFamily
 
@@ -76,12 +76,6 @@ variable {A : Type u} [NonUnitalCStarAlgebra A]
 /-- The `ℓ²` direct-sum Hilbert space of the family. -/
 noncomputable abbrev directSumHilbert (F : SectorFamily.{u, v, w} A) :=
   ↥(lp (fun α : F.Index => (F.rep α).H) 2)
-
-noncomputable instance (F : SectorFamily.{u, v, w} A) :
-    ComplexHilbertSpace F.directSumHilbert where
-  toNormedAddCommGroup := inferInstance
-  toInnerProductSpace := inferInstance
-  toCompleteSpace := inferInstance
 
 /-! ### Coordinate API
 
@@ -113,6 +107,7 @@ noncomputable def sectorEmbed (F : SectorFamily.{u, v, w} A)
       lp.norm_single (E := fun α' : F.Index => (F.rep α').H)
         (by norm_num : (0 : ℝ≥0∞) < 2) α x }
 
+/-- The `α`-th coordinate of `sectorEmbed F α v` is `v` itself. -/
 @[simp] lemma sectorEmbed_apply_coord (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H) :
     (sectorEmbed F α v).val α = v := by
@@ -121,6 +116,7 @@ noncomputable def sectorEmbed (F : SectorFamily.{u, v, w} A)
   exact lp.single_apply_self
     (E := fun α' : F.Index => (F.rep α').H) 2 α v
 
+/-- Every coordinate of `sectorEmbed F α v` other than the `α`-th one vanishes. -/
 lemma sectorEmbed_apply_coord_ne (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H)
     {α' : F.Index} (h : α' ≠ α) :
@@ -130,6 +126,8 @@ lemma sectorEmbed_apply_coord_ne (F : SectorFamily.{u, v, w} A)
   exact lp.single_apply_ne
     (E := fun α'' : F.Index => (F.rep α'').H) 2 α v h
 
+/-- Projecting onto the `α`-th component after embedding into it is the identity:
+`sectorComponent F α (sectorEmbed F α v) = v`. -/
 @[simp] lemma sectorComponent_sectorEmbed (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H) :
     sectorComponent F α (sectorEmbed F α v) = v := by
@@ -144,7 +142,7 @@ Defined generically (the family `F` stays a variable so that the
 costly `directSumHilbert`-family typeclass synthesis only fires here,
 not at downstream specialized call sites). -/
 noncomputable def sectorEmbedOfEquiv (F : SectorFamily.{u, v, w} A)
-    (α : F.Index) {H : Type v} [ComplexHilbertSpace H]
+    (α : F.Index) {H : Type v} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
     (eq : H ≃ₗᵢ[ℂ] (F.rep α).H) :
     H →ₗᵢ[ℂ] F.directSumHilbert :=
   (sectorEmbed F α).comp eq.toLinearIsometry
@@ -152,7 +150,7 @@ noncomputable def sectorEmbedOfEquiv (F : SectorFamily.{u, v, w} A)
 /-- The block-diagonal action of `a` on the direct-sum Hilbert space: Mathlib's `lp.mapCLM` of
 the fibrewise operators `π_α a`, each of norm at most `‖a‖`. -/
 noncomputable def directSumCLM (F : SectorFamily.{u, v, w} A) (a : A) :
-    𝓑(F.directSumHilbert) :=
+    (F.directSumHilbert →L[ℂ] F.directSumHilbert) :=
   lp.mapCLM 2 (fun α => (F.rep α).π a) (norm_nonneg a)
     fun α => NonUnitalStarAlgHom.norm_apply_le (F.rep α).π a
 
@@ -177,7 +175,7 @@ lemma directSumCLM_adjoint (F : SectorFamily.{u, v, w} A) (a : A) :
 /-- The block-diagonal universal `*`-representation associated with a
 sector family. -/
 noncomputable def directSumRep (F : SectorFamily.{u, v, w} A) :
-    A →⋆ₙₐ[ℂ] 𝓑(F.directSumHilbert) where
+    A →⋆ₙₐ[ℂ] (F.directSumHilbert →L[ℂ] F.directSumHilbert) where
   toFun a := F.directSumCLM a
   map_mul' a b := by ext x α; simp
   map_zero' := by ext x α; simp
@@ -224,6 +222,7 @@ noncomputable def toCStarRep (F : SectorFamily.{u, v, w} A) : CStarRep A where
   H := F.directSumHilbert
   π := F.directSumRep
 
+/-- The action of the bundled direct sum `F.toCStarRep` is `F.directSumRep`. -/
 @[simp] lemma toCStarRep_π (F : SectorFamily.{u, v, w} A) : F.toCStarRep.π = F.directSumRep :=
   rfl
 
@@ -235,10 +234,10 @@ theorem directSumRep_isometry_of (F : SectorFamily.{u, v, w} A) (h_sep : F.Separ
     NonUnitalStarAlgHom.norm_map _ (F.directSumRep_injective_of h_sep) a
 
 /-- If the family separates points, the image of the direct-sum representation is norm closed,
-hence a C\*-subalgebra of `𝓑(F.directSumHilbert)`. -/
+hence a C\*-subalgebra of `F.directSumHilbert →L[ℂ] F.directSumHilbert`. -/
 theorem directSumRep_isClosed_range_of (F : SectorFamily.{u, v, w} A)
     (h_sep : F.SeparatesPoints) :
-    IsClosed (NonUnitalStarAlgHom.range F.directSumRep : Set 𝓑(F.directSumHilbert)) := by
+    IsClosed (NonUnitalStarAlgHom.range F.directSumRep : Set (F.directSumHilbert →L[ℂ] F.directSumHilbert)) := by
   rw [NonUnitalStarAlgHom.coe_range]
   exact (F.directSumRep_isometry_of h_sep).isClosedEmbedding.isClosed_range
 
@@ -246,9 +245,9 @@ theorem directSumRep_isClosed_range_of (F : SectorFamily.{u, v, w} A)
 `F.directSumRep a` has every coordinate killed by the whole image of the corresponding member. -/
 theorem directSumRep_actsNondegenerately_of (F : SectorFamily.{u, v, w} A)
     (h : ∀ α, InnerProductSpace.ActsNondegenerately
-      (Set.range ((F.rep α).π : A → 𝓑((F.rep α).H)))) :
+      (Set.range ((F.rep α).π : A → ((F.rep α).H →L[ℂ] (F.rep α).H)))) :
     InnerProductSpace.ActsNondegenerately
-      (Set.range (F.directSumRep : A → 𝓑(F.directSumHilbert))) := by
+      (Set.range (F.directSumRep : A → (F.directSumHilbert →L[ℂ] F.directSumHilbert))) := by
   intro x hx
   apply Subtype.ext
   funext α

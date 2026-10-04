@@ -54,6 +54,9 @@ infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**.
   `VonNeumannAlgebra.IsTypeIFactor.exists_split_tensor_decomposition` — the spatial and split
   tensor decompositions of `QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem`, stated
   for a type I factor with the minimal projection existentially quantified.
+* `VonNeumannAlgebra.IsTypeIFactor.commutant`, `VonNeumannAlgebra.isTypeIFactor_commutant_iff` —
+  the commutant of a type I factor is a type I factor, via `isTypeIFactor_vnTensorRight`
+  (`1 ⊗̄ B(H₂)` is a type I factor) and `isTypeIFactor_conj_iff` (spatial invariance).
 * `VonNeumannAlgebra.IsTypeIFactor.exists_starAlgEquiv` — a type I factor is `⋆`-isomorphic to
   `B(K)` for some complex Hilbert space `K`.
 * `VonNeumannAlgebra.isTypeIFactor_boundedLinearOperators` — `B(H)` is a type I factor.
@@ -230,7 +233,78 @@ theorem IsTypeIFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H
   let ⟨hf, e, he⟩ := hN
   ⟨e, he, hf.exists_split_tensor_decomposition he h₁ h₂⟩
 
+/-- **`1 ⊗̄ B(H₂)` is a type I factor** (for nonzero legs). It is a factor
+(`HilbertTensor.isFactor_vnTensorRight`), and `1 ⊗̂ |u⟩⟨u|` is a minimal projection for a unit
+vector `u ∈ H₂`: every element of `1 ⊗̄ B(H₂) = (B(H₁) ⊗̄ 1)′` is a right amplification `1 ⊗̂ S`
+(`HilbertTensor.exists_amplifyRight_of_commutes`), so the corner reduces to the corner of the
+rank-one projection in `B(H₂)`. -/
+theorem isTypeIFactor_vnTensorRight {H₁ H₂ : Type*} [NormedAddCommGroup H₁]
+    [InnerProductSpace ℂ H₁] [CompleteSpace H₁] [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂]
+    [CompleteSpace H₂] [Nontrivial H₁] [Nontrivial H₂] :
+    IsTypeIFactor (vnTensorRight (H₁ := H₁) (H₂ := H₂)) := by
+  obtain ⟨p, hp⟩ := exists_isMinimalProjection_boundedLinearOperators (H := H₂)
+  refine ⟨isFactor_vnTensorRight, amplifyRight p, hp.1.map (amplifyRightₐ (H₁ := H₁)),
+    amplifyRight_mem_vnTensorRight p, fun h => hp.2.2.1 (amplifyRight_injective (H₁ := H₁)
+      (h.trans amplifyRight_zero.symm)), fun T hT => ?_⟩
+  obtain ⟨S, rfl⟩ : ∃ S, T = amplifyRight S := by
+    rw [← vnTensorLeft_commutant] at hT
+    obtain ⟨v, hv⟩ := exists_ne (0 : H₁)
+    have hu : ‖(‖v‖⁻¹ : ℂ) • v‖ = 1 := by
+      rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
+        inv_mul_cancel₀ (norm_ne_zero_iff.mpr hv)]
+    refine exists_amplifyRight_of_commutes _ hu T fun A => ?_
+    rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def]
+    exact (mem_commutant_iff.mp hT _ (amplifyLeft_mem_vnTensorLeft A)).symm
+  obtain ⟨c, hc⟩ := hp.2.2.2 S (mem_boundedLinearOperators S)
+  exact ⟨c, by rw [← amplifyRight_mul, ← amplifyRight_mul, hc, amplifyRight_smul]⟩
+
 end SpatialTensor
+
+section Conj
+
+variable {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H'] [CompleteSpace H']
+
+/-- **Type I factors are spatially invariant**: `U N U⋆` is a type I factor iff `N` is. -/
+theorem isTypeIFactor_conj_iff {N : VonNeumannAlgebra H} (U : H ≃ₗᵢ[ℂ] H') :
+    IsTypeIFactor (conj U N) ↔ IsTypeIFactor N := by
+  refine ⟨fun ⟨hf, e, he⟩ => ⟨(isFactor_conj_iff U).mp hf, U.conjStarAlgEquiv.symm e, ?_⟩,
+    fun ⟨hf, e, he⟩ => ⟨hf.conj U, _, he.conj U⟩⟩
+  rw [← isMinimalProjection_conj_iff U, StarAlgEquiv.apply_symm_apply]
+  exact he
+
+/-- If `N` is a type I factor, so is `U N U⋆`. -/
+theorem IsTypeIFactor.conj {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) (U : H ≃ₗᵢ[ℂ] H') :
+    IsTypeIFactor (conj U N) :=
+  (isTypeIFactor_conj_iff U).mpr hN
+
+end Conj
+
+open HilbertTensor in
+/-- **The commutant of a type I factor is a type I factor** (Takesaki V.1.31; Kadison–Ringrose
+9.1.4 for the spatial form). By the split tensor decomposition, `N` and `N′` are spatially
+`B(ℓ²(F)) ⊗̄ 1` and `1 ⊗̄ B(eH)` for a minimal projection `e` of `N` and a nonempty `F`; the latter
+is a type I factor (`isTypeIFactor_vnTensorRight`), and type I factors are spatially invariant
+(`isTypeIFactor_conj_iff`). -/
+theorem IsTypeIFactor.commutant {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) :
+    IsTypeIFactor N′ := by
+  classical
+  obtain ⟨e, he, F, U, ⟨i⟩, -, hU', -, -⟩ := hN.exists_split_tensor_decomposition le_rfl le_rfl
+  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
+    rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
+    exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
+      (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
+  have : Nontrivial (lp (fun _ : F => ℂ) 2) := by
+    refine ⟨⟨lp.single 2 i 1, 0, fun h => ?_⟩⟩
+    have := congrArg (fun f : lp (fun _ : F => ℂ) 2 => f i) h
+    simp at this
+  rw [← isTypeIFactor_conj_iff U, hU']
+  exact isTypeIFactor_vnTensorRight
+
+/-- A von Neumann algebra is a type I factor iff its commutant is. -/
+theorem isTypeIFactor_commutant_iff {N : VonNeumannAlgebra H} :
+    IsTypeIFactor N′ ↔ IsTypeIFactor N :=
+  ⟨fun h => VonNeumannAlgebra.commutant_commutant N ▸ h.commutant, IsTypeIFactor.commutant⟩
 
 /-- **Type I factor abstract structure theorem.** A type I factor `N` (a factor with a minimal
 projection, acting on a nonzero Hilbert space) is `⋆`-isomorphic to the algebra `B(K)` of all
@@ -268,15 +342,13 @@ lemma exists_eq_smul_one_of_mem_commutant_boundedLinearOperators {x : H →L[ℂ
     (hx : x ∈ (𝓑(H))′) : ∃ c : ℂ, x = c • 1 :=
   isFactor_boundedLinearOperators x (mem_boundedLinearOperators x) hx
 
-/-- **The scalar algebra `ℂ1 = B(H)′` is a type I factor** on a nonzero space: its only elements
-    are scalars, so it is a factor, and `1` is a minimal projection. This is the degenerate
-    type I factor of the escape clause "either `𝓡 = ℂ1` or …" of the type III₁ literature. -/
+/-- **The scalar algebra `ℂ1 = B(H)′` is a type I factor** on a nonzero space, as the commutant of
+    the type I factor `B(H)` (`IsTypeIFactor.commutant`); concretely its only elements are scalars
+    and `1` is a minimal projection. This is the degenerate type I factor of the escape clause
+    "either `𝓡 = ℂ1` or …" of the type III₁ literature. -/
 theorem isTypeIFactor_commutant_boundedLinearOperators [Nontrivial H] :
-    IsTypeIFactor (𝓑(H))′ := by
-  refine ⟨fun x hx _ => exists_eq_smul_one_of_mem_commutant_boundedLinearOperators hx,
-    1, ⟨IsStarProjection.one _, one_mem _, one_ne_zero, fun a ha => ?_⟩⟩
-  obtain ⟨c, rfl⟩ := exists_eq_smul_one_of_mem_commutant_boundedLinearOperators ha
-  exact ⟨c, by simp⟩
+    IsTypeIFactor (𝓑(H))′ :=
+  isTypeIFactor_boundedLinearOperators.commutant
 
 /-- **`B(H) ≃⋆ₐ B(ℓ²(ι))` with `H ≃ₗᵢ ℓ²(ι)`.** The full algebra is `⋆`-isomorphic to the bounded
 operators on `ℓ²(ι)` for an index set `ι` — the index set of a Hilbert basis of `H` — and the

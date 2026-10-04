@@ -71,11 +71,12 @@ operator exists for arbitrary vectors, and the value is independent of the repre
 
 The **data-processing inequality** `S(ψ ∘ α ‖ φ ∘ α) ≤ S(ψ ‖ φ)` for unital normal Schwarz maps
 is `VonNeumannAlgebra.arakiEntropy_comp_le` (`QuantumSystem.Analysis.Entropy.Araki.Monotonicity`),
-and the evaluation by Umegaki's `Tr ρ (log ρ - log σ)` is
-`VonNeumannAlgebra.arakiEntropy_normalFunctional` (`QuantumSystem.Analysis.Entropy.Araki.Matrix`);
-Umegaki's relative entropy `Matrix.umegakiEntropy` is defined as this functional on the normal
-functionals `Tr (ρ ·)` of `B(ℂⁿ)`, and its monotonicity under quantum channels is the
-data-processing inequality for the dual channel.
+and the evaluation in finite dimension by the eigenvalue sum of Umegaki's `tr ρ (log ρ - log σ)` is
+`VonNeumannAlgebra.arakiEntropy_boundedLinearOperators_eq_sum`
+(`QuantumSystem.Analysis.Entropy.Araki.FiniteDimensional`);
+Umegaki's relative entropy `umegakiEntropy` is defined as this functional on the normal functionals
+`tr (ρ ·)` of `B(H)`, and its monotonicity under quantum channels is the data-processing inequality
+for the dual channel.
 
 
 ## Not formalised

@@ -81,13 +81,14 @@ theorems impose nondegeneracy or cyclicity where they need it.
   to it), `SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le` (stability under
   enlarging the pair), and `SplitProperty.isSplitPair` (the commutant form,
   Borchers/Buchholz, `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`, obtained from the nested form via locality).
-  The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`;
-  Matsui's half-chain split property is of that form.
+  The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`,
+  a symmetric relation (`VonNeumannNet.IsSplitPair.symm`); Matsui's half-chain split property is
+  of that form.
   Its degenerate side is `VonNeumannNet.splitProperty_of_complex`: on a one-dimensional Hilbert
   space *every* net has the property, so no one-dimensional model is evidence about anything else.
 * `LocalNet.vonNeumannNet` — the net of local von Neumann algebras of a representation, as a
-  `VonNeumannNet`, and `LocalNet.SplitProperty` — the split property at that instance, with the
-  three consequences above specialised to it.
+  `VonNeumannNet`, and `LocalNet.SplitProperty` — the split property at that instance, an
+  `abbrev` to which the three consequences above apply directly.
 
 ## Notation
 
@@ -366,9 +367,9 @@ theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K 
     algebras*. For causally orthogonal regions the inclusion `𝓡(O₁) ≤ 𝓡(O₂)′` itself holds by
     locality (`algebra_le_commutant_of_orthogonal`), so the content is the interpolating factor.
 
-    The relation is symmetric in the literature, since the commutant of a type I factor is a type
-    I factor. That theorem is not yet proved in this development, so symmetry is not stated here;
-    it is a missing theorem, not an assumption. -/
+    The relation is symmetric (`IsSplitPair.symm`): taking commutants turns the chain into
+    `𝓡(O₂) ≤ 𝔑′ ≤ 𝓡(O₁)′`, and the commutant of a type I factor is a type I factor
+    (`VonNeumannAlgebra.IsTypeIFactor.commutant`). -/
 def IsSplitPair (vnNet : VonNeumannNet K H) (O₁ O₂ : K) : Prop :=
   VonNeumannAlgebra.IsSplitInclusion (vnNet.algebra O₁) (vnNet.algebra O₂)′
 
@@ -376,6 +377,19 @@ def IsSplitPair (vnNet : VonNeumannNet K H) (O₁ O₂ : K) : Prop :=
 lemma IsSplitPair.le {vnNet : VonNeumannNet K H} {O₁ O₂ : K} (h : vnNet.IsSplitPair O₁ O₂) :
     vnNet.algebra O₁ ≤ (vnNet.algebra O₂)′ :=
   VonNeumannAlgebra.IsSplitInclusion.le h
+
+/-- **Split pairs are symmetric.** If `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O₂)′` for a type I factor `𝔑`, then
+    `𝓡(O₂) ≤ 𝔑′ ≤ 𝓡(O₁)′`, and `𝔑′` is a type I factor
+    (`VonNeumannAlgebra.IsSplitInclusion.commutant`). -/
+lemma IsSplitPair.symm {vnNet : VonNeumannNet K H} {O₁ O₂ : K} (h : vnNet.IsSplitPair O₁ O₂) :
+    vnNet.IsSplitPair O₂ O₁ := by
+  have := VonNeumannAlgebra.IsSplitInclusion.commutant h
+  rwa [VonNeumannAlgebra.commutant_commutant] at this
+
+/-- The split-pair relation is symmetric. -/
+lemma isSplitPair_comm {vnNet : VonNeumannNet K H} {O₁ O₂ : K} :
+    vnNet.IsSplitPair O₁ O₂ ↔ vnNet.IsSplitPair O₂ O₁ :=
+  ⟨IsSplitPair.symm, IsSplitPair.symm⟩
 
 /-- Splitness of a pair survives shrinking either region. -/
 lemma IsSplitPair.mono {vnNet : VonNeumannNet K H} {O₁ O₂ O₁' O₂' : K} (h₁ : O₁' ≤ O₁)
@@ -519,49 +533,15 @@ noncomputable def vonNeumannNet (R : CStarRep N.quasiLocalCStarAlgebra) :
     directed index set nor a quasi-local C⋆-algebra; the hypotheses `[IsDirectedOrder K]`,
     `[Nonempty K]` and `[N.Faithful]` here are the cost of *this instance*, whose local algebras
     are built from a representation of the quasi-local C⋆-algebra. Nets over non-directed index
-    sets are stated through `VonNeumannNet.SplitProperty` directly. -/
-def SplitProperty [ProperContainment K] (R : CStarRep N.quasiLocalCStarAlgebra) : Prop :=
+    sets are stated through `VonNeumannNet.SplitProperty` directly.
+
+    This is an `abbrev`, so the consequences `VonNeumannNet.SplitProperty.isSplitInclusion`,
+    `VonNeumannNet.SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le` and
+    `VonNeumannNet.SplitProperty.isSplitPair` apply to `hs : N.SplitProperty R` directly (also by
+    dot notation), and are not restated here. -/
+abbrev SplitProperty [ProperContainment K] (R : CStarRep N.quasiLocalCStarAlgebra) : Prop :=
   (N.vonNeumannNet R).SplitProperty
 
 end LocalAlgebras
-
-section SplitConsequences
-
-variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
-variable [ProperContainment K] {N : LocalNet K} [N.Faithful]
-variable {R : CStarRep N.quasiLocalCStarAlgebra}
-
-/-- The split property extends to enlarged pairs: if `O₀ ≤ O₁ ⋐ O₂ ≤ O₃` then the inclusion
-    `𝓡(O₀) ≤ 𝓡(O₃)` is split as well. Specialisation of
-    `VonNeumannNet.SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le`. -/
-lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : N.SplitProperty R)
-    {O₀ O₁ O₂ O₃ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⋐ O₂) (h₃ : O₂ ≤ O₃) :
-    VonNeumannAlgebra.IsSplitInclusion
-      (N.localVonNeumannAlgebra R O₀) (N.localVonNeumannAlgebra R O₃) :=
-  VonNeumannNet.SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le hs h₀ h h₃
-
-/-- **The split inclusion of a properly contained pair**: under the split property, `O₁ ⋐ O₂`
-    yields the split inclusion `𝓡(O₁) ≤ 𝓡(O₂)`. Specialisation of
-    `VonNeumannNet.SplitProperty.isSplitInclusion`, whose docstring describes the tensor splitting
-    that follows. (The instantiated existential is deliberately not restated here: spelling it out
-    over `R.H` forces the elaborator to unfold the quasi-local algebra inside `R`'s type, while
-    consuming the general statement through this corollary is cheap.) -/
-theorem SplitProperty.isSplitInclusion (hs : N.SplitProperty R) {O₁ O₂ : K} (h : O₁ ⋐ O₂) :
-    VonNeumannAlgebra.IsSplitInclusion
-      (N.localVonNeumannAlgebra R O₁) (N.localVonNeumannAlgebra R O₂) :=
-  VonNeumannNet.SplitProperty.isSplitInclusion hs h
-
-/-- **The commutant form of the split property** (Borchers' conjecture as displayed in Buchholz,
-    *Product states for local algebras*): for a properly contained pair `O₁ ⋐ O₂` and any region
-    `O_B` causally orthogonal to `O₂`, a type I factor interpolates between `𝓡(O₁)` and the
-    commutant `𝓡(O_B)′`. Specialisation of
-    `VonNeumannNet.SplitProperty.isSplitPair`, whose docstring records what the
-    converse would need (Haag duality) and how this one-sided form relates to Buchholz's
-    symmetric four-term chain. -/
-theorem SplitProperty.isSplitPair (hs : N.SplitProperty R) {O₁ O₂ O_B : K}
-    (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) : (N.vonNeumannNet R).IsSplitPair O₁ O_B :=
-  VonNeumannNet.SplitProperty.isSplitPair hs h hd
-
-end SplitConsequences
 
 end LocalNet

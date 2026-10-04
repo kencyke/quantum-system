@@ -5,9 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Complex.Basic
-public import Mathlib.Analysis.Complex.Exponential
-public import Mathlib.Analysis.Complex.Order
 public import Mathlib.Analysis.SpecialFunctions.Complex.Arg
 
 /-!

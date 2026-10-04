@@ -56,7 +56,7 @@ convention stated in `QuantumSystem.Algebra.LocalNet.Net`.
 
 @[expose] public section
 
-open scoped ProperContainment VonNeumannAlgebra
+open scoped ProperContainment VonNeumannAlgebra ComplexOrder
 
 namespace ProperContainment
 
@@ -101,6 +101,8 @@ def finiteLocalOperators (vnNet : VonNeumannNet (Finset α) H) (S : Set α) :
     Set (H →L[ℂ] H) :=
   ⋃ (Λ : Finset α) (_ : (Λ : Set α) ⊆ S), (vnNet.algebra Λ : Set (H →L[ℂ] H))
 
+/-- Membership in `finiteLocalOperators`: `x` is localised in some finite region `Λ ⊆ S`, i.e.
+`x ∈ vnNet.algebra Λ`. -/
 lemma mem_finiteLocalOperators {vnNet : VonNeumannNet (Finset α) H} {S : Set α}
     {x : H →L[ℂ] H} :
     x ∈ vnNet.finiteLocalOperators S ↔ ∃ Λ : Finset α, (Λ : Set α) ⊆ S ∧ x ∈ vnNet.algebra Λ := by
@@ -179,7 +181,7 @@ variable [PartialOrder N.quasiLocalCStarAlgebra] [StarOrderedRing N.quasiLocalCS
     `State` needs one and the quasi-local algebra carries none; the spectral order
     `CStarAlgebra.spectralOrder` is the canonical instance. -/
 def IsSplitPairAt (ω : State N.quasiLocalCStarAlgebra) (S₁ S₂ : Set α) : Prop :=
-  (N.vonNeumannNetSet ω.toPositiveLinearMap.gnsCStarRep).IsSplitPair S₁ S₂
+  (N.vonNeumannNetSet (PositiveLinearMap.ofClass ω).gnsCStarRep).IsSplitPair S₁ S₂
 
 /-- **The nested split property yields split pairs with a gap**: if the GNS net of `ω` has the
     split property and `S₁ ⋐ S₂` with `S₃` disjoint from `S₂`, then `(S₁, S₃)` is a split pair
@@ -187,7 +189,7 @@ def IsSplitPairAt (ω : State N.quasiLocalCStarAlgebra) (S₁ S₂ : Set α) : P
     `(Iic 0, Ici 3)` from `Iic 0 ⋐ Iic 2`; the gap-free pair `(Iic 0, Ici 1)` is not reachable. -/
 theorem IsSplitPairAt.of_splitProperty [ProperContainment (Set α)]
     {ω : State N.quasiLocalCStarAlgebra}
-    (hs : (N.vonNeumannNetSet ω.toPositiveLinearMap.gnsCStarRep).SplitProperty)
+    (hs : (N.vonNeumannNetSet (PositiveLinearMap.ofClass ω).gnsCStarRep).SplitProperty)
     {S₁ S₂ S₃ : Set α} (h : S₁ ⋐ S₂) (hd : Disjoint S₂ S₃) : N.IsSplitPairAt ω S₁ S₃ :=
   VonNeumannNet.SplitProperty.isSplitPair hs h hd
 
@@ -201,15 +203,16 @@ theorem IsSplitPairAt.of_map_mul {ω : State N.quasiLocalCStarAlgebra}
   refine ⟨_, VonNeumannAlgebra.isTypeIFactor_commutant_boundedLinearOperators, ?_, ?_⟩
   · refine VonNeumannAlgebra.generated_le fun x hx => ?_
     obtain ⟨Λ, -, hx⟩ := VonNeumannNet.mem_finiteLocalOperators.1 hx
-    refine VonNeumannAlgebra.generated_le (M := (𝓑(ω.toPositiveLinearMap.gnsCStarRep.H))′) ?_ hx
+    refine VonNeumannAlgebra.generated_le
+      (M := (𝓑((PositiveLinearMap.ofClass ω).gnsCStarRep.H))′) ?_ hx
     rintro _ ⟨a, rfl⟩
     simp only
     rw [State.gnsCStarRep_π_eq_smul_one_of_map_mul ω hω]
     exact SetLike.mem_coe.2 (SMulMemClass.smul_mem _ (one_mem _))
   · intro x hx
     obtain ⟨c, rfl⟩ := VonNeumannAlgebra.exists_eq_smul_one_of_mem_commutant_boundedLinearOperators hx
-    exact VonNeumannAlgebra.mem_commutant_iff.2 fun g _ => by rw [mul_smul_comm, smul_mul_assoc,
-      mul_one, one_mul]
+    exact VonNeumannAlgebra.mem_commutant_iff.2 fun g _ =>
+      (mul_smul_one c g).trans (smul_one_mul c g).symm
 
 end State
 

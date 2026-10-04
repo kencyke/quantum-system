@@ -5,10 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.Matrix
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
+public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 
 /-!
 # Basic theory of von Neumann factors and the comparison of projections
@@ -59,6 +59,9 @@ The file is organised in three parts:
 * `VonNeumannAlgebra.MvNEquiv.ne_zero`, `VonNeumannAlgebra.IsMinimalProjection.of_mvNEquiv` —
   nonzeroness and minimality transport along Murray–von Neumann equivalence.
 * `VonNeumannAlgebra.isFactor_boundedLinearOperators` — `𝓑(H)` is a factor.
+* `VonNeumannAlgebra.IsFactor.commutant` / `isFactor_commutant_iff` — `N` is a factor iff `N′` is.
+* `VonNeumannAlgebra.isFactor_conj_iff`, `VonNeumannAlgebra.isMinimalProjection_conj_iff` —
+  factors and minimal projections are invariant under spatial isomorphisms `N ↦ U N U⋆`.
 * `VonNeumannAlgebra.IsFactor.central_projection_eq` — in a factor every central projection is
   `0` or `1`.
 * `VonNeumannAlgebra.isStarProjection_mem_commutant_iff` — a star projection lies in the commutant
@@ -91,9 +94,8 @@ activate them with `open scoped VonNeumannAlgebra`.
 | `p ≼[N] q` | `VonNeumannAlgebra.MvNSub N p q` | `open scoped VonNeumannAlgebra` |
 | `𝓑(H)` | `VonNeumannAlgebra.boundedLinearOperators H` | `open scoped VonNeumannAlgebra` |
 
-The `𝓑(H)` glyph overloads the type-level notation `𝓑(H) = H →L[ℂ] H` of
-`ForMathlib.Analysis.CStarAlgebra.HilbertSpace`; the two denote the same object B(H) at different
-levels and are related by `boundedLinearOperators.starAlgEquiv`. The expected type disambiguates.
+The von Neumann algebra `𝓑(H)` and the operator type `H →L[ℂ] H` denote the same object B(H) at
+different levels and are related by `boundedLinearOperators.starAlgEquiv`.
 -/
 
 @[expose] public section
@@ -116,11 +118,10 @@ noncomputable def boundedLinearOperators (H : Type*) [NormedAddCommGroup H]
     Set.Subset.antisymm (Set.subset_univ _) Set.subset_centralizer_centralizer
 
 /-- `𝓑(H)` denotes the von Neumann algebra of all bounded operators on `H`
-(`VonNeumannAlgebra.boundedLinearOperators H`). This overloads the type-level notation
-`𝓑(H) = H →L[ℂ] H` of `ForMathlib.Analysis.CStarAlgebra.HilbertSpace`: the two denote the same
-mathematical object B(H) at different levels (the operator *type* vs. the bundled *von Neumann
-algebra* of all operators), and the expected type disambiguates. The two levels are related by the
-canonical `⋆`-isomorphism `boundedLinearOperators.starAlgEquiv`. -/
+(`VonNeumannAlgebra.boundedLinearOperators H`). It and the operator type `H →L[ℂ] H` denote the
+same mathematical object B(H) at different levels (the bundled *von Neumann algebra* of all
+operators vs. the operator *type*), related by the canonical `⋆`-isomorphism
+`boundedLinearOperators.starAlgEquiv`. -/
 scoped notation:max "𝓑(" H ")" => VonNeumannAlgebra.boundedLinearOperators H
 
 /-- The carrier of `𝓑(H)` is all of `H →L[ℂ] H`. -/
@@ -133,7 +134,7 @@ scoped notation:max "𝓑(" H ")" => VonNeumannAlgebra.boundedLinearOperators H
 
 /-- **The two levels of `𝓑(H)` agree.** The underlying `⋆`-subalgebra of the bundled von Neumann
 algebra `𝓑(H)`, coerced to a type, is canonically `⋆`-isomorphic to the operator type
-`H →L[ℂ] H` (itself the type-level `𝓑(H)` of `ForMathlib.Analysis.CStarAlgebra.HilbertSpace`).
+`H →L[ℂ] H`.
 This is the `⋆`-algebra analogue of `Subalgebra.topEquiv` / `Submodule.topEquiv`, making explicit
 that the notation overload denotes one and the same object B(H). The equivalence is phrased on
 `(𝓑(H)).toStarSubalgebra` because Mathlib equips the `⋆`-subalgebra — not the bundled
@@ -152,20 +153,10 @@ noncomputable def boundedLinearOperators.starAlgEquiv :
       (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
     (StarAlgHom.ext fun _ => rfl) (StarAlgHom.ext fun _ => rfl)
 
+/-- The inverse of `boundedLinearOperators.starAlgEquiv` sends an operator `x` to itself, viewed
+as a member of `𝓑(H)`; coercing back to `H →L[ℂ] H` recovers `x`. -/
 @[simp] lemma boundedLinearOperators.coe_starAlgEquiv_symm_apply (x : H →L[ℂ] H) :
     ((boundedLinearOperators.starAlgEquiv (H := H)).symm x : H →L[ℂ] H) = x := rfl
-
-/-- `n × n` matrices as elements of `𝓑(ℂⁿ)`: the `⋆`-isomorphism `Matrix.toEuclideanCLM`, landing
-in the bundled von Neumann algebra `𝓑(EuclideanSpace ℂ n)`. For a normal functional `ψ` on
-`𝓑(ℂⁿ)`, `ψ.1 A.toBoundedLinearOperators` is `ψ` evaluated on the matrix `A`. -/
-noncomputable def _root_.Matrix.toBoundedLinearOperators {n : Type*} [Fintype n] [DecidableEq n] :
-    Matrix n n ℂ ≃⋆ₐ[ℂ] (𝓑(EuclideanSpace ℂ n) : VonNeumannAlgebra _).toStarSubalgebra :=
-  Matrix.toEuclideanCLM.trans boundedLinearOperators.starAlgEquiv.symm
-
-@[simp] lemma _root_.Matrix.coe_toBoundedLinearOperators {n : Type*} [Fintype n] [DecidableEq n]
-    (A : Matrix n n ℂ) :
-    ((Matrix.toBoundedLinearOperators A : (𝓑(EuclideanSpace ℂ n) : VonNeumannAlgebra _)) :
-      EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) = Matrix.toEuclideanCLM (𝕜 := ℂ) A := rfl
 
 /-- A von Neumann algebra is closed under scalar multiplication. -/
 lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
@@ -212,6 +203,15 @@ lemma eq_boundedLinearOperators_complex (N : VonNeumannAlgebra ℂ) : N = 𝓑(�
 both `N` and its commutant is a scalar multiple of the identity. -/
 def IsFactor (N : VonNeumannAlgebra H) : Prop :=
   ∀ x : H →L[ℂ] H, x ∈ N → x ∈ N.commutant → ∃ c : ℂ, x = c • 1
+
+/-- **The commutant of a factor is a factor.** The centre `N ∩ N′` is also the centre
+`N′ ∩ N″` of the commutant, since `N″ = N`. -/
+theorem IsFactor.commutant {N : VonNeumannAlgebra H} (hN : IsFactor N) : IsFactor N.commutant :=
+  fun x hx hx' => hN x (by rwa [VonNeumannAlgebra.commutant_commutant] at hx') hx
+
+/-- A von Neumann algebra is a factor iff its commutant is. -/
+theorem isFactor_commutant_iff {N : VonNeumannAlgebra H} : IsFactor N.commutant ↔ IsFactor N :=
+  ⟨fun h => VonNeumannAlgebra.commutant_commutant N ▸ h.commutant, IsFactor.commutant⟩
 
 /-- **`B(H)` is a factor.** The centre of the full algebra is trivial: an operator lying in the
 commutant of `𝓑(H)` commutes with every operator, in particular with every rank-one operator, hence
@@ -666,5 +666,63 @@ theorem IsMinimalProjection.mvNSub_of_isFactor {N : VonNeumannAlgebra H}
   have : Nontrivial H := he.nontrivial
   obtain ⟨a, haN, hane⟩ := hN.exists_mul_ne he.2.1 he.2.2.1 hq0
   exact he.mvNSub_of_ne hq hqN haN hane
+
+/-! ### Invariance under spatial isomorphisms -/
+
+section Conj
+
+variable {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H'] [CompleteSpace H']
+
+/-- **Factors are spatially invariant**: if `N` is a factor, so is `U N U⋆`. -/
+theorem IsFactor.conj {N : VonNeumannAlgebra H} (hN : IsFactor N) (U : H ≃ₗᵢ[ℂ] H') :
+    IsFactor (conj U N) := fun y hy hy' => by
+  rw [conj_commutant, mem_conj_iff] at hy'
+  rw [mem_conj_iff] at hy
+  obtain ⟨c, hc⟩ := hN _ hy hy'
+  refine ⟨c, ?_⟩
+  have := congrArg U.conjStarAlgEquiv hc
+  rwa [StarAlgEquiv.apply_symm_apply, map_smul, map_one] at this
+
+/-- `U N U⋆` is a factor iff `N` is. -/
+theorem isFactor_conj_iff {N : VonNeumannAlgebra H} (U : H ≃ₗᵢ[ℂ] H') :
+    IsFactor (conj U N) ↔ IsFactor N := by
+  refine ⟨fun h x hx hx' => ?_, fun h => h.conj U⟩
+  obtain ⟨c, hc⟩ := h _ ((conjStarAlgEquiv_mem_conj_iff U N).mpr hx)
+    (by rw [conj_commutant]; exact (conjStarAlgEquiv_mem_conj_iff U _).mpr hx')
+  refine ⟨c, ?_⟩
+  have := congrArg U.conjStarAlgEquiv.symm hc
+  rwa [StarAlgEquiv.symm_apply_apply, map_smul, map_one] at this
+
+/-- **Minimal projections are spatially invariant**: if `e` is a minimal projection of `N`, then
+`U e U⋆` is a minimal projection of `U N U⋆`. -/
+theorem IsMinimalProjection.conj {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) (U : H ≃ₗᵢ[ℂ] H') :
+    IsMinimalProjection (conj U N) (U.conjStarAlgEquiv e) := by
+  obtain ⟨hp, hmem, hne, hcorner⟩ := he
+  refine ⟨hp.map U.conjStarAlgEquiv, (conjStarAlgEquiv_mem_conj_iff U N).mpr hmem,
+    fun h => hne (U.conjStarAlgEquiv.injective (h.trans (map_zero _).symm)), fun a ha => ?_⟩
+  rw [mem_conj_iff] at ha
+  obtain ⟨c, hc⟩ := hcorner _ ha
+  refine ⟨c, ?_⟩
+  have := congrArg U.conjStarAlgEquiv hc
+  rwa [map_mul, map_mul, StarAlgEquiv.apply_symm_apply, map_smul] at this
+
+/-- `U e U⋆` is a minimal projection of `U N U⋆` iff `e` is a minimal projection of `N`. -/
+theorem isMinimalProjection_conj_iff {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (U : H ≃ₗᵢ[ℂ] H') :
+    IsMinimalProjection (conj U N) (U.conjStarAlgEquiv e) ↔ IsMinimalProjection N e := by
+  refine ⟨fun h => ?_, fun h => h.conj U⟩
+  obtain ⟨hp, hmem, hne, hcorner⟩ := h
+  refine ⟨?_, (conjStarAlgEquiv_mem_conj_iff U N).mp hmem, ?_, fun a ha => ?_⟩
+  · have := hp.map U.conjStarAlgEquiv.symm
+    rwa [StarAlgEquiv.symm_apply_apply] at this
+  · rintro rfl; exact hne (map_zero _)
+  · obtain ⟨c, hc⟩ := hcorner _ ((conjStarAlgEquiv_mem_conj_iff U N).mpr ha)
+    refine ⟨c, ?_⟩
+    have := congrArg U.conjStarAlgEquiv.symm hc
+    rwa [map_mul, map_mul, StarAlgEquiv.symm_apply_apply, StarAlgEquiv.symm_apply_apply,
+      map_smul, StarAlgEquiv.symm_apply_apply] at this
+
+end Conj
 
 end VonNeumannAlgebra

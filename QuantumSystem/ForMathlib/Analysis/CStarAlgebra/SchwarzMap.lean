@@ -5,7 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 
@@ -28,10 +27,12 @@ Positivity is proved here: a positive element is of the form `b⋆ b`, so
 linear map is bounded (Mathlib's `ContinuousLinearMapClass` instance for positive maps), and
 `‖f a‖² = ‖f(a)⋆ f(a)‖ ≤ ‖f(a⋆ a)‖ ≤ ‖f‖ ‖a‖²` forces `‖f‖ ≤ 1`.
 
-The main examples are the non-unital ⋆-homomorphisms (with equality) and, by the
-Kadison–Schwarz inequality of Choi, the completely positive maps with `φ 1 ≤ 1`
-(`CompletelyPositiveMap.le_map_star_mul`). Only `2`-positivity of `φ` is used in the proof; it is
-stated for completely positive maps since Mathlib has no notion of `k`-positivity.
+The main examples are the non-unital ⋆-homomorphisms (with equality), the Kraus maps
+(`SchwarzMap.ofKraus`) and, by the Kadison–Schwarz inequality of Choi, the `2`-positive maps with
+`φ 1 ≤ 1`, in particular the completely positive ones. The `k`-positive maps and that inequality
+are in `ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`
+(`KPositiveMapClass.le_map_star_mul`); a `2`-positive map with `φ 1 ≤ 1` is packaged as a Schwarz
+map by `KPositiveMapClass.toSchwarzMap` in `Analysis/CStarAlgebra/KadisonSchwarz.lean`.
 
 ## Main definitions
 
@@ -41,8 +42,6 @@ stated for completely positive maps since Mathlib has no notion of `k`-positivit
   unlike that class, `A₁` and `A₂` are `outParam`s, so that `le_map_star_mul f a` elaborates
   without an expected type.
 * `SchwarzMap.comp`, `SchwarzMap.id`.
-* `CompletelyPositiveMap.toSchwarzMap` — a completely positive map with `φ 1 ≤ 1` as a Schwarz
-  map.
 * `SchwarzMap.ofKraus` — the Kraus map `x ↦ Σᵢ Cᵢ† x Cᵢ` between operator algebras, for
   `Cᵢ : H → K` with `Σᵢ Cᵢ† Cᵢ ≤ 1`, as a Schwarz map. The inequality is proved directly, as
   `T(x⋆x) - T(x)⋆T(x) = Σᵢ Dᵢ† Dᵢ + T(x)⋆ (1 - Σᵢ Cᵢ† Cᵢ) T(x)` for `Dᵢ = x Cᵢ - Cᵢ T(x)`,
@@ -54,10 +53,6 @@ stated for completely positive maps since Mathlib has no notion of `k`-positivit
 * `SchwarzMapClass.norm_apply_le`, `SchwarzMapClass.nnnorm_apply_le` — Schwarz maps are contractive:
   `‖f a‖ ≤ ‖a‖`.
 * `SchwarzMapClass.map_one_le_one` — `f 1 ≤ 1` for a Schwarz map between unital C⋆-algebras.
-* `CStarMatrix.diag_nonneg` — the diagonal entries of a nonnegative `CStarMatrix` are
-  nonnegative.
-* `CompletelyPositiveMap.le_map_star_mul` — the Kadison–Schwarz inequality for completely
-  positive maps with `φ 1 ≤ 1`.
 -/
 
 @[expose] public section
@@ -244,69 +239,6 @@ instance instSchwarzMapClass : SchwarzMapClass F A₁ A₂ where
 
 end NonUnitalStarAlgHomClass
 
-namespace CStarMatrix
-
-variable {n A : Type*} [Fintype n] [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-/-- The diagonal entries of a nonnegative `CStarMatrix` are nonnegative. The positive matrices are the
-additive closure of the `X⋆ X` (`StarOrderedRing.le_iff`), and `(X⋆ X) i i = ∑ₖ (X k i)⋆ (X k i)`. -/
-theorem diag_nonneg {M : CStarMatrix n n A} (hM : 0 ≤ M) {i : n} : 0 ≤ M i i := by
-  obtain ⟨P, hP, rfl⟩ := (StarOrderedRing.le_iff 0 M).mp hM
-  clear hM
-  rw [zero_add]
-  induction hP using AddSubmonoid.closure_induction with
-  | mem _ h =>
-    obtain ⟨X, rfl⟩ := h
-    change 0 ≤ (star X * X) i i
-    rw [mul_apply]
-    exact Finset.sum_nonneg fun k _ => by rw [star_apply]; exact star_mul_self_nonneg _
-  | zero => exact le_rfl
-  | add _ _ _ _ h₁ h₂ => exact add_nonneg h₁ h₂
-
-end CStarMatrix
-
-namespace CompletelyPositiveMap
-
-variable {A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂]
-  [StarOrderedRing A₁] [StarOrderedRing A₂]
-
-/-- **Kadison–Schwarz inequality** (Choi 1974): a completely positive map with `φ 1 ≤ 1` satisfies
-`φ(a)⋆ φ(a) ≤ φ(a⋆ a)`. The matrix `!![1, a; a⋆, a⋆ a] = X⋆ X`, `X = !![1, a; 0, 0]`, is positive,
-hence so is `N = !![φ 1, b; b⋆, c]` with `b = φ a`, `c = φ(a⋆ a)` (this is the only place complete
-positivity enters, at size `2`); the lower-right entry of `Y⋆ N Y`, `Y = !![1, -b; 0, 1]`, is
-`c - 2 b⋆ b + b⋆ φ(1) b ≤ c - b⋆ b` and is positive (`CStarMatrix.diag_nonneg`). -/
-theorem le_map_star_mul (φ : A₁ →CP A₂) (hφ : φ 1 ≤ 1) (a : A₁) :
-    star (φ a) * φ a ≤ φ (star a * a) := by
-  set b := φ a
-  let X : CStarMatrix (Fin 2) (Fin 2) A₁ := CStarMatrix.ofMatrix !![1, a; 0, 0]
-  let Y : CStarMatrix (Fin 2) (Fin 2) A₂ := CStarMatrix.ofMatrix !![1, -b; 0, 1]
-  have hN : 0 ≤ (star X * X).map φ := φ.map_cstarMatrix_nonneg _ (star_mul_self_nonneg X)
-  have h₁ := CStarMatrix.diag_nonneg (star_left_conjugate_nonneg hN Y) (i := 1)
-  have h₂ : (star Y * (star X * X).map φ * Y) 1 1 =
-      φ (star a * a) - star b * b - star b * b + star b * φ 1 * b := by
-    simp only [Fin.isValue, CStarMatrix.mul_apply, CStarMatrix.star_apply, CStarMatrix.ofMatrix_apply,
-      Matrix.of_apply, Matrix.cons_val', Matrix.cons_val_one, Matrix.cons_val_fin_one,
-      CStarMatrix.map_apply, Fin.sum_univ_two, Matrix.cons_val_zero, map_add, star_neg, star_one, one_mul,
-      star_zero, zero_mul, map_zero, add_zero, neg_mul, mul_one, map_star φ a, mul_neg, Y, b, X]
-    noncomm_ring
-  have h₃ : star b * φ 1 * b ≤ star b * b := by
-    simpa using star_left_conjugate_le_conjugate hφ b
-  rw [h₂] at h₁
-  rw [← sub_nonneg]
-  calc (0 : A₂) ≤ _ + (star b * b - star b * φ 1 * b) := add_nonneg h₁ (sub_nonneg.mpr h₃)
-    _ = φ (star a * a) - star b * b := by noncomm_ring
-
-/-- A completely positive map with `φ 1 ≤ 1` as a Schwarz map. -/
-def toSchwarzMap (φ : A₁ →CP A₂) (hφ : φ 1 ≤ 1) : SchwarzMap A₁ A₂ where
-  toLinearMap := φ.toLinearMap
-  le_map_star_mul' := φ.le_map_star_mul hφ
-
-/-- `φ.toSchwarzMap hφ` evaluates as `φ`. -/
-@[simp] lemma toSchwarzMap_apply (φ : A₁ →CP A₂) (hφ : φ 1 ≤ 1) (a : A₁) :
-    φ.toSchwarzMap hφ a = φ a := rfl
-
-end CompletelyPositiveMap
-
 namespace SchwarzMap
 
 open ContinuousLinearMap
@@ -352,6 +284,7 @@ noncomputable def ofKraus (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) 
       (Finset.sum_nonneg fun i _ => nonneg_iff_isPositive.mpr (isPositive_adjoint_comp_self _))
       (star_left_conjugate_nonneg (sub_nonneg.mpr hC) S)
 
+/-- The Kraus Schwarz map is `x ↦ Σᵢ Cᵢ† x Cᵢ`. -/
 @[simp] lemma ofKraus_apply (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) ∘L C i ≤ 1)
     (x : K →L[ℂ] K) : ofKraus C hC x = ∑ i, adjoint (C i) ∘L x ∘L C i := rfl
 

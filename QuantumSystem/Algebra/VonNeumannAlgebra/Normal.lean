@@ -6,6 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.Projection
+public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Algebra.VonNeumannAlgebra.RadonNikodym
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Support
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor
@@ -47,14 +49,18 @@ amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 * `VonNeumannAlgebra.IsNormal M ω` — `ω` is σ-weakly continuous on `M`.
 * `VonNeumannAlgebra.NormalFunctional M` — the normal positive functionals on `M`.
 * `VonNeumannAlgebra.IsNormal.vec` — a representing vector in `ℓ²(ℕ) ⊗̂ H`.
-* `VonNeumannAlgebra.vectorFunctional M ξ` — the vector functional `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`;
-  `VonNeumannAlgebra.NormalFunctional.ofVector M ξ` — the same as a normal functional.
+* `VonNeumannAlgebra.toCStarRep M` — the defining representation `M ⊆ B(H)` as a `CStarRep`.
+* `VonNeumannAlgebra.vectorFunctional M ξ` — the vector functional `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`, the
+  vector functional `CStarRep.vectorFunctional` of the defining representation as a positive
+  functional; `VonNeumannAlgebra.NormalFunctional.ofVector M ξ` — the same as a normal functional.
 * `VonNeumannAlgebra.amplifiedVectorFunctional M Ξ` — the functional `⟪Ξ, (1 ⊗ ·) Ξ⟫` on `M` for
   `Ξ ∈ H₁ ⊗̂ H`; `VonNeumannAlgebra.NormalFunctional.ofAmplifiedVector M Ξ` — the same as a normal
   functional, for `Ξ ∈ ℓ²(ℕ) ⊗̂ H`.
 * `VonNeumannAlgebra.IsNormalMap α` — a map `α : N → M` between von Neumann algebras is σ-weakly
   continuous; `VonNeumannAlgebra.NormalFunctional.comp` — `ω ∘ α` for a normal positive `α`.
 * `VonNeumannAlgebra.NormalFunctional.supportProj ψ` — the support projection `s(ψ) ∈ M`.
+* `PositiveLinearMap.toNormalFunctional ψ` — a positive functional on `B(H)`, `H`
+  finite-dimensional, as a normal functional on `𝓑(H)`.
 
 ## Main results
 
@@ -68,8 +74,9 @@ amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 * `VonNeumannAlgebra.isNormalMap_id`, `VonNeumannAlgebra.IsNormal.comp`,
   `VonNeumannAlgebra.IsNormalMap.comp` — the identity is normal, and normality is stable
   under composition with normal maps.
-* `VonNeumannAlgebra.isNormalMap_of_finiteDimensional` — every linear map between von Neumann
-  algebras on finite-dimensional spaces is normal.
+* `VonNeumannAlgebra.isNormal_of_finiteDimensional`,
+  `VonNeumannAlgebra.isNormalMap_of_finiteDimensional` — every positive functional on, and every
+  linear map between, von Neumann algebras on finite-dimensional spaces is normal.
 * `VonNeumannAlgebra.NormalFunctional.supportProj_mem`,
   `VonNeumannAlgebra.NormalFunctional.isStarProjection_supportProj` — `s(ψ)` is a projection in `M`.
 * `VonNeumannAlgebra.NormalFunctional.supportProj_le_iff` — `s(ψ) ≤ p ↔ ψ(1 - p) = 0` for
@@ -234,7 +241,7 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
     nlinarith [sq_nonneg (a - b), norm_nonneg (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv ξ)),
       norm_nonneg (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv η))]
   obtain ⟨R, -, -, hR⟩ :=
-    CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := ρ) (f := ω) hdom
+    CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := ρ.toNonUnitalStarAlgHom) (f := ω) hdom
   exact ⟨R (lpTensorEquiv ζ), fun x => (hR x).symm⟩
 
 /-- `ω` is normal iff it is the restriction to `1 ⊗ M` of a vector functional on `ℓ²(ℕ) ⊗̂ H`. -/
@@ -290,14 +297,22 @@ theorem apply_star_mul_self_eq {ω : M →ₚ[ℂ] ℂ} {Ξ : lp (fun _ : ℕ =>
     HilbertTensor.inner_amplifyRight_star_mul_self]
 
 variable (M) in
-/-- The **vector functional** `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`. -/
+/-- The **defining representation** of `M` on `H`, the inclusion `M ⊆ B(H)`, as a `CStarRep`. -/
+noncomputable def toCStarRep : CStarRep M :=
+  ⟨H, (inclₐ M).toNonUnitalStarAlgHom⟩
+
+/-- The defining representation acts by inclusion. -/
+@[simp]
+theorem toCStarRep_π_apply (x : M) (ξ : H) : M.toCStarRep.π x ξ = (x : H →L[ℂ] H) ξ :=
+  rfl
+
+variable (M) in
+/-- The **vector functional** `ω_ξ = ⟪ξ, (·) ξ⟫` on `M`: the vector functional
+`CStarRep.vectorFunctional` of the defining representation `M.toCStarRep`, as a positive
+functional. -/
 noncomputable def vectorFunctional (ξ : H) : M →ₚ[ℂ] ℂ :=
-  PositiveLinearMap.mk₀
-    { toFun := fun x => ⟪ξ, (x : H →L[ℂ] H) ξ⟫_ℂ
-      map_add' := fun x y => by simp [inner_add_right]
-      map_smul' := fun c x => by simp [inner_smul_right] }
-    fun x hx => (ContinuousLinearMap.nonneg_iff_isPositive.mp
-      (show (0 : H →L[ℂ] H) ≤ x from hx)).inner_nonneg_right ξ
+  PositiveLinearMap.mk₀ (WeakDual.toStrongDual (M.toCStarRep.vectorFunctional ξ)).toLinearMap
+    (M.toCStarRep.vectorFunctional_nonneg ξ)
 
 /-- Evaluation of the vector functional: `ω_ξ(x) = ⟪ξ, x ξ⟫`. -/
 @[simp]
@@ -370,6 +385,12 @@ theorem IsNormal.comp [FunLike F N M] [LinearMapClass F ℂ N M] [OrderHomClass 
 /-- The identity map of a von Neumann algebra is normal. -/
 theorem isNormalMap_id : IsNormalMap (id : N → N) :=
   continuous_id
+
+/-- **Positive functionals on a von Neumann algebra on a finite-dimensional space are normal**: in
+finite dimensions the σ-weak topology is the unique Hausdorff vector-space topology, so every linear
+functional is σ-weakly continuous. -/
+theorem isNormal_of_finiteDimensional [FiniteDimensional ℂ H] (ω : M →ₚ[ℂ] ℂ) : M.IsNormal ω :=
+  LinearMap.continuous_of_finiteDimensional (ω.toLinearMap ∘ₗ M.ofSigmaWeak)
 
 /-- **Linear maps between finite-dimensional von Neumann algebras are normal**: in finite
 dimensions the σ-weak topology is the unique Hausdorff vector-space topology, so every linear map is
@@ -512,3 +533,33 @@ theorem supportProj_le_supportProj_iff (φ : M.NormalFunctional) :
 end NormalFunctional
 
 end VonNeumannAlgebra
+
+/-! ### Positive functionals on `B(H)` in finite dimension -/
+
+namespace PositiveLinearMap
+
+open scoped VonNeumannAlgebra
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [FiniteDimensional ℂ H]
+
+/-- A positive functional `ψ` on `B(H) = H →L[ℂ] H`, for finite-dimensional `H`, as a normal
+functional on the von Neumann algebra `𝓑(H)` of all bounded operators: the restriction of `ψ`
+along the inclusion `𝓑(H) → B(H)`, normal by `VonNeumannAlgebra.isNormal_of_finiteDimensional`.
+This is how Araki's relative entropy `VonNeumannAlgebra.arakiEntropy` applies to functionals on
+`B(H)`. -/
+noncomputable def toNormalFunctional (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) : 𝓑(H).NormalFunctional :=
+  ⟨.mk₀ (ψ.toLinearMap ∘ₗ SMulMemClass.subtype 𝓑(H)) fun _ hx => map_nonneg ψ hx,
+    VonNeumannAlgebra.isNormal_of_finiteDimensional _⟩
+
+/-- `ψ.toNormalFunctional` evaluates as `ψ`. -/
+@[simp] theorem toNormalFunctional_apply (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (x : 𝓑(H)) :
+    ψ.toNormalFunctional.1 x = ψ x :=
+  rfl
+
+/-- `ψ ↦ ψ.toNormalFunctional` is injective. -/
+theorem toNormalFunctional_injective :
+    Function.Injective (toNormalFunctional (H := H)) := fun ψ φ h => by
+  ext A
+  simpa using congrArg (fun ω : 𝓑(H).NormalFunctional => ω.1 ⟨A, trivial⟩) h
+
+end PositiveLinearMap

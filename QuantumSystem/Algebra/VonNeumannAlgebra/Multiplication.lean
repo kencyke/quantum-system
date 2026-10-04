@@ -261,6 +261,7 @@ theorem commutant_multiplicationAlgebra :
 noncomputable abbrev densityFun (P : Measure α) (μ : Measure α) (x : α) : ℝ :=
   (P.rnDeriv μ x).toReal
 
+/-- The density `dP/dμ`, as a real function, is measurable. -/
 lemma measurable_densityFun (P μ : Measure α) : Measurable (densityFun P μ) :=
   (Measure.measurable_rnDeriv P μ).ennreal_toReal
 
@@ -275,6 +276,7 @@ noncomputable def densityVec (P : Measure α) [IsFiniteMeasure P] (μ : Measure 
       (Eventually.of_forall fun x => ?_)
     simp [Real.sq_sqrt ENNReal.toReal_nonneg])
 
+/-- Almost everywhere, `densityVec P μ` is the function `√(dP/dμ)` (as a complex number). -/
 lemma coeFn_densityVec (P : Measure α) [IsFiniteMeasure P] (μ : Measure α) :
     ⇑(densityVec P μ) =ᵐ[μ] fun x => ((Real.sqrt (densityFun P μ x) : ℝ) : ℂ) :=
   MemLp.coeFn_toLp _
