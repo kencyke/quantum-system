@@ -229,6 +229,18 @@ noncomputable def conj (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) : Von
     (conj U N : Set (H' →L[ℂ] H')) = ⇑U.conjStarAlgEquiv '' (N : Set (H →L[ℂ] H)) :=
   StarSubalgebra.coe_map _ _
 
+/-- **Membership in a conjugate.** `y ∈ U N U⋆` exactly when `U⋆ y U ∈ N`. -/
+lemma mem_conj_iff (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) {y : H' →L[ℂ] H'} :
+    y ∈ conj U N ↔ U.conjStarAlgEquiv.symm y ∈ N := by
+  rw [← SetLike.mem_coe, coe_conj]
+  exact ⟨by rintro ⟨x, hx, rfl⟩; rwa [StarAlgEquiv.symm_apply_apply],
+    fun h => ⟨_, h, StarAlgEquiv.apply_symm_apply _ _⟩⟩
+
+/-- An operator lies in `U N U⋆` exactly when its preimage `x` lies in `N`. -/
+lemma conjStarAlgEquiv_mem_conj_iff (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H)
+    {x : H →L[ℂ] H} : U.conjStarAlgEquiv x ∈ conj U N ↔ x ∈ N := by
+  rw [mem_conj_iff, StarAlgEquiv.symm_apply_apply]
+
 /-- **Spatial conjugation is monotone.** If `P ≤ Q` then `U P U⋆ ≤ U Q U⋆`: conjugation transports
 inclusions, since its carrier is the image of the carrier under `U.conjStarAlgEquiv`. -/
 lemma conj_mono (U : H ≃ₗᵢ[ℂ] H') {P Q : VonNeumannAlgebra H} (h : P ≤ Q) :
