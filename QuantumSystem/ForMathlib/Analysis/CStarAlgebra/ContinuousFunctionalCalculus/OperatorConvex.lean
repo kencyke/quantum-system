@@ -46,9 +46,8 @@ and which the project builds from direct sums of Mathlib's GNS representations
 
 The core of Jensen's operator inequality is stated over an arbitrary unital C⋆-algebra `A`, from
 the convexity of `cfc f` over the matrix algebra `CStarMatrix ι ι A` and the continuity of `f` on
-the spectra that occur; the matrix forms for matrix convex `f` follow by presenting
-`CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) ℂ`, and are stated outside `ForMathlib`
-in `QuantumSystem/Analysis/Matrix/Order.lean` (`IsMatrixConvexOn.cfc_sum_le`).
+the spectra that occur. For matrix convex `f` the same argument applies to `A = Matrix m m ℂ` by
+presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) ℂ`.
 
 ## Main definitions
 
@@ -107,12 +106,10 @@ abstract C⋆-algebra, whose real algebra structure is `Algebra.complexToReal`, 
 `CStarMatrix` without an instance mismatch; only `IsMatrixConvexOn` uses `cfc` on
 `Matrix (Fin n) (Fin n) ℂ` with its own real algebra structure. `cfc_sum_le_of_convexOn_cstarMatrix`
 receives the convexity over `CStarMatrix ι ι A` through an injective unital ⋆-homomorphism `ψ` into
-another C⋆-algebra `B` (the generality of `ConvexOn.cfc_of_injective`) for two reasons: the matrix
-form of Jensen's inequality (`IsMatrixConvexOn.cfc_sum_le` in
-`QuantumSystem/Analysis/Matrix/Order.lean`), for `A = Matrix m m ℂ`, takes the convexity of `cfc f`
-on `B = Matrix (ι × m) (ι × m) ℂ` from matrix convexity, and operator convexity in the universe of
-`A` reaches `CStarMatrix ι ι A` only after reindexing `ι` by `Fin n`; in both cases `ψ` is a
-⋆-isomorphism.
+another C⋆-algebra `B` (the generality of `ConvexOn.cfc_of_injective`): operator convexity in the
+universe of `A` reaches `CStarMatrix ι ι A` only after reindexing `ι` by `Fin n`, and for
+`A = Matrix m m ℂ` matrix convexity supplies the convexity of `cfc f` on
+`B = Matrix (ι × m) (ι × m) ℂ`; in both cases `ψ` is a ⋆-isomorphism.
 
 The converse on a Hilbert space `H` tests positivity of `t f(X) + u f(Y) - f(tX + uY)` in a
 vector state `ξ`. The spectra of `X`, `Y` lie in an interval `[lo, hi] ⊆ s`, on which `f` is
@@ -746,8 +743,7 @@ spectrum of every such element, then `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ�
 continuity are received on a C⋆-algebra `B` through an injective unital ⋆-homomorphism
 `ψ : CStarMatrix ι ι A → B`, along which both pull back (`ConvexOn.cfc_of_injective`). This covers
 ⋆-isomorphisms, so that `B` may be a matrix algebra `Matrix (ι × m) (ι × m) ℂ` when
-`A = Matrix m m ℂ`: this is the form that matrix convexity alone supplies
-(`IsMatrixConvexOn.cfc_sum_le`, outside `ForMathlib` in `QuantumSystem/Analysis/Matrix/Order.lean`).
+`A = Matrix m m ℂ`: this is the form that matrix convexity alone supplies.
 For operator convex `f` (`IsOperatorConvexOn.cfc_sum_le`), `ψ` is the reindexing
 `CStarMatrix.reindexₐ` along `Fintype.equivFin ι` onto `CStarMatrix (Fin n) (Fin n) A`,
 `n = card ι`, which lies in the universe of `A`. It also covers faithful representations of
