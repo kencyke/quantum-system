@@ -241,7 +241,7 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
     nlinarith [sq_nonneg (a - b), norm_nonneg (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv ξ)),
       norm_nonneg (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv η))]
   obtain ⟨R, -, -, hR⟩ :=
-    CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := ρ) (f := ω) hdom
+    CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := ρ.toNonUnitalStarAlgHom) (f := ω) hdom
   exact ⟨R (lpTensorEquiv ζ), fun x => (hR x).symm⟩
 
 /-- `ω` is normal iff it is the restriction to `1 ⊗ M` of a vector functional on `ℓ²(ℕ) ⊗̂ H`. -/
