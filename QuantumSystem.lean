@@ -42,6 +42,7 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.Analysis.CStarAlgebra.KadisonSchwarz
+public import QuantumSystem.Analysis.CStarAlgebra.LiebConcavity
 public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvex
 public import QuantumSystem.Analysis.CStarAlgebra.Perspective
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Basic
@@ -101,6 +102,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.HilbertSchmidt
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
