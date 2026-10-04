@@ -110,6 +110,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductC
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian

@@ -11,6 +11,7 @@ public import Mathlib.Analysis.Normed.Module.HahnBanach
 public import QuantumSystem.Algebra.CStarAlgebra.State.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 
 /-!
 # Pure states on a C*-algebra
@@ -30,64 +31,8 @@ quasi-state space of `A`, viewed inside `WeakDual ℂ A`.
 
 open scoped ComplexOrder
 
--- The following typeclass instances are no longer auto-derivable in v4.30
--- (the priority-90 `Complex.Module` instances depend on `Module R ℝ`, which
--- doesn't fire when the surrounding code expects e.g. `SMulCommClass ℂ ℝ ℂ`
--- through `ContinuousLinearMap.isScalarTower`'s side conditions in module mode).
--- We provide explicit replacements via anonymous constructors.
-
-private instance smulCommClass_complex_real : SMulCommClass ℂ ℝ ℂ :=
-  ⟨fun a b c => by rw [Complex.real_smul, smul_eq_mul, Complex.real_smul]; ring⟩
-
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B]
-
-/-- Manual `IsScalarTower ℝ ℂ (A →L[ℂ] ℂ)`.  Avoids `ContinuousLinearMap.isScalarTower`,
-whose side conditions are not synthesizable in module mode. -/
-private instance instCLMScalarTower : IsScalarTower ℝ ℂ (A →L[ℂ] ℂ) where
-  smul_assoc r c f := by
-    apply ContinuousLinearMap.ext
-    intro x
-    change (r • c) • f x = r • c • f x
-    exact smul_assoc r c (f x)
-
-/-- The same instance transported to `WeakDual ℂ A`. -/
-private instance instWeakDualScalarTower : IsScalarTower ℝ ℂ (WeakDual ℂ A) where
-  smul_assoc r c f := by
-    apply ContinuousLinearMap.ext
-    intro x
-    change (r • c) • f x = r • c • f x
-    exact smul_assoc r c (f x)
-
-/-- `IsScalarTower ℝ ℂ (Unitization ℂ A)`. -/
-private instance instUnitScalarTower : IsScalarTower ℝ ℂ (Unitization ℂ A) where
-  smul_assoc r c x := by
-    rw [show (r • c : ℂ) = (r : ℂ) * c from rfl, mul_smul]
-    rfl
-
-/-- The weak-* dual `WeakDual ℂ A` is a locally convex real space, as a weak bilinear topology;
-this is what the Krein–Milman argument for pure states needs. -/
-instance : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
-  @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
-
-/-- `ContinuousSMul ℝ (WeakDual ℂ A)` via the existing `WeakDual.instContinuousSMul`,
-provided manually because the implicit `SMulCommClass ℂ ℝ ℂ` is otherwise hidden. -/
-private instance instContinuousSMulRealWeakDual : ContinuousSMul ℝ (WeakDual ℂ A) :=
-  @WeakDual.instContinuousSMul ℂ A _ _ _ _ _ _ _ ℝ _ _ smulCommClass_complex_real _ _
-
-/-- `LinearMap.CompatibleSMul` for `restrictScalars` from ℂ to ℝ on `WeakDual ℂ A → ℂ`.
-Provided explicitly because the auto-derivation via `IsScalarTower.compatibleSMul`
-fails to fire when the side `IsScalarTower ℝ ℂ (WeakDual ℂ A)` instance is private. -/
-private instance instCompatibleSMulWeakDual :
-    LinearMap.CompatibleSMul (WeakDual ℂ A) ℂ ℝ ℂ where
-  map_smul := fun f c x => by
-    have h1 : (c : ℝ) • x = (c : ℂ) • x := by
-      apply ContinuousLinearMap.ext; intro y
-      change c • x y = (c : ℂ) • x y
-      rw [Complex.real_smul, smul_eq_mul]
-    have h2 : (c : ℝ) • f x = (c : ℂ) • f x := by rw [Complex.real_smul]; rfl
-    change f ((c : ℝ) • x) = (c : ℝ) • f x
-    rw [h1, LinearMap.map_smul, h2]
 
 /-- A pure state is an extreme point of the quasi-state space, excluding zero. -/
 def IsPureState (φ : WeakDual ℂ A) : Prop :=
@@ -376,8 +321,6 @@ lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
   let F := {x ∈ S | ∀ z ∈ S, l z ≤ l x}
   have hF_nonempty : F.Nonempty := ⟨φ, hφ_mem, fun z hz => hφ_max hz⟩
   have hF_compact : IsCompact F := h_exposed.isCompact (QuasiStateSpace.compact A)
-  have : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
-    @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
   obtain ⟨ψ, hψ_mem_F, hψ_ext⟩ := hF_compact.extremePoints_nonempty hF_nonempty
   have hψ_ext_S : IsPureState ψ := by
     constructor
