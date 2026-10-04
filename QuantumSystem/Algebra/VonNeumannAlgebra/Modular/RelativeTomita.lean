@@ -24,9 +24,10 @@ operator `Δ_{η,ξ} = S̄†S̄` (downstream), and Araki's relative entropy of 
 `ω_ξ`, `ω_η` is `S(ω_ξ ‖ ω_η) = -⟪ξ, log Δ_{η,ξ} ξ⟫`. In Araki's notation `S_{Φ,Ψ}` this is
 `Φ = η`, `Ψ = ξ`; Ohya–Petz write `S_{η,ξ}` as here.
 
-Not formalised: the equality `S_{η,ξ}† = F̄_{η,ξ}` (only `F_{η,ξ} ⊆ S_{η,ξ}†` is proved), and
-transformation rules under spatial isomorphisms between different Hilbert spaces (deferred to the
-amplification and matrix milestones, where they are consumed).
+Not formalised: the equality `S_{η,ξ}† = F̄_{η,ξ}` (only `F_{η,ξ} ⊆ S_{η,ξ}†` is proved).
+Transformation rules along isometric intertwiners between different Hilbert spaces (spatial
+isomorphisms, amplifications) are in `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial`
+(`VonNeumannAlgebra.mem_graph_relativeTomita_of_intertwiner` and companions).
 
 A conjugate-linear operator is a real-linear `LinearPMap` satisfying `LinearPMap.IsConjLinear`;
 adjoints are real adjoints for the inner product `re ⟪·, ·⟫` (`open ClosedSubmodule`).
