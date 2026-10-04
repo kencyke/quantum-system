@@ -47,6 +47,22 @@ then Mathlib's, and composition is `LinearPMap.compNat`.
   `LinearPMap.IsComplexLinear.isSelfAdjoint_toComplex`,
   `LinearPMap.IsComplexLinear.isPositive_toComplex` — `toComplex` recovers the operator and
   transports adjoints, self-adjointness and positivity.
+
+## Implementation notes
+
+Complex-linear operators are spelled `E →ₗ.[ℂ] F` throughout the project; the real spelling
+`E →ₗ.[ℝ] F` is reserved for conjugate-linear operators and the operators built from them. A
+conjugate-linear operator cannot be an `E →ₗ.[ℂ] F`, and Mathlib's semilinear partial maps
+`E →ₛₗ.[starRingEnd ℂ] F` have no graph, closure or adjoint. The bridge `IsComplexLinear.toComplex`
+exists only to bring a complex-linear composite such as the modular operator `S̄† S̄` back to
+`E →ₗ.[ℂ] F`, where the spectral calculus lives.
+
+## TODO
+
+Develop the graph, closure and adjoint of semilinear partial maps, and von Neumann's theorem for
+them, so that a conjugate-linear operator is an `E →ₛₗ.[starRingEnd ℂ] F` and `S̄† S̄` is
+complex-linear by `LinearPMap.compNat` directly. `IsConjLinear`, `IsComplexLinear` and `toComplex` would
+then disappear; this needs a conjugate space, which Mathlib also lacks.
 -/
 
 @[expose] public section
