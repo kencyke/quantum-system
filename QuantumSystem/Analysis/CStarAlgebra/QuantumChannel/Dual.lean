@@ -10,6 +10,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.KadisonSchwarz
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Basic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
+public import QuantumSystem.Notation
 
 /-!
 # The trace dual of a completely positive map
@@ -44,7 +45,7 @@ No Kraus representation is chosen.
 ## Main statements
 
 * `CStarMatrix.sum_trace_comp_nonneg`: `0 ≤ Σᵢⱼ tr(Qⱼᵢ Mᵢⱼ)` for nonnegative block operator
-  matrices `Q` and `M`; `ContinuousLinearMap.trace_comp_nonneg`: `0 ≤ tr(A B)` for `A, B ≥ 0`.
+  matrices `Q` and `M`.
 * `ContinuousLinearMap.traceDual_one_le_one_iff`: `φ*(1) ≤ 1` iff `φ` is trace non-increasing on
   positive operators.
 -/
@@ -91,7 +92,7 @@ namespace CStarMatrix
 nonnegative diagonal entries of the nonnegative matrix `R M R⋆`. -/
 theorem sum_trace_comp_nonneg {n : Type*} [Fintype n] {Q M : CStarMatrix n n (K →L[ℂ] K)}
     (hQ : 0 ≤ Q) (hM : 0 ≤ M) :
-    0 ≤ ∑ i, ∑ j, LinearMap.trace ℂ K (Q j i ∘L M i j) := by
+    0 ≤ ∑ i, ∑ j, Tr (Q j i ∘L M i j) := by
   obtain ⟨P, hP, rfl⟩ := (StarOrderedRing.le_iff 0 Q).mp hQ
   clear hQ
   rw [zero_add]
@@ -99,12 +100,12 @@ theorem sum_trace_comp_nonneg {n : Type*} [Fintype n] {Q M : CStarMatrix n n (K 
   | mem _ h =>
     obtain ⟨R, rfl⟩ := h
     have hRMR : 0 ≤ R * M * star R := star_right_conjugate_nonneg hM R
-    have key : ∑ i, ∑ j, LinearMap.trace ℂ K ((star R * R) j i ∘L M i j) =
-        ∑ l, LinearMap.trace ℂ K ((R * M * star R) l l) := by
+    have key : ∑ i, ∑ j, Tr ((star R * R) j i ∘L M i j) =
+        ∑ l, Tr ((R * M * star R) l l) := by
       simp only [mul_apply, star_apply, Finset.sum_mul, mul_def, star_eq_adjoint, finsetSum_comp,
         toLinearMap_sum, map_sum]
-      have h (i j l : n) : LinearMap.trace ℂ K ((adjoint (R l j) ∘L R l i) ∘L M i j) =
-          LinearMap.trace ℂ K ((R l i ∘L M i j) ∘L adjoint (R l j)) := by
+      have h (i j l : n) : Tr ((adjoint (R l j) ∘L R l i) ∘L M i j) =
+          Tr ((R l i ∘L M i j) ∘L adjoint (R l j)) := by
         rw [comp_assoc, trace_comp_comm']
       simp only [h]
       rw [Finset.sum_comm]
@@ -176,25 +177,15 @@ end CompletelyPositiveMap
 
 namespace ContinuousLinearMap
 
-/-- The trace of a product of positive operators is nonnegative: for `A = R† R`,
-`tr(A B) = tr(R B R†)` and `R B R† ≥ 0`. -/
-theorem trace_comp_nonneg {A B : K →L[ℂ] K} (hA : 0 ≤ A) (hB : 0 ≤ B) :
-    0 ≤ LinearMap.trace ℂ K (A ∘L B) := by
-  obtain ⟨R, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hA
-  have h : 0 ≤ R * B * star R := star_right_conjugate_nonneg hB R
-  have h' := LinearMap.IsPositive.trace_nonneg
-    ((isPositive_toLinearMap_iff _).2 (nonneg_iff_isPositive.1 h))
-  rwa [mul_def, mul_def, ← trace_comp_comm' (R ∘L B) (star R), ← comp_assoc, ← mul_def] at h'
-
 /-- The trace dual of a positive map is sub-unital, `φ*(1) ≤ 1`, iff the map is **trace
 non-increasing** on positive operators, `Re tr φ(A) ≤ Re tr A`: `tr φ(A) = tr(A φ*(1))`
 (`ContinuousLinearMap.trace_comp_traceDual`), and the positive cone is self-dual, tested here on
 the rank-one operators `|x⟩⟨x|`. -/
 theorem traceDual_one_le_one_iff [OrderHomClass F (H →L[ℂ] H) (K →L[ℂ] K)] (φ : F) :
     traceDual φ 1 ≤ 1 ↔ ∀ A : H →L[ℂ] H, 0 ≤ A →
-      (LinearMap.trace ℂ K (φ A)).re ≤ (LinearMap.trace ℂ H A).re := by
+      (Tr (φ A)).re ≤ (Tr A).re := by
   have key (A : H →L[ℂ] H) :
-      LinearMap.trace ℂ K (φ A) = LinearMap.trace ℂ H (A ∘L traceDual φ 1) := by
+      Tr (φ A) = Tr (A ∘L traceDual φ 1) := by
     rw [← trace_comp_traceDual, ← mul_def, mul_one]
   refine ⟨fun h A hA => ?_, fun h => ?_⟩
   · have h' := (Complex.nonneg_iff.1 (trace_comp_nonneg hA (sub_nonneg.2 h))).1
@@ -204,7 +195,7 @@ theorem traceDual_one_le_one_iff [OrderHomClass F (H →L[ℂ] H) (K →L[ℂ] K
     intro x
     have hP : 0 ≤ rankOne ℂ x x := nonneg_iff_isPositive.2 (isPositive_rankOne_self x)
     have h1 : ⟪x, (1 - traceDual φ 1) x⟫_ℂ =
-        LinearMap.trace ℂ H (rankOne ℂ x x) - LinearMap.trace ℂ K (φ (rankOne ℂ x x)) := by
+        Tr (rankOne ℂ x x) - Tr (φ (rankOne ℂ x x)) := by
       rw [sub_apply, one_apply_eq_self, inner_sub_right, inner_traceDual_apply, ← mul_def,
         mul_one, trace_rankOne]
     have h₁ := Complex.nonneg_iff.1 ((nonneg_iff_isPositive.1 hP).toLinearMap.trace_nonneg)

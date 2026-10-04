@@ -67,7 +67,8 @@ are covered alike.
   `ρ_{f ∘ Φ} = Φ*(ρ_f)` and `ρ_{f ∘ Φ*} = Φ(ρ_f)`.
 * `ContinuousLinearMap.apply_eq_zero_of_inner_apply_self_eq_zero` — a positive operator vanishes
   where its quadratic form does; `ContinuousLinearMap.trace_star_mul_self_eq_zero_iff` — the trace
-  is faithful, `tr(A⋆ A) = 0 ↔ A = 0`.
+  is faithful, `tr(A⋆ A) = 0 ↔ A = 0`; `ContinuousLinearMap.trace_comp_nonneg` — `0 ≤ tr(A B)`
+  for positive `A` and `B`.
 * `ContinuousLinearMap.density_nonneg` — a positive functional has a positive density;
   `ContinuousLinearMap.density_tracePositiveLinearMap` — the trace has density `1`.
 -/
@@ -352,5 +353,18 @@ theorem ContinuousLinearMap.trace_star_mul_self_eq_zero_iff (A : E →L[ℂ] E) 
   refine ContinuousLinearMap.coe_injective (b.toBasis.ext fun i => ?_)
   rw [OrthonormalBasis.coe_toBasis, coe_coe, ContinuousLinearMap.toLinearMap_zero, LinearMap.zero_apply]
   exact norm_eq_zero.mp (pow_eq_zero_iff two_ne_zero |>.mp (hzero i (Finset.mem_univ i)))
+
+/-- The trace of a product of positive operators is nonnegative: for `A = R† R`,
+`tr(A B) = tr(R B R†)` and `R B R† ≥ 0`. -/
+theorem ContinuousLinearMap.trace_comp_nonneg {A B : E →L[ℂ] E} (hA : 0 ≤ A) (hB : 0 ≤ B) :
+    0 ≤ LinearMap.trace ℂ E (A ∘L B) := by
+  obtain ⟨R, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hA
+  have h : 0 ≤ R * B * star R := star_right_conjugate_nonneg hB R
+  have h' := LinearMap.IsPositive.trace_nonneg
+    ((ContinuousLinearMap.isPositive_toLinearMap_iff _).2
+      (ContinuousLinearMap.nonneg_iff_isPositive.1 h))
+  rwa [ContinuousLinearMap.mul_def, ContinuousLinearMap.mul_def,
+    ← ContinuousLinearMap.trace_comp_comm' (R ∘L B) (star R), ← ContinuousLinearMap.comp_assoc,
+    ← ContinuousLinearMap.mul_def] at h'
 
 end DensityNonneg
