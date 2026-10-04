@@ -110,7 +110,7 @@ namespace Matrix
 
 variable {n m : Type*} [Fintype n] [Fintype m]
 
-open scoped ComplexOrder Kronecker
+open scoped ComplexOrder Kronecker Matrix
 
 /-! ### Kraus blocks -/
 
@@ -284,7 +284,7 @@ namespace Matrix
 
 variable {n m : Type*} [Fintype n] [Fintype m]
 
-open scoped ComplexOrder Kronecker
+open scoped ComplexOrder Kronecker Matrix
 
 /-! ### Minimality -/
 

@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Dual
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
+public import QuantumSystem.Notation
 
 /-!
 # The partial trace
@@ -60,7 +61,7 @@ matrix partial trace `Matrix.traceRight`.
 
 @[expose] public section
 
-open scoped TensorProduct InnerProductSpace
+open scoped TensorProduct InnerProductSpace ContinuousLinearMap
 open TensorProduct
 
 variable {H K E : Type*}
@@ -79,20 +80,20 @@ noncomputable def traceRight : (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) →ₗ[ℂ]
 
 /-- **The defining duality** of the partial trace: `tr(A ∘ tr₂(X)) = tr((A ⊗ 1) ∘ X)`. -/
 theorem trace_comp_traceRight (A : H →L[ℂ] H) (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
-    LinearMap.trace ℂ H (A ∘L traceRight H K X) =
-      LinearMap.trace ℂ (H ⊗[ℂ] K) (A.rTensor K ∘L X) :=
+    Tr (A ∘L traceRight H K X) =
+      Tr (A.rTensor K ∘L X) :=
   (trace_comp_traceDual (rTensorStarAlgHom ℂ H K) A X).symm
 
 /-- The partial trace is characterised by its duality: `Y = tr₂(X)` iff
 `tr(A ∘ Y) = tr((A ⊗ 1) ∘ X)` for all `A`. -/
 theorem eq_traceRight_iff (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) (Y : H →L[ℂ] H) :
     Y = traceRight H K X ↔ ∀ A : H →L[ℂ] H,
-      LinearMap.trace ℂ H (A ∘L Y) = LinearMap.trace ℂ (H ⊗[ℂ] K) (A.rTensor K ∘L X) :=
+      Tr (A ∘L Y) = Tr (A.rTensor K ∘L X) :=
   eq_traceDual_iff (rTensorStarAlgHom ℂ H K) X Y
 
 /-- The partial trace of an operator tensor: `tr₂(A ⊗ B) = tr(B) • A`. -/
 theorem traceRight_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
-    traceRight H K (mapL A B) = LinearMap.trace ℂ K B • A := by
+    traceRight H K (mapL A B) = Tr B • A := by
   rw [eq_comm, eq_traceRight_iff]
   intro C
   rw [comp_smul, toLinearMap_smul, map_smul, rTensor_comp_mapL, toLinearMap_mapL,
@@ -100,7 +101,7 @@ theorem traceRight_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
 
 /-- The partial trace preserves the trace: `tr(tr₂(X)) = tr(X)`. -/
 @[simp] theorem trace_traceRight (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
-    LinearMap.trace ℂ H (traceRight H K X) = LinearMap.trace ℂ (H ⊗[ℂ] K) X := by
+    Tr (traceRight H K X) = Tr X := by
   have h := trace_comp_traceRight (1 : H →L[ℂ] H) X
   rwa [rTensor_one, ← mul_def, ← mul_def, one_mul, one_mul] at h
 
@@ -146,8 +147,8 @@ theorem traceDual_eq_iff_traceRight {F : Type*} [FunLike F (H →L[ℂ] H) (K �
     (∀ B : K →L[ℂ] K, traceDual Φ B = adjoint V ∘L B.rTensor E ∘L V) ↔
       ∀ A : H →L[ℂ] H, Φ A = traceRight K E (V ∘L A ∘L adjoint V) := by
   have key (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
-      LinearMap.trace ℂ H (A ∘L adjoint V ∘L B.rTensor E ∘L V) =
-        LinearMap.trace ℂ K (B ∘L traceRight K E (V ∘L A ∘L adjoint V)) := by
+      Tr (A ∘L adjoint V ∘L B.rTensor E ∘L V) =
+        Tr (B ∘L traceRight K E (V ∘L A ∘L adjoint V)) := by
     rw [trace_comp_traceRight,
       show A ∘L adjoint V ∘L B.rTensor E ∘L V = (A ∘L adjoint V ∘L B.rTensor E) ∘L V by
         simp only [comp_assoc], trace_comp_comm',
@@ -172,20 +173,20 @@ noncomputable def traceLeft : (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) →ₗ[ℂ] 
 /-- **The defining duality** of the partial trace over the left factor:
 `tr(B ∘ tr₁(X)) = tr((1 ⊗ B) ∘ X)`. -/
 theorem trace_comp_traceLeft (B : K →L[ℂ] K) (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
-    LinearMap.trace ℂ K (B ∘L traceLeft H K X) =
-      LinearMap.trace ℂ (H ⊗[ℂ] K) (B.lTensor H ∘L X) :=
+    Tr (B ∘L traceLeft H K X) =
+      Tr (B.lTensor H ∘L X) :=
   (trace_comp_traceDual (lTensorStarAlgHom ℂ K H) B X).symm
 
 /-- The partial trace over the left factor is characterised by its duality: `Y = tr₁(X)` iff
 `tr(B ∘ Y) = tr((1 ⊗ B) ∘ X)` for all `B`. -/
 theorem eq_traceLeft_iff (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) (Y : K →L[ℂ] K) :
     Y = traceLeft H K X ↔ ∀ B : K →L[ℂ] K,
-      LinearMap.trace ℂ K (B ∘L Y) = LinearMap.trace ℂ (H ⊗[ℂ] K) (B.lTensor H ∘L X) :=
+      Tr (B ∘L Y) = Tr (B.lTensor H ∘L X) :=
   eq_traceDual_iff (lTensorStarAlgHom ℂ K H) X Y
 
 /-- The partial trace over the left factor of an operator tensor: `tr₁(A ⊗ B) = tr(A) • B`. -/
 theorem traceLeft_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
-    traceLeft H K (mapL A B) = LinearMap.trace ℂ H A • B := by
+    traceLeft H K (mapL A B) = Tr A • B := by
   rw [eq_comm, eq_traceLeft_iff]
   intro C
   rw [comp_smul, toLinearMap_smul, map_smul, lTensor_comp_mapL, toLinearMap_mapL,
@@ -193,7 +194,7 @@ theorem traceLeft_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
 
 /-- The partial trace over the left factor preserves the trace: `tr(tr₁(X)) = tr(X)`. -/
 @[simp] theorem trace_traceLeft (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
-    LinearMap.trace ℂ K (traceLeft H K X) = LinearMap.trace ℂ (H ⊗[ℂ] K) X := by
+    Tr (traceLeft H K X) = Tr X := by
   have h := trace_comp_traceLeft (1 : K →L[ℂ] K) X
   rwa [lTensor_one, ← mul_def, ← mul_def, one_mul, one_mul] at h
 

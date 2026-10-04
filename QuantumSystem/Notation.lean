@@ -6,6 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.LinearAlgebra.Matrix.Trace
+public import Mathlib.LinearAlgebra.Trace
+public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Basic
 
 /-!
 # Quantum Information Notation
@@ -15,7 +17,10 @@ Notations and abbreviations for quantum information theory.
 <table>
 <tr><th>Symbol</th><th>Expansion</th><th>How to activate</th><th>Defined in</th></tr>
 <tr><td><code>Tr A</code></td><td><code>Matrix.trace A</code></td>
-  <td>always available (prefix notation)</td><td>this file</td></tr>
+  <td><code>open scoped Matrix</code></td><td>this file</td></tr>
+<tr><td><code>Tr A</code></td>
+  <td><code>LinearMap.trace 𝕜 H (A : H →ₗ[𝕜] H)</code> for <code>A : H →L[𝕜] H</code></td>
+  <td><code>open scoped ContinuousLinearMap</code></td><td>this file</td></tr>
 <tr><td><code>S(ω)</code></td><td><code>vonNeumannEntropy ω</code></td>
   <td><code>open scoped QuantumInfo</code></td>
   <td><code>Analysis/Entropy/VonNeumann/Basic.lean</code></td></tr>
@@ -42,7 +47,9 @@ Notations and abbreviations for quantum information theory.
 
 ## `Tr` syntax
 
-`Tr` is a prefix notation at max precedence. Use:
+`Tr` is a prefix notation at max precedence, for the trace of a matrix (`open scoped Matrix`) or
+of a bounded operator on a finite-dimensional space (`open scoped ContinuousLinearMap`); when both
+scopes are open the argument's type selects the meaning. Use:
 - `Tr A` for a simple argument
 - `Tr (A * B)` for a complex expression (space before `(`)
 - `(Tr A).re` when chaining dot notation on the result
@@ -50,6 +57,10 @@ Notations and abbreviations for quantum information theory.
 
 @[expose] public section
 
--- `Tr A` is notation for `Matrix.trace A`.
+/-- `Tr A` is the trace of the matrix `A`. -/
+scoped[Matrix] prefix:max "Tr " => Matrix.trace
 
-prefix:max "Tr " => Matrix.trace
+/-- `Tr A` is the trace of the operator `A : H →L[𝕜] H` on a finite-dimensional space, Mathlib's
+`LinearMap.trace 𝕜 H` applied to the underlying linear map. -/
+scoped[ContinuousLinearMap] notation "Tr " A:max =>
+  LinearMap.trace _ _ (ContinuousLinearMap.toLinearMap A)

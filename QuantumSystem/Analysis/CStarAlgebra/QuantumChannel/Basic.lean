@@ -9,6 +9,7 @@ public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
+public import QuantumSystem.Notation
 
 /-!
 # Quantum channels on bounded operators
@@ -20,8 +21,8 @@ Let `H` and `K` be finite-dimensional complex Hilbert spaces. A **quantum channe
 
 Complete positivity is Mathlib's `CompletelyPositiveMap` condition (`(H →L[ℂ] H) →CP (K →L[ℂ] K)`)
 for the C⋆-algebra structure and the Loewner order of `H →L[ℂ] H`, both global instances of
-Mathlib, and the trace is Mathlib's `LinearMap.trace ℂ H`. These are the physically realizable
-operations on the states of a finite quantum system; matrix algebras are the case
+Mathlib, and the trace is Mathlib's `LinearMap.trace ℂ H`, written `Tr`. These are the physically
+realizable operations on the states of a finite quantum system; matrix algebras are the case
 `H = EuclideanSpace ℂ n`.
 
 ## Main definitions
@@ -50,7 +51,7 @@ operations on the states of a finite quantum system; matrix algebras are the cas
 
 @[expose] public section
 
-open scoped CStarAlgebra
+open scoped CStarAlgebra ContinuousLinearMap
 
 variable {H K L : Type*}
   [NormedAddCommGroup H] [InnerProductSpace ℂ H]
@@ -67,7 +68,7 @@ variable {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
 **trace preserving** if `tr (Φ A) = tr A` for all `A`. It is stated for any `FunLike` type, so
 that it applies to linear maps and to completely positive maps alike. -/
 def IsTracePreserving [FiniteDimensional ℂ H] [FiniteDimensional ℂ K] (Φ : F) : Prop :=
-  ∀ A : H →L[ℂ] H, LinearMap.trace ℂ K (Φ A) = LinearMap.trace ℂ H A
+  ∀ A : H →L[ℂ] H, Tr (Φ A) = Tr A
 
 variable [FiniteDimensional ℂ H] [FiniteDimensional ℂ K]
 
@@ -133,7 +134,7 @@ lemma isTracePreserving (Φ : QuantumChannel H K) : IsTracePreserving Φ :=
 
 /-- A quantum channel preserves the trace: `tr (Φ A) = tr A`. -/
 @[simp] lemma trace_map (Φ : QuantumChannel H K) (A : H →L[ℂ] H) :
-    LinearMap.trace ℂ K (Φ A) = LinearMap.trace ℂ H A :=
+    Tr (Φ A) = Tr A :=
   Φ.isTracePreserving' A
 
 /-- The trace dual of a quantum channel is unital. -/

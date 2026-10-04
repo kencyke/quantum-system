@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.PartialTrace
 public import QuantumSystem.Analysis.Entropy.VonNeumann.Basic
+public import QuantumSystem.Notation
 
 /-!
 # Quantum mutual information
@@ -79,7 +80,7 @@ tensors `A ⊗ B` (`TensorProduct.ext_mapL`), where they are `f(A) g(B)`. -/
 theorem mul'_map_mapLEquiv_symm_apply (f : G) (g : G') (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
     LinearMap.mul' ℂ ℂ (TensorProduct.map (f : (H →L[ℂ] H) →ₗ[ℂ] ℂ) (g : (K →L[ℂ] K) →ₗ[ℂ] ℂ)
       ((mapLEquiv ℂ H H K K).symm Z)) =
-      LinearMap.trace ℂ (H ⊗[ℂ] K) (mapL (density f) (density g) ∘L Z) := by
+      Tr (mapL (density f) (density g) ∘L Z) := by
   have h := ext_mapL (𝕜 := ℂ) (E := H) (F := H) (G := K) (H := K) (M := ℂ)
     (u := LinearMap.mul' ℂ ℂ ∘ₗ TensorProduct.map (f : (H →L[ℂ] H) →ₗ[ℂ] ℂ)
       (g : (K →L[ℂ] K) →ₗ[ℂ] ℂ) ∘ₗ (mapLEquiv ℂ H H K K).symm.toLinearMap)
@@ -115,7 +116,7 @@ variable (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (φ : (K →L[ℂ] K) →ₚ[ℂ
 
 /-- The product functional is `Z ↦ tr((ρ_ψ ⊗ ρ_φ) Z)`. -/
 theorem tensorProduct_apply (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
-    ψ.tensorProduct φ Z = LinearMap.trace ℂ (H ⊗[ℂ] K) (mapL (density ψ) (density φ) ∘L Z) :=
+    ψ.tensorProduct φ Z = Tr (mapL (density ψ) (density φ) ∘L Z) :=
   mul'_map_mapLEquiv_symm_apply ψ φ Z
 
 /-- **The product functional on elementary tensors**: `(ψ ⊗ φ)(A ⊗ B) = ψ(A) φ(B)`. -/

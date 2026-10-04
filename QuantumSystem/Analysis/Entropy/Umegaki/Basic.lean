@@ -10,6 +10,7 @@ public import Mathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.Analysis.Entropy.Araki.FiniteDimensional
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
+public import QuantumSystem.Notation
 
 /-!
 # Umegaki's relative entropy
@@ -284,7 +285,7 @@ theorem umegakiEntropy_eq_sum (h : ∀ A : H →L[ℂ] H, φ (star A * A) = 0 �
 `Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² (log rᵢ - log sⱼ)`. -/
 theorem trace_density_comp_log_sub_log {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ}
     (hb : ∀ i, density ψ (b i) = (r i : ℂ) • b i) (hc : ∀ j, density φ (c j) = (s j : ℂ) • c j) :
-    LinearMap.trace ℂ H (density ψ ∘L (CFC.log (density ψ) - CFC.log (density φ))) =
+    Tr (density ψ ∘L (CFC.log (density ψ) - CFC.log (density φ))) =
       ((∑ i, ∑ j, r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 * (Real.log (r i) - Real.log (s j)) : ℝ) : ℂ) := by
   classical
   have hψsa : IsSelfAdjoint (density ψ) := IsSelfAdjoint.of_nonneg (density_nonneg ψ)
@@ -317,8 +318,7 @@ that of `ψ` (`supp ψ ⊆ supp φ`), and `+∞` otherwise. -/
 theorem umegakiEntropy_eq_ite
     [Decidable (∀ A : H →L[ℂ] H, φ (star A * A) = 0 → ψ (star A * A) = 0)] :
     D(ψ ∥ φ) = if ∀ A : H →L[ℂ] H, φ (star A * A) = 0 → ψ (star A * A) = 0 then
-      (((LinearMap.trace ℂ H
-        (density ψ ∘L (CFC.log (density ψ) - CFC.log (density φ)))).re : ℝ) : EReal)
+      (((Tr (density ψ ∘L (CFC.log (density ψ) - CFC.log (density φ)))).re : ℝ) : EReal)
     else ⊤ := by
   split_ifs with h
   · obtain ⟨b, r, hr, hb⟩ := exists_orthonormalBasis_density_apply ψ

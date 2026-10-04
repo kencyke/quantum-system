@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.Algebra.CStarAlgebra.State.Basic
 public import QuantumSystem.Analysis.Entropy.Umegaki.JointConvexity
+public import QuantumSystem.Notation
 
 /-!
 # Von Neumann entropy
@@ -81,7 +82,7 @@ linear functional only so that it is a total function on the dual `WeakDual ℂ 
 restriction to the state space is concave (`StateSpace.concaveOn_vonNeumannEntropy`); off the
 positive functionals its value is junk. -/
 noncomputable def vonNeumannEntropy (ω : G) : ℝ :=
-  -(LinearMap.trace ℂ H (density ω ∘L CFC.log (density ω))).re
+  -(Tr (density ω ∘L CFC.log (density ω))).re
 
 end Generic
 
@@ -180,7 +181,7 @@ variable [Nontrivial H]
 
 /-- `τ(A) = tr A / d`. -/
 theorem maximallyMixed_apply (A : H →L[ℂ] H) :
-    maximallyMixed H A = (Module.finrank ℂ H : ℂ)⁻¹ * LinearMap.trace ℂ H A := by
+    maximallyMixed H A = (Module.finrank ℂ H : ℂ)⁻¹ * Tr A := by
   simp [maximallyMixed, NNReal.smul_def]
 
 variable (ω : State (H →L[ℂ] H))
