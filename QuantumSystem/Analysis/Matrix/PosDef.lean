@@ -32,37 +32,8 @@ lemma PosDef.convex_comb {m : Type*} [Finite m]
     {A B : Matrix m m ℂ} (hA : A.PosDef) (hB : B.PosDef)
     {t : ℝ} (ht0 : 0 < t) (ht1 : 0 < 1 - t) :
     (t • A + (1 - t) • B).PosDef := by
-  classical
   let := Fintype.ofFinite m
-  refine Matrix.PosDef.of_dotProduct_mulVec_pos ?_ ?_
-  · exact hA.1.convex_combination hB.1 t
-  · intro x hx
-    have hApos := hA.dotProduct_mulVec_pos hx
-    have hBpos := hB.dotProduct_mulVec_pos hx
-    have hA_re : 0 < (star x ⬝ᵥ (A *ᵥ x)).re := (RCLike.pos_iff.mp hApos).1
-    have hB_re : 0 < (star x ⬝ᵥ (B *ᵥ x)).re := (RCLike.pos_iff.mp hBpos).1
-    have hC_im : (star x ⬝ᵥ ((t • A + (1 - t) • B) *ᵥ x)).im = 0 := by
-      exact hA.1.convex_combination hB.1 t |>.quadForm_im_eq_zero x
-    have hC_re :
-        (star x ⬝ᵥ ((t • A + (1 - t) • B) *ᵥ x)).re =
-          t * (star x ⬝ᵥ (A *ᵥ x)).re + (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re := by
-      have htA : (t • A) *ᵥ x = t • (A *ᵥ x) := smul_mulVec _ _ _
-      have htB : ((1 - t) • B) *ᵥ x = (1 - t) • (B *ᵥ x) := smul_mulVec _ _ _
-      have hsmA : star x ⬝ᵥ (t • (A *ᵥ x)) = t • (star x ⬝ᵥ (A *ᵥ x)) :=
-        dotProduct_smul (R := ℝ) t (star x) (A *ᵥ x)
-      have hsmB : star x ⬝ᵥ ((1 - t) • (B *ᵥ x)) = (1 - t) • (star x ⬝ᵥ (B *ᵥ x)) :=
-        dotProduct_smul (R := ℝ) (1 - t) (star x) (B *ᵥ x)
-      rw [add_mulVec, dotProduct_add, htA, htB, hsmA, hsmB, Complex.add_re,
-        Complex.smul_re, Complex.smul_re]
-      simp [smul_eq_mul]
-    refine (RCLike.pos_iff).2 ?_
-    constructor
-    · have hA' : 0 < t * (star x ⬝ᵥ (A *ᵥ x)).re := mul_pos ht0 hA_re
-      have hB' : 0 < (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re := mul_pos ht1 hB_re
-      have hsum : 0 < t * (star x ⬝ᵥ (A *ᵥ x)).re + (1 - t) * (star x ⬝ᵥ (B *ᵥ x)).re :=
-        add_pos hA' hB'
-      simpa [hC_re] using hsum
-    · exact hC_im
+  exact (hA.smul ht0).add (hB.smul ht1)
 
 /-- Convex combination of PD matrices with nonnegative weights is PD. -/
 lemma PosDef.convex_comb_nonneg {m : Type*} [Finite m]

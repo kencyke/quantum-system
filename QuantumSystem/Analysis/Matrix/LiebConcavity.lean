@@ -10,62 +10,38 @@ public import QuantumSystem.Analysis.Matrix.Effros
 public import QuantumSystem.Notation
 
 /-!
-# Lieb's Concavity Theorem via Effros's Matrix Convexity Approach
+# Lieb's concavity theorem via Effros's matrix convexity approach
 
-This file provides definitions related to Lieb's concavity theorem and establishes it
-via Effros's matrix convexity approach (2009), which avoids complex interpolation.
+This file proves Lieb's joint concavity theorem (1973) for complex matrices by Effros's
+matrix-perspective argument (2009), which avoids complex interpolation.
 
-## Mathematical Background
+For `0 ≤ p`, `0 ≤ q` with `p + q ≤ 1` and a fixed rectangular matrix `K`, the map
+`(A, B) ↦ Tr(Aᵖ K† Bᵠ K)` is jointly concave on pairs of positive semidefinite matrices. The
+case `q = 1 - p` is the boundary case of Lieb's Theorem 1; the two-exponent form is Lieb 1973
+(Adv. Math. 11, 267–288), see also Carlen–Lieb, arXiv:0710.4167.
 
-### Lieb's Joint Concavity Theorem (1973)
-For 0 ≤ p ≤ 1 and a fixed matrix K, the map
-  (A, B) ↦ Tr(A^p K† B^{1-p} K)
-is jointly concave on pairs of positive semidefinite matrices. This is the boundary
-case of Lieb's Theorem 1, whose exponents satisfy only `p + q ≤ 1`.
+## Main results
 
-**`lieb_joint_concavity_general` is the public form of the two-term theorem** —
-independent exponents `0 ≤ p`, `0 ≤ q` with `p + q ≤ 1`, rectangular `K`,
-positive semidefinite arguments. It subsumes every other two-term statement
-below, so call it. The remaining public declarations are consequences or
-companions, not alternative forms: `lieb_concavity_weighted` and
-`lieb_concavity_sum` (the `r`-term convex-combination versions at `K = I`,
-proved from it by induction), `Fs_homogeneous` (degree-1 homogeneity of the
-`K = I` functional), `trace_rpow_conj_rpow_nonneg` (the functional is real and
-nonnegative), and the Löwner–Heinz wrapper `rpow_le_rpow`.
+* `Matrix.lieb_joint_concavity_general`: **Lieb's concavity theorem** for independent exponents
+  `p + q ≤ 1`, rectangular `K` and positive semidefinite arguments. Every other two-term statement
+  in this file is a consequence of it.
+* `Matrix.lieb_concavity_weighted`, `Matrix.lieb_concavity_sum`: the `r`-term
+  convex-combination and plain-sum versions at `K = 1`.
+* `Matrix.re_trace_smul_rpow_mul_smul_rpow`: degree-one homogeneity of the `K = 1` functional.
+* `Matrix.trace_rpow_conj_rpow_nonneg`: the functional is real and nonnegative.
+* `Matrix.rpow_le_rpow`: the Löwner–Heinz inequality on matrices.
 
-The four statements form a derivation chain, each step relaxing one axis. The
-first three are `private`: they are subsumed as statements, but **each is the
-proof input to the next**, so none can be deleted — privacy is how they stay
-out of the public namespace without breaking the chain.
+## Proof outline
 
-| statement | visibility | matrices | `K` | exponents |
-|---|---|---|---|---|
-| `lieb_joint_concavity` | private | positive definite | square | `p`, `1 - p` |
-| `lieb_joint_concavity_semidef` | private | positive semidefinite | square | `p`, `1 - p` |
-| `lieb_joint_concavity_rect_semidef` | private | positive semidefinite | rectangular | `p`, `1 - p` |
-| `lieb_joint_concavity_general` | **public** | positive semidefinite | rectangular | `p`, `q`, `p + q ≤ 1` |
-
-`liebJointFunction` is likewise private: it hard-codes the second exponent as
-`1 - p`, so it can only state the first three rows, and the public theorem is
-phrased with a plain `Tr`.
-
-The last row is the general two-exponent form of Lieb 1973 (Adv. Math. 11,
-267–288); see also Carlen–Lieb, arXiv:0710.4167.
-
-### Proof Strategy (Effros 2009)
-The proof proceeds via:
-1. **Matrix concavity of t^s**: For 0 < s ≤ 1, the map A ↦ A^s is operator concave
-   (equivalently, f(t) = -t^s is operator convex). This is Mathlib's `CFC.concaveOn_rpow`.
-2. **Jensen's operator inequality** (Hansen–Pedersen,
-   `IsMatrixConvexOn.cfc_add_le`): for matrix convex f and A, B with
-   A†A + B†B = I: f(A†T₁A + B†T₂B) ≤ A†f(T₁)A + B†f(T₂)B.
-3. **Matrix perspective**: The noncommutative perspective
-   g(L,R) = R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2} is jointly convex in positive semidefinite L
-   and positive definite R when f is matrix convex (`Matrix.matrixPerspective_joint_convex`);
-   L and R need not commute.
-4. **Left/right multiplication**: For L(X) = AX and R(X) = XB (operators on M_n),
-   apply the perspective with f(t) = -t^s to obtain joint concavity of
-   (A,B) ↦ Tr(A^s K† B^{1-s} K).
+1. Matrix convexity of `f(t) = -tˢ` for `0 < s ≤ 1` (`isMatrixConvexOn_neg_rpow`).
+2. Jensen's operator inequality (Hansen–Pedersen, `IsMatrixConvexOn.cfc_add_le`): for matrix
+   convex `f` and `A†A + B†B = 1`, `f(A† T₁ A + B† T₂ B) ≤ A† f(T₁) A + B† f(T₂) B`.
+3. Joint convexity of the matrix perspective `g(L, R) = R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}`
+   in positive semidefinite `L` and positive definite `R` (`Matrix.matrixPerspective_joint_convex`).
+4. The perspective of the left and right multiplication operators `L_A`, `R_B` on `M_n` with
+   `f(t) = -tᵖ` has quadratic form `-Tr(Aᵖ K† B¹⁻ᵖ K)` at `vec K†`, giving the positive
+   definite, square, `q = 1 - p` case; the general statement follows by `ε`-regularisation, a
+   block embedding for rectangular `K`, and the Löwner–Heinz inequality for `p + q < 1`.
 
 ## References
 
@@ -178,11 +154,12 @@ The key is that the Lieb function Tr(A^p K† B^{1-p} K) equals the HS inner pro
 ⟨A^p K† B^{1-p}, K†⟩, and operator concavity of x^p implies joint concavity via
 the left/right multiplication operator structure.
 
-This proof uses the Effros approach: for operator convex f(t) = -t^p, the perspective
-function g(L,R) = f(L/R)R is jointly convex for commuting operators L, R.
-Applied to left/right multiplication operators L_A and R_B (which commute), the
-HS inner product ⟨g(L_A, R_B)(K†), K†⟩ = -Tr(A^p K† B^{1-p} K) is jointly convex,
-hence Tr(A^p K† B^{1-p} K) is jointly concave. -/
+This proof uses the Effros approach: for matrix convex `f(t) = -t^p`, the perspective
+`g(L, R) = R^{1/2} f(R^{-1/2} L R^{-1/2}) R^{1/2}` is jointly convex
+(`Matrix.matrixPerspective_joint_convex`). Applied to the left/right multiplication
+operators `L_A` and `R_B`, which commute, the quadratic form
+`⟨vec K†, g(L_A, R_B) vec K†⟩ = -Tr(A^p K† B^{1-p} K)` is jointly convex,
+hence `Tr(A^p K† B^{1-p} K)` is jointly concave. -/
 private lemma lieb_concavity_effros {m : Type*} [Fintype m] [DecidableEq m]
     (A₁ A₂ B₁ B₂ : Matrix m m ℂ)
     (hA₁ : A₁.PosDef) (hA₂ : A₂.PosDef) (hB₁ : B₁.PosDef) (hB₂ : B₂.PosDef)
@@ -719,21 +696,14 @@ region follows by the classical reduction: with `s = p + q`,
 case with operator concavity (`rpow_concavity_le`) and operator monotonicity
 (Löwner–Heinz, `rpow_le_rpow`) of `X ↦ Xˢ` preserves joint concavity. -/
 
-/-- **Löwner–Heinz monotonicity** for matrices: for `0 ≤ s ≤ 1`, `A ≤ B` implies
-`Aˢ ≤ Bˢ` in the Löwner order.
-
-Thin wrapper around Mathlib's `CFC.rpow_le_rpow`: the `CStarAlgebra` instance on
-`Matrix α α ℂ` is not global, so `CStarMatrix.instCStarAlgebra` is used directly:
-`CStarMatrix α α ℂ` is a definitional type copy of `Matrix α α ℂ`, so the instance
-term type-checks at the matrix type by unfolding, and it is then combined with the
-scoped `MatrixOrder` instances. -/
+/-- **Löwner–Heinz**: `A ≤ B` implies `A ^ s ≤ B ^ s` for `0 ≤ s ≤ 1`; Mathlib's
+`CFC.rpow_le_rpow` read through the `L2Operator` C⋆-algebra structure on matrices. -/
 lemma rpow_le_rpow {α : Type*} [Fintype α] [DecidableEq α]
     {A B : Matrix α α ℂ} (hAB : A ≤ B)
     {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     A ^ s ≤ B ^ s := by
-  let csa : CStarAlgebra (Matrix α α ℂ) := CStarMatrix.instCStarAlgebra (n := α) (A := ℂ)
-  let sor : StarOrderedRing (Matrix α α ℂ) := Matrix.instStarOrderedRing
-  exact @CFC.rpow_le_rpow (Matrix α α ℂ) csa _ sor s ⟨hs0, hs1⟩ A B hAB
+  open scoped Matrix.Norms.L2Operator in
+  exact CFC.rpow_le_rpow ⟨hs0, hs1⟩ hAB
 
 /-- Iterated CFC power on a positive semidefinite matrix: `(Xˢ)^(a/s) = Xᵃ`. -/
 private lemma rpow_rpow_div {α : Type*} [Fintype α] [DecidableEq α]
@@ -886,8 +856,8 @@ lemma trace_rpow_conj_rpow_nonneg {n m : Type*} [Fintype n] [DecidableEq n]
   exact (posSemidef_rpow A p).trace_mul_nonneg
     ((posSemidef_rpow B q).conjTranspose_mul_mul_same K)
 
-/-- Homogeneity of rpow: (c ⋅ A)ˢ = cˢ ⋅ Aˢ for c ≥ 0, A PSD and every real s.
-Proved via spectral decomposition + `rpow_unitary_conj` + `diagonal_rpow` + `Real.mul_rpow`. -/
+/-- Homogeneity of the CFC power: `(c • A) ^ s = c ^ s • A ^ s` for `0 ≤ c`, `A` positive
+semidefinite and every real `s`. -/
 lemma rpow_nonneg_smul {α : Type*} [Fintype α] [DecidableEq α]
     (c : ℝ) (hc : 0 ≤ c) (A : Matrix α α ℂ) (hA : A.PosSemidef)
     (s : ℝ) :
@@ -950,8 +920,8 @@ lemma rpow_nonneg_smul {α : Type*} [Fintype α] [DecidableEq α]
     simp only [Complex.ofReal_mul]
   · simp [hij]
 
-/-- Degree-1 homogeneity of F_s: F_s(cA, cB) = c ⋅ F_s(A, B). -/
-lemma Fs_homogeneous {α : Type*} [Fintype α] [DecidableEq α]
+/-- Degree-one homogeneity of `(A, B) ↦ Re Tr(Aˢ B¹⁻ˢ)` under a common nonnegative scaling. -/
+lemma re_trace_smul_rpow_mul_smul_rpow {α : Type*} [Fintype α] [DecidableEq α]
     (c : ℝ) (hc : 0 ≤ c)
     (A B : Matrix α α ℂ) (hA : A.PosSemidef) (hB : B.PosSemidef)
     (s : ℝ) :
@@ -1131,7 +1101,7 @@ lemma lieb_concavity_sum {r : ℕ} {α : Type*} [Fintype α] [DecidableEq α]
   rw [show ∑ i : Fin (r + 1), (1 / rr) • A i = (1 / rr) • ∑ i, A i from Finset.smul_sum.symm,
       show ∑ i : Fin (r + 1), (1 / rr) • B i = (1 / rr) • ∑ i, B i from Finset.smul_sum.symm]
     at hw
-  rw [Fs_homogeneous (1 / rr) (by positivity) _ _ hSA hSB s] at hw
+  rw [re_trace_smul_rpow_mul_smul_rpow (1 / rr) (by positivity) _ _ hSA hSB s] at hw
   -- hw: (1/rr) * Σ Fᵢ ≤ (1/rr) * F(ΣA, ΣB)
   exact le_of_mul_le_mul_left hw (by positivity : (0 : ℝ) < 1 / rr)
 

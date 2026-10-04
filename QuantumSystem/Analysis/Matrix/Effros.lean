@@ -50,37 +50,15 @@ namespace Matrix
 open Real NNReal Set
 open scoped MatrixOrder ComplexOrder Kronecker
 
-/-- Left multiplication operator on matrices. -/
-noncomputable def leftMul {m : Type*} [Fintype m]
-    (A : Matrix m m ℂ) : Matrix m m ℂ →ₗ[ℂ] Matrix m m ℂ :=
-  mulLeftLinearMap m ℂ A
-
-/-- Right multiplication operator on matrices. -/
-noncomputable def rightMul {m : Type*} [Fintype m]
-    (B : Matrix m m ℂ) : Matrix m m ℂ →ₗ[ℂ] Matrix m m ℂ :=
-  mulRightLinearMap m ℂ B
-
-/-- Left and right multiplication operators commute as linear maps. -/
-lemma leftMul_rightMul_commute {m : Type*} [Fintype m]
-    (A B : Matrix m m ℂ) :
-    leftMul A ∘ₗ rightMul B = rightMul B ∘ₗ leftMul A := by
-  simpa [leftMul, rightMul] using
-    (commute_mulLeftLinearMap_mulRightLinearMap (R := ℂ) (a := A) (b := B))
-
-/-- Standard basis on `Matrix m m ℂ`, used to represent linear maps as matrices. -/
-noncomputable def matrixBasis (m : Type*) [Fintype m] [DecidableEq m] :
-  Module.Basis (m × m) ℂ (Matrix m m ℂ) :=
-  Matrix.stdBasis ℂ m m
-
 /-- Matrix representation of left multiplication with respect to the standard basis. -/
 noncomputable def leftMulMatrix {m : Type*} [Fintype m] [DecidableEq m]
     (A : Matrix m m ℂ) : Matrix (m × m) (m × m) ℂ :=
-  LinearMap.toMatrix (matrixBasis m) (matrixBasis m) (leftMul A)
+  LinearMap.toMatrix (stdBasis ℂ m m) (stdBasis ℂ m m) (mulLeftLinearMap m ℂ A)
 
 /-- Matrix representation of right multiplication with respect to the standard basis. -/
 noncomputable def rightMulMatrix {m : Type*} [Fintype m] [DecidableEq m]
     (B : Matrix m m ℂ) : Matrix (m × m) (m × m) ℂ :=
-  LinearMap.toMatrix (matrixBasis m) (matrixBasis m) (rightMul B)
+  LinearMap.toMatrix (stdBasis ℂ m m) (stdBasis ℂ m m) (mulRightLinearMap m ℂ B)
 
 /-- Shorthand for `leftMulMatrix`. Corresponds to L_A in Effros (2009). Active inside
 `namespace Matrix` or after `open scoped Matrix`. -/
@@ -94,63 +72,51 @@ scoped notation "𝐑" => rightMulMatrix
 lemma leftMulMatrix_rightMulMatrix_commute {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐋 A * 𝐑 B = 𝐑 B * 𝐋 A := by
-  classical
-  have hcomp_left :
-      LinearMap.toMatrix (matrixBasis m) (matrixBasis m) (leftMul A ∘ₗ rightMul B) =
-        𝐋 A * 𝐑 B := by
-    simpa [leftMulMatrix, rightMulMatrix] using
-      (LinearMap.toMatrix_comp (v₁ := matrixBasis m) (v₂ := matrixBasis m)
-        (v₃ := matrixBasis m) (f := leftMul A) (g := rightMul B))
-  have hcomp_right :
-      LinearMap.toMatrix (matrixBasis m) (matrixBasis m) (rightMul B ∘ₗ leftMul A) =
-        𝐑 B * 𝐋 A := by
-    simpa [leftMulMatrix, rightMulMatrix] using
-      (LinearMap.toMatrix_comp (v₁ := matrixBasis m) (v₂ := matrixBasis m)
-        (v₃ := matrixBasis m) (f := rightMul B) (g := leftMul A))
-  have hcomm := congrArg
-    (fun f => LinearMap.toMatrix (matrixBasis m) (matrixBasis m) f)
-    (leftMul_rightMul_commute (A := A) (B := B))
-  simpa [hcomp_left, hcomp_right] using hcomm
+  unfold leftMulMatrix rightMulMatrix
+  rw [← LinearMap.toMatrix_comp _ (stdBasis ℂ m m), ← LinearMap.toMatrix_comp _ (stdBasis ℂ m m),
+    commute_mulLeftLinearMap_mulRightLinearMap]
 
 /-- leftMulMatrix is additive: leftMulMatrix (A + B) = leftMulMatrix A + leftMulMatrix B -/
 lemma leftMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐋 (A + B) = 𝐋 A + 𝐋 B := by
   simp only [leftMulMatrix]
-  have h : leftMul (A + B) = leftMul A + leftMul B := by
-    ext X; simp [leftMul, add_mul]
+  have h : mulLeftLinearMap m ℂ (A + B) = mulLeftLinearMap m ℂ A + mulLeftLinearMap m ℂ B := by
+    ext X; simp [mulLeftLinearMap_apply, add_mul]
   rw [h]
-  exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_add (leftMul A) (leftMul B)
+  exact (LinearMap.toMatrix (stdBasis ℂ m m) (stdBasis ℂ m m)).map_add
+    (mulLeftLinearMap m ℂ A) (mulLeftLinearMap m ℂ B)
 
 /-- leftMulMatrix is homogeneous: leftMulMatrix (c • A) = c • leftMulMatrix A -/
 lemma leftMulMatrix_smul {m : Type*} [Fintype m] [DecidableEq m]
     (c : ℂ) (A : Matrix m m ℂ) :
     𝐋 (c • A) = c • 𝐋 A := by
   simp only [leftMulMatrix]
-  have h : leftMul (c • A) = c • leftMul A := by
-    ext X; simp [leftMul]
+  have h : mulLeftLinearMap m ℂ (c • A) = c • mulLeftLinearMap m ℂ A := by
+    ext X; simp [mulLeftLinearMap_apply]
   rw [h]
-  exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_smul c (leftMul A)
+  exact (LinearMap.toMatrix (stdBasis ℂ m m) (stdBasis ℂ m m)).map_smul c (mulLeftLinearMap m ℂ A)
 
 /-- rightMulMatrix is additive: rightMulMatrix (A + B) = rightMulMatrix A + rightMulMatrix B -/
 lemma rightMulMatrix_add {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐑 (A + B) = 𝐑 A + 𝐑 B := by
   simp only [rightMulMatrix]
-  have h : rightMul (A + B) = rightMul A + rightMul B := by
-    ext X; simp [rightMul, mul_add]
+  have h : mulRightLinearMap m ℂ (A + B) = mulRightLinearMap m ℂ A + mulRightLinearMap m ℂ B := by
+    ext X; simp [mulRightLinearMap_apply, mul_add]
   rw [h]
-  exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_add (rightMul A) (rightMul B)
+  exact (LinearMap.toMatrix (stdBasis ℂ m m) (stdBasis ℂ m m)).map_add
+    (mulRightLinearMap m ℂ A) (mulRightLinearMap m ℂ B)
 
 /-- rightMulMatrix is homogeneous: rightMulMatrix (c • A) = c • rightMulMatrix A -/
 lemma rightMulMatrix_smul {m : Type*} [Fintype m] [DecidableEq m]
     (c : ℂ) (A : Matrix m m ℂ) :
     𝐑 (c • A) = c • 𝐑 A := by
   simp only [rightMulMatrix]
-  have h : rightMul (c • A) = c • rightMul A := by
-    ext X; simp [rightMul]
+  have h : mulRightLinearMap m ℂ (c • A) = c • mulRightLinearMap m ℂ A := by
+    ext X; simp [mulRightLinearMap_apply]
   rw [h]
-  exact (LinearMap.toMatrix (matrixBasis m) (matrixBasis m)).map_smul c (rightMul A)
+  exact (LinearMap.toMatrix (stdBasis ℂ m m) (stdBasis ℂ m m)).map_smul c (mulRightLinearMap m ℂ A)
 
 /-- leftMulMatrix is homogeneous for real scalars -/
 lemma leftMulMatrix_smul_real {m : Type*} [Fintype m] [DecidableEq m]
@@ -180,68 +146,23 @@ lemma rightMulMatrix_mul {m : Type*} [Fintype m] [DecidableEq m]
     (A B : Matrix m m ℂ) :
     𝐑 (A * B) = 𝐑 B * 𝐑 A := by
   simp only [rightMulMatrix]
-  have h : rightMul (A * B) = (rightMul B).comp (rightMul A) := by
-    ext X; simp [rightMul, Matrix.mul_assoc]
-  rw [h, LinearMap.toMatrix_comp (matrixBasis m) (matrixBasis m) (matrixBasis m)]
+  have h : mulRightLinearMap m ℂ (A * B) = (mulRightLinearMap m ℂ B).comp (mulRightLinearMap m ℂ A) := by
+    ext X; simp [mulRightLinearMap_apply, Matrix.mul_assoc]
+  rw [h, LinearMap.toMatrix_comp (stdBasis ℂ m m) (stdBasis ℂ m m) (stdBasis ℂ m m)]
 
 /-- rightMulMatrix maps identity to identity -/
 lemma rightMulMatrix_one {m : Type*} [Fintype m] [DecidableEq m] :
     𝐑 (1 : Matrix m m ℂ) = (1 : Matrix (m × m) (m × m) ℂ) := by
   simp only [rightMulMatrix]
-  have h : rightMul (1 : Matrix m m ℂ) = LinearMap.id := by
-    ext X; simp [rightMul]
-  rw [h, LinearMap.toMatrix_id (matrixBasis m)]
+  have h : mulRightLinearMap m ℂ (1 : Matrix m m ℂ) = LinearMap.id := by
+    ext X; simp
+  rw [h, LinearMap.toMatrix_id (stdBasis ℂ m m)]
 
-/-- The standard basis element at index `(i, j)` is the matrix with `1` at `(i, j)` and `0` elsewhere. -/
-lemma matrixBasis_apply_eq_single {m : Type*} [Fintype m] [DecidableEq m] (ij : m × m) :
-    matrixBasis m ij = Matrix.single ij.1 ij.2 (1 : ℂ) := by
-  cases ij with
-  | mk a b =>
-      simp [matrixBasis, Matrix.stdBasis_eq_single]
-
-/-- The basis representation of a matrix `M` at index `(i, j)` is `M i j`. -/
-lemma matrixBasis_repr_apply {m : Type*} [Fintype m] [DecidableEq m]
+/-- The coordinate of a matrix `M` at index `(i, j)` in the standard basis is `M i j`. -/
+lemma stdBasis_repr_apply {m : Type*} [Fintype m]
     (M : Matrix m m ℂ) (i j : m) :
-    (matrixBasis m).repr M (i, j) = M i j := by
-  classical
-  have hsum := congrArg (fun N => N i j) ((matrixBasis m).sum_repr M)
-  have hsum' :
-      (∑ ij : m × m,
-          (matrixBasis m).repr M ij *
-            (if ij.1 = i ∧ ij.2 = j then (1 : ℂ) else 0)) = M i j := by
-    simpa [Matrix.sum_apply, Matrix.smul_apply, matrixBasis_apply_eq_single,
-      Matrix.single, Matrix.of_apply, mul_comm, mul_left_comm, mul_assoc] using hsum
-  have hcoeff :
-      (∑ ij : m × m,
-          (matrixBasis m).repr M ij *
-            (if ij.1 = i ∧ ij.2 = j then (1 : ℂ) else 0)) =
-        (matrixBasis m).repr M (i, j) := by
-    classical
-    let f : m × m → ℂ := fun ij =>
-      (matrixBasis m).repr M ij * (if ij.1 = i ∧ ij.2 = j then (1 : ℂ) else 0)
-    have hsumf : (∑ ij, f ij) = f (i, j) := by
-      refine Fintype.sum_eq_single (i, j) ?_
-      intro ij hij
-      have hne : ¬ (ij.1 = i ∧ ij.2 = j) := by
-        intro h
-        apply hij
-        cases ij with
-        | mk a b =>
-            cases h with
-            | intro h1 h2 =>
-                subst h1
-                subst h2
-                rfl
-      simp [f, hne]
-    simpa [f] using hsumf
-  calc
-    (matrixBasis m).repr M (i, j) =
-        ∑ ij : m × m,
-          (matrixBasis m).repr M ij *
-            (if ij.1 = i ∧ ij.2 = j then (1 : ℂ) else 0) := by
-      symm
-      exact hcoeff
-    _ = M i j := hsum'
+    (stdBasis ℂ m m).repr M (i, j) = M i j := by
+  simp [stdBasis, Pi.basis_repr]
 
 /-- Entry `(i, j), (k, l)` of `leftMulMatrix A` equals `A i k` if `j = l`, else `0`. -/
 lemma leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
@@ -250,8 +171,8 @@ lemma leftMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
   classical
   have hrepr :
       𝐋 A (i, j) (k, l) = (A * Matrix.single k l (1 : ℂ)) i j := by
-    simp only [leftMulMatrix, leftMul, LinearMap.toMatrix_apply, matrixBasis_apply_eq_single]
-    exact matrixBasis_repr_apply ..
+    simp only [leftMulMatrix, LinearMap.toMatrix_apply, stdBasis_eq_single]
+    exact stdBasis_repr_apply ..
   rw [hrepr]
   by_cases hjl : j = l
   · subst hjl; simp
@@ -264,8 +185,8 @@ lemma rightMulMatrix_apply {m : Type*} [Fintype m] [DecidableEq m]
   classical
   have hrepr :
       𝐑 B (i, j) (k, l) = (Matrix.single k l (1 : ℂ) * B) i j := by
-    simp only [rightMulMatrix, rightMul, LinearMap.toMatrix_apply, matrixBasis_apply_eq_single]
-    exact matrixBasis_repr_apply ..
+    simp only [rightMulMatrix, LinearMap.toMatrix_apply, stdBasis_eq_single]
+    exact stdBasis_repr_apply ..
   rw [hrepr]
   by_cases hik : i = k
   · subst hik
@@ -600,18 +521,14 @@ lemma perspective_inner_eq_commuting {n : Type*} [Fintype n] [DecidableEq n]
   rw [(posSemidef_rpow R (-1 / 2 : ℝ)).isHermitian.eq]  -- Rinv† = Rinv
   rw [← (rpow_commute_of_commute (Commute.symm hcomm) _).eq]
 
-/-- For L commuting with a PD R, the perspective inner matrix equals L * R^{-1}.
-This combines the commutativity simplification with the fact that Rinv * Rinv = R^{-1}. -/
+open scoped Matrix.Norms.L2Operator in
+/-- For `L` commuting with a positive definite `R`, the inner matrix of the perspective equals
+`L * R⁻¹`: by commutativity it is `L R^{-1/2} R^{-1/2}`, and `R^{-1/2} R^{-1/2} = R⁻¹`. -/
 lemma perspective_inner_eq_mul_inv {n : Type*} [Fintype n] [DecidableEq n]
     {L R : Matrix n n ℂ} (hR : R.PosDef)
     (hcomm : L * R = R * L) :
     (R ^ (-1 / 2 : ℝ))ᴴ * L * R ^ (-1 / 2 : ℝ) = L * R⁻¹ := by
   rw [perspective_inner_eq_commuting hcomm]
-  let : NormedRing (Matrix n n ℂ) := Matrix.linftyOpNormedRing
-  let : NormedAlgebra ℝ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  let : NormedAlgebra ℂ (Matrix n n ℂ) := Matrix.linftyOpNormedAlgebra
-  let : CStarAlgebra (Matrix n n ℂ) := by
-    simpa [CStarMatrix] using CStarMatrix.instCStarAlgebra (n := n) (A := ℂ)
   have hRunit := hR.isUnit
   have hR0 : (0 : Matrix n n ℂ) ≤ R := by simpa [Matrix.le_iff] using hR.posSemidef
   -- R^{-1/2} * R^{-1/2} = R^{-1}
