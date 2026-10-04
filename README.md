@@ -7,6 +7,14 @@ A Lean 4 formalization of quantum systems from an operator-algebraic perspective
 > removed declarations, changed signatures, and reorganized modules — happen
 > frequently without deprecation.
 
+> [!NOTE]
+> This project is currently not accepting contributors because the following areas still need to be addressed:
+>
+> * Contributing guidelines (including an AI policy)
+> * Repository scope and roadmap, including what should and should not be included
+> * Release workflow
+> * Documentation (including Lean Blueprint)
+
 ## Highlights
 
 Notable results formalized in this repository include:
