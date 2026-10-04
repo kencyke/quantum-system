@@ -280,8 +280,8 @@ theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (φ : (H →L[ℂ] H)
 /-- **Stinespring's theorem, Heisenberg picture**: the trace dual of a completely positive map
 `φ : B(H) → B(K)` is `φ*(B) = V† (B ⊗ 1) V` for some `V : H → K ⊗ ℂʳ` with environment of the
 minimal dimension `r = rank J_b(φ)`
-(`ContinuousLinearMap.finrank_range_choi_le_finrank_of_stinespring`): the Schrödinger form `CompletelyPositiveMap.exists_stinespring`
-read through `ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
+(`ContinuousLinearMap.finrank_range_choi_le_finrank_of_stinespring`): the Schrödinger form
+`CompletelyPositiveMap.exists_stinespring` read through `ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
 theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H)
     (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ

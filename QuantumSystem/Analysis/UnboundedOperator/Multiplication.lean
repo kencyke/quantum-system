@@ -82,6 +82,7 @@ noncomputable def resolventFun {h : α → ℝ} (hh : Measurable h) : Lp ℂ ∞
   (memLp_top_of_bound (by fun_prop : Measurable fun x => (I - (h x : ℂ))⁻¹).aestronglyMeasurable
     1 (Eventually.of_forall fun x => Complex.norm_inv_I_sub_ofReal_le (h x))).toLp _
 
+/-- `resolventFun hh` is almost everywhere the function `x ↦ (i - h x)⁻¹`. -/
 lemma coeFn_resolventFun {h : α → ℝ} (hh : Measurable h) :
     ⇑(resolventFun (μ := μ) hh) =ᵐ[μ] fun x => (I - (h x : ℂ))⁻¹ :=
   MemLp.coeFn_toLp _

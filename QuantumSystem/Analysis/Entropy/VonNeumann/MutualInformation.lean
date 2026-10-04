@@ -141,6 +141,8 @@ noncomputable def tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (
     rw [one_def, ← mapL_id_id, PositiveLinearMap.tensorProduct_mapL, ← one_def, ← one_def]
     simp)
 
+/-- The positive functional underlying a product state is the product of the underlying
+positive functionals. -/
 @[simp] theorem ofClass_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
     PositiveLinearMap.ofClass (ω₁.tensorProduct ω₂) =
       (PositiveLinearMap.ofClass ω₁).tensorProduct (PositiveLinearMap.ofClass ω₂) :=
@@ -181,9 +183,11 @@ restriction along the ampliation `B ↦ 1 ⊗ B`. -/
 noncomputable def traceLeft : State (K →L[ℂ] K) :=
   ω.comp (lTensorStarAlgHom ℂ K H) (map_one _)
 
+/-- `traceRight` evaluates `ω` on the ampliation `A ↦ A ⊗ 1`. -/
 @[simp] theorem traceRight_apply (A : H →L[ℂ] H) : ω.traceRight A = ω (A.rTensor K) :=
   rfl
 
+/-- `traceLeft` evaluates `ω` on the ampliation `B ↦ 1 ⊗ B`. -/
 @[simp] theorem traceLeft_apply (B : K →L[ℂ] K) : ω.traceLeft B = ω (B.lTensor H) :=
   rfl
 

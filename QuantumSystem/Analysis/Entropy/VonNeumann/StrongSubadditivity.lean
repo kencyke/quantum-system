@@ -110,6 +110,7 @@ noncomputable def traceFirst : State (H_B ⊗[ℂ] H_C →L[ℂ] H_B ⊗[ℂ] H_
   ω.comp (CompletelyPositiveMap.lTensorTensor H_A H_B H_C) CompletelyPositiveMap.lTensorTensor_one
 
 set_option maxSynthPendingDepth 2 in
+/-- `traceFirst` evaluates `ω` on the ampliation `X ↦ 1 ⊗ X`. -/
 theorem traceFirst_apply (X : H_B ⊗[ℂ] H_C →L[ℂ] H_B ⊗[ℂ] H_C) :
     ω.traceFirst X = ω (CompletelyPositiveMap.lTensorTensor H_A H_B H_C X) :=
   rfl
