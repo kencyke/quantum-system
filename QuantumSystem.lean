@@ -43,6 +43,7 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.SpatialDecomposition
 public import QuantumSystem.Algebra.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.Analysis.CStarAlgebra.KadisonSchwarz
 public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvex
+public import QuantumSystem.Analysis.CStarAlgebra.Perspective
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Basic
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Choi
 public import QuantumSystem.Analysis.CStarAlgebra.QuantumChannel.Dual
@@ -88,6 +89,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveM
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.RpowCommute
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
