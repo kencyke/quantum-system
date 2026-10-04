@@ -519,49 +519,15 @@ noncomputable def vonNeumannNet (R : CStarRep N.quasiLocalCStarAlgebra) :
     directed index set nor a quasi-local C⋆-algebra; the hypotheses `[IsDirectedOrder K]`,
     `[Nonempty K]` and `[N.Faithful]` here are the cost of *this instance*, whose local algebras
     are built from a representation of the quasi-local C⋆-algebra. Nets over non-directed index
-    sets are stated through `VonNeumannNet.SplitProperty` directly. -/
-def SplitProperty [ProperContainment K] (R : CStarRep N.quasiLocalCStarAlgebra) : Prop :=
+    sets are stated through `VonNeumannNet.SplitProperty` directly.
+
+    This is an `abbrev`, so the consequences `VonNeumannNet.SplitProperty.isSplitInclusion`,
+    `VonNeumannNet.SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le` and
+    `VonNeumannNet.SplitProperty.isSplitPair` apply to `hs : N.SplitProperty R` directly (also by
+    dot notation), and are not restated here. -/
+abbrev SplitProperty [ProperContainment K] (R : CStarRep N.quasiLocalCStarAlgebra) : Prop :=
   (N.vonNeumannNet R).SplitProperty
 
 end LocalAlgebras
-
-section SplitConsequences
-
-variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
-variable [ProperContainment K] {N : LocalNet K} [N.Faithful]
-variable {R : CStarRep N.quasiLocalCStarAlgebra}
-
-/-- The split property extends to enlarged pairs: if `O₀ ≤ O₁ ⋐ O₂ ≤ O₃` then the inclusion
-    `𝓡(O₀) ≤ 𝓡(O₃)` is split as well. Specialisation of
-    `VonNeumannNet.SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le`. -/
-lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : N.SplitProperty R)
-    {O₀ O₁ O₂ O₃ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⋐ O₂) (h₃ : O₂ ≤ O₃) :
-    VonNeumannAlgebra.IsSplitInclusion
-      (N.localVonNeumannAlgebra R O₀) (N.localVonNeumannAlgebra R O₃) :=
-  VonNeumannNet.SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le hs h₀ h h₃
-
-/-- **The split inclusion of a properly contained pair**: under the split property, `O₁ ⋐ O₂`
-    yields the split inclusion `𝓡(O₁) ≤ 𝓡(O₂)`. Specialisation of
-    `VonNeumannNet.SplitProperty.isSplitInclusion`, whose docstring describes the tensor splitting
-    that follows. (The instantiated existential is deliberately not restated here: spelling it out
-    over `R.H` forces the elaborator to unfold the quasi-local algebra inside `R`'s type, while
-    consuming the general statement through this corollary is cheap.) -/
-theorem SplitProperty.isSplitInclusion (hs : N.SplitProperty R) {O₁ O₂ : K} (h : O₁ ⋐ O₂) :
-    VonNeumannAlgebra.IsSplitInclusion
-      (N.localVonNeumannAlgebra R O₁) (N.localVonNeumannAlgebra R O₂) :=
-  VonNeumannNet.SplitProperty.isSplitInclusion hs h
-
-/-- **The commutant form of the split property** (Borchers' conjecture as displayed in Buchholz,
-    *Product states for local algebras*): for a properly contained pair `O₁ ⋐ O₂` and any region
-    `O_B` causally orthogonal to `O₂`, a type I factor interpolates between `𝓡(O₁)` and the
-    commutant `𝓡(O_B)′`. Specialisation of
-    `VonNeumannNet.SplitProperty.isSplitPair`, whose docstring records what the
-    converse would need (Haag duality) and how this one-sided form relates to Buchholz's
-    symmetric four-term chain. -/
-theorem SplitProperty.isSplitPair (hs : N.SplitProperty R) {O₁ O₂ O_B : K}
-    (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) : (N.vonNeumannNet R).IsSplitPair O₁ O_B :=
-  VonNeumannNet.SplitProperty.isSplitPair hs h hd
-
-end SplitConsequences
 
 end LocalNet
