@@ -106,21 +106,26 @@ namespace State
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A]
 
+/-- A state is applied to elements of `A` through its underlying functional in `WeakDual ℂ A`. -/
 noncomputable instance : FunLike (State A) A ℂ where
   coe ω := ω.val
   coe_injective _ _ h := Subtype.ext (DFunLike.coe_injective h)
 
+/-- States are `ℂ`-linear. -/
 instance : LinearMapClass (State A) ℂ A ℂ where
   map_add ω := map_add ω.val
   map_smulₛₗ ω := map_smul ω.val
 
+/-- States are continuous linear functionals. -/
 instance : ContinuousLinearMapClass (State A) ℂ A ℂ where
   map_continuous ω := ω.val.continuous
 
 variable (ω : State A)
 
+/-- Applying the underlying weak-dual functional `ω.val` is the same as applying `ω`. -/
 @[simp] lemma coe_val : ⇑ω.val = ω := rfl
 
+/-- Two states that agree on every element of `A` are equal. -/
 @[ext] lemma ext {ω₁ ω₂ : State A} (h : ∀ a, ω₁ a = ω₂ a) : ω₁ = ω₂ :=
   DFunLike.ext ω₁ ω₂ h
 
@@ -139,6 +144,7 @@ lemma lipschitzWith_one : LipschitzWith 1 ω := by
   have h : ‖WeakDual.toStrongDual ω.val‖₊ = 1 := NNReal.eq ω.norm_eq_one
   exact h ▸ (WeakDual.toStrongDual ω.val).lipschitzWith
 
+/-- A state is continuous for the norm topology of `A`. -/
 lemma continuous : Continuous ω := map_continuous ω
 
 /-! ### Positivity -/
@@ -155,6 +161,7 @@ noncomputable def ofContinuousLinearMap (f : A →L[ℂ] ℂ) (hf : ∀ a, 0 ≤
     State A :=
   ⟨StrongDual.toWeakDual f, mem_stateSpace_iff.mpr ⟨hf, h⟩⟩
 
+/-- `ofContinuousLinearMap f hf h a = f a`. -/
 @[simp] lemma ofContinuousLinearMap_apply (f : A →L[ℂ] ℂ) (hf : ∀ a, 0 ≤ a → 0 ≤ f a)
     (h : ‖f‖ = 1) (a : A) : ofContinuousLinearMap f hf h a = f a := rfl
 
@@ -162,6 +169,8 @@ section StarOrderedRing
 
 variable [StarOrderedRing A]
 
+/-- States are monotone: `a ≤ b` implies `ω a ≤ ω b` in the order of `ℂ`, by positivity on
+`b - a`. -/
 instance : OrderHomClass (State A) A ℂ where
   map_rel ω a b h := by
     have := ω.2.1 (b - a) (sub_nonneg.mpr h)
@@ -257,10 +266,12 @@ noncomputable def ofPositiveLinearMap (f : A →ₚ[ℂ] ℂ) (hf : f 1 = 1) : S
     rw [PositiveContinuousLinearMap.coe_ofClass, hf] at h
     exact_mod_cast h)
 
+/-- The positive functional underlying `ofPositiveLinearMap f hf` is `f` itself. -/
 @[simp] lemma ofClass_ofPositiveLinearMap (f : A →ₚ[ℂ] ℂ) (hf : f 1 = 1) :
     PositiveLinearMap.ofClass (ofPositiveLinearMap f hf) = f :=
   rfl
 
+/-- `ofPositiveLinearMap f hf a = f a`. -/
 @[simp] lemma ofPositiveLinearMap_apply (f : A →ₚ[ℂ] ℂ) (hf : f 1 = 1) (a : A) :
     ofPositiveLinearMap f hf a = f a :=
   rfl
@@ -276,11 +287,14 @@ noncomputable def comp (α : F) (hα : α 1 = 1) : State B :=
     change ω (α 1) = 1
     rw [hα, ω.apply_one])
 
+/-- The positive functional underlying the pullback `ω.comp α hα` is the composite
+`ofClass ω ∘ ofClass α` of positive linear maps. -/
 @[simp] lemma ofClass_comp (α : F) (hα : α 1 = 1) :
     PositiveLinearMap.ofClass (ω.comp α hα) =
       (PositiveLinearMap.ofClass ω).comp (PositiveLinearMap.ofClass α) :=
   rfl
 
+/-- The pullback evaluates as `ω.comp α hα b = ω (α b)`. -/
 @[simp] lemma comp_apply (α : F) (hα : α 1 = 1) (b : B) : ω.comp α hα b = ω (α b) :=
   rfl
 

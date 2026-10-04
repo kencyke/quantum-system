@@ -86,12 +86,16 @@ noncomputable def trans (U : UnitaryEquiv R₁ R₂) (V : UnitaryEquiv R₂ R₃
   toLinearIsometryEquiv := U.toLinearIsometryEquiv.trans V.toLinearIsometryEquiv
   intertwines a := by ext x; simp [U.intertwines_apply, V.intertwines_apply]
 
+/-- The unitary underlying `UnitaryEquiv.refl R` is `LinearIsometryEquiv.refl`. -/
 @[simp] lemma refl_toLinearIsometryEquiv (R : CStarRep A) :
     (refl R).toLinearIsometryEquiv = LinearIsometryEquiv.refl ℂ R.H := rfl
 
+/-- The unitary underlying `U.symm` is the inverse unitary `U.toLinearIsometryEquiv.symm`. -/
 @[simp] lemma symm_toLinearIsometryEquiv (U : UnitaryEquiv R₁ R₂) :
     U.symm.toLinearIsometryEquiv = U.toLinearIsometryEquiv.symm := rfl
 
+/-- The unitary underlying `U.trans V` is the composite unitary `U.trans V` of the underlying
+linear isometry equivalences. -/
 @[simp] lemma trans_toLinearIsometryEquiv (U : UnitaryEquiv R₁ R₂) (V : UnitaryEquiv R₂ R₃) :
     (U.trans V).toLinearIsometryEquiv = U.toLinearIsometryEquiv.trans V.toLinearIsometryEquiv :=
   rfl
@@ -102,13 +106,16 @@ end UnitaryEquiv
 def unitarilyEquivalent (R₁ R₂ : CStarRep A) : Prop :=
   Nonempty (UnitaryEquiv R₁ R₂)
 
+/-- Unitary equivalence of representations is reflexive. -/
 lemma unitarilyEquivalent.refl (R : CStarRep A) : unitarilyEquivalent R R :=
   ⟨UnitaryEquiv.refl R⟩
 
+/-- Unitary equivalence of representations is symmetric. -/
 lemma unitarilyEquivalent.symm {R₁ R₂ : CStarRep A}
     (h : unitarilyEquivalent R₁ R₂) : unitarilyEquivalent R₂ R₁ :=
   h.elim fun U => ⟨U.symm⟩
 
+/-- Unitary equivalence of representations is transitive. -/
 lemma unitarilyEquivalent.trans {R₁ R₂ R₃ : CStarRep A}
     (h₁ : unitarilyEquivalent R₁ R₂) (h₂ : unitarilyEquivalent R₂ R₃) :
     unitarilyEquivalent R₁ R₃ :=

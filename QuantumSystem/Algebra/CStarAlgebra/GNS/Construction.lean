@@ -129,6 +129,7 @@ lemma norm_gnsVector : ‖ξ[ω]‖ = 1 := by
   congr 1
   exact ω.opNorm_ofClass_eq_one
 
+/-- The cyclic vector of a state is nonzero, since `‖ξ[ω]‖ = 1`. -/
 lemma gnsVector_ne_zero : ξ[ω] ≠ 0 := by
   rw [← norm_ne_zero_iff, norm_gnsVector]
   exact one_ne_zero

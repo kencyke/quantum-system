@@ -77,6 +77,10 @@ lemma norm_sq_in_Icc (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁
   have h := norm_sq_decomposition T v₁ v₂ hξ horth
   exact ⟨sq_nonneg _, by linarith [sq_nonneg ‖v₂‖]⟩
 
+/-- **Purity forces a component of the cyclic vector to have norm `0` or `1`.** If the GNS
+cyclic vector of a pure state `ψ` splits as `ξ = v₁ + v₂` along a closed invariant submodule `W`
+(`v₁ ∈ W`, `v₂ ∈ Wᗮ`), then `‖v₁‖² ∈ {0, 1}`: otherwise `ψ` would be a proper convex combination
+of the two normalised vector functionals, contradicting its extremality. -/
 lemma trichotomy_from_purity {ψ : PureState A}
     (W : ClosedSubmodule ℂ (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).H)
     (hW : W ∈ (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).closedInvtSubmodule)

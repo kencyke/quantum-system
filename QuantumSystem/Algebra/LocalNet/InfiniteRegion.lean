@@ -101,6 +101,8 @@ def finiteLocalOperators (vnNet : VonNeumannNet (Finset α) H) (S : Set α) :
     Set (H →L[ℂ] H) :=
   ⋃ (Λ : Finset α) (_ : (Λ : Set α) ⊆ S), (vnNet.algebra Λ : Set (H →L[ℂ] H))
 
+/-- Membership in `finiteLocalOperators`: `x` is localised in some finite region `Λ ⊆ S`, i.e.
+`x ∈ vnNet.algebra Λ`. -/
 lemma mem_finiteLocalOperators {vnNet : VonNeumannNet (Finset α) H} {S : Set α}
     {x : H →L[ℂ] H} :
     x ∈ vnNet.finiteLocalOperators S ↔ ∃ Λ : Finset α, (Λ : Set α) ⊆ S ∧ x ∈ vnNet.algebra Λ := by

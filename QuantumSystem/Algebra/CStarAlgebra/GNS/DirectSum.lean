@@ -73,6 +73,8 @@ This is the representation that witnesses the Gelfand–Naimark theorem
 (`CStarRep.exists_isometric`). -/
 noncomputable def rep : CStarRep A := (pureStateFamily A).toCStarRep
 
+/-- The action of `GNS.DirectSum.rep A` unfolds to the block-diagonal representation
+`(pureStateFamily A).directSumRep`. -/
 @[simp] lemma rep_π : (rep A).π = (pureStateFamily A).directSumRep := rfl
 
 /-- The direct sum representation is faithful. -/

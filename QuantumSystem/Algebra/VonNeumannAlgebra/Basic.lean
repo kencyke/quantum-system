@@ -149,6 +149,8 @@ noncomputable def boundedLinearOperators.starAlgEquiv :
       (H →L[ℂ] H) →⋆ₐ[ℂ] (𝓑(H) : VonNeumannAlgebra H).toStarSubalgebra)
     (StarAlgHom.ext fun _ => rfl) (StarAlgHom.ext fun _ => rfl)
 
+/-- The inverse of `boundedLinearOperators.starAlgEquiv` sends an operator `x` to itself, viewed
+as a member of `𝓑(H)`; coercing back to `H →L[ℂ] H` recovers `x`. -/
 @[simp] lemma boundedLinearOperators.coe_starAlgEquiv_symm_apply (x : H →L[ℂ] H) :
     ((boundedLinearOperators.starAlgEquiv (H := H)).symm x : H →L[ℂ] H) = x := rfl
 

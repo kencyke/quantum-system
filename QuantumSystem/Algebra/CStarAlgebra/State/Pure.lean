@@ -65,6 +65,8 @@ private instance instUnitScalarTower : IsScalarTower ℝ ℂ (Unitization ℂ A)
     rw [show (r • c : ℂ) = (r : ℂ) * c from rfl, mul_smul]
     rfl
 
+/-- The weak-* dual `WeakDual ℂ A` is a locally convex real space, as a weak bilinear topology;
+this is what the Krein–Milman argument for pure states needs. -/
 instance : LocallyConvexSpace ℝ (WeakDual ℂ A) :=
   @WeakBilin.locallyConvexSpace ℂ (A →L[ℂ] ℂ) A _ _ _ _ _ _ _ instCLMScalarTower _
 
@@ -455,6 +457,7 @@ coercion instance alongside it, so that every downstream result is stated in the
 def toState (ψ : PureState A) : State A :=
   IsPureState.toState ψ.property
 
+/-- The state underlying a pure state evaluates as the pure state itself: `ψ.toState a = ψ.val a`. -/
 @[simp]
 lemma toState_apply (ψ : PureState A) (a : A) :
     ψ.toState a = ψ.val a := rfl

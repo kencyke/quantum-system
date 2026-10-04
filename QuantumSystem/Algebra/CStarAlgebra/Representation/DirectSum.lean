@@ -107,6 +107,7 @@ noncomputable def sectorEmbed (F : SectorFamily.{u, v, w} A)
       lp.norm_single (E := fun α' : F.Index => (F.rep α').H)
         (by norm_num : (0 : ℝ≥0∞) < 2) α x }
 
+/-- The `α`-th coordinate of `sectorEmbed F α v` is `v` itself. -/
 @[simp] lemma sectorEmbed_apply_coord (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H) :
     (sectorEmbed F α v).val α = v := by
@@ -115,6 +116,7 @@ noncomputable def sectorEmbed (F : SectorFamily.{u, v, w} A)
   exact lp.single_apply_self
     (E := fun α' : F.Index => (F.rep α').H) 2 α v
 
+/-- Every coordinate of `sectorEmbed F α v` other than the `α`-th one vanishes. -/
 lemma sectorEmbed_apply_coord_ne (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H)
     {α' : F.Index} (h : α' ≠ α) :
@@ -124,6 +126,8 @@ lemma sectorEmbed_apply_coord_ne (F : SectorFamily.{u, v, w} A)
   exact lp.single_apply_ne
     (E := fun α'' : F.Index => (F.rep α'').H) 2 α v h
 
+/-- Projecting onto the `α`-th component after embedding into it is the identity:
+`sectorComponent F α (sectorEmbed F α v) = v`. -/
 @[simp] lemma sectorComponent_sectorEmbed (F : SectorFamily.{u, v, w} A)
     (α : F.Index) (v : (F.rep α).H) :
     sectorComponent F α (sectorEmbed F α v) = v := by
@@ -218,6 +222,7 @@ noncomputable def toCStarRep (F : SectorFamily.{u, v, w} A) : CStarRep A where
   H := F.directSumHilbert
   π := F.directSumRep
 
+/-- The action of the bundled direct sum `F.toCStarRep` is `F.directSumRep`. -/
 @[simp] lemma toCStarRep_π (F : SectorFamily.{u, v, w} A) : F.toCStarRep.π = F.directSumRep :=
   rfl
 

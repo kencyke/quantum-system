@@ -74,6 +74,7 @@ local notation "BWOT" => (H →WOT[ℂ] H)
 noncomputable def sotToWOT (T : BSOT) : BWOT :=
   ContinuousLinearMapWOT.ofCLM ((toUniformConvergenceCLM _ _ _).symm T)
 
+/-- `sotToWOT` does not change the underlying operator: `sotToWOT T x = T x`. -/
 @[simp] lemma sotToWOT_apply (T : BSOT) (x : H) : (sotToWOT (H := H) T) x = T x := rfl
 
 /-- **SOT is finer than WOT.** The identity map from the SOT type-copy to the WOT type-copy is

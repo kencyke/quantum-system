@@ -81,6 +81,7 @@ positions carry no information, since `0` is annihilated by every representation
 `A = 0` the index type is empty, which is the correct answer there. -/
 noncomputable def NormingIndex [SeparableSpace A] : Type := {n : ℕ // denseSeq A n ≠ 0}
 
+/-- The norming index type is countable, being a subtype of `ℕ`. -/
 instance [SeparableSpace A] : Countable (NormingIndex A) :=
   inferInstanceAs (Countable {n : ℕ // denseSeq A n ≠ 0})
 
@@ -89,6 +90,7 @@ noncomputable def NormingIndex.elem [SeparableSpace A] (i : NormingIndex A) : A 
   denseSeq A i.1
 
 omit [PartialOrder A] [StarOrderedRing A] in
+/-- The element at a norming index is nonzero, by the definition of `NormingIndex`. -/
 lemma NormingIndex.elem_ne_zero [SeparableSpace A] (i : NormingIndex A) : i.elem ≠ 0 := i.2
 
 /-- A pure state norming the element at a norming index. -/
@@ -96,6 +98,8 @@ noncomputable def normingState [SeparableSpace A] (i : NormingIndex A) : PureSta
   ⟨(IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose,
     (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.1⟩
 
+/-- The defining property of `normingState i`: it norms the element at `i`,
+`ψ (aᵢ* aᵢ) = ‖aᵢ‖ ^ 2`. -/
 lemma normingState_spec [SeparableSpace A] (i : NormingIndex A) :
     (normingState i).toState (star i.elem * i.elem) = ((‖i.elem‖ ^ 2 : ℝ) : ℂ) :=
   (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.2
@@ -178,10 +182,13 @@ of by the whole pure state space. -/
 noncomputable def normingRep [SeparableSpace A] : CStarRep.{u, u} A :=
   (normingFamily A).toCStarRep
 
+/-- The action of `normingRep A` unfolds to the block-diagonal representation
+`(normingFamily A).directSumRep`. -/
 @[simp]
 lemma normingRep_π [SeparableSpace A] :
     (normingRep A).π = (normingFamily A).directSumRep := rfl
 
+/-- The Hilbert space of the norming representation is separable. -/
 instance [SeparableSpace A] : SeparableSpace (normingRep A).H :=
   separableSpace_normingFamily_directSumHilbert
 
