@@ -30,6 +30,14 @@ Notations and abbreviations for quantum information theory.
 <tr><td><code>S⟦ψ ∥ φ⟧</code></td><td><code>VonNeumannAlgebra.arakiEntropy M ψ φ</code></td>
   <td><code>open scoped Araki</code></td>
   <td><code>Analysis/Entropy/Araki/Basic.lean</code></td></tr>
+<tr><td><code>S[K]</code>, <code>Δ[K]</code>, <code>Δ[K]^{1/2}</code>, <code>J[K]</code>,
+  <code>Δ[K]^{i t}</code></td>
+  <td><code>StandardSubspace.tomita K</code>, <code>StandardSubspace.modular K</code>,
+    <code>IsSelfAdjoint.sqrt (StandardSubspace.isSelfAdjoint_modular K)</code>,
+    <code>StandardSubspace.modularConj K</code>,
+    <code>(StandardSubspace.modularGroup K t : H →L[ℂ] H)</code></td>
+  <td><code>open scoped StandardSubspace</code></td>
+  <td><code>Analysis/StandardSubspace/Tomita.lean</code></td></tr>
 <tr><td><code>M′</code></td><td><code>VonNeumannAlgebra.commutant M</code></td>
   <td><code>open scoped VonNeumannAlgebra</code></td>
   <td><code>ForMathlib/Analysis/VonNeumannAlgebra/Commutant.lean</code></td></tr>

@@ -70,6 +70,7 @@ public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
 public import QuantumSystem.Analysis.SpectralTheory.SNAG
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
+public import QuantumSystem.Analysis.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
 public import QuantumSystem.Analysis.UnboundedOperator.AnalyticContinuation
 public import QuantumSystem.Analysis.UnboundedOperator.FunctionalCalculus
@@ -115,6 +116,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Clo
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.SemilinearIsometry
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.StandardSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
