@@ -48,7 +48,7 @@ operator exists for arbitrary vectors, and the value is independent of the repre
   `S_{amplify H₁ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)` for a unit vector `e`.
 * `VonNeumannAlgebra.arakiEntropy_eq_arakiVec` — independence of the representing vectors.
 * `VonNeumannAlgebra.arakiEntropy_ofVector` — `S(ω_ξ ‖ ω_η)` agrees with
-  `VonNeumannAlgebra.arakiVec M ξ η`.
+  `VonNeumannAlgebra.arakiVec M ξ η`, i.e. `S[M]⟦ξ ∥ η⟧`.
 * `VonNeumannAlgebra.arakiEntropy_ne_bot`, `VonNeumannAlgebra.arakiEntropy_self`.
 * `VonNeumannAlgebra.arakiEntropy_eq_top_of_not_supportProj_le` — **support condition**:
   `S(ψ ‖ φ) = +∞` unless `s(ψ) ≤ s(φ)`, for the support projections
@@ -97,7 +97,7 @@ modular operator, the diagonal measures of its projection-valued measure `E`
 
 @[expose] public section
 
-open scoped InnerProductSpace HilbertTensor ComplexOrder
+open scoped InnerProductSpace HilbertTensor ComplexOrder Araki
 open HilbertTensor (amplifyRight amplifyRightₐ tmulRightL)
 
 namespace VonNeumannAlgebra
@@ -111,7 +111,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 `S_{amplify H₁ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)`. -/
 theorem arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     {e : H₁} (he : ‖e‖ = 1) (ξ η : H) :
-    (M.amplify H₁).arakiVec (e ⊗ₕ ξ) (e ⊗ₕ η) = M.arakiVec ξ η := by
+    S[M.amplify H₁]⟦e ⊗ₕ ξ ∥ e ⊗ₕ η⟧ = S[M]⟦ξ ∥ η⟧ := by
   have h₁ : ∀ x : H →L[ℂ] H, amplifyRight x ∘L tmulRightL e = tmulRightL e ∘L x := fun x =>
     ContinuousLinearMap.ext fun u => by simp [HilbertTensor.amplifyRight_tmul]
   have hπ : ∀ S : VonNeumannAlgebra H, ∀ x ∈ S, ∃ y ∈ (S : Set (H →L[ℂ] H)).image amplifyRight,
@@ -138,7 +138,7 @@ representing vectors `ψ.2.vec`, `φ.2.vec` stand in for Araki's natural-cone re
 `ξ_ψ, ξ_φ ∈ P♮`, whose existence would need Tomita–Takesaki theory; the value does not depend on
 the choice (`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`). -/
 noncomputable def arakiEntropy (ψ φ : M.NormalFunctional) : EReal :=
-  (M.amplify ℓ²).arakiVec ψ.2.vec φ.2.vec
+  S[M.amplify ℓ²]⟦ψ.2.vec ∥ φ.2.vec⟧
 
 /-- `S⟦ψ ∥ φ⟧` is Araki's relative entropy `VonNeumannAlgebra.arakiEntropy M ψ φ`, the algebra `M`
 being read off from `ψ : M.NormalFunctional`. -/
@@ -152,7 +152,7 @@ variable {M}
 theorem arakiEntropy_eq_arakiVec {ψ φ : M.NormalFunctional} {Ξψ Ξφ : ℓ² ⊗̂ H}
     (hψ : ∀ x : M, ⟪Ξψ, amplifyRight (x : H →L[ℂ] H) Ξψ⟫_ℂ = ψ.1 x)
     (hφ : ∀ x : M, ⟪Ξφ, amplifyRight (x : H →L[ℂ] H) Ξφ⟫_ℂ = φ.1 x) :
-    M.arakiEntropy ψ φ = (M.amplify ℓ²).arakiVec Ξψ Ξφ := by
+    S⟦ψ ∥ φ⟧ = S[M.amplify ℓ²]⟦Ξψ ∥ Ξφ⟧ := by
   refine arakiVec_eq_of_inner_eq ?_ ?_
   · exact fun y hy => inner_apply_eq_of_mem_amplify (fun x hx =>
       (ψ.2.inner_vec_amplifyRight ⟨x, hx⟩).trans (hψ ⟨x, hx⟩).symm) hy |>.symm
@@ -163,8 +163,8 @@ variable (M) in
 /-- **Vector functionals.** `S(ω_ξ ‖ ω_η) = arakiVec M ξ η`: the relative entropy of vector
 functionals computed through the amplification is the one computed on `H`. -/
 theorem arakiEntropy_ofVector (ξ η : H) :
-    M.arakiEntropy (NormalFunctional.ofVector M ξ) (NormalFunctional.ofVector M η) =
-      M.arakiVec ξ η := by
+    S⟦NormalFunctional.ofVector M ξ ∥ NormalFunctional.ofVector M η⟧ =
+      S[M]⟦ξ ∥ η⟧ := by
   rw [arakiEntropy_eq_arakiVec (Ξψ := lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₕ ξ)
     (Ξφ := lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₕ η)
     (fun x => HilbertTensor.inner_tmul_amplifyRight_tmul (lp.norm_single_one two_pos 0) ξ x)
@@ -174,18 +174,18 @@ theorem arakiEntropy_ofVector (ξ η : H) :
 variable (ψ φ : M.NormalFunctional)
 
 /-- `S(ψ ‖ φ) ≠ -∞`. -/
-theorem arakiEntropy_ne_bot : M.arakiEntropy ψ φ ≠ ⊥ :=
+theorem arakiEntropy_ne_bot : S⟦ψ ∥ φ⟧ ≠ ⊥ :=
   arakiVec_ne_bot _ _ _
 
 /-- `S(ψ ‖ ψ) = 0`. -/
 @[simp]
-theorem arakiEntropy_self : M.arakiEntropy ψ ψ = 0 :=
+theorem arakiEntropy_self : S⟦ψ ∥ ψ⟧ = 0 :=
   arakiVec_self _ _
 
 variable {ψ φ} in
 /-- **Support condition.** `S(ψ ‖ φ) = +∞` unless `s(ψ) ≤ s(φ)`. -/
 theorem arakiEntropy_eq_top_of_not_supportProj_le (h : ¬ ψ.supportProj ≤ φ.supportProj) :
-    M.arakiEntropy ψ φ = ⊤ := by
+    S⟦ψ ∥ φ⟧ = ⊤ := by
   refine arakiVec_eq_top_of_not_supportProj_le fun hle => h ?_
   rwa [← NormalFunctional.amplifyRight_supportProj, ← NormalFunctional.amplifyRight_supportProj,
     amplifyRight_le_amplifyRight_iff (NormalFunctional.isStarProjection_supportProj ψ)
@@ -196,7 +196,7 @@ variable {ψ φ} in
 null ideal of `φ` is not contained in that of `ψ`, equivalently `s(ψ) ≰ s(φ)` by
 `VonNeumannAlgebra.NormalFunctional.supportProj_le_supportProj_iff`), then `S(ψ ‖ φ) = +∞`. -/
 theorem arakiEntropy_eq_top_of_apply_star_mul_self (x : M) (hφ : φ.1 (star x * x) = 0)
-    (hψ : ψ.1 (star x * x) ≠ 0) : M.arakiEntropy ψ φ = ⊤ :=
+    (hψ : ψ.1 (star x * x) ≠ 0) : S⟦ψ ∥ φ⟧ = ⊤ :=
   arakiEntropy_eq_top_of_not_supportProj_le fun hle =>
     hψ ((NormalFunctional.supportProj_le_supportProj_iff ψ φ).mp hle x hφ)
 
@@ -206,7 +206,7 @@ variable {ψ φ} in
 `amplify ℓ²(ℕ) M ≅ M` is again finite-dimensional, so `VonNeumannAlgebra.arakiVec_eq_top_iff`
 applies to the representing vectors. -/
 theorem arakiEntropy_eq_top_iff [FiniteDimensional ℂ M] :
-    M.arakiEntropy ψ φ = ⊤ ↔ ¬ ψ.supportProj ≤ φ.supportProj := by
+    S⟦ψ ∥ φ⟧ = ⊤ ↔ ¬ ψ.supportProj ≤ φ.supportProj := by
   have : FiniteDimensional ℂ (M.amplify ℓ²) :=
     LinearEquiv.finiteDimensional (M.amplifyEquiv (H₁ := ℓ²)).toAlgEquiv.toLinearEquiv
   rw [arakiEntropy, arakiVec_eq_top_iff, ← NormalFunctional.amplifyRight_supportProj,
@@ -225,7 +225,7 @@ variable {ψ φ} in
 `S(ψ ‖ φ′) = S(ψ ‖ φ) - ψ(1) log c`. -/
 theorem arakiEntropy_of_apply_eq_mul_right {φ' : M.NormalFunctional} {c : ℝ} (hc : 0 < c)
     (h : ∀ x, φ'.1 x = c * φ.1 x) :
-    M.arakiEntropy ψ φ' = M.arakiEntropy ψ φ - (((ψ.1 1).re * Real.log c : ℝ) : EReal) := by
+    S⟦ψ ∥ φ'⟧ = S⟦ψ ∥ φ⟧ - (((ψ.1 1).re * Real.log c : ℝ) : EReal) := by
   rw [arakiEntropy_eq_arakiVec (Ξψ := ψ.2.vec) (Ξφ := (Real.sqrt c : ℂ) • φ.2.vec)
     ψ.2.inner_vec_amplifyRight (fun x => ?_), arakiVec_sqrt_smul_right _ _ hc, NormalFunctional.norm_vec_sq,
     arakiEntropy]
@@ -238,11 +238,11 @@ At `c = 0` both sides vanish (`log 0 = 0`); for `c < 0`, positivity forces `ψ =
 sides vanish again. -/
 theorem arakiEntropy_of_apply_eq_mul_left {ψ' : M.NormalFunctional} {c : ℝ}
     (h : ∀ x, ψ'.1 x = c * ψ.1 x) :
-    M.arakiEntropy ψ' φ =
-      (c : EReal) * (M.arakiEntropy ψ φ + (((ψ.1 1).re * Real.log c : ℝ) : EReal)) := by
+    S⟦ψ' ∥ φ⟧ =
+      (c : EReal) * (S⟦ψ ∥ φ⟧ + (((ψ.1 1).re * Real.log c : ℝ) : EReal)) := by
   rcases lt_or_ge c 0 with hc | hc
   · -- A functional with `χ(1) = 0` has representing vector `0`, hence entropy `0`.
-    have hzero : ∀ χ : M.NormalFunctional, (χ.1 1).re = 0 → M.arakiEntropy χ φ = 0 := by
+    have hzero : ∀ χ : M.NormalFunctional, (χ.1 1).re = 0 → S⟦χ ∥ φ⟧ = 0 := by
       intro χ hχ
       have hv : χ.2.vec = 0 := by
         have h2 := NormalFunctional.norm_vec_sq χ
@@ -270,7 +270,7 @@ theorem arakiEntropy_of_apply_eq_mul_left {ψ' : M.NormalFunctional} {c : ℝ}
 /-- **Klein bound**: `ψ(1) log (ψ(1) / φ(1)) ≤ S(ψ ‖ φ)`. With Mathlib's conventions the left side
 is `0` when `ψ(1) = 0` or `φ(1) = 0`. -/
 theorem mul_log_le_arakiEntropy :
-    (((ψ.1 1).re * Real.log ((ψ.1 1).re / (φ.1 1).re) : ℝ) : EReal) ≤ M.arakiEntropy ψ φ := by
+    (((ψ.1 1).re * Real.log ((ψ.1 1).re / (φ.1 1).re) : ℝ) : EReal) ≤ S⟦ψ ∥ φ⟧ := by
   have := norm_sq_mul_log_div_norm_sq_le_arakiVec (M.amplify ℓ²) ψ.2.vec φ.2.vec
   rwa [NormalFunctional.norm_vec_sq, NormalFunctional.norm_vec_sq] at this
 
@@ -282,7 +282,7 @@ variable {ψ φ} in
 theorem mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : IsStarProjection p)
     (hpM : p ∈ M) (hψp : ψ.1 ⟨1 - p, sub_mem (one_mem M) hpM⟩ = 0) :
     (((ψ.1 1).re * Real.log ((ψ.1 1).re / (φ.1 ⟨p, hpM⟩).re) : ℝ) : EReal) ≤
-      M.arakiEntropy ψ φ := by
+      S⟦ψ ∥ φ⟧ := by
   set q := amplifyRight (H₁ := ℓ²) p
   have hq : IsStarProjection q := isStarProjection_amplifyRight hp
   have hle : (M.amplify ℓ²).supportProj ψ.2.vec ≤ q := by
@@ -311,13 +311,13 @@ projection `s(ψ)`. With Mathlib's conventions the left side is `0` when `ψ(1) 
 theorem mul_log_le_arakiEntropy_supportProj :
     (((ψ.1 1).re * Real.log ((ψ.1 1).re /
         (φ.1 ⟨ψ.supportProj, NormalFunctional.supportProj_mem ψ⟩).re) : ℝ) : EReal) ≤
-      M.arakiEntropy ψ φ :=
+      S⟦ψ ∥ φ⟧ :=
   mul_log_le_arakiEntropy_of_isStarProjection (NormalFunctional.isStarProjection_supportProj ψ)
     (NormalFunctional.supportProj_mem ψ) (NormalFunctional.apply_one_sub_supportProj ψ)
 
 variable {ψ φ} in
 /-- **Positivity.** `0 ≤ S(ψ ‖ φ)` when `φ(1) ≤ ψ(1)`; in particular for two states. -/
-theorem arakiEntropy_nonneg (h : (φ.1 1).re ≤ (ψ.1 1).re) : 0 ≤ M.arakiEntropy ψ φ := by
+theorem arakiEntropy_nonneg (h : (φ.1 1).re ≤ (ψ.1 1).re) : 0 ≤ S⟦ψ ∥ φ⟧ := by
   refine arakiVec_nonneg_of_norm_le ?_
   rw [← sq_le_sq₀ (norm_nonneg _) (norm_nonneg _), NormalFunctional.norm_vec_sq, NormalFunctional.norm_vec_sq]
   exact h

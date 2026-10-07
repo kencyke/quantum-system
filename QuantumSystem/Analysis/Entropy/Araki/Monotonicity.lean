@@ -164,7 +164,7 @@ and `ζ, ζ' ∈ K`, `ξ, ξ' ∈ H` with `ω_ξ ∘ α = ω_ζ` and `ω_ξ' ∘
 theorem arakiVec_le_of_schwarzMap (hα : α 1 = 1) {ζ ζ' : K} {ξ ξ' : H}
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ)
     (hξ' : ∀ y : N, ⟪ζ', (y : K →L[ℂ] K) ζ'⟫_ℂ = ⟪ξ', (α y : H →L[ℂ] H) ξ'⟫_ℂ) :
-    N.arakiVec ζ ζ' ≤ M.arakiVec ξ ξ' := by
+    S[N]⟦ζ ∥ ζ'⟧ ≤ S[M]⟦ξ ∥ ξ'⟧ := by
   refine negLogIntegral_le_of_integral_inv_add_le (ae_nonneg_measure_pvm_relativeModular N ζ ζ')
     (le_of_eq ?_) (arakiVec_ne_bot M ξ ξ')
     fun t ht => integral_inv_add_measure_pvm_relativeModular_le α hξ hξ' ht

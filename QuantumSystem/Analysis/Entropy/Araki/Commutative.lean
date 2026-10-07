@@ -131,8 +131,8 @@ convention, with no mass correction `Q(ι) - P(ι)`; for equal total masses it i
 `pᵢ = 0` contributes `0`. It is `VonNeumannAlgebra.arakiVec_densityVec_eq_klDiv_add_sub` for
 counting measure on `ι`. -/
 theorem arakiVec_densityVec_fintype [Decidable (P ≪ Q)] :
-    (multiplicationAlgebra Measure.count).arakiVec (densityVec P Measure.count)
-        (densityVec Q Measure.count) =
+    S[multiplicationAlgebra Measure.count]⟦densityVec P Measure.count ∥
+        densityVec Q Measure.count⟧ =
       if P ≪ Q then ((∑ i, P.real {i} * Real.log (P.real {i} / Q.real {i}) : ℝ) : EReal)
       else ⊤ := by
   rw [arakiVec_densityVec_eq_klDiv_add_sub (Measure.absolutelyContinuous_count P),

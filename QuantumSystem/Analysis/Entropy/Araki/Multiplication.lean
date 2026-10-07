@@ -448,7 +448,7 @@ is the Kullback–Leibler divergence without Mathlib's mass correction `Q(α) - 
 `VonNeumannAlgebra.arakiVec_densityVec_eq_klDiv_add_sub` for the comparison with
 `InformationTheory.klDiv`. -/
 theorem arakiVec_densityVec (hP : P ≪ μ) [Decidable (P ≪ Q)] :
-    (multiplicationAlgebra μ).arakiVec (densityVec P μ) (densityVec Q μ) =
+    S[multiplicationAlgebra μ]⟦densityVec P μ ∥ densityVec Q μ⟧ =
       if P ≪ Q then erealIntegral P (fun x => (llr P Q x : EReal)) else ⊤ := by
   have hne := arakiVec_ne_bot (multiplicationAlgebra μ) (densityVec P μ) (densityVec Q μ)
   rw [arakiVec, measure_pvm_relativeModular_densityVec hP] at hne ⊢
@@ -511,7 +511,7 @@ correction `Q(α) - P(α)` built into `klDiv`, which Araki's relative entropy do
 `Q(α)` is the full mass of `Q`, including its `μ`-singular part, which may exceed the mass
 `‖ξ_Q‖² = Q_ac(α)` of the functional `ω_{ξ_Q}`. -/
 theorem arakiVec_densityVec_eq_klDiv_add_sub (hP : P ≪ μ) :
-    (multiplicationAlgebra μ).arakiVec (densityVec P μ) (densityVec Q μ) =
+    S[multiplicationAlgebra μ]⟦densityVec P μ ∥ densityVec Q μ⟧ =
       (InformationTheory.klDiv P Q : EReal) + P.real Set.univ - Q.real Set.univ := by
   classical
   rw [arakiVec_densityVec hP]

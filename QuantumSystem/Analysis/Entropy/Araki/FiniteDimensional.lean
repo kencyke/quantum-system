@@ -256,7 +256,7 @@ with `rᵢ |⟪cⱼ, bᵢ⟫|² = 0` whenever `sⱼ = 0` (the support condition 
 orthonormal `g`, `S_{1 ⊗ B(H)}(ω_{Ω_ρ} ‖ ω_{Ω_σ}) = Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² (log rᵢ - log sⱼ)`. -/
 theorem arakiVec_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i) (hs : ∀ j, 0 ≤ s j)
     (hg : Orthonormal ℂ g) (hsupp : ∀ i j, s j = 0 → r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 = 0) :
-    (𝓜).arakiVec (b.purification r g) (c.purification s g) =
+    S[𝓜]⟦b.purification r g ∥ c.purification s g⟧ =
       ((∑ i, ∑ j, r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 * (Real.log (r i) - Real.log (s j)) : ℝ) : EReal) := by
   rw [arakiVec, measure_pvm_relativeModular_purification hr hs hg]
   have ht : ∀ i j, r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 ≠ 0 → s j ≠ 0 := fun i j h hj => h (hsupp i j hj)
