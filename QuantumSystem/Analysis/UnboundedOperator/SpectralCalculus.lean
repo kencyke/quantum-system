@@ -73,6 +73,10 @@ products `re ⟪·, ·⟫` (`open ClosedSubmodule`), and let `A` be a self-adjoi
 * `IsSelfAdjoint.lintegral_measure_pvm_le_norm_sq` — **form bound**: `∫ λ dμ_u ≤ ‖T u‖²` for
   `u ∈ dom T`. For closed `T` equality holds and `dom T = {u | ∫ λ dμ_u < ∞}` is the form domain;
   neither the equality nor this characterisation is formalised.
+* `LinearPMap.adjointCompClosure`, `LinearPMap.isSelfAdjoint_adjointCompClosure`,
+  `LinearPMap.isPositive_adjointCompClosure` — for a densely defined closable `σ`-semilinear `T`
+  (`σ` the identity or the conjugation), `T̄†T̄` as a positive self-adjoint complex operator; for a
+  Tomita operator it is the modular operator.
 * `IsSelfAdjoint.integral_inv_add_measure_pvm_le_of_forall_mem_graph` — **comparison of
   resolvents** (Petz): if every point `(w, w')` of the graph of a closable `S` is dominated by a
   point `(v, v')` of the graph of `T` (`‖v‖ ≤ ‖w‖`, `‖v'‖ ≤ ‖w'‖`, `re ⟪u', w⟫ ≤ re ⟪u, v⟫`), then
@@ -532,7 +536,7 @@ theorem _root_.LinearPMap.isPositive_of_restrictScalars_eq (hTd : Dense (T.domai
     (hAT : A.restrictScalars ℝ = T†.compNat T) : A.IsPositive := by
   have h := LinearPMap.isPositive_adjoint_compNat_self hTd
   rw [← hAT] at h
-  simpa using (LinearPMap.isComplexLinear_restrictScalars A).isPositive_toComplex h
+  simpa using (LinearPMap.isSemilinear_restrictScalars A).isPositive_toLinearPMap h
 
 variable (hAT : A.restrictScalars ℝ = T†.compNat T)
 include hAT
@@ -747,3 +751,41 @@ theorem integral_inv_add_measure_pvm_le_of_forall_mem_graph
 end Form
 
 end IsSelfAdjoint
+
+/-! ### The operator `T̄†T̄` of a closable semilinear operator -/
+
+namespace LinearPMap
+
+open ClosedSubmodule
+
+variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
+  [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F] {σ : ℂ →+* ℂ}
+  [RingHomIsometric σ] [RingHomInvPair σ σ] {T : E →ₗ.[ℝ] F} (hT : T.IsSemilinear σ)
+  (hTd : Dense (T.domain : Set E))
+
+/-- The operator `T̄†T̄ = |T̄|²` of a densely defined `σ`-semilinear real-linear operator `T`, for
+`σ` the identity or the complex conjugation, as a complex operator. For a closable `T` it is
+positive self-adjoint (`LinearPMap.isSelfAdjoint_adjointCompClosure`), so that
+`T̄ = U (T̄†T̄)^{1/2}` (`IsSelfAdjoint.eq_polarIsometry_compPMap`); for the Tomita operator `S` of a
+standard subspace it is the modular operator `Δ = S̄†S̄` (`StandardSubspace.modular`). -/
+noncomputable def adjointCompClosure : E →ₗ.[ℂ] E :=
+  ((hT.closure.adjoint (dense_domain_closure hTd)).compNat hT.closure).toLinearPMap
+
+omit [CompleteSpace F] in
+/-- `T̄†T̄` as real operators. -/
+lemma restrictScalars_adjointCompClosure :
+    (T.adjointCompClosure hT hTd).restrictScalars ℝ = T.closure†.compNat T.closure :=
+  IsSemilinear.restrictScalars_toLinearPMap _
+
+/-- `T̄†T̄` is self-adjoint for a closable `T` (von Neumann's theorem). -/
+lemma isSelfAdjoint_adjointCompClosure (hc : T.IsClosable) :
+    IsSelfAdjoint (T.adjointCompClosure hT hTd) :=
+  IsSemilinear.isSelfAdjoint_toLinearPMap _
+    (isSelfAdjoint_adjoint_compNat_self hc.closure_isClosed (dense_domain_closure hTd))
+
+omit [CompleteSpace F] in
+/-- `T̄†T̄` is positive. -/
+lemma isPositive_adjointCompClosure : (T.adjointCompClosure hT hTd).IsPositive :=
+  IsSemilinear.isPositive_toLinearPMap _ (isPositive_adjoint_compNat_self (dense_domain_closure hTd))
+
+end LinearPMap

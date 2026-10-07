@@ -104,6 +104,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.SemilinearIsometry
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual

@@ -16,7 +16,7 @@ For a von Neumann algebra `M` on `H` and `ξ, η ∈ H`, the **relative modular 
 `Δ_{η,ξ} = S̄†S̄`, where `S̄` is the closure of the relative Tomita operator
 `S_{η,ξ} : x ξ + ζ ↦ s(ξ) x⋆ η` (`VonNeumannAlgebra.relativeTomita`). As `S̄` is conjugate-linear,
 closed and densely defined, `S̄†S̄` is a complex-linear, positive self-adjoint operator (von
-Neumann's theorem), regarded as a complex operator through `LinearPMap.IsComplexLinear.toComplex`.
+Neumann's theorem), regarded as a complex operator through `LinearPMap.IsSemilinear.toLinearPMap`.
 
 The spectral measure `μ_ξ` of `Δ_{η,ξ}` at `ξ` is the input of Araki's relative entropy
 `S(ω_ξ ‖ ω_η) = -∫ log λ dμ_ξ(λ)`. Its atom at `0` detects the support condition: `μ_ξ {0} = 0` iff
@@ -39,7 +39,8 @@ anywhere in the construction of the relative entropy or in its monotonicity
 
 ## Main definitions
 
-* `VonNeumannAlgebra.relativeModular M η ξ` — the relative modular operator `Δ_{η,ξ}`.
+* `VonNeumannAlgebra.relativeModular M η ξ` — the relative modular operator `Δ_{η,ξ} = S̄†S̄`, the
+  operator `LinearPMap.adjointCompClosure` of the relative Tomita operator.
 
 ## Main results
 
@@ -86,18 +87,13 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-! ### The closure of the relative Tomita operator -/
 
 /-- The closure `S̄_{η,ξ}` is conjugate-linear. -/
-lemma isConjLinear_closure_relativeTomita :
-    LinearPMap.IsConjLinear (M.relativeTomita η ξ).closure :=
-  (isConjLinear_relativeTomita M η ξ).closure
+lemma isSemilinear_closure_relativeTomita :
+    LinearPMap.IsSemilinear (starRingEnd ℂ) (M.relativeTomita η ξ).closure :=
+  (isSemilinear_relativeTomita M η ξ).closure
 
 /-- The closure `S̄_{η,ξ}` is closed. -/
 lemma isClosed_closure_relativeTomita : (M.relativeTomita η ξ).closure.IsClosed :=
   (isClosable_relativeTomita M η ξ).closure_isClosed
-
-/-- The closure `S̄_{η,ξ}` is densely defined. -/
-lemma dense_domain_closure_relativeTomita :
-    Dense ((M.relativeTomita η ξ).closure.domain : Set H) :=
-  (dense_domain_relativeTomita M η ξ).mono (LinearPMap.le_closure _).1
 
 variable {M η ξ} in
 /-- The graph of `S_{η,ξ}` lies in that of its closure. -/
@@ -105,43 +101,34 @@ lemma mem_graph_closure_relativeTomita {p : H × H} (hp : p ∈ (M.relativeTomit
     p ∈ (M.relativeTomita η ξ).closure.graph :=
   LinearPMap.le_graph_of_le (LinearPMap.le_closure _) hp
 
-/-- `S̄_{η,ξ}† S̄_{η,ξ}` is complex-linear. -/
-lemma isComplexLinear_adjoint_compNat_closure_relativeTomita :
-    LinearPMap.IsComplexLinear
-      ((M.relativeTomita η ξ).closure†.compNat (M.relativeTomita η ξ).closure) :=
-  ((isConjLinear_closure_relativeTomita M η ξ).adjoint
-    (dense_domain_closure_relativeTomita M η ξ)).compNat (isConjLinear_closure_relativeTomita M η ξ)
-
 /-! ### The relative modular operator -/
 
 /-- The **relative modular operator** `Δ_{η,ξ} = S̄†S̄`, for `S̄` the closure of the relative Tomita
 operator `S_{η,ξ}`, as a complex operator. -/
 noncomputable def relativeModular : H →ₗ.[ℂ] H :=
-  (isComplexLinear_adjoint_compNat_closure_relativeTomita M η ξ).toComplex
+  (M.relativeTomita η ξ).adjointCompClosure (isSemilinear_relativeTomita M η ξ)
+    (dense_domain_relativeTomita M η ξ)
 
 /-- `Δ_{η,ξ} = S̄†S̄` as real operators. -/
 theorem restrictScalars_relativeModular :
     (M.relativeModular η ξ).restrictScalars ℝ =
       (M.relativeTomita η ξ).closure†.compNat (M.relativeTomita η ξ).closure :=
-  LinearPMap.IsComplexLinear.restrictScalars_toComplex _
+  LinearPMap.restrictScalars_adjointCompClosure _ _
 
 variable {M η ξ} in
 /-- The graph of `Δ_{η,ξ}` is that of `S̄†S̄`. -/
 theorem mem_graph_relativeModular {p : H × H} :
     p ∈ (M.relativeModular η ξ).graph ↔
-      p ∈ ((M.relativeTomita η ξ).closure†.compNat (M.relativeTomita η ξ).closure).graph :=
-  LinearPMap.IsComplexLinear.mem_graph_toComplex _
+      p ∈ ((M.relativeTomita η ξ).closure†.compNat (M.relativeTomita η ξ).closure).graph := by
+  rw [← LinearPMap.mem_graph_restrictScalars (R := ℝ), restrictScalars_relativeModular]
 
 /-- `Δ_{η,ξ}` is self-adjoint (von Neumann's theorem). -/
 theorem isSelfAdjoint_relativeModular : IsSelfAdjoint (M.relativeModular η ξ) :=
-  LinearPMap.IsComplexLinear.isSelfAdjoint_toComplex _
-    (LinearPMap.isSelfAdjoint_adjoint_compNat_self (isClosed_closure_relativeTomita M η ξ)
-      (dense_domain_closure_relativeTomita M η ξ))
+  LinearPMap.isSelfAdjoint_adjointCompClosure _ _ (isClosable_relativeTomita M η ξ)
 
 /-- `Δ_{η,ξ}` is positive. -/
 theorem isPositive_relativeModular : (M.relativeModular η ξ).IsPositive :=
-  LinearPMap.IsComplexLinear.isPositive_toComplex _
-    (LinearPMap.isPositive_adjoint_compNat_self (dense_domain_closure_relativeTomita M η ξ))
+  LinearPMap.isPositive_adjointCompClosure _ _
 
 variable {M η ξ}
 
@@ -155,19 +142,19 @@ theorem re_inner_eq_norm_sq_of_mem_graph_relativeModular {u u' y : H} (hu : (u, 
 theorem mem_graph_relativeModular_zero_iff {u : H} :
     (u, 0) ∈ (M.relativeModular η ξ).graph ↔ (u, 0) ∈ (M.relativeTomita η ξ).closure.graph := by
   rw [mem_graph_relativeModular, LinearPMap.mem_graph_adjoint_compNat_self_zero_iff
-    (dense_domain_closure_relativeTomita M η ξ)]
+    (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))]
 
 /-- A vector `u` in the kernel of `S̄_{η,ξ}` is orthogonal to the range of the relative Tomita
 operator `F_{η,ξ}` of `M′`: `F_{η,ξ} ⊆ S̄_{η,ξ}†` and `ker S̄` is a complex subspace. -/
 private lemma inner_eq_zero_of_mem_graph_closure {u v v' : H}
     (hu : (u, 0) ∈ (M.relativeTomita η ξ).closure.graph)
     (hv : (v, v') ∈ (M′.relativeTomita η ξ).graph) : ⟪u, v'⟫_ℂ = 0 := by
-  have hd := dense_domain_closure_relativeTomita M η ξ
+  have hd := LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ)
   have hadj : (v, v') ∈ (M.relativeTomita η ξ).closure†.graph := by
     rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita M η ξ)]
     exact LinearPMap.le_graph_of_le (relativeTomita_commutant_le_adjoint M η ξ) hv
   have hIu : (I • u, 0) ∈ (M.relativeTomita η ξ).closure.graph := by
-    simpa using isConjLinear_closure_relativeTomita M η ξ I u 0 hu
+    simpa using isSemilinear_closure_relativeTomita M η ξ I u 0 hu
   have h₁ := LinearPMap.inner_eq_of_mem_graph_adjoint hd hu hadj
   have h₂ := LinearPMap.inner_eq_of_mem_graph_adjoint hd hIu hadj
   rw [inner_real_eq_re_inner, inner_real_eq_re_inner, inner_zero_right, zero_re] at h₁ h₂
@@ -279,7 +266,8 @@ theorem relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0 < r)
   set C : H →L[ℂ] H := (r : ℂ)⁻¹ • star w
   have key := LinearPMap.adjoint_compNat_self_eq_smul (𝕜 := ℝ)
     (T₁ := (M.relativeTomita η ξ).closure) (T₂ := (M.relativeTomita (w η) ξ).closure)
-    (dense_domain_closure_relativeTomita M η ξ) (dense_domain_closure_relativeTomita M (w η) ξ)
+    (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))
+    (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M (w η) ξ))
     (B := w.restrictScalars ℝ) (C := C.restrictScalars ℝ) hr.ne'
     (fun u v h => LinearPMap.mem_graph_closure_of_mapsTo
       (isClosable_relativeTomita M (w η) ξ) (f := fun p : H × H => (p.1, w p.2))
@@ -320,7 +308,8 @@ theorem relativeModular_smul_right {c : ℂ} (hc : c ≠ 0) :
   set C : H →L[ℂ] H := conj c • 1
   have key := LinearPMap.adjoint_compNat_self_eq_smul (𝕜 := ℝ)
     (T₁ := (M.relativeTomita η ξ).closure) (T₂ := (M.relativeTomita η (c • ξ)).closure)
-    (dense_domain_closure_relativeTomita M η ξ) (dense_domain_closure_relativeTomita M η (c • ξ))
+    (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))
+    (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η (c • ξ)))
     (B := B.restrictScalars ℝ) (C := C.restrictScalars ℝ) (inv_ne_zero hn.ne')
     (fun u v h => LinearPMap.mem_graph_closure_of_mapsTo
       (isClosable_relativeTomita M η (c • ξ)) (f := fun p : H × H => (p.1, B p.2))
@@ -350,7 +339,7 @@ theorem mem_graph_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (
     (w u, w z) ∈ (M.relativeModular η (w ξ)).graph := by
   rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat] at h ⊢
   obtain ⟨y, hy, hyz⟩ := h
-  rw [LinearPMap.mem_graph_adjoint_iff (dense_domain_closure_relativeTomita M η ξ)] at hyz
+  rw [LinearPMap.mem_graph_adjoint_iff (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))] at hyz
   -- `w⋆ w` fixes `[M ξ]` and preserves `[M ξ]ᗮ`.
   have hww : ∀ a a', (a, a') ∈ (M.relativeTomita η ξ).graph → (star w (w a), a') ∈
       (M.relativeTomita η ξ).graph := fun a a' ha => by
@@ -370,7 +359,7 @@ theorem mem_graph_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (
     (isClosable_relativeTomita M η (w ξ)) (f := fun p : H × H => (w p.1, p.2)) (by fun_prop)
     (fun ⟨p₁, p₂⟩ hp => (mem_graph_relativeTomita_apply_right_iff hw hwξ).mpr (hww _ _ hp)) hy,
     ?_⟩
-  rw [LinearPMap.mem_graph_adjoint_iff (dense_domain_closure_relativeTomita M η (w ξ))]
+  rw [LinearPMap.mem_graph_adjoint_iff (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η (w ξ)))]
   intro b b' hb
   have hb' := LinearPMap.mem_graph_closure_of_mapsTo
     (isClosable_relativeTomita M η ξ) (f := fun p : H × H => (star w p.1, p.2)) (by fun_prop)

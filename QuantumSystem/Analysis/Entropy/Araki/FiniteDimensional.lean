@@ -190,13 +190,13 @@ theorem mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 
   rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat]
   refine ⟨((Real.sqrt (s j) / Real.sqrt (r i) : ℝ) : ℂ) • (g j ⊗ₕ b i), ?_, ?_⟩
   · refine mem_graph_closure_relativeTomita ?_
-    have h := isConjLinear_relativeTomita _ _ _ ((Real.sqrt (r i))⁻¹ : ℝ) _ _
+    have h := isSemilinear_relativeTomita _ _ _ ((Real.sqrt (r i))⁻¹ : ℝ) _ _
       (mem_graph_relativeTomita_purification (b := b) (c := c) (s := s) hg hi j)
     rwa [Complex.conj_ofReal, smul_smul, smul_smul, ← Complex.ofReal_mul, ← Complex.ofReal_mul,
       inv_mul_cancel₀ hr, Complex.ofReal_one, one_smul, inv_mul_eq_div] at h
   · rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita _ _ _)]
     refine LinearPMap.le_graph_of_le (relativeTomita_commutant_le_adjoint _ _ _) ?_
-    have h := isConjLinear_relativeTomita _ _ _ ((Real.sqrt (s j) / r i : ℝ) : ℂ) _ _
+    have h := isSemilinear_relativeTomita _ _ _ ((Real.sqrt (s j) / r i : ℝ) : ℂ) _ _
       (mem_graph_relativeTomita_commutant_purification (b := b) (c := c) (s := s) hg hi j)
     have c₁ : Real.sqrt (s j) / r i * Real.sqrt (r i) = Real.sqrt (s j) / Real.sqrt (r i) := by
       rw [div_mul_eq_mul_div, div_eq_div_iff hi.ne' hr]

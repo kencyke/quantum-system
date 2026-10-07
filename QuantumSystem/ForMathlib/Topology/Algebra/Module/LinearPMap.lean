@@ -28,6 +28,8 @@ further hypotheses.
 * `LinearPMap.IsClosed.toSubmodule_eigenspace_zero` — for `c = 0` it is `LinearPMap.ker T`.
 * `LinearPMap.mem_graph_closure_of_mapsTo` — a continuous map carrying the graph of `T₁` into the
   graph of a closable `T₂` carries the graph of `T̄₁` into that of `T̄₂`.
+* `LinearPMap.dense_domain_closure`, `LinearPMap.IsClosed.closure_eq` — the closure of a densely
+  defined operator is densely defined, and a closed operator is its own closure.
 -/
 
 @[expose] public section
@@ -99,6 +101,19 @@ lemma mem_graph_closure_of_mapsTo (h₂ : T₂.IsClosable) {f : E × F → E' ×
     exact map_mem_closure hf hp h
   · rw [closure_def' h₁] at hp
     exact subset_closure (h p hp)
+
+/-- The closure of a densely defined operator is densely defined. -/
+lemma dense_domain_closure {T : E →ₗ.[R] F} (hTd : Dense (T.domain : Set E)) :
+    Dense (T.closure.domain : Set E) :=
+  hTd.mono (le_closure T).1
+
+/-- A closed operator is its own closure. -/
+lemma IsClosed.closure_eq {f : E →ₗ.[R] F} (hf : f.IsClosed) : f.closure = f :=
+  eq_of_eq_graph (by
+    rw [← hf.isClosable.graph_closure_eq_closure_graph]
+    refine SetLike.coe_injective ?_
+    rw [Submodule.topologicalClosure_coe]
+    exact _root_.IsClosed.closure_eq hf)
 
 end Closure
 

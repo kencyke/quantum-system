@@ -29,7 +29,8 @@ Transformation rules along isometric intertwiners between different Hilbert spac
 isomorphisms, amplifications) are in `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial`
 (`VonNeumannAlgebra.mem_graph_relativeTomita_of_intertwiner` and companions).
 
-A conjugate-linear operator is a real-linear `LinearPMap` satisfying `LinearPMap.IsConjLinear`;
+A conjugate-linear operator is a real-linear `LinearPMap` satisfying
+`LinearPMap.IsSemilinear (starRingEnd ℂ)`;
 adjoints are real adjoints for the inner product `re ⟪·, ·⟫` (`open ClosedSubmodule`).
 
 ## Main definitions
@@ -43,7 +44,7 @@ adjoints are real adjoints for the inner product `re ⟪·, ·⟫` (`open Closed
   `VonNeumannAlgebra.mem_domain_relativeTomita_iff` — its domain is `M ξ + [M ξ]ᗮ`, independent
   of `η` (`VonNeumannAlgebra.domain_relativeTomita_eq`).
 * `VonNeumannAlgebra.self_mem_graph_relativeTomita` — `S_{η,ξ} ξ = s(ξ) η`.
-* `VonNeumannAlgebra.isConjLinear_relativeTomita` — `S_{η,ξ}` is conjugate-linear.
+* `VonNeumannAlgebra.isSemilinear_relativeTomita` — `S_{η,ξ}` is conjugate-linear.
 * `VonNeumannAlgebra.dense_domain_relativeTomita` — `S_{η,ξ}` is densely defined.
 * `VonNeumannAlgebra.inner_eq_of_mem_graph_relativeTomita` — `⟪S u, v⟫ = ⟪F v, u⟫` with
   `F = relativeTomita M′ η ξ`; hence `S` and `F` are formal adjoints for `re ⟪·, ·⟫`
@@ -169,7 +170,8 @@ lemma self_mem_graph_relativeTomita : (ξ, M.supportProj ξ η) ∈ (M.relativeT
   simpa using apply_mem_graph_relativeTomita (η := η) (ξ := ξ) (one_mem M)
 
 /-- `S_{η,ξ}` is conjugate-linear. -/
-theorem isConjLinear_relativeTomita : LinearPMap.IsConjLinear (M.relativeTomita η ξ) := by
+lemma isSemilinear_relativeTomita :
+    LinearPMap.IsSemilinear (starRingEnd ℂ) (M.relativeTomita η ξ) := by
   intro c u v h
   obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
