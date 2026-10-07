@@ -68,6 +68,7 @@ public import QuantumSystem.Analysis.Matrix.QuantumChannel.Choi
 public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
 public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
+public import QuantumSystem.Analysis.SpectralTheory.SNAG
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
 public import QuantumSystem.Analysis.UnboundedOperator.AnalyticContinuation
