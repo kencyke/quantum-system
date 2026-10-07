@@ -58,6 +58,7 @@ public import QuantumSystem.Analysis.Entropy.Araki.FiniteDimensional
 public import QuantumSystem.Analysis.Entropy.Araki.Monotonicity
 public import QuantumSystem.Analysis.Entropy.Araki.Multiplication
 public import QuantumSystem.Analysis.Entropy.Araki.Vector
+public import QuantumSystem.Analysis.Entropy.KullbackLeibler
 public import QuantumSystem.Analysis.Entropy.Umegaki.Basic
 public import QuantumSystem.Analysis.Entropy.Umegaki.JointConvexity
 public import QuantumSystem.Analysis.Entropy.Umegaki.Monotonicity

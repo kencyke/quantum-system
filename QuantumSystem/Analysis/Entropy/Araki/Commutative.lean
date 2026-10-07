@@ -6,8 +6,6 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.Entropy.Araki.Multiplication
-public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.Fintype
-public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.Count
 
 /-!
@@ -22,8 +20,9 @@ is the **Kullback–Leibler divergence**
 `S(ω_P ‖ ω_Q) = Σᵢ pᵢ log (pᵢ / qᵢ)` if `P ≪ Q`, and `+∞` otherwise.
 
 The measures are not normalised, and Araki's convention carries no mass correction: the value is
-`Σᵢ pᵢ log (pᵢ / qᵢ)`, not `Σᵢ pᵢ log (pᵢ / qᵢ) + Q(ι) - P(ι)`. For measures of equal total mass
-it coincides with Mathlib's `InformationTheory.klDiv P Q`
+`Σᵢ pᵢ log (pᵢ / qᵢ)`, not `Σᵢ pᵢ log (pᵢ / qᵢ) + Q(ι) - P(ι)`; it is
+`InformationTheory.klDivEReal P Q` (`QuantumSystem.Analysis.Entropy.KullbackLeibler`). For
+measures of equal total mass it coincides with Mathlib's `InformationTheory.klDiv P Q`
 (`VonNeumannAlgebra.arakiEntropy_ofMeasure_eq_klDiv`).
 
 These results pin what the general lemmas of `QuantumSystem.Analysis.Entropy.Araki.Vector`
@@ -107,42 +106,21 @@ theorem measure_pvm_relativeModular_densityVec_fintype :
         rw [LinearMap.map_smul, Measure.mapₗ_apply_of_measurable Measurable.of_discrete,
           Measure.map_dirac' Measurable.of_discrete]
 
-/-- **Gibbs' inequality** for unnormalised measures: `Q(ι) - P(ι) ≤ Σᵢ pᵢ log (pᵢ / qᵢ)` when
-`P ≪ Q`. -/
-private lemma sum_mul_log_div_add_sub_nonneg (hPQ : P ≪ Q) :
-    0 ≤ ∑ i, P.real {i} * Real.log (P.real {i} / Q.real {i}) + Q.real Set.univ - P.real Set.univ := by
-  have h : ∀ i, P.real {i} - Q.real {i} ≤ P.real {i} * Real.log (P.real {i} / Q.real {i}) := by
-    intro i
-    rcases (measureReal_nonneg (μ := P) (s := {i})).eq_or_lt with h0 | hpi
-    · rw [← h0]; simp
-    · refine mul_log_div_ge_sub' hpi (measureReal_nonneg.lt_of_ne' fun hq => hpi.ne' ?_)
-      rw [measureReal_eq_zero_iff] at hq ⊢
-      exact hPQ hq
-  have := Finset.sum_le_sum fun i (_ : i ∈ Finset.univ) => h i
-  rw [Finset.sum_sub_distrib] at this
-  rw [← Finset.coe_univ (α := ι), ← sum_measureReal_singleton, ← sum_measureReal_singleton]
-  linarith
-
 /-- **Araki = Kullback–Leibler.** On the diagonal algebra of a finite type,
 `S(ω_{ξ_P} ‖ ω_{ξ_Q}) = Σᵢ pᵢ log (pᵢ / qᵢ)` if `P ≪ Q`, and `+∞` otherwise, with `pᵢ = P {i}` and
-`qᵢ = Q {i}`. This is the Kullback–Leibler divergence of unnormalised measures in Araki's
-convention, with no mass correction `Q(ι) - P(ι)`; for equal total masses it is Mathlib's
+`qᵢ = Q {i}`: the Kullback–Leibler divergence `InformationTheory.klDivEReal P Q` of unnormalised
+measures in Araki's convention, with no mass correction `Q(ι) - P(ι)`
+(`InformationTheory.klDivEReal_of_fintype`); for equal total masses it is Mathlib's
 `InformationTheory.klDiv` (`VonNeumannAlgebra.arakiEntropy_ofMeasure_eq_klDiv`). A term with
-`pᵢ = 0` contributes `0`. It is `VonNeumannAlgebra.arakiVec_densityVec_eq_klDiv_add_sub` for
-counting measure on `ι`. -/
+`pᵢ = 0` contributes `0`. It is `VonNeumannAlgebra.arakiVec_densityVec` for counting measure on
+`ι`. -/
 theorem arakiVec_densityVec_fintype [Decidable (P ≪ Q)] :
     S[multiplicationAlgebra Measure.count]⟦densityVec P Measure.count ∥
         densityVec Q Measure.count⟧ =
       if P ≪ Q then ((∑ i, P.real {i} * Real.log (P.real {i} / Q.real {i}) : ℝ) : EReal)
       else ⊤ := by
-  rw [arakiVec_densityVec_eq_klDiv_add_sub (Measure.absolutelyContinuous_count P),
-    InformationTheory.klDiv_of_fintype]
-  split_ifs with hPQ
-  · rw [EReal.coe_ennreal_ofReal, max_eq_left (sum_mul_log_div_add_sub_nonneg hPQ), ← EReal.coe_add,
-      ← EReal.coe_sub]
-    congr 1
-    ring
-  · rw [EReal.coe_ennreal_top, EReal.top_add_coe, EReal.top_sub_coe]
+  rw [arakiVec_densityVec (Measure.absolutelyContinuous_count P),
+    InformationTheory.klDivEReal_of_fintype]
 
 /-- **Araki = Kullback–Leibler**, for the normal functionals `ω_P` and `ω_Q` of finite measures on
 a finite type: `Σᵢ pᵢ log (pᵢ / qᵢ)` if `P ≪ Q`, and `+∞` otherwise. -/

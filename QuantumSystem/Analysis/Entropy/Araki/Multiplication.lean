@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.InformationTheory.KullbackLeibler.Basic
+public import QuantumSystem.Analysis.Entropy.KullbackLeibler
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Multiplication
 public import QuantumSystem.Analysis.Entropy.Araki.Basic
 public import QuantumSystem.Analysis.UnboundedOperator.Multiplication
@@ -36,11 +37,12 @@ of the densities (`MeasureTheory.Measure.rnDeriv_mul_rnDeriv`); the multiplicati
 their spectral measures need no hypothesis on `μ`. The prose writes `S(ψ ‖ φ)`; the
 code notation is `S⟦ψ ∥ φ⟧`, with `∥` (U+2225), as in `QuantumSystem.Analysis.Entropy.Araki.Basic`.
 
-This is the divergence *without* the mass correction `Q(α) - P(α)` that Mathlib's
-`InformationTheory.klDiv` adds, so `S(ω_P ‖ ω_Q) = klDiv P Q + P(α) - Q(α)` for all finite
-`P, Q ≪ μ`, and `S(ω_P ‖ ω_Q) = klDiv P Q` when `ω_P(1) = ω_Q(1)`. The integral is the extended
-integral `MeasureTheory.erealIntegral`, which is never `-∞` here
-(`MeasureTheory.erealIntegral_llr_ne_bot`). For the density vectors themselves no hypothesis
+This is the divergence `InformationTheory.klDivEReal P Q`
+(`QuantumSystem.Analysis.Entropy.KullbackLeibler`), *without* the mass correction `Q(α) - P(α)`
+that Mathlib's `InformationTheory.klDiv` adds, so `S(ω_P ‖ ω_Q) = klDiv P Q + P(α) - Q(α)` for all
+finite `P, Q ≪ μ`, and `S(ω_P ‖ ω_Q) = klDiv P Q` when `ω_P(1) = ω_Q(1)`. The integral is the
+extended integral `MeasureTheory.erealIntegral`, which is never `-∞` here
+(`InformationTheory.klDivEReal_ne_bot`). For the density vectors themselves no hypothesis
 `Q ≪ μ` is needed: `ξ_Q` represents only the `μ`-absolutely continuous part `Q_ac` of `Q`, but
 `P ≪ Q ↔ P ≪ Q_ac` and `dP/dQ = dP/dQ_ac` `P`-almost everywhere, because `P` lives where `μ` does
 and the singular part of `Q` does not.
@@ -439,17 +441,14 @@ theorem measure_pvm_relativeModular_densityVec [P.HaveLebesgueDecomposition μ] 
 variable [SigmaFinite μ] in
 /-- **Araki's relative entropy of density vectors**: for σ-finite `μ` and finite measures `P ≪ μ`
 and `Q`, `S(ω_{ξ_P} ‖ ω_{ξ_Q}) = ∫ log (dP/dQ) dP` if `P ≪ Q`, and `+∞` otherwise, with the
-natural logarithm. No hypothesis on `Q` beyond finiteness is needed: `ξ_Q` represents only the
-`μ`-absolutely continuous part `Q_ac` of `Q`, but `P ≪ Q ↔ P ≪ Q_ac` and `dP/dQ = dP/dQ_ac`
-`P`-almost everywhere, because `P ≪ μ` and the singular part of `Q` lives on a `μ`-null set. The
-integral is the extended integral `∫⁻ (llr P Q)⁺ dP - ∫⁻ (llr P Q)⁻ dP`, whose negative part is
-finite for finite `Q`, so the value is never `⊥` (`MeasureTheory.erealIntegral_llr_ne_bot`). This
-is the Kullback–Leibler divergence without Mathlib's mass correction `Q(α) - P(α)`; see
-`VonNeumannAlgebra.arakiVec_densityVec_eq_klDiv_add_sub` for the comparison with
-`InformationTheory.klDiv`. -/
-theorem arakiVec_densityVec (hP : P ≪ μ) [Decidable (P ≪ Q)] :
-    S[multiplicationAlgebra μ]⟦densityVec P μ ∥ densityVec Q μ⟧ =
-      if P ≪ Q then erealIntegral P (fun x => (llr P Q x : EReal)) else ⊤ := by
+natural logarithm: the Kullback–Leibler divergence `InformationTheory.klDivEReal P Q`. No
+hypothesis on `Q` beyond finiteness is needed: `ξ_Q` represents only the `μ`-absolutely
+continuous part `Q_ac` of `Q`, but `P ≪ Q ↔ P ≪ Q_ac` and `dP/dQ = dP/dQ_ac` `P`-almost
+everywhere, because `P ≪ μ` and the singular part of `Q` lives on a `μ`-null set. -/
+theorem arakiVec_densityVec (hP : P ≪ μ) :
+    S[multiplicationAlgebra μ]⟦densityVec P μ ∥ densityVec Q μ⟧ = InformationTheory.klDivEReal P Q := by
+  classical
+  rw [InformationTheory.klDivEReal]
   have hne := arakiVec_ne_bot (multiplicationAlgebra μ) (densityVec P μ) (densityVec Q μ)
   rw [arakiVec, measure_pvm_relativeModular_densityVec hP] at hne ⊢
   set p := densityFun P μ
@@ -513,33 +512,17 @@ correction `Q(α) - P(α)` built into `klDiv`, which Araki's relative entropy do
 theorem arakiVec_densityVec_eq_klDiv_add_sub (hP : P ≪ μ) :
     S[multiplicationAlgebra μ]⟦densityVec P μ ∥ densityVec Q μ⟧ =
       (InformationTheory.klDiv P Q : EReal) + P.real Set.univ - Q.real Set.univ := by
-  classical
-  rw [arakiVec_densityVec hP]
-  by_cases hPQ : P ≪ Q
-  · rw [ite_eq_left hPQ]
-    by_cases hint : Integrable (llr P Q) P
-    · rw [erealIntegral_coe hint, InformationTheory.klDiv_of_ac_of_integrable hPQ hint,
-        EReal.coe_ennreal_ofReal,
-        max_eq_left (InformationTheory.integral_llr_add_sub_measure_univ_nonneg hPQ hint),
-        ← EReal.coe_add, ← EReal.coe_sub]
-      congr 1
-      ring
-    · rw [InformationTheory.klDiv_of_not_integrable hint, EReal.coe_ennreal_top,
-        erealIntegral_llr_eq_top hPQ hint, EReal.top_add_coe, EReal.top_sub_coe]
-  · rw [ite_eq_right hPQ, InformationTheory.klDiv_of_not_ac hPQ, EReal.coe_ennreal_top,
-      EReal.top_add_coe, EReal.top_sub_coe]
+  rw [arakiVec_densityVec hP, InformationTheory.klDivEReal_eq_klDiv_add_sub]
 
 variable [SigmaFinite μ] in
 /-- **Araki = Kullback–Leibler** on the multiplication algebra: for finite measures `P, Q ≪ μ`, the
 relative entropy of their normal functionals `ω_P : M_f ↦ ∫ f dP` and `ω_Q : M_f ↦ ∫ f dQ` is
-`S(ω_P ‖ ω_Q) = ∫ log (dP/dQ) dP` if `P ≪ Q`, and `+∞` otherwise, with the natural logarithm. Every
-normal functional is some `ω_P` (`VonNeumannAlgebra.existsUnique_eq_ofMeasure`). This is the
-Kullback–Leibler divergence without Mathlib's mass correction `Q(α) - P(α)`; see
-`VonNeumannAlgebra.arakiEntropy_ofMeasure_eq_klDiv_add_sub` for the comparison with
-`InformationTheory.klDiv`. -/
-theorem arakiEntropy_ofMeasure (hP : P ≪ μ) (hQ : Q ≪ μ) [Decidable (P ≪ Q)] :
+`S(ω_P ‖ ω_Q) = ∫ log (dP/dQ) dP` if `P ≪ Q`, and `+∞` otherwise, with the natural logarithm: the
+Kullback–Leibler divergence `InformationTheory.klDivEReal P Q`. Every normal functional is some
+`ω_P` (`VonNeumannAlgebra.existsUnique_eq_ofMeasure`). -/
+theorem arakiEntropy_ofMeasure (hP : P ≪ μ) (hQ : Q ≪ μ) :
     S⟦NormalFunctional.ofMeasure P hP ∥ NormalFunctional.ofMeasure Q hQ⟧ =
-      if P ≪ Q then erealIntegral P (fun x => (llr P Q x : EReal)) else ⊤ := by
+      InformationTheory.klDivEReal P Q := by
   rw [NormalFunctional.ofMeasure_eq_ofVector, NormalFunctional.ofMeasure_eq_ofVector,
     arakiEntropy_ofVector, arakiVec_densityVec hP]
 
@@ -578,12 +561,11 @@ theorem existsUnique_arakiEntropy_ofMeasure (ψ φ : (multiplicationAlgebra μ).
     (∃! P : Measure α, ∃ (_ : IsFiniteMeasure P) (hP : P ≪ μ), ψ = NormalFunctional.ofMeasure P hP) ∧
       (∃! Q : Measure α, ∃ (_ : IsFiniteMeasure Q) (hQ : Q ≪ μ),
         φ = NormalFunctional.ofMeasure Q hQ) ∧
-      ∀ (P Q : Measure α) [IsFiniteMeasure P] [IsFiniteMeasure Q] (hP : P ≪ μ) (hQ : Q ≪ μ)
-        [Decidable (P ≪ Q)], ψ = NormalFunctional.ofMeasure P hP →
-          φ = NormalFunctional.ofMeasure Q hQ →
-            S⟦ψ ∥ φ⟧ = if P ≪ Q then erealIntegral P (fun x => (llr P Q x : EReal)) else ⊤ := by
+      ∀ (P Q : Measure α) [IsFiniteMeasure P] [IsFiniteMeasure Q] (hP : P ≪ μ) (hQ : Q ≪ μ),
+        ψ = NormalFunctional.ofMeasure P hP → φ = NormalFunctional.ofMeasure Q hQ →
+          S⟦ψ ∥ φ⟧ = InformationTheory.klDivEReal P Q := by
   refine ⟨existsUnique_eq_ofMeasure ψ, existsUnique_eq_ofMeasure φ, ?_⟩
-  rintro P Q _ _ hP hQ _ rfl rfl
+  rintro P Q _ _ hP hQ rfl rfl
   exact arakiEntropy_ofMeasure hP hQ
 
 end VonNeumannAlgebra
