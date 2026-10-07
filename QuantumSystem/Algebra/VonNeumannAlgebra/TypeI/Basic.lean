@@ -243,10 +243,10 @@ theorem isTypeIFactor_vnTensorRight {H₁ H₂ : Type*} [NormedAddCommGroup H₁
     [CompleteSpace H₂] [Nontrivial H₁] [Nontrivial H₂] :
     IsTypeIFactor (vnTensorRight (H₁ := H₁) (H₂ := H₂)) := by
   obtain ⟨p, hp⟩ := exists_isMinimalProjection_boundedLinearOperators (H := H₂)
-  refine ⟨isFactor_vnTensorRight, amplifyRight p, hp.1.map (amplifyRightₐ (H₁ := H₁)),
+  refine ⟨isFactor_vnTensorRight, 𝟙 ⊗ p, hp.1.map (amplifyRightₐ (H₁ := H₁)),
     amplifyRight_mem_vnTensorRight p, fun h => hp.2.2.1 (amplifyRight_injective (H₁ := H₁)
       (h.trans amplifyRight_zero.symm)), fun T hT => ?_⟩
-  obtain ⟨S, rfl⟩ : ∃ S, T = amplifyRight S := by
+  obtain ⟨S, rfl⟩ : ∃ S, T = 𝟙 ⊗ S := by
     rw [← vnTensorLeft_commutant] at hT
     obtain ⟨v, hv⟩ := exists_ne (0 : H₁)
     have hu : ‖(‖v‖⁻¹ : ℂ) • v‖ = 1 := by

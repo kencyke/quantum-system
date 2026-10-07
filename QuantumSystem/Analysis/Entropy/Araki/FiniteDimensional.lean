@@ -82,7 +82,7 @@ variable (b : OrthonormalBasis ι ℂ H) (r : ι → ℝ) {g : ι → K}
 
 /-- `(1 ⊗ |x⟩⟨bᵢ|) Ω = √rᵢ gᵢ ⊗ x`. -/
 lemma amplifyRight_rankOne_purification (x : H) (i : ι) :
-    amplifyRight (rankOne ℂ x (b i)) (b.purification r g) = (√ᶜ r i) • (g i ⊗ₕ x) := by
+    (𝟙 ⊗ rankOne ℂ x (b i)) (b.purification r g) = (√ᶜ r i) • (g i ⊗ₕ x) := by
   classical
   have hf := b.orthonormal
   simp only [purification, map_sum, map_smul, HilbertTensor.amplifyRight_tmul,
@@ -94,7 +94,7 @@ lemma amplifyRight_rankOne_purification (x : H) (i : ι) :
 
 /-- `(|y⟩⟨gᵢ| ⊗ 1) Ω = √rᵢ y ⊗ bᵢ` for orthonormal `g`. -/
 lemma amplifyLeft_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : ι) :
-    amplifyLeft (rankOne ℂ y (g i)) (b.purification r g) = (√ᶜ r i) • (y ⊗ₕ b i) := by
+    (rankOne ℂ y (g i) ⊗ 𝟙) (b.purification r g) = (√ᶜ r i) • (y ⊗ₕ b i) := by
   classical
   simp only [purification, map_sum, map_smul, HilbertTensor.amplifyLeft_tmul,
     InnerProductSpace.rankOne_apply]
@@ -107,7 +107,7 @@ lemma amplifyLeft_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : ι)
 orthonormal `g`, `⟪Ω, (1 ⊗ A) Ω⟫ = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
 theorem inner_purification_amplifyRight (hr : ∀ i, 0 ≤ r i) (hg : Orthonormal ℂ g)
     (A : H →L[ℂ] H) :
-    ⟪b.purification r g, amplifyRight A (b.purification r g)⟫_ℂ =
+    ⟪b.purification r g, (𝟙 ⊗ A) (b.purification r g)⟫_ℂ =
       ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
   classical
   simp only [purification, map_sum, map_smul, HilbertTensor.amplifyRight_tmul, sum_inner,
@@ -122,7 +122,7 @@ end OrthonormalBasis
 namespace VonNeumannAlgebra
 
 /-- `B(H)` acting on the second leg of `K ⊗̂ H`, i.e. `1 ⊗ B(H)`. -/
-local notation "𝓜" => VonNeumannAlgebra.amplify K 𝓑(H)
+local notation "𝓜" => 𝟙[K] ⊗ 𝓑(H)
 
 variable [CompleteSpace H] {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ} {g : ι → K}
 

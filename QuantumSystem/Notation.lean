@@ -48,6 +48,17 @@ Notations and abbreviations for quantum information theory.
   <td><code>open scoped VonNeumannAlgebra</code></td>
   <td><code>Algebra/VonNeumannAlgebra/Modular/RelativeTomita.lean</code>,
     <code>RelativeModular.lean</code></td></tr>
+<tr><td><code>𝟙 ⊗ B</code>, <code>A ⊗ 𝟙</code>, <code>𝟙 ⊗ₐ</code>, <code>⊗ₐ 𝟙</code></td>
+  <td><code>HilbertTensor.amplifyRight B</code>, <code>HilbertTensor.amplifyLeft A</code>,
+    <code>HilbertTensor.amplifyRightₐ</code>, <code>HilbertTensor.amplifyLeftₐ</code>
+    (the operators <code>1 ⊗ B</code>, <code>A ⊗ 1</code> on <code>H₁ ⊗̂ H₂</code> and the
+    bundled ⋆-homomorphisms)</td>
+  <td><code>open scoped HilbertTensor</code></td>
+  <td><code>ForMathlib/Analysis/InnerProductSpace/TensorProductCompletion.lean</code></td></tr>
+<tr><td><code>𝟙[K] ⊗ M</code></td><td><code>VonNeumannAlgebra.amplify K M</code> (the algebra
+  <code>1 ⊗ M</code> on <code>K ⊗̂ H</code>)</td>
+  <td><code>open scoped VonNeumannAlgebra</code></td>
+  <td><code>Algebra/VonNeumannAlgebra/TensorFactor.lean</code></td></tr>
 <tr><td><code>M′</code></td><td><code>VonNeumannAlgebra.commutant M</code></td>
   <td><code>open scoped VonNeumannAlgebra</code></td>
   <td><code>ForMathlib/Analysis/VonNeumannAlgebra/Commutant.lean</code></td></tr>

@@ -185,10 +185,10 @@ section Amplify
 variable (H₁ : Type*) [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] [CompleteSpace H₁]
   [Nontrivial H₁]
 
-/-- The Schwarz map `1 ⊗ α : amplify H₁ N → amplify H₁ M`, `1 ⊗ y ↦ 1 ⊗ α(y)`, transported along
+/-- The Schwarz map `1 ⊗ α : 𝟙[H₁] ⊗ N → 𝟙[H₁] ⊗ M`, `1 ⊗ y ↦ 1 ⊗ α(y)`, transported along
 the `⋆`-isomorphisms `VonNeumannAlgebra.amplifyEquiv`. -/
 noncomputable def amplifySchwarzMap (α : SchwarzMap N M) :
-    SchwarzMap (N.amplify H₁) (M.amplify H₁) :=
+    SchwarzMap (𝟙[H₁] ⊗ N) (𝟙[H₁] ⊗ M) :=
   (SchwarzMapClass.toSchwarzMap (amplifyEquiv H₁ M)).comp
     (α.comp (SchwarzMapClass.toSchwarzMap (amplifyEquiv H₁ N).symm))
 
@@ -215,7 +215,7 @@ local notation "ℓ²" => lp (fun _ : ℕ => ℂ) 2
 theorem arakiEntropy_comp_le (α : SchwarzMap N M) (hα₁ : α 1 = 1) (hα : IsNormalMap α)
     (ψ φ : M.NormalFunctional) :
     S⟦ψ.comp α hα ∥ φ.comp α hα⟧ ≤ S⟦ψ ∥ φ⟧ := by
-  have key : ∀ ω : M.NormalFunctional, ∀ y : N.amplify ℓ²,
+  have key : ∀ ω : M.NormalFunctional, ∀ y : 𝟙[ℓ²] ⊗ N,
       ⟪(ω.comp α hα).2.vec, (y : ℓ² ⊗̂ K →L[ℂ] ℓ² ⊗̂ K) (ω.comp α hα).2.vec⟫_ℂ =
         ⟪ω.2.vec, (amplifySchwarzMap ℓ² α y : ℓ² ⊗̂ H →L[ℂ] ℓ² ⊗̂ H) ω.2.vec⟫_ℂ := fun ω y => by
     obtain ⟨y, rfl⟩ : ∃ y', amplifyEquiv ℓ² N y' = y :=

@@ -108,15 +108,15 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-! ### Invariance under amplification -/
 
 /-- **Invariance under amplification.** For a unit vector `e ∈ H₁`,
-`S_{amplify H₁ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)`. -/
+`S_{𝟙[H₁] ⊗ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)`. -/
 theorem arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     {e : H₁} (he : ‖e‖ = 1) (ξ η : H) :
-    S[M.amplify H₁]⟦e ⊗ₕ ξ ∥ e ⊗ₕ η⟧ = S[M]⟦ξ ∥ η⟧ := by
-  have h₁ : ∀ x : H →L[ℂ] H, amplifyRight x ∘L tmulRightL e = tmulRightL e ∘L x := fun x =>
+    S[𝟙[H₁] ⊗ M]⟦e ⊗ₕ ξ ∥ e ⊗ₕ η⟧ = S[M]⟦ξ ∥ η⟧ := by
+  have h₁ : ∀ x : H →L[ℂ] H, 𝟙 ⊗ x ∘L tmulRightL e = tmulRightL e ∘L x := fun x =>
     ContinuousLinearMap.ext fun u => by simp [HilbertTensor.amplifyRight_tmul]
   have hπ : ∀ S : VonNeumannAlgebra H, ∀ x ∈ S, ∃ y ∈ (S : Set (H →L[ℂ] H)).image amplifyRight,
       y ∘L tmulRightL e = tmulRightL e ∘L x ∧ star y ∘L tmulRightL e = tmulRightL e ∘L star x :=
-    fun S x hx => ⟨amplifyRight x, ⟨x, hx, rfl⟩, h₁ x, by rw [HilbertTensor.amplifyRight_star]; exact h₁ _⟩
+    fun S x hx => ⟨𝟙 ⊗ x, ⟨x, hx, rfl⟩, h₁ x, by rw [HilbertTensor.amplifyRight_star]; exact h₁ _⟩
   refine arakiVec_of_intertwiner M ξ η (V := tmulRightL e)
     (fun x hx => ?_) (fun x hx => ?_) ?_
   · obtain ⟨y, ⟨x', hx', rfl⟩, h⟩ := hπ M x hx
@@ -138,7 +138,7 @@ representing vectors `ψ.2.vec`, `φ.2.vec` stand in for Araki's natural-cone re
 `ξ_ψ, ξ_φ ∈ P♮`, whose existence would need Tomita–Takesaki theory; the value does not depend on
 the choice (`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`). -/
 noncomputable def arakiEntropy (ψ φ : M.NormalFunctional) : EReal :=
-  S[M.amplify ℓ²]⟦ψ.2.vec ∥ φ.2.vec⟧
+  S[𝟙[ℓ²] ⊗ M]⟦ψ.2.vec ∥ φ.2.vec⟧
 
 /-- `S⟦ψ ∥ φ⟧` is Araki's relative entropy `VonNeumannAlgebra.arakiEntropy M ψ φ`, the algebra `M`
 being read off from `ψ : M.NormalFunctional`. -/
@@ -150,9 +150,9 @@ variable {M}
 `ψ(x) = ⟪Ξ_ψ, (1 ⊗ x) Ξ_ψ⟫` and `φ(x) = ⟪Ξ_φ, (1 ⊗ x) Ξ_φ⟫`,
 `S(ψ ‖ φ) = S_{amplify M}(ω_{Ξ_ψ} ‖ ω_{Ξ_φ})`. -/
 theorem arakiEntropy_eq_arakiVec {ψ φ : M.NormalFunctional} {Ξψ Ξφ : ℓ² ⊗̂ H}
-    (hψ : ∀ x : M, ⟪Ξψ, amplifyRight (x : H →L[ℂ] H) Ξψ⟫_ℂ = ψ.1 x)
-    (hφ : ∀ x : M, ⟪Ξφ, amplifyRight (x : H →L[ℂ] H) Ξφ⟫_ℂ = φ.1 x) :
-    S⟦ψ ∥ φ⟧ = S[M.amplify ℓ²]⟦Ξψ ∥ Ξφ⟧ := by
+    (hψ : ∀ x : M, ⟪Ξψ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξψ⟫_ℂ = ψ.1 x)
+    (hφ : ∀ x : M, ⟪Ξφ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξφ⟫_ℂ = φ.1 x) :
+    S⟦ψ ∥ φ⟧ = S[𝟙[ℓ²] ⊗ M]⟦Ξψ ∥ Ξφ⟧ := by
   refine arakiVec_eq_of_inner_eq ?_ ?_
   · exact fun y hy => inner_apply_eq_of_mem_amplify (fun x hx =>
       (ψ.2.inner_vec_amplifyRight ⟨x, hx⟩).trans (hψ ⟨x, hx⟩).symm) hy |>.symm
@@ -207,7 +207,7 @@ variable {ψ φ} in
 applies to the representing vectors. -/
 theorem arakiEntropy_eq_top_iff [FiniteDimensional ℂ M] :
     S⟦ψ ∥ φ⟧ = ⊤ ↔ ¬ ψ.supportProj ≤ φ.supportProj := by
-  have : FiniteDimensional ℂ (M.amplify ℓ²) :=
+  have : FiniteDimensional ℂ (𝟙[ℓ²] ⊗ M) :=
     LinearEquiv.finiteDimensional (M.amplifyEquiv (H₁ := ℓ²)).toAlgEquiv.toLinearEquiv
   rw [arakiEntropy, arakiVec_eq_top_iff, ← NormalFunctional.amplifyRight_supportProj,
     ← NormalFunctional.amplifyRight_supportProj,
@@ -248,7 +248,7 @@ theorem arakiEntropy_of_apply_eq_mul_left {ψ' : M.NormalFunctional} {c : ℝ}
         have h2 := NormalFunctional.norm_vec_sq χ
         rw [hχ] at h2
         exact norm_eq_zero.mp (pow_eq_zero_iff two_ne_zero |>.mp h2)
-      have h0 := arakiVec_smul_left (M.amplify ℓ²) φ.2.vec (0 : ℂ) (ξ := 0)
+      have h0 := arakiVec_smul_left (𝟙[ℓ²] ⊗ M) φ.2.vec (0 : ℂ) (ξ := 0)
       rw [zero_smul] at h0
       rw [arakiEntropy, hv, h0]
       simp
@@ -271,7 +271,7 @@ theorem arakiEntropy_of_apply_eq_mul_left {ψ' : M.NormalFunctional} {c : ℝ}
 is `0` when `ψ(1) = 0` or `φ(1) = 0`. -/
 theorem mul_log_le_arakiEntropy :
     (((ψ.1 1).re * Real.log ((ψ.1 1).re / (φ.1 1).re) : ℝ) : EReal) ≤ S⟦ψ ∥ φ⟧ := by
-  have := norm_sq_mul_log_div_norm_sq_le_arakiVec (M.amplify ℓ²) ψ.2.vec φ.2.vec
+  have := norm_sq_mul_log_div_norm_sq_le_arakiVec (𝟙[ℓ²] ⊗ M) ψ.2.vec φ.2.vec
   rwa [NormalFunctional.norm_vec_sq, NormalFunctional.norm_vec_sq] at this
 
 variable {ψ φ} in
@@ -285,15 +285,15 @@ theorem mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : Is
       S⟦ψ ∥ φ⟧ := by
   set q := amplifyRight (H₁ := ℓ²) p
   have hq : IsStarProjection q := isStarProjection_amplifyRight hp
-  have hle : (M.amplify ℓ²).supportProj ψ.2.vec ≤ q := by
+  have hle : (𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec ≤ q := by
     rw [← NormalFunctional.amplifyRight_supportProj,
       amplifyRight_le_amplifyRight_iff (NormalFunctional.isStarProjection_supportProj ψ) hp]
     exact (NormalFunctional.supportProj_le_iff ψ hp hpM).mpr hψp
-  have hb : ‖(M.amplify ℓ²).supportProj ψ.2.vec φ.2.vec‖ ^ 2 ≤ (φ.1 ⟨p, hpM⟩).re := by
-    have h₁ : (M.amplify ℓ²).supportProj ψ.2.vec = (M.amplify ℓ²).supportProj ψ.2.vec * q :=
-      ((IsStarProjection.le_iff_mul_eq_left ((M.amplify ℓ²).isStarProjection_supportProj _)
+  have hb : ‖(𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec φ.2.vec‖ ^ 2 ≤ (φ.1 ⟨p, hpM⟩).re := by
+    have h₁ : (𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec = (𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec * q :=
+      ((IsStarProjection.le_iff_mul_eq_left ((𝟙[ℓ²] ⊗ M).isStarProjection_supportProj _)
         hq).mp hle).symm
-    have h₂ : ‖(M.amplify ℓ²).supportProj ψ.2.vec φ.2.vec‖ ≤ ‖q φ.2.vec‖ := by
+    have h₂ : ‖(𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec φ.2.vec‖ ≤ ‖q φ.2.vec‖ := by
       rw [h₁, mul_apply_eq_comp]
       exact Submodule.norm_starProjection_apply_le _ _
     have hpp : star (⟨p, hpM⟩ : M) * ⟨p, hpM⟩ = ⟨p, hpM⟩ :=
@@ -302,7 +302,7 @@ theorem mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : Is
     rw [hpp] at h₃
     rw [h₃, Complex.ofReal_re]
     gcongr
-  have := norm_sq_mul_log_le_arakiVec_of_le (M.amplify ℓ²) ψ.2.vec hb
+  have := norm_sq_mul_log_le_arakiVec_of_le (𝟙[ℓ²] ⊗ M) ψ.2.vec hb
   rwa [NormalFunctional.norm_vec_sq] at this
 
 /-- **Sharp Klein bound** (Araki): `ψ(1) log (ψ(1) / φ(s(ψ))) ≤ S(ψ ‖ φ)`, for the support

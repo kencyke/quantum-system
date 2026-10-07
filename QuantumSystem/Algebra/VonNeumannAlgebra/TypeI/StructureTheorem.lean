@@ -340,28 +340,28 @@ rank-one operator picks out the `q`-th coordinate. -/
 lemma OrthEquivFam.amplifyLeft_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
-    amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)) (hF.spatialEquiv htop y)
+    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙) (hF.spatialEquiv htop y)
       = tmul (δ p) (hF.multiplicityEquiv htop y q) := by
-  have key : ∀ i : F, amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
+  have key : ∀ i : F, ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (tmul (δ i) (hF.multiplicityEquiv htop y i))
       = (inner ℂ (δ q) (δ i) : ℂ) • tmul (δ p) (hF.multiplicityEquiv htop y i) :=
     fun i => by rw [amplifyLeft_tmul, InnerProductSpace.rankOne_apply, tmul_smul_left]
   have hqq : (inner ℂ (δ q) (δ q) : ℂ) = 1 := by
     rw [lp.inner_single_left, lp.coeFn_single, Pi.single_eq_same,
       RCLike.inner_apply, map_one, mul_one]
-  have hz : ∀ i : F, i ≠ q → amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
+  have hz : ∀ i : F, i ≠ q → ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (tmul (δ i) (hF.multiplicityEquiv htop y i)) = 0 := by
     intro i hi
     have hzero : (inner ℂ (δ q) (δ i) : ℂ) = 0 := by
       rw [lp.inner_single_left, lp.coeFn_single,
         Pi.single_eq_of_ne (Ne.symm hi), inner_zero_right]
     rw [key i, hzero, zero_smul]
-  have hval : amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
+  have hval : ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (tmul (δ q) (hF.multiplicityEquiv htop y q))
       = tmul (δ p) (hF.multiplicityEquiv htop y q) := by
     rw [key q, hqq, one_smul]
   exact (((hF.hasSum_tmul_spatialEquiv htop y).mapL
-    (amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)))).unique
+    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)).unique
     (hasSum_single q hz)).trans hval
 
 /-- **Intertwining relation.** The spatial isomorphism intertwines the matrix unit `e_{pq}` with
@@ -370,7 +370,7 @@ lemma OrthEquivFam.spatialEquiv_intertwine (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
     hF.spatialEquiv htop (hF.matrixUnit p q y)
-      = amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)) (hF.spatialEquiv htop y) :=
+      = ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙) (hF.spatialEquiv htop y) :=
   (hF.spatialEquiv_matrixUnit_apply htop p q y).trans
     ((congrArg (tmul (δ p)) (hF.multiplicityEquiv_matrixUnit_coord htop p q y)).trans
       (hF.amplifyLeft_rankOne_spatialEquiv htop p q y).symm)
@@ -383,11 +383,11 @@ theorem OrthEquivFam.conjStarAlgEquiv_matrixUnit (hF : OrthEquivFam N e F)
     (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
     [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) :
     (hF.spatialEquiv htop).conjStarAlgEquiv (hF.matrixUnit p q)
-      = amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)) := by
+      = (InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙 := by
   refine ContinuousLinearMap.ext fun w => ?_
   rw [LinearIsometryEquiv.conjStarAlgEquiv_apply_apply]
   exact (hF.spatialEquiv_intertwine htop p q ((hF.spatialEquiv htop).symm w)).trans
-    (congrArg (amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)))
+    (congrArg ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (LinearIsometryEquiv.apply_symm_apply (hF.spatialEquiv htop) w))
 
 omit [CompleteSpace H] in
