@@ -69,14 +69,19 @@ The measurability of the pairing, required by `ProjectionValuedMeasure.fourier`,
 
 * `AddChar.isPositiveDefinite_inner_apply` — the matrix coefficients `v ↦ ⟪y, U v y⟫` of a unitary
   representation are positive definite.
-* `AddChar.IsStronglyContinuous.fourier_pvm` — **SNAG theorem**: `U v = ∫ exp (i L(p, v)) dE_U(p)`.
-* `AddChar.IsStronglyContinuous.eq_pvm_of_fourier_eq`,
-  `AddChar.IsStronglyContinuous.existsUnique_fourier_eq` — `E_U` is the unique projection-valued
-  measure on `W` with Fourier transform `U`.
-* `AddChar.IsStronglyContinuous.existsUnique_fourier_eq_strongDual` — the same on the dual space,
-  `U v = ∫ exp (i p v) dE(p)` for a unique `E` on `StrongDual ℝ V`.
+* `AddChar.IsStronglyContinuous.fourier_pvm`, `AddChar.IsStronglyContinuous.eq_pvm_of_fourier_eq`
+  — existence and uniqueness: `U v = ∫ exp (i L(p, v)) dE_U(p)`, and `E_U` is the only
+  projection-valued measure on `W` with Fourier transform `U`.
+* `AddChar.IsStronglyContinuous.existsUnique_fourier_eq` — **SNAG theorem**: `U` is the Fourier
+  transform of a unique projection-valued measure on `W`.
+* `AddChar.IsStronglyContinuous.existsUnique_fourier_eq_strongDual` — **SNAG theorem** on the dual
+  space: `U v = ∫ exp (i p v) dE(p)` for a unique `E` on `StrongDual ℝ V`.
 * `AddChar.IsStronglyContinuous.inner_apply_eq_integral_measure_pvm` — the diagonal measures:
   `⟪y, U v y⟫ = ∫ exp (i L(p, v)) dE_y(p)`.
+* `AddChar.IsStronglyContinuous.pvm_compAddMonoidHom`,
+  `AddChar.IsStronglyContinuous.pvm_compAddMonoidHom_strongDual` — **functoriality**: for
+  `φ : V' →L[ℝ] V` the projection-valued measure of `U ∘ φ` is the image of `E_U` under the
+  transpose of `φ`, `p ↦ p ∘ φ` on the dual spaces.
 * `MeasureTheory.ProjectionValuedMeasure.isStronglyContinuous_fourier_of_isContPerfPair`,
   `MeasureTheory.ProjectionValuedMeasure.pvm_isStronglyContinuous_fourier` — the converse: the
   Fourier transform of a projection-valued measure on `W` is strongly continuous, with that measure
@@ -775,6 +780,54 @@ theorem existsUnique_fourier_eq_strongDual (hU : U.IsStronglyContinuous) :
       E.fourier (topDualPairing ℝ V) (topDualPairing ℝ V).measurable_flip_apply_of_isContPerfPair =
         U :=
   hU.existsUnique_fourier_eq (topDualPairing ℝ V)
+
+end AddChar.IsStronglyContinuous
+
+/-! ### Functoriality -/
+
+namespace AddChar.IsStronglyContinuous
+
+variable {V W V' W' : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V]
+  [IsTopologicalAddGroup V] [ContinuousSMul ℝ V] [FiniteDimensional ℝ V]
+  [AddCommGroup W] [Module ℝ W] [TopologicalSpace W] [IsTopologicalAddGroup W]
+  [ContinuousSMul ℝ W] [MeasurableSpace W] [BorelSpace W] {L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ}
+  [L.IsContPerfPair] [AddCommGroup V'] [Module ℝ V'] [TopologicalSpace V']
+  [IsTopologicalAddGroup V'] [ContinuousSMul ℝ V'] [FiniteDimensional ℝ V']
+  [AddCommGroup W'] [Module ℝ W'] [TopologicalSpace W'] [IsTopologicalAddGroup W']
+  [ContinuousSMul ℝ W'] [MeasurableSpace W'] [BorelSpace W'] {L' : W' →ₗ[ℝ] V' →ₗ[ℝ] ℝ}
+  [L'.IsContPerfPair] {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+  [CompleteSpace H] {U : AddChar V (unitary (H →L[ℂ] H))} (hU : U.IsStronglyContinuous)
+
+/-- **Functoriality** of the projection-valued measure: if `φ : V' → V` and `ψ : W → W'` are
+adjoint for the pairings, `L'(ψ w, v') = L(w, φ v')`, then the projection-valued measure of the
+pullback `U ∘ φ` is the image `ψ_* E_U` of that of `U`. (The adjoint `ψ` of `φ` is unique, the
+transpose of `φ`.) -/
+theorem pvm_compAddMonoidHom (φ : V' →L[ℝ] V) (ψ : W →L[ℝ] W')
+    (hφψ : ∀ w v', L' (ψ w) v' = L w (φ v')) :
+    (hU.compAddMonoidHom (φ : V' →+ V) φ.continuous).pvm L' =
+      (hU.pvm L).map ψ ψ.continuous.measurable := by
+  refine ((hU.compAddMonoidHom _ φ.continuous).eq_pvm_of_fourier_eq ?_).symm
+  refine AddChar.ext _ _ fun v' => Subtype.ext ?_
+  rw [ProjectionValuedMeasure.coe_fourier_apply, ProjectionValuedMeasure.integral_map
+    (ProjectionValuedMeasure.measurable_exp_pairing L' L'.measurable_flip_apply_of_isContPerfPair
+      v') ⟨1, fun _ => (norm_exp_ofReal_mul_I _).le⟩ ψ.continuous.measurable]
+  have h : ((fun w' => cexp (L' w' v' * I)) ∘ ψ) = fun w => cexp (L w (φ v') * I) := by
+    ext w
+    simp [hφψ]
+  rw [h, ← ProjectionValuedMeasure.coe_fourier_apply _ _ L.measurable_flip_apply_of_isContPerfPair,
+    hU.fourier_pvm L]
+  rfl
+
+variable [T2Space V] [T2Space V'] [MeasurableSpace (StrongDual ℝ V)]
+  [BorelSpace (StrongDual ℝ V)] [MeasurableSpace (StrongDual ℝ V')] [BorelSpace (StrongDual ℝ V')]
+
+/-- **Functoriality** on the dual spaces: the projection-valued measure of `U ∘ φ` on
+`StrongDual ℝ V'` is the image of that of `U` under the transpose `p ↦ p ∘ φ`. -/
+lemma pvm_compAddMonoidHom_strongDual (φ : V' →L[ℝ] V) :
+    (hU.compAddMonoidHom (φ : V' →+ V) φ.continuous).pvm (topDualPairing ℝ V') =
+      (hU.pvm (topDualPairing ℝ V)).map (fun p => p.comp φ)
+        (ContinuousLinearMap.precomp ℝ φ).continuous.measurable :=
+  hU.pvm_compAddMonoidHom φ (ContinuousLinearMap.precomp ℝ φ) fun _ _ => rfl
 
 end AddChar.IsStronglyContinuous
 

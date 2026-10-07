@@ -85,6 +85,8 @@ representation given by the SNAG theorem.
 * `ProjectionValuedMeasure.inner_fourier_apply_self` — `⟪y, U(v) y⟫ = ∫ exp (i L(w, v)) dE_y(w)`.
 * `AddChar.isStronglyContinuous_iff` — strong continuity is continuity of `g ↦ U g y` for every
   `y`.
+* `AddChar.IsStronglyContinuous.compAddMonoidHom` — pullbacks along continuous homomorphisms are
+  strongly continuous.
 * `ProjectionValuedMeasure.continuous_fourier_apply`,
   `ProjectionValuedMeasure.isStronglyContinuous_fourier` — the Fourier transform is strongly
   continuous when the pairing is continuous in `v`.
@@ -793,6 +795,13 @@ continuous. -/
 lemma IsStronglyContinuous.continuous_inner_apply {U : AddChar G (unitary (H →L[ℂ] H))}
     (hU : U.IsStronglyContinuous) (x y : H) : Continuous fun g => ⟪x, (U g : H →L[ℂ] H) y⟫_ℂ :=
   continuous_const.inner (isStronglyContinuous_iff.mp hU y)
+
+/-- The pullback `U ∘ f` of a strongly continuous representation along a continuous
+homomorphism `f` is strongly continuous. -/
+lemma IsStronglyContinuous.compAddMonoidHom {U : AddChar G (unitary (H →L[ℂ] H))}
+    (hU : U.IsStronglyContinuous) {G' : Type*} [AddMonoid G'] [TopologicalSpace G'] (f : G' →+ G)
+    (hf : Continuous f) : (U.compAddMonoidHom f).IsStronglyContinuous :=
+  hU.comp hf
 
 end AddChar
 
