@@ -72,6 +72,8 @@ public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
 public import QuantumSystem.Analysis.UnboundedOperator.FunctionalCalculus
 public import QuantumSystem.Analysis.UnboundedOperator.Multiplication
+public import QuantumSystem.Analysis.UnboundedOperator.PolarDecomposition
+public import QuantumSystem.Analysis.UnboundedOperator.Power
 public import QuantumSystem.Analysis.UnboundedOperator.Resolvent
 public import QuantumSystem.Analysis.UnboundedOperator.ResolventCFC
 public import QuantumSystem.Analysis.UnboundedOperator.RestrictScalars
@@ -133,6 +135,7 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty
+public import QuantumSystem.ForMathlib.MeasureTheory.Function.MemLpMulSelf
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunction.Bochner
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.Count
