@@ -70,6 +70,7 @@ public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
+public import QuantumSystem.Analysis.UnboundedOperator.FunctionalCalculus
 public import QuantumSystem.Analysis.UnboundedOperator.Multiplication
 public import QuantumSystem.Analysis.UnboundedOperator.Resolvent
 public import QuantumSystem.Analysis.UnboundedOperator.ResolventCFC

@@ -16,8 +16,10 @@ For a self-adjoint operator `A` on a complex Hilbert space and `w` in its resolv
 `w = i`), the resolvent `R = (w - A)⁻¹` is a normal bounded operator, so Mathlib's continuous
 functional calculus applies to it. Every other resolvent is a continuous function of `R`:
 `(z - A)⁻¹ = cfc (ζ ↦ ζ / (1 - (w - z) ζ)) R`. This is the entry point of the spectral theory of
-unbounded self-adjoint operators used here: functions of `A` are written as `cfc g R`, with
-`g (ζ) = f (w - ζ⁻¹)`.
+unbounded self-adjoint operators used here: the projection-valued measure `E_A` is built from the
+calculus of `R` (`QuantumSystem.Analysis.UnboundedOperator.SpectralMeasure`), and functions of `A`
+are then the spectral integrals `f(A) = ∫ f dE_A`
+(`QuantumSystem.Analysis.UnboundedOperator.FunctionalCalculus`).
 
 ## Main results
 

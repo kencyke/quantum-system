@@ -21,12 +21,12 @@ self-adjoint operator `A`, and of the scalar spectral measures
 diagonal measures of their projection-valued measures (`IsStarNormal.pvm`). Results about `ν_u^w`
 that hold for every normal operator, such as the transformation rule `ν_{h(R) u}^w = |h|² ν_u^w`
 and scaling, are stated for normal operators in `QuantumSystem.Analysis.SpectralTheory.Normal`
-and `QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued`.
+and `QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued`; for `A` itself the
+transformation rule is `μ_{f(A) u} = |f|² μ_u`
+(`ProjectionValuedMeasure.measure_integral_apply`), with `f(A) = ∫ f dE_A`.
 
 ## Main results
 
-* `IsSelfAdjoint.measure_pvm_cfc_apply` — the transformation rule
-  `μ_{h(R) u} = |h((i - λ)⁻¹)|² μ_u`.
 * `IsSelfAdjoint.measure_pvm_resolvent_of_mem_graph`, `IsSelfAdjoint.measure_pvm_of_mem_graph`
   — an eigenvector `A u = c u` has `ν_u^w = ‖u‖² δ_{(w - c)⁻¹}` and `μ_u = ‖u‖² δ_c`.
 * `IsSelfAdjoint.measure_pvm_resolvent_add_of_mem_graph` — `ν_{x + y}^w = ν_x^w + ν_y^w` for an
@@ -92,45 +92,6 @@ namespace IsSelfAdjoint
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
   {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A)
-
-/-- **Transformation rule** for the spectral measure. For `h` continuous on the spectrum of
-`R = (i - A)⁻¹`, `μ_{h(R) u} = |h((i - λ)⁻¹)|² μ_u`. -/
-theorem measure_pvm_cfc_apply (u : E) {h : ℂ → ℂ}
-    (hh : ContinuousOn h (spectrum ℂ (A.resolvent I))) :
-    hA.pvm.measure (cfc h (A.resolvent I) u) =
-      (hA.pvm.measure u).withDensity fun t => ‖h (I - t)⁻¹‖ₑ ^ 2 := by
-  classical
-  set σ := spectrum ℂ (A.resolvent I)
-  have hψ : Measurable fun t : ℝ => (I - t)⁻¹ := by fun_prop
-  have hφ : Measurable fun ζ : ℂ => re (I - ζ⁻¹) := by fun_prop
-  -- A measurable density agreeing with `‖h‖²` on the spectrum.
-  let ρ : ℂ → ℝ≥0∞ := σ.piecewise (fun ζ => ‖h ζ‖ₑ ^ 2) 0
-  have hρ : Measurable ρ :=
-    ((ENNReal.continuous_pow 2).comp_continuousOn hh.enorm).measurable_piecewise continuousOn_const
-    (spectrum.isClosed _).measurableSet
-  have hρσ : ∀ ζ ∈ σ, ρ ζ = ‖h ζ‖ₑ ^ 2 := fun ζ hζ => Set.piecewise_eq_of_mem _ _ _ hζ
-  have hν : (fun ζ => ‖h ζ‖ₑ ^ 2) =ᵐ[(hA.isStarNormal_resolvent I).pvm.measure u] ρ := by
-    filter_upwards [(hA.isStarNormal_resolvent I).ae_mem_spectrum_measure_pvm u] with ζ hζ
-    exact (hρσ ζ hζ).symm
-  have hμ : (fun t : ℝ => ‖h (I - t)⁻¹‖ₑ ^ 2) =ᵐ[hA.pvm.measure u] ρ ∘ fun t => (I - t)⁻¹ := by
-    have := (hA.isStarNormal_resolvent I).ae_mem_spectrum_measure_pvm u
-    rw [← hA.map_measure_pvm u hA.I_mem_resolventSet] at this
-    filter_upwards [ae_of_ae_map hψ.aemeasurable this] with t ht
-    exact (hρσ _ ht).symm
-  -- `map ψ (μ.withDensity (ρ ∘ ψ)) = (map ψ μ).withDensity ρ`.
-  have hmap : ((hA.pvm.measure u).withDensity (ρ ∘ fun t => (I - t)⁻¹)).map
-      (fun t : ℝ => (I - t)⁻¹) = ((hA.isStarNormal_resolvent I).pvm.measure u).withDensity ρ := by
-    ext s hs
-    rw [Measure.map_apply hψ hs, withDensity_apply _ (hψ hs), withDensity_apply _ hs,
-      ← hA.map_measure_pvm u hA.I_mem_resolventSet, setLIntegral_map hs hρ hψ]
-    rfl
-  rw [withDensity_congr_ae hμ, measure_pvm_eq_map,
-    (hA.isStarNormal_resolvent I).measure_pvm_cfc_apply u hh,
-    withDensity_congr_ae hν, ← hmap, Measure.map_map hφ hψ]
-  conv_rhs => rw [← Measure.map_id (μ := (hA.pvm.measure u).withDensity _)]
-  congr 1
-  funext t
-  simp only [Function.comp_apply, inv_inv, sub_sub_cancel, ofReal_re, id_eq]
 
 /-- An eigenvector `A u = c u` (`c` real) has `ν_u^w = ‖u‖² δ_{(w - c)⁻¹}` for `w` in the
 resolvent set. -/
