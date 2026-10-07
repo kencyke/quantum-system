@@ -40,6 +40,8 @@ argument: `E.complexMeasure x y s = ⟪x, E s y⟫`, which is Rudin's `E_{y,x}(s
 * `MeasureTheory.ProjectionValuedMeasure X H` — projection-valued measures on `X` acting on `H`.
 * `MeasureTheory.ProjectionValuedMeasure.ofHasSum` — a projection-valued measure from a map to
   `H →L[ℂ] H` that is countably additive at every vector.
+* `MeasureTheory.ProjectionValuedMeasure.ofMeasure` — a projection-valued measure from a map to
+  orthogonal projections whose diagonal set functions `s ↦ ‖P s y‖²` are measures.
 * `MeasureTheory.ProjectionValuedMeasure.dirac a` — the projection-valued measure concentrated at
   `a`, `s ↦ 1` if `a ∈ s` and `0` otherwise.
 * `MeasureTheory.ProjectionValuedMeasure.measure E x` — the finite measure `s ↦ ‖E s x‖²`, i.e.
@@ -50,6 +52,9 @@ argument: `E.complexMeasure x y s = ⟪x, E s y⟫`, which is Rudin's `E_{y,x}(s
   with `(E.map f) s = E (f ⁻¹' s)` for measurable `s`.
 
 ## Main results
+
+* `ContinuousLinearMap.ext_inner_self` — on a complex inner product space an operator is determined
+  by its quadratic form `y ↦ ⟪y, T y⟫`.
 
 * `MeasureTheory.ProjectionValuedMeasure.apply_union`, `apply_univ`, `apply_empty` — finite
   additivity and normalisation.
@@ -70,12 +75,26 @@ argument: `E.complexMeasure x y s = ⟪x, E s y⟫`, which is Rudin's `E_{y,x}(s
   vanishes on `s`.
 * `MeasureTheory.ProjectionValuedMeasure.ext_of_measure` — a projection-valued measure is determined
   by its diagonal measures `E.measure x`.
+* `MeasureTheory.ProjectionValuedMeasure.hasSum_apply_of_measure`,
+  `MeasureTheory.ProjectionValuedMeasure.measure_ofMeasure` — weak countable additivity on the
+  diagonal implies strong countable additivity, and the diagonal measures of `ofMeasure P μ …` are
+  the `μ y`.
+* `MeasureTheory.ProjectionValuedMeasure.map_congr_ae`, `map_map`, `map_id` — functoriality of the
+  image, which depends only on the map up to `E`-null sets.
 -/
 
 @[expose] public section
 
 open Set Filter Function Topology ContinuousLinearMap
 open scoped ENNReal InnerProductSpace
+
+/-- On a complex inner product space, two operators with the same quadratic form
+`y ↦ ⟪y, T y⟫` are equal. -/
+lemma ContinuousLinearMap.ext_inner_self {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    {T S : E →L[ℂ] E} (h : ∀ y, ⟪y, T y⟫_ℂ = ⟪y, S y⟫_ℂ) : T = S :=
+  ContinuousLinearMap.coe_injective <| (ext_inner_map (T : E →ₗ[ℂ] E) S).mp fun y => by
+    simp only [ContinuousLinearMap.coe_coe]
+    rw [← inner_conj_symm, h y, inner_conj_symm]
 
 section StarProjection
 
@@ -224,6 +243,24 @@ lemma norm_apply_le (s : Set X) (x : H) : ‖E s x‖ ≤ ‖x‖ :=
 /-- Each `E s` is self-adjoint: `⟪E s x, y⟫ = ⟪x, E s y⟫`. -/
 lemma inner_apply_left (s : Set X) (x y : H) : ⟪E s x, y⟫_ℂ = ⟪x, E s y⟫_ℂ := by
   rw [← ContinuousLinearMap.adjoint_inner_left, ((E.isStarProjection s).isSelfAdjoint).adjoint_eq]
+
+/-- A spectral projection is idempotent. -/
+lemma apply_apply_self {s : Set X} (hs : MeasurableSet s) (y : H) : E s (E s y) = E s y := by
+  rw [← mul_apply_eq_comp, ← E.apply_inter hs hs, inter_self]
+
+/-- `E(t) E(s) = E(s)` for `s ⊆ t`. -/
+lemma apply_apply_of_subset {s t : Set X} (hs : MeasurableSet s) (ht : MeasurableSet t)
+    (hst : s ⊆ t) (y : H) : E t (E s y) = E s y := by
+  rw [← mul_apply_eq_comp, ← E.apply_inter ht hs, inter_eq_right.mpr hst]
+
+/-- **Pythagoras** for a spectral projection: `‖y - E(s) y‖² = ‖y‖² - ‖E(s) y‖²`. -/
+lemma norm_sub_apply_sq {s : Set X} (hs : MeasurableSet s) (y : H) :
+    ‖y - E s y‖ ^ 2 = ‖y‖ ^ 2 - ‖E s y‖ ^ 2 := by
+  have h : ⟪E s y, y - E s y⟫_ℂ = 0 := by
+    rw [inner_sub_right, E.inner_apply_left, E.inner_apply_left, E.apply_apply_self hs, sub_self]
+  have := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero _ _ h
+  rw [add_sub_cancel] at this
+  linarith
 
 /-! ### Construction from pointwise countable additivity -/
 
@@ -450,12 +487,105 @@ lemma ext {F : ProjectionValuedMeasure X H} (h : ∀ s, MeasurableSet s → E s 
 lemma ext_of_measure {F : ProjectionValuedMeasure X H} (h : ∀ x, E.measure x = F.measure x) :
     E = F := by
   refine E.ext fun s hs => ?_
-  have hx : ∀ x, ⟪E s x, x⟫_ℂ = ⟪F s x, x⟫_ℂ := fun x => by
-    have hm := congrArg (fun μ => μ.real s) (h x)
-    simp only [measureReal_apply x hs] at hm
-    rw [← inner_conj_symm, inner_apply_self, ← inner_conj_symm, inner_apply_self, hm]
-  have := (ext_inner_map (E s : H →ₗ[ℂ] H) (F s)).mp hx
-  exact ContinuousLinearMap.coe_injective this
+  refine ContinuousLinearMap.ext_inner_self fun x => ?_
+  have hm := congrArg (fun μ => μ.real s) (h x)
+  simp only [measureReal_apply x hs] at hm
+  rw [inner_apply_self, inner_apply_self, hm]
+
+/-! ### Construction from diagonal measures -/
+
+section OfMeasure
+
+variable {P : Set X → H →L[ℂ] H} {μ : H → Measure X}
+
+open Complex in
+/-- **Weak implies strong countable additivity**: if the values of `P` are orthogonal projections
+and every diagonal set function `s ↦ ‖P s y‖²` is a measure `μ y`, then `P` is countably additive
+in the strong operator topology, `P (⋃ sᵢ) y = Σ P sᵢ y` for pairwise disjoint measurable `sᵢ`:
+`P` is finitely additive, and `‖P (⋃ sᵢ) y - Σ_{i ∈ F} P sᵢ y‖² = μ_y(⋃ sᵢ) - Σ_{i ∈ F} μ_y(sᵢ)`. -/
+lemma hasSum_apply_of_measure (isStarProjection : ∀ s, IsStarProjection (P s))
+    (measure_apply : ∀ y s, MeasurableSet s → μ y s = ‖P s y‖ₑ ^ 2) {f : ℕ → Set X}
+    (hf : ∀ i, MeasurableSet (f i)) (hd : Pairwise (Disjoint on f)) (y : H) :
+    HasSum (fun i => P (f i) y) (P (⋃ i, f i) y) := by
+  have hfin : ∀ z, IsFiniteMeasure (μ z) := fun z =>
+    ⟨by rw [measure_apply z univ MeasurableSet.univ]; exact ENNReal.pow_lt_top enorm_lt_top⟩
+  have hreal : ∀ z s, MeasurableSet s → (μ z).real s = ‖P s z‖ ^ 2 := fun z s hs => by
+    rw [measureReal_def, measure_apply z s hs, ← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _),
+      ENNReal.toReal_ofReal (by positivity)]
+  have hinner : ∀ z s, MeasurableSet s → ⟪z, P s z⟫_ℂ = ((μ z).real s : ℂ) := fun z s hs => by
+    rw [(isStarProjection s).inner_apply_self, hreal z s hs]
+  have hempty : P ∅ = 0 := ContinuousLinearMap.ext_inner_self fun z => by
+    rw [hinner z ∅ MeasurableSet.empty, measureReal_empty, zero_apply, inner_zero_right, ofReal_zero]
+  have hunion : ∀ s t, Disjoint s t → MeasurableSet s → MeasurableSet t →
+      P (s ∪ t) = P s + P t := fun s t hst hs ht => ContinuousLinearMap.ext_inner_self fun z => by
+    have := hfin z
+    rw [add_apply, inner_add_right, hinner z _ (hs.union ht), hinner z s hs, hinner z t ht,
+      measureReal_union hst ht, ofReal_add]
+  have := hfin y
+  set U := ⋃ i, f i
+  have hU : MeasurableSet U := MeasurableSet.iUnion hf
+  have hsum : ∀ F : Finset ℕ, ∑ i ∈ F, P (f i) y = P (⋃ i ∈ F, f i) y := by
+    intro F
+    induction F using Finset.induction_on with
+    | empty => simp [hempty]
+    | insert a F ha ih =>
+      have hdisj : Disjoint (f a) (⋃ i ∈ F, f i) :=
+        Set.disjoint_iUnion₂_right.mpr fun i hi => hd (fun h : a = i => ha (h ▸ hi))
+      rw [Finset.sum_insert ha, ih, Finset.set_biUnion_insert,
+        hunion _ _ hdisj (hf a) (Finset.measurableSet_biUnion F fun i _ => hf i), add_apply]
+  have hmeas : HasSum (fun i => (μ y).real (f i)) ((μ y).real U) := by
+    convert (μ y).toSignedMeasure.hasSum_of_disjoint_iUnion hf hd using 1
+    · exact funext fun i => (Measure.toSignedMeasure_apply_measurable (hf i)).symm
+    · exact (Measure.toSignedMeasure_apply_measurable hU).symm
+  have hnorm : ∀ F : Finset ℕ, ‖∑ i ∈ F, P (f i) y - P U y‖ =
+      √((μ y).real U - ∑ i ∈ F, (μ y).real (f i)) := by
+    intro F
+    set V := ⋃ i ∈ F, f i
+    have hV : MeasurableSet V := Finset.measurableSet_biUnion F fun i _ => hf i
+    have hVU : V ⊆ U := Set.iUnion₂_subset fun i _ => Set.subset_iUnion f i
+    have hsplit : P U = P (U \ V) + P V := by
+      rw [← hunion _ _ Set.disjoint_sdiff_left (hU.diff hV) hV, Set.sdiff_union_of_subset hVU]
+    have hμ : (μ y).real U = (μ y).real (U \ V) + (μ y).real V := by
+      conv_lhs => rw [← Set.sdiff_union_of_subset hVU]
+      exact measureReal_union Set.disjoint_sdiff_left hV (measure_ne_top _ _) (measure_ne_top _ _)
+    rw [hsum, hsplit, add_apply, norm_sub_rev, add_sub_cancel_right,
+      ← measureReal_biUnion_finset (fun i _ j _ hij => hd hij) (fun i _ => hf i), hμ,
+      add_sub_cancel_right, hreal y _ (hU.diff hV), Real.sqrt_sq (norm_nonneg _)]
+  rw [HasSum, tendsto_iff_norm_sub_tendsto_zero]
+  simp only [hnorm]
+  have h := (tendsto_const_nhds (x := (μ y).real U)).sub hmeas
+  rw [sub_self] at h
+  have h' := (Real.continuous_sqrt.tendsto 0).comp h
+  rwa [Real.sqrt_zero] at h'
+
+/-- A **projection-valued measure from diagonal measures**: a map `P` from sets to orthogonal
+projections, vanishing off the measurable sets, with `P X = 1` and such that every diagonal set
+function `s ↦ ‖P s y‖² = ⟪y, P s y⟫` is a measure `μ y` (weak countable additivity on the
+diagonal, Rudin's definition). Strong countable additivity is `hasSum_apply_of_measure`. -/
+noncomputable def ofMeasure (P : Set X → H →L[ℂ] H) (μ : H → Measure X)
+    (not_measurable : ∀ s, ¬MeasurableSet s → P s = 0)
+    (isStarProjection : ∀ s, IsStarProjection (P s)) (univ : P univ = 1)
+    (measure_apply : ∀ y s, MeasurableSet s → μ y s = ‖P s y‖ₑ ^ 2) :
+    ProjectionValuedMeasure X H :=
+  ofHasSum P not_measurable
+    (fun _ hf hd y => hasSum_apply_of_measure isStarProjection measure_apply hf hd y)
+    isStarProjection univ
+
+/-- The projection-valued measure `ofMeasure P μ …` has the values of `P`. -/
+@[simp]
+lemma ofMeasure_apply (P : Set X → H →L[ℂ] H) (μ : H → Measure X) (not_measurable isStarProjection
+    univ measure_apply) (s : Set X) :
+    ofMeasure P μ not_measurable isStarProjection univ measure_apply s = P s := rfl
+
+/-- The diagonal measures of `ofMeasure P μ …` are the measures `μ y`. -/
+lemma measure_ofMeasure (P : Set X → H →L[ℂ] H) (μ : H → Measure X) (not_measurable
+    isStarProjection univ) (measure_apply : ∀ y s, MeasurableSet s → μ y s = ‖P s y‖ₑ ^ 2)
+    (y : H) :
+    (ofMeasure P μ not_measurable isStarProjection univ measure_apply).measure y = μ y := by
+  ext s hs
+  rw [ProjectionValuedMeasure.measure_apply y hs, ofMeasure_apply, measure_apply y s hs]
+
+end OfMeasure
 
 /-! ### Dirac projection-valued measures -/
 
@@ -536,6 +666,21 @@ lemma map_apply (hf : Measurable f) {s : Set Y} (hs : MeasurableSet s) :
 lemma measure_map (hf : Measurable f) (x : H) : (E.map f hf).measure x = (E.measure x).map f := by
   ext s hs
   rw [measure_apply x hs, Measure.map_apply hf hs, measure_apply x (hf hs), map_apply _ hf hs]
+
+/-- Images under maps that agree `E`-almost everywhere coincide. -/
+lemma map_congr_ae {g : X → Y} (hf : Measurable f) (hg : Measurable g)
+    (h : ∀ x, f =ᵐ[E.measure x] g) : E.map f hf = E.map g hg :=
+  ext_of_measure _ fun x => by rw [measure_map, measure_map, Measure.map_congr (h x)]
+
+/-- The image of the image is the image under the composite. -/
+lemma map_map {Z : Type*} [MeasurableSpace Z] {g : Y → Z} (hf : Measurable f) (hg : Measurable g) :
+    (E.map f hf).map g hg = E.map (g ∘ f) (hg.comp hf) :=
+  ext_of_measure _ fun x => by rw [measure_map, measure_map, measure_map, Measure.map_map hg hf]
+
+/-- The image under the identity is `E`. -/
+@[simp]
+lemma map_id : E.map id measurable_id = E :=
+  ext_of_measure _ fun x => by rw [measure_map, Measure.map_id]
 
 /-- The complex measures of the image of `E` are the images of those of `E`. -/
 lemma complexMeasure_map (hf : Measurable f) (x y : H) :
