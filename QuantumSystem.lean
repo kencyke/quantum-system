@@ -70,6 +70,7 @@ public import QuantumSystem.Analysis.Matrix.QuantumChannel.Stinespring
 public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
 public import QuantumSystem.Analysis.SpectralTheory.SNAG
+public import QuantumSystem.Analysis.SpectralTheory.SpectralCone
 public import QuantumSystem.Analysis.SpectralTheory.Stone
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
 public import QuantumSystem.Analysis.StandardSubspace.Borchers

@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
+public import QuantumSystem.Analysis.UnboundedOperator.SpectralCalculus
 public import QuantumSystem.Analysis.UnboundedOperator.SpectralMeasure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.SemilinearIsometry
 
@@ -44,6 +45,7 @@ spaces: if `V` maps the graph of `A` onto that of `B`, then `E_B = V E_A V⁻¹`
 * `IsSelfAdjoint.eq_integralPMap_pvm` — **spectral theorem**: `A = ∫ λ dE_A(λ)`.
 * `IsSelfAdjoint.mem_domain_iff_memLp`, `IsSelfAdjoint.inner_eq_integral_of_mem_graph` —
   `dom A = {y | ∫ λ² dμ_y < ∞}` and `⟪y, A y⟫ = ∫ λ dμ_y`.
+* `IsSelfAdjoint.isPositive_iff_pvm_Iio_eq_zero` — `A ≥ 0` iff `E_A((-∞, 0)) = 0`.
 * `IsSelfAdjoint.eq_pvm_of_eq_integralPMap` — **uniqueness**: `E_A` is the only projection-valued
   measure `F` with `A = ∫ λ dF(λ)`.
 * `ProjectionValuedMeasure.pvm_integralPMap_ofReal`,
@@ -321,6 +323,19 @@ lemma inner_eq_integral_of_mem_graph {y z : E} (h : (y, z) ∈ A.graph) :
     ⟪y, z⟫_ℂ = ∫ t, (t : ℂ) ∂(hA.pvm.measure y) := by
   rw [hA.eq_integralPMap_pvm, ProjectionValuedMeasure.mem_graph_integralPMap] at h
   rw [← h.2, hA.pvm.inner_integralApply_self Complex.measurable_ofReal h.1]
+
+/-- A self-adjoint operator is positive iff its projection-valued measure vanishes on `(-∞, 0)`. -/
+lemma isPositive_iff_pvm_Iio_eq_zero : A.IsPositive ↔ hA.pvm (Iio 0) = 0 := by
+  refine ⟨fun hpos => (hA.pvm.apply_eq_zero_iff measurableSet_Iio).mpr fun u =>
+    hA.measure_pvm_Iio_zero u hpos, fun h => ?_⟩
+  have h' : ∀ u, ∀ᵐ t ∂(hA.pvm.measure u), 0 ≤ t := fun u => by
+    have := (hA.pvm.apply_eq_zero_iff measurableSet_Iio).mp h u
+    rw [measure_eq_zero_iff_ae_notMem] at this
+    filter_upwards [this] with t ht
+    simpa using ht
+  rw [hA.eq_integralPMap_pvm, hA.pvm.integralPMap_congr_ae (g := fun t => ((max t 0 : ℝ) : ℂ))
+    measurable_ofReal (by fun_prop) fun u => (h' u).mono fun t ht => by simp [max_eq_left ht]]
+  exact hA.pvm.isPositive_integralPMap_ofReal (by fun_prop) fun t => le_max_right t 0
 
 include hA in
 /-- **Uniqueness of `E_A`**: the projection-valued measure `E_A` is the only projection-valued
