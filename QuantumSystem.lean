@@ -70,6 +70,7 @@ public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
 public import QuantumSystem.Analysis.SpectralTheory.SNAG
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
+public import QuantumSystem.Analysis.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
 public import QuantumSystem.Analysis.UnboundedOperator.AnalyticContinuation
