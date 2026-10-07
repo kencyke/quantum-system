@@ -130,6 +130,7 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
+public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunction.Bochner
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.Count
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
