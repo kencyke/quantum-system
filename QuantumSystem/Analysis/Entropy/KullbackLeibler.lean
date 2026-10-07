@@ -89,7 +89,7 @@ lemma klDivEReal_ne_bot [SigmaFinite P] [IsFiniteMeasure Q] : klDivEReal P Q ≠
 
 /-- **Comparison with Mathlib's `klDiv`**: `D(P ‖ Q) = klDiv P Q + P(α) - Q(α)` for finite
 measures; the term `P(α) - Q(α)` cancels the mass correction of `klDiv`. -/
-theorem klDivEReal_eq_klDiv_add_sub [IsFiniteMeasure P] [IsFiniteMeasure Q] :
+lemma klDivEReal_eq_klDiv_add_sub [IsFiniteMeasure P] [IsFiniteMeasure Q] :
     klDivEReal P Q = (klDiv P Q : EReal) + P.real Set.univ - Q.real Set.univ := by
   by_cases hPQ : P ≪ Q
   · by_cases hint : Integrable (llr P Q) P
@@ -105,7 +105,7 @@ theorem klDivEReal_eq_klDiv_add_sub [IsFiniteMeasure P] [IsFiniteMeasure Q] :
 
 /-- `D(P ‖ Q) = klDiv P Q` for finite measures of equal total mass, e.g. two probability
 measures. -/
-theorem klDivEReal_eq_klDiv_of_measure_univ_eq [IsFiniteMeasure P] [IsFiniteMeasure Q]
+lemma klDivEReal_eq_klDiv_of_measure_univ_eq [IsFiniteMeasure P] [IsFiniteMeasure Q]
     (h : P Set.univ = Q Set.univ) : klDivEReal P Q = klDiv P Q := by
   rw [klDivEReal_eq_klDiv_add_sub, measureReal_def, measureReal_def, h]
   exact EReal.add_sub_cancel_right
@@ -132,7 +132,7 @@ private lemma sum_mul_log_div_add_sub_nonneg (hPQ : P ≪ Q) :
 
 /-- **Kullback–Leibler divergence on a finite type**: `D(P ‖ Q) = Σᵢ pᵢ log (pᵢ / qᵢ)` if `P ≪ Q`,
 with `pᵢ = P {i}` and `qᵢ = Q {i}` (a term with `pᵢ = 0` contributes `0`), and `+∞` otherwise. -/
-theorem klDivEReal_of_fintype [Decidable (P ≪ Q)] :
+lemma klDivEReal_of_fintype [Decidable (P ≪ Q)] :
     klDivEReal P Q =
       if P ≪ Q then ((∑ i, P.real {i} * Real.log (P.real {i} / Q.real {i}) : ℝ) : EReal)
       else ⊤ := by

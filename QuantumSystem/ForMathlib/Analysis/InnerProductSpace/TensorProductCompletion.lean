@@ -407,13 +407,15 @@ noncomputable def amplifyRight (B : H₂ →L[ℂ] H₂) :
 operator `1 ⊗̂ B` on `H₁ ⊗̂ H₂`; the first factor `H₁` is inferred. -/
 scoped notation:100 "𝟙" " ⊗ " B:101 => HilbertTensor.amplifyRight B
 
-@[simp] theorem amplifyLeft_tmul (A : H₁ →L[ℂ] H₃) (x : H₁) (y : H₂) :
+/-- `(A ⊗ 𝟙) (x ⊗ y) = A x ⊗ y`. -/
+@[simp] lemma amplifyLeft_tmul (A : H₁ →L[ℂ] H₃) (x : H₁) (y : H₂) :
     (A ⊗ 𝟙) (x ⊗ₕ y) = (A x) ⊗ₕ y := by
   rw [amplifyLeft, tmul]
   change Completion.map (algAmplifyLeft A) _ = _
   rw [Completion.map_coe (algAmplifyLeft A).uniformContinuous, algAmplifyLeft_tmul, tmul]
 
-@[simp] theorem amplifyRight_tmul (B : H₂ →L[ℂ] H₂) (x : H₁) (y : H₂) :
+/-- `(𝟙 ⊗ B) (x ⊗ y) = x ⊗ B y`. -/
+@[simp] lemma amplifyRight_tmul (B : H₂ →L[ℂ] H₂) (x : H₁) (y : H₂) :
     (𝟙 ⊗ B) (x ⊗ₕ y) = x ⊗ₕ (B y) := by
   rw [amplifyRight, tmul]
   change Completion.map (algAmplifyRight B) _ = _
@@ -461,7 +463,8 @@ lemma algAmplifyRight_mul_apply (A B : H₂ →L[ℂ] H₂) (a : H₁ ⊗[ℂ] H
   | tmul x y => simp [mul_apply_eq_comp]
   | add p q hp hq => simp [map_add, hp, hq]
 
-@[simp] theorem amplifyLeft_one :
+/-- `1 ⊗ 𝟙 = 1`. -/
+@[simp] lemma amplifyLeft_one :
     (1 : H₁ →L[ℂ] H₁) ⊗ 𝟙 = (1 : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂) := by
   ext z
   refine Completion.induction_on z
@@ -475,7 +478,7 @@ lemma algAmplifyLeft_comp_apply (A : H₃ →L[ℂ] H₄) (B : H₁ →L[ℂ] H�
   | add p q hp hq => simp [map_add, hp, hq]
 
 /-- The left amplification is functorial: `(A ∘ B) ⊗̂ 1 = (A ⊗̂ 1) ∘ (B ⊗̂ 1)`. -/
-theorem amplifyLeft_comp (A : H₃ →L[ℂ] H₄) (B : H₁ →L[ℂ] H₃) :
+lemma amplifyLeft_comp (A : H₃ →L[ℂ] H₄) (B : H₁ →L[ℂ] H₃) :
     amplifyLeft (H₂ := H₂) (A ∘L B) = (A ⊗ 𝟙).comp (B ⊗ 𝟙) := by
   ext z
   refine Completion.induction_on z
@@ -483,7 +486,8 @@ theorem amplifyLeft_comp (A : H₃ →L[ℂ] H₄) (B : H₁ →L[ℂ] H₃) :
       ((A ⊗ 𝟙).continuous.comp (B ⊗ 𝟙).continuous)) (fun a => ?_)
   simp [algAmplifyLeft_comp_apply]
 
-theorem amplifyLeft_mul (A B : H₁ →L[ℂ] H₁) :
+/-- `(A B) ⊗ 𝟙 = (A ⊗ 𝟙) (B ⊗ 𝟙)`. -/
+lemma amplifyLeft_mul (A B : H₁ →L[ℂ] H₁) :
     amplifyLeft (H₂ := H₂) (A * B) = A ⊗ 𝟙 * B ⊗ 𝟙 := by
   ext z
   refine Completion.induction_on z
@@ -491,14 +495,16 @@ theorem amplifyLeft_mul (A B : H₁ →L[ℂ] H₁) :
       ((A ⊗ 𝟙).continuous.comp (B ⊗ 𝟙).continuous)) (fun a => ?_)
   simp [mul_apply_eq_comp, algAmplifyLeft_mul_apply]
 
-@[simp] theorem amplifyRight_one :
+/-- `𝟙 ⊗ 1 = 1`. -/
+@[simp] lemma amplifyRight_one :
     𝟙 ⊗ (1 : H₂ →L[ℂ] H₂) = (1 : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂) := by
   ext z
   refine Completion.induction_on z
     (isClosed_eq (𝟙 ⊗ _).continuous (ContinuousLinearMap.continuous 1)) (fun a => ?_)
   simp [algAmplifyRight_one_apply]
 
-theorem amplifyRight_mul (A B : H₂ →L[ℂ] H₂) :
+/-- `𝟙 ⊗ (A B) = (𝟙 ⊗ A) (𝟙 ⊗ B)`. -/
+lemma amplifyRight_mul (A B : H₂ →L[ℂ] H₂) :
     amplifyRight (H₁ := H₁) (A * B) = 𝟙 ⊗ A * 𝟙 ⊗ B := by
   ext z
   refine Completion.induction_on z
@@ -555,7 +561,8 @@ lemma algAmplifyRight_smul_apply (c : ℂ) (B : H₂ →L[ℂ] H₂) (a : H₁ �
   rw [amplifyLeft_coe, algAmplifyLeft_zero_apply, UniformSpace.Completion.coe_zero,
     zero_apply]
 
-theorem amplifyLeft_add (A B : H₁ →L[ℂ] H₁) :
+/-- `(A + B) ⊗ 𝟙 = A ⊗ 𝟙 + B ⊗ 𝟙`. -/
+lemma amplifyLeft_add (A B : H₁ →L[ℂ] H₁) :
     amplifyLeft (H₂ := H₂) (A + B) = A ⊗ 𝟙 + B ⊗ 𝟙 := by
   ext z
   refine Completion.induction_on z
@@ -564,7 +571,8 @@ theorem amplifyLeft_add (A B : H₁ →L[ℂ] H₁) :
   rw [amplifyLeft_coe, algAmplifyLeft_add_apply, UniformSpace.Completion.coe_add,
     add_apply, amplifyLeft_coe, amplifyLeft_coe]
 
-theorem amplifyLeft_smul (c : ℂ) (A : H₁ →L[ℂ] H₁) :
+/-- `(c A) ⊗ 𝟙 = c (A ⊗ 𝟙)`. -/
+lemma amplifyLeft_smul (c : ℂ) (A : H₁ →L[ℂ] H₁) :
     amplifyLeft (H₂ := H₂) (c • A) = c • A ⊗ 𝟙 := by
   ext z
   refine Completion.induction_on z
@@ -581,7 +589,8 @@ theorem amplifyLeft_smul (c : ℂ) (A : H₁ →L[ℂ] H₁) :
   rw [amplifyRight_coe, algAmplifyRight_zero_apply, UniformSpace.Completion.coe_zero,
     zero_apply]
 
-theorem amplifyRight_add (A B : H₂ →L[ℂ] H₂) :
+/-- `𝟙 ⊗ (A + B) = 𝟙 ⊗ A + 𝟙 ⊗ B`. -/
+lemma amplifyRight_add (A B : H₂ →L[ℂ] H₂) :
     amplifyRight (H₁ := H₁) (A + B) = 𝟙 ⊗ A + 𝟙 ⊗ B := by
   ext z
   refine Completion.induction_on z
@@ -590,7 +599,8 @@ theorem amplifyRight_add (A B : H₂ →L[ℂ] H₂) :
   rw [amplifyRight_coe, algAmplifyRight_add_apply, UniformSpace.Completion.coe_add,
     add_apply, amplifyRight_coe, amplifyRight_coe]
 
-theorem amplifyRight_smul (c : ℂ) (B : H₂ →L[ℂ] H₂) :
+/-- `𝟙 ⊗ (c B) = c (𝟙 ⊗ B)`. -/
+lemma amplifyRight_smul (c : ℂ) (B : H₂ →L[ℂ] H₂) :
     amplifyRight (H₁ := H₁) (c • B) = c • 𝟙 ⊗ B := by
   ext z
   refine Completion.induction_on z
