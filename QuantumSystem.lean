@@ -70,7 +70,9 @@ public import QuantumSystem.Analysis.SpectralTheory.Normal
 public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
+public import QuantumSystem.Analysis.UnboundedOperator.AnalyticContinuation
 public import QuantumSystem.Analysis.UnboundedOperator.FunctionalCalculus
+public import QuantumSystem.Analysis.UnboundedOperator.Interpolation
 public import QuantumSystem.Analysis.UnboundedOperator.Multiplication
 public import QuantumSystem.Analysis.UnboundedOperator.PolarDecomposition
 public import QuantumSystem.Analysis.UnboundedOperator.Power
@@ -85,6 +87,8 @@ public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
+public import QuantumSystem.ForMathlib.Analysis.Complex.Strip
+public import QuantumSystem.ForMathlib.Analysis.Complex.WeakHolomorphic
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.BoundedOperatorRepresentation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
