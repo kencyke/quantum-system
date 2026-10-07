@@ -120,7 +120,7 @@ private theorem mem_graph_relativeModular_densityVec_of_bounded {B : Set α} (hB
     (hBq : ∀ x ∈ B, densityFun Q μ x ≤ n * densityFun P μ x) {u : Lp ℂ 2 μ}
     (hub : ∀ x ∈ B, ‖u x‖ ≤ n) (hu0 : ∀ᵐ x ∂μ, x ∉ B → u x = 0) {v : Lp ℂ 2 μ}
     (hv : ⇑v =ᵐ[μ] fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x) :
-    (u, v) ∈ ((multiplicationAlgebra μ).relativeModular (densityVec Q μ) (densityVec P μ)).graph := by
+    (u, v) ∈ (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph := by
   set p := densityFun P μ
   set q := densityFun Q μ
   have hq0 : ∀ x, 0 ≤ q x := fun x => ENNReal.toReal_nonneg
@@ -254,7 +254,7 @@ private theorem mem_graph_relativeModular_densityVec_of_bounded_ae {B : Set α} 
     (hBq : ∀ x ∈ B, densityFun Q μ x ≤ n * densityFun P μ x) {u : Lp ℂ 2 μ}
     (hub : ∀ᵐ x ∂μ, x ∈ B → ‖u x‖ ≤ n) (hu0 : ∀ᵐ x ∂μ, x ∉ B → u x = 0) {v : Lp ℂ 2 μ}
     (hv : ⇑v =ᵐ[μ] fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x) :
-    (u, v) ∈ ((multiplicationAlgebra μ).relativeModular (densityVec Q μ) (densityVec P μ)).graph := by
+    (u, v) ∈ (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph := by
   have hum : Measurable (⇑u) := (Lp.stronglyMeasurable u).measurable
   refine mem_graph_relativeModular_densityVec_of_bounded (B := B ∩ {x | ‖u x‖ ≤ n})
     (hB.inter (measurableSet_le hum.norm measurable_const)) hn (fun x hx => hBp x hx.1)
@@ -268,7 +268,7 @@ private theorem mem_graph_relativeModular_densityVec_of_bounded_ae {B : Set α} 
 `S_{ξ_Q, ξ_P} u = 0` and `Δ_{ξ_Q, ξ_P} u = 0`. -/
 theorem mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos {u : Lp ℂ 2 μ}
     (hu : ∀ᵐ x ∂μ, 0 < densityFun P μ x → u x = 0) :
-    (u, 0) ∈ ((multiplicationAlgebra μ).relativeModular (densityVec Q μ) (densityVec P μ)).graph := by
+    (u, 0) ∈ (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph := by
   set p := densityFun P μ
   have hS : MeasurableSet {x | 0 < p x} := measurableSet_lt measurable_const (measurable_densityFun P μ)
   set E := indicatorConst (μ := μ) hS (1 : ℂ)
@@ -315,10 +315,10 @@ are no other vectors in the domain (`mem_graph_relativeModular_densityVec_iff`).
 theorem mem_graph_relativeModular_densityVec_of_memLp {u : Lp ℂ 2 μ}
     (hu : MemLp (fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x) 2 μ) :
     (u, hu.toLp _) ∈
-      ((multiplicationAlgebra μ).relativeModular (densityVec Q μ) (densityVec P μ)).graph := by
+      (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph := by
   set p := densityFun P μ
   set q := densityFun Q μ
-  set Δ := (multiplicationAlgebra μ).relativeModular (densityVec Q μ) (densityVec P μ)
+  set Δ := Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧
   set v := hu.toLp _
   have hv : ⇑v =ᵐ[μ] fun x => ((q x / p x : ℝ) : ℂ) * u x := MemLp.coeFn_toLp _
   have hum : Measurable (⇑u) := (Lp.stronglyMeasurable u).measurable
@@ -403,7 +403,7 @@ operator is self-adjoint, hence symmetric, and extends `M_{q/p}`
 (`mem_graph_relativeModular_densityVec_of_memLp`); as `M_{q/p}` is self-adjoint
 (`MeasureTheory.L2.isSelfAdjoint_mulPMap`), the two are equal (`IsSelfAdjoint.eq_of_le`). -/
 theorem relativeModular_densityVec_eq_mulPMap :
-    (multiplicationAlgebra μ).relativeModular (densityVec Q μ) (densityVec P μ) =
+    Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧ =
       L2.mulPMap fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) :=
   (L2.isSelfAdjoint_mulPMap ((measurable_densityFun Q μ).div (measurable_densityFun P μ))).eq_of_le
     (isSelfAdjoint_relativeModular _ _ _).isFormalAdjoint
@@ -415,7 +415,7 @@ theorem relativeModular_densityVec_eq_mulPMap :
 /-- The graph of the relative modular operator of a multiplication algebra:
 `(u, v) ∈ graph Δ_{ξ_Q, ξ_P} ↔ (q / p) u ∈ L² ∧ v = (q / p) u`, with `q / 0 = 0` on `{p = 0}`. -/
 theorem mem_graph_relativeModular_densityVec_iff {u v : Lp ℂ 2 μ} :
-    (u, v) ∈ ((multiplicationAlgebra μ).relativeModular (densityVec Q μ) (densityVec P μ)).graph ↔
+    (u, v) ∈ (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph ↔
       MemLp (fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x) 2 μ ∧
         ⇑v =ᵐ[μ] fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x := by
   rw [relativeModular_densityVec_eq_mulPMap]
@@ -425,10 +425,10 @@ theorem mem_graph_relativeModular_densityVec_iff {u v : Lp ℂ 2 μ} :
 `Δ_{ξ_Q, ξ_P}` at `ξ_P` is the image of `P` under `q / p`. This needs only a Lebesgue
 decomposition of `P` with respect to `μ` (automatic for σ-finite `μ`), so that `|ξ_P|² μ = P`. -/
 theorem measure_pvm_relativeModular_densityVec [P.HaveLebesgueDecomposition μ] (hP : P ≪ μ) :
-    (isSelfAdjoint_relativeModular (multiplicationAlgebra μ) (densityVec Q μ)
-        (densityVec P μ)).pvm.measure (densityVec P μ) =
+    μ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧ =
       P.map fun x => densityFun Q μ x / densityFun P μ x := by
   have hh := (measurable_densityFun Q μ).div (measurable_densityFun P μ)
+  unfold relativeModularMeasure
   rw [IsSelfAdjoint.pvm_congr _ (L2.isSelfAdjoint_mulPMap hh)
     relativeModular_densityVec_eq_mulPMap, L2.measure_pvm_mulPMap hh,
     withDensity_enorm_sq_densityVec P hP]

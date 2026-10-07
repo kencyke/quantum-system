@@ -122,16 +122,22 @@ real-linear, conjugate-linear partially defined operator on `H`. -/
 noncomputable def relativeTomita : H →ₗ.[ℝ] H :=
   (M.relativeTomitaGraph η ξ).toLinearPMap
 
+/-- `S[M]⟦η, ξ⟧` is the relative Tomita operator `S_{η,ξ}` of the von Neumann algebra `M`. -/
+scoped notation "S[" M "]⟦" η ", " ξ "⟧" => VonNeumannAlgebra.relativeTomita M η ξ
+
+/-- `S⟦η, ξ⟧` is `S[M]⟦η, ξ⟧` for the algebra `M` fixed in this file. -/
+local notation "S⟦" η ", " ξ "⟧" => VonNeumannAlgebra.relativeTomita M η ξ
+
 /-- The graph of `S_{η,ξ}` is `relativeTomitaGraph`. -/
 @[simp]
-theorem graph_relativeTomita : (M.relativeTomita η ξ).graph = M.relativeTomitaGraph η ξ :=
+theorem graph_relativeTomita : (S⟦η, ξ⟧).graph = M.relativeTomitaGraph η ξ :=
   Submodule.toLinearPMap_graph_eq _ fun _ hp hp0 => relativeTomitaGraph_snd_eq_zero_of_fst_eq_zero hp hp0
 
 variable {M η ξ}
 
 /-- Membership in the graph of `S_{η,ξ}`. -/
 lemma mem_graph_relativeTomita {p : H × H} :
-    p ∈ (M.relativeTomita η ξ).graph ↔ ∃ x ∈ M,
+    p ∈ (S⟦η, ξ⟧).graph ↔ ∃ x ∈ M,
       ∃ ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ,
         p = (x ξ + ζ, M.supportProj ξ (star x η)) := by
   rw [graph_relativeTomita]
@@ -139,7 +145,7 @@ lemma mem_graph_relativeTomita {p : H × H} :
 
 /-- The domain of `S_{η,ξ}` is `M ξ + [M ξ]ᗮ`. -/
 theorem mem_domain_relativeTomita_iff {u : H} :
-    u ∈ (M.relativeTomita η ξ).domain ↔ ∃ x ∈ M,
+    u ∈ (S⟦η, ξ⟧).domain ↔ ∃ x ∈ M,
       ∃ ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ, u = x ξ + ζ := by
   rw [LinearPMap.mem_domain_iff]
   simp only [mem_graph_relativeTomita, Prod.ext_iff]
@@ -148,30 +154,30 @@ theorem mem_domain_relativeTomita_iff {u : H} :
 
 /-- The domain of `S_{η,ξ}` does not depend on `η`. -/
 theorem domain_relativeTomita_eq (η' : H) :
-    (M.relativeTomita η ξ).domain = (M.relativeTomita η' ξ).domain :=
+    (S⟦η, ξ⟧).domain = (S⟦η', ξ⟧).domain :=
   Submodule.ext fun _ => mem_domain_relativeTomita_iff.trans mem_domain_relativeTomita_iff.symm
 
 /-- `S_{η,ξ} (x ξ + ζ) = s(ξ) x⋆ η`, in graph form. -/
 lemma mk_mem_graph_relativeTomita {x : H →L[ℂ] H} (hx : x ∈ M) {ζ : H}
     (hζ : ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ) :
-    (x ξ + ζ, M.supportProj ξ (star x η)) ∈ (M.relativeTomita η ξ).graph := by
+    (x ξ + ζ, M.supportProj ξ (star x η)) ∈ (S⟦η, ξ⟧).graph := by
   rw [graph_relativeTomita]
   exact mk_mem_relativeTomitaGraph hx hζ
 
 /-- `S_{η,ξ} (x ξ) = s(ξ) x⋆ η`, in graph form. -/
 lemma apply_mem_graph_relativeTomita {x : H →L[ℂ] H} (hx : x ∈ M) :
-    (x ξ, M.supportProj ξ (star x η)) ∈ (M.relativeTomita η ξ).graph := by
+    (x ξ, M.supportProj ξ (star x η)) ∈ (S⟦η, ξ⟧).graph := by
   simpa using mk_mem_graph_relativeTomita (η := η) hx (zero_mem _)
 
 variable (M η ξ)
 
 /-- `S_{η,ξ} ξ = s(ξ) η`, in graph form. -/
-lemma self_mem_graph_relativeTomita : (ξ, M.supportProj ξ η) ∈ (M.relativeTomita η ξ).graph := by
+lemma self_mem_graph_relativeTomita : (ξ, M.supportProj ξ η) ∈ (S⟦η, ξ⟧).graph := by
   simpa using apply_mem_graph_relativeTomita (η := η) (ξ := ξ) (one_mem M)
 
 /-- `S_{η,ξ}` is conjugate-linear. -/
 lemma isSemilinear_relativeTomita :
-    LinearPMap.IsSemilinear (starRingEnd ℂ) (M.relativeTomita η ξ) := by
+    LinearPMap.IsSemilinear (starRingEnd ℂ) (S⟦η, ξ⟧) := by
   intro c u v h
   obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
@@ -181,9 +187,9 @@ lemma isSemilinear_relativeTomita :
   · simp [star_smul]
 
 /-- `S_{η,ξ}` is densely defined: its domain `M ξ + [M ξ]ᗮ` is dense. -/
-theorem dense_domain_relativeTomita : Dense ((M.relativeTomita η ξ).domain : Set H) := by
+theorem dense_domain_relativeTomita : Dense ((S⟦η, ξ⟧).domain : Set H) := by
   set K := (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule
-  have hdom : ∀ x ∈ M, ∀ ζ ∈ Kᗮ, x ξ + ζ ∈ (M.relativeTomita η ξ).domain := fun x hx ζ hζ =>
+  have hdom : ∀ x ∈ M, ∀ ζ ∈ Kᗮ, x ξ + ζ ∈ (S⟦η, ξ⟧).domain := fun x hx ζ hζ =>
     LinearPMap.mem_domain_of_mem_graph (mk_mem_graph_relativeTomita (η := η) hx hζ)
   intro w
   -- `w = P w + (w - P w)` with `P w ∈ [M ξ]` and `w - P w ∈ [M ξ]ᗮ`.
@@ -202,7 +208,7 @@ variable {M η ξ} in
 of `F = F_{η,ξ}`, the relative Tomita operator of the commutant, `⟪S u, v⟫ = ⟪F v, u⟫`: both are
 `⟪η, x x′ ξ⟫` for `u = x ξ + ζ`, `v = x′ ξ + ζ′`. -/
 theorem inner_eq_of_mem_graph_relativeTomita {u u' v v' : H}
-    (hu : (u, u') ∈ (M.relativeTomita η ξ).graph) (hv : (v, v') ∈ (M′.relativeTomita η ξ).graph) :
+    (hu : (u, u') ∈ (S⟦η, ξ⟧).graph) (hv : (v, v') ∈ (S[M′]⟦η, ξ⟧).graph) :
     ⟪u', v⟫_ℂ = ⟪v', u⟫_ℂ := by
   obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp hu
   obtain ⟨y, hy, ζ', hζ', h'⟩ := mem_graph_relativeTomita.mp hv
@@ -228,18 +234,18 @@ theorem inner_eq_of_mem_graph_relativeTomita {u u' v v' : H}
 /-- `S_{η,ξ}` and the relative Tomita operator `F_{η,ξ}` of `M′` are formal adjoints for the real
 inner product: `re ⟪S u, v⟫ = re ⟪u, F v⟫`. -/
 theorem isFormalAdjoint_relativeTomita :
-    (M.relativeTomita η ξ).IsFormalAdjoint (M′.relativeTomita η ξ) := fun u v => by
-  have h := inner_eq_of_mem_graph_relativeTomita ((M.relativeTomita η ξ).mem_graph u)
-    ((M′.relativeTomita η ξ).mem_graph v)
+    (S⟦η, ξ⟧).IsFormalAdjoint (S[M′]⟦η, ξ⟧) := fun u v => by
+  have h := inner_eq_of_mem_graph_relativeTomita ((S⟦η, ξ⟧).mem_graph u)
+    ((S[M′]⟦η, ξ⟧).mem_graph v)
   rw [inner_real_eq_re_inner, inner_real_eq_re_inner, h, ← inner_conj_symm, conj_re]
 
 /-- The relative Tomita operator of the commutant is contained in the adjoint of `S_{η,ξ}`. -/
 theorem relativeTomita_commutant_le_adjoint :
-    M′.relativeTomita η ξ ≤ (M.relativeTomita η ξ)† :=
+    S[M′]⟦η, ξ⟧ ≤ (S⟦η, ξ⟧)† :=
   (isFormalAdjoint_relativeTomita M η ξ).le_adjoint (dense_domain_relativeTomita M η ξ)
 
 /-- `S_{η,ξ}` is closable: its adjoint contains the densely defined `F_{η,ξ}`. -/
-theorem isClosable_relativeTomita : (M.relativeTomita η ξ).IsClosable :=
+theorem isClosable_relativeTomita : (S⟦η, ξ⟧).IsClosable :=
   (LinearPMap.isClosable_iff_dense_adjoint_domain (dense_domain_relativeTomita M η ξ)).mpr
     ((dense_domain_relativeTomita M′ η ξ).mono (relativeTomita_commutant_le_adjoint M η ξ).1)
 
@@ -249,8 +255,8 @@ variable {M η ξ} {u v : H} {w : H →L[ℂ] H}
 
 /-- Replacing `η` by `w′ η` for `w′ ∈ M′`, in graph form: `S_{w′ η, ξ} = w′ S_{η,ξ}`. -/
 theorem mem_graph_relativeTomita_apply_left_iff (hw : w ∈ M′) :
-    (u, v) ∈ (M.relativeTomita (w η) ξ).graph ↔
-      ∃ v₀, (u, v₀) ∈ (M.relativeTomita η ξ).graph ∧ w v₀ = v := by
+    (u, v) ∈ (S⟦w η, ξ⟧).graph ↔
+      ∃ v₀, (u, v₀) ∈ (S⟦η, ξ⟧).graph ∧ w v₀ = v := by
   have key : ∀ x ∈ M, M.supportProj ξ (star x (w η)) = w (M.supportProj ξ (star x η)) :=
     fun x hx => by
       rw [← apply_apply_of_mem_commutant hw (star_mem hx),
@@ -266,29 +272,29 @@ theorem mem_graph_relativeTomita_apply_left_iff (hw : w ∈ M′) :
 
 /-- Replacing `η` by `w′ η` for `w′ ∈ M′`: `S_{w′ η, ξ} = w′ S_{η,ξ}`. -/
 theorem relativeTomita_apply_left (hw : w ∈ M′) :
-    M.relativeTomita (w η) ξ =
-      ((w : H →ₗ[ℂ] H).restrictScalars ℝ).compPMap (M.relativeTomita η ξ) :=
+    S⟦w η, ξ⟧ =
+      ((w : H →ₗ[ℂ] H).restrictScalars ℝ).compPMap (S⟦η, ξ⟧) :=
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_apply_left_iff hw, LinearPMap.mem_graph_compPMap]
     rfl
 
 /-- Scaling `η`, in graph form: `S_{a η, ξ} = a S_{η,ξ}`. -/
 theorem mem_graph_relativeTomita_smul_left_iff (a : ℂ) :
-    (u, v) ∈ (M.relativeTomita (a • η) ξ).graph ↔
-      ∃ v₀, (u, v₀) ∈ (M.relativeTomita η ξ).graph ∧ a • v₀ = v := by
+    (u, v) ∈ (S⟦a • η, ξ⟧).graph ↔
+      ∃ v₀, (u, v₀) ∈ (S⟦η, ξ⟧).graph ∧ a • v₀ = v := by
   have hw : a • (1 : H →L[ℂ] H) ∈ M′ := SMulMemClass.smul_mem a (one_mem M′)
   simpa using mem_graph_relativeTomita_apply_left_iff (η := η) (u := u) (v := v) hw
 
 /-- Scaling `η`: `S_{a η, ξ} = a S_{η,ξ}`. -/
 theorem relativeTomita_smul_left (a : ℂ) :
-    M.relativeTomita (a • η) ξ = a • M.relativeTomita η ξ :=
+    S⟦a • η, ξ⟧ = a • S⟦η, ξ⟧ :=
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_smul_left_iff, LinearPMap.mem_graph_smul]
 
 /-- Scaling `ξ` by `c ≠ 0`, in graph form: `S_{η, c ξ} = c̄⁻¹ S_{η,ξ}`. -/
 theorem mem_graph_relativeTomita_smul_right_iff {c : ℂ} (hc : c ≠ 0) :
-    (u, v) ∈ (M.relativeTomita η (c • ξ)).graph ↔
-      ∃ v₀, (u, v₀) ∈ (M.relativeTomita η ξ).graph ∧ (conj c)⁻¹ • v₀ = v := by
+    (u, v) ∈ (S⟦η, c • ξ⟧).graph ↔
+      ∃ v₀, (u, v₀) ∈ (S⟦η, ξ⟧).graph ∧ (conj c)⁻¹ • v₀ = v := by
   have hK := InnerProductSpace.cyclicSubspace_smul (M : Set (H →L[ℂ] H)) ξ hc
   have hc' : conj c ≠ 0 := (map_ne_zero _).mpr hc
   refine ⟨fun h => ?_, fun ⟨v₀, h, hv⟩ => ?_⟩
@@ -308,14 +314,14 @@ theorem mem_graph_relativeTomita_smul_right_iff {c : ℂ} (hc : c ≠ 0) :
 
 /-- Scaling `ξ` by `c ≠ 0`: `S_{η, c ξ} = c̄⁻¹ S_{η,ξ}`. -/
 theorem relativeTomita_smul_right {c : ℂ} (hc : c ≠ 0) :
-    M.relativeTomita η (c • ξ) = (conj c)⁻¹ • M.relativeTomita η ξ :=
+    S⟦η, c • ξ⟧ = (conj c)⁻¹ • S⟦η, ξ⟧ :=
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_smul_right_iff hc, LinearPMap.mem_graph_smul]
 
 /-- Replacing `ξ` by `v′ ξ` for `v′ ∈ M′` with `v′⋆ v′ ξ = ξ`, in graph form:
 `S_{η, v′ ξ} = S_{η,ξ} v′⋆`. -/
 theorem mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
-    (u, v) ∈ (M.relativeTomita η (w ξ)).graph ↔ (star w u, v) ∈ (M.relativeTomita η ξ).graph := by
+    (u, v) ∈ (S⟦η, w ξ⟧).graph ↔ (star w u, v) ∈ (S⟦η, ξ⟧).graph := by
   have hw' : star w ∈ M′ := star_mem hw
   have hs := supportProj_apply_of_mem_commutant (M := M) hw hwξ
   -- `⟪a ξ, w⋆ z⟫ = ⟪a (w ξ), z⟫` for `a ∈ M`.
@@ -347,7 +353,7 @@ theorem mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star 
 
 /-- Replacing `ξ` by `v′ ξ` for `v′ ∈ M′` with `v′⋆ v′ ξ = ξ`: `S_{η, v′ ξ} = S_{η,ξ} v′⋆`. -/
 theorem relativeTomita_apply_right (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
-    M.relativeTomita η (w ξ) = (M.relativeTomita η ξ).compNat
+    S⟦η, w ξ⟧ = (S⟦η, ξ⟧).compNat
       ((((star w : H →L[ℂ] H) : H →ₗ[ℂ] H).restrictScalars ℝ).toPMap ⊤) :=
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_apply_right_iff hw hwξ, LinearPMap.mem_graph_compNat_toPMap]

@@ -156,7 +156,7 @@ lemma supportProj_commutant_purification_tmul {i : ι} (hi : 0 < r i) (x : H) :
 private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i)
     (j : ι) :
     ((√ᶜ r i) • (g i ⊗ₕ c j), (√ᶜ s j) • (g j ⊗ₕ b i)) ∈
-      ((𝓜).relativeTomita (c.purification s g) (b.purification r g)).graph := by
+      (S[𝓜]⟦c.purification s g, b.purification r g⟧).graph := by
   have h := apply_mem_graph_relativeTomita (η := c.purification s g) (ξ := b.purification r g)
     (amplifyRight_mem_amplify (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ (c j) (b i))))
   rwa [b.amplifyRight_rankOne_purification, HilbertTensor.amplifyRight_star,
@@ -168,7 +168,7 @@ private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i 
 private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
     ((√ᶜ r i) • (g j ⊗ₕ b i), (√ᶜ s j) • (g i ⊗ₕ c j)) ∈
-      ((𝓜)′.relativeTomita (c.purification s g) (b.purification r g)).graph := by
+      (S[(𝓜)′]⟦c.purification s g, b.purification r g⟧).graph := by
   have h := apply_mem_graph_relativeTomita (M := (𝓜)′) (η := c.purification s g)
     (ξ := b.purification r g)
     (amplifyLeft_mem_commutant_amplify (M := 𝓑(H)) (rankOne ℂ (g j) (g i)))
@@ -183,7 +183,7 @@ private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
 theorem mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 ≤ s j)
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
     (g i ⊗ₕ c j, ((s j / r i : ℝ) : ℂ) • (g i ⊗ₕ c j)) ∈
-      ((𝓜).relativeModular (c.purification s g) (b.purification r g)).graph := by
+      (Δ[𝓜]⟦c.purification s g, b.purification r g⟧).graph := by
   have hr := (Real.sqrt_pos.mpr hi).ne'
   have hrr := Real.mul_self_sqrt hi.le
   have htt := Real.mul_self_sqrt (hs j)
@@ -223,8 +223,7 @@ lemma purification_eq_sum :
 /-- **Spectral measure**: `μ_{Ω_ρ}` of `Δ_{Ω_σ, Ω_ρ}` is `Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² δ_{sⱼ / rᵢ}`. -/
 theorem measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i)
     (hs : ∀ j, 0 ≤ s j) (hg : Orthonormal ℂ g) :
-    (isSelfAdjoint_relativeModular (𝓜) (c.purification s g) (b.purification r g)).pvm.measure
-        (b.purification r g) =
+    μ[𝓜]⟦c.purification s g, b.purification r g⟧ =
       ∑ p : ι × ι, (r p.1 * ‖⟪c p.2, b p.1⟫_ℂ‖ ^ 2).toNNReal • Measure.dirac (s p.2 / r p.1) := by
   have he := c.orthonormal
   have hnorm : ∀ p : ι × ι, ‖((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) • (g p.1 ⊗ₕ c p.2)‖₊ ^ 2 =
@@ -242,7 +241,7 @@ theorem measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 
         (fun p _ q _ hpq => ?_)
       · rcases (hr p.1).eq_or_lt with h0 | hi
         · simp [← h0]
-        · have := ((𝓜).relativeModular (c.purification s g) (b.purification r g)).graph.smul_mem
+        · have := (Δ[𝓜]⟦c.purification s g, b.purification r g⟧).graph.smul_mem
             ((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ)
             (mem_graph_relativeModular_purification (b := b) hs hg hi p.2)
           rwa [Prod.smul_mk, smul_comm] at this

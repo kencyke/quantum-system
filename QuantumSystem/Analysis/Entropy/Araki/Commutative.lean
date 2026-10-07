@@ -72,8 +72,8 @@ theorem mem_graph_relativeModular_densityVec_single (i : ι) :
     (indicatorConstLp 2 (measurableSet_singleton i) (measure_ne_top _ _) (1 : ℂ),
       ((Q.real {i} / P.real {i} : ℝ) : ℂ) •
         indicatorConstLp 2 (measurableSet_singleton i) (measure_ne_top _ _) (1 : ℂ)) ∈
-      ((multiplicationAlgebra Measure.count).relativeModular (densityVec Q Measure.count)
-        (densityVec P Measure.count)).graph := by
+      (Δ[multiplicationAlgebra Measure.count]⟦densityVec Q Measure.count,
+        densityVec P Measure.count⟧).graph := by
   refine mem_graph_relativeModular_densityVec_iff.mpr ⟨MemLp.of_discrete, ?_⟩
   refine Measure.ae_count_iff.mpr fun j => ?_
   simp only [Measure.ae_count_iff.mp (Lp.coeFn_smul _ _) j, Pi.smul_apply,
@@ -92,8 +92,8 @@ variable [Fintype ι]
 carries no mass, whatever its junk location `qᵢ / 0 = 0`.) This is the image `(q / p)_* P` of
 `VonNeumannAlgebra.measure_pvm_relativeModular_densityVec`. -/
 theorem measure_pvm_relativeModular_densityVec_fintype :
-    (isSelfAdjoint_relativeModular (multiplicationAlgebra Measure.count) (densityVec Q Measure.count)
-        (densityVec P Measure.count)).pvm.measure (densityVec P Measure.count) =
+    μ[multiplicationAlgebra Measure.count]⟦densityVec Q Measure.count,
+        densityVec P Measure.count⟧ =
       ∑ i, P {i} • Measure.dirac (Q.real {i} / P.real {i}) := by
   rw [measure_pvm_relativeModular_densityVec (Measure.absolutelyContinuous_count P)]
   simp_rw [densityFun_count]

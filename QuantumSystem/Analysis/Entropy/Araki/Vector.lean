@@ -117,18 +117,18 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 vector functionals `ω_ξ, ω_η` on `M`, where `μ_ξ` is the spectral measure at `ξ` of the relative
 modular operator `Δ_{η,ξ}`, and `-log 0 = +∞`. -/
 noncomputable def arakiVec : EReal :=
-  negLogIntegral ((isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ)
+  negLogIntegral (μ[M]⟦η, ξ⟧)
 
 /-! ### The spectral measure of `Δ_{η,ξ}` at `ξ` -/
 
 /-- The spectral measure of `Δ_{η,ξ}` at `ξ` has total mass `‖ξ‖²`. -/
 lemma measureReal_measure_pvm_relativeModular_univ :
-    ((isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ).real Set.univ = ‖ξ‖ ^ 2 := by
+    (μ[M]⟦η, ξ⟧).real Set.univ = ‖ξ‖ ^ 2 := by
   rw [ProjectionValuedMeasure.measureReal_univ]
 
 /-- The spectral measure of `Δ_{η,ξ}` at `ξ` lives on `[0, ∞)`. -/
 lemma ae_nonneg_measure_pvm_relativeModular :
-    ∀ᵐ t ∂(isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ, 0 ≤ t :=
+    ∀ᵐ t ∂μ[M]⟦η, ξ⟧, 0 ≤ t :=
   (isSelfAdjoint_relativeModular M η ξ).ae_nonneg_measure_pvm ξ
     (isPositive_relativeModular M η ξ)
 
@@ -154,7 +154,8 @@ theorem arakiVec_eq_top_of_supportProj_apply_eq_zero (hξ : ξ ≠ 0) (h : M.sup
     M.arakiVec ξ η = ⊤ := by
   refine negLogIntegral_eq_top_of_lintegral_eq_zero (fun hμ => hξ ?_) ?_
   · have := (isSelfAdjoint_relativeModular M η ξ).pvm.measure_univ ξ
-    rwa [hμ, Measure.coe_zero, Pi.zero_apply, eq_comm, pow_eq_zero_iff two_ne_zero,
+    rwa [show (isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ = μ[M]⟦η, ξ⟧
+      from rfl, hμ, Measure.coe_zero, Pi.zero_apply, eq_comm, pow_eq_zero_iff two_ne_zero,
       enorm_eq_zero] at this
   · refine nonpos_iff_eq_zero.mp (lintegral_measure_pvm_relativeModular_le.trans ?_)
     simp [h]
@@ -280,8 +281,8 @@ theorem arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
         Real.sq_sqrt hc.le]
     exact (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).mp (hη' ▸ h x hx)
   have hres : ∀ t : ℝ, 0 < t →
-      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M η' ξ).pvm.measure ξ ≤
-        ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ ξ).pvm.measure ξ := by
+      ∫ s, (t + s)⁻¹ ∂μ[M]⟦η', ξ⟧ ≤
+        ∫ s, (t + s)⁻¹ ∂μ[M]⟦ξ, ξ⟧ := by
     intro t ht
     refine (isSelfAdjoint_relativeModular M ξ ξ).integral_inv_add_measure_pvm_le_of_forall_mem_graph
       (restrictScalars_relativeModular M ξ ξ) (isSelfAdjoint_relativeModular M η' ξ)

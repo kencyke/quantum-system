@@ -120,8 +120,8 @@ theorem integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ)
     (hξ' : ∀ y : N, ⟪ζ', (y : K →L[ℂ] K) ζ'⟫_ℂ = ⟪ξ', (α y : H →L[ℂ] H) ξ'⟫_ℂ) {t : ℝ}
     (ht : 0 < t) :
-    ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular N ζ' ζ).pvm.measure ζ ≤
-      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ' ξ).pvm.measure ξ := by
+    ∫ s, (t + s)⁻¹ ∂μ[N]⟦ζ', ζ⟧ ≤
+      ∫ s, (t + s)⁻¹ ∂μ[M]⟦ξ', ξ⟧ := by
   refine (isSelfAdjoint_relativeModular M ξ' ξ).integral_inv_add_measure_pvm_le_of_forall_mem_graph
     (restrictScalars_relativeModular M ξ' ξ) (isSelfAdjoint_relativeModular N ζ' ζ)
     (isClosable_relativeTomita N ζ' ζ) (restrictScalars_relativeModular N ζ' ζ) ξ ζ ?_ ht

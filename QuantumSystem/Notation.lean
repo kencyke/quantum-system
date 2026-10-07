@@ -38,6 +38,13 @@ Notations and abbreviations for quantum information theory.
     <code>(StandardSubspace.modularGroup K t : H →L[ℂ] H)</code></td>
   <td><code>open scoped StandardSubspace</code></td>
   <td><code>Analysis/StandardSubspace/Tomita.lean</code></td></tr>
+<tr><td><code>S[M]⟦η, ξ⟧</code>, <code>Δ[M]⟦η, ξ⟧</code>, <code>μ[M]⟦η, ξ⟧</code></td>
+  <td><code>VonNeumannAlgebra.relativeTomita M η ξ</code>,
+    <code>VonNeumannAlgebra.relativeModular M η ξ</code>,
+    <code>VonNeumannAlgebra.relativeModularMeasure M η ξ</code></td>
+  <td><code>open scoped VonNeumannAlgebra</code></td>
+  <td><code>Algebra/VonNeumannAlgebra/Modular/RelativeTomita.lean</code>,
+    <code>RelativeModular.lean</code></td></tr>
 <tr><td><code>M′</code></td><td><code>VonNeumannAlgebra.commutant M</code></td>
   <td><code>open scoped VonNeumannAlgebra</code></td>
   <td><code>ForMathlib/Analysis/VonNeumannAlgebra/Commutant.lean</code></td></tr>
@@ -50,6 +57,11 @@ Notations and abbreviations for quantum information theory.
   <td><code>open scoped HilbertSchmidt</code></td>
   <td><code>ForMathlib/Analysis/InnerProductSpace/HilbertSchmidt.lean</code></td></tr>
 </table>
+
+The relative modular theory (`Algebra/VonNeumannAlgebra/Modular/RelativeTomita.lean`,
+`RelativeModular.lean`) also uses *local* notations `S⟦η, ξ⟧`, `Δ⟦η, ξ⟧`, `μ⟦η, ξ⟧` for
+`S[M]⟦η, ξ⟧`, `Δ[M]⟦η, ξ⟧`, `μ[M]⟦η, ξ⟧` with the algebra `M` fixed by the file's `variable`, as
+in the textbooks; they are not exported.
 
 ## `Tr` syntax
 

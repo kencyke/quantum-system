@@ -159,8 +159,8 @@ theorem adjoint_comp_supportProj (ξ : H) :
 include hM hM' in
 /-- `V` maps the graph of `S^M_{η,ξ}` into that of `S^N_{Vη,Vξ}`. -/
 theorem mem_graph_relativeTomita_of_intertwiner {η ξ a b : H}
-    (h : (a, b) ∈ (M.relativeTomita η ξ).graph) :
-    (V a, V b) ∈ (N.relativeTomita (V η) (V ξ)).graph := by
+    (h : (a, b) ∈ (S[M]⟦η, ξ⟧).graph) :
+    (V a, V b) ∈ (S[N]⟦V η, V ξ⟧).graph := by
   obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
   obtain ⟨y, hy, h₁, h₂⟩ := hM x hx
@@ -174,8 +174,8 @@ theorem mem_graph_relativeTomita_of_intertwiner {η ξ a b : H}
 include hM hM' in
 /-- `V†` maps the graph of `S^N_{Vη,Vξ}` into that of `S^M_{η,ξ}`. -/
 theorem adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
-    {a b : K} (h : (a, b) ∈ (N.relativeTomita (V η) (V ξ)).graph) :
-    (V† a, V† b) ∈ (M.relativeTomita η ξ).graph := by
+    {a b : K} (h : (a, b) ∈ (S[N]⟦V η, V ξ⟧).graph) :
+    (V† a, V† b) ∈ (S[M]⟦η, ξ⟧).graph := by
   obtain ⟨y, hy, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
   have hyM := adjoint_comp_comp_mem hM' hy
@@ -192,8 +192,8 @@ theorem adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
 include hM hM' in
 /-- `V` maps the graph of `Δ^M_{η,ξ}` into that of `Δ^N_{Vη,Vξ}`. -/
 theorem mem_graph_relativeModular_of_intertwiner {η ξ u z : H}
-    (h : (u, z) ∈ (M.relativeModular η ξ).graph) :
-    (V u, V z) ∈ (N.relativeModular (V η) (V ξ)).graph := by
+    (h : (u, z) ∈ (Δ[M]⟦η, ξ⟧).graph) :
+    (V u, V z) ∈ (Δ[N]⟦V η, V ξ⟧).graph := by
   rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat] at h ⊢
   obtain ⟨w, hw, hwz⟩ := h
   refine ⟨V w, LinearPMap.mem_graph_closure_of_mapsTo (isClosable_relativeTomita N (V η) (V ξ))
@@ -213,8 +213,8 @@ include hM hM' in
 /-- **Transport of spectral measures.** If moreover `V† V ξ = ξ`, the spectral measure of
 `Δ^N_{Vη,Vξ}` at `V ξ` equals that of `Δ^M_{η,ξ}` at `ξ`. -/
 theorem measure_pvm_relativeModular_of_intertwiner {η ξ : H} (hV : V† (V ξ) = ξ) :
-    (isSelfAdjoint_relativeModular N (V η) (V ξ)).pvm.measure (V ξ) =
-      (isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ :=
+    μ[N]⟦V η, V ξ⟧ =
+      μ[M]⟦η, ξ⟧ :=
   (isSelfAdjoint_relativeModular M η ξ).measure_pvm_intertwiner
     (isSelfAdjoint_relativeModular N (V η) (V ξ))
     (fun _ _ h => mem_graph_relativeModular_of_intertwiner hM hM' h) hV
