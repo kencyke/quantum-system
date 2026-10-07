@@ -73,6 +73,8 @@ argument: `E.complexMeasure x y s = ⟪x, E s y⟫`, which is Rudin's `E_{y,x}(s
   diagonal, `E.complexMeasure x x` is the diagonal measure `E.measure x`.
 * `MeasureTheory.ProjectionValuedMeasure.apply_eq_zero_iff` — `E s = 0` iff every diagonal measure
   vanishes on `s`.
+* `MeasureTheory.ProjectionValuedMeasure.apply_mono_null`, `apply_biUnion_null` — subsets and
+  countable unions of `E`-null sets are `E`-null.
 * `MeasureTheory.ProjectionValuedMeasure.ext_of_measure` — a projection-valued measure is determined
   by its diagonal measures `E.measure x`.
 * `MeasureTheory.ProjectionValuedMeasure.hasSum_apply_of_measure`,
@@ -381,6 +383,19 @@ lemma apply_eq_zero_iff (hs : MeasurableSet s) : E s = 0 ↔ ∀ x, E.measure x 
   · intro h
     ext x
     simpa [measure_apply x hs] using h x
+
+/-- A subset of an `E`-null measurable set is `E`-null. -/
+lemma apply_mono_null (ht : MeasurableSet t) (hst : s ⊆ t) (h : E t = 0) : E s = 0 := by
+  by_cases hs : MeasurableSet s
+  · exact (E.apply_eq_zero_iff hs).mpr fun x =>
+      measure_mono_null hst ((E.apply_eq_zero_iff ht).mp h x)
+  · exact E.apply_of_not_measurableSet hs
+
+/-- A countable union of `E`-null measurable sets is `E`-null. -/
+lemma apply_biUnion_null {ι : Type*} {T : Set ι} (hT : T.Countable) {f : ι → Set X}
+    (hf : ∀ i, MeasurableSet (f i)) (h : ∀ i ∈ T, E (f i) = 0) : E (⋃ i ∈ T, f i) = 0 :=
+  (E.apply_eq_zero_iff (.biUnion hT fun i _ => hf i)).mpr fun x =>
+    (measure_biUnion_null_iff hT).mpr fun i hi => (E.apply_eq_zero_iff (hf i)).mp (h i hi) x
 
 /-- The complex measure `s ↦ ⟪x, E s y⟫` of a projection-valued measure, conjugate-linear in `x`
 (Rudin's `E_{y,x}`). -/
