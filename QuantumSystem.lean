@@ -152,4 +152,5 @@ public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
 public import QuantumSystem.Notation
