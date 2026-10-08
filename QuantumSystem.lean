@@ -32,6 +32,7 @@ public import QuantumSystem.Algebra.VonNeumannAlgebra.MinimalProjection
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeModular
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeTomita
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.StandardSubspace
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Multiplication
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Normal
 public import QuantumSystem.Algebra.VonNeumannAlgebra.RadonNikodym

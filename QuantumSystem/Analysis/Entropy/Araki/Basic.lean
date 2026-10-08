@@ -83,13 +83,16 @@ for the dual channel.
 
 The construction uses only the scalar spectral measures `μ_ξ = ⟪E(·) ξ, ξ⟫` of the relative
 modular operator, the diagonal measures of its projection-valued measure `E`
-(`IsSelfAdjoint.pvm`). The following are not formalised:
+(`IsSelfAdjoint.pvm`). The Borel functional calculus `f(Δ) = ∫ f dE`
+(`QuantumSystem.Analysis.UnboundedOperator.FunctionalCalculus`), the operators `log Δ`, `Δ^{it}`,
+`Δ^{1/2}` (`QuantumSystem.Analysis.UnboundedOperator.Power`) and the polar decomposition
+(`QuantumSystem.Analysis.UnboundedOperator.PolarDecomposition`) are available but not used here.
+The following are not formalised:
 
-* the Borel functional calculus `f(Δ) = ∫ f dE`, hence the operators `log Δ`, `Δ^{it}` and
-  `Δ^{1/2}` themselves, and `dom Δ^{1/2} = dom S̄`;
-* the polar decomposition `S̄ = J Δ^{1/2}` and Tomita–Takesaki theory (`J M J = M′`,
-  `Δ^{it} M Δ^{-it} = M`), the modular automorphism group `σ_t`, the KMS condition and Connes'
-  cocycle;
+* Tomita–Takesaki theory for von Neumann algebras (`J M J = M′`, `Δ^{it} M Δ^{-it} = M`; for
+  `Ω = ξ = η` cyclic and separating the standard-subspace versions apply, see
+  `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.StandardSubspace`), the modular automorphism
+  group `σ_t`, the KMS condition and Connes' cocycle;
 * Petz's recovery map and the equality case of the data-processing inequality;
 * Kosaki's variational formula, and the joint convexity and lower semicontinuity of `S` that follow
   from it.

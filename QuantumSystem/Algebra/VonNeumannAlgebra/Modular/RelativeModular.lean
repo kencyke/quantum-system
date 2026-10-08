@@ -35,7 +35,15 @@ defined `T` the operator `T†T` is positive self-adjoint (von Neumann's theorem
 the polar decomposition `S̄ = J Δ^{1/2}`, `J M J = M′`, `Δ^{it} M Δ^{-it} = M`, the modular
 automorphism group and the KMS condition — describe *properties* of `Δ` and are not used
 anywhere in the construction of the relative entropy or in its monotonicity
-(`QuantumSystem.Analysis.Entropy.Araki.Monotonicity`); they are not formalised.
+(`QuantumSystem.Analysis.Entropy.Araki.Monotonicity`). The polar decomposition
+`S̄_{η,ξ} = U Δ_{η,ξ}^{1/2}` is the general `IsSelfAdjoint.eq_polarIsometry_compPMap`. For a cyclic
+and separating `Ω`, `Δ_{Ω,Ω}` is the modular operator of the standard subspace
+`H_M = closure (M_sa Ω)` (`VonNeumannAlgebra.relativeModular_self_eq_modular`,
+`QuantumSystem.Algebra.VonNeumannAlgebra.Modular.StandardSubspace`), so `S̄_{Ω,Ω} = J Δ^{1/2}` with
+the modular conjugation `J` of `H_M`, `Δ^{it} H_M = H_M`, `J H_M = (H_M)' = H_{M′}` and the analytic
+continuation of the modular orbits hold. Not formalised: the von Neumann algebra statements
+`J M J = M′` and `Δ^{it} M Δ^{-it} = M`, the modular automorphism group `σ_t` of `M` and the KMS
+condition of `ω_Ω`.
 
 ## Main definitions
 

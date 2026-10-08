@@ -48,6 +48,12 @@ Notations and abbreviations for quantum information theory.
   <td><code>open scoped VonNeumannAlgebra</code></td>
   <td><code>Algebra/VonNeumannAlgebra/Modular/RelativeTomita.lean</code>,
     <code>RelativeModular.lean</code></td></tr>
+<tr><td><code>H[M, Ω]</code></td>
+  <td><code>VonNeumannAlgebra.standardSubspace M Ω hc hs</code> (the standard subspace
+    <code>H_M = closure {x Ω | x ∈ M, x⋆ = x}</code>; the proofs <code>hc hs</code> are found in
+    the context by <code>cyclic_separating</code>, also for <code>M′</code>)</td>
+  <td><code>open scoped VonNeumannAlgebra</code></td>
+  <td><code>Algebra/VonNeumannAlgebra/Modular/StandardSubspace.lean</code></td></tr>
 <tr><td><code>A†</code></td><td><code>ContinuousLinearMap.adjoint A</code> (Mathlib's notation; applied
   as <code>(A†) x</code>; used between two spaces, <code>A⋆</code> on one space)</td>
   <td><code>open scoped InnerProduct</code>; displayed in goals after importing
