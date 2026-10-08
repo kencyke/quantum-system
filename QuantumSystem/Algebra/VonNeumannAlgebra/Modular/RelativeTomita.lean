@@ -24,7 +24,9 @@ operator `Δ_{η,ξ} = S̄†S̄` (downstream), and Araki's relative entropy of 
 `ω_ξ`, `ω_η` is `S(ω_ξ ‖ ω_η) = -⟪ξ, log Δ_{η,ξ} ξ⟫`. In Araki's notation `S_{Φ,Ψ}` this is
 `Φ = η`, `Ψ = ξ`; Ohya–Petz write `S_{η,ξ}` as here.
 
-Not formalised: the equality `S_{η,ξ}† = F̄_{η,ξ}` (only `F_{η,ξ} ⊆ S_{η,ξ}†` is proved).
+The equality `S_{η,ξ}† = F̄_{η,ξ}` is proved for `ξ` cyclic and separating and `η` cyclic
+(`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`); for general `η, ξ` only
+`F_{η,ξ} ⊆ S_{η,ξ}†` is proved.
 Transformation rules along isometric intertwiners between different Hilbert spaces (spatial
 isomorphisms, amplifications) are in `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial`
 (`VonNeumannAlgebra.mem_graph_relativeTomita_of_intertwiner` and companions).
