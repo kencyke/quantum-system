@@ -264,9 +264,10 @@ theorem supportProj_smul {c : ℂ} (hc : c ≠ 0) : M.supportProj (c • ξ) = M
 
 /-- `s(ξ) = 1` iff `ξ` is cyclic for the commutant, `[M′ ξ] = H`. -/
 theorem supportProj_eq_one_iff :
-    M.supportProj ξ = 1 ↔ cyclicSubspace (M′ : Set (H →L[ℂ] H)) ξ = ⊤ := by
+    M.supportProj ξ = 1 ↔ InnerProductSpace.IsCyclicVector M′ ξ := by
   rw [supportProj, ← Submodule.starProjection_top', Submodule.starProjection_inj,
     ← ClosedSubmodule.toSubmodule_top, ClosedSubmodule.toSubmodule_injective.eq_iff]
+  exact InnerProductSpace.isCyclicVector_iff.symm
 
 variable (M) in
 /-- The support `s(ξ) ∈ M` commutes with the support `s′(η) ∈ M′` of any vector `η` in the
