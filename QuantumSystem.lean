@@ -30,6 +30,7 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.MinimalProjection
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Borchers
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.BorchersTranslation
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeModular
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeTomita
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial
@@ -77,6 +78,7 @@ public import QuantumSystem.Analysis.SpectralTheory.SpectralCone
 public import QuantumSystem.Analysis.SpectralTheory.Stone
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
 public import QuantumSystem.Analysis.StandardSubspace.Borchers
+public import QuantumSystem.Analysis.StandardSubspace.BorchersTranslation
 public import QuantumSystem.Analysis.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
 public import QuantumSystem.Analysis.UnboundedOperator.AnalyticContinuation

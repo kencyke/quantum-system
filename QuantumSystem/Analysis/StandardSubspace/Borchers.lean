@@ -84,11 +84,10 @@ extends them to all vectors.
   the boundary is proved here, which is what Theorem B needs.
 * The converse of Theorem A (an operator `V` with such a continuation maps `K₁` into `K₂`), and the
   half-sided modular inclusions built on it (Borchers 1995, Theorem 4.1(a); Wiesbrock).
-* The von Neumann algebra versions (Theorem A for `V` unitary with `V Ω = Ω` and `V M V* ⊆ M`,
-  Theorem B with `W(z)` acting on a cyclic separating vector) and the relative versions
-  (`ξ ≠ η`).
-* Borchers' theorem on half-sided translations as a corollary (`W(z) = U(e^{2πz} a)` for a positive
-  generator; the lower strip for a negative one) — roadmap step B12.
+* The relative versions (`ξ ≠ η`) for von Neumann algebras. (The von Neumann algebra versions for
+  a cyclic and separating vector are `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Borchers`,
+  and Borchers' theorem on half-sided translations is
+  `QuantumSystem.Analysis.StandardSubspace.BorchersTranslation`.)
 
 ## References
 
