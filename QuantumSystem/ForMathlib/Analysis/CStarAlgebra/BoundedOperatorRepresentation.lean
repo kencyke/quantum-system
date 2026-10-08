@@ -49,7 +49,7 @@ multiplicity space may be taken to be `EuclideanSpace ℂ (Fin d)`.
 
 @[expose] public section
 
-open scoped TensorProduct InnerProductSpace
+open scoped TensorProduct InnerProductSpace InnerProduct
 open InnerProductSpace TensorProduct
 
 namespace StarAlgHom
@@ -77,7 +77,7 @@ lemma apply_rankOne_self_of_mem_multiplicitySpace {ξ₀ : H} (hξ₀ : ‖ξ₀
 
 /-- `π(|η⟩⟨ξ₀|)† π(|η'⟩⟨ξ₀|) = ⟪η, η'⟫ π(|ξ₀⟩⟨ξ₀|)`. -/
 lemma adjoint_apply_rankOne_comp_apply_rankOne (ξ₀ η η' : H) :
-    ContinuousLinearMap.adjoint (π (rankOne ℂ η ξ₀)) ∘L π (rankOne ℂ η' ξ₀) =
+    (π (rankOne ℂ η ξ₀))† ∘L π (rankOne ℂ η' ξ₀) =
       ⟪η, η'⟫_ℂ • π (rankOne ℂ ξ₀ ξ₀) := by
   rw [← ContinuousLinearMap.star_eq_adjoint, ← map_star, ContinuousLinearMap.star_eq_adjoint,
     adjoint_rankOne, ← ContinuousLinearMap.mul_def, ← map_mul, ContinuousLinearMap.mul_def,

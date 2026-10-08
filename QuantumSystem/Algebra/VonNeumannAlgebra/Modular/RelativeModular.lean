@@ -369,7 +369,7 @@ theorem mem_graph_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (
       (S⟦η, ξ⟧).graph := fun a a' ha => by
     obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp ha
     obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
-    have hwζ : star w (w ζ) ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ := by
+    have hwζ : star w (w ζ) ∈ (cyclicSubspace M ξ).toSubmoduleᗮ := by
       rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
       intro b hb
       rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_right,

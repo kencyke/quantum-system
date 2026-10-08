@@ -9,6 +9,7 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # The tensor von Neumann factors `B(H₁) ⊗̄ 1`, `1 ⊗̄ B(H₂)` and the amplification `1 ⊗ M`
@@ -77,7 +78,7 @@ For a von Neumann algebra `M` on `H` and a Hilbert space `H₁`, the **amplifica
 
 @[expose] public section
 
-open scoped TensorProduct
+open scoped TensorProduct InnerProduct
 
 namespace HilbertTensor
 
@@ -156,7 +157,7 @@ variable [CompleteSpace H₂]
 /-- The adjoint of the inclusion `ι_e` acts on pure tensors as the `e`-slice
 `g ⊗ z ↦ ⟪e, g⟫ • z`. -/
 lemma adjoint_tmulRightL_tmul (e g : H₁) (z : H₂) :
-    ContinuousLinearMap.adjoint (tmulRightL (H₂ := H₂) e) (tmul g z) = (inner ℂ e g) • z := by
+    ((tmulRightL (H₂ := H₂) e)†) (tmul g z) = (inner ℂ e g) • z := by
   refine ext_inner_right ℂ fun y => ?_
   rw [ContinuousLinearMap.adjoint_inner_left, tmulRightL_apply, inner_tmul, inner_smul_left,
     inner_conj_symm]
@@ -166,14 +167,14 @@ inclusion `ι_f`: `(|f⟩⟨e|) ⊗̂ 1 = ι_f ∘ ι_e*`. This is the algebraic
 argument. -/
 lemma amplifyLeft_rankOne_eq (e f : H₁) :
     amplifyLeft (H₂ := H₂) (InnerProductSpace.rankOne ℂ f e)
-      = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) := by
+      = (tmulRightL f).comp ((tmulRightL e)†) := by
   refine ContinuousLinearMap.ext fun w => ?_
   refine UniformSpace.Completion.induction_on w
     (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
   induction a using TensorProduct.inductionOn with
   | tmul g z =>
       change (_ ⊗ 𝟙) (tmul g z)
-        = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) (tmul g z)
+        = (tmulRightL f).comp ((tmulRightL e)†) (tmul g z)
       rw [amplifyLeft_tmul, ContinuousLinearMap.comp_apply, adjoint_tmulRightL_tmul,
         tmulRightL_apply, InnerProductSpace.rankOne_apply,
         tmul_smul_left, smul_tmul_right]
@@ -190,7 +191,7 @@ lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : S
     (hT : ∀ f ∈ D, T.comp ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙)
       = ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙).comp T) :
     ∃ S : H₂ →L[ℂ] H₂, T = 𝟙 ⊗ S := by
-  set S := (ContinuousLinearMap.adjoint (tmulRightL e)).comp (T.comp (tmulRightL e)) with hS
+  set S := ((tmulRightL e)†).comp (T.comp (tmulRightL e)) with hS
   have hee : inner ℂ e e = (1 : ℂ) := by rw [inner_self_eq_norm_sq_to_K, he]; norm_num
   have key : ∀ f ∈ D, ∀ y : H₂, T (tmul f y) = tmul f (S y) := by
     intro f hf y
@@ -200,7 +201,7 @@ lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : S
         = T (((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙) (tmul e y)) := by rw [e1]
       _ = ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙) (T (tmul e y)) := by
             rw [← ContinuousLinearMap.comp_apply, hT f hf, ContinuousLinearMap.comp_apply]
-      _ = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) (T (tmul e y)) := by
+      _ = (tmulRightL f).comp ((tmulRightL e)†) (T (tmul e y)) := by
             rw [amplifyLeft_rankOne_eq]
       _ = tmul f (S y) := by
             rw [ContinuousLinearMap.comp_apply, tmulRightL_apply, hS]

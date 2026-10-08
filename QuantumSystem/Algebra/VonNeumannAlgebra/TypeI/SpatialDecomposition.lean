@@ -41,10 +41,10 @@ double-commutant form: the matrix units generate `N`) and the identification of 
 
 ## Conventions
 
-The dense span of the ranges is expressed as
-`(Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤`, i.e. the closed linear
-span of the union of the ranges is the whole space; this is the operator-friendly form of
-`⨆ᵢ ranges = 1` and matches the central-support construction `IsFactor.exists_mul_ne`.
+The dense span of the ranges is expressed as `(⨆ f ∈ F, f.range).topologicalClosure = ⊤`, the
+textbook `⋁_{f ∈ F} fH = H`: the closed linear span of the union of the ranges is the whole space,
+the operator-friendly form of `Σ_{f ∈ F} f = 1`. The supremum is that of the lattice of submodules,
+which is the linear span of the union (`VonNeumannAlgebra.iSup_range_eq_span`).
 
 `OrthEquivFam` only records that each member is a nonzero star projection in `N` equivalent to
 `e`; when `e` is minimal the members are minimal as a consequence
@@ -89,6 +89,16 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 namespace VonNeumannAlgebra
 
+omit [CompleteSpace H] in
+/-- The supremum `⋁_{f ∈ F} fH` of the ranges of a family of operators is the linear span of the
+union of the ranges. -/
+lemma iSup_range_eq_span (F : Set (H →L[ℂ] H)) :
+    ⨆ f ∈ F, f.range = Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y} := by
+  rw [Submodule.iSup_eq_span']
+  congr 1
+  ext y
+  simp [eq_comm]
+
 /-- A family of pairwise-orthogonal nonzero projections in `N`, each Murray–von Neumann equivalent
 to `e`. -/
 def OrthEquivFam (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) (F : Set (H →L[ℂ] H)) : Prop :=
@@ -120,7 +130,8 @@ because that subspace is invariant under the commutant `N'`: for `y ∈ N'` and 
 `y (f x) = (y f) x = (f y) x = f (y x)` lies in the range of `f`. -/
 lemma OrthEquivFam.starProjection_mem {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F) :
-    (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure.starProjection ∈ N := by
+    (⨆ f ∈ F, f.range).topologicalClosure.starProjection ∈ N := by
+  rw [iSup_range_eq_span]
   set S : Set H := {y | ∃ f ∈ F, ∃ x, f x = y} with hS
   set M : Submodule ℂ H := (Submodule.span ℂ S).topologicalClosure with hM
   set p : H →L[ℂ] H := M.starProjection with hp
@@ -153,15 +164,18 @@ every `f ∈ F`, contradicting maximality. -/
 theorem IsFactor.exists_orthEquivFam_top {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
-      (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ := by
+      (⨆ f ∈ F, f.range).topologicalClosure = ⊤ := by
   have : Nontrivial H := he.nontrivial
   obtain ⟨F, hF, hFmax⟩ := exists_maximal_orthEquivFam N e
   refine ⟨F, hF, ?_⟩
+  rw [iSup_range_eq_span]
   set S : Set H := {y | ∃ f ∈ F, ∃ x, f x = y} with hS
   set M : Submodule ℂ H := (Submodule.span ℂ S).topologicalClosure with hM
   set p : H →L[ℂ] H := M.starProjection with hp
   have hpproj : IsStarProjection p := isStarProjection_starProjection
-  have hpN : p ∈ N := hF.starProjection_mem
+  have hpN : p ∈ N := by
+    have h := hF.starProjection_mem
+    rwa [iSup_range_eq_span] at h
   have hpf : ∀ f ∈ F, p * f = f := by
     intro f hf
     ext x
@@ -350,10 +364,10 @@ namespace VonNeumannAlgebra
 internal Hilbert sum of the ranges. -/
 lemma OrthEquivFam.isHilbertSum {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
-    IsHilbertSum ℂ (fun i : F => LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H))
-      (fun i => (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ) := by
-  have : ∀ i : F, CompleteSpace (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) :=
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
+    IsHilbertSum ℂ (fun i : F => (i : H →L[ℂ] H).range)
+      (fun i => ((i : H →L[ℂ] H).range).subtypeₗᵢ) := by
+  have : ∀ i : F, CompleteSpace ((i : H →L[ℂ] H).range) :=
     fun i => (hF.1 i.1 i.2).1.completeSpace_range
   refine IsHilbertSum.mkInternal _ ?_ ?_
   · rintro ⟨pi, hpi⟩ ⟨pj, hpj⟩ hij ⟨v, hv⟩ ⟨w, hw⟩
@@ -371,16 +385,14 @@ lemma OrthEquivFam.isHilbertSum {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
       show (pi : H →L[ℂ] H) ((pj : H →L[ℂ] H) w) = ((pi : H →L[ℂ] H) * pj) w from rfl, h0]
     simp
   · rw [← htop]
-    refine Submodule.topologicalClosure_mono (Submodule.span_le.mpr ?_)
-    rintro y ⟨f, hf, x, rfl⟩
-    exact Submodule.mem_iSup_of_mem ⟨f, hf⟩ ⟨x, rfl⟩
+    exact Submodule.topologicalClosure_mono (iSup₂_le fun f hf => le_iSup_of_le ⟨f, hf⟩ le_rfl)
 
 /-- **Spatial Hilbert-sum isomorphism.** A covering orthogonal family of `e`-equivalent
 projections gives a linear isometric equivalence of `H` with the `ℓ²` sum of the ranges. -/
 noncomputable def OrthEquivFam.hilbertSumEquiv {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
-    H ≃ₗᵢ[ℂ] lp (fun i : F => LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) 2 :=
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
+    H ≃ₗᵢ[ℂ] lp (fun i : F => (i : H →L[ℂ] H).range) 2 :=
   (hF.isHilbertSum htop).linearIsometryEquiv
 
 /-- **Multiplicity decomposition of the Hilbert space.** A covering orthogonal family of
@@ -395,8 +407,8 @@ is built from the Hilbert-sum decomposition `H ≅ ⊕ᵢ range eᵢ` and the pa
 isometries `range eᵢ ≅ range e`. -/
 noncomputable def OrthEquivFam.multiplicityEquiv {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
-    H ≃ₗᵢ[ℂ] lp (fun _ : F => LinearMap.range (e : H →ₗ[ℂ] H)) 2 :=
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
+    H ≃ₗᵢ[ℂ] lp (fun _ : F => e.range) 2 :=
   (hF.hilbertSumEquiv htop).trans (lpCongr (fun i =>
     (IsPartialIsometry.sourceRangeEquiv
       (hF.1 i.1 i.2).2.2.2.choose_spec.2.1
@@ -408,43 +420,43 @@ noncomputable def OrthEquivFam.multiplicityEquiv {N : VonNeumannAlgebra H} {e : 
 projections. -/
 lemma OrthEquivFam.coe_hilbertSumEquiv_apply {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     (y : H) (i : F) :
-    ((hF.hilbertSumEquiv htop y i : LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) : H)
+    ((hF.hilbertSumEquiv htop y i : (i : H →L[ℂ] H).range) : H)
       = (i : H →L[ℂ] H) y := by
   have hHS := hF.isHilbertSum htop
   have hdecomp : HasSum
-      (fun j : F => (LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
+      (fun j : F => ((j : H →L[ℂ] H).range).subtypeₗᵢ
         ((hHS.linearIsometryEquiv y) j)) y := by
     have h := hHS.hasSum_linearIsometryEquiv_symm (hHS.linearIsometryEquiv y)
     rwa [LinearIsometryEquiv.symm_apply_apply] at h
   have happ := hdecomp.mapL (i : H →L[ℂ] H)
   have hii : (i : H →L[ℂ] H)
-      ((LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i))
-      = (LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i) :=
+      (((i : H →L[ℂ] H).range).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i))
+      = ((i : H →L[ℂ] H).range).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i) :=
     (LinearMap.IsIdempotentElem.mem_range_iff
       (ContinuousLinearMap.IsIdempotentElem.toLinearMap (hF.1 i.1 i.2).1.isIdempotentElem)).mp (Submodule.coe_mem _)
   have hsingle : HasSum
       (fun j : F => (i : H →L[ℂ] H)
-        ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j)))
+        (((j : H →L[ℂ] H).range).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j)))
       ((i : H →L[ℂ] H)
-        ((LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i))) :=
+        (((i : H →L[ℂ] H).range).subtypeₗᵢ ((hHS.linearIsometryEquiv y) i))) :=
     hasSum_single i (fun j hj => by
       have hjfix : (j : H →L[ℂ] H)
-          ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j))
-          = (LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
+          (((j : H →L[ℂ] H).range).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j))
+          = ((j : H →L[ℂ] H).range).subtypeₗᵢ
               ((hHS.linearIsometryEquiv y) j) :=
         (LinearMap.IsIdempotentElem.mem_range_iff
       (ContinuousLinearMap.IsIdempotentElem.toLinearMap (hF.1 j.1 j.2).1.isIdempotentElem)).mp (Submodule.coe_mem _)
       have hij0 : (i : H →L[ℂ] H) * (j : H →L[ℂ] H) = 0 :=
         hF.2 i.2 j.2 (fun h => hj (Subtype.ext h).symm)
       calc (i : H →L[ℂ] H)
-            ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j))
+            (((j : H →L[ℂ] H).range).subtypeₗᵢ ((hHS.linearIsometryEquiv y) j))
           = (i : H →L[ℂ] H) ((j : H →L[ℂ] H)
-              ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
+              (((j : H →L[ℂ] H).range).subtypeₗᵢ
                 ((hHS.linearIsometryEquiv y) j))) := by rw [hjfix]
         _ = ((i : H →L[ℂ] H) * (j : H →L[ℂ] H))
-              ((LinearMap.range ((j : H →L[ℂ] H) : H →ₗ[ℂ] H)).subtypeₗᵢ
+              (((j : H →L[ℂ] H).range).subtypeₗᵢ
                 ((hHS.linearIsometryEquiv y) j)) := rfl
         _ = 0 := by rw [hij0]; rfl)
   exact ((happ.unique hsingle).trans hii).symm
@@ -458,9 +470,9 @@ this `ℓ²` sum into the literal tensor product `H ≅ ℓ²(F) ⊗̂ eH`; that
 theorem IsFactor.exists_lp_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
-      (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ ∧
+      (⨆ f ∈ F, f.range).topologicalClosure = ⊤ ∧
       (∀ p ∈ F, IsMinimalProjection N p) ∧
-      Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : F => LinearMap.range (e : H →ₗ[ℂ] H)) 2) := by
+      Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : F => e.range) 2) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
   exact ⟨F, hF, htop, fun p hp => hF.isMinimalProjection_of_mem he hp,
     ⟨hF.multiplicityEquiv htop⟩⟩
@@ -474,15 +486,15 @@ This is the literal `H ≅ ℓ²(F) ⊗̂ eH` form of the type I structure theor
 theorem IsFactor.exists_tmul_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
-      (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤ ∧
+      (⨆ f ∈ F, f.range).topologicalClosure = ⊤ ∧
       (∀ p ∈ F, IsMinimalProjection N p) ∧
       Nonempty (H ≃ₗᵢ[ℂ]
-        HilbertTensor (lp (fun _ : F => ℂ) 2) (LinearMap.range (e : H →ₗ[ℂ] H))) := by
+        HilbertTensor (lp (fun _ : F => ℂ) 2) (e.range)) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : CompleteSpace (e.range) := he.1.completeSpace_range
   have : DecidableEq (↥F) := Classical.decEq _
   exact ⟨F, hF, htop, fun p hp => hF.isMinimalProjection_of_mem he hp,
     ⟨(hF.multiplicityEquiv htop).trans
-      (HilbertTensor.lpTensorEquiv (ι := F) (K := LinearMap.range (e : H →ₗ[ℂ] H)))⟩⟩
+      (HilbertTensor.lpTensorEquiv (ι := F) (K := e.range))⟩⟩
 
 end VonNeumannAlgebra

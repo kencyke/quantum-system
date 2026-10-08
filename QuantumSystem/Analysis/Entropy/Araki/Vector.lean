@@ -8,6 +8,7 @@ module
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial
 public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Araki's relative entropy of vector functionals
@@ -110,7 +111,7 @@ reduction to the faithful case (which would also go through the standard form) i
 @[expose] public section
 
 open Complex MeasureTheory
-open scoped InnerProductSpace VonNeumannAlgebra
+open scoped InnerProductSpace VonNeumannAlgebra InnerProduct
 
 namespace VonNeumannAlgebra
 
@@ -187,7 +188,7 @@ theorem arakiVec_of_intertwiner {K : Type*} [NormedAddCommGroup K] [InnerProduct
     [CompleteSpace K] {N : VonNeumannAlgebra K} {V : H →L[ℂ] K}
     (hM : ∀ x ∈ M, ∃ y ∈ N, y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x)
     (hM' : ∀ x ∈ M′, ∃ y ∈ N′, y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x)
-    (hV : ContinuousLinearMap.adjoint V (V ξ) = ξ) :
+    (hV : (V†) (V ξ) = ξ) :
     S[N]⟦V ξ ∥ V η⟧ = S[M]⟦ξ ∥ η⟧ := by
   rw [arakiVec, arakiVec, measure_pvm_relativeModular_of_intertwiner hM hM' hV]
 
@@ -302,9 +303,9 @@ theorem arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
     intro w w' hw
     obtain ⟨a, ha, z, hz, hwz⟩ := mem_graph_relativeTomita.mp hw
     obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hwz
-    have hK : a ξ ∈ (InnerProductSpace.cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule :=
+    have hK : a ξ ∈ (InnerProductSpace.cyclicSubspace M ξ).toSubmodule :=
       InnerProductSpace.apply_mem_cyclicSubspace ξ ha
-    have hK₁ : ξ ∈ (InnerProductSpace.cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule :=
+    have hK₁ : ξ ∈ (InnerProductSpace.cyclicSubspace M ξ).toSubmodule :=
       self_mem_cyclicSubspace M ξ
     refine ⟨a ξ, M.supportProj ξ (star a ξ),
       mem_graph_closure_relativeTomita (apply_mem_graph_relativeTomita ha), ?_, ?_, ?_⟩

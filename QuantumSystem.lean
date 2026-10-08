@@ -110,6 +110,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.FiniteRank
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.HilbertSchmidt

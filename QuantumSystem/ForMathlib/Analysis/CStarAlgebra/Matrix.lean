@@ -27,6 +27,8 @@ conjugations by rectangular matrices, and shows that it preserves the trace.
 
 @[expose] public section
 
+open scoped InnerProduct
+
 open InnerProductSpace
 
 namespace Matrix
@@ -35,7 +37,7 @@ variable {𝕜 m n : Type*} [RCLike 𝕜] [Fintype m] [Fintype n] [DecidableEq m
 
 /-- The matrix unit `Eᵢⱼ` is the rank-one operator `|eᵢ⟩⟨eⱼ|` on `EuclideanSpace 𝕜 n`. -/
 lemma toEuclideanCLM_single (i j : n) :
-    toEuclideanCLM (n := n) (𝕜 := 𝕜) (single i j 1) =
+    toEuclideanCLM (𝕜 := 𝕜) (single i j 1) =
       rankOne 𝕜 (EuclideanSpace.single i (1 : 𝕜)) (EuclideanSpace.single j (1 : 𝕜)) := by
   ext x k
   simp [rankOne_apply, mulVec, dotProduct, single_apply, EuclideanSpace.inner_single_left, ite_and,
@@ -45,14 +47,14 @@ lemma toEuclideanCLM_single (i j : n) :
 @[simp]
 lemma trace_toEuclideanCLM (A : Matrix n n 𝕜) :
     LinearMap.trace 𝕜 (EuclideanSpace 𝕜 n)
-      (toEuclideanCLM (n := n) (𝕜 := 𝕜) A : EuclideanSpace 𝕜 n →ₗ[𝕜] EuclideanSpace 𝕜 n) =
+      (toEuclideanCLM (𝕜 := 𝕜) A : EuclideanSpace 𝕜 n →ₗ[𝕜] EuclideanSpace 𝕜 n) =
       A.trace := by
   rw [coe_toEuclideanCLM_eq_toEuclideanLin, toEuclideanLin_eq_toLin_orthonormal, trace_toLin_eq]
 
 /-- The trace pairing of two matrices is that of their operators: `tr(A' ∘ B') = Tr (A B)`. -/
 lemma trace_toEuclideanCLM_comp_toEuclideanCLM (A B : Matrix n n 𝕜) :
     LinearMap.trace 𝕜 (EuclideanSpace 𝕜 n)
-      (toEuclideanCLM (n := n) (𝕜 := 𝕜) A ∘L toEuclideanCLM (n := n) (𝕜 := 𝕜) B :
+      (toEuclideanCLM (𝕜 := 𝕜) A ∘L toEuclideanCLM (𝕜 := 𝕜) B :
         EuclideanSpace 𝕜 n →ₗ[𝕜] EuclideanSpace 𝕜 n) = (A * B).trace := by
   rw [← ContinuousLinearMap.mul_def, ← map_mul, trace_toEuclideanCLM]
 
@@ -60,9 +62,9 @@ lemma trace_toEuclideanCLM_comp_toEuclideanCLM (A B : Matrix n n 𝕜) :
 `K' : 𝕜ⁿ →L 𝕜ᵐ`: the operator of `K A Kᴴ` is `K' A' K'†`, since `Kᴴ` is the matrix of `K'†`
 (`Matrix.toEuclideanLin_conjTranspose_eq_adjoint`). -/
 lemma toEuclideanCLM_mul_mul_conjTranspose (K : Matrix m n 𝕜) (A : Matrix n n 𝕜) :
-    toEuclideanCLM (n := m) (𝕜 := 𝕜) (K * A * Kᴴ) =
-      LinearMap.toContinuousLinearMap (toEuclideanLin K) ∘L toEuclideanCLM (n := n) (𝕜 := 𝕜) A ∘L
-        ContinuousLinearMap.adjoint (LinearMap.toContinuousLinearMap (toEuclideanLin K)) := by
+    toEuclideanCLM (𝕜 := 𝕜) (K * A * Kᴴ) =
+      LinearMap.toContinuousLinearMap (toEuclideanLin K) ∘L toEuclideanCLM (𝕜 := 𝕜) A ∘L
+        (LinearMap.toContinuousLinearMap (toEuclideanLin K))† := by
   refine ContinuousLinearMap.coe_injective ?_
   rw [coe_toEuclideanCLM_eq_toEuclideanLin, ContinuousLinearMap.toLinearMap_comp,
     ContinuousLinearMap.toLinearMap_comp, ← LinearMap.adjoint_toContinuousLinearMap,

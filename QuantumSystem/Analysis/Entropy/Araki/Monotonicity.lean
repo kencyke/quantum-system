@@ -138,9 +138,9 @@ theorem integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H
     change star (y * e) ζ' = e (star y ζ')
     rw [star_mul, (N.isStarProjection_supportProj ζ).isSelfAdjoint.star_eq, mul_apply_eq_comp]
   set x : H →L[ℂ] H := (α b : H →L[ℂ] H)
-  have hK : y ζ ∈ (InnerProductSpace.cyclicSubspace (N : Set (K →L[ℂ] K)) ζ).toSubmodule :=
+  have hK : y ζ ∈ (InnerProductSpace.cyclicSubspace N ζ).toSubmodule :=
     InnerProductSpace.apply_mem_cyclicSubspace ζ hy
-  have hK₁ : ζ ∈ (InnerProductSpace.cyclicSubspace (N : Set (K →L[ℂ] K)) ζ).toSubmodule :=
+  have hK₁ : ζ ∈ (InnerProductSpace.cyclicSubspace N ζ).toSubmodule :=
     self_mem_cyclicSubspace N ζ
   refine ⟨x ξ, M.supportProj ξ (star x ξ'),
     mem_graph_closure_relativeTomita (apply_mem_graph_relativeTomita (α b).2), ?_, ?_, ?_⟩

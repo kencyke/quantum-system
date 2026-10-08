@@ -11,6 +11,7 @@ public import QuantumSystem.Analysis.UnboundedOperator.VonNeumann
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Calculus of scalar spectral measures
@@ -86,7 +87,7 @@ products `re ⟪·, ·⟫` (`open ClosedSubmodule`), and let `A` be a self-adjoi
 @[expose] public section
 
 open Complex MeasureTheory
-open scoped ComplexConjugate LinearPMap BoundedContinuousFunction NNReal ENNReal
+open scoped ComplexConjugate LinearPMap BoundedContinuousFunction NNReal ENNReal InnerProduct
 
 namespace IsSelfAdjoint
 
@@ -282,7 +283,7 @@ variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteS
 partial isometry, then `ν_{V u}^w` for `B` equals `ν_u^w` for `A`. -/
 theorem measure_pvm_resolvent_intertwiner (hV : ∀ u v, (u, v) ∈ A.graph → (V u, V v) ∈ B.graph)
     {w : ℂ} (hwA : w ∈ A.resolventSet) (hwB : w ∈ B.resolventSet) {u : E}
-    (hVu : ContinuousLinearMap.adjoint V (V u) = u) :
+    (hVu : (V†) (V u) = u) :
     (hB.isStarNormal_resolvent w).pvm.measure (V u) =
       (hA.isStarNormal_resolvent w).pvm.measure u := by
   have : IsStarNormal (A.resolvent w) := hA.isStarNormal_resolvent w
@@ -300,7 +301,7 @@ theorem measure_pvm_resolvent_intertwiner (hV : ∀ u v, (u, v) ∈ A.graph → 
 /-- **Covariance under intertwiners.** If `V` maps the graph of `A` into the graph of `B` and
 `V† V u = u`, then the spectral measure of `V u` for `B` equals that of `u` for `A`. -/
 theorem measure_pvm_intertwiner (hV : ∀ u v, (u, v) ∈ A.graph → (V u, V v) ∈ B.graph) {u : E}
-    (hVu : ContinuousLinearMap.adjoint V (V u) = u) :
+    (hVu : (V†) (V u) = u) :
     hB.pvm.measure (V u) = hA.pvm.measure u := by
   rw [measure_pvm_eq_map, measure_pvm_eq_map,
     hA.measure_pvm_resolvent_intertwiner hB hV hA.I_mem_resolventSet hB.I_mem_resolventSet hVu]

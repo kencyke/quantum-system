@@ -127,7 +127,7 @@ and the index set `F` with its nonemptiness, so that a consumer needs no reconst
 theorem IsSplitInclusion.exists_tensor_decomposition {A B : VonNeumannAlgebra H}
     (h : IsSplitInclusion A B) :
     ∃ (M : VonNeumannAlgebra H) (e : H →L[ℂ] H) (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ LinearMap.range (e : H →ₗ[ℂ] H)),
+      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
       IsTypeIFactor M ∧ IsMinimalProjection M e ∧ Nonempty F ∧ A ≤ M ∧ M ≤ B ∧
       VonNeumannAlgebra.conj U M = vnTensorLeft ∧
       VonNeumannAlgebra.conj U M′ = vnTensorRight ∧

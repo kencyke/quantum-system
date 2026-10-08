@@ -75,25 +75,25 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 /-- The **support projection** `s(ξ)` of `ξ` in `M`: the orthogonal projection onto `[M′ ξ]`. -/
 noncomputable def supportProj (ξ : H) : H →L[ℂ] H :=
-  (cyclicSubspace (M′ : Set (H →L[ℂ] H)) ξ).toSubmodule.starProjection
+  (cyclicSubspace M′ ξ).toSubmodule.starProjection
 
 variable {M} {ξ v : H} {x : H →L[ℂ] H}
 
 variable (M ξ) in
 /-- For a von Neumann algebra, `[M ξ]` is the closure of the orbit `{x ξ | x ∈ M}`. -/
 lemma coe_cyclicSubspace :
-    (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ : Set H) =
+    (cyclicSubspace M ξ : Set H) =
       closure (Set.range fun x : M => (x : H →L[ℂ] H) ξ) :=
   InnerProductSpace.coe_cyclicSubspace_of_submodule M.toSubalgebra.toSubmodule ξ
 
 variable (M ξ) in
 /-- `ξ ∈ [M ξ]`, since `1 ∈ M`. -/
-lemma self_mem_cyclicSubspace : ξ ∈ cyclicSubspace (M : Set (H →L[ℂ] H)) ξ := by
+lemma self_mem_cyclicSubspace : ξ ∈ cyclicSubspace M ξ := by
   simpa using InnerProductSpace.apply_mem_cyclicSubspace ξ (one_mem M)
 
 /-- `[M ξ]` is invariant under `M`. -/
-lemma apply_mem_cyclicSubspace (hx : x ∈ M) (hv : v ∈ cyclicSubspace (M : Set (H →L[ℂ] H)) ξ) :
-    x v ∈ cyclicSubspace (M : Set (H →L[ℂ] H)) ξ :=
+lemma apply_mem_cyclicSubspace (hx : x ∈ M) (hv : v ∈ cyclicSubspace M ξ) :
+    x v ∈ cyclicSubspace M ξ :=
   InnerProductSpace.apply_mem_cyclicSubspace_of_mem M.toSubalgebra.toNonUnitalSubalgebra hx hv
 
 /-- Operators of `M′` commute with those of `M`: `w (y z) = y (w z)` for `w ∈ M′`, `y ∈ M`. -/
@@ -103,7 +103,7 @@ lemma apply_apply_of_mem_commutant {w y : H →L[ℂ] H} (hw : w ∈ M′) (hy :
 
 /-- A closed set containing the orbit `{x ξ | x ∈ M}` contains `[M ξ]`. -/
 lemma cyclicSubspace_subset {s : Set H} (hs : IsClosed s) (h : ∀ x ∈ M, x ξ ∈ s) :
-    (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ : Set H) ⊆ s :=
+    (cyclicSubspace M ξ : Set H) ⊆ s :=
   InnerProductSpace.cyclicSubspace_subset_of_submodule M.toSubalgebra.toSubmodule hs h
 
 variable (M) in
@@ -118,14 +118,14 @@ def applyₗ (ζ : H) : M →ₗ[ℂ] H where
 
 variable (M ξ) in
 /-- `x ↦ x ξ` on `M`, as a linear map into `[M ξ]`. -/
-def applyCyclicₗ : M →ₗ[ℂ] (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule where
+def applyCyclicₗ : M →ₗ[ℂ] (cyclicSubspace M ξ).toSubmodule where
   toFun x := ⟨(x : H →L[ℂ] H) ξ, InnerProductSpace.apply_mem_cyclicSubspace ξ x.2⟩
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
 
 /-- `applyCyclicₗ M ξ x = x ξ`. -/
 @[simp] lemma coe_applyCyclicₗ_apply (x : M) :
-    ((M.applyCyclicₗ ξ x : (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule) : H) =
+    ((M.applyCyclicₗ ξ x : (cyclicSubspace M ξ).toSubmodule) : H) =
       (x : H →L[ℂ] H) ξ :=
   rfl
 
@@ -133,7 +133,7 @@ def applyCyclicₗ : M →ₗ[ℂ] (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ)
 lemma denseRange_applyCyclicₗ : DenseRange (M.applyCyclicₗ ξ) := by
   rw [DenseRange, Subtype.dense_iff]
   intro v hv
-  have hv' : v ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ : Set H) := hv
+  have hv' : v ∈ (cyclicSubspace M ξ : Set H) := hv
   rw [coe_cyclicSubspace] at hv'
   refine closure_mono ?_ hv'
   rintro _ ⟨x, rfl⟩
@@ -147,7 +147,7 @@ lemma isStarProjection_supportProj : IsStarProjection (M.supportProj ξ) :=
 
 /-- The support projection of `ξ` in the commutant is the projection onto `[M ξ]`. -/
 lemma supportProj_commutant :
-    M′.supportProj ξ = (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule.starProjection := by
+    M′.supportProj ξ = (cyclicSubspace M ξ).toSubmodule.starProjection := by
   simp only [supportProj, commutant_commutant]
 
 /-- The support projection `s(ξ)` lies in `M`: its range `[M′ ξ]` is invariant under `M′`. -/
@@ -169,7 +169,7 @@ variable {M ξ}
 since it commutes with `M′`. -/
 theorem mul_supportProj_eq_zero_iff (hx : x ∈ M) : x * M.supportProj ξ = 0 ↔ x ξ = 0 := by
   refine ⟨fun h => by simpa using congr($h ξ), fun h => ?_⟩
-  have hK : (cyclicSubspace (M′ : Set (H →L[ℂ] H)) ξ : Set H) ⊆ {v | x v = 0} :=
+  have hK : (cyclicSubspace M′ ξ : Set H) ⊆ {v | x v = 0} :=
     cyclicSubspace_subset (isClosed_eq x.continuous continuous_const) fun y hy => by
       change x (y ξ) = 0
       rw [← mul_apply_eq_comp, mem_commutant_iff.mp hy x hx, mul_apply_eq_comp, h, map_zero]
@@ -298,7 +298,7 @@ lemma norm_apply_eq_of_inner_eq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x 
 
 /-- The isometry `[M ξ] → H` extending `x ξ ↦ x η`. -/
 private noncomputable def isometryOfInnerEq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
-    (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule →ₗᵢ[ℂ] H :=
+    (cyclicSubspace M ξ).toSubmodule →ₗᵢ[ℂ] H :=
   (applyₗ M η).extendOfIsometry denseRange_applyCyclicₗ fun x =>
     norm_apply_eq_of_inner_eq h x.2
 

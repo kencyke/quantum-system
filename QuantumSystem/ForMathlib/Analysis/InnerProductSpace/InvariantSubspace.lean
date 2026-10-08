@@ -258,7 +258,7 @@ lemma mem_orthogonal_cyclicSubspace_iff {S : Set (H →L[ℂ] H)} {x v : H} :
 /-- For a linear subspace `P` of operators, the orbit `{a x | a ∈ P}` is already a subspace, so
 `[P x]` is its closure. -/
 lemma coe_cyclicSubspace_of_submodule (P : Submodule ℂ (H →L[ℂ] H)) (x : H) :
-    (cyclicSubspace (P : Set (H →L[ℂ] H)) x : Set H) =
+    (cyclicSubspace P x : Set H) =
       closure (Set.range fun a : P => (a : H →L[ℂ] H) x) := by
   have : (Submodule.span ℂ (Set.range fun a : (P : Set (H →L[ℂ] H)) => (a : H →L[ℂ] H) x) :
       Set H) = Set.range fun a : P => (a : H →L[ℂ] H) x := by
@@ -274,16 +274,16 @@ lemma coe_cyclicSubspace_of_submodule (P : Submodule ℂ (H →L[ℂ] H)) (x : H
 `[P x]`. -/
 lemma cyclicSubspace_subset_of_submodule (P : Submodule ℂ (H →L[ℂ] H)) {x : H} {s : Set H}
     (hs : IsClosed s) (h : ∀ a ∈ P, a x ∈ s) :
-    (cyclicSubspace (P : Set (H →L[ℂ] H)) x : Set H) ⊆ s := by
+    (cyclicSubspace P x : Set H) ⊆ s := by
   rw [coe_cyclicSubspace_of_submodule]
   exact closure_minimal (by rintro _ ⟨⟨a, ha⟩, rfl⟩; exact h a ha) hs
 
 /-- For a subalgebra `A`, the cyclic subspace `[A x]` is invariant under `A`. -/
 lemma apply_mem_cyclicSubspace_of_mem (A : NonUnitalSubalgebra ℂ (H →L[ℂ] H)) {x y : H}
-    {a : H →L[ℂ] H} (ha : a ∈ A) (hy : y ∈ cyclicSubspace (A : Set (H →L[ℂ] H)) x) :
-    a y ∈ cyclicSubspace (A : Set (H →L[ℂ] H)) x := by
-  have hy' : y ∈ (cyclicSubspace (A.toSubmodule : Set (H →L[ℂ] H)) x : Set H) := hy
-  change a y ∈ (cyclicSubspace (A.toSubmodule : Set (H →L[ℂ] H)) x : Set H)
+    {a : H →L[ℂ] H} (ha : a ∈ A) (hy : y ∈ cyclicSubspace A x) :
+    a y ∈ cyclicSubspace A x := by
+  have hy' : y ∈ (cyclicSubspace A.toSubmodule x : Set H) := hy
+  change a y ∈ (cyclicSubspace A.toSubmodule x : Set H)
   rw [coe_cyclicSubspace_of_submodule] at hy' ⊢
   exact map_mem_closure a.continuous hy' fun _ ⟨b, hb⟩ =>
     ⟨⟨a * b, (A.mul_mem ha (show (b : H →L[ℂ] H) ∈ A from b.2) : a * (b : H →L[ℂ] H) ∈ A)⟩,

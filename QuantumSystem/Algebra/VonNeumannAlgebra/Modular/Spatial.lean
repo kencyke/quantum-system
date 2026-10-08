@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeModular
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Transport of relative modular operators along isometric intertwiners
@@ -39,7 +40,7 @@ spectral measure of `Δ^N_{Vη,Vξ}` at `Vξ` equals that of `Δ^M_{η,ξ}` at `
 @[expose] public section
 
 open Complex ClosedSubmodule
-open scoped InnerProductSpace VonNeumannAlgebra LinearPMap
+open scoped InnerProductSpace InnerProduct VonNeumannAlgebra LinearPMap
 open InnerProductSpace (cyclicSubspace)
 
 namespace VonNeumannAlgebra
@@ -47,8 +48,6 @@ namespace VonNeumannAlgebra
 variable {H K : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
   [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
   {M : VonNeumannAlgebra H} {N : VonNeumannAlgebra K} {V : H →L[ℂ] K}
-
-local notation "V†" => ContinuousLinearMap.adjoint V
 
 /-- From `y⋆ V = V x⋆`: `V† y = x V†`. -/
 private lemma adjoint_comp_eq_of_star_comp {x : H →L[ℂ] H} {y : K →L[ℂ] K}
@@ -64,7 +63,7 @@ private lemma apply_apply_of_comp_eq {x : H →L[ℂ] H} {y : K →L[ℂ] K} (h 
   congr($h u)
 
 private lemma adjoint_apply_apply_of_star_comp {x : H →L[ℂ] H} {y : K →L[ℂ] K}
-    (h : star y ∘L V = V ∘L star x) (z : K) : V† (y z) = x (V† z) :=
+    (h : star y ∘L V = V ∘L star x) (z : K) : (V†) (y z) = x ((V†) z) :=
   congr($(adjoint_comp_eq_of_star_comp h) z)
 
 /-- **Compression.** `V† y V ∈ M` for `y ∈ N`, when every `x′ ∈ M′` is intertwined by `V` with
@@ -101,8 +100,8 @@ variable (hM : ∀ x ∈ M, ∃ y ∈ N, y ∘L V = V ∘L x ∧ star y ∘L V =
 include hM' in
 /-- `V` maps `[M ξ]ᗮ` into `[N (V ξ)]ᗮ`. -/
 lemma apply_mem_orthogonal_cyclicSubspace_of_intertwiner {ξ ζ : H}
-    (hζ : ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ) :
-    V ζ ∈ (cyclicSubspace (N : Set (K →L[ℂ] K)) (V ξ)).toSubmoduleᗮ := by
+    (hζ : ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ) :
+    V ζ ∈ (cyclicSubspace N (V ξ)).toSubmoduleᗮ := by
   rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
   intro y hy
   rw [← ContinuousLinearMap.adjoint_inner_left V]
@@ -111,8 +110,8 @@ lemma apply_mem_orthogonal_cyclicSubspace_of_intertwiner {ξ ζ : H}
 include hM in
 /-- `V†` maps `[N (V ξ)]ᗮ` into `[M ξ]ᗮ`. -/
 lemma adjoint_apply_mem_orthogonal_cyclicSubspace_of_intertwiner {ξ : H} {ζ : K}
-    (hζ : ζ ∈ (cyclicSubspace (N : Set (K →L[ℂ] K)) (V ξ)).toSubmoduleᗮ) :
-    V† ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ := by
+    (hζ : ζ ∈ (cyclicSubspace N (V ξ)).toSubmoduleᗮ) :
+    (V†) ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ := by
   rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
   intro x hx
   obtain ⟨y, hy, h₁, -⟩ := hM x hx
@@ -175,7 +174,7 @@ include hM hM' in
 /-- `V†` maps the graph of `S^N_{Vη,Vξ}` into that of `S^M_{η,ξ}`. -/
 theorem adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
     {a b : K} (h : (a, b) ∈ (S[N]⟦V η, V ξ⟧).graph) :
-    (V† a, V† b) ∈ (S[M]⟦η, ξ⟧).graph := by
+    ((V†) a, (V†) b) ∈ (S[M]⟦η, ξ⟧).graph := by
   obtain ⟨y, hy, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
   have hyM := adjoint_comp_comp_mem hM' hy
@@ -212,7 +211,7 @@ theorem mem_graph_relativeModular_of_intertwiner {η ξ u z : H}
 include hM hM' in
 /-- **Transport of spectral measures.** If moreover `V† V ξ = ξ`, the spectral measure of
 `Δ^N_{Vη,Vξ}` at `V ξ` equals that of `Δ^M_{η,ξ}` at `ξ`. -/
-theorem measure_pvm_relativeModular_of_intertwiner {η ξ : H} (hV : V† (V ξ) = ξ) :
+theorem measure_pvm_relativeModular_of_intertwiner {η ξ : H} (hV : (V†) (V ξ) = ξ) :
     μ[N]⟦V η, V ξ⟧ =
       μ[M]⟦η, ξ⟧ :=
   (isSelfAdjoint_relativeModular M η ξ).measure_pvm_intertwiner

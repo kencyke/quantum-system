@@ -48,6 +48,11 @@ Notations and abbreviations for quantum information theory.
   <td><code>open scoped VonNeumannAlgebra</code></td>
   <td><code>Algebra/VonNeumannAlgebra/Modular/RelativeTomita.lean</code>,
     <code>RelativeModular.lean</code></td></tr>
+<tr><td><code>A†</code></td><td><code>ContinuousLinearMap.adjoint A</code> (Mathlib's notation; applied
+  as <code>(A†) x</code>; used between two spaces, <code>A⋆</code> on one space)</td>
+  <td><code>open scoped InnerProduct</code>; displayed in goals after importing
+    <code>ForMathlib/Analysis/InnerProductSpace/Adjoint.lean</code></td>
+  <td>Mathlib, <code>Analysis/InnerProductSpace/Adjoint.lean</code></td></tr>
 <tr><td><code>𝟙 ⊗ B</code>, <code>A ⊗ 𝟙</code>, <code>𝟙 ⊗ₐ</code>, <code>⊗ₐ 𝟙</code></td>
   <td><code>HilbertTensor.amplifyRight B</code>, <code>HilbertTensor.amplifyLeft A</code>,
     <code>HilbertTensor.amplifyRightₐ</code>, <code>HilbertTensor.amplifyLeftₐ</code>

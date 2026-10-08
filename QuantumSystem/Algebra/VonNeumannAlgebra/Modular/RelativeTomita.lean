@@ -79,7 +79,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-- The graph `{(x ξ + ζ, s(ξ) x⋆ η) | x ∈ M, ζ ⊥ [M ξ]}` of the relative Tomita operator, a real
 subspace of `H × H`. -/
 def relativeTomitaGraph : Submodule ℝ (H × H) where
-  carrier := {p | ∃ x ∈ M, ∃ ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ,
+  carrier := {p | ∃ x ∈ M, ∃ ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ,
     p = (x ξ + ζ, M.supportProj ξ (star x η))}
   add_mem' := by
     rintro _ _ ⟨x, hx, ζ, hζ, rfl⟩ ⟨y, hy, ζ', hζ', rfl⟩
@@ -97,7 +97,7 @@ variable {M η ξ}
 
 /-- `(x ξ + ζ, s(ξ) x⋆ η)` lies in the graph for `x ∈ M` and `ζ ⊥ [M ξ]`. -/
 lemma mk_mem_relativeTomitaGraph {x : H →L[ℂ] H} (hx : x ∈ M) {ζ : H}
-    (hζ : ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ) :
+    (hζ : ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ) :
     (x ξ + ζ, M.supportProj ξ (star x η)) ∈ M.relativeTomitaGraph η ξ :=
   ⟨x, hx, ζ, hζ, rfl⟩
 
@@ -105,7 +105,7 @@ lemma mk_mem_relativeTomitaGraph {x : H →L[ℂ] H} (hx : x ∈ M) {ζ : H}
 lemma relativeTomitaGraph_snd_eq_zero_of_fst_eq_zero {p : H × H} (hp : p ∈ M.relativeTomitaGraph η ξ)
     (hp0 : p.1 = 0) : p.2 = 0 := by
   obtain ⟨x, hx, ζ, hζ, rfl⟩ := hp
-  have hxK : x ξ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule :=
+  have hxK : x ξ ∈ (cyclicSubspace M ξ).toSubmodule :=
     InnerProductSpace.apply_mem_cyclicSubspace ξ hx
   have hxξ : x ξ = 0 := by
     have h : ζ = -x ξ := eq_neg_of_add_eq_zero_right hp0
@@ -138,7 +138,7 @@ variable {M η ξ}
 /-- Membership in the graph of `S_{η,ξ}`. -/
 lemma mem_graph_relativeTomita {p : H × H} :
     p ∈ (S⟦η, ξ⟧).graph ↔ ∃ x ∈ M,
-      ∃ ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ,
+      ∃ ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ,
         p = (x ξ + ζ, M.supportProj ξ (star x η)) := by
   rw [graph_relativeTomita]
   rfl
@@ -146,7 +146,7 @@ lemma mem_graph_relativeTomita {p : H × H} :
 /-- The domain of `S_{η,ξ}` is `M ξ + [M ξ]ᗮ`. -/
 theorem mem_domain_relativeTomita_iff {u : H} :
     u ∈ (S⟦η, ξ⟧).domain ↔ ∃ x ∈ M,
-      ∃ ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ, u = x ξ + ζ := by
+      ∃ ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ, u = x ξ + ζ := by
   rw [LinearPMap.mem_domain_iff]
   simp only [mem_graph_relativeTomita, Prod.ext_iff]
   exact ⟨fun ⟨_, x, hx, ζ, hζ, h, _⟩ => ⟨x, hx, ζ, hζ, h⟩,
@@ -159,7 +159,7 @@ theorem domain_relativeTomita_eq (η' : H) :
 
 /-- `S_{η,ξ} (x ξ + ζ) = s(ξ) x⋆ η`, in graph form. -/
 lemma mk_mem_graph_relativeTomita {x : H →L[ℂ] H} (hx : x ∈ M) {ζ : H}
-    (hζ : ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ) :
+    (hζ : ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ) :
     (x ξ + ζ, M.supportProj ξ (star x η)) ∈ (S⟦η, ξ⟧).graph := by
   rw [graph_relativeTomita]
   exact mk_mem_relativeTomitaGraph hx hζ
@@ -188,7 +188,7 @@ lemma isSemilinear_relativeTomita :
 
 /-- `S_{η,ξ}` is densely defined: its domain `M ξ + [M ξ]ᗮ` is dense. -/
 theorem dense_domain_relativeTomita : Dense ((S⟦η, ξ⟧).domain : Set H) := by
-  set K := (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule
+  set K := (cyclicSubspace M ξ).toSubmodule
   have hdom : ∀ x ∈ M, ∀ ζ ∈ Kᗮ, x ξ + ζ ∈ (S⟦η, ξ⟧).domain := fun x hx ζ hζ =>
     LinearPMap.mem_domain_of_mem_graph (mk_mem_graph_relativeTomita (η := η) hx hζ)
   intro w
@@ -331,7 +331,7 @@ theorem mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star 
   refine ⟨fun h => ?_, fun h => ?_⟩
   · obtain ⟨y, hy, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
     obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
-    have hζ' : star w ζ ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmoduleᗮ := by
+    have hζ' : star w ζ ∈ (cyclicSubspace M ξ).toSubmoduleᗮ := by
       rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
       exact fun a ha => (hinner a ha ζ).trans (hζ a ha)
     convert mk_mem_graph_relativeTomita (η := η) hy hζ' using 2
@@ -341,7 +341,7 @@ theorem mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star 
     obtain ⟨h₁, rfl⟩ := Prod.ext_iff.mp h
     dsimp only at h₁
     -- `u = x (v′ ξ) + (u - x (v′ ξ))` with `u - x (v′ ξ) ⊥ [M v′ ξ]`.
-    have hζ' : u - x (w ξ) ∈ (cyclicSubspace (M : Set (H →L[ℂ] H)) (w ξ)).toSubmoduleᗮ := by
+    have hζ' : u - x (w ξ) ∈ (cyclicSubspace M (w ξ)).toSubmoduleᗮ := by
       rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
       intro a ha
       have h₂ : ⟪a (w ξ), x (w ξ)⟫_ℂ = ⟪a ξ, x ξ⟫_ℂ := by

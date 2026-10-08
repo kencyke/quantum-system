@@ -298,7 +298,7 @@ theorem mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos {u : Lp �
     filter_upwards [Lp.coeFn_star E, hE] with x h₁ h₂
     rw [h₁, Pi.star_apply, h₂]
     by_cases hx : 0 < p x <;> simp [hx]
-  have hζ : u ∈ (cyclicSubspace (M : Set (Lp ℂ 2 μ →L[ℂ] Lp ℂ 2 μ)) ξ).toSubmoduleᗮ := by
+  have hζ : u ∈ (cyclicSubspace M ξ).toSubmoduleᗮ := by
     rw [mem_orthogonal_cyclicSubspace_iff]
     intro T hT
     have hc := congrArg (fun A : Lp ℂ 2 μ →L[ℂ] Lp ℂ 2 μ => A ξ) (commute_mulL2_of_mem hT E)

@@ -40,25 +40,27 @@ non-degenerately, and that `F(H)' = ℂ1` and hence `F(H)'' = B(H)` — live in
 
 @[expose] public section
 
+open scoped InnerProduct
+
 namespace InnerProductSpace
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 
 /-- An operator has **finite rank** if its range is finite-dimensional. -/
 def IsFiniteRank (T : H →L[ℂ] H) : Prop :=
-  FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H))
+  FiniteDimensional ℂ (T.range)
 
 lemma isFiniteRank_zero : IsFiniteRank (0 : H →L[ℂ] H) := by
-  have h : LinearMap.range ((0 : H →L[ℂ] H) : H →ₗ[ℂ] H) = ⊥ := by simp
+  have h : (0 : H →L[ℂ] H).range = ⊥ := by simp
   rw [IsFiniteRank, h]
   infer_instance
 
 lemma IsFiniteRank.add {S T : H →L[ℂ] H} (hS : IsFiniteRank S) (hT : IsFiniteRank T) :
     IsFiniteRank (S + T) := by
-  have : FiniteDimensional ℂ (LinearMap.range (S : H →ₗ[ℂ] H)) := hS
-  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
-  refine Submodule.finiteDimensional_of_le (S₂ := LinearMap.range (S : H →ₗ[ℂ] H) ⊔
-    LinearMap.range (T : H →ₗ[ℂ] H)) ?_
+  have : FiniteDimensional ℂ (S.range) := hS
+  have : FiniteDimensional ℂ (T.range) := hT
+  refine Submodule.finiteDimensional_of_le (S₂ := S.range ⊔
+    T.range) ?_
   rintro _ ⟨x, rfl⟩
   exact Submodule.add_mem_sup ⟨x, rfl⟩ ⟨x, rfl⟩
 
@@ -66,9 +68,9 @@ lemma IsFiniteRank.add {S T : H →L[ℂ] H} (hS : IsFiniteRank S) (hT : IsFinit
 under the image. -/
 lemma IsFiniteRank.mul_left {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H →L[ℂ] H) :
     IsFiniteRank (S * T) := by
-  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
+  have : FiniteDimensional ℂ (T.range) := hT
   refine Submodule.finiteDimensional_of_le
-    (S₂ := (LinearMap.range (T : H →ₗ[ℂ] H)).map (S : H →ₗ[ℂ] H)) ?_
+    (S₂ := (T.range).map (S : H →ₗ[ℂ] H)) ?_
   rintro _ ⟨x, rfl⟩
   exact ⟨T x, ⟨x, rfl⟩, rfl⟩
 
@@ -76,15 +78,15 @@ lemma IsFiniteRank.mul_left {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H →
 or smaller. -/
 lemma IsFiniteRank.mul_right {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H →L[ℂ] H) :
     IsFiniteRank (T * S) := by
-  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
-  refine Submodule.finiteDimensional_of_le (S₂ := LinearMap.range (T : H →ₗ[ℂ] H)) ?_
+  have : FiniteDimensional ℂ (T.range) := hT
+  refine Submodule.finiteDimensional_of_le (S₂ := T.range) ?_
   rintro _ ⟨x, rfl⟩
   exact ⟨S x, rfl⟩
 
 lemma IsFiniteRank.smul {T : H →L[ℂ] H} (hT : IsFiniteRank T) (c : ℂ) :
     IsFiniteRank (c • T) := by
-  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
-  refine Submodule.finiteDimensional_of_le (S₂ := LinearMap.range (T : H →ₗ[ℂ] H)) ?_
+  have : FiniteDimensional ℂ (T.range) := hT
+  refine Submodule.finiteDimensional_of_le (S₂ := T.range) ?_
   rintro _ ⟨x, rfl⟩
   exact Submodule.smul_mem _ _ ⟨x, rfl⟩
 
@@ -101,16 +103,16 @@ variable [CompleteSpace H]
 /-- The adjoint of a finite-rank operator has finite rank. Since `T†` annihilates `(ran T)ᗮ`, its
 range is the image of the finite-dimensional subspace `ran T`. -/
 lemma IsFiniteRank.adjoint {T : H →L[ℂ] H} (hT : IsFiniteRank T) :
-    IsFiniteRank (ContinuousLinearMap.adjoint T) := by
-  have : FiniteDimensional ℂ (LinearMap.range (T : H →ₗ[ℂ] H)) := hT
+    IsFiniteRank (T†) := by
+  have : FiniteDimensional ℂ (T.range) := hT
   refine Submodule.finiteDimensional_of_le
-    (S₂ := (LinearMap.range (T : H →ₗ[ℂ] H)).map
-      ((ContinuousLinearMap.adjoint T : H →L[ℂ] H) : H →ₗ[ℂ] H)) ?_
+    (S₂ := (T.range).map
+      ((T† : H →L[ℂ] H) : H →ₗ[ℂ] H)) ?_
   rintro _ ⟨x, rfl⟩
   obtain ⟨p, hp, q, hq, rfl⟩ :=
-    Submodule.exists_add_mem_mem_orthogonal (K := LinearMap.range (T : H →ₗ[ℂ] H)) x
-  have hq0 : ContinuousLinearMap.adjoint T q = 0 := by
-    have hmem : q ∈ LinearMap.ker ((ContinuousLinearMap.adjoint T : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
+    Submodule.exists_add_mem_mem_orthogonal (K := T.range) x
+  have hq0 : (T†) q = 0 := by
+    have hmem : q ∈ LinearMap.ker ((T† : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
       rw [← ContinuousLinearMap.orthogonal_range]
       exact hq
     simpa using hmem
@@ -144,11 +146,11 @@ theorem one_notMem_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (1 : H →L[ℂ] H) ∉ finiteRankOperators (H := H) := by
   intro hmem
   refine h ?_
-  have hr : LinearMap.range ((1 : H →L[ℂ] H) : H →ₗ[ℂ] H) = ⊤ := by
+  have hr : (1 : H →L[ℂ] H).range = ⊤ := by
     ext y
     simp only [Submodule.mem_top, iff_true, LinearMap.mem_range]
     exact ⟨y, rfl⟩
-  have : FiniteDimensional ℂ (LinearMap.range ((1 : H →L[ℂ] H) : H →ₗ[ℂ] H)) := hmem
+  have : FiniteDimensional ℂ ((1 : H →L[ℂ] H).range) := hmem
   rw [hr] at this
   exact (Submodule.topEquiv (R := ℂ) (M := H)).finiteDimensional
 

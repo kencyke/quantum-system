@@ -75,7 +75,7 @@ amplified operators `amplifyRight B`, `amplifyLeft A`) and `𝟙 ⊗ₐ`, `⊗�
 
 @[expose] public section
 
-open scoped TensorProduct
+open scoped TensorProduct InnerProduct
 
 /-! ### Completion of a linear isometric equivalence and of a finite-dimensional space
 
@@ -678,7 +678,7 @@ variable [CompleteSpace H₁] [CompleteSpace H₂]
 omit [CompleteSpace H₂] in
 lemma algAmplifyLeft_inner_adjoint [CompleteSpace H₃] (A : H₁ →L[ℂ] H₃) (a : H₃ ⊗[ℂ] H₂)
     (b : H₁ ⊗[ℂ] H₂) :
-    inner ℂ (algAmplifyLeft (ContinuousLinearMap.adjoint A) a) b
+    inner ℂ (algAmplifyLeft (A†) a) b
       = inner ℂ a (algAmplifyLeft A b) := by
   simp only [algAmplifyLeft, LinearMap.mkContinuous_apply]
   induction a using TensorProduct.inductionOn with
@@ -693,7 +693,7 @@ lemma algAmplifyLeft_inner_adjoint [CompleteSpace H₃] (A : H₁ →L[ℂ] H₃
 
 omit [CompleteSpace H₁] in
 lemma algAmplifyRight_inner_adjoint (B : H₂ →L[ℂ] H₂) (a b : H₁ ⊗[ℂ] H₂) :
-    inner ℂ (algAmplifyRight (ContinuousLinearMap.adjoint B) a) b
+    inner ℂ (algAmplifyRight (B†) a) b
       = inner ℂ a (algAmplifyRight B b) := by
   simp only [algAmplifyRight, LinearMap.mkContinuous_apply]
   induction a using TensorProduct.inductionOn with
@@ -709,8 +709,8 @@ lemma algAmplifyRight_inner_adjoint (B : H₂ →L[ℂ] H₂) (a b : H₁ ⊗[�
 omit [CompleteSpace H₂] in
 /-- The adjoint of the left amplification of `A` is the left amplification of the adjoint of `A`. -/
 lemma amplifyLeft_adjoint [CompleteSpace H₃] (A : H₁ →L[ℂ] H₃) :
-    ContinuousLinearMap.adjoint (amplifyLeft (H₂ := H₂) A)
-      = (ContinuousLinearMap.adjoint A) ⊗ 𝟙 := by
+    (amplifyLeft (H₂ := H₂) A)†
+      = (A†) ⊗ 𝟙 := by
   symm
   rw [ContinuousLinearMap.eq_adjoint_iff]
   intro u v
@@ -722,8 +722,8 @@ omit [CompleteSpace H₁] in
 /-- The adjoint of the right amplification of `B` is the right amplification of the adjoint of
 `B`. -/
 lemma amplifyRight_adjoint (B : H₂ →L[ℂ] H₂) :
-    ContinuousLinearMap.adjoint (amplifyRight (H₁ := H₁) B)
-      = 𝟙 ⊗ (ContinuousLinearMap.adjoint B) := by
+    (amplifyRight (H₁ := H₁) B)†
+      = 𝟙 ⊗ (B†) := by
   symm
   rw [ContinuousLinearMap.eq_adjoint_iff]
   intro u v
