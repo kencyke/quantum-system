@@ -369,7 +369,7 @@ theorem mem_graph_tomita_iff {u v : H} :
     rwa [← K.isSelfAdjoint_modular.polarIsometry_apply_of_mem_graph hAS hS hw hv] at hv
 
 /-- **`ξ ∈ K` iff `J_K Δ_K^{1/2} ξ = ξ`**. -/
-theorem mem_iff_modularConj_sqrt {ξ : H} :
+lemma mem_iff_modularConj_sqrt {ξ : H} :
     ξ ∈ K ↔
       ∃ w, (ξ, w) ∈ Δ[K]^{1/2}.graph ∧ J[K] w = ξ := by
   rw [K.mem_iff_mem_graph_tomita, mem_graph_tomita_iff]
@@ -471,7 +471,7 @@ lemma modularGroup_apply_mem {ξ : H} (hξ : ξ ∈ K) (t : ℝ) :
   rw [K.modularConj_comm_modularGroup, hwξ]
 
 /-- **`Δ_K^{it} K = K`**: `ξ ∈ K` iff `Δ_K^{it} ξ ∈ K`. -/
-theorem modularGroup_apply_mem_iff {ξ : H} (t : ℝ) :
+lemma modularGroup_apply_mem_iff {ξ : H} (t : ℝ) :
     Δ[K]^{i t} ξ ∈ K ↔ ξ ∈ K := by
   refine ⟨fun h => ?_, fun h => K.modularGroup_apply_mem h t⟩
   have h' := K.modularGroup_apply_mem h (-t)
@@ -564,7 +564,7 @@ lemma mem_graph_tomita_symplComp_iff {u v : H} :
     exact ⟨⟨u, Submodule.mem_top⟩, rfl, rfl⟩
 
 /-- **`J_K K = K'`**: `J_K ξ ∈ K'` iff `ξ ∈ K`. -/
-theorem modularConj_mem_symplComp_iff {ξ : H} :
+lemma modularConj_mem_symplComp_iff {ξ : H} :
     J[K] ξ ∈ K.symplComp ↔ ξ ∈ K := by
   rw [K.symplComp.mem_iff_mem_graph_tomita, mem_graph_tomita_symplComp_iff, modularConj_modularConj,
     K.mem_iff_modularConj_sqrt]
@@ -653,7 +653,7 @@ private lemma modular_symplComp_eq_integralPMap :
 
 /-- **`Δ_{K'} = Δ_K⁻¹`**: the modular operator of the symplectic complement is the inverse of that
 of `K`. -/
-theorem modular_symplComp : K.symplComp.modular = Δ[K].inverse := by
+lemma modular_symplComp : K.symplComp.modular = Δ[K].inverse := by
   rw [modular_symplComp_eq_integralPMap]
   conv_rhs => rw [K.isSelfAdjoint_modular.eq_integralPMap_pvm]
   simp_rw [ofReal_inv]
@@ -661,7 +661,7 @@ theorem modular_symplComp : K.symplComp.modular = Δ[K].inverse := by
     (K.ae_pos_measure_pvm_modular y).mono fun _ ht => ofReal_ne_zero.mpr ht.ne'
 
 /-- **`J_{K'} = J_K`**. -/
-theorem modularConj_symplComp (x : H) : K.symplComp.modularConj x = J[K] x := by
+lemma modularConj_symplComp (x : H) : K.symplComp.modularConj x = J[K] x := by
   -- both agree on the range of `Δ_{K'}^{1/2} = Δ_K^{-1/2}`, which contains `dom Δ_K^{1/2}`
   have hagree : ∀ u w, (u, w) ∈ K.symplComp.isSelfAdjoint_modular.sqrt.graph →
       K.symplComp.modularConj w = J[K] w := fun u w h => by
@@ -930,7 +930,7 @@ theorem modularGroup_map (V : H₁ ≃ₗᵢ[ℂ] H₂)
 
 /-- **Covariance of the modular group under antiunitaries**: if an antiunitary `V` maps `K₁` onto
 `K₂`, then `V Δ_{K₁}^{it} V* = Δ_{K₂}^{-it}`. -/
-theorem modularGroup_map_of_antiunitary (V : H₁ ≃ₗᵢ⋆[ℂ] H₂)
+lemma modularGroup_map_of_antiunitary (V : H₁ ≃ₗᵢ⋆[ℂ] H₂)
     (hV : ∀ ξ, V ξ ∈ K₂ ↔ ξ ∈ K₁) (t : ℝ) (x : H₁) :
     Δ[K₂]^{i (-t)} (V x) = V (Δ[K₁]^{i t} x) := by
   simpa using modularGroup_map_aux V hV t x
