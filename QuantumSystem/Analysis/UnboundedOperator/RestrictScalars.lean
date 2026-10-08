@@ -34,6 +34,8 @@ Conjugate-linear unbounded operators, such as Tomita operators, are treated here
   complex operator is its complex adjoint.
 * `LinearPMap.IsSemilinear.adjoint` — for the identity and the complex conjugation, semilinearity
   passes to the adjoint.
+* `LinearPMap.IsSemilinear.inner_eq_of_mem_graph_adjoint` — the complex adjoint identity
+  `⟪ψ, u⟫ = σ ⟪φ, v⟫` for `(u, v) ∈ graph T` and `(φ, ψ) ∈ graph T†`.
 * `LinearPMap.IsSemilinear.adjoint_toLinearPMap`, `LinearPMap.IsSemilinear.isSelfAdjoint_toLinearPMap`,
   `LinearPMap.IsSemilinear.isPositive_toLinearPMap` — for complex Hilbert spaces, `toLinearPMap`
   transports adjoints, self-adjointness and positivity.
@@ -58,7 +60,7 @@ disappear; this needs a conjugate space, which Mathlib also lacks.
 @[expose] public section
 
 open Complex ClosedSubmodule
-open scoped ComplexConjugate LinearPMap
+open scoped ComplexConjugate LinearPMap InnerProductSpace
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
   [NormedAddCommGroup F] [InnerProductSpace ℂ F]
@@ -105,6 +107,34 @@ lemma IsSemilinear.adjoint [CompleteSpace E] {σ : ℂ →+* ℂ} [RingHomIsomet
   have := h _ _ (hT (conj (σ c)) a b hab)
   simp only [inner_real_eq_re_inner, inner_smul_left, inner_smul_right, conj_conj, hσ] at this ⊢
   exact this
+
+/-- **The complex adjoint identity** for a densely defined `σ`-semilinear `T`, `σ` the identity or
+the complex conjugation: the real adjoint identity `re ⟪ψ, u⟫ = re ⟪φ, v⟫` for `(u, v) ∈ graph T`
+and `(φ, ψ) ∈ graph T†` upgrades to `⟪ψ, u⟫ = σ ⟪φ, v⟫`, by applying it also to `(i u, σ(i) v)`. -/
+lemma IsSemilinear.inner_eq_of_mem_graph_adjoint [CompleteSpace E] {σ : ℂ →+* ℂ}
+    [RingHomIsometric σ] (hT : IsSemilinear σ T) (hd : Dense (T.domain : Set E)) {u ψ : E}
+    {v φ : F} (huv : (u, v) ∈ T.graph) (h : (φ, ψ) ∈ T†.graph) :
+    ⟪ψ, u⟫_ℂ = σ ⟪φ, v⟫_ℂ := by
+  rw [adjoint_graph_eq_graph_adjoint hd, Submodule.mem_adjoint_iff] at h
+  have h₁ := h _ _ huv
+  have h₂ := h _ _ (hT I u v huv)
+  rw [sub_eq_zero, inner_real_eq_re_inner, inner_real_eq_re_inner] at h₁ h₂
+  dsimp only at h₁ h₂
+  rw [← inner_conj_symm ψ u, ← inner_conj_symm φ v]
+  rcases RingHom.eq_id_or_conj_of_isometric σ with rfl | rfl
+  · simp only [RingHom.id_apply, inner_smul_left, conj_I, neg_mul, neg_re, mul_re, I_re, I_im,
+      zero_mul, one_mul, zero_sub, neg_inj] at h₂
+    refine Complex.ext ?_ ?_
+    · rw [RingHom.id_apply, conj_re, conj_re]
+      exact h₁.symm
+    · rw [RingHom.id_apply, conj_im, conj_im, h₂]
+  · simp only [conj_I, inner_smul_left, conj_neg_I, mul_re, neg_re, neg_im, I_re, I_im, zero_mul,
+      one_mul, zero_sub, neg_zero] at h₂
+    refine Complex.ext ?_ ?_
+    · rw [conj_conj, conj_re]
+      exact h₁.symm
+    · rw [conj_conj, conj_im]
+      linarith
 
 /-- The complex adjoint of `hT.toLinearPMap` is the complex form of the real adjoint of `T`. -/
 lemma IsSemilinear.adjoint_toLinearPMap [CompleteSpace E] (hT : IsSemilinear (RingHom.id ℂ) T)

@@ -184,13 +184,8 @@ private lemma inner_eq_zero_of_mem_graph_closure {u v v' : H}
   have hadj : (v, v') ∈ (S⟦η, ξ⟧).closure†.graph := by
     rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita M η ξ)]
     exact LinearPMap.le_graph_of_le (relativeTomita_commutant_le_adjoint M η ξ) hv
-  have hIu : (I • u, 0) ∈ (S⟦η, ξ⟧).closure.graph := by
-    simpa using isSemilinear_closure_relativeTomita M η ξ I u 0 hu
-  have h₁ := LinearPMap.inner_eq_of_mem_graph_adjoint hd hu hadj
-  have h₂ := LinearPMap.inner_eq_of_mem_graph_adjoint hd hIu hadj
-  rw [inner_real_eq_re_inner, inner_real_eq_re_inner, inner_zero_right, zero_re] at h₁ h₂
-  rw [inner_smul_right, mul_re, I_re, I_im, zero_mul, one_mul, zero_sub, neg_eq_zero] at h₂
-  have h0 : ⟪v', u⟫_ℂ = 0 := Complex.ext (by simpa using h₁) (by simpa using h₂)
+  have h0 := (isSemilinear_closure_relativeTomita M η ξ).inner_eq_of_mem_graph_adjoint hd hu hadj
+  rw [inner_zero_right, map_zero] at h0
   rw [← inner_conj_symm, h0, map_zero]
 
 /-- **Support theorem.** The spectral measure `μ_ξ` of `Δ_{η,ξ}` has no atom at `0` iff
