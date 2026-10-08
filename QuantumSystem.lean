@@ -161,4 +161,5 @@ public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionVal
 public import QuantumSystem.ForMathlib.Topology.Algebra.CStarCompletion
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
+public import QuantumSystem.Geometry.Minkowski
 public import QuantumSystem.Notation
