@@ -80,6 +80,7 @@ representation given by the SNAG theorem.
 * `ProjectionValuedMeasure.commute_integral` — operators commuting with every `E s` commute with
   every `∫ f dE`.
 * `ProjectionValuedMeasure.integral_map` — change of variables, `∫ f d(φ_* E) = ∫ f ∘ φ dE`.
+* `ProjectionValuedMeasure.integral_dirac` — `∫ f dδ_a = f(a)`.
 * `ProjectionValuedMeasure.tendsto_integral_apply` — **dominated convergence** in the strong
   operator topology.
 * `ProjectionValuedMeasure.inner_fourier_apply_self` — `⟪y, U(v) y⟫ = ∫ exp (i L(w, v)) dE_y(w)`.
@@ -732,6 +733,17 @@ lemma integral_map {Y : Type*} [MeasurableSpace Y] {φ : Y → X} (hφ : Measura
   rw [inner_integral_self _ hf ⟨C, hC⟩, inner_integral_self _ (hf.comp hφ) ⟨C, fun x => hC _⟩,
     measure_map, MeasureTheory.integral_map hφ.aemeasurable hf.aestronglyMeasurable]
   rfl
+
+include hf hfb in
+/-- Integration against the Dirac projection-valued measure at `a` evaluates at `a`:
+`∫ f dδ_a = f(a)`. -/
+lemma integral_dirac (a : X) : (dirac H a).integral f = f a • 1 :=
+  ContinuousLinearMap.ext_inner_self fun y => by
+    rw [inner_integral_self _ hf hfb, measure_dirac, integral_smul_measure,
+      integral_dirac' _ _ hf.stronglyMeasurable, smul_apply, one_apply_eq_self, inner_smul_right,
+      inner_self_eq_norm_sq_to_K, ENNReal.toReal_pow, toReal_enorm, Complex.real_smul]
+    push_cast
+    exact mul_comm _ _
 
 /-- **Dominated convergence**: for measurable `fᵢ → f` pointwise along a countably generated filter,
 uniformly bounded, `(∫ fᵢ dE) y → (∫ f dE) y` for every `y`. -/

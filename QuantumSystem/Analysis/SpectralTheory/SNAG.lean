@@ -76,6 +76,7 @@ The measurability of the pairing, required by `ProjectionValuedMeasure.fourier`,
   transform of a unique projection-valued measure on `W`.
 * `AddChar.IsStronglyContinuous.existsUnique_fourier_eq_strongDual` — **SNAG theorem** on the dual
   space: `U v = ∫ exp (i p v) dE(p)` for a unique `E` on `StrongDual ℝ V`.
+* `AddChar.IsStronglyContinuous.pvm_one` — the trivial representation has the Dirac measure at `0`.
 * `AddChar.IsStronglyContinuous.inner_apply_eq_integral_measure_pvm` — the diagonal measures:
   `⟪y, U v y⟫ = ∫ exp (i L(p, v)) dE_y(p)`.
 * `AddChar.IsStronglyContinuous.pvm_compAddMonoidHom`,
@@ -757,6 +758,16 @@ perfect pairing `L` of `W` with `V`. -/
 theorem existsUnique_fourier_eq :
     ∃! E : ProjectionValuedMeasure W H, E.fourier L L.measurable_flip_apply_of_isContPerfPair = U :=
   ⟨hU.pvm L, hU.fourier_pvm L, fun _ hE => hU.eq_pvm_of_fourier_eq hE⟩
+
+variable (L) in
+/-- The projection-valued measure of the trivial representation is the Dirac measure at `0`. -/
+lemma pvm_one (hU₁ : (1 : AddChar V (unitary (H →L[ℂ] H))).IsStronglyContinuous) :
+    hU₁.pvm L = ProjectionValuedMeasure.dirac H 0 := by
+  refine (hU₁.eq_pvm_of_fourier_eq (AddChar.ext _ _ fun v => Subtype.ext ?_)).symm
+  rw [ProjectionValuedMeasure.coe_fourier_apply, ProjectionValuedMeasure.integral_dirac
+    (ProjectionValuedMeasure.measurable_exp_pairing L L.measurable_flip_apply_of_isContPerfPair v)
+    ⟨1, fun _ => (norm_exp_ofReal_mul_I _).le⟩]
+  simp
 
 end IsStronglyContinuous
 
