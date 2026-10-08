@@ -29,6 +29,7 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.TFAE
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.Algebra.VonNeumannAlgebra.MinimalProjection
+public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Borchers
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeModular
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeTomita
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial
