@@ -51,6 +51,11 @@ continuous); the notation is scoped to `PositiveLinearMap`.
   `PositiveLinearMap.gnsVector_eq_gnsMk_one` (`ξ_f = [1]`) and
   `PositiveLinearMap.ofReal_norm_gnsVector_sq` (`‖ξ_f‖² = f 1`).
 
+## Notation
+
+`‖f‖ₒₚ` is the operator norm of a positive linear functional `f`, taken through
+`PositiveContinuousLinearMap.ofClass f`; activate it with `open scoped PositiveLinearMap`.
+
 ## References
 
 * Bratteli, Robinson, *Operator Algebras and Quantum Statistical Mechanics I*, Theorem 2.3.16.

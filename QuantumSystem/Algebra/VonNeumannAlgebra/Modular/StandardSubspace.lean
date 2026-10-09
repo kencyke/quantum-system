@@ -60,6 +60,12 @@ apply to von Neumann algebras.
 * Tomita's theorem `J M J = M′`, `Δ^{it} M Δ^{-it} = M` for von Neumann algebras, the modular
   automorphism group of `M` and the KMS condition of `ω_Ω`.
 
+## Notation
+
+`H[M, Ω]` is `VonNeumannAlgebra.standardSubspace M Ω hc hs`, the standard subspace
+`H_M = closure {x Ω | x ∈ M, x⋆ = x}`; the proofs `hc hs` are found in the context by
+`cyclic_separating`, also for `M′`. Activate it with `open scoped VonNeumannAlgebra`.
+
 ## References
 
 * O. Bratteli, D. W. Robinson, *Operator Algebras and Quantum Statistical Mechanics 1*, Springer

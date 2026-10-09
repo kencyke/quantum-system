@@ -102,6 +102,10 @@ reduction to the faithful case (which would also go through the standard form) i
 * `VonNeumannAlgebra.exists_norm_sq_le_of_supportProj_le` — for finite-dimensional `M`,
   `s(ξ) ≤ s(η)` gives `ω_ξ ≤ c ω_η` for some `c > 0`.
 
+## Notation
+
+`S[M]⟦ξ ∥ η⟧` is `VonNeumannAlgebra.arakiVec M ξ η`; activate it with `open scoped Araki`.
+
 ## References
 
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976), 809–833.

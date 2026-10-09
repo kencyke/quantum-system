@@ -42,6 +42,11 @@ commute (`HilbertSchmidt.commute_leftMul_rightMul`).
 * Generalise to infinite-dimensional `H` and `K`, where the Hilbert–Schmidt operators form a proper
   subspace of `H →L[ℂ] K`, and to `RCLike 𝕜`.
 * Turn the type synonym into a one-field structure, as Mathlib's `WithLp`, to rule out defeq abuse.
+
+## Notation
+
+`𝐋[H] B` is `HilbertSchmidt.leftMul H B` and `𝐑[K] A` is
+`MulOpposite.unop (HilbertSchmidt.rightMul K A)`; activate them with `open scoped HilbertSchmidt`.
 -/
 
 @[expose] public section

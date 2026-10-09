@@ -70,6 +70,10 @@ is the eigenvalue sum `Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² (log rᵢ - log sⱼ)`
 `VonNeumannAlgebra.arakiEntropy_eq_top_of_apply_star_mul_self`. Faithfulness writes the eigenvalue
 sum as a sum of Kullback–Leibler terms `|⟪cⱼ, bᵢ⟫|² sⱼ klFun(rᵢ / sⱼ)`.
 
+## Notation
+
+`D(ψ ∥ φ)` is `umegakiEntropy ψ φ`; activate it with `open scoped QuantumInfo`.
+
 ## References
 
 * H. Umegaki, *Conditional expectation in an operator algebra IV (entropy and information)*,

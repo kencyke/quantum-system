@@ -263,9 +263,10 @@ Would the notation or the docs slow a reader down, or mislead them?
   auto-generated unexpander often does not fire and goals show the raw spelling.
   Check one goal with `lean_goal`; if the notation does not appear, the
   declaration needs an `app_unexpander` or a `delab`. Severity `should-fix`.
-- **A notation must be registered.** Every exported notation introduced by the
-  target belongs in the project's notation table (`QuantumSystem/Notation.lean`
-  here). A missing row is a `nit`.
+- **A notation must be documented where it is declared.** Every exported
+  notation introduced by the target is named in its module doc together with
+  how to activate it (`open scoped …`); the project keeps no central notation
+  table. A missing mention is a `nit`.
 - Check naming against the project's style rules (its `CLAUDE.md` / `AGENTS.md`
   or linked style file), and otherwise against Mathlib's naming conventions.
 - **Check that conventions are pinned in the module doc.** A statement that is

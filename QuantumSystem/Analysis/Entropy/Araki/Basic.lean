@@ -96,6 +96,11 @@ The following are not formalised:
 * Petz's recovery map and the equality case of the data-processing inequality;
 * Kosaki's variational formula, and the joint convexity and lower semicontinuity of `S` that follow
   from it.
+
+## Notation
+
+`S⟦ψ ∥ φ⟧` is `VonNeumannAlgebra.arakiEntropy M ψ φ`, with the algebra `M` inferred from the
+states; activate it with `open scoped Araki`.
 -/
 
 @[expose] public section

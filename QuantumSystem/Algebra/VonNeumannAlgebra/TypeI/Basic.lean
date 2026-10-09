@@ -73,9 +73,9 @@ infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**.
 
 In the prose above `B(H)` names the mathematical object — the algebra of all bounded operators —
 while `𝓑(H)` is the Lean notation for it. The two are used deliberately, not interchangeably:
-`𝓑(H)` resolves to `VonNeumannAlgebra.boundedLinearOperators H` (bundled von Neumann algebra) or
-to `H →L[ℂ] H` (operator type) according to the expected type, an overload tabled in
-`QuantumSystem.Algebra.VonNeumannAlgebra.Basic` and bridged by
+`𝓑(H)` is the bundled von Neumann algebra `VonNeumannAlgebra.boundedLinearOperators H` (notation
+introduced in `QuantumSystem.Algebra.VonNeumannAlgebra.Basic`), while the operator type is written
+`H →L[ℂ] H`; the two are related by the canonical `⋆`-isomorphism
 `boundedLinearOperators.starAlgEquiv`.
 
 `⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; that

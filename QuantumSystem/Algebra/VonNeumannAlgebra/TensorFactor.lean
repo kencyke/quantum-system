@@ -74,6 +74,11 @@ For a von Neumann algebra `M` on `H` and a Hilbert space `H₁`, the **amplifica
   the bicommutant theorem).
 * `VonNeumannAlgebra.inner_apply_eq_of_mem_amplify` — hence vector functionals on `amplify H₁ M`
   are determined by their values on `1 ⊗ M`.
+
+## Notation
+
+`𝟙[K] ⊗ M` is `VonNeumannAlgebra.amplify K M`, the algebra `1 ⊗ M` on `K ⊗̂ H`; activate it
+with `open scoped VonNeumannAlgebra`.
 -/
 
 @[expose] public section

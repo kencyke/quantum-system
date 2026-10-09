@@ -59,6 +59,11 @@ adjoints are real adjoints for the inner product `re ⟪·, ·⟫` (`open Closed
   `S_{η, c ξ} = c̄⁻¹ S_{η,ξ}` for `c ≠ 0` (`relativeTomita_smul_right`) and
   `S_{η, w′ ξ} = S_{η,ξ} w′⋆` for `w′ ∈ M′` with `w′⋆ w′ ξ = ξ` (`relativeTomita_apply_right`).
 
+## Notation
+
+`S[M]⟦η, ξ⟧` is `VonNeumannAlgebra.relativeTomita M η ξ`; activate it with
+`open scoped VonNeumannAlgebra`.
+
 ## References
 
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976).

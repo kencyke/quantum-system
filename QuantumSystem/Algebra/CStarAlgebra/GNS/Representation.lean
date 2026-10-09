@@ -28,7 +28,8 @@ vector (`norm_ξ_eq_one`) and that `π ≠ 0`, since a state is nonzero
 * `GNS.Representation.π_eq_zero_iff`: `π = 0` iff `f = 0`.
 * `GNS.Representation.actsNondegenerately`, `GNS.Representation.tendsto_π_approximateUnit`:
   a GNS triplet is non-degenerate, and `π e_α → 1` strongly along an approximate unit.
-* `GNS.Representation.UnitaryEquiv`: unitary equivalence of GNS triplets, written `T₁ ≃ᵁ T₂`.
+* `GNS.Representation.UnitaryEquiv`: unitary equivalence of GNS triplets, written `T₁ ≃ᵁ T₂`
+  (`open scoped GNS`).
 * `GNS.Representation.unique_up_to_unitary_equivalence`: any two GNS triplets for the same
   functional are unitarily equivalent.  The unitary `π₁ a ξ₁ ↦ π₂ a ξ₂` is Mathlib's
   `LinearEquiv.extendOfIsometry` applied to the two dense orbit maps.
@@ -54,7 +55,8 @@ positive functional" at the type level.
 
 Inherited fields (from `CStarRep A`):
 * `H` : the underlying type of the Hilbert space.
-* `[hilbert]` : evidence that `H` is a complex Hilbert space.
+* `[normedAddCommGroup]`, `[innerProductSpace]`, `[completeSpace]` : the instances making `H` a
+  complex Hilbert space.
 * `π : A →⋆ₙₐ[ℂ] (H →L[ℂ] H)` : a non‑unital *-representation of `A` on `H`.
 
 GNS-specific fields:
@@ -219,7 +221,11 @@ structure UnitaryEquiv (T₁ T₂ : Representation f) extends
   /-- The unitary sends the cyclic vector of the first triplet to that of the second. -/
   map_cyclic_vector : toUnitaryEquiv.toLinearIsometryEquiv T₁.ξ = T₂.ξ
 
-notation:50 T₁ " ≃ᵁ " T₂ => Representation.UnitaryEquiv (f := _) T₁ T₂
+/-- `T₁ ≃ᵁ T₂` is a unitary equivalence of GNS triplets preserving the cyclic vector
+(`GNS.Representation.UnitaryEquiv`). Scoped to `GNS` (activate with `open scoped GNS`), alongside
+`𝓗[ω]`, `π[ω]`, `ξ[ω]`, since it names the GNS-specific notion, not the generic
+`CStarRep.UnitaryEquiv`. -/
+scoped[GNS] notation:50 T₁ " ≃ᵁ " T₂ => GNS.Representation.UnitaryEquiv (f := _) T₁ T₂
 
 /-- For a GNS triplet, the length of the orbit vector `T.π x T.ξ` is read off from the functional:
 `‖π x ξ‖ = √‖f (x* x)‖`, the same form as `PositiveLinearMap.norm_gnsMk` for the canonical

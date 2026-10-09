@@ -62,6 +62,10 @@ tracial states are defined (see the TODO of `QuantumSystem.Algebra.CStarAlgebra.
 The upper bound and its equality case are Klein's inequality and faithfulness of `D(ω ‖ τ)`;
 concavity is joint convexity of `D(· ‖ tr)` (`umegakiEntropy_jointly_convex`);
 invariance is invariance of `D` together with that of the trace.
+
+## Notation
+
+`S(ω)` is `vonNeumannEntropy ω`; activate it with `open scoped QuantumInfo`.
 -/
 
 @[expose] public section

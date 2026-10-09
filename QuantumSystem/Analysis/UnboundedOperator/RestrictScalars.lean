@@ -55,6 +55,13 @@ Develop the graph, closure and adjoint of semilinear partial maps, and von Neuma
 them, so that a conjugate-linear operator is an `E →ₛₗ.[starRingEnd ℂ] F` and `S̄† S̄` is
 complex-linear by `LinearPMap.compNat` directly. `IsSemilinear` and `toLinearPMap` would then
 disappear; this needs a conjugate space, which Mathlib also lacks.
+
+## Notation
+
+`V ⬝ T` and `T ⬝ V` compose a bounded complex-linear map `V` with a real-linear operator `T`
+(`LinearMap.compPMap` and `LinearPMap.compNat` along `(V : E →ₗ[ℂ] F).restrictScalars ℝ`), so
+the intertwining `V T ⊆ T′ V` reads `V ⬝ T ≤ T′ ⬝ V`. Activate them with
+`open scoped LinearPMap`.
 -/
 
 @[expose] public section

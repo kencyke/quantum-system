@@ -92,6 +92,9 @@ theorems impose nondegeneracy or cyclicity where they need it.
 
 ## Notation
 
+`O₁ ⋐ O₂` is `ProperContainment.ProperlyContained O₁ O₂`; activate it with
+`open scoped ProperContainment`.
+
 `𝔄(O)` and `𝓡(O)` in the prose above are documentation shorthand for the local C⋆-algebra
 `N.algebra O` and the local von Neumann algebra `N.localVonNeumannAlgebra R O`; the convention —
 and why neither is a Lean notation — is stated in full in `QuantumSystem.Algebra.LocalNet.Net`.

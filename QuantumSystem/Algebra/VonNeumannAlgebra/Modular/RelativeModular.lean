@@ -62,6 +62,10 @@ condition of `ω_Ω`.
 
 ## Notation
 
+The scoped notations `Δ[M]⟦η, ξ⟧`, `Δ[M]⟦η, ξ⟧^{1/2}`, `E_Δ[M]⟦η, ξ⟧` (the spectral measure of
+`Δ_{η,ξ}`), `Δ[M]⟦η, ξ⟧^{±i t}` and `μ[M]⟦η, ξ⟧` are activated with
+`open scoped VonNeumannAlgebra`.
+
 With the algebra `M` fixed, this file writes `S⟦η, ξ⟧`, `Δ⟦η, ξ⟧` and `μ⟦η, ξ⟧` for
 `S[M]⟦η, ξ⟧`, `Δ[M]⟦η, ξ⟧` and `μ[M]⟦η, ξ⟧` (local notations, not exported); the latter are
 the exported `scoped` notations for `relativeTomita M η ξ`, `relativeModular M η ξ` and
@@ -198,10 +202,6 @@ meta def delabSqrtRelativeModular : Delab := do
   let ξ ← withAppArg <| withNaryArg 6 delab
   `(Δ[$M]⟦$η, $ξ⟧^{1/2})
 
-/-- The **relative modular group** `t ↦ Δ_{η,ξ}^{it} = ∫_{(0,∞)} λ^{it} dE(λ)`
-(`IsSelfAdjoint.imaginaryPower`, with `0^{it} = 0`): partial isometries with initial and final space
-`E_Δ((0, ∞)) H = (ker Δ_{η,ξ})ᗮ` (`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`,
-`IsSelfAdjoint.norm_imaginaryPower_apply`,
 /-- `E_Δ[M]⟦η, ξ⟧` is the projection-valued (spectral) measure `E_Δ` of the relative modular
 operator `Δ_{η,ξ}` on the Borel sets of `ℝ`, so that `E_Δ[M]⟦η, ξ⟧ (Set.Ioi 0)` is `E_Δ((0, ∞))`. -/
 scoped notation "E_Δ[" M "]⟦" η ", " ξ "⟧" =>
@@ -219,6 +219,10 @@ meta def delabPvmRelativeModular : Delab := do
   let ξ ← withAppArg <| withNaryArg 6 delab
   `(E_Δ[$M]⟦$η, $ξ⟧)
 
+/-- The **relative modular group** `t ↦ Δ_{η,ξ}^{it} = ∫_{(0,∞)} λ^{it} dE(λ)`
+(`IsSelfAdjoint.imaginaryPower`, with `0^{it} = 0`): partial isometries with initial and final space
+`E_Δ((0, ∞)) H = (ker Δ_{η,ξ})ᗮ` (`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`,
+`IsSelfAdjoint.norm_imaginaryPower_apply`,
 `IsSelfAdjoint.pvm_Ioi_imaginaryPower_apply`), strongly continuous in `t`
 (`IsSelfAdjoint.continuous_imaginaryPower_apply`), and a group of partial isometries on
 `E_Δ((0, ∞)) H`: `Δ_{η,ξ}^{i(s+t)} = Δ_{η,ξ}^{is} Δ_{η,ξ}^{it}`

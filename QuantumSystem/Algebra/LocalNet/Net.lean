@@ -55,6 +55,9 @@ index set to be directed); covariance data and its action live in `LocalNet.Cova
 
 ## Notation
 
+`O₁ ⟂ O₂` is `CausalOrthogonality.Orthogonal O₁ O₂`, causal orthogonality of regions; activate it
+with `open scoped CausalOrthogonality`.
+
 `𝔄(O)` in the prose above is documentation shorthand, following the AQFT literature, for the local
 C⋆-algebra `N.algebra O` of a region; where a representation is in play, `𝓡(O)` abbreviates the
 local von Neumann algebra `N.localVonNeumannAlgebra R O`. Neither is a Lean notation, and
