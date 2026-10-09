@@ -65,6 +65,13 @@ is contained in the spectral cone. For the dual pairing `L = topDualPairing ℝ 
 * `[T2Space V]` is used only to reach the dual pairing `topDualPairing ℝ V` in the construction;
   a strongly continuous `U` factors through the Hausdorff quotient of `V`, so the assumption could
   be removed.
+* Holomorphy in the tube `V + i C`: the spectrum condition `E_U((C*)ᶜ) = 0` holds iff
+  `v ↦ U v` extends to a bounded family on `V + i C`, holomorphic on `V + i C°` and strongly
+  continuous up to the boundary, `U (v + i w) = ∫ exp (i L(p, v)) exp (-L(p, w)) dE_U(p)`
+  (Streater–Wightman, §2.6; Borchers 1995, §2). This needs holomorphy in several complex variables;
+  only the one-variable case along a direction `a` of the spectral cone, `w ↦ e^{iwP_a}` on the
+  upper half-plane (`ProjectionValuedMeasure.diffContOnCl_integralApply_cexp_of_nonneg`), is
+  formalised.
 
 ## References
 
