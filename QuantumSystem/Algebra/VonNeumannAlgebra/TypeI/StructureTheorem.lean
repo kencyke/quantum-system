@@ -110,11 +110,11 @@ the analytic heart of the generation theorem; it is the Hilbert-sum reconstructi
 coordinates, with the `i`-th coordinate recognised as the orthogonal projection `(↑i) y` by
 `coe_hilbertSumEquiv_apply`. -/
 theorem OrthEquivFam.hasSum_resolutionOfIdentity (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) (y : H) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) (y : H) :
     HasSum (fun i : F => (i : H →L[ℂ] H) y) y := by
   have hdecomp : HasSum
       (fun i : F => ((hF.hilbertSumEquiv htop y i :
-          LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) : H)) y := by
+          (i : H →L[ℂ] H).range) : H)) y := by
     have h := (hF.isHilbertSum htop).hasSum_linearIsometryEquiv_symm (hF.hilbertSumEquiv htop y)
     have hy : (hF.isHilbertSum htop).linearIsometryEquiv.symm (hF.hilbertSumEquiv htop y) = y :=
       (hF.hilbertSumEquiv htop).symm_apply_apply y
@@ -131,7 +131,7 @@ identity `Σ_r p_r = 1` between and around `a`, the commutator reduces to the fa
 (`exists_matrixEntry`) and therefore commutes with `b`. -/
 theorem OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     {a : H →L[ℂ] H} (ha : a ∈ N) {b : H →L[ℂ] H}
     (hb : b ∈ Set.centralizer (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2))) :
     a * b = b * a := by
@@ -194,7 +194,7 @@ theorem OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
 /-- The centralizer of the matrix units is contained in the commutant of `N`. -/
 lemma OrthEquivFam.centralizer_subset_commutant (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
     Set.centralizer (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2))
       ⊆ Set.centralizer (N : Set (H →L[ℂ] H)) := by
   intro b hb
@@ -207,7 +207,7 @@ matrix units `e_{pq} = v_p v_q⋆` is `N`. This is the von-Neumann-algebraic for
 theorem `N ≅ B(ℓ²(F)) ⊗̄ 1`. -/
 theorem OrthEquivFam.generated_matrixUnits_eq (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
     VonNeumannAlgebra.generated (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) = N := by
   set S := Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2) with hSdef
   apply le_antisymm
@@ -228,7 +228,7 @@ content of the structure theorem, in closure form, obtained from the generation 
 double commutant theorem. -/
 theorem OrthEquivFam.mem_sotClosure_adjoin (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     {a : H →L[ℂ] H} (ha : a ∈ N) :
     (ContinuousLinearMap.toUniformConvergenceCLM _ _ _ a : H →SLₚₜ[RingHom.id ℂ] H) ∈ closure (Set.toSOT
       (StarAlgebra.adjoin ℂ (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) :
@@ -259,22 +259,21 @@ theorem OrthEquivFam.mem_sotClosure_adjoin (hF : OrthEquivFam N e F)
 
 /-- `δ i` abbreviates the standard basis vector `lp.single 2 i 1` of `ℓ²(F)`, matching the `δ_i` of the
 informal text. (A Dirac bra-ket `|x⟩⟨y|` notation for the rank-one operator is deliberately not
-introduced here: a leading `|` token collides with the set-builder `{y | … }` used in the `htop`
-hypotheses throughout this file.) -/
+introduced here: a leading `|` token collides with the set-builder syntax `{y | … }`.) -/
 local notation "δ " i:max => lp.single (E := fun _ => ℂ) 2 i (1 : ℂ)
 
 /-- **Explicit multiplicity coordinate.** Under the spatial decomposition the `i`-th coordinate of
 `y` in `ℓ²(F; eH)` is `v_i⋆ y`, where `v_i` is the equivalence partial isometry `e ≅ i`. -/
 theorem OrthEquivFam.coe_multiplicityEquiv_apply (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     (y : H) (i : F) :
-    ((hF.multiplicityEquiv htop y i : LinearMap.range (e : H →ₗ[ℂ] H)) : H)
+    ((hF.multiplicityEquiv htop y i : e.range) : H)
       = star (hF.pisom i) y := by
   have hop : star (hF.pisom i) * (i : H →L[ℂ] H) = star (hF.pisom i) := by
     rw [← hF.pisom_range i, ← mul_assoc, hF.pisom_source i, hF.e_mul_star_pisom i]
-  have h1 : ((hF.multiplicityEquiv htop y i : LinearMap.range (e : H →ₗ[ℂ] H)) : H)
+  have h1 : ((hF.multiplicityEquiv htop y i : e.range) : H)
       = star (hF.pisom i)
-          ((hF.hilbertSumEquiv htop y i : LinearMap.range ((i : H →L[ℂ] H) : H →ₗ[ℂ] H)) : H) :=
+          ((hF.hilbertSumEquiv htop y i : (i : H →L[ℂ] H).range) : H) :=
     (hF.pisom_isPI i).coe_sourceRangeEquiv_symm (hF.pisom_source i) (hF.pisom_range i) _
   rw [h1, hF.coe_hilbertSumEquiv_apply htop y i, ← mul_apply_eq_comp, hop]
 
@@ -283,22 +282,22 @@ linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` of `H` with t
 product, identifying `H` with `ℓ²(F) ⊗̂ (eH)` via `multiplicityEquiv` and the tensor bridge. This is
 the isomorphism implementing the type I structure theorem `N ≅ B(ℓ²(F)) ⊗̄ 1`. -/
 noncomputable def OrthEquivFam.spatialEquiv (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] :
-    H ≃ₗᵢ[ℂ] HilbertTensor (lp (fun _ : F => ℂ) 2) (LinearMap.range (e : H →ₗ[ℂ] H)) :=
-  (hF.multiplicityEquiv htop).trans (lpTensorEquiv (ι := F) (K := LinearMap.range (e : H →ₗ[ℂ] H)))
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [CompleteSpace (e.range)] [DecidableEq F] :
+    H ≃ₗᵢ[ℂ] HilbertTensor (lp (fun _ : F => ℂ) 2) (e.range) :=
+  (hF.multiplicityEquiv htop).trans (lpTensorEquiv (ι := F) (K := e.range))
 
 /-- **Spatial expansion of `U`.** The spatial isomorphism `U = multiplicityEquiv ∘ lpTensorEquiv`
 expands a vector as `U y = ∑ᵢ δᵢ ⊗̂ (i-th multiplicity coordinate of y)`. -/
 theorem OrthEquivFam.hasSum_tmul_spatialEquiv (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (y : H) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [CompleteSpace (e.range)] [DecidableEq F] (y : H) :
     HasSum (fun i : F => tmul (δ i) (hF.multiplicityEquiv htop y i))
       (hF.spatialEquiv htop y) := by
-  have h := (lp.hasSum_single (E := fun _ : F => LinearMap.range (e : H →ₗ[ℂ] H)) (p := 2)
+  have h := (lp.hasSum_single (E := fun _ : F => e.range) (p := 2)
       (by norm_num) (hF.multiplicityEquiv htop y)).mapL
       (lpTensorEquiv (ι := F)
-        (K := LinearMap.range (e : H →ₗ[ℂ] H))).toLinearIsometry.toContinuousLinearMap
+        (K := e.range)).toLinearIsometry.toContinuousLinearMap
   simpa only [OrthEquivFam.spatialEquiv, LinearIsometryEquiv.coe_toLinearIsometry,
     LinearIsometry.coe_toContinuousLinearMap, lpTensorEquiv_single,
     LinearIsometryEquiv.trans_apply] using h
@@ -308,14 +307,14 @@ attribute [local irreducible] OrthEquivFam.spatialEquiv OrthEquivFam.multiplicit
 /-- The `p`-th coordinate of `U (e_{pq} y)` collapses to the single term `δ_p ⊗̂ (v_q⋆ y)`: every
 other coordinate vanishes because `v_i⋆ e_{pq} = 0` for `i ≠ p`. -/
 lemma OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [CompleteSpace (e.range)] [DecidableEq F] (p q : F) (y : H) :
     hF.spatialEquiv htop (hF.matrixUnit p q y)
       = tmul (δ p) (hF.multiplicityEquiv htop (hF.matrixUnit p q y) p) := by
   refine (hF.hasSum_tmul_spatialEquiv htop (hF.matrixUnit p q y)).unique ?_
   refine hasSum_single p (fun i hi => ?_)
   have hcoe : ((hF.multiplicityEquiv htop (hF.matrixUnit p q y) i :
-      LinearMap.range (e : H →ₗ[ℂ] H)) : H) = 0 := by
+      e.range) : H) = 0 := by
     rw [hF.coe_multiplicityEquiv_apply htop]
     have h0 : star (hF.pisom i) * hF.matrixUnit p q = 0 := by
       rw [OrthEquivFam.matrixUnit_def, ← mul_assoc,
@@ -326,7 +325,7 @@ lemma OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
 
 /-- The surviving coordinates agree: `v_p⋆ (e_{pq} y) = v_q⋆ y`. -/
 lemma OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     (p q : F) (y : H) :
     hF.multiplicityEquiv htop (hF.matrixUnit p q y) p = hF.multiplicityEquiv htop y q := by
   apply Subtype.ext
@@ -338,39 +337,39 @@ lemma OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F)
 /-- The amplified rank-one operator on `U y` collapses to the single term `δ_p ⊗̂ (v_q⋆ y)`: the
 rank-one operator picks out the `q`-th coordinate. -/
 lemma OrthEquivFam.amplifyLeft_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
-    amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)) (hF.spatialEquiv htop y)
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [CompleteSpace (e.range)] [DecidableEq F] (p q : F) (y : H) :
+    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙) (hF.spatialEquiv htop y)
       = tmul (δ p) (hF.multiplicityEquiv htop y q) := by
-  have key : ∀ i : F, amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
+  have key : ∀ i : F, ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (tmul (δ i) (hF.multiplicityEquiv htop y i))
       = (inner ℂ (δ q) (δ i) : ℂ) • tmul (δ p) (hF.multiplicityEquiv htop y i) :=
     fun i => by rw [amplifyLeft_tmul, InnerProductSpace.rankOne_apply, tmul_smul_left]
   have hqq : (inner ℂ (δ q) (δ q) : ℂ) = 1 := by
     rw [lp.inner_single_left, lp.coeFn_single, Pi.single_eq_same,
       RCLike.inner_apply, map_one, mul_one]
-  have hz : ∀ i : F, i ≠ q → amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
+  have hz : ∀ i : F, i ≠ q → ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (tmul (δ i) (hF.multiplicityEquiv htop y i)) = 0 := by
     intro i hi
     have hzero : (inner ℂ (δ q) (δ i) : ℂ) = 0 := by
       rw [lp.inner_single_left, lp.coeFn_single,
         Pi.single_eq_of_ne (Ne.symm hi), inner_zero_right]
     rw [key i, hzero, zero_smul]
-  have hval : amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q))
+  have hval : ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (tmul (δ q) (hF.multiplicityEquiv htop y q))
       = tmul (δ p) (hF.multiplicityEquiv htop y q) := by
     rw [key q, hqq, one_smul]
   exact (((hF.hasSum_tmul_spatialEquiv htop y).mapL
-    (amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)))).unique
+    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)).unique
     (hasSum_single q hz)).trans hval
 
 /-- **Intertwining relation.** The spatial isomorphism intertwines the matrix unit `e_{pq}` with
 the amplified rank-one operator: `U (e_{pq} y) = (|δ_p⟩⟨δ_q| ⊗̂ 1) (U y)`. -/
 lemma OrthEquivFam.spatialEquiv_intertwine (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) (y : H) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [CompleteSpace (e.range)] [DecidableEq F] (p q : F) (y : H) :
     hF.spatialEquiv htop (hF.matrixUnit p q y)
-      = amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)) (hF.spatialEquiv htop y) :=
+      = ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙) (hF.spatialEquiv htop y) :=
   (hF.spatialEquiv_matrixUnit_apply htop p q y).trans
     ((congrArg (tmul (δ p)) (hF.multiplicityEquiv_matrixUnit_coord htop p q y)).trans
       (hF.amplifyLeft_rankOne_spatialEquiv htop p q y).symm)
@@ -380,14 +379,14 @@ lemma OrthEquivFam.spatialEquiv_intertwine (hF : OrthEquivFam N e F)
 `|δ_p⟩⟨δ_q|` on `ℓ²(F)`: `U e_{pq} U⋆ = |δ_p⟩⟨δ_q| ⊗̂ 1`. This is the algebraic heart of the
 identification `N ≅ B(ℓ²(F)) ⊗̄ 1`. -/
 theorem OrthEquivFam.conjStarAlgEquiv_matrixUnit (hF : OrthEquivFam N e F)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] [DecidableEq F] (p q : F) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [CompleteSpace (e.range)] [DecidableEq F] (p q : F) :
     (hF.spatialEquiv htop).conjStarAlgEquiv (hF.matrixUnit p q)
-      = amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)) := by
+      = (InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙 := by
   refine ContinuousLinearMap.ext fun w => ?_
   rw [LinearIsometryEquiv.conjStarAlgEquiv_apply_apply]
   exact (hF.spatialEquiv_intertwine htop p q ((hF.spatialEquiv htop).symm w)).trans
-    (congrArg (amplifyLeft (InnerProductSpace.rankOne ℂ (δ p) (δ q)))
+    (congrArg ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
       (LinearIsometryEquiv.apply_symm_apply (hF.spatialEquiv htop) w))
 
 omit [CompleteSpace H] in
@@ -398,19 +397,19 @@ in `1 ⊗̄ B(eH)` (the dense slice lemma, using that `{δ_p}` spans densely), a
 `1 ⊗̄ B(eH)` commutes with them; so the commutant is `vnTensorRight`, whose commutant is
 `vnTensorLeft`. -/
 lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
-    [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] :
+    [CompleteSpace (e.range)] :
     VonNeumannAlgebra.generated (Set.range (fun pq : F × F =>
-        amplifyLeft (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))
+        amplifyLeft (H₂ := e.range)
           (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))))
       = vnTensorLeft := by
-  set T := Set.range (fun pq : F × F => amplifyLeft (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))
+  set T := Set.range (fun pq : F × F => amplifyLeft (H₂ := e.range)
     (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) with hTdef
   have hcomm : VonNeumannAlgebra.commutantSet T = vnTensorRight := by
     refine le_antisymm (fun x hx => ?_) ?_
     · refine mem_vnTensorRight_of_commutes_dense (δ (Classical.arbitrary F))
         (lp.norm_single_one two_pos _) (Set.range fun i : F => δ i) lp.dense_span_single x (fun f hf => ?_)
       obtain ⟨p, rfl⟩ := hf
-      have hg : amplifyLeft (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))
+      have hg : amplifyLeft (H₂ := e.range)
           (InnerProductSpace.rankOne ℂ (δ p) (δ (Classical.arbitrary F))) ∈ T :=
         ⟨(p, Classical.arbitrary F), rfl⟩
       have hcx := (VonNeumannAlgebra.mem_commutantSet_iff.mp hx _ hg).1
@@ -426,7 +425,7 @@ lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
         (star (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) B
   exact (congrArg VonNeumannAlgebra.commutant hcomm).trans
     (vnTensorRight_commutant (H₁ := lp (fun _ : F => ℂ) 2)
-      (H₂ := LinearMap.range (e : H →ₗ[ℂ] H)))
+      (H₂ := e.range))
 
 /-- **Type I factor structure theorem (explicit identification).** Under the spatial isomorphism
 `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)`, the type I factor `N` is carried exactly onto the tensor factor
@@ -435,13 +434,13 @@ lemma generated_amplifyLeft_rankOne_eq [Nonempty F] [DecidableEq F]
 spatial conjugation commutes with the generated-algebra construction. -/
 theorem OrthEquivFam.conj_spatialEquiv_eq_vnTensorLeft (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [Nonempty F] [DecidableEq F] [CompleteSpace (e.range)] :
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) N = vnTensorLeft := by
   have himg : ⇑(hF.spatialEquiv htop).conjStarAlgEquiv ''
       (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2))
       = Set.range (fun pq : F × F =>
-        amplifyLeft (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))
+        amplifyLeft (H₂ := e.range)
           (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) := by
     rw [← Set.range_comp]
     exact congrArg Set.range (funext fun pq => hF.conjStarAlgEquiv_matrixUnit htop pq.1 pq.2)
@@ -454,7 +453,7 @@ theorem OrthEquivFam.conj_spatialEquiv_eq_vnTensorLeft (hF : OrthEquivFam N e F)
           Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) :=
         VonNeumannAlgebra.conj_generated _ _
     _ = VonNeumannAlgebra.generated (Set.range (fun pq : F × F =>
-          amplifyLeft (H₂ := LinearMap.range (e : H →ₗ[ℂ] H))
+          amplifyLeft (H₂ := e.range)
             (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2)))) :=
         congrArg VonNeumannAlgebra.generated himg
     _ = vnTensorLeft := generated_amplifyLeft_rankOne_eq
@@ -465,8 +464,8 @@ commutant `N'` onto `1 ⊗̄ B(eH)`: `U N' U⋆ = 1 ⊗̄ B(eH)`. This is the co
 commutants and `(B(ℓ²(F)) ⊗̄ 1)' = 1 ⊗̄ B(eH)`. -/
 theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_vnTensorRight (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))] :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [Nonempty F] [DecidableEq F] [CompleteSpace (e.range)] :
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) N′ = vnTensorRight := by
   rw [← VonNeumannAlgebra.conj_commutant, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
     vnTensorLeft_commutant]
@@ -476,8 +475,8 @@ is carried by the spatial isomorphism into the left tensor factor: `U A U⋆ ≤
 is monotonicity of spatial conjugation composed with `U N U⋆ = vnTensorLeft`. -/
 lemma OrthEquivFam.conj_spatialEquiv_le_vnTensorLeft (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))]
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [Nonempty F] [DecidableEq F] [CompleteSpace (e.range)]
     {A : VonNeumannAlgebra H} (h₁ : A ≤ N) :
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) A ≤ vnTensorLeft :=
   (VonNeumannAlgebra.conj_mono _ h₁).trans_eq (hF.conj_spatialEquiv_eq_vnTensorLeft he htop)
@@ -488,8 +487,8 @@ Taking commutants in `N ≤ B` gives `B′ ≤ N′`, and monotonicity composed 
 `U N′ U⋆ = vnTensorRight` finishes. -/
 lemma OrthEquivFam.conj_spatialEquiv_le_vnTensorRight (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤)
-    [Nonempty F] [DecidableEq F] [CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H))]
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
+    [Nonempty F] [DecidableEq F] [CompleteSpace (e.range)]
     {B : VonNeumannAlgebra H} (h₂ : N ≤ B) :
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) B′ ≤ vnTensorRight :=
   (VonNeumannAlgebra.conj_mono _ (VonNeumannAlgebra.commutant_le h₂)).trans_eq
@@ -499,8 +498,9 @@ omit [CompleteSpace H] in
 /-- A covering orthogonal family of a nonzero Hilbert space is nonempty: its ranges span a dense
 subspace, which would be `{0}` were the family empty. -/
 lemma OrthEquivFam.nonempty_of_top [Nontrivial H] {F : Set (H →L[ℂ] H)}
-    (htop : (Submodule.span ℂ {y | ∃ f ∈ F, ∃ x, f x = y}).topologicalClosure = ⊤) :
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
     Nonempty F := by
+  rw [iSup_range_eq_span] at htop
   rw [← not_isEmpty_iff]
   intro hempty
   have hset : {y : H | ∃ f ∈ F, ∃ x, f x = y} = (∅ : Set H) := by
@@ -524,12 +524,12 @@ doc's reference list). -/
 theorem IsFactor.exists_spatial_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ LinearMap.range (e : H →ₗ[ℂ] H)),
+      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight := by
   have := he.nontrivial
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : CompleteSpace (e.range) := he.1.completeSpace_range
   have : DecidableEq F := Classical.decEq _
   have : Nonempty F := OrthEquivFam.nonempty_of_top htop
   exact ⟨F, hF.spatialEquiv htop, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
@@ -554,7 +554,7 @@ theorem IsFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
     {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ LinearMap.range (e : H →ₗ[ℂ] H)),
+      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
       Nonempty F ∧
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight ∧
@@ -562,7 +562,7 @@ theorem IsFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
       VonNeumannAlgebra.conj U B′ ≤ vnTensorRight := by
   have := he.nontrivial
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
-  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
+  have : CompleteSpace (e.range) := he.1.completeSpace_range
   have : DecidableEq F := Classical.decEq _
   have : Nonempty F := OrthEquivFam.nonempty_of_top htop
   exact ⟨F, hF.spatialEquiv htop, ‹Nonempty F›, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,

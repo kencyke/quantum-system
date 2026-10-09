@@ -209,7 +209,7 @@ for *every* minimal projection `e` of a factor. -/
 theorem IsTypeIFactor.exists_spatial_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) :
     ∃ e : H →L[ℂ] H, IsMinimalProjection N e ∧ ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ LinearMap.range (e : H →ₗ[ℂ] H)),
+      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight :=
   let ⟨hf, e, he⟩ := hN
@@ -224,7 +224,7 @@ inclusion `A ≤ N ≤ B`, then for some minimal projection `e` of `N` there is
 theorem IsTypeIFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     ∃ e : H →L[ℂ] H, IsMinimalProjection N e ∧ ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ LinearMap.range (e : H →ₗ[ℂ] H)),
+      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
       Nonempty F ∧
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight ∧
@@ -243,10 +243,10 @@ theorem isTypeIFactor_vnTensorRight {H₁ H₂ : Type*} [NormedAddCommGroup H₁
     [CompleteSpace H₂] [Nontrivial H₁] [Nontrivial H₂] :
     IsTypeIFactor (vnTensorRight (H₁ := H₁) (H₂ := H₂)) := by
   obtain ⟨p, hp⟩ := exists_isMinimalProjection_boundedLinearOperators (H := H₂)
-  refine ⟨isFactor_vnTensorRight, amplifyRight p, hp.1.map (amplifyRightₐ (H₁ := H₁)),
+  refine ⟨isFactor_vnTensorRight, 𝟙 ⊗ p, hp.1.map (amplifyRightₐ (H₁ := H₁)),
     amplifyRight_mem_vnTensorRight p, fun h => hp.2.2.1 (amplifyRight_injective (H₁ := H₁)
       (h.trans amplifyRight_zero.symm)), fun T hT => ?_⟩
-  obtain ⟨S, rfl⟩ : ∃ S, T = amplifyRight S := by
+  obtain ⟨S, rfl⟩ : ∃ S, T = 𝟙 ⊗ S := by
     rw [← vnTensorLeft_commutant] at hT
     obtain ⟨v, hv⟩ := exists_ne (0 : H₁)
     have hu : ‖(‖v‖⁻¹ : ℂ) • v‖ = 1 := by
@@ -289,8 +289,8 @@ theorem IsTypeIFactor.commutant {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N)
     IsTypeIFactor N′ := by
   classical
   obtain ⟨e, he, F, U, ⟨i⟩, -, hU', -, -⟩ := hN.exists_split_tensor_decomposition le_rfl le_rfl
-  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  have : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
+  have : CompleteSpace (e.range) := he.1.completeSpace_range
+  have : Nontrivial (e.range) := by
     rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
     exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
       (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
@@ -320,8 +320,8 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
     ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
       Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
   obtain ⟨e, he, F, U, hU, -⟩ := hN.exists_spatial_tensor_decomposition
-  have : CompleteSpace (LinearMap.range (e : H →ₗ[ℂ] H)) := he.1.completeSpace_range
-  have : Nontrivial (LinearMap.range (e : H →ₗ[ℂ] H)) := by
+  have : CompleteSpace (e.range) := he.1.completeSpace_range
+  have : Nontrivial (e.range) := by
     rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
     exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
       (h.trans ContinuousLinearMap.toLinearMap_zero.symm))

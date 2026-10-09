@@ -11,6 +11,7 @@ public import QuantumSystem.Analysis.UnboundedOperator.VonNeumann
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Calculus of scalar spectral measures
@@ -21,12 +22,12 @@ self-adjoint operator `A`, and of the scalar spectral measures
 diagonal measures of their projection-valued measures (`IsStarNormal.pvm`). Results about `ν_u^w`
 that hold for every normal operator, such as the transformation rule `ν_{h(R) u}^w = |h|² ν_u^w`
 and scaling, are stated for normal operators in `QuantumSystem.Analysis.SpectralTheory.Normal`
-and `QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued`.
+and `QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued`; for `A` itself the
+transformation rule is `μ_{f(A) u} = |f|² μ_u`
+(`ProjectionValuedMeasure.measure_integral_apply`), with `f(A) = ∫ f dE_A`.
 
 ## Main results
 
-* `IsSelfAdjoint.measure_pvm_cfc_apply` — the transformation rule
-  `μ_{h(R) u} = |h((i - λ)⁻¹)|² μ_u`.
 * `IsSelfAdjoint.measure_pvm_resolvent_of_mem_graph`, `IsSelfAdjoint.measure_pvm_of_mem_graph`
   — an eigenvector `A u = c u` has `ν_u^w = ‖u‖² δ_{(w - c)⁻¹}` and `μ_u = ‖u‖² δ_c`.
 * `IsSelfAdjoint.measure_pvm_resolvent_add_of_mem_graph` — `ν_{x + y}^w = ν_x^w + ν_y^w` for an
@@ -37,10 +38,11 @@ and `QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued`.
 * `IsSelfAdjoint.mem_eigenspace_iff_resolvent_apply` — `ker (A - c) = ker (R - (w - c)⁻¹)`.
 * `IsSelfAdjoint.measure_pvm_resolvent_singleton`, `IsSelfAdjoint.measure_pvm_singleton` —
   **atoms**: `μ_u {c} = ‖P u‖²` for the orthogonal projection `P` onto `ker (A - c)`; hence
-  `μ_u {c} = 0 ↔ P u = 0` (`IsSelfAdjoint.measure_pvm_singleton_eq_zero_iff`).
+  `μ_u {c} = 0 ↔ P u = 0` (`IsSelfAdjoint.measure_pvm_singleton_eq_zero_iff`) and `E_A({c}) = P`
+  (`IsSelfAdjoint.pvm_singleton`).
 * `IsSelfAdjoint.measure_pvm_resolvent_intertwiner`, `IsSelfAdjoint.measure_pvm_intertwiner` —
-  **covariance**: a bounded `V` mapping the graph of `A` into the graph of `B` satisfies
-  `μ^B_{V u} = μ^A_u` whenever `V† V u = u`.
+  **covariance**: a bounded `V` with `V A ⊆ B V` satisfies `μ^B_{V u} = μ^A_u` whenever
+  `V† V u = u`.
 * `IsSelfAdjoint.exists_finite_measure_pvm_compl_eq_zero` — in finite dimensions the `μ_u` are
   concentrated on one finite set.
 * `IsSelfAdjoint.measure_pvm_eq_zero_of_subset_resolventSet` — `μ_u` vanishes on measurable
@@ -71,8 +73,14 @@ products `re ⟪·, ·⟫` (`open ClosedSubmodule`), and let `A` be a self-adjoi
   `re ⟪u, (t + A)⁻¹ u⟫ = max_{w ∈ dom T} (2 re ⟪u, w⟫ - t ‖w‖² - ‖T w‖²)`, attained at
   `w = (t + A)⁻¹ u` (`IsSelfAdjoint.re_inner_resolvent_neg_eq`).
 * `IsSelfAdjoint.lintegral_measure_pvm_le_norm_sq` — **form bound**: `∫ λ dμ_u ≤ ‖T u‖²` for
-  `u ∈ dom T`. For closed `T` equality holds and `dom T = {u | ∫ λ dμ_u < ∞}` is the form domain;
-  neither the equality nor this characterisation is formalised.
+  `u ∈ dom T`, so that `dom T ⊆ dom A^{1/2}`
+  (`IsSelfAdjoint.domain_le_domain_sqrt_of_restrictScalars_eq`). For closed `T` equality holds
+  (`IsSelfAdjoint.lintegral_measure_pvm_eq_norm_sq`) and `dom T = dom A^{1/2}`
+  (`IsSelfAdjoint.domain_sqrt_eq_domain`).
+* `LinearPMap.adjointCompClosure`, `LinearPMap.isSelfAdjoint_adjointCompClosure`,
+  `LinearPMap.isPositive_adjointCompClosure` — for a densely defined closable `σ`-semilinear `T`
+  (`σ` the identity or the conjugation), `T̄†T̄` as a positive self-adjoint complex operator; for a
+  Tomita operator it is the modular operator.
 * `IsSelfAdjoint.integral_inv_add_measure_pvm_le_of_forall_mem_graph` — **comparison of
   resolvents** (Petz): if every point `(w, w')` of the graph of a closable `S` is dominated by a
   point `(v, v')` of the graph of `T` (`‖v‖ ≤ ‖w‖`, `‖v'‖ ≤ ‖w'‖`, `re ⟪u', w⟫ ≤ re ⟪u, v⟫`), then
@@ -82,51 +90,12 @@ products `re ⟪·, ·⟫` (`open ClosedSubmodule`), and let `A` be a self-adjoi
 @[expose] public section
 
 open Complex MeasureTheory
-open scoped ComplexConjugate LinearPMap BoundedContinuousFunction NNReal ENNReal
+open scoped ComplexConjugate LinearPMap BoundedContinuousFunction NNReal ENNReal InnerProduct
 
 namespace IsSelfAdjoint
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
   {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A)
-
-/-- **Transformation rule** for the spectral measure. For `h` continuous on the spectrum of
-`R = (i - A)⁻¹`, `μ_{h(R) u} = |h((i - λ)⁻¹)|² μ_u`. -/
-theorem measure_pvm_cfc_apply (u : E) {h : ℂ → ℂ}
-    (hh : ContinuousOn h (spectrum ℂ (A.resolvent I))) :
-    hA.pvm.measure (cfc h (A.resolvent I) u) =
-      (hA.pvm.measure u).withDensity fun t => ‖h (I - t)⁻¹‖ₑ ^ 2 := by
-  classical
-  set σ := spectrum ℂ (A.resolvent I)
-  have hψ : Measurable fun t : ℝ => (I - t)⁻¹ := by fun_prop
-  have hφ : Measurable fun ζ : ℂ => re (I - ζ⁻¹) := by fun_prop
-  -- A measurable density agreeing with `‖h‖²` on the spectrum.
-  let ρ : ℂ → ℝ≥0∞ := σ.piecewise (fun ζ => ‖h ζ‖ₑ ^ 2) 0
-  have hρ : Measurable ρ :=
-    ((ENNReal.continuous_pow 2).comp_continuousOn hh.enorm).measurable_piecewise continuousOn_const
-    (spectrum.isClosed _).measurableSet
-  have hρσ : ∀ ζ ∈ σ, ρ ζ = ‖h ζ‖ₑ ^ 2 := fun ζ hζ => Set.piecewise_eq_of_mem _ _ _ hζ
-  have hν : (fun ζ => ‖h ζ‖ₑ ^ 2) =ᵐ[(hA.isStarNormal_resolvent I).pvm.measure u] ρ := by
-    filter_upwards [(hA.isStarNormal_resolvent I).ae_mem_spectrum_measure_pvm u] with ζ hζ
-    exact (hρσ ζ hζ).symm
-  have hμ : (fun t : ℝ => ‖h (I - t)⁻¹‖ₑ ^ 2) =ᵐ[hA.pvm.measure u] ρ ∘ fun t => (I - t)⁻¹ := by
-    have := (hA.isStarNormal_resolvent I).ae_mem_spectrum_measure_pvm u
-    rw [← hA.map_measure_pvm u hA.I_mem_resolventSet] at this
-    filter_upwards [ae_of_ae_map hψ.aemeasurable this] with t ht
-    exact (hρσ _ ht).symm
-  -- `map ψ (μ.withDensity (ρ ∘ ψ)) = (map ψ μ).withDensity ρ`.
-  have hmap : ((hA.pvm.measure u).withDensity (ρ ∘ fun t => (I - t)⁻¹)).map
-      (fun t : ℝ => (I - t)⁻¹) = ((hA.isStarNormal_resolvent I).pvm.measure u).withDensity ρ := by
-    ext s hs
-    rw [Measure.map_apply hψ hs, withDensity_apply _ (hψ hs), withDensity_apply _ hs,
-      ← hA.map_measure_pvm u hA.I_mem_resolventSet, setLIntegral_map hs hρ hψ]
-    rfl
-  rw [withDensity_congr_ae hμ, measure_pvm_eq_map,
-    (hA.isStarNormal_resolvent I).measure_pvm_cfc_apply u hh,
-    withDensity_congr_ae hν, ← hmap, Measure.map_map hφ hψ]
-  conv_rhs => rw [← Measure.map_id (μ := (hA.pvm.measure u).withDensity _)]
-  congr 1
-  funext t
-  simp only [Function.comp_apply, inv_inv, sub_sub_cancel, ofReal_re, id_eq]
 
 /-- An eigenvector `A u = c u` (`c` real) has `ν_u^w = ‖u‖² δ_{(w - c)⁻¹}` for `w` in the
 resolvent set. -/
@@ -305,6 +274,15 @@ theorem measure_pvm_singleton_eq_zero_iff (u : E) (c : ℝ) :
   · exact norm_eq_zero.mp (pow_eq_zero_iff two_ne_zero |>.mp (le_antisymm h (sq_nonneg _)))
   · simp [h]
 
+/-- **`E_A({c})` is the projection onto the eigenspace `ker (A - c)`.** -/
+lemma pvm_singleton (c : ℝ) :
+    hA.pvm {c} = (hA.isClosed.eigenspace (c : ℂ)).toSubmodule.starProjection := by
+  refine ContinuousLinearMap.ext_inner_self fun u => ?_
+  have h := congrArg ENNReal.toReal (hA.measure_pvm_singleton u c)
+  rw [← measureReal_def, hA.pvm.measureReal_apply u (measurableSet_singleton c),
+    ENNReal.toReal_ofReal (by positivity)] at h
+  rw [hA.pvm.inner_apply_self, isStarProjection_starProjection.inner_apply_self, h]
+
 /-! ### Intertwiners -/
 
 section Intertwiners
@@ -312,17 +290,18 @@ section Intertwiners
 variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F]
   {B : F →ₗ.[ℂ] F} (hB : IsSelfAdjoint B) {V : E →L[ℂ] F}
 
-/-- **Covariance under intertwiners.** Let `V` map the graph of `A` into the graph of `B`
-(`V (dom A) ⊆ dom B` and `B V = V A` there). If `V† V u = u`, as for `u` in the initial space of a
-partial isometry, then `ν_{V u}^w` for `B` equals `ν_u^w` for `A`. -/
-theorem measure_pvm_resolvent_intertwiner (hV : ∀ u v, (u, v) ∈ A.graph → (V u, V v) ∈ B.graph)
+/-- **Covariance under intertwiners.** Let `V A ⊆ B V`. If `V† V u = u`, as for `u` in the initial
+space of a partial isometry, then `ν_{V u}^w` for `B` equals `ν_u^w` for `A`. -/
+theorem measure_pvm_resolvent_intertwiner
+    (hV : (V : E →ₗ[ℂ] F).compPMap A ≤ B.compNat ((V : E →ₗ[ℂ] F).toPMap ⊤))
     {w : ℂ} (hwA : w ∈ A.resolventSet) (hwB : w ∈ B.resolventSet) {u : E}
-    (hVu : ContinuousLinearMap.adjoint V (V u) = u) :
+    (hVu : (V†) (V u) = u) :
     (hB.isStarNormal_resolvent w).pvm.measure (V u) =
       (hA.isStarNormal_resolvent w).pvm.measure u := by
   have : IsStarNormal (A.resolvent w) := hA.isStarNormal_resolvent w
   have : IsStarNormal (B.resolvent w) := hB.isStarNormal_resolvent w
-  have h₁ := LinearPMap.comp_resolvent_eq_resolvent_comp hwA hwB hV
+  have h₁ := LinearPMap.comp_resolvent_eq_resolvent_comp hwA hwB fun _ _ h =>
+    LinearPMap.compPMap_le_compNat_toPMap_iff.mp hV h
   refine (hA.isStarNormal_resolvent w).eq_measure_pvm_of_integral
     ((hB.isStarNormal_resolvent w).pvm.measure (V u)) fun g => ?_
   have hcomm := ContinuousLinearMap.comp_cfc_eq_cfc_comp ‹_› ‹_› h₁
@@ -332,10 +311,11 @@ theorem measure_pvm_resolvent_intertwiner (hV : ∀ u v, (u, v) ∈ A.graph → 
     ← ContinuousLinearMap.comp_apply, ← hcomm, ContinuousLinearMap.comp_apply,
     ← ContinuousLinearMap.adjoint_inner_left, hVu]
 
-/-- **Covariance under intertwiners.** If `V` maps the graph of `A` into the graph of `B` and
-`V† V u = u`, then the spectral measure of `V u` for `B` equals that of `u` for `A`. -/
-theorem measure_pvm_intertwiner (hV : ∀ u v, (u, v) ∈ A.graph → (V u, V v) ∈ B.graph) {u : E}
-    (hVu : ContinuousLinearMap.adjoint V (V u) = u) :
+/-- **Covariance under intertwiners.** If `V A ⊆ B V` and `V† V u = u`, then the spectral measure
+of `V u` for `B` equals that of `u` for `A`. -/
+theorem measure_pvm_intertwiner
+    (hV : (V : E →ₗ[ℂ] F).compPMap A ≤ B.compNat ((V : E →ₗ[ℂ] F).toPMap ⊤)) {u : E}
+    (hVu : (V†) (V u) = u) :
     hB.pvm.measure (V u) = hA.pvm.measure u := by
   rw [measure_pvm_eq_map, measure_pvm_eq_map,
     hA.measure_pvm_resolvent_intertwiner hB hV hA.I_mem_resolventSet hB.I_mem_resolventSet hVu]
@@ -532,7 +512,7 @@ theorem _root_.LinearPMap.isPositive_of_restrictScalars_eq (hTd : Dense (T.domai
     (hAT : A.restrictScalars ℝ = T†.compNat T) : A.IsPositive := by
   have h := LinearPMap.isPositive_adjoint_compNat_self hTd
   rw [← hAT] at h
-  simpa using (LinearPMap.isComplexLinear_restrictScalars A).isPositive_toComplex h
+  simpa using (LinearPMap.isSemilinear_restrictScalars A).isPositive_toLinearPMap h
 
 variable (hAT : A.restrictScalars ℝ = T†.compNat T)
 include hAT
@@ -632,9 +612,10 @@ theorem isLeast_re_inner_resolvent_neg {t : ℝ} (ht : 0 < t) (u : E) :
     nlinarith [sq_nonneg ‖w + r‖, sq_nonneg ‖w' + y‖]
 
 /-- **Form bound.** For self-adjoint `A = T†T`, with `T` real-linear, and `u ∈ dom T`,
-`∫ λ dμ_u(λ) ≤ ‖T u‖²`. For closed `T`, `dom T` is the form domain of `A` and equality holds; the
-reverse inequality, and the characterisation of the form domain as `{u | ∫ λ dμ_u < ∞}`, are not
-formalised. -/
+`∫ λ dμ_u(λ) ≤ ‖T u‖²`, so that `dom T ⊆ dom A^{1/2}`
+(`IsSelfAdjoint.domain_le_domain_sqrt_of_restrictScalars_eq`). For closed `T`, `dom T = dom A^{1/2}`
+(`IsSelfAdjoint.domain_sqrt_eq_domain`) and equality holds
+(`IsSelfAdjoint.lintegral_measure_pvm_eq_norm_sq`). -/
 theorem lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.graph) :
     ∫⁻ s, ENNReal.ofReal s ∂(hA.pvm.measure u) ≤ ENNReal.ofReal (‖u'‖ ^ 2) := by
   have hpos := hA.isPositive_of_restrictScalars_eq hAT
@@ -747,3 +728,41 @@ theorem integral_inv_add_measure_pvm_le_of_forall_mem_graph
 end Form
 
 end IsSelfAdjoint
+
+/-! ### The operator `T̄†T̄` of a closable semilinear operator -/
+
+namespace LinearPMap
+
+open ClosedSubmodule
+
+variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
+  [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F] {σ : ℂ →+* ℂ}
+  [RingHomIsometric σ] [RingHomInvPair σ σ] {T : E →ₗ.[ℝ] F} (hT : T.IsSemilinear σ)
+  (hTd : Dense (T.domain : Set E))
+
+/-- The operator `T̄†T̄ = |T̄|²` of a densely defined `σ`-semilinear real-linear operator `T`, for
+`σ` the identity or the complex conjugation, as a complex operator. For a closable `T` it is
+positive self-adjoint (`LinearPMap.isSelfAdjoint_adjointCompClosure`), so that
+`T̄ = U (T̄†T̄)^{1/2}` (`IsSelfAdjoint.eq_polarIsometry_compPMap`); for the Tomita operator `S` of a
+standard subspace it is the modular operator `Δ = S̄†S̄` (`StandardSubspace.modular`). -/
+noncomputable def adjointCompClosure : E →ₗ.[ℂ] E :=
+  ((hT.closure.adjoint (dense_domain_closure hTd)).compNat hT.closure).toLinearPMap
+
+omit [CompleteSpace F] in
+/-- `T̄†T̄` as real operators. -/
+lemma restrictScalars_adjointCompClosure :
+    (T.adjointCompClosure hT hTd).restrictScalars ℝ = T.closure†.compNat T.closure :=
+  IsSemilinear.restrictScalars_toLinearPMap _
+
+/-- `T̄†T̄` is self-adjoint for a closable `T` (von Neumann's theorem). -/
+lemma isSelfAdjoint_adjointCompClosure (hc : T.IsClosable) :
+    IsSelfAdjoint (T.adjointCompClosure hT hTd) :=
+  IsSemilinear.isSelfAdjoint_toLinearPMap _
+    (isSelfAdjoint_adjoint_compNat_self hc.closure_isClosed (dense_domain_closure hTd))
+
+omit [CompleteSpace F] in
+/-- `T̄†T̄` is positive. -/
+lemma isPositive_adjointCompClosure : (T.adjointCompClosure hT hTd).IsPositive :=
+  IsSemilinear.isPositive_toLinearPMap _ (isPositive_adjoint_compNat_self (dense_domain_closure hTd))
+
+end LinearPMap

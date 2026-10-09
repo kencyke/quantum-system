@@ -199,15 +199,15 @@ range projections of two operators with `x₁ x₂ = 0`, `x₁` self-adjoint, ar
 /-- The orthogonal projection onto the closure of the range of `x ∈ N` lies in `N`, because that
 subspace is invariant under the commutant. -/
 lemma starProjection_range_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (hx : x ∈ N) :
-    (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection ∈ N := by
-  set M : Submodule ℂ H := (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure with hM
+    (x.range).topologicalClosure.starProjection ∈ N := by
+  set M : Submodule ℂ H := (x.range).topologicalClosure with hM
   have hpproj : IsStarProjection M.starProjection := isStarProjection_starProjection
   rw [IsStarProjection.mem_iff hpproj N]
   intro y hyN'
   rw [Submodule.range_starProjection]
   have hcl : IsClosed ((M.comap (y : H →ₗ[ℂ] H)) : Set H) := by
     rw [Submodule.comap_coe]
-    exact ((LinearMap.range (x : H →ₗ[ℂ] H)).isClosed_topologicalClosure).preimage y.continuous
+    exact ((x.range).isClosed_topologicalClosure).preimage y.continuous
   have hle : M ≤ M.comap (y : H →ₗ[ℂ] H) := by
     refine Submodule.topologicalClosure_minimal _ ?_ hcl
     rintro z ⟨v, rfl⟩
@@ -219,11 +219,11 @@ lemma starProjection_range_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (hx
 
 /-- The range projection of a nonzero operator is nonzero. -/
 lemma starProjection_range_ne_zero {x : H →L[ℂ] H} (hx0 : x ≠ 0) :
-    (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection ≠ 0 := by
+    (x.range).topologicalClosure.starProjection ≠ 0 := by
   intro h0
   apply hx0
   ext v
-  have hmem : x v ∈ (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure :=
+  have hmem : x v ∈ (x.range).topologicalClosure :=
     Submodule.le_topologicalClosure _ ⟨v, rfl⟩
   have hfix := Submodule.starProjection_eq_self_iff.mpr hmem
   rw [h0] at hfix
@@ -231,9 +231,9 @@ lemma starProjection_range_ne_zero {x : H →L[ℂ] H} (hx0 : x ≠ 0) :
 
 /-- If `p * x = x`, then the range projection of `x` is a subprojection of `p`. -/
 lemma starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
-    p * (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection
-      = (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure.starProjection := by
-  set M : Submodule ℂ H := (LinearMap.range (x : H →ₗ[ℂ] H)).topologicalClosure with hM
+    p * (x.range).topologicalClosure.starProjection
+      = (x.range).topologicalClosure.starProjection := by
+  set M : Submodule ℂ H := (x.range).topologicalClosure with hM
   have hle : M ≤ LinearMap.ker ((p - 1 : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
     refine Submodule.topologicalClosure_minimal _ ?_ (p - 1).isClosed_ker
     rintro z ⟨v, rfl⟩
@@ -251,10 +251,10 @@ lemma starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
 orthogonal. -/
 lemma starProjection_range_mul_eq_zero {x₁ x₂ : H →L[ℂ] H} (hsa : star x₁ = x₁)
     (h12 : x₁ * x₂ = 0) :
-    (LinearMap.range (x₁ : H →ₗ[ℂ] H)).topologicalClosure.starProjection
-      * (LinearMap.range (x₂ : H →ₗ[ℂ] H)).topologicalClosure.starProjection = 0 := by
-  set M₁ : Submodule ℂ H := (LinearMap.range (x₁ : H →ₗ[ℂ] H)).topologicalClosure with hM₁
-  set M₂ : Submodule ℂ H := (LinearMap.range (x₂ : H →ₗ[ℂ] H)).topologicalClosure with hM₂
+    (x₁.range).topologicalClosure.starProjection
+      * (x₂.range).topologicalClosure.starProjection = 0 := by
+  set M₁ : Submodule ℂ H := (x₁.range).topologicalClosure with hM₁
+  set M₂ : Submodule ℂ H := (x₂.range).topologicalClosure with hM₂
   have hadj : ContinuousLinearMap.adjoint x₁ = x₁ := by
     rw [← ContinuousLinearMap.star_eq_adjoint, hsa]
   have hortho : M₂ ⟂ M₁ := by

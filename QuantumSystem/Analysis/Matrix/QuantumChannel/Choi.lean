@@ -129,7 +129,7 @@ in the product `e ⊗ e'` of the standard bases. Its entries are
 `⟪eᵢ ⊗ e'ₖ, J_e(Ψ) (eⱼ ⊗ e'ₗ)⟫ = ⟪e'ₖ, Ψ(|eᵢ⟩⟨eⱼ|) e'ₗ⟫ = Φ(Eᵢⱼ) k l`
 (`ContinuousLinearMap.adjoint_mkL_comp_choi_comp_mkL`, `Matrix.toEuclideanCLM_single`). -/
 theorem choiMatrix_eq_toMatrix_choi {Φ : F} {Ψ : G}
-    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     choiMatrix Φ =
       LinearMap.toMatrix
         ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis
@@ -149,7 +149,7 @@ theorem choiMatrix_eq_toMatrix_choi {Φ : F} {Ψ : G}
 /-- The Choi matrix is positive semidefinite iff the Choi operator `J_e(Ψ)` of the operator form
 `Ψ` is positive (`Matrix.choiMatrix_eq_toMatrix_choi`). -/
 theorem posSemidef_choiMatrix_iff_nonneg_choi {Φ : F} {Ψ : G}
-    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     (choiMatrix Φ).PosSemidef ↔ 0 ≤ ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ := by
   rw [choiMatrix_eq_toMatrix_choi h, LinearMap.posSemidef_toMatrix_iff,
     ContinuousLinearMap.isPositive_toLinearMap_iff, ContinuousLinearMap.nonneg_iff_isPositive]
@@ -157,7 +157,7 @@ theorem posSemidef_choiMatrix_iff_nonneg_choi {Φ : F} {Ψ : G}
 /-- The rank of the Choi matrix is the rank of the Choi operator `J_e(Ψ)` of the operator form `Ψ`
 (`Matrix.choiMatrix_eq_toMatrix_choi`). -/
 theorem rank_choiMatrix_eq_finrank_range_choi {Φ : F} {Ψ : G}
-    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     (choiMatrix Φ).rank = Module.finrank ℂ (LinearMap.range
       (ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ :
         EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m →ₗ[ℂ] EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m)) := by
@@ -170,9 +170,9 @@ theorem rank_choiMatrix_eq_finrank_range_choi {Φ : F} {Ψ : G}
 `K'ₐ : ℂⁿ →L ℂᵐ` of the `Kₐ` (`Matrix.toEuclideanCLM_mul_mul_conjTranspose`). -/
 private lemma toEuclideanCLM_sum_mul_mul_conjTranspose {ι : Type*} [Fintype ι]
     (K : ι → Matrix m n ℂ) (A : Matrix n n ℂ) :
-    toEuclideanCLM (n := m) (𝕜 := ℂ) (∑ a, K a * A * (K a)ᴴ) =
+    toEuclideanCLM (𝕜 := ℂ) (∑ a, K a * A * (K a)ᴴ) =
       CompletelyPositiveMap.ofKraus (fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a)))
-        (toEuclideanCLM (n := n) (𝕜 := ℂ) A) := by
+        (toEuclideanCLM (𝕜 := ℂ) A) := by
   rw [map_sum, CompletelyPositiveMap.ofKraus_apply]
   simp only [toEuclideanCLM_mul_mul_conjTranspose]
 
@@ -186,8 +186,8 @@ theorem rank_choiMatrix_le_card_of_kraus {Φ : F} {ι : Type*} [Fintype ι] (K :
   classical
   set T : ι → EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ m :=
     fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a))
-  have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (n := n) (𝕜 := ℂ) A) =
-      toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A) := by
+  have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (𝕜 := ℂ) A) =
+      toEuclideanCLM (𝕜 := ℂ) (Φ A) := by
     rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
   rw [rank_choiMatrix_eq_finrank_range_choi h]
   exact ContinuousLinearMap.finrank_range_choi_le_card _ (CompletelyPositiveMap.ofKraus_apply T)
@@ -203,8 +203,8 @@ theorem rank_choiMatrix_eq_card_iff_linearIndependent {Φ : F} {ι : Type*} [Fin
   classical
   set T : ι → EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ m :=
     fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a))
-  have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (n := n) (𝕜 := ℂ) A) =
-      toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A) := by
+  have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (𝕜 := ℂ) A) =
+      toEuclideanCLM (𝕜 := ℂ) (Φ A) := by
     rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
   rw [rank_choiMatrix_eq_finrank_range_choi h,
     ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent _
@@ -264,9 +264,9 @@ variable {n m : Type*} [Fintype n] [Fintype m] [DecidableEq n] [DecidableEq m]
 `Matrix.toEuclideanCLM`. -/
 private lemma arrowCongr_toEuclideanCLM_apply (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ)
     (A : Matrix n n ℂ) :
-    (toEuclideanCLM (n := n) (𝕜 := ℂ)).toAlgEquiv.toLinearEquiv.arrowCongr
-      (toEuclideanCLM (n := m) (𝕜 := ℂ)).toAlgEquiv.toLinearEquiv Φ
-      (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A) := by
+    (toEuclideanCLM (𝕜 := ℂ)).toAlgEquiv.toLinearEquiv.arrowCongr
+      (toEuclideanCLM (𝕜 := ℂ)).toAlgEquiv.toLinearEquiv Φ
+      (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A) := by
   simp
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
@@ -276,7 +276,7 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 private lemma exists_coe_eq_iff_toEuclideanCLM {Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ}
     {Ψ : (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) →ₗ[ℂ]
       (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)}
-    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A)) :
+    (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
       ∃ ψ : (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n) →CP
           (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m),
@@ -284,14 +284,14 @@ private lemma exists_coe_eq_iff_toEuclideanCLM {Φ : Matrix n n ℂ →ₗ[ℂ] 
           (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)) = Ψ := by
   constructor
   · rintro ⟨φ, rfl⟩
-    refine ⟨arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ)) φ,
+    refine ⟨arrowCongr (toEuclideanCLM (𝕜 := ℂ)) (toEuclideanCLM (𝕜 := ℂ)) φ,
       LinearMap.ext fun X => ?_⟩
-    obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (n := n) (𝕜 := ℂ)) X
+    obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (𝕜 := ℂ)) X
     rw [h]
     simp
   · rintro ⟨ψ, rfl⟩
-    refine ⟨(arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ))).symm ψ,
-      LinearMap.ext fun A => EquivLike.injective (toEuclideanCLM (n := m) (𝕜 := ℂ)) ?_⟩
+    refine ⟨(arrowCongr (toEuclideanCLM (𝕜 := ℂ)) (toEuclideanCLM (𝕜 := ℂ))).symm ψ,
+      LinearMap.ext fun A => EquivLike.injective (toEuclideanCLM (𝕜 := ℂ)) ?_⟩
     rw [← h]
     simp
 
@@ -305,7 +305,7 @@ theorem exists_coe_eq_of_kraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) 
   refine (exists_coe_eq_iff_toEuclideanCLM (arrowCongr_toEuclideanCLM_apply Φ)).2
     ⟨ofKraus fun a => LinearMap.toContinuousLinearMap (toEuclideanLin (K a)),
       LinearMap.ext fun X => ?_⟩
-  obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (n := n) (𝕜 := ℂ)) X
+  obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (𝕜 := ℂ)) X
   rw [arrowCongr_toEuclideanCLM_apply, hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
   rfl
 
@@ -316,15 +316,15 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 (`CompletelyPositiveMap.exists_kraus_finrank_range_choi`). -/
 theorem exists_kraus_rank (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
     ∃ K : Fin (choiMatrix φ).rank → Matrix m n ℂ, ∀ A, φ A = ∑ a, K a * A * (K a)ᴴ := by
-  set ψ := arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ)) φ
-  have hψ (A : Matrix n n ℂ) : ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) =
-      toEuclideanCLM (n := m) (𝕜 := ℂ) (φ A) := by
+  set ψ := arrowCongr (toEuclideanCLM (𝕜 := ℂ)) (toEuclideanCLM (𝕜 := ℂ)) φ
+  have hψ (A : Matrix n n ℂ) : ψ (toEuclideanCLM (𝕜 := ℂ) A) =
+      toEuclideanCLM (𝕜 := ℂ) (φ A) := by
     simp [ψ]
   rw [rank_choiMatrix_eq_finrank_range_choi hψ]
   have hT := exists_kraus_finrank_range_choi (EuclideanSpace.basisFun n ℂ) ψ
   obtain ⟨T, hT⟩ := hT
   refine ⟨fun a => toEuclideanLin.symm (LinearMap.toContinuousLinearMap.symm (T a)),
-    fun A => EquivLike.injective (toEuclideanCLM (n := m) (𝕜 := ℂ)) ?_⟩
+    fun A => EquivLike.injective (toEuclideanCLM (𝕜 := ℂ)) ?_⟩
   rw [← hψ, hT, toEuclideanCLM_sum_mul_mul_conjTranspose, ofKraus_apply]
   simp only [LinearEquiv.apply_symm_apply]
 
@@ -357,7 +357,7 @@ theorem exists_coe_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] M
   rintro ⟨ψ, rfl⟩
   refine (exists_coe_eq_iff_toEuclideanCLM (arrowCongr_toEuclideanCLM_apply _)).2
     ⟨ofKPositiveMap
-      (KPositiveMap.arrowCongr (toEuclideanCLM (n := n) (𝕜 := ℂ)) (toEuclideanCLM (n := m) (𝕜 := ℂ)) ψ)
+      (KPositiveMap.arrowCongr (toEuclideanCLM (𝕜 := ℂ)) (toEuclideanCLM (𝕜 := ℂ)) ψ)
       (by simpa [finrank_euclideanSpace] using hk), LinearMap.ext fun X => ?_⟩
   simp
 

@@ -9,6 +9,7 @@ public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # The tensor von Neumann factors `B(H₁) ⊗̄ 1`, `1 ⊗̄ B(H₂)` and the amplification `1 ⊗ M`
@@ -24,8 +25,10 @@ von Neumann factors on the completed Hilbert tensor product:
 
 Here and in the files downstream, `⊗̄` is documentation shorthand for the von Neumann (spatial)
 tensor product of algebras: it has no Lean declaration, and the algebras it names are the two
-definitions above. The tensor notations that *are* declared live in `TensorProductCompletion`:
-`⊗̂` for the completed Hilbert tensor product and `⊗ₕ` for elementary tensors.
+definitions above. The tensor notations that *are* declared are `⊗̂` for the completed Hilbert
+tensor product, `⊗ₕ` for elementary tensors, `𝟙 ⊗ B` and `A ⊗ 𝟙` for the amplified operators
+(all in `TensorProductCompletion`), and `𝟙[K] ⊗ M` for the amplification
+`VonNeumannAlgebra.amplify K M` (this file).
 
 These are the objects in the split-property tensor decomposition `A₁ ⊆ B(H₁)⊗̄1`,
 `A₂ ⊆ 1⊗̄B(H₂)` — equation (39) of J. Yngvason, *Localization and Entanglement in Relativistic
@@ -75,7 +78,7 @@ For a von Neumann algebra `M` on `H` and a Hilbert space `H₁`, the **amplifica
 
 @[expose] public section
 
-open scoped TensorProduct
+open scoped TensorProduct InnerProduct
 
 namespace HilbertTensor
 
@@ -137,13 +140,13 @@ for `A : H₁ → H₃` between different first factors. -/
 theorem amplifyLeft_comp_amplifyRight {H₃ : Type*} [NormedAddCommGroup H₃] [InnerProductSpace ℂ H₃]
     (A : H₁ →L[ℂ] H₃) (B : H₂ →L[ℂ] H₂) :
     (amplifyLeft (H₂ := H₂) A).comp (amplifyRight (H₁ := H₁) B)
-      = (amplifyRight B).comp (amplifyLeft A) := by
+      = (𝟙 ⊗ B).comp (A ⊗ 𝟙) := by
   refine ContinuousLinearMap.ext fun w => ?_
   refine UniformSpace.Completion.induction_on w
     (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
   induction a using TensorProduct.inductionOn with
   | tmul f y =>
-      change amplifyLeft A (amplifyRight B (tmul f y)) = amplifyRight B (amplifyLeft A (tmul f y))
+      change (A ⊗ 𝟙) ((𝟙 ⊗ B) (tmul f y)) = (𝟙 ⊗ B) ((A ⊗ 𝟙) (tmul f y))
       rw [amplifyRight_tmul, amplifyLeft_tmul, amplifyLeft_tmul, amplifyRight_tmul]
   | add p q hp hq => rw [UniformSpace.Completion.coe_add, map_add, map_add, hp, hq]
 
@@ -154,7 +157,7 @@ variable [CompleteSpace H₂]
 /-- The adjoint of the inclusion `ι_e` acts on pure tensors as the `e`-slice
 `g ⊗ z ↦ ⟪e, g⟫ • z`. -/
 lemma adjoint_tmulRightL_tmul (e g : H₁) (z : H₂) :
-    ContinuousLinearMap.adjoint (tmulRightL (H₂ := H₂) e) (tmul g z) = (inner ℂ e g) • z := by
+    ((tmulRightL (H₂ := H₂) e)†) (tmul g z) = (inner ℂ e g) • z := by
   refine ext_inner_right ℂ fun y => ?_
   rw [ContinuousLinearMap.adjoint_inner_left, tmulRightL_apply, inner_tmul, inner_smul_left,
     inner_conj_symm]
@@ -164,14 +167,14 @@ inclusion `ι_f`: `(|f⟩⟨e|) ⊗̂ 1 = ι_f ∘ ι_e*`. This is the algebraic
 argument. -/
 lemma amplifyLeft_rankOne_eq (e f : H₁) :
     amplifyLeft (H₂ := H₂) (InnerProductSpace.rankOne ℂ f e)
-      = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) := by
+      = (tmulRightL f).comp ((tmulRightL e)†) := by
   refine ContinuousLinearMap.ext fun w => ?_
   refine UniformSpace.Completion.induction_on w
     (isClosed_eq (by fun_prop) (by fun_prop)) (fun a => ?_)
   induction a using TensorProduct.inductionOn with
   | tmul g z =>
-      change amplifyLeft _ (tmul g z)
-        = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) (tmul g z)
+      change (_ ⊗ 𝟙) (tmul g z)
+        = (tmulRightL f).comp ((tmulRightL e)†) (tmul g z)
       rw [amplifyLeft_tmul, ContinuousLinearMap.comp_apply, adjoint_tmulRightL_tmul,
         tmulRightL_apply, InnerProductSpace.rankOne_apply,
         tmul_smul_left, smul_tmul_right]
@@ -185,39 +188,39 @@ working at the level of the bounded inclusions `ι_y : f ↦ f ⊗̂ y`. -/
 lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set H₁)
     (hD : Dense (Submodule.span ℂ D : Set H₁))
     (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
-    (hT : ∀ f ∈ D, T.comp (amplifyLeft (InnerProductSpace.rankOne ℂ f e))
-      = (amplifyLeft (InnerProductSpace.rankOne ℂ f e)).comp T) :
-    ∃ S : H₂ →L[ℂ] H₂, T = amplifyRight S := by
-  set S := (ContinuousLinearMap.adjoint (tmulRightL e)).comp (T.comp (tmulRightL e)) with hS
+    (hT : ∀ f ∈ D, T.comp ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙)
+      = ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙).comp T) :
+    ∃ S : H₂ →L[ℂ] H₂, T = 𝟙 ⊗ S := by
+  set S := ((tmulRightL e)†).comp (T.comp (tmulRightL e)) with hS
   have hee : inner ℂ e e = (1 : ℂ) := by rw [inner_self_eq_norm_sq_to_K, he]; norm_num
   have key : ∀ f ∈ D, ∀ y : H₂, T (tmul f y) = tmul f (S y) := by
     intro f hf y
     have e1 : amplifyLeft (H₂ := H₂) (InnerProductSpace.rankOne ℂ f e) (tmul e y) = tmul f y := by
       rw [amplifyLeft_tmul, InnerProductSpace.rankOne_apply, hee, one_smul]
     calc T (tmul f y)
-        = T (amplifyLeft (InnerProductSpace.rankOne ℂ f e) (tmul e y)) := by rw [e1]
-      _ = amplifyLeft (InnerProductSpace.rankOne ℂ f e) (T (tmul e y)) := by
+        = T (((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙) (tmul e y)) := by rw [e1]
+      _ = ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙) (T (tmul e y)) := by
             rw [← ContinuousLinearMap.comp_apply, hT f hf, ContinuousLinearMap.comp_apply]
-      _ = (tmulRightL f).comp (ContinuousLinearMap.adjoint (tmulRightL e)) (T (tmul e y)) := by
+      _ = (tmulRightL f).comp ((tmulRightL e)†) (T (tmul e y)) := by
             rw [amplifyLeft_rankOne_eq]
       _ = tmul f (S y) := by
             rw [ContinuousLinearMap.comp_apply, tmulRightL_apply, hS]
             simp only [ContinuousLinearMap.comp_apply, tmulRightL_apply]
   have key_all : ∀ (f : H₁) (y : H₂), T (tmul f y) = tmul f (S y) := by
     intro f y
-    have hcl : T.comp (tmulLeftL y) = (amplifyRight S).comp (tmulLeftL y) := by
+    have hcl : T.comp (tmulLeftL y) = (𝟙 ⊗ S).comp (tmulLeftL y) := by
       refine ContinuousLinearMap.ext_on hD (fun g hg => ?_)
       rw [ContinuousLinearMap.comp_apply, ContinuousLinearMap.comp_apply, tmulLeftL_apply,
         amplifyRight_tmul, key g hg y]
     have h := congrArg (fun L : H₁ →L[ℂ] HilbertTensor H₁ H₂ => L f) hcl
     simpa only [ContinuousLinearMap.comp_apply, tmulLeftL_apply, amplifyRight_tmul] using h
-  have hTS : T = amplifyRight S := by
+  have hTS : T = 𝟙 ⊗ S := by
     refine ContinuousLinearMap.ext fun w => ?_
     refine UniformSpace.Completion.induction_on w
-      (isClosed_eq T.continuous (amplifyRight S).continuous) (fun a => ?_)
+      (isClosed_eq T.continuous (𝟙 ⊗ S).continuous) (fun a => ?_)
     induction a using TensorProduct.inductionOn with
     | tmul f y =>
-        change T (tmul f y) = amplifyRight S (tmul f y)
+        change T (tmul f y) = (𝟙 ⊗ S) (tmul f y)
         rw [key_all, amplifyRight_tmul]
     | add p q hp hq => rw [UniformSpace.Completion.coe_add, map_add, map_add, hp, hq]
   exact ⟨S, hTS⟩
@@ -228,8 +231,8 @@ vector `e ∈ H₁`), then `T = 1 ⊗̂ S`, hence `T ∈ 1 ⊗̄ B(H₂)`. -/
 lemma mem_vnTensorRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set H₁)
     (hD : Dense (Submodule.span ℂ D : Set H₁))
     (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
-    (hT : ∀ f ∈ D, T.comp (amplifyLeft (InnerProductSpace.rankOne ℂ f e))
-      = (amplifyLeft (InnerProductSpace.rankOne ℂ f e)).comp T) :
+    (hT : ∀ f ∈ D, T.comp ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙)
+      = ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙).comp T) :
     T ∈ vnTensorRight := by
   obtain ⟨S, rfl⟩ := exists_amplifyRight_of_commutes_dense e he D hD T hT
   exact amplifyRight_mem_vnTensorRight S
@@ -238,8 +241,8 @@ lemma mem_vnTensorRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set
 `A ⊗̂ 1`, then `T = 1 ⊗̂ S` for `S = ι_e* ∘ T ∘ ι_e` (any unit vector `e ∈ H₁`). -/
 lemma exists_amplifyRight_of_commutes (e : H₁) (he : ‖e‖ = 1)
     (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
-    (hT : ∀ A : H₁ →L[ℂ] H₁, T.comp (amplifyLeft A) = (amplifyLeft A).comp T) :
-    ∃ S : H₂ →L[ℂ] H₂, T = amplifyRight S :=
+    (hT : ∀ A : H₁ →L[ℂ] H₁, T.comp (A ⊗ 𝟙) = (A ⊗ 𝟙).comp T) :
+    ∃ S : H₂ →L[ℂ] H₂, T = 𝟙 ⊗ S :=
   exists_amplifyRight_of_commutes_dense e he Set.univ
     (by rw [Submodule.span_univ, Submodule.top_coe]; exact dense_univ) T
     (fun f _ => hT (InnerProductSpace.rankOne ℂ f e))
@@ -249,7 +252,7 @@ amplification `A ⊗̂ 1`, then `T = 1 ⊗̂ S` for `S = ι_e* ∘ T ∘ ι_e` (
 hence `T ∈ 1 ⊗̄ B(H₂)`. -/
 theorem mem_vnTensorRight_of_commutes (e : H₁) (he : ‖e‖ = 1)
     (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
-    (hT : ∀ A : H₁ →L[ℂ] H₁, T.comp (amplifyLeft A) = (amplifyLeft A).comp T) :
+    (hT : ∀ A : H₁ →L[ℂ] H₁, T.comp (A ⊗ 𝟙) = (A ⊗ 𝟙).comp T) :
     T ∈ vnTensorRight := by
   obtain ⟨S, rfl⟩ := exists_amplifyRight_of_commutes e he T hT
   exact amplifyRight_mem_vnTensorRight S
@@ -272,7 +275,7 @@ theorem vnTensorLeft_commutant [CompleteSpace H₁] [CompleteSpace H₂] [Nontri
         inv_mul_cancel₀ (norm_ne_zero_iff.mpr hx)]
     intro T hT
     refine mem_vnTensorRight_of_commutes _ he T fun A => ?_
-    have hc := (VonNeumannAlgebra.mem_commutantSet_iff.mp hT (amplifyLeft A) ⟨A, rfl⟩).1
+    have hc := (VonNeumannAlgebra.mem_commutantSet_iff.mp hT (A ⊗ 𝟙) ⟨A, rfl⟩).1
     rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def]
     exact hc.symm
   · -- easy inclusion: `1⊗̄B(H₂)` commutes with `B(H₁)⊗̄1`
@@ -331,14 +334,14 @@ lemma eq_smul_one_of_mem_vnTensorLeft_of_mem_vnTensorRight
     rw [← vnTensorLeft_commutant_eq_commutantSet, vnTensorLeft_commutant]
     exact hR
   obtain ⟨S, rfl⟩ := exists_amplifyRight_of_commutes _ he x fun A => by
-    have hc := (VonNeumannAlgebra.mem_commutantSet_iff.mp hx' (amplifyLeft A) ⟨A, rfl⟩).1
+    have hc := (VonNeumannAlgebra.mem_commutantSet_iff.mp hx' (A ⊗ 𝟙) ⟨A, rfl⟩).1
     rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def]
     exact hc.symm
   have hS : ∀ B : H₂ →L[ℂ] H₂, S * B = B * S := by
     intro B
     have hmem : amplifyRight (H₁ := H₁) S ∈ vnTensorRight.commutant := by
       rw [vnTensorRight_commutant]; exact hL
-    have h1 := VonNeumannAlgebra.mem_commutant_iff.mp hmem (amplifyRight B)
+    have h1 := VonNeumannAlgebra.mem_commutant_iff.mp hmem (𝟙 ⊗ B)
       (amplifyRight_mem_vnTensorRight B)
     apply amplifyRight_injective (H₁ := H₁)
     rw [amplifyRight_mul, amplifyRight_mul]
@@ -364,7 +367,7 @@ theorem isFactor_vnTensorRight [CompleteSpace H₁] [CompleteSpace H₂] [Nontri
 
 /-! ### `B(H₁) ⊗̄ 1` is `⋆`-isomorphic to `B(H₁)`
 
-The left amplification `amplifyLeft : B(H₁) → B(H₁)⊗̄1` is a `⋆`-algebra homomorphism that is
+The left amplification `(: ⊗ 𝟙) B(H₁) → B(H₁)⊗̄1` is a `⋆`-algebra homomorphism that is
 injective (`amplifyLeft_injective`) and, by the slice lemma transported through the swap
 equivalence, surjective onto `vnTensorLeft` (`exists_amplifyLeft_of_mem_vnTensorLeft`). Hence it
 is a `⋆`-isomorphism `B(H₁) ≃⋆ₐ B(H₁) ⊗̄ 1` (`amplifyLeftStarAlgEquiv`). -/
@@ -408,16 +411,16 @@ space, where the slice lemma `exists_amplifyRight_of_commutes` produces the oper
 lemma exists_amplifyLeft_of_mem_vnTensorLeft [CompleteSpace H₁] [Nontrivial H₂]
     {T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂}
     (hT : T ∈ vnTensorLeft (H₁ := H₁) (H₂ := H₂)) :
-    ∃ A : H₁ →L[ℂ] H₁, T = amplifyLeft A := by
-  have hcomm : ∀ B : H₂ →L[ℂ] H₂, T * amplifyRight B = amplifyRight B * T := fun B =>
+    ∃ A : H₁ →L[ℂ] H₁, T = A ⊗ 𝟙 := by
+  have hcomm : ∀ B : H₂ →L[ℂ] H₂, T * 𝟙 ⊗ B = 𝟙 ⊗ B * T := fun B =>
     VonNeumannAlgebra.mem_commutant_iff.mp (amplifyRight_mem_commutant_vnTensorLeft B) T hT
   obtain ⟨u, hu⟩ := exists_ne (0 : H₂)
   have he : ‖(‖u‖⁻¹ : ℂ) • u‖ = 1 := by
     rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
       inv_mul_cancel₀ (norm_ne_zero_iff.mpr hu)]
   have hhyp : ∀ A : H₂ →L[ℂ] H₂,
-      (commEquiv.conjStarAlgEquiv T).comp (amplifyLeft A)
-        = (amplifyLeft A).comp (commEquiv.conjStarAlgEquiv T) := fun A => by
+      (commEquiv.conjStarAlgEquiv T).comp (A ⊗ 𝟙)
+        = (A ⊗ 𝟙).comp (commEquiv.conjStarAlgEquiv T) := fun A => by
     rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def,
       ← conjStarAlgEquiv_commEquiv_amplifyRight A, ← map_mul, ← map_mul, hcomm A]
   obtain ⟨S, hS⟩ := exists_amplifyRight_of_commutes (H₁ := H₂) (H₂ := H₁)
@@ -431,7 +434,7 @@ lemma exists_amplifyLeft_of_mem_vnTensorLeft [CompleteSpace H₁] [Nontrivial H�
 factor, i.e. with codomain restricted to `vnTensorLeft`. -/
 noncomputable def amplifyLeftVnₐ [CompleteSpace H₁] :
     (H₁ →L[ℂ] H₁) →⋆ₐ[ℂ] (vnTensorLeft (H₁ := H₁) (H₂ := H₂)) where
-  toFun A := ⟨amplifyLeft A, amplifyLeft_mem_vnTensorLeft A⟩
+  toFun A := ⟨A ⊗ 𝟙, amplifyLeft_mem_vnTensorLeft A⟩
   map_one' := Subtype.ext amplifyLeft_one
   map_mul' A B := Subtype.ext (amplifyLeft_mul A B)
   map_zero' := Subtype.ext amplifyLeft_zero
@@ -498,6 +501,10 @@ generated by `1 ⊗ M`. -/
 noncomputable def amplify (M : VonNeumannAlgebra H) : VonNeumannAlgebra (H₁ ⊗̂ H) :=
   generated (amplifyRight (H₁ := H₁) '' (M : Set (H →L[ℂ] H)))
 
+/-- `𝟙[K] ⊗ M` is the amplification `VonNeumannAlgebra.amplify K M` of `M` to `K ⊗̂ H`, the von
+Neumann algebra `1 ⊗ M`. -/
+scoped notation:100 "𝟙[" K "]" " ⊗ " M:101 => VonNeumannAlgebra.amplify K M
+
 variable {M : VonNeumannAlgebra H} {x : H →L[ℂ] H}
 
 /-- The amplification of `𝓑(H)` is the tensor factor `1 ⊗̄ B(H) = HilbertTensor.vnTensorRight`. -/
@@ -506,13 +513,13 @@ theorem amplify_boundedLinearOperators :
   rw [amplify, coe_boundedLinearOperators, Set.image_univ]
   rfl
 
-/-- `1 ⊗ x ∈ amplify H₁ M` for `x ∈ M`. -/
-theorem amplifyRight_mem_amplify (hx : x ∈ M) : amplifyRight (H₁ := H₁) x ∈ M.amplify H₁ :=
+/-- `1 ⊗ x ∈ 𝟙[H₁] ⊗ M` for `x ∈ M`. -/
+theorem amplifyRight_mem_amplify (hx : x ∈ M) : amplifyRight (H₁ := H₁) x ∈ 𝟙[H₁] ⊗ M :=
   mem_generated_of_mem ⟨x, hx, rfl⟩
 
-/-- `1 ⊗ x′` commutes with `amplify H₁ M` for `x′ ∈ M′`. -/
+/-- `1 ⊗ x′` commutes with `𝟙[H₁] ⊗ M` for `x′ ∈ M′`. -/
 theorem amplifyRight_mem_commutant_amplify (hx : x ∈ M′) :
-    amplifyRight (H₁ := H₁) x ∈ (M.amplify H₁)′ := by
+    amplifyRight (H₁ := H₁) x ∈ (𝟙[H₁] ⊗ M)′ := by
   rw [amplify, commutant_generated, mem_commutantSet_iff]
   rintro _ ⟨y, hy, rfl⟩
   have hy' : star y ∈ M := star_mem hy
@@ -524,16 +531,16 @@ theorem amplifyRight_mem_commutant_amplify (hx : x ∈ M′) :
 
 /-- **Vector functionals on the amplification** are determined by their values on `1 ⊗ M`. -/
 theorem inner_apply_eq_of_mem_amplify {Ξ Ξ' : H₁ ⊗̂ H}
-    (h : ∀ x ∈ M, ⟪Ξ, amplifyRight x Ξ⟫_ℂ = ⟪Ξ', amplifyRight x Ξ'⟫_ℂ) {y : H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H}
-    (hy : y ∈ M.amplify H₁) : ⟪Ξ, y Ξ⟫_ℂ = ⟪Ξ', y Ξ'⟫_ℂ := by
-  refine inner_apply_eq_of_mem_generated (M.toStarSubalgebra.map amplifyRightₐ) ?_ ?_
+    (h : ∀ x ∈ M, ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ = ⟪Ξ', (𝟙 ⊗ x) Ξ'⟫_ℂ) {y : H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H}
+    (hy : y ∈ 𝟙[H₁] ⊗ M) : ⟪Ξ, y Ξ⟫_ℂ = ⟪Ξ', y Ξ'⟫_ℂ := by
+  refine inner_apply_eq_of_mem_generated (M.toStarSubalgebra.map (𝟙 ⊗ₐ)) ?_ ?_
   · rintro _ ⟨x, hx, rfl⟩
     exact h x hx
   · rwa [StarSubalgebra.coe_map]
 
-/-- `1 ⊗ A` commutes with `amplify H₁ M` for every `A ∈ B(H₁)`. -/
+/-- `A ⊗ 1` commutes with `𝟙[H₁] ⊗ M` for every `A ∈ B(H₁)`. -/
 theorem amplifyLeft_mem_commutant_amplify (A : H₁ →L[ℂ] H₁) :
-    amplifyLeft (H₂ := H) A ∈ (M.amplify H₁)′ := by
+    amplifyLeft (H₂ := H) A ∈ (𝟙[H₁] ⊗ M)′ := by
   rw [amplify, commutant_generated, mem_commutantSet_iff]
   rintro _ ⟨x, -, rfl⟩
   refine ⟨?_, ?_⟩
@@ -543,9 +550,9 @@ theorem amplifyLeft_mem_commutant_amplify (A : H₁ →L[ℂ] H₁) :
     exact (HilbertTensor.amplifyLeft_comp_amplifyRight A (star x)).symm
 
 /-- **The amplification is `1 ⊗ M`.** For a complete, nontrivial `H₁`, the elements of
-`amplify H₁ M` are exactly the `1 ⊗ x` with `x ∈ M`. -/
+`𝟙[H₁] ⊗ M` are exactly the `1 ⊗ x` with `x ∈ M`. -/
 theorem mem_amplify_iff [CompleteSpace H₁] [Nontrivial H₁] {y : H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H} :
-    y ∈ M.amplify H₁ ↔ ∃ x ∈ M, amplifyRight x = y := by
+    y ∈ 𝟙[H₁] ⊗ M ↔ ∃ x ∈ M, 𝟙 ⊗ x = y := by
   refine ⟨fun hy => ?_, fun ⟨x, hx, h⟩ => h ▸ amplifyRight_mem_amplify hx⟩
   obtain ⟨u, hu⟩ := exists_ne (0 : H₁)
   have he : ‖(‖u‖⁻¹ : ℂ) • u‖ = 1 := by
@@ -563,15 +570,15 @@ theorem mem_amplify_iff [CompleteSpace H₁] [Nontrivial H₁] {y : H₁ ⊗̂ H
 
 /-- **The amplification is `1 ⊗ M`**, as sets. -/
 theorem coe_amplify [CompleteSpace H₁] [Nontrivial H₁] :
-    (M.amplify H₁ : Set (H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H)) = amplifyRight '' (M : Set (H →L[ℂ] H)) :=
+    (𝟙[H₁] ⊗ M : Set (H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H)) = (𝟙 ⊗ ·) '' (M : Set (H →L[ℂ] H)) :=
   Set.ext fun _ => mem_amplify_iff
 
 variable (H₁ M) in
 /-- For a complete, nontrivial `H₁`, `x ↦ 1 ⊗ x` is a `⋆`-isomorphism of `M` onto its
-amplification `amplify H₁ M` (`VonNeumannAlgebra.mem_amplify_iff`). -/
-noncomputable def amplifyEquiv [CompleteSpace H₁] [Nontrivial H₁] : M ≃⋆ₐ[ℂ] M.amplify H₁ :=
+amplification `𝟙[H₁] ⊗ M` (`VonNeumannAlgebra.mem_amplify_iff`). -/
+noncomputable def amplifyEquiv [CompleteSpace H₁] [Nontrivial H₁] : M ≃⋆ₐ[ℂ] 𝟙[H₁] ⊗ M :=
   StarAlgEquiv.ofBijective
-    ((amplifyRightₐ.comp M.toStarSubalgebra.subtype).codRestrict (M.amplify H₁).toStarSubalgebra
+    (((𝟙 ⊗ₐ).comp M.toStarSubalgebra.subtype).codRestrict (𝟙[H₁] ⊗ M).toStarSubalgebra
       fun x => amplifyRight_mem_amplify x.2)
     ⟨fun _ _ h => Subtype.ext (HilbertTensor.amplifyRight_injective (congrArg Subtype.val h)),
       fun y => by
@@ -581,7 +588,7 @@ noncomputable def amplifyEquiv [CompleteSpace H₁] [Nontrivial H₁] : M ≃⋆
 /-- `amplifyEquiv H₁ M x = 1 ⊗ x`. -/
 @[simp]
 theorem coe_amplifyEquiv_apply [CompleteSpace H₁] [Nontrivial H₁] (x : M) :
-    ((amplifyEquiv H₁ M x : M.amplify H₁) : H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H) = amplifyRight (x : H →L[ℂ] H) :=
+    ((amplifyEquiv H₁ M x : 𝟙[H₁] ⊗ M) : H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H) = 𝟙 ⊗ (x : H →L[ℂ] H) :=
   rfl
 
 /-- `amplifyEquiv H₁ M 1 = 1`. -/

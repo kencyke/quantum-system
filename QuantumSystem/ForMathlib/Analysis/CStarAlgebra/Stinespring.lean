@@ -97,7 +97,7 @@ C⋆-algebras are automatically bounded.
 
 @[expose] public section
 
-open scoped CStarAlgebra InnerProductSpace ComplexOrder TensorProduct
+open scoped CStarAlgebra InnerProductSpace ComplexOrder TensorProduct InnerProduct
 
 namespace CStarMatrix
 
@@ -752,19 +752,19 @@ noncomputable def stinespringOperator : H →L[ℂ] φ.Stinespring :=
 
 /-- `V† [z] = φ a ξ` on `z = a ⊗ ξ`, extended linearly. -/
 lemma adjoint_stinespringOperator_coe (z : φ.PreStinespring) :
-    ContinuousLinearMap.adjoint φ.stinespringOperator z = φ.stinespringOperatorAdjointₗ z := by
+    (φ.stinespringOperator†) z = φ.stinespringOperatorAdjointₗ z := by
   rw [stinespringOperator, ContinuousLinearMap.adjoint_adjoint]
   exact ContinuousLinearMap.extend_eq _ denseRange_coe (isUniformInducing_coe _) z
 
 /-- `V† [a ⊗ ξ] = φ a ξ`. -/
 @[simp]
 lemma adjoint_stinespringOperator_stinespringMk_tmul (a : A) (ξ : H) :
-    ContinuousLinearMap.adjoint φ.stinespringOperator (φ.stinespringMk (a ⊗ₜ ξ)) = φ a ξ :=
+    (φ.stinespringOperator†) (φ.stinespringMk (a ⊗ₜ ξ)) = φ a ξ :=
   φ.adjoint_stinespringOperator_coe _
 
 /-- `‖V†‖ ≤ √‖φ‖`. -/
 lemma norm_adjoint_stinespringOperator_le :
-    ‖ContinuousLinearMap.adjoint φ.stinespringOperator‖ ≤ √‖φ‖ₒₚ := by
+    ‖φ.stinespringOperator†‖ ≤ √‖φ‖ₒₚ := by
   refine ContinuousLinearMap.opNorm_le_bound _ (Real.sqrt_nonneg _) fun x => ?_
   induction x using induction_on with
   | hp => exact isClosed_le (by fun_prop) (by fun_prop)
@@ -790,7 +790,7 @@ lemma stinespringNonUnitalStarAlgHom_apply_stinespringOperator (a : A) (ξ : H) 
 non-unital) C⋆-algebra: `φ a = V† π(a) V` for the Stinespring representation
 `π = φ.stinespringNonUnitalStarAlgHom` and `V = φ.stinespringOperator`. -/
 theorem apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp (a : A) :
-    φ a = ContinuousLinearMap.adjoint φ.stinespringOperator ∘L
+    φ a = φ.stinespringOperator† ∘L
       φ.stinespringNonUnitalStarAlgHom a ∘L φ.stinespringOperator := by
   ext ξ
   simp
@@ -830,9 +830,9 @@ theorem norm_stinespringOperator_sq :
   · refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun a => ?_
     change ‖φ a‖ ≤ _
     rw [apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp]
-    calc ‖ContinuousLinearMap.adjoint φ.stinespringOperator ∘L
+    calc ‖φ.stinespringOperator† ∘L
           φ.stinespringNonUnitalStarAlgHom a ∘L φ.stinespringOperator‖
-        ≤ ‖ContinuousLinearMap.adjoint φ.stinespringOperator‖ *
+        ≤ ‖φ.stinespringOperator†‖ *
           (‖φ.stinespringNonUnitalStarAlgHom a‖ * ‖φ.stinespringOperator‖) :=
           (ContinuousLinearMap.opNorm_comp_le _ _).trans (by gcongr; exact ContinuousLinearMap.opNorm_comp_le _ _)
       _ ≤ ‖φ.stinespringOperator‖ * (‖a‖ * ‖φ.stinespringOperator‖) := by
@@ -848,7 +848,7 @@ vectors `π(a) V ξ` span a dense subspace of `K`, and `‖V‖² = ‖φ‖`. -
 theorem exists_stinespring_dilation :
     ∃ (K : Type (max u v)) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K)
       (_ : CompleteSpace K) (π : A →⋆ₙₐ[ℂ] (K →L[ℂ] K)) (V : H →L[ℂ] K),
-      (∀ a, φ a = ContinuousLinearMap.adjoint V ∘L π a ∘L V) ∧
+      (∀ a, φ a = V† ∘L π a ∘L V) ∧
       (Submodule.span ℂ (Set.range fun p : A × H => π p.1 (V p.2))).topologicalClosure = ⊤ ∧
       ‖V‖ ^ 2 = ‖φ‖ₒₚ :=
   ⟨φ.Stinespring, inferInstance, inferInstance, inferInstance, φ.stinespringNonUnitalStarAlgHom,
@@ -861,7 +861,7 @@ theorem exists_stinespring_dilation :
 /-- For any dilation `φ a = V† π(a) V`, `⟪π(a) V η, V ξ⟫ = ⟪η, φ(a⋆) ξ⟫`. -/
 lemma inner_apply_apply_eq_inner_map_star {K : Type*} [NormedAddCommGroup K]
     [InnerProductSpace ℂ K] [CompleteSpace K] {π : A →⋆ₙₐ[ℂ] (K →L[ℂ] K)} {V : H →L[ℂ] K}
-    (hφ : ∀ a, φ a = ContinuousLinearMap.adjoint V ∘L π a ∘L V) (a : A) (η ξ : H) :
+    (hφ : ∀ a, φ a = V† ∘L π a ∘L V) (a : A) (η ξ : H) :
     ⟪π a (V η), V ξ⟫_ℂ = ⟪η, φ (star a) ξ⟫_ℂ := by
   rw [hφ, ContinuousLinearMap.comp_apply, ContinuousLinearMap.comp_apply,
     ContinuousLinearMap.adjoint_inner_right, map_star, ContinuousLinearMap.star_eq_adjoint,
@@ -876,7 +876,7 @@ extends from the pre-Stinespring space to an isometry of the completion, whose r
 and contains the dense span of the `π(a) V ξ`. -/
 theorem exists_linearIsometryEquiv_stinespring {K : Type*} [NormedAddCommGroup K]
     [InnerProductSpace ℂ K] [CompleteSpace K] (π : A →⋆ₙₐ[ℂ] (K →L[ℂ] K)) (V : H →L[ℂ] K)
-    (hφ : ∀ a, φ a = ContinuousLinearMap.adjoint V ∘L π a ∘L V)
+    (hφ : ∀ a, φ a = V† ∘L π a ∘L V)
     (hmin : (Submodule.span ℂ (Set.range fun p : A × H => π p.1 (V p.2))).topologicalClosure = ⊤) :
     ∃ U : φ.Stinespring ≃ₗᵢ[ℂ] K, (∀ ξ, U (φ.stinespringOperator ξ) = V ξ) ∧
       ∀ a x, U (φ.stinespringNonUnitalStarAlgHom a x) = π a (U x) := by
@@ -971,10 +971,10 @@ theorem exists_linearIsometryEquiv_of_stinespring_dilation {K₁ K₂ : Type*}
     [NormedAddCommGroup K₁] [InnerProductSpace ℂ K₁] [CompleteSpace K₁]
     [NormedAddCommGroup K₂] [InnerProductSpace ℂ K₂] [CompleteSpace K₂]
     (π₁ : A →⋆ₙₐ[ℂ] (K₁ →L[ℂ] K₁)) (V₁ : H →L[ℂ] K₁)
-    (hφ₁ : ∀ a, φ a = ContinuousLinearMap.adjoint V₁ ∘L π₁ a ∘L V₁)
+    (hφ₁ : ∀ a, φ a = V₁† ∘L π₁ a ∘L V₁)
     (hmin₁ : (Submodule.span ℂ (Set.range fun p : A × H => π₁ p.1 (V₁ p.2))).topologicalClosure = ⊤)
     (π₂ : A →⋆ₙₐ[ℂ] (K₂ →L[ℂ] K₂)) (V₂ : H →L[ℂ] K₂)
-    (hφ₂ : ∀ a, φ a = ContinuousLinearMap.adjoint V₂ ∘L π₂ a ∘L V₂)
+    (hφ₂ : ∀ a, φ a = V₂† ∘L π₂ a ∘L V₂)
     (hmin₂ : (Submodule.span ℂ (Set.range fun p : A × H => π₂ p.1 (V₂ p.2))).topologicalClosure = ⊤) :
     ∃ U : K₁ ≃ₗᵢ[ℂ] K₂, (∀ ξ, U (V₁ ξ) = V₂ ξ) ∧ ∀ a x, U (π₁ a x) = π₂ a (U x) := by
   obtain ⟨U₁, hV₁, hπ₁⟩ := φ.exists_linearIsometryEquiv_stinespring π₁ V₁ hφ₁ hmin₁
@@ -1027,13 +1027,13 @@ lemma stinespringOperator_apply (ξ : H) : φ.stinespringOperator ξ = φ.stines
 /-- **Stinespring's theorem**, unital case: `φ a = V† π(a) V` for the unital Stinespring
 representation `π = φ.stinespringStarAlgHom`. -/
 theorem apply_eq_adjoint_comp_stinespringStarAlgHom_comp (a : A) :
-    φ a = ContinuousLinearMap.adjoint φ.stinespringOperator ∘L
+    φ a = φ.stinespringOperator† ∘L
       φ.stinespringStarAlgHom a ∘L φ.stinespringOperator :=
   φ.apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp a
 
 /-- `V† V = φ 1`. -/
 theorem adjoint_stinespringOperator_comp_self :
-    ContinuousLinearMap.adjoint φ.stinespringOperator ∘L φ.stinespringOperator = φ 1 := by
+    φ.stinespringOperator† ∘L φ.stinespringOperator = φ 1 := by
   rw [φ.apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp,
     stinespringNonUnitalStarAlgHom_one, ContinuousLinearMap.one_def, ContinuousLinearMap.id_comp]
 
@@ -1052,8 +1052,8 @@ span a dense subspace of `K`. -/
 theorem exists_unital_stinespring_dilation :
     ∃ (K : Type (max u v)) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K)
       (_ : CompleteSpace K) (π : A →⋆ₐ[ℂ] (K →L[ℂ] K)) (V : H →L[ℂ] K),
-      (∀ a, φ a = ContinuousLinearMap.adjoint V ∘L π a ∘L V) ∧
-      ContinuousLinearMap.adjoint V ∘L V = φ 1 ∧
+      (∀ a, φ a = V† ∘L π a ∘L V) ∧
+      V† ∘L V = φ 1 ∧
       (Submodule.span ℂ (Set.range fun p : A × H => π p.1 (V p.2))).topologicalClosure = ⊤ :=
   ⟨φ.Stinespring, inferInstance, inferInstance, inferInstance, φ.stinespringStarAlgHom,
     φ.stinespringOperator, φ.apply_eq_adjoint_comp_stinespringStarAlgHom_comp,

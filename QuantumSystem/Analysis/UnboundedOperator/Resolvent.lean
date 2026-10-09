@@ -9,6 +9,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Pos
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Resolvent
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Resolvents of unbounded operators on Hilbert spaces
@@ -38,7 +39,7 @@ and the adjoint of a resolvent.
 @[expose] public section
 
 open RCLike
-open scoped ComplexConjugate LinearPMap
+open scoped ComplexConjugate LinearPMap InnerProduct
 
 namespace LinearPMap
 
@@ -169,10 +170,10 @@ theorem IsPositive.mem_resolventSet {A : E →ₗ.[𝕜] E} (hA : IsSelfAdjoint 
 `z̄ - T†`. -/
 private lemma adjoint_resolvent_isInverse (hTd : Dense (T.domain : Set E))
     (hz : z ∈ T.resolventSet) :
-    (∀ x, (ContinuousLinearMap.adjoint (T.resolvent z) x,
-      conj z • ContinuousLinearMap.adjoint (T.resolvent z) x - x) ∈ T†.graph) ∧
+    (∀ x, (((T.resolvent z)†) x,
+      conj z • ((T.resolvent z)†) x - x) ∈ T†.graph) ∧
     ∀ u v, (u, v) ∈ T†.graph →
-      ContinuousLinearMap.adjoint (T.resolvent z) (conj z • u - v) = u := by
+      ((T.resolvent z)†) (conj z • u - v) = u := by
   have hRb : ∀ a b, (a, b) ∈ T.graph → T.resolvent z b = z • T.resolvent z a - a := fun a b hab => by
     have := resolvent_sub_apply hz hab
     rw [ContinuousLinearMap.map_sub, ContinuousLinearMap.map_smul] at this
@@ -201,7 +202,7 @@ theorem conj_mem_resolventSet_adjoint (hTd : Dense (T.domain : Set E))
 /-- For a densely defined operator `T` and `z` in its resolvent set, the adjoint of the resolvent
 of `T` at `z` is the resolvent of `T†` at `z̄`: `((z - T)⁻¹)† = (z̄ - T†)⁻¹`. -/
 theorem adjoint_resolvent (hTd : Dense (T.domain : Set E)) (hz : z ∈ T.resolventSet) :
-    ContinuousLinearMap.adjoint (T.resolvent z) = T†.resolvent (conj z) :=
+    (T.resolvent z)† = T†.resolvent (conj z) :=
   (resolvent_eq_of (adjoint_resolvent_isInverse hTd hz).1
     (adjoint_resolvent_isInverse hTd hz).2).symm
 
@@ -214,7 +215,7 @@ theorem _root_.IsSelfAdjoint.conj_mem_resolventSet {A : E →ₗ.[𝕜] E} (hA :
 `((z - A)⁻¹)† = (z̄ - A)⁻¹`. -/
 theorem _root_.IsSelfAdjoint.adjoint_resolvent {A : E →ₗ.[𝕜] E} (hA : IsSelfAdjoint A) {z : 𝕜}
     (hz : z ∈ A.resolventSet) :
-    ContinuousLinearMap.adjoint (A.resolvent z) = A.resolvent (conj z) := by
+    (A.resolvent z)† = A.resolvent (conj z) := by
   simpa only [isSelfAdjoint_def.mp hA] using LinearPMap.adjoint_resolvent hA.dense_domain hz
 
 /-- For a self-adjoint operator and `im z ≠ 0`, `‖(z - A)⁻¹‖ ≤ |im z|⁻¹`. -/

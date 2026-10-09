@@ -124,7 +124,7 @@ variable {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
 operators of `Φ` (`ContinuousLinearMap.finrank_range_choi_le_card`). -/
 theorem finrank_range_choi_le_finrank_of_stinespring (b : OrthonormalBasis ι ℂ H) {Φ : F}
     (V : H →L[ℂ] K ⊗[ℂ] E) (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L adjoint V)) :
-    Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)) ≤
+    Module.finrank ℂ ((choi b Φ).range) ≤
       Module.finrank ℂ E := by
   have h := finrank_range_choi_le_card b (Φ := Φ) (κ := Fin (Module.finrank ℂ E))
     (T := krausBlock (stdOrthonormalBasis ℂ E) V) fun A => by
@@ -137,7 +137,7 @@ blocks of `V` are linearly independent
 theorem finrank_range_choi_eq_card_iff_linearIndependent_krausBlock (b : OrthonormalBasis ι ℂ H)
     {Φ : F} (f : OrthonormalBasis κ ℂ E) (V : H →L[ℂ] K ⊗[ℂ] E)
     (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L adjoint V)) :
-    Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)) = Fintype.card κ ↔
+    Module.finrank ℂ ((choi b Φ).range) = Fintype.card κ ↔
       LinearIndependent ℂ (krausBlock f V) :=
   finrank_range_choi_eq_card_iff_linearIndependent b fun A => by
     rw [hV, traceRight_comp_comp_adjoint f]
@@ -267,7 +267,7 @@ orthonormal basis `b` of `H`. Conversely every such map is completely positive
 (`CompletelyPositiveMap.ofStinespring`). -/
 theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (Module.finrank ℂ (LinearMap.range (choi b φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+        (Fin (Module.finrank ℂ ((choi b φ).range))),
       ∀ A, φ A = traceRight K (EuclideanSpace ℂ (Fin _)) (V ∘L A ∘L adjoint V) := by
   have h := exists_stinespring_linearIndependent_krausBlock φ
   obtain ⟨d, V, hV, hli⟩ := h
@@ -285,7 +285,7 @@ minimal dimension `r = rank J_b(φ)`
 theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H)
     (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (Module.finrank ℂ (LinearMap.range (choi b φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+        (Fin (Module.finrank ℂ ((choi b φ).range))),
       ∀ B : K →L[ℂ] K, ContinuousLinearMap.traceDual φ B = adjoint V ∘L B.rTensor _ ∘L V := by
   have h := exists_stinespring b φ
   obtain ⟨V, hV⟩ := h
@@ -297,7 +297,7 @@ with exactly `rank J_b(φ)` operators, the minimal number
 (`CompletelyPositiveMap.exists_stinespring`). -/
 theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)
     (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
-    ∃ T : Fin (Module.finrank ℂ (LinearMap.range (choi b φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K))) →
+    ∃ T : Fin (Module.finrank ℂ ((choi b φ).range)) →
         H →L[ℂ] K,
       ∀ A, φ A = ∑ a, T a ∘L A ∘L adjoint (T a) := by
   have h := exists_stinespring b φ
@@ -310,8 +310,8 @@ basis: each is the minimal number of Kraus operators (`CompletelyPositiveMap.exi
 `ContinuousLinearMap.finrank_range_choi_le_card`). -/
 theorem finrank_range_choi_congr {ι' : Type*} [Fintype ι'] (b : OrthonormalBasis ι ℂ H)
     (b' : OrthonormalBasis ι' ℂ H) (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
-    Module.finrank ℂ (LinearMap.range (choi b φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)) =
-      Module.finrank ℂ (LinearMap.range (choi b' φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)) := by
+    Module.finrank ℂ ((choi b φ).range) =
+      Module.finrank ℂ ((choi b' φ).range) := by
   have h := exists_kraus_finrank_range_choi b φ
   have h' := exists_kraus_finrank_range_choi b' φ
   obtain ⟨T, hT⟩ := h
@@ -326,7 +326,7 @@ theorem exists_coe_eq_iff_exists_stinespring (b : OrthonormalBasis ι ℂ H)
     (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ φ : (H →L[ℂ] H) →CP (K →L[ℂ] K), (φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
       ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-          (Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+          (Fin (Module.finrank ℂ ((choi b Φ).range))),
         ∀ A, Φ A = traceRight K (EuclideanSpace ℂ (Fin _)) (V ∘L A ∘L adjoint V) :=
   ⟨by rintro ⟨φ, rfl⟩; exact exists_stinespring b φ,
     fun h => by
@@ -338,7 +338,7 @@ completely positive iff `Φ(A) = Σₐ Tₐ A Tₐ†` with `rank J_b(Φ)` opera
 theorem exists_coe_eq_iff_exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)
     (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ φ : (H →L[ℂ] H) →CP (K →L[ℂ] K), (φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
-      ∃ T : Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K))) →
+      ∃ T : Fin (Module.finrank ℂ ((choi b Φ).range)) →
           H →L[ℂ] K,
         ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a) :=
   ⟨by rintro ⟨φ, rfl⟩; exact exists_kraus_finrank_range_choi b φ,
@@ -372,7 +372,7 @@ quantum channel `Φ : B(H) → B(K)` is the unital map `Φ*(B) = V† (B ⊗ 1) 
 `V† V = V† (1 ⊗ 1) V = Φ*(1) = 1` (`QuantumChannel.traceDual_one`). -/
 theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+        (Fin (Module.finrank ℂ ((choi b Φ).range))),
       adjoint V ∘L V = 1 ∧
         ∀ B : K →L[ℂ] K, ContinuousLinearMap.traceDual Φ B = adjoint V ∘L B.rTensor _ ∘L V := by
   have h := CompletelyPositiveMap.exists_traceDual_eq_stinespring b Φ.toCompletelyPositiveMap
@@ -390,7 +390,7 @@ Heisenberg form `QuantumChannel.exists_traceDual_eq_stinespring` read through
 `ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
 theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+        (Fin (Module.finrank ℂ ((choi b Φ).range))),
       adjoint V ∘L V = 1 ∧ ∀ A, Φ A = ContinuousLinearMap.traceRight K (EuclideanSpace ℂ (Fin _))
         (V ∘L A ∘L adjoint V) := by
   have h := exists_traceDual_eq_stinespring b Φ
@@ -401,7 +401,7 @@ theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel 
 exactly `rank J_b(Φ)` operators, satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`
 (`isTracePreserving_iff_sum_adjoint_comp_eq_one`). -/
 theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
-    ∃ T : Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K))) →
+    ∃ T : Fin (Module.finrank ℂ ((choi b Φ).range)) →
         H →L[ℂ] K,
       (∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) ∧ ∑ a, adjoint (T a) ∘L T a = 1 := by
   have h := CompletelyPositiveMap.exists_kraus_finrank_range_choi b Φ.toCompletelyPositiveMap
@@ -415,7 +415,7 @@ theorem exists_coe_eq_iff_exists_stinespring (b : OrthonormalBasis ι ℂ H)
     (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ Ψ : QuantumChannel H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
       ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-          (Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)))),
+          (Fin (Module.finrank ℂ ((choi b Φ).range))),
         adjoint V ∘L V = 1 ∧ ∀ A, Φ A = ContinuousLinearMap.traceRight K (EuclideanSpace ℂ (Fin _))
         (V ∘L A ∘L adjoint V) :=
   ⟨by rintro ⟨Ψ, rfl⟩; exact exists_stinespring b Ψ,
@@ -430,7 +430,7 @@ with `rank J_b(Φ)` operators. -/
 theorem exists_coe_eq_iff_exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)
     (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ Ψ : QuantumChannel H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
-      ∃ T : Fin (Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K))) →
+      ∃ T : Fin (Module.finrank ℂ ((choi b Φ).range)) →
           H →L[ℂ] K,
         (∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) ∧ ∑ a, adjoint (T a) ∘L T a = 1 :=
   ⟨by rintro ⟨Ψ, rfl⟩; exact exists_kraus_finrank_range_choi b Ψ,

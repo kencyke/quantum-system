@@ -165,7 +165,7 @@ theorem choi_eq_sum_rankOne_of_kraus (b : OrthonormalBasis ι ℂ H) {Φ : F} {�
 of `J_b(Φ) = Σₐ |vₐ⟩⟨vₐ|` is spanned by the `|κ|` vectors `vₐ`. -/
 theorem finrank_range_choi_le_card (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
     {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
-    Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)) ≤ Fintype.card κ := by
+    Module.finrank ℂ ((choi b Φ).range) ≤ Fintype.card κ := by
   rw [choi_eq_sum_rankOne_of_kraus b hT, range_sum_rankOne_self]
   exact finrank_range_le_card _
 
@@ -175,7 +175,7 @@ operators `vₐ = Σᵢ bᵢ ⊗ Tₐ bᵢ`, and vectorisation `T ↦ Σᵢ bᵢ
 theorem finrank_range_choi_eq_card_iff_linearIndependent (b : OrthonormalBasis ι ℂ H) {Φ : F}
     {κ : Type*} [Fintype κ] {T : κ → H →L[ℂ] K}
     (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
-    Module.finrank ℂ (LinearMap.range (choi b Φ : H ⊗[ℂ] K →ₗ[ℂ] H ⊗[ℂ] K)) = Fintype.card κ ↔
+    Module.finrank ℂ ((choi b Φ).range) = Fintype.card κ ↔
       LinearIndependent ℂ T := by
   classical
   rw [choi_eq_sum_rankOne_of_kraus b hT, range_sum_rankOne_self, eq_comm]

@@ -98,19 +98,19 @@ variable {ι : Type*} [DecidableEq ι] {H : Type*} [NormedAddCommGroup H] [Inner
 /-- For `Ξ = lpTensorEquiv ξ = ∑ᵢ eᵢ ⊗ ξᵢ`, `(1 ⊗ x) Ξ = ∑ᵢ eᵢ ⊗ x ξᵢ`. -/
 theorem amplifyRight_lpTensorEquiv (ξ : lp (fun _ : ι => H) 2) (x : H →L[ℂ] H)
     (hx : Memℓp (fun i => x (ξ i)) 2) :
-    amplifyRight x (lpTensorEquiv ξ) = lpTensorEquiv ⟨fun i => x (ξ i), hx⟩ := by
+    (𝟙 ⊗ x) (lpTensorEquiv ξ) = lpTensorEquiv ⟨fun i => x (ξ i), hx⟩ := by
   set L := (lpTensorEquiv (ι := ι) (K := H)).toContinuousLinearEquiv.toContinuousLinearMap
-  have h₁ := (lp.hasSum_single ENNReal.ofNat_ne_top ξ).mapL ((amplifyRight x).comp L)
+  have h₁ := (lp.hasSum_single ENNReal.ofNat_ne_top ξ).mapL ((𝟙 ⊗ x).comp L)
   have h₂ := (lp.hasSum_single ENNReal.ofNat_ne_top
     (⟨fun i => x (ξ i), hx⟩ : lp (fun _ : ι => H) 2)).mapL L
   refine h₁.unique (h₂.congr_fun fun i => ?_)
-  change amplifyRight x (lpTensorEquiv (lp.single 2 i (ξ i))) =
+  change (𝟙 ⊗ x) (lpTensorEquiv (lp.single 2 i (ξ i))) =
     lpTensorEquiv (lp.single 2 i (x (ξ i)))
   rw [lpTensorEquiv_single, lpTensorEquiv_single, amplifyRight_tmul]
 
 /-- For `Ξ = lpTensorEquiv ξ` and `Η = lpTensorEquiv η`, `⟪Ξ, (1 ⊗ x) Η⟫ = ∑ᵢ ⟪ξᵢ, x ηᵢ⟫`. -/
 theorem hasSum_inner_amplifyRight_lpTensorEquiv (ξ η : lp (fun _ : ι => H) 2) (x : H →L[ℂ] H) :
-    HasSum (fun i => ⟪ξ i, x (η i)⟫_ℂ) ⟪lpTensorEquiv ξ, amplifyRight x (lpTensorEquiv η)⟫_ℂ := by
+    HasSum (fun i => ⟪ξ i, x (η i)⟫_ℂ) ⟪lpTensorEquiv ξ, (𝟙 ⊗ x) (lpTensorEquiv η)⟫_ℂ := by
   rw [amplifyRight_lpTensorEquiv η x (lp.memℓp_apply_clm η x), LinearIsometryEquiv.inner_map_map]
   exact lp.hasSum_inner ξ _
 
@@ -118,7 +118,7 @@ omit [DecidableEq ι] in
 /-- `⟪Ξ, (1 ⊗ x⋆x) Ξ⟫ = ‖(1 ⊗ x) Ξ‖²`. -/
 theorem inner_amplifyRight_star_mul_self {H₁ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] (Ξ : H₁ ⊗̂ H) (x : H →L[ℂ] H) :
-    ⟪Ξ, amplifyRight (star x * x) Ξ⟫_ℂ = ((‖amplifyRight x Ξ‖ ^ 2 : ℝ) : ℂ) := by
+    ⟪Ξ, (𝟙 ⊗ (star x * x)) Ξ⟫_ℂ = ((‖(𝟙 ⊗ x) Ξ‖ ^ 2 : ℝ) : ℂ) := by
   rw [amplifyRight_mul, ← amplifyRight_star, ContinuousLinearMap.star_eq_adjoint,
     mul_apply_eq_comp, ContinuousLinearMap.adjoint_inner_right, inner_self_eq_norm_sq_to_K]
   norm_cast
@@ -127,7 +127,7 @@ omit [DecidableEq ι] in
 /-- `⟪Ξ, (1 ⊗ x⋆x) Η⟫ = ⟪(1 ⊗ x) Ξ, (1 ⊗ x) Η⟫`. -/
 theorem inner_amplifyRight_star_mul {H₁ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] (Ξ Η : H₁ ⊗̂ H) (x : H →L[ℂ] H) :
-    ⟪Ξ, amplifyRight (star x * x) Η⟫_ℂ = ⟪amplifyRight x Ξ, amplifyRight x Η⟫_ℂ := by
+    ⟪Ξ, (𝟙 ⊗ (star x * x)) Η⟫_ℂ = ⟪(𝟙 ⊗ x) Ξ, (𝟙 ⊗ x) Η⟫_ℂ := by
   rw [amplifyRight_mul, ← amplifyRight_star, ContinuousLinearMap.star_eq_adjoint,
     mul_apply_eq_comp, ContinuousLinearMap.adjoint_inner_right]
 
@@ -135,7 +135,7 @@ omit [DecidableEq ι] [CompleteSpace H] in
 /-- `⟪e ⊗ ξ, (1 ⊗ x)(e ⊗ ξ)⟫ = ⟪ξ, x ξ⟫` for a unit vector `e`. -/
 theorem inner_tmul_amplifyRight_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     {e : H₁} (he : ‖e‖ = 1) (ξ : H) (x : H →L[ℂ] H) :
-    ⟪e ⊗ₕ ξ, amplifyRight x (e ⊗ₕ ξ)⟫_ℂ = ⟪ξ, x ξ⟫_ℂ := by
+    ⟪e ⊗ₕ ξ, (𝟙 ⊗ x) (e ⊗ₕ ξ)⟫_ℂ = ⟪ξ, x ξ⟫_ℂ := by
   rw [amplifyRight_tmul, inner_tmul, inner_self_eq_norm_sq_to_K, he]
   simp
 
@@ -207,16 +207,16 @@ local notation "ℓ²" => lp (fun _ : ℕ => ℂ) 2
 `ω ≤ ω_Ζ` for the interleaving `Ζ` of `Ξ₀` and `Η₀`, and the Radon–Nikodym theorem gives
 `ω = ω_{R Ζ}` with `R` in the commutant of `1 ⊗ M`. -/
 theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.IsNormal ω) :
-    ∃ Ξ : ℓ² ⊗̂ H, ∀ x : M, ⟪Ξ, amplifyRight (x : H →L[ℂ] H) Ξ⟫_ℂ = ω x := by
+    ∃ Ξ : ℓ² ⊗̂ H, ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x := by
   obtain ⟨ξ, η, hξη⟩ := h.exists_hasSum_inner
   set ζ := lp.interleave ξ η
-  set ρ : M →⋆ₐ[ℂ] (ℓ² ⊗̂ H →L[ℂ] ℓ² ⊗̂ H) := HilbertTensor.amplifyRightₐ.comp (inclₐ M)
-  have hρ : ∀ x : M, ρ x = amplifyRight (x : H →L[ℂ] H) := fun _ => rfl
-  have hω : ∀ x : M, ω x = ⟪lpTensorEquiv ξ, amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv η)⟫_ℂ :=
+  set ρ : M →⋆ₐ[ℂ] (ℓ² ⊗̂ H →L[ℂ] ℓ² ⊗̂ H) := (𝟙 ⊗ₐ).comp (inclₐ M)
+  have hρ : ∀ x : M, ρ x = 𝟙 ⊗ (x : H →L[ℂ] H) := fun _ => rfl
+  have hω : ∀ x : M, ω x = ⟪lpTensorEquiv ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η)⟫_ℂ :=
     fun x => (hξη x).unique (HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv ξ η x)
-  have hζ : ∀ y : H →L[ℂ] H, ⟪lpTensorEquiv ζ, amplifyRight y (lpTensorEquiv ζ)⟫_ℂ =
-      ⟪lpTensorEquiv ξ, amplifyRight y (lpTensorEquiv ξ)⟫_ℂ +
-        ⟪lpTensorEquiv η, amplifyRight y (lpTensorEquiv η)⟫_ℂ := fun y => by
+  have hζ : ∀ y : H →L[ℂ] H, ⟪lpTensorEquiv ζ, (𝟙 ⊗ y) (lpTensorEquiv ζ)⟫_ℂ =
+      ⟪lpTensorEquiv ξ, (𝟙 ⊗ y) (lpTensorEquiv ξ)⟫_ℂ +
+        ⟪lpTensorEquiv η, (𝟙 ⊗ y) (lpTensorEquiv η)⟫_ℂ := fun y => by
     refine (HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv ζ ζ y).unique ?_
     have hzip := Stream'.zip_interleave (fun u v => ⟪u, y v⟫_ℂ)
       (ξ : ℕ → H) (η : ℕ → H) (ξ : ℕ → H) (η : ℕ → H)
@@ -224,8 +224,8 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
       ((HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv ξ ξ y).interleave
         (HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv η η y))
   have hdom : ∀ x : M, ‖ω (star x * x)‖ ≤ ‖ρ x (lpTensorEquiv ζ)‖ ^ 2 := fun x => by
-    set a := ‖amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv ξ)‖
-    set b := ‖amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv η)‖
+    set a := ‖(𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv ξ)‖
+    set b := ‖(𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η)‖
     have hsq : ‖ρ x (lpTensorEquiv ζ)‖ ^ 2 = a ^ 2 + b ^ 2 := by
       have := hζ (star (x : H →L[ℂ] H) * x)
       rw [HilbertTensor.inner_amplifyRight_star_mul_self,
@@ -236,10 +236,10 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
       exact this
     rw [hsq, hω, MulMemClass.coe_mul, StarMemClass.coe_star,
       HilbertTensor.inner_amplifyRight_star_mul]
-    have hab := norm_inner_le_norm (𝕜 := ℂ) (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv ξ))
-      (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv η))
-    nlinarith [sq_nonneg (a - b), norm_nonneg (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv ξ)),
-      norm_nonneg (amplifyRight (x : H →L[ℂ] H) (lpTensorEquiv η))]
+    have hab := norm_inner_le_norm (𝕜 := ℂ) ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv ξ))
+      ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η))
+    nlinarith [sq_nonneg (a - b), norm_nonneg ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv ξ)),
+      norm_nonneg ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η))]
   obtain ⟨R, -, -, hR⟩ :=
     CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := ρ.toNonUnitalStarAlgHom) (f := ω) hdom
   exact ⟨R (lpTensorEquiv ζ), fun x => (hR x).symm⟩
@@ -247,7 +247,7 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
 /-- `ω` is normal iff it is the restriction to `1 ⊗ M` of a vector functional on `ℓ²(ℕ) ⊗̂ H`. -/
 theorem isNormal_iff_exists {ω : M →ₚ[ℂ] ℂ} :
     M.IsNormal ω ↔ ∃ Ξ : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H,
-      ∀ x : M, ⟪Ξ, amplifyRight (x : H →L[ℂ] H) Ξ⟫_ℂ = ω x := by
+      ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x := by
   refine ⟨IsNormal.exists_inner_amplifyRight_eq, fun ⟨Ξ, hΞ⟩ => ?_⟩
   refine isNormal_of_hasSum_inner (lpTensorEquiv.symm Ξ) (lpTensorEquiv.symm Ξ) fun x => ?_
   have := HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv (lpTensorEquiv.symm Ξ)
@@ -277,22 +277,22 @@ noncomputable def vec : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H :=
 
 /-- `ω(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫` for the representing vector `Ξ`. -/
 theorem inner_vec_amplifyRight (x : M) :
-    ⟪h.vec, amplifyRight (x : H →L[ℂ] H) h.vec⟫_ℂ = ω x :=
+    ⟪h.vec, (𝟙 ⊗ (x : H →L[ℂ] H)) h.vec⟫_ℂ = ω x :=
   (isNormal_iff_exists.mp h).choose_spec x
 
 end IsNormal
 
 /-- `ω(1) = ‖Ξ‖²` for any vector `Ξ` representing `ω`. -/
 theorem re_apply_one_eq_norm_sq {ω : M →ₚ[ℂ] ℂ} {Ξ : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H}
-    (hΞ : ∀ x : M, ⟪Ξ, amplifyRight (x : H →L[ℂ] H) Ξ⟫_ℂ = ω x) : (ω 1).re = ‖Ξ‖ ^ 2 := by
+    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x) : (ω 1).re = ‖Ξ‖ ^ 2 := by
   rw [← hΞ 1, OneMemClass.coe_one, HilbertTensor.amplifyRight_one,
     one_apply_eq_self, inner_self_eq_norm_sq_to_K]
   norm_cast
 
 /-- `ω(x⋆ x) = ‖(1 ⊗ x) Ξ‖²` for any vector `Ξ` representing `ω`. -/
 theorem apply_star_mul_self_eq {ω : M →ₚ[ℂ] ℂ} {Ξ : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H}
-    (hΞ : ∀ x : M, ⟪Ξ, amplifyRight (x : H →L[ℂ] H) Ξ⟫_ℂ = ω x) (x : M) :
-    ω (star x * x) = ((‖amplifyRight (x : H →L[ℂ] H) Ξ‖ ^ 2 : ℝ) : ℂ) := by
+    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x) (x : M) :
+    ω (star x * x) = ((‖(𝟙 ⊗ (x : H →L[ℂ] H)) Ξ‖ ^ 2 : ℝ) : ℂ) := by
   rw [← hΞ, MulMemClass.coe_mul, StarMemClass.coe_star,
     HilbertTensor.inner_amplifyRight_star_mul_self]
 
@@ -337,7 +337,7 @@ variable (M) in
 noncomputable def amplifiedVectorFunctional {H₁ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] (Ξ : H₁ ⊗̂ H) : M →ₚ[ℂ] ℂ :=
   PositiveLinearMap.mk₀
-    { toFun := fun x => ⟪Ξ, amplifyRight (x : H →L[ℂ] H) Ξ⟫_ℂ
+    { toFun := fun x => ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ
       map_add' := fun x y => by
         simp [HilbertTensor.amplifyRight_add, inner_add_right]
       map_smul' := fun c x => by
@@ -353,7 +353,7 @@ noncomputable def amplifiedVectorFunctional {H₁ : Type*} [NormedAddCommGroup H
 @[simp]
 theorem amplifiedVectorFunctional_apply {H₁ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] (Ξ : H₁ ⊗̂ H) (x : M) :
-    M.amplifiedVectorFunctional Ξ x = ⟪Ξ, amplifyRight (x : H →L[ℂ] H) Ξ⟫_ℂ :=
+    M.amplifiedVectorFunctional Ξ x = ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ :=
   rfl
 
 variable (M) in
@@ -436,13 +436,13 @@ lemma isStarProjection_amplifyRight {H₁ : Type*} [NormedAddCommGroup H₁] [In
 
 /-- `1 ⊗ (1 - p) = 1 - 1 ⊗ p`. -/
 lemma amplifyRight_one_sub {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
-    (p : H →L[ℂ] H) : amplifyRight (H₁ := H₁) (1 - p) = 1 - amplifyRight p := by
+    (p : H →L[ℂ] H) : amplifyRight (H₁ := H₁) (1 - p) = 1 - 𝟙 ⊗ p := by
   rw [← HilbertTensor.amplifyRightₐ_apply, map_sub, map_one]
   rfl
 
 /-- For projections, `1 ⊗ e ≤ 1 ⊗ f ↔ e ≤ f`. -/
 lemma amplifyRight_le_amplifyRight_iff {e f : H →L[ℂ] H} (he : IsStarProjection e)
-    (hf : IsStarProjection f) : amplifyRight (H₁ := ℓ²) e ≤ amplifyRight f ↔ e ≤ f := by
+    (hf : IsStarProjection f) : amplifyRight (H₁ := ℓ²) e ≤ 𝟙 ⊗ f ↔ e ≤ f := by
   rw [(isStarProjection_amplifyRight he).le_iff_mul_eq_left (isStarProjection_amplifyRight hf),
     he.le_iff_mul_eq_left hf, ← HilbertTensor.amplifyRight_mul,
     HilbertTensor.amplifyRight_injective.eq_iff]
@@ -453,8 +453,8 @@ variable (ψ : M.NormalFunctional)
 
 /-- A representing vector's support lies in `1 ⊗ M`. -/
 lemma exists_amplifyRight_eq_supportProj :
-    ∃ x ∈ M, amplifyRight x = (M.amplify ℓ²).supportProj ψ.2.vec :=
-  mem_amplify_iff.mp ((M.amplify ℓ²).supportProj_mem ψ.2.vec)
+    ∃ x ∈ M, 𝟙 ⊗ x = (𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec :=
+  mem_amplify_iff.mp ((𝟙[ℓ²] ⊗ M).supportProj_mem ψ.2.vec)
 
 /-- The **support projection** `s(ψ) ∈ M` of a normal functional: the element of `M` with
 `1 ⊗ s(ψ) = s(Ξ_ψ)`, the vector support of a representing vector in `amplify ℓ²(ℕ) M`. -/
@@ -467,21 +467,21 @@ theorem supportProj_mem : supportProj ψ ∈ M :=
 
 /-- `1 ⊗ s(ψ) = s(Ξ_ψ)` for the chosen representing vector. -/
 theorem amplifyRight_supportProj :
-    amplifyRight (supportProj ψ) = (M.amplify ℓ²).supportProj ψ.2.vec :=
+    𝟙 ⊗ (supportProj ψ) = (𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec :=
   (exists_amplifyRight_eq_supportProj ψ).choose_spec.2
 
 /-- **Independence of the representing vector.** `1 ⊗ s(ψ) = s(Ξ)` for *every* `Ξ` with
 `ψ(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫`. -/
 theorem amplifyRight_supportProj_eq {Ξ : ℓ² ⊗̂ H}
-    (hΞ : ∀ x : M, ⟪Ξ, amplifyRight (x : H →L[ℂ] H) Ξ⟫_ℂ = ψ.1 x) :
-    amplifyRight (supportProj ψ) = (M.amplify ℓ²).supportProj Ξ := by
+    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ψ.1 x) :
+    𝟙 ⊗ (supportProj ψ) = (𝟙[ℓ²] ⊗ M).supportProj Ξ := by
   rw [amplifyRight_supportProj]
   refine supportProj_eq_of_inner_eq fun y hy => inner_apply_eq_of_mem_amplify (fun x hx => ?_) hy
   rw [ψ.2.inner_vec_amplifyRight ⟨x, hx⟩, hΞ ⟨x, hx⟩]
 
 /-- `s(ψ)` is a projection. -/
 theorem isStarProjection_supportProj : IsStarProjection (supportProj ψ) := by
-  have hS := (M.amplify ℓ²).isStarProjection_supportProj ψ.2.vec
+  have hS := (𝟙[ℓ²] ⊗ M).isStarProjection_supportProj ψ.2.vec
   rw [← amplifyRight_supportProj] at hS
   refine ⟨HilbertTensor.amplifyRight_injective (H₁ := ℓ²) ?_,
     HilbertTensor.amplifyRight_injective (H₁ := ℓ²) ?_⟩
@@ -495,7 +495,7 @@ theorem supportProj_le_iff {p : H →L[ℂ] H} (hp : IsStarProjection p) (hpM : 
   rw [← amplifyRight_le_amplifyRight_iff (isStarProjection_supportProj ψ) hp,
     amplifyRight_supportProj, supportProj_le_iff_inner_eq_zero (isStarProjection_amplifyRight hp)
       (amplifyRight_mem_amplify hpM), ← ψ.2.inner_vec_amplifyRight ⟨1 - p, _⟩]
-  change _ ↔ ⟪_, amplifyRight (1 - p) _⟫_ℂ = 0
+  change _ ↔ ⟪_, (𝟙 ⊗ (1 - p)) _⟫_ℂ = 0
   rw [amplifyRight_one_sub]
 
 /-- `ψ(1 - s(ψ)) = 0`. -/

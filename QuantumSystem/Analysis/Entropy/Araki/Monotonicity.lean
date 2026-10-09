@@ -120,8 +120,8 @@ theorem integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ)
     (hξ' : ∀ y : N, ⟪ζ', (y : K →L[ℂ] K) ζ'⟫_ℂ = ⟪ξ', (α y : H →L[ℂ] H) ξ'⟫_ℂ) {t : ℝ}
     (ht : 0 < t) :
-    ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular N ζ' ζ).pvm.measure ζ ≤
-      ∫ s, (t + s)⁻¹ ∂(isSelfAdjoint_relativeModular M ξ' ξ).pvm.measure ξ := by
+    ∫ s, (t + s)⁻¹ ∂μ[N]⟦ζ', ζ⟧ ≤
+      ∫ s, (t + s)⁻¹ ∂μ[M]⟦ξ', ξ⟧ := by
   refine (isSelfAdjoint_relativeModular M ξ' ξ).integral_inv_add_measure_pvm_le_of_forall_mem_graph
     (restrictScalars_relativeModular M ξ' ξ) (isSelfAdjoint_relativeModular N ζ' ζ)
     (isClosable_relativeTomita N ζ' ζ) (restrictScalars_relativeModular N ζ' ζ) ξ ζ ?_ ht
@@ -138,9 +138,9 @@ theorem integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H
     change star (y * e) ζ' = e (star y ζ')
     rw [star_mul, (N.isStarProjection_supportProj ζ).isSelfAdjoint.star_eq, mul_apply_eq_comp]
   set x : H →L[ℂ] H := (α b : H →L[ℂ] H)
-  have hK : y ζ ∈ (InnerProductSpace.cyclicSubspace (N : Set (K →L[ℂ] K)) ζ).toSubmodule :=
+  have hK : y ζ ∈ (InnerProductSpace.cyclicSubspace N ζ).toSubmodule :=
     InnerProductSpace.apply_mem_cyclicSubspace ζ hy
-  have hK₁ : ζ ∈ (InnerProductSpace.cyclicSubspace (N : Set (K →L[ℂ] K)) ζ).toSubmodule :=
+  have hK₁ : ζ ∈ (InnerProductSpace.cyclicSubspace N ζ).toSubmodule :=
     self_mem_cyclicSubspace N ζ
   refine ⟨x ξ, M.supportProj ξ (star x ξ'),
     mem_graph_closure_relativeTomita (apply_mem_graph_relativeTomita (α b).2), ?_, ?_, ?_⟩
@@ -164,7 +164,7 @@ and `ζ, ζ' ∈ K`, `ξ, ξ' ∈ H` with `ω_ξ ∘ α = ω_ζ` and `ω_ξ' ∘
 theorem arakiVec_le_of_schwarzMap (hα : α 1 = 1) {ζ ζ' : K} {ξ ξ' : H}
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ)
     (hξ' : ∀ y : N, ⟪ζ', (y : K →L[ℂ] K) ζ'⟫_ℂ = ⟪ξ', (α y : H →L[ℂ] H) ξ'⟫_ℂ) :
-    N.arakiVec ζ ζ' ≤ M.arakiVec ξ ξ' := by
+    S[N]⟦ζ ∥ ζ'⟧ ≤ S[M]⟦ξ ∥ ξ'⟧ := by
   refine negLogIntegral_le_of_integral_inv_add_le (ae_nonneg_measure_pvm_relativeModular N ζ ζ')
     (le_of_eq ?_) (arakiVec_ne_bot M ξ ξ')
     fun t ht => integral_inv_add_measure_pvm_relativeModular_le α hξ hξ' ht
@@ -185,10 +185,10 @@ section Amplify
 variable (H₁ : Type*) [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] [CompleteSpace H₁]
   [Nontrivial H₁]
 
-/-- The Schwarz map `1 ⊗ α : amplify H₁ N → amplify H₁ M`, `1 ⊗ y ↦ 1 ⊗ α(y)`, transported along
+/-- The Schwarz map `1 ⊗ α : 𝟙[H₁] ⊗ N → 𝟙[H₁] ⊗ M`, `1 ⊗ y ↦ 1 ⊗ α(y)`, transported along
 the `⋆`-isomorphisms `VonNeumannAlgebra.amplifyEquiv`. -/
 noncomputable def amplifySchwarzMap (α : SchwarzMap N M) :
-    SchwarzMap (N.amplify H₁) (M.amplify H₁) :=
+    SchwarzMap (𝟙[H₁] ⊗ N) (𝟙[H₁] ⊗ M) :=
   (SchwarzMapClass.toSchwarzMap (amplifyEquiv H₁ M)).comp
     (α.comp (SchwarzMapClass.toSchwarzMap (amplifyEquiv H₁ N).symm))
 
@@ -215,7 +215,7 @@ local notation "ℓ²" => lp (fun _ : ℕ => ℂ) 2
 theorem arakiEntropy_comp_le (α : SchwarzMap N M) (hα₁ : α 1 = 1) (hα : IsNormalMap α)
     (ψ φ : M.NormalFunctional) :
     S⟦ψ.comp α hα ∥ φ.comp α hα⟧ ≤ S⟦ψ ∥ φ⟧ := by
-  have key : ∀ ω : M.NormalFunctional, ∀ y : N.amplify ℓ²,
+  have key : ∀ ω : M.NormalFunctional, ∀ y : 𝟙[ℓ²] ⊗ N,
       ⟪(ω.comp α hα).2.vec, (y : ℓ² ⊗̂ K →L[ℂ] ℓ² ⊗̂ K) (ω.comp α hα).2.vec⟫_ℂ =
         ⟪ω.2.vec, (amplifySchwarzMap ℓ² α y : ℓ² ⊗̂ H →L[ℂ] ℓ² ⊗̂ H) ω.2.vec⟫_ℂ := fun ω y => by
     obtain ⟨y, rfl⟩ : ∃ y', amplifyEquiv ℓ² N y' = y :=

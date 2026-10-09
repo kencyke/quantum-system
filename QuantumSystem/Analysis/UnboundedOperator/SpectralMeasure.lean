@@ -27,14 +27,11 @@ The complex measures follow Mathlib's convention: `E_{x,y}(s) = ⟪x, E_A(s) y�
 `x` (Rudin's and Schmüdgen's `E_{y,x}`). Integrals against them are written part by part,
 `∫ f dE_{x,y} = ∫ f d(re E_{x,y}) + i ∫ f d(im E_{x,y})`.
 
-Functions of `A` are not named separately: they are `cfc g R_w`, with `g ζ = f (w - ζ⁻¹)`.
-
-## Not formalised
-
-* The spectral theorem proper, `⟪x, A y⟫ = ∫ λ dE_{x,y}(λ)` for `y ∈ dom A`, and the domain
-  characterisation `dom A = {y | ∫ λ² dμ_y < ∞}`.
-* Uniqueness of `E_A` among projection-valued measures satisfying the resolvent representation.
-* The Borel functional calculus `f(A) = ∫ f dE_A`.
+The continuous functional calculus `cfc g R_w` of the bounded normal resolvent is only the means of
+constructing `E_A`; functions of `A` are the spectral integrals `f(A) = ∫ f dE_A`. The spectral
+lemma in its operator form `A = ∫ λ dE_A(λ)`, the domain characterisation
+`dom A = {y | ∫ λ² dμ_y < ∞}`, the uniqueness of `E_A` and this Borel functional calculus are in
+`QuantumSystem.Analysis.UnboundedOperator.FunctionalCalculus`.
 
 ## Main definitions
 
@@ -57,8 +54,6 @@ Functions of `A` are not named separately: they are `cfc g R_w`, with `g ζ = f 
 * `IsSelfAdjoint.measure_pvm_eq_map_measure_pvm_resolvent` — **base-point independence**:
   `μ_u` is the image of `ν_u^w` under `ζ ↦ re (w - ζ⁻¹)` for every `w` in the resolvent set.
 * `IsSelfAdjoint.map_measure_pvm` — `μ_u` pushed forward along `λ ↦ (w - λ)⁻¹` is `ν_u^w`.
-* `IsSelfAdjoint.integral_measure_pvm_eq_inner_cfc` —
-  `∫ g ((w - λ)⁻¹) dμ_u = ⟪u, cfc g R_w u⟫`.
 * `IsSelfAdjoint.inner_resolvent_eq_integral` — the Stieltjes representation
   `⟪u, (z - A)⁻¹ u⟫ = ∫ (z - λ)⁻¹ dμ_u` for `z` in the resolvent set.
 * `IsSelfAdjoint.integral_measure_pvm` — `∫ f dμ_u = ∫ f (re (w - ζ⁻¹)) dν_u^w`.
@@ -178,9 +173,9 @@ theorem map_measure_pvm (hw : w ∈ A.resolventSet) :
   simp only [Function.comp_apply, hre, sub_sub_cancel, inv_inv, id_eq]
 
 variable {w} in
-/-- **Spectral integral formula** on the real line. For `w` in the resolvent set and `g`
+/-- Spectral integral formula on the real line. For `w` in the resolvent set and `g`
 continuous on the spectrum of `R = (w - A)⁻¹`, `∫ g ((w - λ)⁻¹) dμ_u(λ) = ⟪u, cfc g R u⟫`. -/
-theorem integral_measure_pvm_eq_inner_cfc (hw : w ∈ A.resolventSet) {g : ℂ → ℂ}
+private lemma integral_measure_pvm_eq_inner_cfc (hw : w ∈ A.resolventSet) {g : ℂ → ℂ}
     (hg : ContinuousOn g (spectrum ℂ (A.resolvent w))) :
     ∫ t, g ((w - t)⁻¹) ∂(hA.pvm.measure u) = inner ℂ u (cfc g (A.resolvent w) u) := by
   have hψ : Measurable fun t : ℝ => (w - t)⁻¹ := by fun_prop

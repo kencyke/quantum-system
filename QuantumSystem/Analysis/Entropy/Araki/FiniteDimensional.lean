@@ -82,7 +82,7 @@ variable (b : OrthonormalBasis ι ℂ H) (r : ι → ℝ) {g : ι → K}
 
 /-- `(1 ⊗ |x⟩⟨bᵢ|) Ω = √rᵢ gᵢ ⊗ x`. -/
 lemma amplifyRight_rankOne_purification (x : H) (i : ι) :
-    amplifyRight (rankOne ℂ x (b i)) (b.purification r g) = (√ᶜ r i) • (g i ⊗ₕ x) := by
+    (𝟙 ⊗ rankOne ℂ x (b i)) (b.purification r g) = (√ᶜ r i) • (g i ⊗ₕ x) := by
   classical
   have hf := b.orthonormal
   simp only [purification, map_sum, map_smul, HilbertTensor.amplifyRight_tmul,
@@ -94,7 +94,7 @@ lemma amplifyRight_rankOne_purification (x : H) (i : ι) :
 
 /-- `(|y⟩⟨gᵢ| ⊗ 1) Ω = √rᵢ y ⊗ bᵢ` for orthonormal `g`. -/
 lemma amplifyLeft_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : ι) :
-    amplifyLeft (rankOne ℂ y (g i)) (b.purification r g) = (√ᶜ r i) • (y ⊗ₕ b i) := by
+    (rankOne ℂ y (g i) ⊗ 𝟙) (b.purification r g) = (√ᶜ r i) • (y ⊗ₕ b i) := by
   classical
   simp only [purification, map_sum, map_smul, HilbertTensor.amplifyLeft_tmul,
     InnerProductSpace.rankOne_apply]
@@ -107,7 +107,7 @@ lemma amplifyLeft_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : ι)
 orthonormal `g`, `⟪Ω, (1 ⊗ A) Ω⟫ = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
 theorem inner_purification_amplifyRight (hr : ∀ i, 0 ≤ r i) (hg : Orthonormal ℂ g)
     (A : H →L[ℂ] H) :
-    ⟪b.purification r g, amplifyRight A (b.purification r g)⟫_ℂ =
+    ⟪b.purification r g, (𝟙 ⊗ A) (b.purification r g)⟫_ℂ =
       ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
   classical
   simp only [purification, map_sum, map_smul, HilbertTensor.amplifyRight_tmul, sum_inner,
@@ -122,7 +122,7 @@ end OrthonormalBasis
 namespace VonNeumannAlgebra
 
 /-- `B(H)` acting on the second leg of `K ⊗̂ H`, i.e. `1 ⊗ B(H)`. -/
-local notation "𝓜" => VonNeumannAlgebra.amplify K 𝓑(H)
+local notation "𝓜" => 𝟙[K] ⊗ 𝓑(H)
 
 variable [CompleteSpace H] {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ} {g : ι → K}
 
@@ -156,7 +156,7 @@ lemma supportProj_commutant_purification_tmul {i : ι} (hi : 0 < r i) (x : H) :
 private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i)
     (j : ι) :
     ((√ᶜ r i) • (g i ⊗ₕ c j), (√ᶜ s j) • (g j ⊗ₕ b i)) ∈
-      ((𝓜).relativeTomita (c.purification s g) (b.purification r g)).graph := by
+      (S[𝓜]⟦c.purification s g, b.purification r g⟧).graph := by
   have h := apply_mem_graph_relativeTomita (η := c.purification s g) (ξ := b.purification r g)
     (amplifyRight_mem_amplify (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ (c j) (b i))))
   rwa [b.amplifyRight_rankOne_purification, HilbertTensor.amplifyRight_star,
@@ -168,7 +168,7 @@ private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i 
 private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
     ((√ᶜ r i) • (g j ⊗ₕ b i), (√ᶜ s j) • (g i ⊗ₕ c j)) ∈
-      ((𝓜)′.relativeTomita (c.purification s g) (b.purification r g)).graph := by
+      (S[(𝓜)′]⟦c.purification s g, b.purification r g⟧).graph := by
   have h := apply_mem_graph_relativeTomita (M := (𝓜)′) (η := c.purification s g)
     (ξ := b.purification r g)
     (amplifyLeft_mem_commutant_amplify (M := 𝓑(H)) (rankOne ℂ (g j) (g i)))
@@ -183,20 +183,20 @@ private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
 theorem mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 ≤ s j)
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
     (g i ⊗ₕ c j, ((s j / r i : ℝ) : ℂ) • (g i ⊗ₕ c j)) ∈
-      ((𝓜).relativeModular (c.purification s g) (b.purification r g)).graph := by
+      (Δ[𝓜]⟦c.purification s g, b.purification r g⟧).graph := by
   have hr := (Real.sqrt_pos.mpr hi).ne'
   have hrr := Real.mul_self_sqrt hi.le
   have htt := Real.mul_self_sqrt (hs j)
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat]
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
   refine ⟨((Real.sqrt (s j) / Real.sqrt (r i) : ℝ) : ℂ) • (g j ⊗ₕ b i), ?_, ?_⟩
   · refine mem_graph_closure_relativeTomita ?_
-    have h := isConjLinear_relativeTomita _ _ _ ((Real.sqrt (r i))⁻¹ : ℝ) _ _
+    have h := isSemilinear_relativeTomita _ _ _ ((Real.sqrt (r i))⁻¹ : ℝ) _ _
       (mem_graph_relativeTomita_purification (b := b) (c := c) (s := s) hg hi j)
     rwa [Complex.conj_ofReal, smul_smul, smul_smul, ← Complex.ofReal_mul, ← Complex.ofReal_mul,
       inv_mul_cancel₀ hr, Complex.ofReal_one, one_smul, inv_mul_eq_div] at h
   · rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita _ _ _)]
     refine LinearPMap.le_graph_of_le (relativeTomita_commutant_le_adjoint _ _ _) ?_
-    have h := isConjLinear_relativeTomita _ _ _ ((Real.sqrt (s j) / r i : ℝ) : ℂ) _ _
+    have h := isSemilinear_relativeTomita _ _ _ ((Real.sqrt (s j) / r i : ℝ) : ℂ) _ _
       (mem_graph_relativeTomita_commutant_purification (b := b) (c := c) (s := s) hg hi j)
     have c₁ : Real.sqrt (s j) / r i * Real.sqrt (r i) = Real.sqrt (s j) / Real.sqrt (r i) := by
       rw [div_mul_eq_mul_div, div_eq_div_iff hi.ne' hr]
@@ -223,8 +223,7 @@ lemma purification_eq_sum :
 /-- **Spectral measure**: `μ_{Ω_ρ}` of `Δ_{Ω_σ, Ω_ρ}` is `Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² δ_{sⱼ / rᵢ}`. -/
 theorem measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i)
     (hs : ∀ j, 0 ≤ s j) (hg : Orthonormal ℂ g) :
-    (isSelfAdjoint_relativeModular (𝓜) (c.purification s g) (b.purification r g)).pvm.measure
-        (b.purification r g) =
+    μ[𝓜]⟦c.purification s g, b.purification r g⟧ =
       ∑ p : ι × ι, (r p.1 * ‖⟪c p.2, b p.1⟫_ℂ‖ ^ 2).toNNReal • Measure.dirac (s p.2 / r p.1) := by
   have he := c.orthonormal
   have hnorm : ∀ p : ι × ι, ‖((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) • (g p.1 ⊗ₕ c p.2)‖₊ ^ 2 =
@@ -242,7 +241,7 @@ theorem measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 
         (fun p _ q _ hpq => ?_)
       · rcases (hr p.1).eq_or_lt with h0 | hi
         · simp [← h0]
-        · have := ((𝓜).relativeModular (c.purification s g) (b.purification r g)).graph.smul_mem
+        · have := (Δ[𝓜]⟦c.purification s g, b.purification r g⟧).graph.smul_mem
             ((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ)
             (mem_graph_relativeModular_purification (b := b) hs hg hi p.2)
           rwa [Prod.smul_mk, smul_comm] at this
@@ -257,7 +256,7 @@ with `rᵢ |⟪cⱼ, bᵢ⟫|² = 0` whenever `sⱼ = 0` (the support condition 
 orthonormal `g`, `S_{1 ⊗ B(H)}(ω_{Ω_ρ} ‖ ω_{Ω_σ}) = Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² (log rᵢ - log sⱼ)`. -/
 theorem arakiVec_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i) (hs : ∀ j, 0 ≤ s j)
     (hg : Orthonormal ℂ g) (hsupp : ∀ i j, s j = 0 → r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 = 0) :
-    (𝓜).arakiVec (b.purification r g) (c.purification s g) =
+    S[𝓜]⟦b.purification r g ∥ c.purification s g⟧ =
       ((∑ i, ∑ j, r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 * (Real.log (r i) - Real.log (s j)) : ℝ) : EReal) := by
   rw [arakiVec, measure_pvm_relativeModular_purification hr hs hg]
   have ht : ∀ i j, r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 ≠ 0 → s j ≠ 0 := fun i j h hj => h (hsupp i j hj)

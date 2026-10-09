@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
+public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 
@@ -29,7 +30,9 @@ with the transport of a von Neumann algebra along a linear isometric equivalence
   statement that a unitary equivalence of representations carries `s''` to `(U s U⋆)''`.
 
 The instances `VonNeumannAlgebra.isClosed_coe` and `VonNeumannAlgebra.instStarOrderedRing` make
-`↥N` a C⋆-algebra ordered by the Loewner order of `B(H)`.
+`↥N` a C⋆-algebra ordered by the Loewner order of `B(H)`; in particular `N` is spanned by its
+unitaries, so an operator commuting with the unitaries of `N` lies in `N′`
+(`VonNeumannAlgebra.mem_commutant_of_forall_unitary`).
 
 These let one build `B(H₁) ⊗̄ 1` and `1 ⊗̄ B(H₂)` (and any concretely-generated von Neumann
 algebra) without unfolding the bicommutant by hand, and transport the generation theorem
@@ -204,6 +207,29 @@ lemma generated_le {s : Set (H →L[ℂ] H)} {M : VonNeumannAlgebra H}
 /-- The generated von Neumann algebra is monotone in the generating set. -/
 lemma generated_mono {s t : Set (H →L[ℂ] H)} (h : s ⊆ t) : generated s ≤ generated t :=
   generated_le fun _ hx => SetLike.mem_coe.mpr (mem_generated_of_mem (h hx))
+
+/-! ### Operators commuting with the unitaries of `M` -/
+
+/-- A unitary of `M` is a unitary of `H`. -/
+lemma coe_mem_unitary {M : VonNeumannAlgebra H} (u : unitary M) :
+    ((u : M) : H →L[ℂ] H) ∈ unitary (H →L[ℂ] H) := by
+  have hu := Unitary.mem_iff.mp u.2
+  rw [Unitary.mem_iff]
+  exact ⟨congrArg Subtype.val hu.1, congrArg Subtype.val hu.2⟩
+
+/-- An operator commuting with every unitary of `M` lies in the commutant `M′`, since a
+C⋆-algebra is spanned by its unitaries (`CStarAlgebra.span_unitary`). -/
+lemma mem_commutant_of_forall_unitary {M : VonNeumannAlgebra H} {y : H →L[ℂ] H}
+    (hy : ∀ u : unitary M, ((u : M) : H →L[ℂ] H) * y = y * ((u : M) : H →L[ℂ] H)) : y ∈ M′ := by
+  have key : ∀ a ∈ Submodule.span ℂ (unitary M : Set M), (a : H →L[ℂ] H) * y = y * a := by
+    intro a ha
+    induction ha using Submodule.span_induction with
+    | mem w hw => exact hy ⟨w, hw⟩
+    | zero => simp
+    | add a b _ _ ha hb => simp [add_mul, mul_add, ha, hb]
+    | smul c a _ ha => simp [ha]
+  refine mem_commutant_iff.mpr fun x hx => ?_
+  exact key ⟨x, hx⟩ (by rw [CStarAlgebra.span_unitary]; trivial)
 
 /-! ### Unitary conjugation of a von Neumann algebra -/
 

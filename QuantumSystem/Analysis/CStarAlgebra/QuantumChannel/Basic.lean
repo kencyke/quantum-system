@@ -10,6 +10,7 @@ public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!
 # Quantum channels on bounded operators
@@ -51,7 +52,7 @@ realizable operations on the states of a finite quantum system; matrix algebras 
 
 @[expose] public section
 
-open scoped CStarAlgebra ContinuousLinearMap
+open scoped CStarAlgebra ContinuousLinearMap InnerProduct
 
 variable {H K L : Type*}
   [NormedAddCommGroup H] [InnerProductSpace ℂ H]
@@ -192,7 +193,7 @@ noncomputable def ofLinearIsometryEquiv (U : H ≃ₗᵢ[ℂ] K) : QuantumChanne
 /-- The unitary channel of `U` acts as `A ↦ U A U†`. -/
 lemma ofLinearIsometryEquiv_apply (U : H ≃ₗᵢ[ℂ] K) (A : H →L[ℂ] H) :
     ofLinearIsometryEquiv U A =
-      (U : H →L[ℂ] K) ∘L A ∘L ContinuousLinearMap.adjoint (U : H →L[ℂ] K) := by
+      (U : H →L[ℂ] K) ∘L A ∘L (U : H →L[ℂ] K)† := by
   rw [U.adjoint_eq_symm]
   rfl
 

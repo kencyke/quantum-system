@@ -229,14 +229,43 @@ concrete model.)
 Would the notation or the docs slow a reader down, or mislead them?
 
 - Prefer the established notation over raw Mathlib spellings. Its sources are
-  the project's notation table, when it keeps one, **and** the `scoped notation`
-  declarations living in the modules themselves — enumerate the latter with
-  `grep -rnE "^(scoped )?(notation|prefix|postfix|infix[lr]?)" <source root> --include='*.lean'`
-  (postfix notations — `†`, `′`, `″` — and unscoped module notations count too).
+  the project's notation table, when it keeps one, **and** the notation
+  declarations living in the modules themselves and in Mathlib — enumerate the
+  former with
+  `grep -rnE "^\s*(@\[[^]]*\]\s*)?(scoped(\[[^]]*\])?\s+|local\s+)?(notation[0-9]?|prefix|postfix|infix[lr]?)\b" <source root> --include='*.lean'`
+  (this also catches `scoped[NS] notation`, `local notation` and
+  `@[inherit_doc] scoped notation`; postfix notations — `†`, `′`, `″` — and
+  unscoped module notations count too).
 - **Where no established notation exists**, ask whether the textbook/paper
   notation for the object would help, and propose introducing it (a
   `notation`/`scoped notation` declaration, or a rename) — name the literature
   convention you are matching. Severity `nit` or `should-fix`.
+- **Flag verbose repeated expressions.** When the same long expression recurs in
+  statements — as a rule of thumb ten times or more across the target, or five
+  times or more in one file — classify it and propose the fix:
+  (a) a textbook object with a standard short notation (`H_M`, `V†`, `eH`,
+  `⋁ fH`): use the established notation, or propose a `scoped notation` naming
+  the literature convention;
+  (b) a type ascription or named argument that elaboration can infer
+  (`(M : Set (H →L[ℂ] H))` before a coercion, `(n := n)`): propose deleting it;
+  (c) an implicit argument that cannot be inferred, so that every caller writes
+  `(X := X)` (an implicit `H` that occurs only in the body of an `abbrev`):
+  propose making it explicit;
+  (d) a proof argument repeated at every use (`M.standardSubspace Ω hc hs`):
+  propose an auto-param or a notation that finds it in the context.
+  Check (b) and (c) with `lean_run_code` before reporting. An ascription inside a
+  proof term with no expected type may be load-bearing for elaboration time;
+  report those only when the statement-level form is verbose too. Severity
+  `nit` or `should-fix`.
+- **A notation must also be displayed.** When a notation expands to a term with
+  proof arguments, elided implicit arguments or a coercion of a bundled map
+  (`ContinuousLinearMap.adjoint`, a `def` with proof arguments), the
+  auto-generated unexpander often does not fire and goals show the raw spelling.
+  Check one goal with `lean_goal`; if the notation does not appear, the
+  declaration needs an `app_unexpander` or a `delab`. Severity `should-fix`.
+- **A notation must be registered.** Every exported notation introduced by the
+  target belongs in the project's notation table (`QuantumSystem/Notation.lean`
+  here). A missing row is a `nit`.
 - Check naming against the project's style rules (its `CLAUDE.md` / `AGENTS.md`
   or linked style file), and otherwise against Mathlib's naming conventions.
 - **Check that conventions are pinned in the module doc.** A statement that is

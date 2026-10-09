@@ -186,10 +186,10 @@ the operator form of `Φ : M_n(ℂ) → M_m(ℂ)`, `Ψ(A') = Φ(A)'` for the ope
 `A` against `B` in the trace: `tr(Ψ(A') ∘ B') = Tr (Φ(A) B)` and
 `tr(A' ∘ Ψ*(B')) = Tr (A Vᴴ (B ⊗ 1) V)`. -/
 theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
-    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A))
+    (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A))
     (V : Matrix (m × ι) n ℂ) :
-    (∀ B, ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (n := m) (𝕜 := ℂ) B) =
-        toEuclideanCLM (n := n) (𝕜 := ℂ) (Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V)) ↔
+    (∀ B, ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (𝕜 := ℂ) B) =
+        toEuclideanCLM (𝕜 := ℂ) (Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V)) ↔
       ∀ A, Φ A = traceRight (V * A * Vᴴ) := by
   constructor
   · intro hΨ A
@@ -200,17 +200,17 @@ theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] 
   · intro hV B
     rw [eq_comm, ContinuousLinearMap.eq_traceDual_iff]
     intro X
-    obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (n := n) (𝕜 := ℂ)) X
+    obtain ⟨A, rfl⟩ := EquivLike.surjective (toEuclideanCLM (𝕜 := ℂ)) X
     rw [h, trace_toEuclideanCLM_comp_toEuclideanCLM, trace_toEuclideanCLM_comp_toEuclideanCLM, hV,
       trace_traceRight_mul_mul_conjTranspose_mul]
 
 /-- If `Φ(A) = tr₂(V A Vᴴ)` for all `A`, then the trace dual of the operator form `Ψ` of `Φ` is
 `Ψ*(B') = (Vᴴ (B ⊗ 1) V)'`. -/
 theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
-    (h : ∀ A, Ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (Φ A))
+    (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A))
     (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = traceRight (V * A * Vᴴ)) (B : Matrix m m ℂ) :
-    ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (n := m) (𝕜 := ℂ) B) =
-      toEuclideanCLM (n := n) (𝕜 := ℂ) (Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V) :=
+    ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (𝕜 := ℂ) B) =
+      toEuclideanCLM (𝕜 := ℂ) (Vᴴ * (B ⊗ₖ (1 : Matrix ι ι ℂ)) * V) :=
   (traceDual_eq_iff_stinespring h V).2 hV B
 
 end Heisenberg
@@ -255,10 +255,10 @@ theorem exists_traceDual_eq_stinespringMatrix (φ : Matrix n n ℂ →CP Matrix 
       (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)]
     [LinearMapClass G ℂ (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
       (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)] {ψ : G}
-    (h : ∀ A, ψ (toEuclideanCLM (n := n) (𝕜 := ℂ) A) = toEuclideanCLM (n := m) (𝕜 := ℂ) (φ A)) :
+    (h : ∀ A, ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (φ A)) :
     ∃ V : Matrix (m × Fin (choiMatrix φ).rank) n ℂ, ∀ B,
-      ContinuousLinearMap.traceDual ψ (toEuclideanCLM (n := m) (𝕜 := ℂ) B) =
-        toEuclideanCLM (n := n) (𝕜 := ℂ) (Vᴴ *
+      ContinuousLinearMap.traceDual ψ (toEuclideanCLM (𝕜 := ℂ) B) =
+        toEuclideanCLM (𝕜 := ℂ) (Vᴴ *
           (B ⊗ₖ (1 : Matrix (Fin (choiMatrix φ).rank) (Fin (choiMatrix φ).rank) ℂ)) * V) := by
   obtain ⟨V, hV⟩ := φ.exists_stinespringMatrix
   exact ⟨V, (traceDual_eq_iff_stinespring h V).2 hV⟩

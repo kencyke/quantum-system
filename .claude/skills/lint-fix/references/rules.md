@@ -59,6 +59,17 @@ The Mathlib contribute templates are authoritative; the bullets below distill wh
 - Theorem names use `_` as word separator (`norm_add_le`, `inner_self_nonneg`).
 - Prefer the `_of_` pattern for implications (`continuous_of_lipschitz`); `iff` joins equivalences; `not_` prefixes negations.
 
+**`theorem` versus `lemma`.**
+- Reserve `theorem` for the headline results a file exists to prove — the statements a textbook
+  would call a theorem (a spectral theorem, a uniqueness or existence theorem, Tomita's theorem,
+  Borchers' Theorem A). Everything else — API lemmas, rewriting rules, intermediate steps, the
+  `_iff`/`_of_` bookkeeping around a definition — is a `lemma`, and anything used only inside the
+  file is a `private lemma`.
+- A rule of thumb: if the declaration is listed under "Main results" in the module doc with a bold
+  name, it may be a `theorem`; a file rarely needs more than a handful.
+  **Why:** `theorem` marks what a reader should look at first. When most declarations carry it,
+  the marker stops carrying information and the main results disappear in the noise.
+
 **Layout.**
 - 120-column line limit.
 - 2-space indentation; `by` stays on the same line as the goal it opens unless the resulting line would exceed the limit.

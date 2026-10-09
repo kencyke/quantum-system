@@ -157,7 +157,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 /-- The range of a star projection, a closed subspace, is complete. -/
 lemma IsStarProjection.completeSpace_range {p : H →L[ℂ] H} (hp : IsStarProjection p) :
-    CompleteSpace (LinearMap.range (p : H →ₗ[ℂ] H)) :=
+    CompleteSpace (p.range) :=
   (ContinuousLinearMap.IsIdempotentElem.isClosed_range hp.isIdempotentElem).completeSpace_coe
 
 namespace IsPartialIsometry
@@ -186,7 +186,7 @@ lemma apply_mem_range {v : H →L[ℂ] H} (hv : IsPartialIsometry v) {q : H →L
 `range p` onto the range subspace `range q`. -/
 noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
     {p q : H →L[ℂ] H} (hsource : star v * v = p) (hrange : v * star v = q) :
-    LinearMap.range (p : H →ₗ[ℂ] H) ≃ₗᵢ[ℂ] LinearMap.range (q : H →ₗ[ℂ] H) := by
+    p.range ≃ₗᵢ[ℂ] q.range := by
   have hpidem : (p : H →L[ℂ] H) * p = p := by
     have := hv.isStarProjection_star_mul_self.isIdempotentElem
     rwa [hsource] at this
@@ -196,7 +196,7 @@ noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v
   have hsvpi : star v * v * star v = star v := by
     have h : star v * star (star v) * star v = star v := IsPartialIsometry.star hv
     rwa [star_star] at h
-  have hfix : ∀ {x : H}, x ∈ LinearMap.range (p : H →ₗ[ℂ] H) → (p : H →L[ℂ] H) x = x := by
+  have hfix : ∀ {x : H}, x ∈ p.range → (p : H →L[ℂ] H) x = x := by
     rintro x ⟨z, rfl⟩
     rw [ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hpidem]
   refine LinearIsometryEquiv.ofSurjective
@@ -209,7 +209,7 @@ noncomputable def sourceRangeEquiv {v : H →L[ℂ] H} (hv : IsPartialIsometry v
   have hqfix : (q : H →L[ℂ] H) η = η := by
     obtain ⟨z, hz⟩ := hη
     rw [← hz, ContinuousLinearMap.coe_coe, ← mul_apply_eq_comp, hqidem]
-  have hmem : star v η ∈ LinearMap.range (p : H →ₗ[ℂ] H) := by
+  have hmem : star v η ∈ p.range := by
     refine ⟨star v η, ?_⟩
     rw [ContinuousLinearMap.coe_coe, show (p : H →L[ℂ] H) (star v η) = (p * star v) η from rfl,
       ← hsource, hsvpi]
@@ -223,7 +223,7 @@ end IsPartialIsometry
 subspace, `(sourceRangeEquiv v).symm η = v⋆ η`. -/
 lemma IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPartialIsometry v)
     {p q : H →L[ℂ] H} (hsource : star v * v = p) (hrange : v * star v = q)
-    (η : LinearMap.range (q : H →ₗ[ℂ] H)) :
+    (η : q.range) :
     ((hv.sourceRangeEquiv hsource hrange).symm η : H) = star v (η : H) := by
   have hsvpi : star v * v * star v = star v := by
     have h : star v * star (star v) * star v = star v := IsPartialIsometry.star hv
@@ -231,7 +231,7 @@ lemma IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPa
   have hq : IsStarProjection q := by rw [← hrange]; exact hv.isStarProjection_mul_star_self
   have hqfix : (q : H →L[ℂ] H) (η : H) = (η : H) := (LinearMap.IsIdempotentElem.mem_range_iff
     (ContinuousLinearMap.IsIdempotentElem.toLinearMap hq.isIdempotentElem)).mp η.2
-  have hmem : star v (η : H) ∈ LinearMap.range (p : H →ₗ[ℂ] H) :=
+  have hmem : star v (η : H) ∈ p.range :=
     ⟨star v (η : H), by
       rw [ContinuousLinearMap.coe_coe, ← hsource, ← mul_apply_eq_comp, hsvpi]⟩
   have hG : (hv.sourceRangeEquiv hsource hrange) ⟨star v (η : H), hmem⟩ = η := by
