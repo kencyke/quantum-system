@@ -75,7 +75,7 @@ modular automorphism groups.
 @[expose] public section
 
 open Complex MeasureTheory
-open scoped InnerProductSpace ComplexOrder VonNeumannAlgebra HilbertTensor Araki
+open scoped InnerProductSpace ComplexOrder VonNeumannAlgebra HilbertTensor Araki lp
 open HilbertTensor (amplifyRight)
 
 namespace VonNeumannAlgebra
@@ -207,19 +207,20 @@ theorem amplifySchwarzMap_one {α : SchwarzMap N M} (hα : α 1 = 1) :
 
 end Amplify
 
-/-- `ℓ²(ℕ)`, the multiplicity space of the amplification. -/
-local notation "ℓ²" => lp (fun _ : ℕ => ℂ) 2
-
 /-- **Data-processing inequality** (Uhlmann; Petz's proof). For a unital normal Schwarz map
 `α : N → M` and normal positive functionals `ψ, φ` on `M`, `S(ψ ∘ α ‖ φ ∘ α) ≤ S(ψ ‖ φ)`. -/
 theorem arakiEntropy_comp_le (α : SchwarzMap N M) (hα₁ : α 1 = 1) (hα : IsNormalMap α)
     (ψ φ : M.NormalFunctional) :
     S⟦ψ.comp α hα ∥ φ.comp α hα⟧ ≤ S⟦ψ ∥ φ⟧ := by
-  have key : ∀ ω : M.NormalFunctional, ∀ y : 𝟙[ℓ²] ⊗ N,
-      ⟪(ω.comp α hα).2.vec, (y : ℓ² ⊗̂ K →L[ℂ] ℓ² ⊗̂ K) (ω.comp α hα).2.vec⟫_ℂ =
-        ⟪ω.2.vec, (amplifySchwarzMap ℓ² α y : ℓ² ⊗̂ H →L[ℂ] ℓ² ⊗̂ H) ω.2.vec⟫_ℂ := fun ω y => by
-    obtain ⟨y, rfl⟩ : ∃ y', amplifyEquiv ℓ² N y' = y :=
-      ⟨(amplifyEquiv ℓ² N).symm y, (amplifyEquiv ℓ² N).apply_symm_apply y⟩
+  have key : ∀ ω : M.NormalFunctional, ∀ y : 𝟙[ℓ²(ℕ, ℂ)] ⊗ N,
+      ⟪(ω.comp α hα).2.vec,
+          (y : ℓ²(ℕ, ℂ) ⊗̂ K →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ K) (ω.comp α hα).2.vec⟫_ℂ =
+        ⟪ω.2.vec,
+          (amplifySchwarzMap ℓ²(ℕ, ℂ) α y : ℓ²(ℕ, ℂ) ⊗̂ H →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ H)
+            ω.2.vec⟫_ℂ :=
+      fun ω y => by
+    obtain ⟨y, rfl⟩ : ∃ y', amplifyEquiv ℓ²(ℕ, ℂ) N y' = y :=
+      ⟨(amplifyEquiv ℓ²(ℕ, ℂ) N).symm y, (amplifyEquiv ℓ²(ℕ, ℂ) N).apply_symm_apply y⟩
     rw [amplifySchwarzMap_amplifyEquiv, coe_amplifyEquiv_apply, coe_amplifyEquiv_apply,
       (ω.comp α hα).2.inner_vec_amplifyRight, ω.2.inner_vec_amplifyRight,
       NormalFunctional.comp_apply]

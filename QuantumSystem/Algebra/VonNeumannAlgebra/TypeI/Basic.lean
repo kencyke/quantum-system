@@ -87,6 +87,8 @@ algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
 
 namespace VonNeumannAlgebra
 
+open scoped lp
+
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- **Type I von Neumann algebra**: every nonzero central projection dominates a nonzero abelian
@@ -209,7 +211,7 @@ for *every* minimal projection `e` of a factor. -/
 theorem IsTypeIFactor.exists_spatial_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) :
     ∃ e : H →L[ℂ] H, IsMinimalProjection N e ∧ ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
+      (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight :=
   let ⟨hf, e, he⟩ := hN
@@ -224,7 +226,7 @@ inclusion `A ≤ N ≤ B`, then for some minimal projection `e` of `N` there is
 theorem IsTypeIFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     ∃ e : H →L[ℂ] H, IsMinimalProjection N e ∧ ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
+      (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
       Nonempty F ∧
       VonNeumannAlgebra.conj U N = vnTensorLeft ∧
       VonNeumannAlgebra.conj U N′ = vnTensorRight ∧
@@ -294,9 +296,9 @@ theorem IsTypeIFactor.commutant {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N)
     rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
     exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
       (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
-  have : Nontrivial (lp (fun _ : F => ℂ) 2) := by
+  have : Nontrivial (ℓ²(F, ℂ)) := by
     refine ⟨⟨lp.single 2 i 1, 0, fun h => ?_⟩⟩
-    have := congrArg (fun f : lp (fun _ : F => ℂ) 2 => f i) h
+    have := congrArg (fun f : ℓ²(F, ℂ) => f i) h
     simp at this
   rw [← isTypeIFactor_conj_iff U, hU']
   exact isTypeIFactor_vnTensorRight
@@ -325,7 +327,7 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
     rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
     exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
       (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
-  exact ⟨lp (fun _ : F => ℂ) 2, inferInstance, inferInstance, inferInstance,
+  exact ⟨ℓ²(F, ℂ), inferInstance, inferInstance, inferInstance,
     ⟨(conjEquiv U N).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
 
 /-! ### The fundamental example: `B(H)` is a type I factor -/

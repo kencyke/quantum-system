@@ -87,7 +87,7 @@ amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 
 @[expose] public section
 
-open scoped InnerProductSpace ComplexOrder HilbertTensor
+open scoped InnerProductSpace ComplexOrder HilbertTensor lp
 open HilbertTensor (amplifyRight lpTensorEquiv)
 
 namespace HilbertTensor
@@ -199,18 +199,16 @@ theorem IsNormal.exists_hasSum_inner {ω : M →ₚ[ℂ] ℂ} (h : M.IsNormal ω
     (S := M.sigmaWeak) (φ := ω.toLinearMap ∘ₗ M.ofSigmaWeak) h
   exact ⟨ξ, η, fun x => hξη (M.toSigmaWeak x)⟩
 
-/-- `ℓ²(ℕ)`, the multiplicity space of the amplification. -/
-local notation "ℓ²" => lp (fun _ : ℕ => ℂ) 2
-
 /-- **Normal functionals are vector functionals on the amplification.** A normal `ω` is
 `x ↦ ⟪Ξ, (1 ⊗ x) Ξ⟫` for some `Ξ ∈ ℓ²(ℕ) ⊗̂ H`: from `ω(x) = ⟪Ξ₀, (1 ⊗ x) Η₀⟫`, positivity gives
 `ω ≤ ω_Ζ` for the interleaving `Ζ` of `Ξ₀` and `Η₀`, and the Radon–Nikodym theorem gives
 `ω = ω_{R Ζ}` with `R` in the commutant of `1 ⊗ M`. -/
 theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.IsNormal ω) :
-    ∃ Ξ : ℓ² ⊗̂ H, ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x := by
+    ∃ Ξ : ℓ²(ℕ, ℂ) ⊗̂ H, ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x := by
   obtain ⟨ξ, η, hξη⟩ := h.exists_hasSum_inner
   set ζ := lp.interleave ξ η
-  set ρ : M →⋆ₐ[ℂ] (ℓ² ⊗̂ H →L[ℂ] ℓ² ⊗̂ H) := (𝟙 ⊗ₐ).comp (inclₐ M)
+  set ρ : M →⋆ₐ[ℂ] (ℓ²(ℕ, ℂ) ⊗̂ H →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ H) :=
+    (𝟙 ⊗ₐ).comp (inclₐ M)
   have hρ : ∀ x : M, ρ x = 𝟙 ⊗ (x : H →L[ℂ] H) := fun _ => rfl
   have hω : ∀ x : M, ω x = ⟪lpTensorEquiv ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η)⟫_ℂ :=
     fun x => (hξη x).unique (HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv ξ η x)
@@ -442,7 +440,7 @@ lemma amplifyRight_one_sub {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProduc
 
 /-- For projections, `1 ⊗ e ≤ 1 ⊗ f ↔ e ≤ f`. -/
 lemma amplifyRight_le_amplifyRight_iff {e f : H →L[ℂ] H} (he : IsStarProjection e)
-    (hf : IsStarProjection f) : amplifyRight (H₁ := ℓ²) e ≤ 𝟙 ⊗ f ↔ e ≤ f := by
+    (hf : IsStarProjection f) : amplifyRight (H₁ := ℓ²(ℕ, ℂ)) e ≤ 𝟙 ⊗ f ↔ e ≤ f := by
   rw [(isStarProjection_amplifyRight he).le_iff_mul_eq_left (isStarProjection_amplifyRight hf),
     he.le_iff_mul_eq_left hf, ← HilbertTensor.amplifyRight_mul,
     HilbertTensor.amplifyRight_injective.eq_iff]
@@ -453,8 +451,8 @@ variable (ψ : M.NormalFunctional)
 
 /-- A representing vector's support lies in `1 ⊗ M`. -/
 lemma exists_amplifyRight_eq_supportProj :
-    ∃ x ∈ M, 𝟙 ⊗ x = (𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec :=
-  mem_amplify_iff.mp ((𝟙[ℓ²] ⊗ M).supportProj_mem ψ.2.vec)
+    ∃ x ∈ M, 𝟙 ⊗ x = (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj ψ.2.vec :=
+  mem_amplify_iff.mp ((𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj_mem ψ.2.vec)
 
 /-- The **support projection** `s(ψ) ∈ M` of a normal functional: the element of `M` with
 `1 ⊗ s(ψ) = s(Ξ_ψ)`, the vector support of a representing vector in `amplify ℓ²(ℕ) M`. -/
@@ -467,24 +465,24 @@ theorem supportProj_mem : supportProj ψ ∈ M :=
 
 /-- `1 ⊗ s(ψ) = s(Ξ_ψ)` for the chosen representing vector. -/
 theorem amplifyRight_supportProj :
-    𝟙 ⊗ (supportProj ψ) = (𝟙[ℓ²] ⊗ M).supportProj ψ.2.vec :=
+    𝟙 ⊗ (supportProj ψ) = (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj ψ.2.vec :=
   (exists_amplifyRight_eq_supportProj ψ).choose_spec.2
 
 /-- **Independence of the representing vector.** `1 ⊗ s(ψ) = s(Ξ)` for *every* `Ξ` with
 `ψ(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫`. -/
-theorem amplifyRight_supportProj_eq {Ξ : ℓ² ⊗̂ H}
+theorem amplifyRight_supportProj_eq {Ξ : ℓ²(ℕ, ℂ) ⊗̂ H}
     (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ψ.1 x) :
-    𝟙 ⊗ (supportProj ψ) = (𝟙[ℓ²] ⊗ M).supportProj Ξ := by
+    𝟙 ⊗ (supportProj ψ) = (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj Ξ := by
   rw [amplifyRight_supportProj]
   refine supportProj_eq_of_inner_eq fun y hy => inner_apply_eq_of_mem_amplify (fun x hx => ?_) hy
   rw [ψ.2.inner_vec_amplifyRight ⟨x, hx⟩, hΞ ⟨x, hx⟩]
 
 /-- `s(ψ)` is a projection. -/
 theorem isStarProjection_supportProj : IsStarProjection (supportProj ψ) := by
-  have hS := (𝟙[ℓ²] ⊗ M).isStarProjection_supportProj ψ.2.vec
+  have hS := (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).isStarProjection_supportProj ψ.2.vec
   rw [← amplifyRight_supportProj] at hS
-  refine ⟨HilbertTensor.amplifyRight_injective (H₁ := ℓ²) ?_,
-    HilbertTensor.amplifyRight_injective (H₁ := ℓ²) ?_⟩
+  refine ⟨HilbertTensor.amplifyRight_injective (H₁ := ℓ²(ℕ, ℂ)) ?_,
+    HilbertTensor.amplifyRight_injective (H₁ := ℓ²(ℕ, ℂ)) ?_⟩
   · rw [HilbertTensor.amplifyRight_mul, hS.isIdempotentElem.eq]
   · rw [← HilbertTensor.amplifyRight_star, hS.isSelfAdjoint.star_eq]
 
@@ -508,9 +506,9 @@ theorem apply_star_mul_self_eq_zero_iff (x : M) :
     ψ.1 (star x * x) = 0 ↔ (x : H →L[ℂ] H) * supportProj ψ = 0 := by
   rw [apply_star_mul_self_eq ψ.2.inner_vec_amplifyRight, Complex.ofReal_eq_zero,
     pow_eq_zero_iff two_ne_zero, norm_eq_zero,
-    ← mul_supportProj_eq_zero_iff (amplifyRight_mem_amplify (H₁ := ℓ²) x.2),
+    ← mul_supportProj_eq_zero_iff (amplifyRight_mem_amplify (H₁ := ℓ²(ℕ, ℂ)) x.2),
     ← amplifyRight_supportProj, ← HilbertTensor.amplifyRight_mul,
-    ← HilbertTensor.amplifyRight_zero (H₁ := ℓ²), HilbertTensor.amplifyRight_injective.eq_iff]
+    ← HilbertTensor.amplifyRight_zero (H₁ := ℓ²(ℕ, ℂ)), HilbertTensor.amplifyRight_injective.eq_iff]
 
 /-- **Support inclusion is null-ideal inclusion.** `s(ψ) ≤ s(φ)` iff `ψ(x⋆x) = 0` whenever
 `φ(x⋆x) = 0`. -/
