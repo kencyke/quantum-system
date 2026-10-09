@@ -15,6 +15,7 @@ does not literally cover, instead of guessing.
   **Why:** Mathlib style; mixed whitespace breaks `lake exe runLinter`.
 - Never modify `lakefile.toml`, `lean-toolchain`, or `lake-manifest.json`.
   **Why:** the toolchain and manifest are pinned intentionally; accidental edits cascade into reproducibility failures.
+- Regenerate the aggregate `QuantumSystem.lean` with Mathlib's script, `lake exe mk_all --lib QuantumSystem`.
 - Write comments in English.
 - Never create namespaces or sections named `QuantumSystem`.
   **Why:** the module path already prefixes every declaration; an extra namespace would produce `QuantumSystem.QuantumSystem.Foo`.
