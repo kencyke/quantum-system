@@ -4,7 +4,7 @@
 
 - `QuantumSystem/ForMathlib/` — only Mathlib imports allowed; candidates for upstreaming.
 - `QuantumSystem.lean` — aggregate root that re-exports every module.
-- `scripts/mk_all.lean` — regenerates the aggregate.
+- `lake exe mk_all --lib QuantumSystem` (Mathlib's script) — regenerates the aggregate.
 - `lakefile.toml`, `lean-toolchain`, `lake-manifest.json` — pinned toolchain and manifest.
 
 ## Working Principles
@@ -79,7 +79,7 @@
 - After adding imports, run `lean_build` via MCP to restart the LSP;
   otherwise `lean_diagnostic_messages` suffices.
 - If a new top-level module is introduced, regenerate `QuantumSystem.lean`
-  via `scripts/mk_all.lean`.
+  via `lake exe mk_all --lib QuantumSystem`.
 - When a tactic fails to close a goal, do not stack `try` / `<;>` to silence
   the error — re-inspect the goal with `lean_goal` and address the actual
   mismatch.

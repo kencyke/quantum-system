@@ -15,8 +15,3 @@ leanOptions.linter.style.longLine = false
 name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.35.0-rc2"
-
-[[lean_exe]]
-name = "mk_all"
-srcDir = "scripts"
-root = "mk_all"
