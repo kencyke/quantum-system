@@ -62,8 +62,8 @@ infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**.
 * `VonNeumannAlgebra.isTypeIFactor_boundedLinearOperators` — `B(H)` is a type I factor.
 * `VonNeumannAlgebra.isTypeIFactor_commutant_boundedLinearOperators` — the scalar algebra
   `ℂ1 = B(H)′` is a type I factor on a nonzero space.
-* `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(ℓ²(ι))` with the
-  implementing isometry `H ≃ₗᵢ ℓ²(ι)`, for `ι` the index set of a Hilbert basis of `H`.
+* `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(ℓ²(ι))`, implemented
+  as `x ↦ U x U⁻¹` by an isometry `U : H ≃ₗᵢ ℓ²(ι)`, for `ι` the index set of a Hilbert basis of `H`.
 * `VonNeumannAlgebra.isTypeIInfinite_boundedLinearOperators` — for infinite-dimensional `H`, `B(H)`
   is a type I_∞ factor, packaged as the intrinsic predicate `IsTypeIInfinite 𝓑(H)`.
 * `VonNeumannAlgebra.exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators` — for
@@ -352,10 +352,10 @@ theorem isTypeIFactor_commutant_boundedLinearOperators [Nontrivial H] :
     IsTypeIFactor (𝓑(H))′ :=
   isTypeIFactor_boundedLinearOperators.commutant
 
-/-- **`B(H) ≃⋆ₐ B(ℓ²(ι))` with `H ≃ₗᵢ ℓ²(ι)`.** The full algebra is `⋆`-isomorphic to the bounded
-operators on `ℓ²(ι)` for an index set `ι` — the index set of a Hilbert basis of `H` — and the
-isomorphism is implemented by the corresponding isometry `H ≃ₗᵢ ℓ²(ι)`, which is returned
-alongside it.
+/-- **`B(H) ≃⋆ₐ B(ℓ²(ι))`, implemented by `U : H ≃ₗᵢ ℓ²(ι)`.** The full algebra is `⋆`-isomorphic
+to the bounded operators on `ℓ²(ι)` for an index set `ι` — the index set of a Hilbert basis of
+`H` — and the isomorphism is spatial: it is `x ↦ U x U⁻¹` for the corresponding isometry
+`U : H ≃ₗᵢ ℓ²(ι)`, which is returned alongside it.
 
 The `ℓ²` model is stated rather than hidden behind an unconstrained `∃ K`. With `K` unconstrained
 the statement would be discharged by `K := H` and `boundedLinearOperators.starAlgEquiv`,
@@ -365,15 +365,17 @@ what the type `I_{|ι|}` reading of `B(H)` needs. Nonzeroness of `H` is not requ
 the Hilbert basis is empty and both sides are trivial. -/
 theorem exists_starAlgEquiv_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
     [InnerProductSpace ℂ H] [CompleteSpace H] :
-    ∃ ι : Type u, Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : ι => ℂ) 2) ∧
-      Nonempty ((𝓑(H) : VonNeumannAlgebra H) ≃⋆ₐ[ℂ]
-        (lp (fun _ : ι => ℂ) 2 →L[ℂ] lp (fun _ : ι => ℂ) 2)) := by
+    ∃ (ι : Type u) (U : H ≃ₗᵢ[ℂ] ℓ²(ι, ℂ))
+      (e : (𝓑(H) : VonNeumannAlgebra H) ≃⋆ₐ[ℂ] (ℓ²(ι, ℂ) →L[ℂ] ℓ²(ι, ℂ))),
+      ∀ (x : (𝓑(H) : VonNeumannAlgebra H)) (v : ℓ²(ι, ℂ)),
+        e x v = U ((x : H →L[ℂ] H) (U.symm v)) := by
   obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
-  exact ⟨w, ⟨b.repr⟩, ⟨boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv⟩⟩
+  exact ⟨w, b.repr, boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv,
+    fun _ _ => rfl⟩
 
 /-- **`B(H) ≃⋆ₐ B(ℓ²(ι))` with `ι` infinite, when `H` is infinite-dimensional.** The full algebra
-is `⋆`-isomorphic to the bounded operators on `ℓ²(ι)` for an *infinite* index set `ι`, with the
-implementing isometry `H ≃ₗᵢ ℓ²(ι)` returned alongside; in particular `ℓ²(ι)` is itself
+is `⋆`-isomorphic to the bounded operators on `ℓ²(ι)` for an *infinite* index set `ι`, by
+`x ↦ U x U⁻¹` for an isometry `U : H ≃ₗᵢ ℓ²(ι)` returned alongside; in particular `ℓ²(ι)` is itself
 infinite-dimensional. Expressing type I_∞ this way is the standard reading: a type I_n factor is
 `B(K)` with `dim K = n`, so I_∞ is exactly the infinite index set.
 
@@ -382,10 +384,11 @@ unconstrained `∃ K` with `¬FiniteDimensional ℂ K` would be discharged by `K
 theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type u}
     [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
     (hinf : ¬FiniteDimensional ℂ H) :
-    ∃ ι : Type u, Infinite ι ∧ ¬FiniteDimensional ℂ (lp (fun _ : ι => ℂ) 2) ∧
-      Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : ι => ℂ) 2) ∧
-      Nonempty ((𝓑(H) : VonNeumannAlgebra H) ≃⋆ₐ[ℂ]
-        (lp (fun _ : ι => ℂ) 2 →L[ℂ] lp (fun _ : ι => ℂ) 2)) := by
+    ∃ ι : Type u, Infinite ι ∧ ¬FiniteDimensional ℂ (ℓ²(ι, ℂ)) ∧
+      ∃ (U : H ≃ₗᵢ[ℂ] ℓ²(ι, ℂ))
+        (e : (𝓑(H) : VonNeumannAlgebra H) ≃⋆ₐ[ℂ] (ℓ²(ι, ℂ) →L[ℂ] ℓ²(ι, ℂ))),
+        ∀ (x : (𝓑(H) : VonNeumannAlgebra H)) (v : ℓ²(ι, ℂ)),
+          e x v = U ((x : H →L[ℂ] H) (U.symm v)) := by
   obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
   have hwinf : Infinite w := by
     rw [← not_finite_iff_infinite]
@@ -393,12 +396,12 @@ theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type
     have : Finite w := hfin
     have : Fintype w := Fintype.ofFinite w
     exact hinf b.toOrthonormalBasis.toBasis.finiteDimensional_of_finite
-  have hnfd : ¬FiniteDimensional ℂ (lp (fun _ : w => ℂ) 2) := by
+  have hnfd : ¬FiniteDimensional ℂ (ℓ²(w, ℂ)) := by
     intro hK
     have := hK
     exact hinf b.repr.symm.toLinearEquiv.finiteDimensional
-  exact ⟨w, hwinf, hnfd, ⟨b.repr⟩,
-    ⟨boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv⟩⟩
+  exact ⟨w, hwinf, hnfd, b.repr, boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv,
+    fun _ _ => rfl⟩
 
 /-- **`B(H)` is a type I_∞ factor when `H` is infinite-dimensional.** Packaged as the intrinsic
 predicate `IsTypeIInfinite`: `𝓑(H) = B(H)` is a type I factor (`isTypeIFactor_boundedLinearOperators`)
