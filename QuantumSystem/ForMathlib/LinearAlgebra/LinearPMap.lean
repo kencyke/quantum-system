@@ -28,15 +28,25 @@ restriction of scalars, which Mathlib provides for linear maps but not for `Line
   `LinearPMap.comp` when the latter is defined, and with `LinearMap.compPMap` when `g` is
   everywhere defined.
 * `LinearPMap.mem_graph_compNat` — the graph of `g ∘ f` is the relational composite of the graphs.
-* `LinearPMap.compNat_assoc`, `LinearPMap.compPMap_compNat`, `LinearPMap.compNat_mono` —
-  associativity and monotonicity.
+* `LinearPMap.compNat_toPMap_eq_compPMap_iff`, `LinearPMap.compNat_self_eq_id_iff` — `B V = V A`
+  for a semilinear equivalence `V`, and `S S = 1` on `dom S`, in terms of graph points.
+* `LinearPMap.le_iff_mem_graph`, `LinearPMap.compPMap_le_compNat_toPMap_iff`,
+  `LinearPMap.compPMap_le_iff` — `f ≤ g`, `g T ⊆ S f` and `g A ⊆ T` in terms of graph points, for
+  the arguments that are genuinely pointwise (closures, limits, single vectors).
+* `LinearPMap.compNat_assoc`, `LinearPMap.compPMap_compNat`, `LinearPMap.compPMap_comp`,
+  `LinearPMap.compNat_toPMap_comp`, `LinearPMap.toPMap_comp`, `LinearPMap.id_compPMap`,
+  `LinearPMap.compNat_toPMap_id`, `LinearPMap.compNat_mono`, `LinearPMap.compPMap_mono` —
+  associativity, units and monotonicity.
 * `LinearPMap.mem_graph_domRestrict` — the graph of a restriction.
 * `LinearPMap.mem_graph_compPMap`, `LinearPMap.mem_graph_compNat_toPMap`,
   `LinearPMap.mem_graph_smul` — the graphs of `g ∘ f` with `g` or `f` everywhere defined, and of
   `a • f`.
 * `LinearPMap.restrictScalars` — an `S`-linear partially defined map as an `R`-linear one, with the
   same graph (`LinearPMap.graph_restrictScalars`); restriction of scalars is injective
-  (`LinearPMap.restrictScalars_injective`).
+  (`LinearPMap.restrictScalars_injective`), preserves and reflects `≤`
+  (`LinearPMap.restrictScalars_le_iff`), and commutes with composition and kernels
+  (`LinearPMap.restrictScalars_compNat`, `LinearPMap.restrictScalars_compPMap`,
+  `LinearPMap.restrictScalars_toPMap`, `LinearPMap.restrictScalars_ker`).
 * `LinearPMap.isClosed_restrictScalars_iff`, `LinearPMap.isClosable_restrictScalars_iff`,
   `LinearPMap.closure_restrictScalars`, `LinearPMap.topologicalClosure_graph_restrictScalars` —
   restricting scalars does not change the graph as a set, so closedness, closability and the
@@ -177,6 +187,12 @@ lemma compPMap_compNat (h : G →ₗ[R] K) (g : F →ₗ.[R] G) (f : E →ₗ.[R
     (h.compPMap g).compNat f = h.compPMap (g.compNat f) := by
   rw [← toPMap_compNat, ← toPMap_compNat, compNat_assoc]
 
+/-- **Inclusion of operators, pointwise**: `f ≤ g` iff every point of the graph of `f` lies in the
+graph of `g`, i.e. `x ∈ dom f` forces `x ∈ dom g` and `g x = f x`. -/
+lemma le_iff_mem_graph {f g : E →ₗ.[R] F} :
+    f ≤ g ↔ ∀ ⦃x : E⦄ ⦃y : F⦄, (x, y) ∈ f.graph → (x, y) ∈ g.graph :=
+  le_graph_iff.symm.trans ⟨fun h _ _ hxy => h hxy, fun h ⟨_, _⟩ hxy => h hxy⟩
+
 /-- Composition on the natural domain is monotone in both factors. -/
 lemma compNat_mono {g g' : F →ₗ.[R] G} {f f' : E →ₗ.[R] F} (hg : g ≤ g') (hf : f ≤ f') :
     g.compNat f ≤ g'.compNat f' := by
@@ -203,12 +219,105 @@ lemma mem_graph_compNat_toPMap {g : F →ₗ.[R] G} {f : E →ₗ[R] F} {x : E} 
     exact hyz
   · exact (mem_graph_iff _).mpr ⟨⟨x, Submodule.mem_top⟩, rfl, rfl⟩
 
+/-- Composition with an everywhere-defined left factor is monotone. -/
+lemma compPMap_mono (g : F →ₗ[R] G) {f f' : E →ₗ.[R] F} (hf : f ≤ f') :
+    g.compPMap f ≤ g.compPMap f' := by
+  rw [← toPMap_compNat, ← toPMap_compNat]
+  exact compNat_mono le_rfl hf
+
+/-- An everywhere-defined composite, as a partially defined map, is the composite of the factors. -/
+lemma toPMap_comp (g : F →ₗ[R] G) (f : E →ₗ[R] F) :
+    (g ∘ₗ f).toPMap ⊤ = (g.toPMap ⊤).compNat (f.toPMap ⊤) := by
+  rw [toPMap_compNat]
+  rfl
+
+/-- Composition with everywhere-defined left factors is associative. -/
+lemma compPMap_comp (h : G →ₗ[R] K) (g : F →ₗ[R] G) (f : E →ₗ.[R] F) :
+    (h ∘ₗ g).compPMap f = h.compPMap (g.compPMap f) :=
+  rfl
+
+/-- Composition with everywhere-defined right factors is associative. -/
+lemma compNat_toPMap_comp (h : G →ₗ.[R] K) (g : F →ₗ[R] G) (f : E →ₗ[R] F) :
+    h.compNat ((g ∘ₗ f).toPMap ⊤) = (h.compNat (g.toPMap ⊤)).compNat (f.toPMap ⊤) := by
+  rw [toPMap_comp, compNat_assoc]
+
+/-- The identity is a left unit for composition. -/
+@[simp]
+lemma id_compPMap (f : E →ₗ.[R] F) : LinearMap.id.compPMap f = f :=
+  ext rfl fun _ _ _ => rfl
+
+/-- The identity is a right unit for composition. -/
+@[simp]
+lemma compNat_toPMap_id (f : E →ₗ.[R] F) : f.compNat (LinearMap.id.toPMap ⊤) = f :=
+  eq_of_eq_graph (Submodule.ext fun ⟨_, _⟩ => mem_graph_compNat_toPMap)
+
+/-- **Involutions, pointwise**: `S S = 1` on `dom S` iff the graph of `S` is symmetric, i.e.
+`S x = v` implies `S v = x`. -/
+lemma compNat_self_eq_id_iff {S : E →ₗ.[R] E} :
+    S.compNat S = LinearMap.id.toPMap S.domain ↔ ∀ ⦃x v⦄, (x, v) ∈ S.graph → (v, x) ∈ S.graph := by
+  constructor
+  · intro h x v hxv
+    obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff S).mp hxv
+    have hp : (p : E) ∈ (S.compNat S).domain := by rw [h]; exact p.2
+    have hval : S.compNat S ⟨p, hp⟩ = p := h.le.2 (x := ⟨p, hp⟩) (y := ⟨p, p.2⟩) rfl
+    rw [compNat_apply] at hval
+    refine (mem_graph_iff S).mpr
+      ⟨⟨S ⟨p, compNat_domain_le hp⟩, compNat_apply_mem (g := S) (f := S) ⟨(p : E), hp⟩⟩, rfl, ?_⟩
+    exact hval
+  · intro h
+    refine ext (Submodule.ext fun x => ?_) fun x hx _ => ?_
+    · rw [mem_compNat_domain]
+      exact ⟨fun ⟨hx, _⟩ => hx, fun hx => ⟨hx, mem_domain_of_mem_graph (h (S.mem_graph ⟨x, hx⟩))⟩⟩
+    · rw [compNat_apply]
+      exact ((image_iff _).mpr (h (S.mem_graph _))).symm
+
+/-- **Intertwining, pointwise**: `g T ⊆ S f` iff every point `(u, v)` of the graph of `T` is mapped
+to the point `(f u, g v)` of the graph of `S`. -/
+lemma compPMap_le_compNat_toPMap_iff {T : E →ₗ.[R] F} {S : G →ₗ.[R] K} {f : E →ₗ[R] G}
+    {g : F →ₗ[R] K} :
+    g.compPMap T ≤ S.compNat (f.toPMap ⊤) ↔ ∀ ⦃u v⦄, (u, v) ∈ T.graph → (f u, g v) ∈ S.graph := by
+  rw [le_iff_mem_graph]
+  constructor
+  · intro h u v hv
+    exact mem_graph_compNat_toPMap.mp (h (mem_graph_compPMap.mpr ⟨v, hv, rfl⟩))
+  · intro h u z hz
+    obtain ⟨v, hv, rfl⟩ := mem_graph_compPMap.mp hz
+    exact mem_graph_compNat_toPMap.mpr (h hv)
+
+/-- **Extension by a composite, pointwise**: `g A ⊆ T` iff `(x, g u)` lies in the graph of `T` for
+every point `(x, u)` of the graph of `A`. -/
+lemma compPMap_le_iff {A : E →ₗ.[R] F} {T : E →ₗ.[R] G} {g : F →ₗ[R] G} :
+    g.compPMap A ≤ T ↔ ∀ ⦃x u⦄, (x, u) ∈ A.graph → (x, g u) ∈ T.graph := by
+  rw [le_iff_mem_graph]
+  constructor
+  · intro h x u hu
+    exact h (mem_graph_compPMap.mpr ⟨u, hu, rfl⟩)
+  · intro h x z hz
+    obtain ⟨u, hu, rfl⟩ := mem_graph_compPMap.mp hz
+    exact h hu
+
 /-- The graph of `a • f`: `(x, z)` lies in it iff `z = a • y` for `(x, y)` in the graph of `f`. -/
 lemma mem_graph_smul {M : Type*} [Monoid M] [DistribMulAction M F] [SMulCommClass R M F] (a : M)
     {f : E →ₗ.[R] F} {x : E} {z : F} :
     (x, z) ∈ (a • f).graph ↔ ∃ y, (x, y) ∈ f.graph ∧ a • y = z := by
   simp only [mem_graph_iff]
   exact ⟨fun ⟨p, hp, hpz⟩ => ⟨f p, ⟨p, hp, rfl⟩, hpz⟩, fun ⟨_, ⟨p, hp, rfl⟩, hpz⟩ => ⟨p, hp, hpz⟩⟩
+
+/-- The kernel in graph form: `x ∈ ker f` iff `(x, 0)` lies in the graph of `f`. -/
+lemma mem_graph_zero_iff_mem_ker {f : E →ₗ.[R] F} {x : E} : (x, 0) ∈ f.graph ↔ x ∈ f.ker := by
+  rw [mem_graph_iff, mem_ker_iff]
+  exact ⟨fun ⟨y, hy, h⟩ => ⟨y, hy.symm, h⟩, fun ⟨y, hy, h⟩ => ⟨y, hy.symm, h⟩⟩
+
+/-- Surjectivity of `g + f` in graph form: every `h` is `g u + v` for some `(u, v)` in the graph of
+`f`. -/
+lemma surjective_vadd_iff {f : E →ₗ.[R] F} {g : E →ₗ[R] F} :
+    Function.Surjective (g +ᵥ f) ↔ ∀ h, ∃ u v, (u, v) ∈ f.graph ∧ g u + v = h := by
+  refine forall_congr' fun h => ⟨fun ⟨x, hx⟩ => ⟨x, f ⟨x, x.2⟩, f.mem_graph ⟨x, x.2⟩, ?_⟩,
+    fun ⟨u, v, huv, he⟩ => ?_⟩
+  · rw [← hx, vadd_apply]
+    rfl
+  · obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff f).mp huv
+    exact ⟨p, by rw [vadd_apply]; exact he⟩
 
 /-- Injectivity in graph form: `f.ker = ⊥` iff `(x, 0) ∈ graph f` forces `x = 0`. -/
 lemma ker_eq_bot_iff_mem_graph {f : E →ₗ.[R] F} : f.ker = ⊥ ↔ ∀ x, (x, 0) ∈ f.graph → x = 0 := by
@@ -225,6 +334,46 @@ lemma mem_graph_inverse_iff {f : E →ₗ.[R] F} (hf : f.ker = ⊥) {x : E} {y :
     (y, x) ∈ f.inverse.graph ↔ (x, y) ∈ f.graph := by
   rw [inverse_graph hf, Submodule.map_equiv_eq_comap_symm]
   rfl
+
+section SemilinearEquiv
+
+variable {S E K : Type*} [Ring S] [AddCommGroup E] [Module S E] [AddCommGroup K] [Module S K]
+  {σ σ' : S →+* S} [RingHomInvPair σ σ'] [RingHomInvPair σ' σ]
+
+/-- **Conjugation by a semilinear equivalence, pointwise**: `B V = V A` iff `V × V` maps the graph
+of `A` onto the graph of `B`. -/
+lemma compNat_toPMap_eq_compPMap_iff {A : E →ₗ.[S] E} {B : K →ₗ.[S] K} (V : E ≃ₛₗ[σ] K) :
+    B.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) = (V : E →ₛₗ[σ] K).compPMap A ↔
+      ∀ u v, (u, v) ∈ A.graph ↔ (V u, V v) ∈ B.graph := by
+  constructor
+  · intro h u v
+    constructor
+    · intro huv
+      obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff A).mp huv
+      have hp : (p : E) ∈ (B.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤)).domain := h.ge.1 p.2
+      have hval := h.ge.2 (x := ⟨p, p.2⟩) (y := ⟨p, hp⟩) rfl
+      rw [compNat_toPMap_apply] at hval
+      exact (mem_graph_iff B).mpr ⟨⟨_, mem_compNat_toPMap_domain.mp hp⟩, rfl, hval.symm⟩
+    · intro huv
+      have hu : u ∈ (B.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤)).domain :=
+        mem_compNat_toPMap_domain.mpr (mem_domain_of_mem_graph huv)
+      have hval := h.le.2 (x := ⟨u, hu⟩) (y := ⟨u, h.le.1 hu⟩) rfl
+      rw [compNat_toPMap_apply] at hval
+      have hBu : B ⟨V u, mem_domain_of_mem_graph huv⟩ = V v := ((image_iff _).mpr huv).symm
+      have hV : V (A ⟨u, h.le.1 hu⟩) = V v := by
+        rw [← hBu]
+        exact hval.symm
+      exact (image_iff (h.le.1 hu)).mp (V.injective hV).symm
+  · intro h
+    have hdom : ∀ u, u ∈ (B.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤)).domain ↔ u ∈ A.domain := fun u => by
+      rw [mem_compNat_toPMap_domain, mem_domain_iff, mem_domain_iff]
+      exact ⟨fun ⟨y, hy⟩ => ⟨V.symm y, (h _ _).mpr (by rwa [V.apply_symm_apply])⟩,
+        fun ⟨y, hy⟩ => ⟨V y, (h _ _).mp hy⟩⟩
+    refine ext (Submodule.ext hdom) fun x hx hx' => ?_
+    rw [compNat_toPMap_apply]
+    exact ((image_iff _).mpr ((h _ _).mp (A.mem_graph ⟨x, hx'⟩))).symm
+
+end SemilinearEquiv
 
 end Linear
 
@@ -264,11 +413,45 @@ lemma mem_graph_restrictScalars {p : E × F} : p ∈ (T.restrictScalars R).graph
 lemma graph_restrictScalars : (T.restrictScalars R).graph = T.graph.restrictScalars R :=
   Submodule.ext fun _ => mem_graph_restrictScalars
 
+/-- Restriction of scalars preserves and reflects inclusions. -/
+@[simp]
+lemma restrictScalars_le_iff {T' : E →ₗ.[S] F} : T.restrictScalars R ≤ T'.restrictScalars R ↔ T ≤ T' := by
+  simp only [le_iff_mem_graph, mem_graph_restrictScalars]
+
+/-- Restriction of scalars commutes with taking kernels. -/
+lemma restrictScalars_ker : (T.restrictScalars R).ker = T.ker.restrictScalars R := by
+  ext x
+  simp only [mem_ker_iff, Submodule.restrictScalars_mem, restrictScalars_domain, Subtype.exists]
+  rfl
+
 /-- Restriction of scalars is injective on partially defined maps. -/
 lemma restrictScalars_injective :
     Function.Injective (restrictScalars R : (E →ₗ.[S] F) → E →ₗ.[R] F) := fun T T' h =>
   eq_of_eq_graph (Submodule.ext fun p => by
     rw [← mem_graph_restrictScalars (R := R), h, mem_graph_restrictScalars])
+
+section Comp
+
+variable {G : Type*} [AddCommGroup G] [Module R G] [Module S G] [IsScalarTower R S G]
+
+/-- Restriction of scalars commutes with composition on the natural domain. -/
+lemma restrictScalars_compNat (g : F →ₗ.[S] G) (f : E →ₗ.[S] F) :
+    (g.compNat f).restrictScalars R = (g.restrictScalars R).compNat (f.restrictScalars R) :=
+  eq_of_eq_graph (Submodule.ext fun ⟨_, _⟩ => by
+    simp only [mem_graph_restrictScalars, mem_graph_compNat])
+
+/-- Restriction of scalars commutes with composition with an everywhere-defined left factor. -/
+lemma restrictScalars_compPMap (g : F →ₗ[S] G) (f : E →ₗ.[S] F) :
+    (g.compPMap f).restrictScalars R = (g.restrictScalars R).compPMap (f.restrictScalars R) :=
+  eq_of_eq_graph (Submodule.ext fun ⟨_, _⟩ => by
+    simp only [mem_graph_restrictScalars, mem_graph_compPMap, LinearMap.coe_restrictScalars])
+
+/-- Restriction of scalars of an everywhere-defined map. -/
+lemma restrictScalars_toPMap (f : E →ₗ[S] F) :
+    (f.toPMap ⊤).restrictScalars R = (f.restrictScalars R).toPMap ⊤ :=
+  ext rfl fun _ _ _ => rfl
+
+end Comp
 
 end RestrictScalars
 

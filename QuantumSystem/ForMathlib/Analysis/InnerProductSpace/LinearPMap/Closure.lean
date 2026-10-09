@@ -25,6 +25,7 @@ All of this reduces to the graph statement `g.adjoint.adjoint = closure g` for a
 * `Submodule.adjoint_adjoint` — `g.adjoint.adjoint = g.topologicalClosure`.
 * `Submodule.adjoint_topologicalClosure` — `g.topologicalClosure.adjoint = g.adjoint`.
 * `LinearPMap.mem_graph_adjoint_iff` — the graph of `T†` in terms of the graph of `T`.
+* `LinearPMap.adjoint_anti` — `S ⊆ T` implies `T† ⊆ S†`.
 * `LinearPMap.adjoint_closure` — `T.closure† = T†`.
 * `LinearPMap.isClosable_iff_dense_adjoint_domain` — `T` is closable iff `T†` is densely defined.
 * `LinearPMap.adjoint_adjoint` — `T†† = T.closure` for closable `T`.
@@ -115,6 +116,11 @@ theorem mem_graph_adjoint_iff (hT : Dense (T.domain : Set E)) {y : F} {w : E} :
     (y, w) ∈ T†.graph ↔ ∀ v v', (v, v') ∈ T.graph → inner 𝕜 v' y = inner 𝕜 v w := by
   rw [adjoint_graph_eq_graph_adjoint hT, Submodule.mem_adjoint_iff]
   exact forall₂_congr fun _ _ => imp_congr_right fun _ => sub_eq_zero
+
+/-- **The adjoint reverses inclusions**: `S ⊆ T` implies `T† ⊆ S†`, for densely defined `S`. -/
+lemma adjoint_anti {S : E →ₗ.[𝕜] F} (hS : Dense (S.domain : Set E)) (h : S ≤ T) : T† ≤ S† :=
+  le_of_le_graph fun ⟨_, _⟩ hyw => (mem_graph_adjoint_iff hS).mpr fun v v' hv =>
+    (mem_graph_adjoint_iff (hS.mono h.1)).mp hyw v v' (le_graph_of_le h hv)
 
 /-- A densely defined operator and its closure have the same adjoint. (If `T` is not closable,
 `T.closure = T` by convention and the statement is trivial.) -/
