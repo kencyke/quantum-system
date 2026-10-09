@@ -52,8 +52,8 @@ convergence gives the derivative, and Fatou's lemma, through the lower semiconti
 
 * `AddChar.mem_graph_generator_iff`, `AddChar.mem_graph_selfAdjointGenerator_iff` — `G y = z` iff
   `t ↦ U(t) y` has derivative `z` at `0`, and `A y = z` iff it has derivative `i z`.
-* `AddChar.apply_mem_graph_generator`, `AddChar.hasDerivAt_apply_of_mem_graph_generator` — `U(t)`
-  preserves the domain of `G` and commutes with `G`, and `d/dt U(t) y = U(t) G y` at every `t`.
+* `AddChar.compPMap_generator_le`, `AddChar.hasDerivAt_apply_of_mem_graph_generator` —
+  `U(t) G ⊆ G U(t)`, and `d/dt U(t) y = U(t) G y` at every `t`.
 * `ProjectionValuedMeasure.hasDerivAt_integral_cexp_apply`,
   `ProjectionValuedMeasure.memLp_of_differentiableAt_integral_cexp_apply`,
   `ProjectionValuedMeasure.hasDerivAt_integral_cexp_apply_iff` — differentiating
@@ -148,10 +148,13 @@ private lemma apply_apply_comm (s t : ℝ) (y : E) : U s (U t y) = U t (U s y) :
   rw [← mul_apply_eq_comp, ← mul_apply_eq_comp, ← AddChar.map_add_eq_mul, ← AddChar.map_add_eq_mul,
     add_comm]
 
-/-- `U(t)` maps the graph of the generator into itself: if `G y = z`, then `U(t) y` is in the
-domain and `G U(t) y = U(t) z`. -/
-lemma apply_mem_graph_generator {y z : E} (h : (y, z) ∈ U.generator.graph) (t : ℝ) :
-    (U t y, U t z) ∈ U.generator.graph := by
+/-- **`U(t)` commutes with the generator**: `U(t) G ⊆ G U(t)`. -/
+lemma compPMap_generator_le (t : ℝ) :
+    ((U t : E →L[R] E) : E →ₗ[R] E).compPMap U.generator ≤
+      U.generator.compNat (((U t : E →L[R] E) : E →ₗ[R] E).toPMap ⊤) := by
+  -- the derivative of `s ↦ U(s) U(t) y` is computed at each vector `y`
+  refine LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun y z h => ?_
+  simp only [ContinuousLinearMap.coe_coe]
   rw [mem_graph_generator_iff] at h ⊢
   simp_rw [apply_apply_comm _ t]
   exact ((U t).toLinearMap.toAddMonoidHom.toRealLinearMap (U t).continuous).hasFDerivAt.comp_hasDerivAt
@@ -160,7 +163,9 @@ lemma apply_mem_graph_generator {y z : E} (h : (y, z) ∈ U.generator.graph) (t 
 /-- `d/dt U(t) y = U(t) G y` at every `t`, for `y` in the domain of the generator. -/
 lemma hasDerivAt_apply_of_mem_graph_generator {y z : E} (h : (y, z) ∈ U.generator.graph)
     (t : ℝ) : HasDerivAt (fun s => U s y) (U t z) t := by
-  have h' := mem_graph_generator_iff.mp (apply_mem_graph_generator h t)
+  have h' := mem_graph_generator_iff.mp
+    (LinearPMap.compPMap_le_compNat_toPMap_iff.mp (U.compPMap_generator_le t) h)
+  simp only [ContinuousLinearMap.coe_coe] at h'
   rw [← sub_self t] at h'
   convert h'.comp_sub_const t t using 1
   funext s
