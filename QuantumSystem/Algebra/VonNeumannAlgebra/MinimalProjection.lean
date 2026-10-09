@@ -75,7 +75,7 @@ theorem IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra 
   by_cases hqp : q = p
   · exact Or.inr hqp
   exfalso
-  have hqmul : q * p = q := isStarProjection_subproj_comm hp.1 hq hsub
+  have hqmul : q * p = q := hp.1.mul_eq_left_of_mul_eq_right hq hsub
   set r : H →L[ℂ] H := p - q with hr
   have hpr : p * r = r := by
     rw [hr, mul_sub, hp.1.isIdempotentElem, hsub]
@@ -139,7 +139,7 @@ def cornerNonUnitalStarSubalgebra (N : VonNeumannAlgebra H) {p : H →L[ℂ] H}
     exact ⟨mul_mem hyN hzN, by rw [← mul_assoc, hpy], by rw [mul_assoc, hzp]⟩
   smul_mem' := by
     rintro c y ⟨hyN, hpy, hyp⟩
-    exact ⟨smul_mem c hyN, by rw [mul_smul_comm, hpy], by rw [smul_mul_assoc, hyp]⟩
+    exact ⟨SMulMemClass.smul_mem c hyN, by rw [mul_smul_comm, hpy], by rw [smul_mul_assoc, hyp]⟩
   star_mem' := by
     rintro y ⟨hyN, hpy, hyp⟩
     refine ⟨star_mem hyN, ?_, ?_⟩

@@ -158,11 +158,6 @@ as a member of `𝓑(H)`; coercing back to `H →L[ℂ] H` recovers `x`. -/
 @[simp] lemma boundedLinearOperators.coe_starAlgEquiv_symm_apply (x : H →L[ℂ] H) :
     ((boundedLinearOperators.starAlgEquiv (H := H)).symm x : H →L[ℂ] H) = x := rfl
 
-/-- A von Neumann algebra is closed under scalar multiplication. -/
-lemma smul_mem {N : VonNeumannAlgebra H} (c : ℂ) {x : H →L[ℂ] H} (hx : x ∈ N) : c • x ∈ N := by
-  rw [Algebra.smul_def]
-  exact mul_mem (algebraMap_mem N.toStarSubalgebra c) hx
-
 /-! ### The one-dimensional case
 
 On `ℂ` every bounded operator is a scalar, so there is exactly one von Neumann algebra. This is
@@ -195,7 +190,7 @@ lemma eq_boundedLinearOperators_complex (N : VonNeumannAlgebra ℂ) : N = 𝓑(�
     rw [smul_apply, one_apply_eq_self, smul_eq_mul,
       apply_eq_mul_apply_one x z, mul_comm]
   rw [hx]
-  exact smul_mem _ (one_mem N)
+  exact SMulMemClass.smul_mem _ (one_mem N)
 
 /-! ### Factors, minimal projections and Murray–von Neumann equivalence -/
 
@@ -467,16 +462,6 @@ lemma MvNEquiv.isStarProjection_right {N : VonNeumannAlgebra H} {p q : H →L[�
     (h : p ∼[N] q) : IsStarProjection q := by
   obtain ⟨v, _, hpi, _, hvq⟩ := h; exact hvq ▸ hpi.isStarProjection_mul_star_self
 
-/-- For projections, the subprojection relation `e * f = f` is left/right symmetric. -/
-lemma isStarProjection_subproj_comm {R : Type*} [Ring R] [StarRing R] {e f : R}
-    (he : IsStarProjection e) (hf : IsStarProjection f) (h : e * f = f) : f * e = f := by
-  have := congrArg star h
-  rwa [star_mul, he.isSelfAdjoint.star_eq, hf.isSelfAdjoint.star_eq] at this
-
-/-- The source projection of a partial isometry acts as a right identity. -/
-lemma IsPartialIsometry.mul_source {R : Type*} [Monoid R] [StarMul R] {v : R}
-    (h : IsPartialIsometry v) : v * (star v * v) = v := by rw [← mul_assoc]; exact h
-
 /-- The range projection of a Murray–von Neumann equivalence with nonzero source is nonzero. -/
 lemma MvNEquiv.ne_zero {N : VonNeumannAlgebra H} {p q : H →L[ℂ] H}
     (h : p ∼[N] q) (hp : p ≠ 0) : q ≠ 0 := by
@@ -498,7 +483,7 @@ lemma IsMinimalProjection.of_mvNEquiv {N : VonNeumannAlgebra H} {e p : H →L[�
   have hp0 : p ≠ 0 := h.ne_zero he.2.2.1
   obtain ⟨v, hvN, hvpi, hvp, hvq⟩ := h
   have hpN : p ∈ N := by rw [← hvq]; exact mul_mem hvN (star_mem hvN)
-  have hve : v * e = v := by rw [← hvp]; exact IsPartialIsometry.mul_source hvpi
+  have hve : v * e = v := by rw [← hvp]; exact hvpi.mul_source
   have hev : e * star v = star v := by
     have := congrArg star hve
     rwa [star_mul, he.1.isSelfAdjoint.star_eq] at this
@@ -580,7 +565,7 @@ theorem mvNSub_of_posCorner {N : VonNeumannAlgebra H} {e q a : H →L[ℂ] H}
     e ≼[N] q := by
   set γ : ℂ := ((Real.sqrt c)⁻¹ : ℂ) with hγ
   set v : H →L[ℂ] H := γ • (q * a * e) with hv
-  have hvN : v ∈ N := smul_mem γ (mul_mem (mul_mem hqN haN) heN)
+  have hvN : v ∈ N := SMulMemClass.smul_mem γ (mul_mem (mul_mem hqN haN) heN)
   have hsrc : star v * v = e := by
     rw [hv, star_smul, smul_mul_smul_comm, hcorner, smul_smul]
     have hstar : star γ = γ := by rw [hγ, star_inv₀, ← starRingEnd_apply, Complex.conj_ofReal]

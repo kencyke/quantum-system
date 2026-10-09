@@ -30,6 +30,8 @@ for von Neumann algebras.
 * `IsPartialIsometry.isStarProjection_star_mul_self` / `isStarProjection_mul_star_self` — the
   source and range projections `v⋆v`, `vv⋆` are star projections.
 * `IsPartialIsometry.star` — the adjoint of a partial isometry is a partial isometry.
+* `IsPartialIsometry.mul_source` — `v (v⋆ v) = v`; `IsStarProjection.mul_eq_left_of_mul_eq_right` —
+  for star projections, `e f = f` implies `f e = f`.
 * `isPartialIsometry_of_isStarProjection_star_mul_self` /
   `isPartialIsometry_of_isStarProjection_mul_star_self` — the C⋆-ring converse: a star projection
   source or range projection forces `v` to be a partial isometry.
@@ -78,7 +80,17 @@ theorem isStarProjection_mul_star_self {v : R} (h : IsPartialIsometry v) :
         _ = v * star v := by rw [h],
    IsSelfAdjoint.mul_star_self v⟩
 
+/-- The source projection of a partial isometry acts as a right identity: `v (v⋆ v) = v`. -/
+lemma mul_source {v : R} (h : IsPartialIsometry v) : v * (star v * v) = v := by
+  rw [← mul_assoc]; exact h
+
 end IsPartialIsometry
+
+/-- For star projections, the subprojection relation `e * f = f` is left/right symmetric. -/
+lemma IsStarProjection.mul_eq_left_of_mul_eq_right {e f : R} (he : IsStarProjection e)
+    (hf : IsStarProjection f) (h : e * f = f) : f * e = f := by
+  have := congrArg star h
+  rwa [star_mul, he.isSelfAdjoint.star_eq, hf.isSelfAdjoint.star_eq] at this
 
 /-- The adjoint of a partial isometry is a partial isometry. -/
 protected theorem IsPartialIsometry.star {v : R} (h : IsPartialIsometry v) :
