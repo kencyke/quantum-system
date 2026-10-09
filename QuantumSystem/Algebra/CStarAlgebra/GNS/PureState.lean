@@ -8,21 +8,34 @@ module
 public import QuantumSystem.Algebra.CStarAlgebra.GNS.Representation
 public import QuantumSystem.Algebra.CStarAlgebra.State.Pure
 public import QuantumSystem.Algebra.CStarAlgebra.Representation.VectorFunctional
+public import QuantumSystem.Algebra.CStarAlgebra.Representation.RadonNikodym
 
 /-!
-# Irreducibility of the GNS representation of a pure state
+# Pure states and irreducible GNS representations
 
-For a pure state `ψ`, the canonical GNS representation
-`GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)` is
-irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant subspace
-splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity forces
-one of them to vanish.
+A state is pure iff its GNS representation is irreducible
+(`GNS.Representation.isPureState_iff_isIrreducible`, for every GNS triplet of the state; Murphy,
+Thm. 5.1.6; Bratteli–Robinson, Thm. 2.3.19).
+
+* Pure ⇒ irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant
+  subspace splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity
+  forces one of them to vanish.
+* Irreducible ⇒ pure (`GNS.Representation.isPureState_of_isIrreducible`): a quasi-state dominated by
+  `ω` is `⟪T ξ, π(·) ξ⟫` for some `T` in the commutant (Radon–Nikodym,
+  `CStarAlgebra.exists_commute_of_apply_star_mul_self_le`), and `T` is a scalar by Schur's lemma
+  (`CStarRep.isIrreducible_iff_centralizer`), so the dominated functional is a multiple of `ω`.
+* Irreducibility does not depend on the GNS triplet (`GNS.Representation.isIrreducible_iff_canonical`).
 
 The splitting of the cyclic vector holds for a GNS triplet of any positive functional `f`: along
 a closed invariant submodule `W`, `ξ = v₁ + v₂` with `v₁ ∈ W`, `v₂ ∈ Wᗮ`, `f` is the sum of the
 vector functionals of `v₁` and `v₂` (`CStarRep.vectorFunctional`), `‖v₁‖² + ‖v₂‖² = ‖f‖ₒₚ`, and
 `W = ⊥` or `W = ⊤` when `‖v₁‖²` is `0` or `‖f‖ₒₚ`.  Purity is used only in
 `trichotomy_from_purity`.
+
+## Main results
+
+* `GNS.Representation.isPureState_iff_isIrreducible` — **a state is pure iff its GNS
+  representation is irreducible**, for every GNS triplet of the state.
 -/
 
 @[expose] public section
@@ -354,8 +367,9 @@ lemma eq_bot_of_norm_sq_eq_zero (T : Representation f)
   rw [Submodule.orthogonal_eq_top_iff] at this
   exact ClosedSubmodule.toSubmodule_injective this
 
-/-- **Main Theorem**: The GNS representation of a pure state is irreducible. -/
-theorem pureState_gns_isIrreducible {ψ : PureState A} :
+/-- The GNS representation of a pure state is irreducible: the forward direction of
+`GNS.Representation.isPureState_iff_isIrreducible`, for the canonical triplet. -/
+lemma pureState_gns_isIrreducible {ψ : PureState A} :
     (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).IsIrreducible := by
   let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)
   refine ⟨T.π_ne_zero ψ.toState.ofClass_ne_zero, fun W hW => ?_⟩
@@ -364,6 +378,110 @@ theorem pureState_gns_isIrreducible {ψ : PureState A} :
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
   · exact Or.inr (eq_top_of_norm_sq_eq_opNorm T W hW v₁ v₂ hv₁ hξ horth
       (h_one.trans ψ.toState.opNorm_ofClass_eq_one.symm))
+
+/-- Irreducibility is a property of the GNS representation, not of the chosen triplet: any two
+GNS triplets of `f` are unitarily equivalent (`unique_up_to_unitary_equivalence`), and
+irreducibility transfers along unitary equivalence. -/
+lemma isIrreducible_iff_canonical (T : Representation f) :
+    T.IsIrreducible ↔ (canonical f).IsIrreducible :=
+  let ⟨U⟩ := unique_up_to_unitary_equivalence T (canonical f)
+  CStarRep.UnitaryEquiv.isIrreducible_iff U.toUnitaryEquiv
+
+/-- **Radon–Nikodym and Schur**: if the GNS representation of a state `ω` is irreducible, every
+positive functional `φ` with `φ + ψ = ω` for a positive `ψ` is a scalar multiple of `ω`. The
+domination gives `φ(a) = ⟪T ξ, π(a) ξ⟫` with `T` in the commutant
+(`CStarAlgebra.exists_commute_of_apply_star_mul_self_le`), which is `ℂ1` by Schur's lemma
+(`CStarRep.isIrreducible_iff_centralizer`). -/
+private lemma exists_eq_smul_of_add_eq {ω : State A}
+    (h : (canonical (PositiveLinearMap.ofClass ω)).IsIrreducible) {φ ψ : WeakDual ℂ A}
+    (hφ : ∀ a : A, 0 ≤ a → 0 ≤ φ a) (hψ : ∀ a : A, 0 ≤ a → 0 ≤ ψ a) (hsum : φ + ψ = ω.val) :
+    ∃ c : ℂ, φ = c • ω.val := by
+  set T := canonical (PositiveLinearMap.ofClass ω)
+  let fφ : A →ₚ[ℂ] ℂ := PositiveLinearMap.mk₀ (WeakDual.toStrongDual φ : A →L[ℂ] ℂ).toLinearMap hφ
+  have hdom : ∀ a, ‖fφ (star a * a)‖ ≤ ‖T.π a T.ξ‖ ^ 2 := fun a => by
+    rw [T.norm_apply_cyclic, Real.sq_sqrt (norm_nonneg _)]
+    have hφa := hφ _ (star_mul_self_nonneg a)
+    have hψa := hψ _ (star_mul_self_nonneg a)
+    have hωa : ω (star a * a) = φ (star a * a) + ψ (star a * a) := by
+      rw [← ω.coe_val, ← hsum]; rfl
+    change ‖φ (star a * a)‖ ≤ ‖ω (star a * a)‖
+    rw [hωa, ← Complex.re_eq_norm.mpr hφa, ← Complex.re_eq_norm.mpr (add_nonneg hφa hψa),
+      Complex.add_re]
+    linarith [(Complex.nonneg_iff.mp hψa).1]
+  obtain ⟨T₀, hcomm, -, -, hT₀⟩ :=
+    CStarAlgebra.exists_commute_of_apply_star_mul_self_le (ρ := T.π) (ζ := T.ξ) (f := fφ) hdom
+  obtain ⟨c, hc⟩ := ((CStarRep.isIrreducible_iff_centralizer _).mp h).2 T₀ (by
+    rintro _ ⟨a, rfl⟩
+    exact (hcomm a).eq.symm)
+  refine ⟨starRingEnd ℂ c, DFunLike.ext _ _ fun a => ?_⟩
+  have h₁ : φ a = fφ a := rfl
+  have h₂ : (PositiveLinearMap.ofClass ω) a = ω a := rfl
+  rw [h₁, hT₀, hc, smul_apply, one_apply_eq_self, inner_smul_left,
+    ← T.gns_condition, h₂]
+  rfl
+
+omit [StarOrderedRing A] in
+/-- A positive functional `t • φ = c • ω` with `φ` a quasi-state has `‖c‖ ≤ t`. -/
+private lemma norm_le_of_smul_eq {ω : State A} {φ : WeakDual ℂ A} (hφ : φ ∈ QuasiStateSpace A)
+    {t : ℝ} (ht : 0 ≤ t) {c : ℂ} (h : t • φ = c • ω.val) : ‖c‖ ≤ t := by
+  have hn := congrArg (fun χ => ‖WeakDual.toStrongDual χ‖) h
+  simp only [map_smul, norm_smul, ω.norm_eq_one, mul_one] at hn
+  have hreal : WeakDual.toStrongDual (t • φ) = t • WeakDual.toStrongDual φ := rfl
+  rw [← hn, hreal, norm_smul, Real.norm_of_nonneg ht]
+  exact mul_le_of_le_one_right ht (mem_closedBall_zero_iff.mp hφ.2)
+
+/-- A state whose GNS representation is irreducible is pure: the converse direction of
+`GNS.Representation.isPureState_iff_isIrreducible`, for the canonical triplet. If `ω = t φ + (1 - t) χ` with
+quasi-states `φ`, `χ` and `0 < t < 1`, then `t φ = c ω` and `(1 - t) χ = d ω` by Radon–Nikodym and
+Schur, with `c + d = 1`, `‖c‖ ≤ t` and `‖d‖ ≤ 1 - t`; so `c = t`, `d = 1 - t` and `φ = χ = ω`. -/
+lemma isPureState_of_isIrreducible {ω : State A}
+    (h : (canonical (PositiveLinearMap.ofClass ω)).IsIrreducible) : IsPureState ω.val := by
+  have hω0 : ω.val ≠ 0 := fun h0 => by simpa [h0] using ω.norm_eq_one
+  refine ⟨mem_extremePoints.mpr ⟨StateSpace.subset_quasiStateSpace ω.2, fun φ hφ χ hχ hseg => ?_⟩,
+    hω0⟩
+  obtain ⟨a, b, ha, hb, hab, hsum⟩ := hseg
+  have hpos : ∀ (t : ℝ), 0 ≤ t → ∀ θ ∈ QuasiStateSpace A, ∀ x : A, 0 ≤ x → 0 ≤ (t • θ) x :=
+    fun t ht θ hθ x hx => by
+      change 0 ≤ t • θ x
+      rw [← Complex.coe_smul]
+      exact smul_nonneg (by exact_mod_cast ht) (hθ.1 x hx)
+  obtain ⟨c, hc⟩ := exists_eq_smul_of_add_eq h (hpos a ha.le φ hφ) (hpos b hb.le χ hχ) hsum
+  obtain ⟨d, hd⟩ := exists_eq_smul_of_add_eq h (hpos b hb.le χ hχ) (hpos a ha.le φ hφ)
+    (by rw [add_comm, hsum])
+  have hcd : c + d = 1 := by
+    have : (c + d - 1) • ω.val = 0 := by rw [sub_smul, add_smul, ← hc, ← hd, hsum, one_smul, sub_self]
+    exact sub_eq_zero.mp ((smul_eq_zero.mp this).resolve_right hω0)
+  have hca := norm_le_of_smul_eq hφ ha.le hc
+  have hdb := norm_le_of_smul_eq hχ hb.le hd
+  -- `c + d = 1` with `‖c‖ ≤ a`, `‖d‖ ≤ b`, `a + b = 1` forces `c = a`, `d = b`.
+  have hre : c.re = a ∧ d.re = b := by
+    have h1 : c.re + d.re = 1 := by simpa using congrArg Complex.re hcd
+    have := Complex.re_le_norm c
+    have := Complex.re_le_norm d
+    constructor <;> linarith
+  have hc' : c = a := by
+    have h0 : 0 ≤ c := Complex.re_eq_norm.mp (le_antisymm (Complex.re_le_norm c) (hre.1 ▸ hca))
+    rw [← Complex.re_add_im c, ← (Complex.nonneg_iff.mp h0).2, hre.1]
+    simp
+  have hd' : d = b := by
+    have h0 : 0 ≤ d := Complex.re_eq_norm.mp (le_antisymm (Complex.re_le_norm d) (hre.2 ▸ hdb))
+    rw [← Complex.re_add_im d, ← (Complex.nonneg_iff.mp h0).2, hre.2]
+    simp
+  have hcancel : ∀ {t : ℝ}, 0 < t → ∀ {θ : WeakDual ℂ A}, t • θ = (t : ℂ) • ω.val → θ = ω.val :=
+    fun ht θ hθ => by
+      rw [Complex.coe_smul] at hθ
+      exact smul_right_injective _ ht.ne' hθ
+  exact ⟨hcancel ha (hc' ▸ hc), hcancel hb (hd' ▸ hd)⟩
+
+/-- **Pure states are exactly the states with irreducible GNS representation** (Murphy,
+*C\*-algebras and Operator Theory*, Thm. 5.1.6; Bratteli–Robinson, Thm. 2.3.19), for every GNS
+triplet `T` of the state. -/
+theorem isPureState_iff_isIrreducible (ω : State A)
+    (T : Representation (PositiveLinearMap.ofClass ω)) :
+    IsPureState ω.val ↔ T.IsIrreducible := by
+  rw [isIrreducible_iff_canonical]
+  refine ⟨fun hω => ?_, isPureState_of_isIrreducible⟩
+  exact pureState_gns_isIrreducible (ψ := ⟨ω.val, hω⟩)
 
 end Representation
 
