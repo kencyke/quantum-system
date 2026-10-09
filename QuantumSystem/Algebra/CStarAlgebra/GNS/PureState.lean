@@ -31,10 +31,8 @@ namespace GNS
 
 namespace Representation
 
-open scoped ComplexOrder ComplexConjugate CStarAlgebra InnerProduct NNReal
+open scoped ComplexOrder ComplexConjugate CStarAlgebra InnerProduct NNReal ComplexInnerProductSpace
 open PositiveLinearMap
-
-local notation "⟪" x ", " y "⟫" => inner ℂ x y
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 

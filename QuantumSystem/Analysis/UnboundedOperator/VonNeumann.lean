@@ -44,13 +44,11 @@ The self-adjointness comes from a general criterion: a symmetric operator `A` fo
 @[expose] public section
 
 open RCLike
-open scoped ComplexConjugate LinearPMap
+open scoped ComplexConjugate LinearPMap InnerProductSpace
 
 variable {𝕜 E F : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 namespace LinearPMap
 
@@ -71,7 +69,7 @@ theorem IsFormalAdjoint.isSelfAdjoint_of_surjective_conj [CompleteSpace E] {A : 
       Submodule.eq_bot_iff]
     intro h hh
     obtain ⟨u, v, huv, rfl⟩ := hsurj h
-    have hu : ∀ x, ⟪x, u⟫ = 0 := fun x => by
+    have hu : ∀ x, ⟪x, u⟫_𝕜 = 0 := fun x => by
       obtain ⟨a, b, hab, rfl⟩ := hsurj' x
       have h₁ := (Submodule.mem_orthogonal _ _).mp hh a (mem_domain_of_mem_graph hab)
       rw [inner_add_right, inner_smul_right, ← hA.inner_eq_of_mem_graph hab huv] at h₁
@@ -90,11 +88,11 @@ theorem IsFormalAdjoint.isSelfAdjoint_of_surjective_conj [CompleteSpace E] {A : 
   · obtain ⟨y, w⟩ := p
     rw [Submodule.mem_adjoint_iff] at hyw
     obtain ⟨u, v, huv, he⟩ := hsurj (z • y + w)
-    have hperp : ∀ a b, (a, b) ∈ A.graph → ⟪conj z • a + b, y - u⟫ = 0 := fun a b hab => by
+    have hperp : ∀ a b, (a, b) ∈ A.graph → ⟪conj z • a + b, y - u⟫_𝕜 = 0 := fun a b hab => by
       have h₁ := hyw a b hab
       dsimp only at h₁
       have h₂ := hA.inner_eq_of_mem_graph hab huv
-      have h₃ : ⟪a, z • u + v⟫ = ⟪a, z • y + w⟫ := by rw [he]
+      have h₃ : ⟪a, z • u + v⟫_𝕜 = ⟪a, z • y + w⟫_𝕜 := by rw [he]
       simp only [inner_add_right, inner_smul_right] at h₃
       simp only [inner_add_left, inner_sub_right, inner_smul_left, conj_conj]
       linear_combination h₁ - h₂ - h₃
@@ -122,7 +120,7 @@ omit [CompleteSpace F] in
 /-- The defining relation of the adjoint in graph form: for `(x, y)` in the graph of `T` and
 `(y', z')` in the graph of `T†`, `⟪z', x⟫ = ⟪y', y⟫`. -/
 lemma inner_eq_of_mem_graph_adjoint (hTd : Dense (T.domain : Set E)) {x : E} {y y' : F} {z' : E}
-    (h : (x, y) ∈ T.graph) (h' : (y', z') ∈ T†.graph) : ⟪z', x⟫ = ⟪y', y⟫ := by
+    (h : (x, y) ∈ T.graph) (h' : (y', z') ∈ T†.graph) : ⟪z', x⟫_𝕜 = ⟪y', y⟫_𝕜 := by
   obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff T).mp h
   obtain ⟨q, rfl, rfl⟩ := (mem_graph_iff T†).mp h'
   exact adjoint_isFormalAdjoint hTd q p
@@ -130,7 +128,8 @@ lemma inner_eq_of_mem_graph_adjoint (hTd : Dense (T.domain : Set E)) {x : E} {y 
 omit [CompleteSpace F] in
 /-- `⟪T†T x, x⟫ = ⟪T x, T x⟫` for `x` in the domain of `T†T`. -/
 lemma inner_adjoint_compNat_self (hTd : Dense (T.domain : Set E)) (x : (T†.compNat T).domain) :
-    ⟪T†.compNat T x, (x : E)⟫ = ⟪T ⟨x, compNat_domain_le x.2⟩, T ⟨x, compNat_domain_le x.2⟩⟫ := by
+    ⟪T†.compNat T x, (x : E)⟫_𝕜 =
+      ⟪T ⟨x, compNat_domain_le x.2⟩, T ⟨x, compNat_domain_le x.2⟩⟫_𝕜 := by
   rw [compNat_apply]
   exact inner_eq_of_mem_graph_adjoint hTd (T.mem_graph ⟨x, compNat_domain_le x.2⟩)
     (T†.mem_graph ⟨_, compNat_apply_mem x⟩)
@@ -139,7 +138,7 @@ omit [CompleteSpace F] in
 /-- `re ⟪T†T x, x⟫ = ‖T x‖²` for `x` in the domain of `T†T`. -/
 lemma re_inner_adjoint_compNat_self (hTd : Dense (T.domain : Set E))
     (x : (T†.compNat T).domain) :
-    re ⟪T†.compNat T x, (x : E)⟫ = ‖T ⟨x, compNat_domain_le x.2⟩‖ ^ 2 := by
+    re ⟪T†.compNat T x, (x : E)⟫_𝕜 = ‖T ⟨x, compNat_domain_le x.2⟩‖ ^ 2 := by
   rw [inner_adjoint_compNat_self hTd, inner_self_eq_norm_sq]
 
 omit [CompleteSpace F] in
@@ -160,7 +159,7 @@ theorem adjoint_compNat_self_eq_smul_of_inner {T₁ T₂ : E →ₗ.[𝕜] F}
     (hT₁ : Dense (T₁.domain : Set E)) (hT₂ : Dense (T₂.domain : Set E)) {r : ℝ} (hr : r ≠ 0)
     (hdom : T₁.domain = T₂.domain)
     (hinner : ∀ u y₁ y₂ v z₁ z₂, (u, y₁) ∈ T₁.graph → (u, y₂) ∈ T₂.graph → (v, z₁) ∈ T₁.graph →
-      (v, z₂) ∈ T₂.graph → ⟪z₂, y₂⟫ = (r : 𝕜) * ⟪z₁, y₁⟫) :
+      (v, z₂) ∈ T₂.graph → ⟪z₂, y₂⟫_𝕜 = (r : 𝕜) * ⟪z₁, y₁⟫_𝕜) :
     T₂†.compNat T₂ = (r : 𝕜) • T₁†.compNat T₁ := by
   have hr' : (r : 𝕜) ≠ 0 := ofReal_ne_zero.mpr hr
   -- the adjoints are characterised by inner products with graph points
@@ -189,7 +188,7 @@ omit [CompleteSpace F] in
 theorem adjoint_compNat_self_eq_smul {T₁ T₂ : E →ₗ.[𝕜] F} (hT₁ : Dense (T₁.domain : Set E))
     (hT₂ : Dense (T₂.domain : Set E)) {B C : F →L[𝕜] F} {r : ℝ} (hr : r ≠ 0)
     (hB : (B : F →ₗ[𝕜] F).compPMap T₁ ≤ T₂) (hC : (C : F →ₗ[𝕜] F).compPMap T₂ ≤ T₁)
-    (hBC : ∀ y y', ⟪y', B y⟫ = (r : 𝕜) * ⟪C y', y⟫) :
+    (hBC : ∀ y y', ⟪y', B y⟫_𝕜 = (r : 𝕜) * ⟪C y', y⟫_𝕜) :
     T₂†.compNat T₂ = (r : 𝕜) • T₁†.compNat T₁ := by
   refine adjoint_compNat_self_eq_smul_of_inner hT₁ hT₂ hr (le_antisymm hB.1 hC.1)
     fun u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂ => ?_
@@ -238,7 +237,7 @@ private lemma exists_mem_graph_adjoint_compNat_self (hT : T.IsClosed)
   have hpq' := congrArg WithLp.ofLp hpq
   simp only [WithLp.ofLp_add, Prod.ext_iff, Prod.fst_add, Prod.snd_add] at hpq'
   have hq' : ∀ a b, (a, b) ∈ T.graph →
-      ⟪a, (WithLp.ofLp q).1⟫ + ⟪b, (WithLp.ofLp q).2⟫ = 0 := fun a b hab => by
+      ⟪a, (WithLp.ofLp q).1⟫_𝕜 + ⟪b, (WithLp.ofLp q).2⟫_𝕜 = 0 := fun a b hab => by
     have := (Submodule.mem_orthogonal _ _).mp hq (WithLp.toLp 2 (a, b)) hab
     rwa [WithLp.prod_inner_apply, WithLp.ofLp_toLp] at this
   have hba : ((WithLp.ofLp q).2, -(WithLp.ofLp q).1) ∈ T†.graph := by
@@ -303,7 +302,7 @@ theorem hasCore_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.domain : 
   -- The only vector of `G` orthogonal to `K` is `0`.
   have hGK : ∀ r ∈ G, r ∈ Kᗮ → r = 0 := fun r hrG hrK => by
     have hrG' : ((WithLp.ofLp r).1, (WithLp.ofLp r).2) ∈ T.graph := hrG
-    have hu : ∀ x w, (x, w) ∈ (T†.compNat T).graph → ⟪x + w, (WithLp.ofLp r).1⟫ = 0 :=
+    have hu : ∀ x w, (x, w) ∈ (T†.compNat T).graph → ⟪x + w, (WithLp.ofLp r).1⟫_𝕜 = 0 :=
       fun x w hxw => by
         obtain ⟨y, hxy, hyw⟩ := mem_graph_compNat.mp hxw
         have h₁ := (Submodule.mem_orthogonal' _ _).mp hrK (WithLp.toLp 2 (x, y))

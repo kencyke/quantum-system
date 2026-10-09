@@ -51,8 +51,6 @@ variable {𝕜 E F G : Type*} [RCLike 𝕜]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
   [NormedAddCommGroup G] [InnerProductSpace 𝕜 G]
 
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
-
 /-- **Bounded perturbation.** For a bounded, everywhere-defined `A` and a densely defined `T`,
 `(A + T)† = A† + T†`; in particular the adjoint domain is unchanged. -/
 theorem adjoint_vadd [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}

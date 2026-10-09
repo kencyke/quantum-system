@@ -48,8 +48,7 @@ Mathlib's `K ∈ Module.End.invtSubmodule T`.
 
 namespace InnerProductSpace
 
-local notation "⟪" x ", " y "⟫" => inner ℂ x y
-open scoped InnerProduct
+open scoped InnerProduct ComplexInnerProductSpace
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 

@@ -32,19 +32,17 @@ self-adjointness; a *positive self-adjoint* operator is `IsSelfAdjoint T ∧ T.I
 @[expose] public section
 
 open RCLike
-open scoped ComplexConjugate
+open scoped ComplexConjugate InnerProductSpace
 open scoped LinearPMap
 
 namespace LinearPMap
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
-
 /-- A partially defined operator is **positive** if it is symmetric and `0 ≤ re ⟪T x, x⟫` on its
 domain. This does not include self-adjointness. -/
 def IsPositive (T : E →ₗ.[𝕜] E) : Prop :=
-  T.IsFormalAdjoint T ∧ ∀ x : T.domain, 0 ≤ re ⟪T x, x⟫
+  T.IsFormalAdjoint T ∧ ∀ x : T.domain, 0 ≤ re ⟪T x, x⟫_𝕜
 
 variable {T : E →ₗ.[𝕜] E}
 
@@ -53,32 +51,32 @@ lemma IsPositive.isFormalAdjoint (hT : T.IsPositive) : T.IsFormalAdjoint T := hT
 
 /-- For a positive operator, `0 ≤ re ⟪T x, x⟫`. -/
 lemma IsPositive.re_inner_nonneg_left (hT : T.IsPositive) (x : T.domain) :
-    0 ≤ re ⟪T x, x⟫ :=
+    0 ≤ re ⟪T x, x⟫_𝕜 :=
   hT.2 x
 
 /-- For a positive operator, `0 ≤ re ⟪x, T x⟫`. -/
 lemma IsPositive.re_inner_nonneg_right (hT : T.IsPositive) (x : T.domain) :
-    0 ≤ re ⟪(x : E), T x⟫ := by
+    0 ≤ re ⟪(x : E), T x⟫_𝕜 := by
   rw [← inner_conj_symm, conj_re]
   exact hT.2 x
 
 /-- For a symmetric operator, `⟪x, T x⟫` is real. -/
 lemma IsFormalAdjoint.inner_map_self_im_eq_zero (hT : T.IsFormalAdjoint T) (x : T.domain) :
-    im ⟪(x : E), T x⟫ = 0 := by
-  have h : conj ⟪(x : E), T x⟫ = ⟪(x : E), T x⟫ := by rw [inner_conj_symm, hT x x]
+    im ⟪(x : E), T x⟫_𝕜 = 0 := by
+  have h : conj ⟪(x : E), T x⟫_𝕜 = ⟪(x : E), T x⟫_𝕜 := by rw [inner_conj_symm, hT x x]
   exact conj_eq_iff_im.mp h
 
 /-- Symmetry in graph form: for `(u, v)` and `(u', v')` in the graph of a symmetric operator,
 `⟪v, u'⟫ = ⟪u, v'⟫`. -/
 lemma IsFormalAdjoint.inner_eq_of_mem_graph (hT : T.IsFormalAdjoint T) {u v u' v' : E}
-    (h : (u, v) ∈ T.graph) (h' : (u', v') ∈ T.graph) : ⟪v, u'⟫ = ⟪u, v'⟫ := by
+    (h : (u, v) ∈ T.graph) (h' : (u', v') ∈ T.graph) : ⟪v, u'⟫_𝕜 = ⟪u, v'⟫_𝕜 := by
   obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff T).mp h
   obtain ⟨q, rfl, rfl⟩ := (mem_graph_iff T).mp h'
   exact hT p q
 
 /-- Symmetry can be checked in graph form. -/
 lemma isFormalAdjoint_of_mem_graph
-    (h : ∀ u v u' v', (u, v) ∈ T.graph → (u', v') ∈ T.graph → ⟪v, u'⟫ = ⟪u, v'⟫) :
+    (h : ∀ u v u' v', (u, v) ∈ T.graph → (u', v') ∈ T.graph → ⟪v, u'⟫_𝕜 = ⟪u, v'⟫_𝕜) :
     T.IsFormalAdjoint T := fun x y => h _ _ _ _ (T.mem_graph x) (T.mem_graph y)
 
 end LinearPMap

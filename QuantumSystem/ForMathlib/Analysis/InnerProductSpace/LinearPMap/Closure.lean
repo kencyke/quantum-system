@@ -38,20 +38,18 @@ All of this reduces to the graph statement `g.adjoint.adjoint = closure g` for a
 
 @[expose] public section
 
-open scoped LinearPMap
+open scoped LinearPMap InnerProductSpace
 
 variable {𝕜 E F : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 namespace Submodule
 
 /-- The adjoint of a submodule of `E × F` is closed. -/
 theorem isClosed_adjoint (g : Submodule 𝕜 (E × F)) : IsClosed (g.adjoint : Set (F × E)) := by
   have : (g.adjoint : Set (F × E)) =
-      ⋂ p ∈ g, {x : F × E | ⟪p.2, x.1⟫ - ⟪p.1, x.2⟫ = 0} := by
+      ⋂ p ∈ g, {x : F × E | ⟪p.2, x.1⟫_𝕜 - ⟪p.1, x.2⟫_𝕜 = 0} := by
     ext x
     simp only [SetLike.mem_coe, mem_adjoint_iff, Set.mem_iInter, Set.mem_ofPred_eq, Prod.forall]
   rw [this]
@@ -75,7 +73,7 @@ theorem adjoint_topologicalClosure (g : Submodule 𝕜 (E × F)) :
     exact fun a b hab => hx a b (g.le_topologicalClosure hab)
   · rw [mem_adjoint_iff] at hx ⊢
     intro a b hab
-    have hcl : IsClosed {p : E × F | ⟪p.2, x.1⟫ - ⟪p.1, x.2⟫ = 0} :=
+    have hcl : IsClosed {p : E × F | ⟪p.2, x.1⟫_𝕜 - ⟪p.1, x.2⟫_𝕜 = 0} :=
       isClosed_eq (by fun_prop) continuous_const
     exact closure_minimal (fun p hp => hx p.1 p.2 hp) hcl (show (a, b) ∈ closure (g : Set (E × F)) from hab)
 

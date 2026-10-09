@@ -39,13 +39,11 @@ and the adjoint of a resolvent.
 @[expose] public section
 
 open RCLike
-open scoped ComplexConjugate LinearPMap InnerProduct
+open scoped ComplexConjugate LinearPMap InnerProduct InnerProductSpace
 
 namespace LinearPMap
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 variable {T : E →ₗ.[𝕜] E} {z w : 𝕜}
 
@@ -53,14 +51,14 @@ variable {T : E →ₗ.[𝕜] E} {z w : 𝕜}
 lemma IsFormalAdjoint.abs_im_mul_norm_le (hT : T.IsFormalAdjoint T) {u v : E}
     (huv : (u, v) ∈ T.graph) (z : 𝕜) : |im z| * ‖u‖ ≤ ‖z • u - v‖ := by
   obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff T).mp huv
-  have him : im ⟪(p : E), z • (p : E) - T p⟫ = im z * ‖(p : E)‖ ^ 2 := by
+  have him : im ⟪(p : E), z • (p : E) - T p⟫_𝕜 = im z * ‖(p : E)‖ ^ 2 := by
     rw [inner_sub_right, inner_smul_right, _root_.map_sub, hT.inner_map_self_im_eq_zero p, sub_zero,
       inner_self_eq_norm_sq_to_K, mul_im, ← ofReal_pow, ofReal_im, ofReal_re, mul_zero, zero_add]
   have h : ‖(p : E)‖ * (|im z| * ‖(p : E)‖) ≤ ‖(p : E)‖ * ‖z • (p : E) - T p‖ := by
-    calc ‖(p : E)‖ * (|im z| * ‖(p : E)‖) = |im ⟪(p : E), z • (p : E) - T p⟫| := by
+    calc ‖(p : E)‖ * (|im z| * ‖(p : E)‖) = |im ⟪(p : E), z • (p : E) - T p⟫_𝕜| := by
           rw [him, abs_mul, abs_of_nonneg (sq_nonneg ‖(p : E)‖)]
           ring
-      _ ≤ ‖⟪(p : E), z • (p : E) - T p⟫‖ := abs_im_le_norm _
+      _ ≤ ‖⟪(p : E), z • (p : E) - T p⟫_𝕜‖ := abs_im_le_norm _
       _ ≤ ‖(p : E)‖ * ‖z • (p : E) - T p‖ := norm_inner_le_norm _ _
   rcases (norm_nonneg (p : E)).eq_or_lt with h0 | h0
   · rw [← h0, mul_zero]
@@ -71,14 +69,14 @@ lemma IsFormalAdjoint.abs_im_mul_norm_le (hT : T.IsFormalAdjoint T) {u v : E}
 lemma IsPositive.neg_re_mul_norm_le (hT : T.IsPositive) {u v : E} (huv : (u, v) ∈ T.graph)
     (z : 𝕜) : -re z * ‖u‖ ≤ ‖z • u - v‖ := by
   obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff T).mp huv
-  have hre : re ⟪(p : E), z • (p : E) - T p⟫ ≤ re z * ‖(p : E)‖ ^ 2 := by
+  have hre : re ⟪(p : E), z • (p : E) - T p⟫_𝕜 ≤ re z * ‖(p : E)‖ ^ 2 := by
     rw [inner_sub_right, inner_smul_right, _root_.map_sub, inner_self_eq_norm_sq_to_K, mul_re,
       ← ofReal_pow, ofReal_im, ofReal_re, mul_zero, sub_zero]
     linarith [hT.re_inner_nonneg_right p]
   have h : ‖(p : E)‖ * (-re z * ‖(p : E)‖) ≤ ‖(p : E)‖ * ‖z • (p : E) - T p‖ := by
     calc ‖(p : E)‖ * (-re z * ‖(p : E)‖) = -(re z * ‖(p : E)‖ ^ 2) := by ring
-      _ ≤ -re ⟪(p : E), z • (p : E) - T p⟫ := neg_le_neg hre
-      _ ≤ ‖⟪(p : E), z • (p : E) - T p⟫‖ := by
+      _ ≤ -re ⟪(p : E), z • (p : E) - T p⟫_𝕜 := neg_le_neg hre
+      _ ≤ ‖⟪(p : E), z • (p : E) - T p⟫_𝕜‖ := by
           rw [← norm_neg, ← _root_.map_neg]
           exact re_le_norm _
       _ ≤ ‖(p : E)‖ * ‖z • (p : E) - T p‖ := norm_inner_le_norm _ _
@@ -133,7 +131,7 @@ theorem mem_resolventSet_of_bounded_below (hT : T.IsClosed) (hTd : Dense (T.doma
     rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
       Submodule.eq_bot_iff]
     intro w hw
-    have hw' : ∀ u : T.domain, ⟪conj z • w, (u : E)⟫ = ⟪w, T u⟫ := fun u => by
+    have hw' : ∀ u : T.domain, ⟪conj z • w, (u : E)⟫_𝕜 = ⟪w, T u⟫_𝕜 := fun u => by
       have h := (Submodule.mem_orthogonal _ _).mp hw (L u) ⟨u, rfl⟩
       rw [hLapp, inner_sub_left, inner_smul_left, sub_eq_zero] at h
       rw [inner_smul_left, conj_conj, ← inner_conj_symm w (T u), ← h, map_mul, conj_conj,
