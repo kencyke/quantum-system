@@ -14,9 +14,9 @@ public import QuantumSystem.Analysis.StandardSubspace.BorchersTranslation
 Let `M` be a von Neumann algebra on `H`, `Ω` a cyclic and separating vector, with modular group
 `Δ^{it}` and modular conjugation `J` (those of the standard subspace `H_M`,
 `VonNeumannAlgebra.standardSubspace`), and `T` a strongly continuous unitary representation of a
-finite-dimensional real vector space `V` with `T(v) Ω = Ω`. A translation `T(v)` with
-`T(v) M T(v)⋆ ⊆ M` maps `H_M` into itself, so the directions `a` with `T(s a) M T(s a)⋆ ⊆ M` for
-`s ≥ 0` lie in the translation cone of `H_M`
+finite-dimensional real vector space `V`. A translation `T(v)` with `T(v) Ω = Ω` and
+`T(v) M T(v)⋆ ⊆ M` maps `H_M` into itself, so the directions `a` with `T(s a) Ω = Ω` and
+`T(s a) M T(s a)⋆ ⊆ M` for `s ≥ 0` lie in the translation cone of `H_M`
 (`VonNeumannAlgebra.mem_translationCone_standardSubspace`), and the standard subspace versions of
 Borchers' theorem apply (`QuantumSystem.Analysis.StandardSubspace.BorchersTranslation`).
 
@@ -25,8 +25,9 @@ Borchers' theorem apply (`QuantumSystem.Analysis.StandardSubspace.BorchersTransl
   `U(s) M U(s)⋆ ⊆ M` for `s ≥ 0`, `Δ^{it} U(s) Δ^{-it} = U(e^{-2πt} s)` and `J U(s) J = U(-s)`
   (`VonNeumannAlgebra.modularGroup_mul_mul_eq_of_isPositive`,
   `VonNeumannAlgebra.modularConj_apply_eq_of_isPositive`).
-* **Borchers' theorem**, boost form: if `T(v) M T(v)⋆ ⊆ M` for `v` in a closed convex cone `W`,
-  then for `a ∈ W` with positive generator, `b ∈ W` with negative generator and `z ∈ W ∩ -W`,
+* **Borchers' theorem**, boost form: if `T(v) Ω = Ω` and `T(v) M T(v)⋆ ⊆ M` for `v` in a closed
+  convex cone `W`, then for `a ∈ W` with positive generator, `b ∈ W` with negative generator and
+  `z ∈ W ∩ -W`,
   `Δ^{it} T(r a + s b + z) Δ^{-it} = T(e^{-2πt} r a + e^{2πt} s b + z)` and
   `J T(r a + s b + z) J = T(-r a - s b + z)` (`VonNeumannAlgebra.modularGroup_mul_mul_eq_boost`,
   `VonNeumannAlgebra.modularConj_apply_eq_reflection`).
@@ -95,14 +96,14 @@ lemma mem_translationCone_standardSubspace {a : V}
 section OneParameter
 
 variable {U : AddChar ℝ (unitary (H →L[ℂ] H))} (hU : U.IsStronglyContinuous)
-  (hpos : U.selfAdjointGenerator.IsPositive) (hUΩ : ∀ s, (U s : H →L[ℂ] H) Ω = Ω)
+  (hpos : U.selfAdjointGenerator.IsPositive) (hUΩ : ∀ s : ℝ, 0 ≤ s → (U s : H →L[ℂ] H) Ω = Ω)
   (hUM : ∀ s : ℝ, 0 ≤ s → ∀ x ∈ M, (U s : H →L[ℂ] H) * x * star (U s : H →L[ℂ] H) ∈ M)
 include hU hpos hUΩ hUM
 
 /-- `1` lies in the translation cone of `H_M` and in the spectral cone of `U`. -/
 private lemma one_mem_cones :
     (1 : ℝ) ∈ hU.translationCone H[M, Ω] ∧ (1 : ℝ) ∈ hU.spectralCone :=
-  ⟨mem_translationCone_standardSubspace hc hs hU (fun s _ => by simpa using hUΩ s)
+  ⟨mem_translationCone_standardSubspace hc hs hU (fun s hs' => by simpa using hUΩ s hs')
     fun s hs' x hx => by
     simpa using hUM s hs' x hx, hU.one_mem_spectralCone_iff.mpr hpos⟩
 
@@ -130,8 +131,8 @@ end OneParameter
 
 section Boost
 
-variable [FiniteDimensional ℝ V] [T2Space V] (hTΩ : ∀ v, (T v : H →L[ℂ] H) Ω = Ω)
-  {W : ProperCone ℝ V}
+variable [FiniteDimensional ℝ V] [T2Space V] {W : ProperCone ℝ V}
+  (hTΩ : ∀ v ∈ W, (T v : H →L[ℂ] H) Ω = Ω)
   (hW : ∀ v ∈ W, ∀ x ∈ M, (T v : H →L[ℂ] H) * x * star (T v : H →L[ℂ] H) ∈ M)
   {a b z : V}
 include hTΩ hW
@@ -139,11 +140,11 @@ include hTΩ hW
 omit [IsTopologicalAddGroup V] [FiniteDimensional ℝ V] [T2Space V] in
 /-- The cone `W` of half-sided translations of `M` lies in the translation cone of `H_M`. -/
 private lemma le_translationCone : W ≤ hT.translationCone H[M, Ω] :=
-  fun _ hv => mem_translationCone_standardSubspace hc hs hT (fun _ _ => hTΩ _) fun _ hs' =>
-    hW _ (W.smul_mem hv hs')
+  fun _ hv => mem_translationCone_standardSubspace hc hs hT (fun _ hs' => hTΩ _ (W.smul_mem hv hs'))
+    fun _ hs' => hW _ (W.smul_mem hv hs')
 
 /-- **Borchers' theorem**, boost form, for von Neumann algebras: let `Ω` be cyclic and separating
-for `M`, `T(v) Ω = Ω`, and `T(v) M T(v)⋆ ⊆ M` for `v` in a closed convex cone `W`. For `a ∈ W`
+for `M`, and `T(v) Ω = Ω` and `T(v) M T(v)⋆ ⊆ M` for `v` in a closed convex cone `W`. For `a ∈ W`
 with positive generator, `b ∈ W` with negative generator and `z ∈ W ∩ -W`,
 `Δ^{it} T(r a + s b + z) Δ^{-it} = T(e^{-2πt} r a + e^{2πt} s b + z)`. -/
 theorem modularGroup_mul_mul_eq_boost (ha : a ∈ W) (haC : a ∈ hT.spectralCone) (hb : b ∈ W)

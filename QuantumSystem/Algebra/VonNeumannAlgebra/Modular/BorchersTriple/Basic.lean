@@ -127,7 +127,7 @@ theorem modularGroup_mul_mul_eq_boost (ha : a ∈ W) (haC : a ∈ C) (hb : b ∈
       B.standardSubspace.modularGroup (-t) =
         B.T ((Real.exp (-2 * π * t) * r) • a + (Real.exp (2 * π * t) * s) • b + z) :=
   VonNeumannAlgebra.modularGroup_mul_mul_eq_boost B.isCyclicVector B.isSeparatingVector
-    B.isStronglyContinuous B.apply_vacuum B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb
+    B.isStronglyContinuous (fun v _ => B.apply_vacuum v) B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb
     (B.subset_spectralCone hbC) hz hz' r s t
 
 /-- **Borchers' theorem** for Borchers triples, modular conjugation: for `a ∈ W ∩ C`,
@@ -137,7 +137,7 @@ theorem modularConj_apply_eq_reflection (ha : a ∈ W) (haC : a ∈ C) (hb : b �
     J[B.standardSubspace] ((B.T (r • a + s • b + z) : H →L[ℂ] H) (J[B.standardSubspace] x)) =
       (B.T (-(r • a) - s • b + z) : H →L[ℂ] H) x :=
   VonNeumannAlgebra.modularConj_apply_eq_reflection B.isCyclicVector B.isSeparatingVector
-    B.isStronglyContinuous B.apply_vacuum B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb
+    B.isStronglyContinuous (fun v _ => B.apply_vacuum v) B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb
     (B.subset_spectralCone hbC) hz hz' r s x
 
 end BorchersTriple
