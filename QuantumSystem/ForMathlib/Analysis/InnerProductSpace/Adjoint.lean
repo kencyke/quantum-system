@@ -26,7 +26,10 @@ written `(T†) x` for either kind; `T† x` (which `LinearPMap` alone accepts) 
 
 The adjoint `A†` is used for operators between two spaces. For an element of the C⋆-algebra
 `E →L[𝕜] E` the star `A⋆` (`star A`) is used, as for any C⋆-algebra; the two agree by
-`ContinuousLinearMap.star_eq_adjoint`.
+`ContinuousLinearMap.star_eq_adjoint`. The real adjoint of a real-linear map on a complex Hilbert
+space, for the real inner product `re ⟪·, ·⟫`, is written `A†` even on one space, as for the
+modular conjugation `(J : H →L[ℝ] H)†`, since the real inner product is only a scoped instance
+(`ClosedSubmodule.instInnerProductSpaceReal`).
 -/
 
 @[expose] public section
