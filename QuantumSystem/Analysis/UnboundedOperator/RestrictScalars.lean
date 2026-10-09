@@ -84,6 +84,52 @@ end Submodule
 
 namespace LinearPMap
 
+/-! ### Bounded complex-linear maps composed with real-linear operators -/
+
+/-- `V ⬝ T`: the real-linear operator `T` followed by the bounded complex-linear map `V`, the
+real-linear operator `x ↦ V (T x)` on `dom T` (`LinearMap.compPMap` with
+`(V : E →ₗ[ℂ] F).restrictScalars ℝ`). Together with `T ⬝ V` it spells the intertwining relation
+`V T ⊆ T′ V` as `V ⬝ T ≤ T′ ⬝ V`. -/
+scoped notation:70 V:71 " ⬝ " T:70 =>
+  LinearMap.compPMap (LinearMap.restrictScalars ℝ (ContinuousLinearMap.toLinearMap V)) T
+
+/-- `T ⬝ V`: the bounded complex-linear map `V` followed by the real-linear operator `T`, the
+real-linear operator `x ↦ T (V x)` on `V⁻¹ (dom T)` (`LinearPMap.compNat` with the everywhere
+defined `(V : E →ₗ[ℂ] F).restrictScalars ℝ`). -/
+scoped notation:70 T:71 " ⬝ " V:70 =>
+  LinearPMap.compNat T
+    (LinearMap.toPMap (LinearMap.restrictScalars ℝ (ContinuousLinearMap.toLinearMap V)) ⊤)
+
+open Lean PrettyPrinter Delaborator SubExpr in
+/-- Delaborator displaying `LinearMap.compPMap ((V : E →ₗ[ℂ] F).restrictScalars ℝ) T` as
+`V ⬝ T`. -/
+@[scoped delab app.LinearMap.compPMap]
+meta def delabCompPMapRestrictScalars : Delab := do
+  let e ← getExpr
+  guard <| e.isAppOfArity ``LinearMap.compPMap 21
+  let g := e.getArg! 19
+  guard <| g.isAppOfArity ``LinearMap.restrictScalars 14 && (g.getArg! 0).isConstOf ``Real
+  guard <| (g.getArg! 13).isAppOfArity ``ContinuousLinearMap.toLinearMap 14
+  let V ← withNaryArg 19 <| withNaryArg 13 <| withNaryArg 13 delab
+  let T ← withNaryArg 20 delab
+  `($V ⬝ $T)
+
+open Lean PrettyPrinter Delaborator SubExpr in
+/-- Delaborator displaying `LinearPMap.compNat T (((V : E →ₗ[ℂ] F).restrictScalars ℝ).toPMap ⊤)`
+as `T ⬝ V`. -/
+@[scoped delab app.LinearPMap.compNat]
+meta def delabCompNatRestrictScalars : Delab := do
+  let e ← getExpr
+  guard <| e.isAppOfArity ``LinearPMap.compNat 21
+  let s := e.getArg! 20
+  guard <| s.isAppOfArity ``LinearMap.toPMap 13 && (s.getArg! 12).isAppOf ``Top.top
+  let g := s.getArg! 11
+  guard <| g.isAppOfArity ``LinearMap.restrictScalars 14 && (g.getArg! 0).isConstOf ``Real
+  guard <| (g.getArg! 13).isAppOfArity ``ContinuousLinearMap.toLinearMap 14
+  let T ← withNaryArg 19 delab
+  let V ← withNaryArg 20 <| withNaryArg 11 <| withNaryArg 13 <| withNaryArg 13 delab
+  `($T ⬝ $V)
+
 /-- The real adjoint of a densely defined complex operator is its complex adjoint. -/
 theorem adjoint_restrictScalars [CompleteSpace E] {T : E →ₗ.[ℂ] F}
     (hT : Dense (T.domain : Set E)) : (T.restrictScalars ℝ)† = T†.restrictScalars ℝ := by
