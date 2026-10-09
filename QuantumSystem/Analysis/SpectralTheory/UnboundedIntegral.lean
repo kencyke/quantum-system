@@ -46,7 +46,7 @@ by monotone convergence. Closedness and self-adjointness for real `f` follow.
 * `ProjectionValuedMeasure.measure_integralApply`, `integralApply_integralApply`,
   `mem_graph_compNat_integralPMap`, `compNat_integralPMap_le`, `compNat_integralPMap` — the
   **product rule** `(∫ f dE)(∫ g dE) ⊆ ∫ f g dE`, with domain `dom (∫ g dE) ∩ dom (∫ f g dE)`.
-* `ProjectionValuedMeasure.mem_graph_integralPMap_integral` — bounded spectral integrals commute
+* `ProjectionValuedMeasure.integral_compPMap_integralPMap_le` — bounded spectral integrals commute
   with unbounded ones.
 * `ProjectionValuedMeasure.tendsto_apply_of_monotone`, `tendsto_apply_cutoff` — `E sₙ y → y` for
   measurable sets increasing to `X`, in particular for the cutoffs `{‖f‖ ≤ n}`.
@@ -413,11 +413,15 @@ lemma compNat_integralPMap (hf : Measurable f) (hg : Measurable g)
     rw [E.mem_graph_compNat_integralPMap hf hg, E.mem_graph_integralPMap]
     exact ⟨fun ⟨_, h, hz⟩ => ⟨h, hz⟩, fun ⟨h, hz⟩ => ⟨hdom y h, h, hz⟩⟩)
 
-/-- **Bounded integrals commute with unbounded ones**: `∫ g dE` maps the graph of `∫ f dE` into
-itself, for a bounded measurable `g`. -/
-lemma mem_graph_integralPMap_integral (hf : Measurable f) (hg : Measurable g)
-    (hgb : ∃ C, ∀ x, ‖g x‖ ≤ C) {y z : H} (h : (y, z) ∈ (E.integralPMap f).graph) :
-    (E.integral g y, E.integral g z) ∈ (E.integralPMap f).graph := by
+/-- **Bounded integrals commute with unbounded ones**: `(∫ g dE)(∫ f dE) ⊆ (∫ f dE)(∫ g dE)`, for a
+bounded measurable `g`. -/
+lemma integral_compPMap_integralPMap_le (hf : Measurable f) (hg : Measurable g)
+    (hgb : ∃ C, ∀ x, ‖g x‖ ≤ C) :
+    (E.integral g : H →ₗ[ℂ] H).compPMap (E.integralPMap f) ≤
+      (E.integralPMap f).compNat ((E.integral g : H →ₗ[ℂ] H).toPMap ⊤) := by
+  -- the domain condition `g f ∈ L²(E_y)` is checked at each vector `y`
+  refine LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun y z h => ?_
+  simp only [ContinuousLinearMap.coe_coe]
   obtain ⟨hy, rfl⟩ := E.mem_graph_integralPMap.mp h
   obtain ⟨C, hC⟩ := hgb
   have hfg : MemLp (f * g) 2 (E.measure y) :=

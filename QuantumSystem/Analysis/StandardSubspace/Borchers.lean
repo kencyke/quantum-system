@@ -24,15 +24,16 @@ operators `Δ₁`, `Δ₂` and modular conjugations `J₁`, `J₂`.
 Let `V : H₁ →L[ℂ] H₂` be a bounded operator with `V K₁ ⊆ K₂`. **Borchers' Theorem A** (Borchers
 1995, Theorem A) states that `V(t) = Δ₂^{-it} V Δ₁^{it}` extends to a family `V(z)` of bounded
 operators on the strip `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in the interior and
-weakly continuous up to the boundary, with `‖V(z)‖ ≤ ‖V‖` and `V(t + i/2) = J₂ V(t) J₁`
+`*`-strongly continuous on the closed strip, with `‖V(z)‖ ≤ ‖V‖` and `V(t + i/2) = J₂ V(t) J₁`
 (`StandardSubspace.exists_modularGroup_continuation`). The proof: `V S₁ ⊆ S₂ V`
-(`StandardSubspace.mem_graph_tomita_map`), and the polar decompositions `S = J Δ^{1/2}` turn this
-into the intertwining `Δ₂^{1/2} V ⊇ (J₂ V J₁) Δ₁^{1/2}`
-(`StandardSubspace.mem_graph_sqrt_modular_map`); the interpolation theorem for the imaginary
-powers of two positive operators (`IsSelfAdjoint.exists_stripContinuation`) then continues
-`Δ₂^{-it} V Δ₁^{it}` to the strip, with boundary value `Δ₂^{-it} J₂ V J₁ Δ₁^{it}` on `im z = 1/2`,
-and `J` commutes with `Δ^{it}`. Borchers states the theorem for a unitary `V` on a single Hilbert
-space; here `V` is any bounded operator between two Hilbert spaces.
+(`StandardSubspace.compPMap_tomita_le_of_apply_mem`), and Theorem A for semilinear operators in polar
+decomposition form (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`), for `Sᵢ = Jᵢ Δᵢ^{1/2}`,
+continues `Δ₂^{-it} V Δ₁^{it}` to the strip, with boundary value `Δ₂^{-it} J₂† V J₁ Δ₁^{it}` on
+`im z = 1/2`, where the real adjoint `J₂†` is `J₂` (`StandardSubspace.adjoint_modularConj`);
+here `J` commutes with `Δ^{it}`, and the modular operators are injective, so the imaginary powers
+are the modular groups. Borchers states
+the theorem for a unitary `V` on a single Hilbert space; here `V` is any bounded operator between
+two Hilbert spaces.
 
 ## Theorem B
 
@@ -70,8 +71,6 @@ extends them to all vectors.
 
 ## Main results
 
-* `StandardSubspace.mem_graph_sqrt_modular_map` — `Δ₂^{1/2} V ⊇ (J₂ V J₁) Δ₁^{1/2}` if
-  `V K₁ ⊆ K₂`.
 * `StandardSubspace.exists_modularGroup_continuation` — Theorem A.
 * `StandardSubspace.modularGroup_apply_eq_of_upperStrip`, `StandardSubspace.modularConj_apply_eq_of_upperStrip`
   — Theorem B.
@@ -80,14 +79,12 @@ extends them to all vectors.
 
 ## TODO
 
-* Theorem A: the boundary values are attained `*`-strongly (Borchers); only weak continuity up to
-  the boundary is proved here, which is what Theorem B needs.
 * The converse of Theorem A (an operator `V` with such a continuation maps `K₁` into `K₂`), and the
   half-sided modular inclusions built on it (Borchers 1995, Theorem 4.1(a); Wiesbrock).
-* The relative versions (`ξ ≠ η`) for von Neumann algebras. (The von Neumann algebra versions for
-  a cyclic and separating vector are `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Borchers`,
-  and Borchers' theorem on half-sided translations is
-  `QuantumSystem.Analysis.StandardSubspace.BorchersTranslation`.)
+
+The von Neumann algebra versions, including Theorem A for relative modular operators, are in
+`QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Borchers`, and Borchers' theorem on half-sided
+translations is `QuantumSystem.Analysis.StandardSubspace.BorchersTranslation`.
 
 ## References
 
@@ -98,7 +95,7 @@ extends them to all vectors.
 @[expose] public section
 
 open Set Filter Topology Complex ClosedSubmodule
-open scoped InnerProductSpace ComplexConjugate
+open scoped InnerProductSpace ComplexConjugate InnerProduct
 
 namespace StandardSubspace
 
@@ -108,49 +105,29 @@ variable {H₁ H₂ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H�
 
 /-! ### Theorem A -/
 
-/-- **`Δ₂^{1/2} V ⊇ (J₂ V J₁) Δ₁^{1/2}`** for a bounded `V` with `V K₁ ⊆ K₂`: it is
-`V S₁ ⊆ S₂ V` written with the polar decompositions `S = J Δ^{1/2}`. -/
-lemma mem_graph_sqrt_modular_map {V : H₁ →L[ℂ] H₂}
-    (hV : ∀ ξ ∈ K₁, V ξ ∈ K₂) {x u : H₁}
-    (h : (x, u) ∈ Δ[K₁]^{1/2}.graph) :
-    (V x, J[K₂] (V (J[K₁] u))) ∈ Δ[K₂]^{1/2}.graph := by
-  have h₁ : (x, J[K₁] u) ∈ S[K₁].graph := K₁.mem_graph_tomita_iff.mpr ⟨u, h, rfl⟩
-  obtain ⟨w, hw, hwv⟩ := K₂.mem_graph_tomita_iff.mp (mem_graph_tomita_map (Or.inl rfl) V hV h₁)
-  rwa [← hwv, modularConj_modularConj]
-
 /-- **Borchers' Theorem A**: if `V K₁ ⊆ K₂`, then `t ↦ Δ₂^{-it} V Δ₁^{it}` extends to a bounded
 family `V(z)` on the strip `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in the interior,
-weakly continuous up to the boundary, with `‖V(z)‖ ≤ ‖V‖` and `V(t + i/2) = J₂ V(t) J₁`. -/
+`*`-strongly continuous on the closed strip, with `‖V(z)‖ ≤ ‖V‖` and `V(t + i/2) = J₂ V(t) J₁`. -/
 theorem exists_modularGroup_continuation (V : H₁ →L[ℂ] H₂)
     (hV : ∀ ξ ∈ K₁, V ξ ∈ K₂) :
     ∃ F : ℂ → H₁ →L[ℂ] H₂, DifferentiableOn ℂ F (im ⁻¹' Ioo 0 (1 / 2)) ∧
-      (∀ x y, DiffContOnCl ℂ (fun z => ⟪y, F z x⟫_ℂ) (im ⁻¹' Ioo 0 (1 / 2))) ∧
+      (∀ x, ContinuousOn (fun z => F z x) (im ⁻¹' Icc 0 (1 / 2))) ∧
+      (∀ y, ContinuousOn (fun z => ((F z)†) y) (im ⁻¹' Icc 0 (1 / 2))) ∧
       (∀ z ∈ im ⁻¹' Icc 0 (1 / 2), ‖F z‖ ≤ ‖V‖) ∧
-      (∀ t : ℝ, F t = Δ[K₂]^{i (-t)} ∘L V ∘L
-        Δ[K₁]^{i t}) ∧
+      (∀ t : ℝ, F t = Δ[K₂]^{-i t} ∘L V ∘L Δ[K₁]^{i t}) ∧
       ∀ (t : ℝ) (x : H₁), F (t + I / 2) x = J[K₂] (F t (J[K₁] x)) := by
-  let J₁ : H₁ →L⋆[ℂ] H₁ := J[K₁].toLinearIsometry.toContinuousLinearMap
-  let J₂ : H₂ →L⋆[ℂ] H₂ := J[K₂].toLinearIsometry.toContinuousLinearMap
-  let V' : H₁ →L[ℂ] H₂ := J₂.comp (V.comp J₁)
-  have hV' : ∀ u, V' u = J[K₂] (V (J[K₁] u)) := fun _ => rfl
-  have hnorm : ‖V'‖ ≤ ‖V‖ := by
-    refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun u => ?_
-    rw [hV', LinearIsometryEquiv.norm_map]
-    exact (V.le_opNorm _).trans_eq (by rw [LinearIsometryEquiv.norm_map])
-  obtain ⟨F, hFd, hFw, hFb, hF0, hF1⟩ :=
-    K₁.isSelfAdjoint_modular.exists_stripContinuation K₂.isSelfAdjoint_modular
-      K₁.isPositive_modular K₁.ker_modular_eq_bot K₂.isPositive_modular K₂.ker_modular_eq_bot
-      (V := V) (V' := V')
-      fun x u h => mem_graph_sqrt_modular_map hV h
-  refine ⟨F, hFd, hFw, fun z hz => (hFb z hz).trans ?_, hF0, fun t x => ?_⟩
-  · -- `‖V‖^{1 - 2y} ‖V'‖^{2y} ≤ ‖V‖^{1 - 2y} ‖V‖^{2y} = ‖V‖`
-    have hy : 0 ≤ 2 * z.im := by linarith [hz.1]
-    calc ‖V‖ ^ (1 - 2 * z.im) * ‖V'‖ ^ (2 * z.im) ≤ ‖V‖ ^ (1 - 2 * z.im) * ‖V‖ ^ (2 * z.im) :=
-          mul_le_mul_of_nonneg_left (Real.rpow_le_rpow (norm_nonneg _) hnorm hy) (by positivity)
-      _ = ‖V‖ := by rw [← Real.rpow_add' (norm_nonneg _) (by norm_num), sub_add_cancel,
-          Real.rpow_one]
+  obtain ⟨F, hFd, hFs, hFs', hFb, hF0, hF1⟩ :=
+    K₁.isSelfAdjoint_modular.exists_stripContinuation_polarIsometry K₂.isSelfAdjoint_modular
+      K₁.restrictScalars_modular K₂.restrictScalars_modular K₁.isClosed_tomita K₂.isClosed_tomita
+      K₁.isSemilinear_tomita K₂.isSemilinear_tomita V
+      (compPMap_tomita_le_of_apply_mem V hV)
+  refine ⟨F, hFd, hFs, hFs', hFb, hF0, fun t x => ?_⟩
   rw [hF1, hF0]
-  simp only [ContinuousLinearMap.comp_apply, hV']
+  change Δ[K₂]^{-i t} (((J[K₂] : H₂ →L[ℝ] H₂)†) (V (J[K₁] (Δ[K₁]^{i t} x)))) =
+    J[K₂] (Δ[K₂]^{-i t} (V (Δ[K₁]^{i t} (J[K₁] x))))
+  rw [K₂.adjoint_modularConj]
+  change Δ[K₂]^{-i t} (J[K₂] (V (J[K₁] (Δ[K₁]^{i t} x)))) =
+    J[K₂] (Δ[K₂]^{-i t} (V (Δ[K₁]^{i t} (J[K₁] x))))
   rw [K₁.modularConj_comm_modularGroup, K₂.modularConj_comm_modularGroup]
 
 /-! ### Theorem B on the upper strip -/
@@ -170,8 +147,8 @@ include hW hB hK hK'
 give the three identities below. -/
 private lemma inner_eq_aux (s : ℝ) {ξ : H₁} (hξ : ξ ∈ K₁) {η : H₂}
     (hη : η ∈ K₂) :
-    (∀ t : ℝ, ⟪J[K₂] (Δ[K₂]^{i (-t)} η),
-        W (s + t) (Δ[K₁]^{i (-t)} ξ)⟫_ℂ =
+    (∀ t : ℝ, ⟪J[K₂] (Δ[K₂]^{-i t} η),
+        W (s + t) (Δ[K₁]^{-i t} ξ)⟫_ℂ =
       ⟪J[K₂] η, W s ξ⟫_ℂ) ∧
     ⟪η, W (s + I / 2) (J[K₁] ξ)⟫_ℂ = ⟪J[K₂] η, W s ξ⟫_ℂ ∧
     (⟪J[K₂] η, W s ξ⟫_ℂ).im = 0 := by
@@ -219,11 +196,11 @@ private lemma inner_eq_aux (s : ℝ) {ξ : H₁} (hξ : ξ ∈ K₁) {η : H₂}
           (mul_le_mul (hWC z hz) (hCa ⟨z, hz, rfl⟩) (norm_nonneg _) hCz))
           (norm_nonneg _) ((norm_nonneg _).trans (hCb ⟨z, hz, rfl⟩))
   -- the boundary values
-  have hFt : ∀ t : ℝ, F t = ⟪J[K₂] (Δ[K₂]^{i (-t)} η),
-      W (s + t) (Δ[K₁]^{i (-t)} ξ)⟫_ℂ := fun t => by
+  have hFt : ∀ t : ℝ, F t = ⟪J[K₂] (Δ[K₂]^{-i t} η),
+      W (s + t) (Δ[K₁]^{-i t} ξ)⟫_ℂ := fun t => by
     simp only [F, ha0, hb0]
-  have hFt' : ∀ t : ℝ, F (t + I / 2) = ⟪Δ[K₂]^{i (-t)} η,
-      W (s + t + I / 2) (J[K₁] (Δ[K₁]^{i (-t)} ξ))⟫_ℂ := fun t => by
+  have hFt' : ∀ t : ℝ, F (t + I / 2) = ⟪Δ[K₂]^{-i t} η,
+      W (s + t + I / 2) (J[K₁] (Δ[K₁]^{-i t} ξ))⟫_ℂ := fun t => by
     simp only [F, ha1, hb1, modularConj_modularConj, add_assoc]
   have hre : ∀ z : ℂ, z.im = 0 → z = (z.re : ℂ) := fun z hz => Complex.ext (by simp) (by simp [hz])
   have hre' : ∀ z : ℂ, z.im = 1 / 2 → z = (z.re : ℂ) + I / 2 := fun z hz =>
@@ -259,10 +236,10 @@ private lemma inner_eq_aux (s : ℝ) {ξ : H₁} (hξ : ξ ∈ K₁) {η : H₂}
 
 /-- **Borchers' Theorem B**, modular group: `Δ₂^{it} W(s) Δ₁^{-it} = W(s - t)`. -/
 theorem modularGroup_apply_eq_of_upperStrip (s t : ℝ) (x : H₁) :
-    Δ[K₂]^{i t} (W s (Δ[K₁]^{i (-t)} x)) =
+    Δ[K₂]^{i t} (W s (Δ[K₁]^{-i t} x)) =
       W (s - t) x := by
   let D : H₁ →L[ℂ] H₂ := Δ[K₂]^{i t} ∘L W s ∘L
-    Δ[K₁]^{i (-t)} - W (s - t)
+    Δ[K₁]^{-i t} - W (s - t)
   suffices hD : D = 0 by
     have := congrArg (fun f : H₁ →L[ℂ] H₂ => f x) hD
     simpa [D, sub_eq_zero] using this
@@ -352,7 +329,7 @@ theorem modularConj_apply_eq_of_lowerStrip (s : ℝ) (x : H₁) :
 /-- **Borchers' Theorem B on the lower strip**, modular group: `Δ₂^{it} W(s) Δ₁^{-it} = W(s + t)`.
 -/
 theorem modularGroup_apply_eq_of_lowerStrip (s t : ℝ) (x : H₁) :
-    Δ[K₂]^{i t} (W s (Δ[K₁]^{i (-t)} x)) =
+    Δ[K₂]^{i t} (W s (Δ[K₁]^{-i t} x)) =
       W (s + t) x := by
   obtain ⟨h₁, h₂, h₃, h₄⟩ := upper_of_lower hW hB hK hK'
   have h := modularGroup_apply_eq_of_upperStrip (W := fun z => W (z - I / 2)) h₁ h₂ h₃ h₄ s (-t)

@@ -26,11 +26,10 @@ spectral measure of `Δ^N_{Vη,Vξ}` at `Vξ` equals that of `Δ^M_{η,ξ}` at `
 * `VonNeumannAlgebra.supportProj_comp_eq_comp_supportProj`,
   `VonNeumannAlgebra.adjoint_comp_supportProj` — `s_N(V ξ) V = V s_M(ξ)` and
   `V† s_N(V ξ) = s_M(ξ) V†`.
-* `VonNeumannAlgebra.mem_graph_relativeTomita_of_intertwiner`,
-  `VonNeumannAlgebra.adjoint_mem_graph_relativeTomita_of_intertwiner` — `V` maps the graph of
-  `S^M_{η,ξ}` into that of `S^N_{Vη,Vξ}`, and `V†` maps the latter into the former.
-* `VonNeumannAlgebra.mem_graph_relativeModular_of_intertwiner` — `V` maps the graph of
-  `Δ^M_{η,ξ}` into that of `Δ^N_{Vη,Vξ}`.
+* `VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_intertwiner`,
+  `VonNeumannAlgebra.adjoint_compPMap_closure_relativeTomita_le_of_intertwiner` —
+  `V S̄^M_{η,ξ} ⊆ S̄^N_{Vη,Vξ} V` and `V† S̄^N_{Vη,Vξ} ⊆ S̄^M_{η,ξ} V†`.
+* `VonNeumannAlgebra.compPMap_relativeModular_le_of_intertwiner` — `V Δ^M_{η,ξ} ⊆ Δ^N_{Vη,Vξ} V`.
 * `VonNeumannAlgebra.measure_pvm_relativeModular_of_intertwiner` — equality of the spectral
   measures.
 * `VonNeumannAlgebra.star_comp_eq_of_comp_eq` — for a unitary `U`, `y U = U x` implies
@@ -156,8 +155,8 @@ theorem adjoint_comp_supportProj (ξ : H) :
     (M.isStarProjection_supportProj _).isSelfAdjoint.star_eq] at h
 
 include hM hM' in
-/-- `V` maps the graph of `S^M_{η,ξ}` into that of `S^N_{Vη,Vξ}`. -/
-theorem mem_graph_relativeTomita_of_intertwiner {η ξ a b : H}
+/-- `V S^M_{η,ξ} ⊆ S^N_{Vη,Vξ} V`, pointwise on the generating vectors. -/
+private lemma mem_graph_relativeTomita_of_intertwiner {η ξ a b : H}
     (h : (a, b) ∈ (S[M]⟦η, ξ⟧).graph) :
     (V a, V b) ∈ (S[N]⟦V η, V ξ⟧).graph := by
   obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
@@ -171,8 +170,8 @@ theorem mem_graph_relativeTomita_of_intertwiner {η ξ a b : H}
     exact congr($(supportProj_comp_eq_comp_supportProj hM hM' ξ) (star x η)).symm
 
 include hM hM' in
-/-- `V†` maps the graph of `S^N_{Vη,Vξ}` into that of `S^M_{η,ξ}`. -/
-theorem adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
+/-- `V† S^N_{Vη,Vξ} ⊆ S^M_{η,ξ} V†`, pointwise on the generating vectors. -/
+private lemma adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
     {a b : K} (h : (a, b) ∈ (S[N]⟦V η, V ξ⟧).graph) :
     ((V†) a, (V†) b) ∈ (S[M]⟦η, ξ⟧).graph := by
   obtain ⟨y, hy, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
@@ -189,24 +188,59 @@ theorem adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
     exact congr($(adjoint_comp_supportProj hM hM' ξ) (star y (V η)))
 
 include hM hM' in
-/-- `V` maps the graph of `Δ^M_{η,ξ}` into that of `Δ^N_{Vη,Vξ}`. -/
-theorem mem_graph_relativeModular_of_intertwiner {η ξ u z : H}
-    (h : (u, z) ∈ (Δ[M]⟦η, ξ⟧).graph) :
-    (V u, V z) ∈ (Δ[N]⟦V η, V ξ⟧).graph := by
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat] at h ⊢
-  obtain ⟨w, hw, hwz⟩ := h
-  refine ⟨V w, LinearPMap.mem_graph_closure_of_mapsTo (isClosable_relativeTomita N (V η) (V ξ))
-    (f := fun p : H × H => (V p.1, V p.2)) (by fun_prop)
-    (fun p hp => mem_graph_relativeTomita_of_intertwiner hM hM' hp) hw, ?_⟩
-  rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita N (V η) (V ξ)),
-    LinearPMap.mem_graph_adjoint_iff (dense_domain_relativeTomita N (V η) (V ξ))]
-  rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita M η ξ),
-    LinearPMap.mem_graph_adjoint_iff (dense_domain_relativeTomita M η ξ)] at hwz
-  intro a b hab
-  have := hwz _ _ (adjoint_mem_graph_relativeTomita_of_intertwiner hM hM' hab)
-  rwa [inner_real_eq_re_inner, inner_real_eq_re_inner, ContinuousLinearMap.adjoint_inner_left,
-    ContinuousLinearMap.adjoint_inner_left, ← inner_real_eq_re_inner,
-    ← inner_real_eq_re_inner] at this
+/-- **`V S̄^M_{η,ξ} ⊆ S̄^N_{Vη,Vξ} V`**: `V S^M_{η,ξ} ⊆ S^N_{Vη,Vξ} V` on the generating vectors,
+hence on the closures (`LinearPMap.compPMap_closure_le`, `LinearPMap.closure_compNat_toPMap_le`). -/
+lemma compPMap_closure_relativeTomita_le_of_intertwiner {η ξ : H} :
+    V ⬝ (S[M]⟦η, ξ⟧).closure ≤ (S[N]⟦V η, V ξ⟧).closure ⬝ V :=
+  LinearPMap.compPMap_closure_le_closure_compNat_toPMap (isClosable_relativeTomita M η ξ)
+    (isClosable_relativeTomita N (V η) (V ξ)) (V.restrictScalars ℝ) (V.restrictScalars ℝ)
+    (LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun _ _ h =>
+      mem_graph_relativeTomita_of_intertwiner hM hM' h)
+
+include hM hM' in
+/-- **`V† S̄^N_{Vη,Vξ} ⊆ S̄^M_{η,ξ} V†`**, as for `V`. -/
+lemma adjoint_compPMap_closure_relativeTomita_le_of_intertwiner {η ξ : H} :
+    V† ⬝ (S[N]⟦V η, V ξ⟧).closure ≤ (S[M]⟦η, ξ⟧).closure ⬝ V† :=
+  LinearPMap.compPMap_closure_le_closure_compNat_toPMap (isClosable_relativeTomita N (V η) (V ξ))
+    (isClosable_relativeTomita M η ξ) ((V†).restrictScalars ℝ) ((V†).restrictScalars ℝ)
+    (LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun _ _ h =>
+      adjoint_mem_graph_relativeTomita_of_intertwiner hM hM' h)
+
+include hM hM' in
+/-- **`V Δ^M_{η,ξ} ⊆ Δ^N_{Vη,Vξ} V`**: with `S̄ = S̄^M_{η,ξ}` and `S̄′ = S̄^N_{Vη,Vξ}`,
+`V S̄ ⊆ S̄′ V` and `V S̄† ⊆ (S̄ V†)† ⊆ (V† S̄′)† = S̄′† V`, so `V S̄† S̄ ⊆ S̄′† S̄′ V`. -/
+lemma compPMap_relativeModular_le_of_intertwiner {η ξ : H} :
+    (V : H →ₗ[ℂ] K).compPMap Δ[M]⟦η, ξ⟧ ≤ Δ[N]⟦V η, V ξ⟧.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤) := by
+  set S := (S[M]⟦η, ξ⟧).closure
+  set S' := (S[N]⟦V η, V ξ⟧).closure
+  set v : H →L[ℝ] K := V.restrictScalars ℝ
+  set va : K →L[ℝ] H := (V†).restrictScalars ℝ
+  have hd := LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ)
+  have hd' := LinearPMap.dense_domain_closure (dense_domain_relativeTomita N (V η) (V ξ))
+  have h₁ : (v : H →ₗ[ℝ] K).compPMap S ≤ S'.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) :=
+    compPMap_closure_relativeTomita_le_of_intertwiner hM hM'
+  have h₂ : (v : H →ₗ[ℝ] K).compPMap S† ≤ S'†.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) := by
+    have hle : (va : K →ₗ[ℝ] H).compPMap S' ≤ S.compNat ((va : K →ₗ[ℝ] H).toPMap ⊤) :=
+      adjoint_compPMap_closure_relativeTomita_le_of_intertwiner hM hM'
+    have hva : va† = v := by
+      rw [ContinuousLinearMap.adjoint_restrictScalars, ContinuousLinearMap.adjoint_adjoint]
+    have hadj := LinearPMap.compPMap_adjoint_le_adjoint_compNat_toPMap hd va (hd'.mono hle.1)
+    rw [hva] at hadj
+    have hanti : (S.compNat ((va : K →ₗ[ℝ] H).toPMap ⊤))† ≤ ((va : K →ₗ[ℝ] H).compPMap S')† :=
+      LinearPMap.adjoint_anti hd' hle
+    have heq : ((va : K →ₗ[ℝ] H).compPMap S')† = S'†.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) := by
+      rw [LinearPMap.adjoint_compPMap hd' va, hva]
+    exact hadj.trans (hanti.trans_eq heq)
+  rw [← LinearPMap.restrictScalars_le_iff (R := ℝ), LinearPMap.restrictScalars_compPMap,
+    LinearPMap.restrictScalars_compNat, LinearPMap.restrictScalars_toPMap,
+    restrictScalars_relativeModular, restrictScalars_relativeModular]
+  calc (v : H →ₗ[ℝ] K).compPMap (S†.compNat S)
+      = ((v : H →ₗ[ℝ] K).compPMap S†).compNat S := (LinearPMap.compPMap_compNat _ _ _).symm
+    _ ≤ (S'†.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤)).compNat S := LinearPMap.compNat_mono h₂ le_rfl
+    _ = S'†.compNat ((v : H →ₗ[ℝ] K).compPMap S) := by
+        rw [LinearPMap.compNat_assoc, LinearPMap.toPMap_compNat]
+    _ ≤ S'†.compNat (S'.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤)) := LinearPMap.compNat_mono le_rfl h₁
+    _ = (S'†.compNat S').compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) := (LinearPMap.compNat_assoc _ _ _).symm
 
 include hM hM' in
 /-- **Transport of spectral measures.** If moreover `V† V ξ = ξ`, the spectral measure of
@@ -216,7 +250,7 @@ theorem measure_pvm_relativeModular_of_intertwiner {η ξ : H} (hV : (V†) (V �
       μ[M]⟦η, ξ⟧ :=
   (isSelfAdjoint_relativeModular M η ξ).measure_pvm_intertwiner
     (isSelfAdjoint_relativeModular N (V η) (V ξ))
-    (fun _ _ h => mem_graph_relativeModular_of_intertwiner hM hM' h) hV
+    (compPMap_relativeModular_le_of_intertwiner hM hM') hV
 
 /-- For a unitary `U`, the intertwining relation `y U = U x` implies `y⋆ U = U x⋆`: the second
 half of the hypotheses above is automatic for spatial isomorphisms. -/

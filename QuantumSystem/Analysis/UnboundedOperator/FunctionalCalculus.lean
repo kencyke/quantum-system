@@ -28,7 +28,7 @@ projection-valued measure of the bounded normal operator `(i - A)⁻¹`.
 
 Covariance is stated for a semilinear isometric equivalence `V : E ≃ₛₗᵢ[σ] K`, with `σ` the
 identity (unitary `V`) or the complex conjugation (antiunitary `V`), between possibly different
-spaces: if `V` maps the graph of `A` onto that of `B`, then `E_B = V E_A V⁻¹`
+spaces: if `B V = V A`, then `E_B = V E_A V⁻¹`
 (`ProjectionValuedMeasure.transport`), and `f(B) = V f̄(A) V⁻¹` in the antiunitary case.
 
 ## Main definitions
@@ -51,10 +51,11 @@ spaces: if `V` maps the graph of `A` onto that of `B`, then `E_B = V E_A V⁻¹`
 * `ProjectionValuedMeasure.pvm_integralPMap_ofReal`,
   `ProjectionValuedMeasure.integralPMap_pvm_integralPMap_ofReal` — for measurable real `g`,
   `E_{g(A)} = g_* E_A` and `f(g(A)) = (f ∘ g)(A)`, for any projection-valued measure on `ℝ`.
+* `ProjectionValuedMeasure.integralPMap_transport_compNat` — `(∫ f d(V E V⁻¹)) V = V ∫ σ⁻¹ ∘ f dE`.
 * `ProjectionValuedMeasure.measure_transport`, `ProjectionValuedMeasure.integral_transport` —
   `(V E V⁻¹)_y = E_{V⁻¹ y}` and `∫ f d(V E V⁻¹) = V (∫ σ⁻¹ ∘ f dE) V⁻¹`.
-* `LinearPMap.resolvent_eq_comp_of_mem_graph_iff` — `(z - S)⁻¹ = V (σ⁻¹ z - T)⁻¹ V⁻¹` when `V`
-  maps the graph of `T` onto that of `S`.
+* `LinearPMap.resolvent_eq_comp_of_compNat_toPMap_eq` — `(z - S)⁻¹ = V (σ⁻¹ z - T)⁻¹ V⁻¹` when
+  `S V = V T`.
 * `IsSelfAdjoint.pvm_eq_transport`, `IsSelfAdjoint.integral_pvm_eq_comp` — **covariance**:
   `E_B = V E_A V⁻¹` and `f(B) = V (σ⁻¹ ∘ f)(A) V⁻¹`.
 
@@ -242,21 +243,27 @@ lemma integralApply_transport {f : X → ℂ} (hf : Measurable f) {y : K}
   simp_rw [h₂]
   exact (E'.transport V).tendsto_eLpNorm_approxOn hf hy
 
-/-- The graph of an integral against the transported measure is the image of the graph of the
-integral of `σ⁻¹ ∘ f` under `V × V`. -/
-lemma mem_graph_integralPMap_transport {f : X → ℂ} (hf : Measurable f) {y z : K} :
-    (y, z) ∈ ((E'.transport V).integralPMap f).graph ↔
-      (V.symm y, V.symm z) ∈ (E'.integralPMap fun x => σ' (f x)).graph := by
-  rw [mem_graph_integralPMap, mem_graph_integralPMap, E'.memLp_measure_transport_iff V hf y]
-  constructor
-  · rintro ⟨hy, rfl⟩
-    refine ⟨hy, ?_⟩
-    rw [E'.integralApply_transport V hf ((E'.memLp_measure_transport_iff V hf y).mpr hy),
-      LinearIsometryEquiv.symm_apply_apply]
-  · rintro ⟨hy, hz⟩
-    refine ⟨hy, ?_⟩
-    rw [E'.integralApply_transport V hf ((E'.memLp_measure_transport_iff V hf y).mpr hy), hz,
-      LinearIsometryEquiv.apply_symm_apply]
+/-- **Integrals against the transported measure**: `(∫ f d(V E V⁻¹)) V = V ∫ σ⁻¹ ∘ f dE`. -/
+lemma integralPMap_transport_compNat {f : X → ℂ} (hf : Measurable f) :
+    ((E'.transport V).integralPMap f).compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) =
+      (V : E →ₛₗ[σ] K).compPMap (E'.integralPMap fun x => σ' (f x)) := by
+  -- domain and values of the integrals are computed vector by vector
+  refine (LinearPMap.compNat_toPMap_eq_compPMap_iff V.toLinearEquiv).mpr fun u v => ?_
+  have key : ∀ y z : K, (y, z) ∈ ((E'.transport V).integralPMap f).graph ↔
+      (V.symm y, V.symm z) ∈ (E'.integralPMap fun x => σ' (f x)).graph := fun y z => by
+    rw [mem_graph_integralPMap, mem_graph_integralPMap, E'.memLp_measure_transport_iff V hf y]
+    constructor
+    · rintro ⟨hy, rfl⟩
+      refine ⟨hy, ?_⟩
+      rw [E'.integralApply_transport V hf ((E'.memLp_measure_transport_iff V hf y).mpr hy),
+        LinearIsometryEquiv.symm_apply_apply]
+    · rintro ⟨hy, hz⟩
+      refine ⟨hy, ?_⟩
+      rw [E'.integralApply_transport V hf ((E'.memLp_measure_transport_iff V hf y).mpr hy), hz,
+        LinearIsometryEquiv.apply_symm_apply]
+  rw [key]
+  exact Iff.of_eq (by simp only [LinearIsometryEquiv.coe_toLinearEquiv,
+    LinearIsometryEquiv.symm_apply_apply])
 
 /-- Transport commutes with images: `(V E V⁻¹)` under `g` is `V (g_* E) V⁻¹`. -/
 lemma transport_map {Y : Type*} [MeasurableSpace Y] {g : X → Y} (hg : Measurable g) :
@@ -394,14 +401,17 @@ variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteS
   {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ'] [RingHomInvPair σ' σ] [RingHomIsometric σ]
 
 omit [CompleteSpace E] [CompleteSpace K] [RingHomIsometric σ] in
-/-- **Resolvents along a semilinear isometric equivalence**: if `V` maps the graph of `T` onto
-that of `S`, then `(z - S)⁻¹ = V (σ⁻¹ z - T)⁻¹ V⁻¹`. -/
-lemma _root_.LinearPMap.resolvent_eq_comp_of_mem_graph_iff {T : E →ₗ.[ℂ] E}
+/-- **Resolvents along a semilinear isometric equivalence**: if `S V = V T`, then
+`(z - S)⁻¹ = V (σ⁻¹ z - T)⁻¹ V⁻¹`. -/
+lemma _root_.LinearPMap.resolvent_eq_comp_of_compNat_toPMap_eq {T : E →ₗ.[ℂ] E}
     {S : K →ₗ.[ℂ] K} (V : E ≃ₛₗᵢ[σ] K)
-    (hTS : ∀ u v, (u, v) ∈ T.graph ↔ (V u, V v) ∈ S.graph) {z : ℂ}
+    (hTS : S.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) = (V : E →ₛₗ[σ] K).compPMap T) {z : ℂ}
     (hz : σ' z ∈ T.resolventSet) :
     S.resolvent z = V.toLinearIsometry.toContinuousLinearMap.comp
       ((T.resolvent (σ' z)).comp V.symm.toLinearIsometry.toContinuousLinearMap) := by
+  -- the resolvent is characterised by its values on graph points
+  replace hTS := (LinearPMap.compNat_toPMap_eq_compPMap_iff V.toLinearEquiv).mp hTS
+  simp only [LinearIsometryEquiv.coe_toLinearEquiv] at hTS
   refine LinearPMap.resolvent_eq_of (fun x => ?_) (fun u v huv => ?_)
   · have h := (hTS _ _).mp (LinearPMap.resolvent_mem_graph hz (V.symm x))
     simp only [ContinuousLinearMap.comp_apply, LinearIsometry.coe_toContinuousLinearMap,
@@ -416,10 +426,9 @@ lemma _root_.LinearPMap.resolvent_eq_comp_of_mem_graph_iff {T : E →ₗ.[ℂ] E
 
 include hA in
 /-- **Covariance of the projection-valued measure**: if a semilinear isometric equivalence `V`
-(unitary or antiunitary) maps the graph of `A` onto that of a self-adjoint `B`, then
-`E_B = V E_A V⁻¹`. -/
+(unitary or antiunitary) satisfies `B V = V A` for a self-adjoint `B`, then `E_B = V E_A V⁻¹`. -/
 theorem pvm_eq_transport {B : K →ₗ.[ℂ] K} (hB : IsSelfAdjoint B) (V : E ≃ₛₗᵢ[σ] K)
-    (hAB : ∀ u v, (u, v) ∈ A.graph ↔ (V u, V v) ∈ B.graph) :
+    (hAB : B.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) = (V : E →ₛₗ[σ] K).compPMap A) :
     hB.pvm = hA.pvm.transport V := by
   refine (hB.eq_pvm_of_eq_integralPMap _ (hB.eq_of_resolvent_I_eq
     ((hA.pvm.transport V).isSelfAdjoint_integralPMap_ofReal (φ := fun t : ℝ => t)
@@ -431,17 +440,18 @@ theorem pvm_eq_transport {B : K →ₗ.[ℂ] K} (hB : IsSelfAdjoint B) (V : E �
   rw [(hA.pvm.transport V).resolvent_integralPMap_ofReal (by simp),
     ProjectionValuedMeasure.integral_transport _ _ hr
       ⟨_, ProjectionValuedMeasure.norm_inv_sub_ofReal_le (by simp)⟩,
-    LinearPMap.resolvent_eq_comp_of_mem_graph_iff V hAB
+    LinearPMap.resolvent_eq_comp_of_compNat_toPMap_eq V hAB
       (hA.mem_resolventSet (z := σ' I) hσI), hA.resolvent_eq_integral_pvm hσI]
   rcases RingHom.eq_id_or_conj_of_ringHomIsometric (σ := σ) (σ' := σ') with
     ⟨-, rfl⟩ | ⟨-, rfl⟩ <;> simp
 
 include hA in
-/-- **Covariance of the functional calculus**: if a semilinear isometric equivalence `V` maps the
-graph of `A` onto that of a self-adjoint `B`, then `f(B) = V (σ⁻¹ ∘ f)(A) V⁻¹` for bounded
-measurable `f`; for an antiunitary `V`, `f(B) = V f̄(A) V⁻¹`. -/
+/-- **Covariance of the functional calculus**: if a semilinear isometric equivalence `V` satisfies
+`B V = V A` for a self-adjoint `B`, then `f(B) = V (σ⁻¹ ∘ f)(A) V⁻¹` for bounded measurable `f`;
+for an antiunitary `V`, `f(B) = V f̄(A) V⁻¹`. -/
 lemma integral_pvm_eq_comp {B : K →ₗ.[ℂ] K} (hB : IsSelfAdjoint B) (V : E ≃ₛₗᵢ[σ] K)
-    (hAB : ∀ u v, (u, v) ∈ A.graph ↔ (V u, V v) ∈ B.graph) {f : ℝ → ℂ} (hf : Measurable f)
+    (hAB : B.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) = (V : E →ₛₗ[σ] K).compPMap A) {f : ℝ → ℂ}
+    (hf : Measurable f)
     (hfb : ∃ C, ∀ t, ‖f t‖ ≤ C) :
     hB.pvm.integral f = V.toLinearIsometry.toContinuousLinearMap.comp
       ((hA.pvm.integral fun t => σ' (f t)).comp V.symm.toLinearIsometry.toContinuousLinearMap) := by

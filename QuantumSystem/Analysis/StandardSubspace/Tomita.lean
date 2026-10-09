@@ -47,25 +47,31 @@ Nets*, §2.1):
 
 ## Notation
 
-Under `open scoped StandardSubspace`, `S[K]`, `Δ[K]`, `Δ[K]^{1/2}`, `J[K]` and `Δ[K]^{i t}` denote
-`S_K`, `Δ_K`, `Δ_K^{1/2}` (`IsSelfAdjoint.sqrt`), `J_K` and the bounded operator `Δ_K^{it}`.
+Under `open scoped StandardSubspace`, `S[K]`, `Δ[K]`, `Δ[K]^{1/2}`, `J[K]`, `Δ[K]^{i t}` and
+`Δ[K]^{-i t}` denote `S_K`, `Δ_K`, `Δ_K^{1/2}` (`IsSelfAdjoint.sqrt`), `J_K` and the bounded operators
+`Δ_K^{it}`, `Δ_K^{-it}`; the exponent is parsed at `max` precedence (`Δ[K]^{i (s + t)}`). The real
+adjoint for `re ⟪·, ·⟫` of a bounded real-linear `U` is written `U†` (`open scoped InnerProduct`).
 
 ## Main results
 
 * `StandardSubspace.isSemilinear_tomita`, `isClosed_tomita`, `dense_domain_tomita`,
-  `tomita_involution`, `mem_iff_mem_graph_tomita` — `S_K` is a closed densely defined
+  `tomita_compNat_tomita`, `mem_iff_mem_graph_tomita` — `S_K` is a closed densely defined
   conjugate-linear involution with fixed points `K`.
-* `StandardSubspace.mem_graph_tomita_iff` — `S_K = J_K Δ_K^{1/2}`.
+* `StandardSubspace.tomita_eq_modularConj_compPMap` — **polar decomposition** `S_K = J_K Δ_K^{1/2}`.
+* `StandardSubspace.compPMap_tomita_le_of_apply_mem` — `V S_{K₁} ⊆ S_{K₂} V` for a bounded `V`
+  with `V K₁ ⊆ K₂`.
+* `StandardSubspace.adjoint_modularConj` — `J_K† = J_K` for the real adjoint.
 * `StandardSubspace.eq_top_of_le`, `ext_continuousLinearMap`, `eq_zero_of_forall_inner_eq_zero` —
   cyclicity: a closed real subspace containing `K` and `i K` is everything.
 * `StandardSubspace.ker_modular_eq_bot`, `pvm_modular_Iic_eq_zero`, `ker_sqrt_modular_eq_bot` —
   `Δ_K` and `Δ_K^{1/2}` are injective.
-* `StandardSubspace.modularConj_modularConj`, `mem_graph_inverse_sqrt_modular_iff` — `J_K² = 1` and
-  `J_K Δ_K^{1/2} J_K = Δ_K^{-1/2}`.
+* `StandardSubspace.modularConj_modularConj`, `sqrt_modular_compNat_modularConj` — `J_K² = 1` and
+  `Δ_K^{1/2} J_K = J_K Δ_K^{-1/2}`.
+* `StandardSubspace.modularGroup_compPMap_sqrt_le` — `Δ_K^{it} Δ_K^{1/2} ⊆ Δ_K^{1/2} Δ_K^{it}`.
 * `StandardSubspace.coe_modularGroup_apply`, `modularConj_comm_modularGroup` —
   `Δ_K^{it} = ∫ λ^{it} dE_Δ(λ)` and `J_K Δ_K^{it} = Δ_K^{it} J_K`.
 * `StandardSubspace.modularGroup_apply_mem_iff` — `Δ_K^{it} K = K`.
-* `StandardSubspace.tomita_symplComp`, `mem_graph_tomita_symplComp_iff` — `S_{K'} = S_K†`.
+* `StandardSubspace.tomita_symplComp`, `tomita_symplComp_eq_compNat` — `S_{K'} = S_K† = Δ_K^{1/2} J_K`.
 * `StandardSubspace.sqrt_modular_symplComp`, `modular_symplComp`, `modularGroup_symplComp`,
   `modularConj_symplComp` — `Δ_{K'}^{1/2} = Δ_K^{-1/2}`, `Δ_{K'} = Δ_K⁻¹`, `Δ_{K'}^{it} = Δ_K^{-it}`
   and `J_{K'} = J_K`.
@@ -74,9 +80,9 @@ Under `open scoped StandardSubspace`, `S[K]`, `Δ[K]`, `Δ[K]^{1/2}`, `J[K]` and
   analytically to the strip `0 ≤ im z ≤ 1/2` with `Δ_K^{-i(t + i/2)} ξ = J_K Δ_K^{-it} ξ` (one half
   of the KMS characterisation of `K`; the converse is `mem_iff_modularConj_sqrt`).
 * **Covariance**: for a unitary or antiunitary `V : H₁ ≃ₛₗᵢ[σ] H₂` with `V K₁ = K₂`,
-  `StandardSubspace.mem_graph_tomita_map_iff` (`S_{K₂} = V S_{K₁} V⁻¹`), `map_mem_symplComp_iff`
-  (`V K₁' = K₂'`), `mem_graph_modular_map_iff`, `pvm_modular_map`, `mem_graph_sqrt_modular_map_iff`
-  (`Δ_{K₂} = V Δ_{K₁} V⁻¹`), `modularConj_map` (`J_{K₂} = V J_{K₁} V⁻¹`); for the modular group
+  `StandardSubspace.map_mem_symplComp_iff` (`V K₁' = K₂'`), `modular_compNat_eq`, `pvm_modular_map`,
+  `sqrt_modular_compNat_eq` (`Δ_{K₂} V = V Δ_{K₁}`), `modularConj_map` (`J_{K₂} = V J_{K₁} V⁻¹`);
+  for the modular group
   `modularGroup_map` (`V Δ_{K₁}^{it} V* = Δ_{K₂}^{it}` for unitary `V`) and
   `modularGroup_map_of_antiunitary` (`V Δ_{K₁}^{it} V* = Δ_{K₂}^{-it}` for antiunitary `V`).
 
@@ -91,7 +97,7 @@ Under `open scoped StandardSubspace`, `S[K]`, `Δ[K]`, `Δ[K]^{1/2}`, `J[K]` and
 @[expose] public section
 
 open Set Filter Topology Complex ClosedSubmodule MeasureTheory
-open scoped InnerProductSpace ComplexConjugate LinearPMap
+open scoped InnerProductSpace InnerProduct ComplexConjugate LinearPMap
 
 namespace StandardSubspace
 
@@ -232,11 +238,16 @@ lemma dense_domain_tomita : Dense (S[K].domain : Set H) := by
   refine dense_iff_closure_eq.mpr (eq_univ_of_forall fun z => closure_mono hsub ?_)
   exact ClosedSubmodule.mem_sup.mp (htop ClosedSubmodule.mem_top)
 
-/-- The Tomita operator is an involution: `S u = v` iff `S v = u`. -/
-lemma tomita_involution {u v : H} (h : (u, v) ∈ S[K].graph) : (v, u) ∈ S[K].graph := by
+/-- `S u = v` implies `S v = u`. -/
+private lemma mem_graph_tomita_swap {u v : H} (h : (u, v) ∈ S[K].graph) : (v, u) ∈ S[K].graph := by
   obtain ⟨x, hx, y, hy, rfl, rfl⟩ := K.mem_graph_tomita.mp h
   refine K.mem_graph_tomita.mpr ⟨x, hx, -y, K.toClosedSubmodule.toSubmodule.neg_mem hy, ?_, ?_⟩ <;>
     simp [sub_eq_add_neg]
+
+/-- **The Tomita operator is an involution**: `S_K² = 1` on `dom S_K`. -/
+lemma tomita_compNat_tomita : S[K].compNat S[K] = (LinearMap.id : H →ₗ[ℝ] H).toPMap S[K].domain :=
+  -- `S (x + i y) = x - i y` is computed on the generating vectors
+  LinearPMap.compNat_self_eq_id_iff.mpr fun _ _ h => K.mem_graph_tomita_swap h
 
 /-- `K` is the set of fixed points of the Tomita operator. -/
 lemma mem_iff_mem_graph_tomita {ξ : H} :
@@ -323,15 +334,24 @@ meta def delabSqrtModular : Delab := do
 lemma isPositive_modular : Δ[K].IsPositive :=
   LinearPMap.isPositive_adjointCompClosure _ _
 
+omit [CompleteSpace H] in
+/-- The Tomita operator is injective. -/
+lemma ker_tomita_eq_bot : S[K].ker = ⊥ :=
+  LinearPMap.ker_eq_bot_of_involution K.tomita_compNat_tomita
+
+omit [CompleteSpace H] in
+/-- The Tomita operator has dense range: its range is its domain. -/
+lemma dense_range_tomita : Dense (Set.range S[K]) :=
+  LinearPMap.dense_range_of_involution K.tomita_compNat_tomita K.dense_domain_tomita
+
 /-- The modular operator is injective. -/
 lemma ker_modular_eq_bot : Δ[K].ker = ⊥ :=
-  K.isSelfAdjoint_modular.ker_eq_bot_of_involution K.restrictScalars_modular
-    (fun _ _ h => K.tomita_involution h)
+  (K.isSelfAdjoint_modular.ker_eq_bot_iff_of_restrictScalars_eq K.restrictScalars_modular).mpr
+    K.ker_tomita_eq_bot
 
 /-- The modular operator is positive and injective: its spectral measure vanishes on `(-∞, 0]`. -/
 lemma pvm_modular_Iic_eq_zero : K.isSelfAdjoint_modular.pvm (Iic 0) = 0 :=
-  K.isSelfAdjoint_modular.pvm_Iic_eq_zero_of_involution K.restrictScalars_modular
-    (fun _ _ h => K.tomita_involution h)
+  K.isSelfAdjoint_modular.pvm_Iic_eq_zero K.isPositive_modular K.ker_modular_eq_bot
 
 /-- The modular operator is injective: its spectral measure lives on `(0, ∞)`. -/
 lemma ae_pos_measure_pvm_modular (y : H) :
@@ -341,10 +361,10 @@ lemma ae_pos_measure_pvm_modular (y : H) :
     fun _ ht => not_le.mp ht
 
 /-- The **modular conjugation** `J_K`: the antiunitary part of the polar decomposition
-`S_K = J_K Δ_K^{1/2}` (`StandardSubspace.mem_graph_tomita_iff`). -/
+`S_K = J_K Δ_K^{1/2}` (`StandardSubspace.tomita_eq_modularConj_compPMap`). -/
 noncomputable def modularConj : H ≃ₗᵢ⋆[ℂ] H :=
   K.isSelfAdjoint_modular.polarIsometryEquiv K.restrictScalars_modular K.isClosed_tomita
-    (fun _ _ h => K.tomita_involution h) K.isSemilinear_tomita
+    K.ker_tomita_eq_bot K.dense_range_tomita K.isSemilinear_tomita
 
 /-- `J[K]` is the modular conjugation `J_K` of the standard subspace `K`. -/
 scoped notation "J[" K "]" => StandardSubspace.modularConj K
@@ -352,21 +372,35 @@ scoped notation "J[" K "]" => StandardSubspace.modularConj K
 /-- `J_K² = 1`. -/
 @[simp]
 lemma modularConj_modularConj (x : H) : J[K] (J[K] x) = x :=
-  K.isSelfAdjoint_modular.polarIsometryEquiv_apply_apply _ _ _ _ x
+  K.isSelfAdjoint_modular.polarIsometryEquiv_apply_apply _ _ K.tomita_compNat_tomita
+    _ x
 
-/-- **Polar decomposition** `S_K = J_K Δ_K^{1/2}`, in graph form. -/
-theorem mem_graph_tomita_iff {u v : H} :
-    (u, v) ∈ S[K].graph ↔
-      ∃ w, (u, w) ∈ Δ[K]^{1/2}.graph ∧ J[K] w = v := by
-  have hS := K.isClosed_tomita
-  have hAS := K.restrictScalars_modular
+/-- **`J_K† = J_K`** for the real adjoint: `J_K` is an antiunitary involution, so
+`re ⟪J x, y⟫ = re ⟪J x, J J y⟫ = re ⟪x, J y⟫`. -/
+lemma adjoint_modularConj : ((J[K] : H →L[ℝ] H)†) = J[K] := by
+  refine ((ContinuousLinearMap.eq_adjoint_iff _ _).mpr fun x y => ?_).symm
+  change inner ℝ (J[K] x) y = inner ℝ x (J[K] y)
+  conv_lhs => rw [← K.modularConj_modularConj y]
+  rw [inner_real_eq_re_inner, inner_real_eq_re_inner, J[K].inner_map_mapₛₗ,
+    Complex.conj_re]
+
+/-- **Polar decomposition** `S_K = J_K Δ_K^{1/2}`, as real-linear operators. -/
+theorem tomita_eq_modularConj_compPMap :
+    S[K] = ((J[K] : H →L[ℝ] H) : H →ₗ[ℝ] H).compPMap
+      (Δ[K]^{1/2}.restrictScalars ℝ) :=
+  K.isSelfAdjoint_modular.eq_polarIsometry_compPMap K.restrictScalars_modular K.isClosed_tomita
+
+/-- `S_K = J_K Δ_K^{1/2}`, pointwise. -/
+private lemma mem_graph_tomita_iff {u v : H} :
+    (u, v) ∈ S[K].graph ↔ ∃ w, (u, w) ∈ Δ[K]^{1/2}.graph ∧ J[K] w = v := by
+  have h := K.tomita_eq_modularConj_compPMap
   constructor
-  · intro h
-    obtain ⟨w, hw⟩ := (K.isSelfAdjoint_modular.exists_mem_graph_sqrt_iff hAS hS).mpr ⟨v, h⟩
-    exact ⟨w, hw, K.isSelfAdjoint_modular.polarIsometry_apply_of_mem_graph hAS hS hw h⟩
+  · intro huv
+    obtain ⟨w, hw, rfl⟩ := LinearPMap.mem_graph_compPMap.mp (LinearPMap.le_graph_of_le h.le huv)
+    exact ⟨w, LinearPMap.mem_graph_restrictScalars.mp hw, rfl⟩
   · rintro ⟨w, hw, rfl⟩
-    obtain ⟨v, hv⟩ := (K.isSelfAdjoint_modular.exists_mem_graph_sqrt_iff hAS hS).mp ⟨w, hw⟩
-    rwa [← K.isSelfAdjoint_modular.polarIsometry_apply_of_mem_graph hAS hS hw hv] at hv
+    exact LinearPMap.le_graph_of_le h.ge
+      (LinearPMap.mem_graph_compPMap.mpr ⟨w, LinearPMap.mem_graph_restrictScalars.mpr hw, rfl⟩)
 
 /-- **`ξ ∈ K` iff `J_K Δ_K^{1/2} ξ = ξ`**. -/
 lemma mem_iff_modularConj_sqrt {ξ : H} :
@@ -374,16 +408,22 @@ lemma mem_iff_modularConj_sqrt {ξ : H} :
       ∃ w, (ξ, w) ∈ Δ[K]^{1/2}.graph ∧ J[K] w = ξ := by
   rw [K.mem_iff_mem_graph_tomita, mem_graph_tomita_iff]
 
-/-- **`J_K Δ_K^{1/2} J_K = Δ_K^{-1/2}`**: `Δ_K^{-1/2} x = u` iff `Δ_K^{1/2} (J_K x) = J_K u`. -/
-lemma mem_graph_inverse_sqrt_modular_iff {x u : H} :
+/-- **`J_K Δ_K^{1/2} J_K = Δ_K^{-1/2}`**, as `Δ_K^{1/2} J_K = J_K Δ_K^{-1/2}`. -/
+lemma sqrt_modular_compNat_modularConj :
+    Δ[K]^{1/2}.compNat ((J[K] : H →ₗ⋆[ℂ] H).toPMap ⊤) =
+      (J[K] : H →ₗ⋆[ℂ] H).compPMap Δ[K]^{1/2}.inverse :=
+  K.isSelfAdjoint_modular.sqrt_compNat_polarIsometryEquiv _ _ K.tomita_compNat_tomita _
+
+/-- `Δ_K^{-1/2} x = u` iff `Δ_K^{1/2} (J_K x) = J_K u`. -/
+private lemma mem_graph_inverse_sqrt_modular_iff {x u : H} :
     (x, u) ∈ Δ[K]^{1/2}.inverse.graph ↔
       (J[K] x, J[K] u) ∈ Δ[K]^{1/2}.graph :=
-  K.isSelfAdjoint_modular.mem_graph_inverse_sqrt_iff _ _ _ _
+  (LinearPMap.compNat_toPMap_eq_compPMap_iff J[K].toLinearEquiv).mp
+    K.sqrt_modular_compNat_modularConj x u
 
 /-- `Δ_K^{1/2}` is injective. -/
 lemma ker_sqrt_modular_eq_bot : Δ[K]^{1/2}.ker = ⊥ :=
-  K.isSelfAdjoint_modular.ker_sqrt_eq_bot_of_involution K.restrictScalars_modular
-    (fun _ _ h => K.tomita_involution h)
+  K.isSelfAdjoint_modular.ker_sqrt_eq_bot K.isPositive_modular K.ker_modular_eq_bot
 
 /-- `J_K Δ_K^{1/2} J_K = Δ_K^{-1/2}` in graph form: `Δ_K^{1/2} x = u` iff
 `Δ_K^{1/2} (J_K u) = J_K x`. -/
@@ -393,17 +433,23 @@ private lemma mem_graph_sqrt_modularConj_iff {x u : H} :
   rw [← K.mem_graph_inverse_sqrt_modular_iff, LinearPMap.mem_graph_inverse_iff
     K.ker_sqrt_modular_eq_bot]
 
-/-- The **modular group** `t ↦ Δ_K^{it} = e^{it log Δ_K}`: the unitary group generated by
-`log Δ_K` (`IsSelfAdjoint.unitaryGroup`). -/
+/-- The **modular group** `t ↦ Δ_K^{it}`: the imaginary powers of the positive injective `Δ_K`
+(`IsSelfAdjoint.imaginaryPowerGroup`), the unitary group `e^{it log Δ_K}` generated by `log Δ_K`
+(`IsSelfAdjoint.imaginaryPower_eq_unitaryGroup`). -/
 noncomputable abbrev modularGroup : AddChar ℝ (unitary (H →L[ℂ] H)) :=
-  K.isSelfAdjoint_modular.isSelfAdjoint_logPMap.unitaryGroup
+  K.isSelfAdjoint_modular.imaginaryPowerGroup K.isPositive_modular K.ker_modular_eq_bot
 
-/-- `Δ[K]^{i t}` is the unitary `Δ_K^{it}` of the modular group, as a bounded operator. -/
-scoped notation "Δ[" K "]^{i " t "}" => Subtype.val (StandardSubspace.modularGroup K t)
+/-- `Δ[K]^{i t}` is the unitary `Δ_K^{it}` of the modular group, as a bounded operator. The
+exponent is parsed at `max` precedence, so a compound exponent needs parentheses:
+`Δ[K]^{i (s + t)}`. -/
+scoped notation "Δ[" K "]^{i " t:max "}" => Subtype.val (StandardSubspace.modularGroup K t)
+
+/-- `Δ[K]^{-i t}` is `Δ_K^{-it} = Δ_K^{i(-t)}`. -/
+scoped notation "Δ[" K "]^{-i " t:max "}" => Subtype.val (StandardSubspace.modularGroup K (-t))
 
 open Lean PrettyPrinter Delaborator SubExpr in
 /-- Delaborator displaying the bounded operator `↑(StandardSubspace.modularGroup K t)` as
-`Δ[K]^{i t}`. -/
+`Δ[K]^{i t}`, and `↑(StandardSubspace.modularGroup K (-t))` as `Δ[K]^{-i t}`. -/
 @[scoped delab app.Subtype.val]
 meta def delabModularGroupVal : Delab := do
   -- the argument is `DFunLike.coe (StandardSubspace.modularGroup K) t`
@@ -411,14 +457,19 @@ meta def delabModularGroupVal : Delab := do
   guard <| g.isAppOfArity ``DFunLike.coe 6
   guard <| (g.getArg! 4).isAppOfArity ``StandardSubspace.modularGroup 5
   let K ← withAppArg <| withNaryArg 4 <| withNaryArg 3 delab
-  let t ← withAppArg <| withNaryArg 5 delab
-  `(Δ[$K]^{i $t})
+  if (g.getArg! 5).isAppOfArity ``Neg.neg 3 then
+    let t ← withAppArg <| withNaryArg 5 <| withAppArg delab
+    `(Δ[$K]^{-i $t})
+  else
+    let t ← withAppArg <| withNaryArg 5 delab
+    `(Δ[$K]^{i $t})
 
 /-- `Δ_K^{it} = ∫ λ^{it} dE_Δ(λ)`, with `λ^{it} = e^{it log λ}`. -/
 lemma coe_modularGroup_apply (t : ℝ) :
     Δ[K]^{i t} =
       K.isSelfAdjoint_modular.pvm.integral fun s : ℝ => cexp (t * Real.log s * I) :=
-  K.isSelfAdjoint_modular.coe_unitaryGroup_logPMap_apply t
+  (K.isSelfAdjoint_modular.imaginaryPower_eq_unitaryGroup K.isPositive_modular K.ker_modular_eq_bot
+    t).trans (K.isSelfAdjoint_modular.coe_unitaryGroup_logPMap_apply t)
 
 /-- **`J_K Δ_K^{it} J_K = Δ_K^{it}`**. -/
 lemma modularConj_modularGroup_apply (t : ℝ) (x : H) :
@@ -426,7 +477,7 @@ lemma modularConj_modularGroup_apply (t : ℝ) (x : H) :
       Δ[K]^{i t} x := by
   rw [coe_modularGroup_apply]
   have h := K.isSelfAdjoint_modular.polarIsometryEquiv_integral_apply K.restrictScalars_modular
-    K.isClosed_tomita (fun _ _ h => K.tomita_involution h) K.isSemilinear_tomita
+    K.isClosed_tomita K.tomita_compNat_tomita K.isSemilinear_tomita
     (f := fun s : ℝ => cexp (t * Real.log s * I)) (by fun_prop)
     ⟨1, fun s => by rw [← ofReal_mul, norm_exp_ofReal_mul_I]⟩ x
   refine h.trans (congrArg (fun f => K.isSelfAdjoint_modular.pvm.integral f x) (funext fun s => ?_))
@@ -449,19 +500,24 @@ lemma inner_modularConj_left (x y : H) : ⟪J[K] x, y⟫_ℂ = ⟪J[K] y, x⟫_�
 
 /-- `Δ_K^{-it} = (Δ_K^{it})*`. -/
 lemma inner_modularGroup_neg_left (t : ℝ) (x y : H) :
-    ⟪Δ[K]^{i (-t)} x, y⟫_ℂ = ⟪x, Δ[K]^{i t} y⟫_ℂ := by
+    ⟪Δ[K]^{-i t} x, y⟫_ℂ = ⟪x, Δ[K]^{i t} y⟫_ℂ := by
   rw [AddChar.map_neg_eq_inv, ← Unitary.star_eq_inv, Unitary.coe_star,
     ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_left]
 
-/-- `Δ_K^{it}` commutes with `Δ_K^{1/2}`: it maps the graph of `Δ_K^{1/2}` into itself. -/
-lemma mem_graph_sqrt_modularGroup (t : ℝ) {x u : H}
-    (h : (x, u) ∈ Δ[K]^{1/2}.graph) :
-    (Δ[K]^{i t} x, Δ[K]^{i t} u) ∈
-      Δ[K]^{1/2}.graph := by
+/-- **`Δ_K^{it}` commutes with `Δ_K^{1/2}`**: `Δ_K^{it} Δ_K^{1/2} ⊆ Δ_K^{1/2} Δ_K^{it}`. -/
+lemma modularGroup_compPMap_sqrt_le (t : ℝ) :
+    ((Δ[K]^{i t} : H →L[ℂ] H) : H →ₗ[ℂ] H).compPMap Δ[K]^{1/2} ≤
+      Δ[K]^{1/2}.compNat (((Δ[K]^{i t} : H →L[ℂ] H) : H →ₗ[ℂ] H).toPMap ⊤) := by
   rw [coe_modularGroup_apply]
-  exact K.isSelfAdjoint_modular.pvm.mem_graph_integralPMap_integral
+  exact K.isSelfAdjoint_modular.pvm.integral_compPMap_integralPMap_le
     (Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable) (by fun_prop)
-    ⟨1, fun s => by rw [← ofReal_mul, norm_exp_ofReal_mul_I]⟩ h
+    ⟨1, fun s => by rw [← ofReal_mul, norm_exp_ofReal_mul_I]⟩
+
+/-- `Δ_K^{it}` maps the graph of `Δ_K^{1/2}` into itself. -/
+private lemma mem_graph_sqrt_modularGroup (t : ℝ) {x u : H}
+    (h : (x, u) ∈ Δ[K]^{1/2}.graph) :
+    (Δ[K]^{i t} x, Δ[K]^{i t} u) ∈ Δ[K]^{1/2}.graph :=
+  LinearPMap.compPMap_le_compNat_toPMap_iff.mp (K.modularGroup_compPMap_sqrt_le t) h
 
 /-- **`Δ_K^{it} K ⊆ K`**. -/
 lemma modularGroup_apply_mem {ξ : H} (hξ : ξ ∈ K) (t : ℝ) :
@@ -525,27 +581,14 @@ theorem tomita_symplComp [CompleteSpace H] : K.symplComp.tomita = S[K]† := by
     · rw [smul_smul, hI]
       module
 
-/-- The isometric part `J_K`, as a real operator, is self-adjoint for the real inner product. -/
-private lemma adjoint_polarIsometry :
-    ContinuousLinearMap.adjoint (K.isSelfAdjoint_modular.polarIsometry K.restrictScalars_modular
-      K.isClosed_tomita) =
-      K.isSelfAdjoint_modular.polarIsometry K.restrictScalars_modular K.isClosed_tomita := by
-  refine ((ContinuousLinearMap.eq_adjoint_iff _ _).mpr fun x y => ?_).symm
-  change inner ℝ (J[K] x) y = inner ℝ x (J[K] y)
-  conv_lhs => rw [← K.modularConj_modularConj y]
-  rw [inner_real_eq_re_inner, inner_real_eq_re_inner, J[K].inner_map_mapₛₗ,
-    Complex.conj_re]
-
-/-- The graph of `S_{K'}`: `S_{K'} u = v` iff `Δ_K^{1/2} J_K u = v`. -/
-lemma mem_graph_tomita_symplComp_iff {u v : H} :
+/-- `S_{K'} u = v` iff `Δ_K^{1/2} J_K u = v`. -/
+private lemma mem_graph_tomita_symplComp_iff {u v : H} :
     (u, v) ∈ K.symplComp.tomita.graph ↔
       (J[K] u, v) ∈ Δ[K]^{1/2}.graph := by
-  set J := K.isSelfAdjoint_modular.polarIsometry K.restrictScalars_modular K.isClosed_tomita
-  have hS := K.isSelfAdjoint_modular.eq_polarIsometry_compPMap K.restrictScalars_modular
-    K.isClosed_tomita
   have hd : Dense ((Δ[K]^{1/2}.restrictScalars ℝ).domain : Set H) :=
     K.isSelfAdjoint_modular.isSelfAdjoint_sqrt.dense_domain
-  rw [tomita_symplComp, hS, LinearPMap.adjoint_compPMap hd, adjoint_polarIsometry,
+  rw [tomita_symplComp, K.tomita_eq_modularConj_compPMap, LinearPMap.adjoint_compPMap hd,
+    adjoint_modularConj,
     LinearPMap.adjoint_restrictScalars hd, LinearPMap.isSelfAdjoint_def.mp
       K.isSelfAdjoint_modular.isSelfAdjoint_sqrt, LinearPMap.mem_graph_compNat]
   constructor
@@ -562,6 +605,15 @@ lemma mem_graph_tomita_symplComp_iff {u v : H} :
     refine ⟨J[K] u, ?_, LinearPMap.mem_graph_restrictScalars.mpr h⟩
     rw [LinearPMap.mem_graph_iff]
     exact ⟨⟨u, Submodule.mem_top⟩, rfl, rfl⟩
+
+/-- **`S_{K'} = Δ_K^{1/2} J_K`**, as real-linear operators. -/
+lemma tomita_symplComp_eq_compNat :
+    K.symplComp.tomita = (Δ[K]^{1/2}.restrictScalars ℝ).compNat
+      (((J[K] : H →L[ℝ] H) : H →ₗ[ℝ] H).toPMap ⊤) :=
+  LinearPMap.eq_of_eq_graph (Submodule.ext fun ⟨_, _⟩ => by
+    rw [mem_graph_tomita_symplComp_iff, LinearPMap.mem_graph_compNat_toPMap,
+      LinearPMap.mem_graph_restrictScalars]
+    rfl)
 
 /-- **`J_K K = K'`**: `J_K ξ ∈ K'` iff `ξ ∈ K`. -/
 lemma modularConj_mem_symplComp_iff {ξ : H} :
@@ -614,10 +666,10 @@ private lemma sqrt_modular_symplComp_eq_integralPMap :
   have hpos : (E'.integralPMap fun t => (((Real.sqrt t)⁻¹ : ℝ) : ℂ)).IsPositive :=
     E'.isPositive_integralPMap_ofReal Real.continuous_sqrt.measurable.inv
       fun t => inv_nonneg.mpr (Real.sqrt_nonneg t)
-  have hJ : ∀ x, ‖Jr x‖ = ‖x‖ := K.isSelfAdjoint_modular.norm_polarIsometry_of_involution
-    K.restrictScalars_modular K.isClosed_tomita (fun _ _ h => K.tomita_involution h)
+  have hJ : ∀ x, ‖Jr x‖ = ‖x‖ := K.isSelfAdjoint_modular.norm_polarIsometry_of_ker_eq_bot
+    K.restrictScalars_modular K.isClosed_tomita K.ker_tomita_eq_bot
   refine (K.symplComp.isSelfAdjoint_modular.eq_sqrt_of_eq_compPMap
-    K.symplComp.restrictScalars_modular hsa hpos Jr (fun _ y _ => hJ y) ?_).symm
+    K.symplComp.restrictScalars_modular hsa hpos Jr (fun y _ => hJ y) ?_).symm
   refine LinearPMap.eq_of_eq_graph (Submodule.ext fun ⟨u, v⟩ => ?_)
   rw [mem_graph_tomita_symplComp_iff, LinearPMap.mem_graph_compPMap]
   constructor
@@ -685,8 +737,7 @@ lemma modularConj_symplComp (x : H) : K.symplComp.modularConj x = J[K] x := by
 
 
 /-- **`Δ_{K'}^{it} = Δ_K^{-it}`**. -/
-lemma modularGroup_symplComp (t : ℝ) :
-    (K.symplComp.modularGroup t : H →L[ℂ] H) = K.modularGroup (-t) := by
+lemma modularGroup_symplComp (t : ℝ) : Δ[K.symplComp]^{i t} = Δ[K]^{-i t} := by
   have hinv : Measurable fun s : ℝ => s⁻¹ := measurable_inv
   have hpvm : K.symplComp.isSelfAdjoint_modular.pvm = K.isSelfAdjoint_modular.pvm.map _ hinv := by
     have key : ∀ {A B : H →ₗ.[ℂ] H} (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B), A = B →
@@ -712,15 +763,16 @@ on the closure, with boundary values `J_K Δ_K^{-it} ξ` on `im z = 1/2`. -/
 theorem exists_diffContOnCl_modularGroup {ξ : H} (hξ : ξ ∈ K) :
     ∃ F : ℂ → H, DiffContOnCl ℂ F (im ⁻¹' Ioo 0 (1 / 2)) ∧
       BddAbove ((norm ∘ F) '' (im ⁻¹' Icc 0 (1 / 2))) ∧
-      (∀ t : ℝ, F t = Δ[K]^{i (-t)} ξ) ∧
-      (∀ t : ℝ, F (t + I / 2) = J[K] (Δ[K]^{i (-t)} ξ)) ∧
+      (∀ t : ℝ, F t = Δ[K]^{-i t} ξ) ∧
+      (∀ t : ℝ, F (t + I / 2) = J[K] (Δ[K]^{-i t} ξ)) ∧
       ∀ z ∈ im ⁻¹' Icc 0 (1 / 2), (ξ, F z) ∈ (K.isSelfAdjoint_modular.cpow (-I * z)).graph := by
   set E := K.isSelfAdjoint_modular.pvm
   have hφ : Measurable fun x : ℝ => -Real.log x := Real.measurable_log.neg
   have hsqm : Measurable fun x : ℝ => (Real.sqrt x : ℂ) :=
     Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable
   obtain ⟨w, hw, hwξ⟩ := K.mem_iff_modularConj_sqrt.mp hξ
-  rw [IsSelfAdjoint.sqrt, ProjectionValuedMeasure.mem_graph_integralPMap] at hw
+  rw [IsSelfAdjoint.sqrt, ProjectionValuedMeasure.sqrt,
+    ProjectionValuedMeasure.mem_graph_integralPMap] at hw
   have hpos := K.ae_pos_measure_pvm_modular ξ
   have ha : MemLp (fun x : ℝ => Real.exp (-0 * -Real.log x)) 2 (E.measure ξ) := by
     simpa using memLp_const (1 : ℝ)
@@ -793,10 +845,9 @@ variable {H₁ H₂ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H�
   [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂] {K₁ : StandardSubspace H₁}
   {K₂ : StandardSubspace H₂}
 
-/-- **`W S_{K₁} ⊆ S_{K₂} W`**: a map that is semilinear for a ring endomorphism `σ₀` of `ℂ` with
-`σ₀ i = ± i` (a complex-linear or conjugate-linear map) and maps `K₁` into `K₂` maps the graph of
-`S_{K₁}` into that of `S_{K₂}`. -/
-lemma mem_graph_tomita_map {F : Type*} [FunLike F H₁ H₂] {σ₀ : ℂ →+* ℂ}
+/-- `W S_{K₁} ⊆ S_{K₂} W`, pointwise, for a map that is semilinear for a ring endomorphism `σ₀` of
+`ℂ` with `σ₀ i = ± i` and maps `K₁` into `K₂`. -/
+private lemma mem_graph_tomita_map {F : Type*} [FunLike F H₁ H₂] {σ₀ : ℂ →+* ℂ}
     [SemilinearMapClass F σ₀ H₁ H₂] (hσ₀ : σ₀ I = I ∨ σ₀ I = -I) (W : F)
     (hW : ∀ ξ ∈ K₁, W ξ ∈ K₂) {u v : H₁}
     (h : (u, v) ∈ S[K₁].graph) : (W u, W v) ∈ S[K₂].graph := by
@@ -809,13 +860,18 @@ lemma mem_graph_tomita_map {F : Type*} [FunLike F H₁ H₂] {σ₀ : ℂ →+* 
     · rw [map_add, map_smulₛₗ, hI, smul_neg, neg_smul]
     · rw [map_sub, map_smulₛₗ, hI, smul_neg, neg_smul]
 
+/-- **`V S_{K₁} ⊆ S_{K₂} V`** for a bounded complex-linear `V` with `V K₁ ⊆ K₂`. -/
+lemma compPMap_tomita_le_of_apply_mem (V : H₁ →L[ℂ] H₂) (hV : ∀ ξ ∈ K₁, V ξ ∈ K₂) :
+    V ⬝ S[K₁] ≤ S[K₂] ⬝ V :=
+  -- the generating vectors `x + i y` of the domain are mapped one by one
+  LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun _ _ h => mem_graph_tomita_map (Or.inl rfl) V hV h
+
 variable {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ'] [RingHomInvPair σ' σ] [RingHomIsometric σ]
   (V : H₁ ≃ₛₗᵢ[σ] H₂) (hV : ∀ ξ, V ξ ∈ K₂ ↔ ξ ∈ K₁)
 include hV
 
-/-- **Covariance of the Tomita operator**: if a unitary or antiunitary `V` maps `K₁` onto `K₂`,
-then `S_{K₂} = V S_{K₁} V⁻¹`. -/
-lemma mem_graph_tomita_map_iff {u v : H₁} :
+/-- `S_{K₂} = V S_{K₁} V⁻¹`, pointwise, if a unitary or antiunitary `V` maps `K₁` onto `K₂`. -/
+private lemma mem_graph_tomita_map_iff {u v : H₁} :
     (V u, V v) ∈ S[K₂].graph ↔ (u, v) ∈ S[K₁].graph := by
   obtain ⟨hσ, hσ'⟩ := RingHom.apply_I_of_ringHomIsometric (σ := σ) (σ' := σ')
   refine ⟨fun h => ?_, mem_graph_tomita_map hσ V fun ξ hξ => (hV ξ).mpr hξ⟩
@@ -839,8 +895,8 @@ lemma map_mem_symplComp_iff {ξ : H₁} :
     rw [← V.apply_symm_apply y, V.inner_map_mapₛₗ, him]
     exact mem_symplComp_iff.mp h _ ((hV _).mp (by rwa [V.apply_symm_apply]))
 
-/-- **Covariance of the modular operator**: if `V K₁ = K₂`, then `Δ_{K₂} = V Δ_{K₁} V⁻¹`. -/
-lemma mem_graph_modular_map_iff {u v : H₁} :
+/-- `Δ_{K₂} = V Δ_{K₁} V⁻¹`, pointwise, if `V K₁ = K₂`. -/
+private lemma mem_graph_modular_map_iff {u v : H₁} :
     (V u, V v) ∈ Δ[K₂].graph ↔ (u, v) ∈ Δ[K₁].graph := by
   have hV' : ∀ ξ, V ξ ∈ K₂.symplComp ↔ ξ ∈ K₁.symplComp :=
     fun _ => map_mem_symplComp_iff V hV
@@ -856,25 +912,36 @@ lemma mem_graph_modular_map_iff {u v : H₁} :
   · rintro ⟨w, h₁, h₂⟩
     exact ⟨V w, (mem_graph_tomita_map_iff V hV).mpr h₁, (mem_graph_tomita_map_iff V hV').mpr h₂⟩
 
+/-- **Covariance of the modular operator**: if `V K₁ = K₂`, then `Δ_{K₂} V = V Δ_{K₁}`. -/
+lemma modular_compNat_eq :
+    Δ[K₂].compNat ((V : H₁ →ₛₗ[σ] H₂).toPMap ⊤) = (V : H₁ →ₛₗ[σ] H₂).compPMap Δ[K₁] :=
+  -- `Δ = S_{K'} S_K` is transported through the graphs of the Tomita operators
+  (LinearPMap.compNat_toPMap_eq_compPMap_iff V.toLinearEquiv).mpr fun _ _ =>
+    (mem_graph_modular_map_iff V hV).symm
+
 /-- **Covariance of the spectral measure of the modular operator**: if `V K₁ = K₂`, then
 `E_{Δ_{K₂}} = V E_{Δ_{K₁}} V⁻¹`. -/
 lemma pvm_modular_map :
     K₂.isSelfAdjoint_modular.pvm = K₁.isSelfAdjoint_modular.pvm.transport V :=
-  K₁.isSelfAdjoint_modular.pvm_eq_transport K₂.isSelfAdjoint_modular V
-    fun _ _ => (mem_graph_modular_map_iff V hV).symm
+  K₁.isSelfAdjoint_modular.pvm_eq_transport K₂.isSelfAdjoint_modular V (modular_compNat_eq V hV)
 
-/-- `Δ_{K₂}^{1/2} = V Δ_{K₁}^{1/2} V⁻¹` if `V K₁ = K₂`. -/
-lemma mem_graph_sqrt_modular_map_iff {u v : H₁} :
-    (V u, V v) ∈ Δ[K₂]^{1/2}.graph ↔
-      (u, v) ∈ Δ[K₁]^{1/2}.graph := by
+/-- **Covariance of `Δ^{1/2}`**: if `V K₁ = K₂`, then `Δ_{K₂}^{1/2} V = V Δ_{K₁}^{1/2}`. -/
+lemma sqrt_modular_compNat_eq :
+    Δ[K₂]^{1/2}.compNat ((V : H₁ →ₛₗ[σ] H₂).toPMap ⊤) = (V : H₁ →ₛₗ[σ] H₂).compPMap Δ[K₁]^{1/2} := by
   have hfun : (fun t : ℝ => σ' (Real.sqrt t : ℂ)) = fun t => (Real.sqrt t : ℂ) := by
     rcases RingHom.eq_id_or_conj_of_ringHomIsometric (σ := σ) (σ' := σ') with
       ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ <;> simp
-  rw [IsSelfAdjoint.sqrt, IsSelfAdjoint.sqrt, pvm_modular_map V hV,
-    ProjectionValuedMeasure.mem_graph_integralPMap_transport _ _
+  rw [IsSelfAdjoint.sqrt, IsSelfAdjoint.sqrt, ProjectionValuedMeasure.sqrt,
+    ProjectionValuedMeasure.sqrt, pvm_modular_map V hV,
+    ProjectionValuedMeasure.integralPMap_transport_compNat _ _
       (f := fun t : ℝ => (Real.sqrt t : ℂ))
-      (Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable),
-    V.symm_apply_apply, V.symm_apply_apply, hfun]
+      (Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable), hfun]
+
+/-- `Δ_{K₂}^{1/2} = V Δ_{K₁}^{1/2} V⁻¹`, pointwise, if `V K₁ = K₂`. -/
+private lemma mem_graph_sqrt_modular_map_iff {u v : H₁} :
+    (V u, V v) ∈ Δ[K₂]^{1/2}.graph ↔ (u, v) ∈ Δ[K₁]^{1/2}.graph :=
+  ((LinearPMap.compNat_toPMap_eq_compPMap_iff V.toLinearEquiv).mp
+    (sqrt_modular_compNat_eq V hV) u v).symm
 
 /-- **Covariance of the modular conjugation**: if `V K₁ = K₂`, then `J_{K₂} = V J_{K₁} V⁻¹`. -/
 theorem modularConj_map (x : H₁) : J[K₂] (V x) = V (J[K₁] x) := by
@@ -932,7 +999,7 @@ theorem modularGroup_map (V : H₁ ≃ₗᵢ[ℂ] H₂)
 `K₂`, then `V Δ_{K₁}^{it} V* = Δ_{K₂}^{-it}`. -/
 lemma modularGroup_map_of_antiunitary (V : H₁ ≃ₗᵢ⋆[ℂ] H₂)
     (hV : ∀ ξ, V ξ ∈ K₂ ↔ ξ ∈ K₁) (t : ℝ) (x : H₁) :
-    Δ[K₂]^{i (-t)} (V x) = V (Δ[K₁]^{i t} x) := by
+    Δ[K₂]^{-i t} (V x) = V (Δ[K₁]^{i t} x) := by
   simpa using modularGroup_map_aux V hV t x
 
 end CovarianceGroup

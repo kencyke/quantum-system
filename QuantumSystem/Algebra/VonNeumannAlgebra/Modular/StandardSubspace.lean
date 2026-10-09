@@ -50,7 +50,8 @@ apply to von Neumann algebras.
   `VonNeumannAlgebra.isCyclicVector_iff_isSeparatingVector_commutant` — `Ω` is separating
   (cyclic) for `M` iff it is cyclic (separating) for `M′`.
 * `VonNeumannAlgebra.closure_relativeTomita_self_eq_tomita` — `S̄_{Ω,Ω} = S_{H_M}`.
-* `VonNeumannAlgebra.relativeModular_self_eq_modular` — `Δ_{Ω,Ω} = Δ_{H_M}`.
+* `VonNeumannAlgebra.relativeModular_self_eq_modular`, `VonNeumannAlgebra.relativeModularGroup_self` —
+  `Δ_{Ω,Ω} = Δ_{H_M}` and `Δ_{Ω,Ω}^{it} = Δ_{H_M}^{it}`.
 * `VonNeumannAlgebra.apply_mem_standardSubspace_of_adjoint_apply` — a bounded `V` with
   `V† Ω₂ = Ω₁` and `V M₁ V† ⊆ M₂` maps `H_{M₁}` into `H_{M₂}`.
 
@@ -336,6 +337,16 @@ theorem relativeModular_self_eq_modular : Δ[M]⟦Ω, Ω⟧ = Δ[H[M, Ω]] := by
   refine LinearPMap.restrictScalars_injective (R := ℝ) ?_
   rw [restrictScalars_relativeModular, StandardSubspace.restrictScalars_modular,
     closure_relativeTomita_self_eq_tomita hc hs]
+
+/-- **The modular group of `(M, Ω)`**: `Δ_{Ω,Ω}^{it}` is the modular group `Δ_{H_M}^{it}` of the
+standard subspace `H_M`. -/
+lemma relativeModularGroup_self (t : ℝ) : Δ[M]⟦Ω, Ω⟧^{i t} = Δ[H[M, Ω]]^{i t} := by
+  have key : ∀ {A B : H →ₗ.[ℂ] H} (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B), A = B →
+      hA.imaginaryPower t = hB.imaginaryPower t := by
+    rintro A B hA hB rfl
+    rfl
+  rw [relativeModularGroup, key _ _ (relativeModular_self_eq_modular hc hs)]
+  rfl
 
 /-! ### Transport between standard subspaces -/
 

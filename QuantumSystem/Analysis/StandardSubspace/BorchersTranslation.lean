@@ -240,7 +240,7 @@ variable [FiniteDimensional ℝ V] [T2Space V] {a b z : V}
 `s' = log s / 2π`. -/
 private lemma eq_of_pos (haK : a ∈ hT.translationCone K) (haC : a ∈ hT.spectralCone) {s : ℝ}
     (hs : 0 < s) :
-    (∀ (t : ℝ) (x : H), Δ[K]^{i t} ((T (s • a) : H →L[ℂ] H) (Δ[K]^{i (-t)} x)) =
+    (∀ (t : ℝ) (x : H), Δ[K]^{i t} ((T (s • a) : H →L[ℂ] H) (Δ[K]^{-i t} x)) =
       (T ((Real.exp (-2 * π * t) * s) • a) : H →L[ℂ] H) x) ∧
     ∀ x, J[K] ((T (s • a) : H →L[ℂ] H) (J[K] x)) = (T (-(s • a)) : H →L[ℂ] H) x := by
   obtain ⟨W, hW, hB, hWt, hWt'⟩ := hT.exists_boostFamily haC

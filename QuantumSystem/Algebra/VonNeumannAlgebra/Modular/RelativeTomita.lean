@@ -24,12 +24,12 @@ operator `Δ_{η,ξ} = S̄†S̄` (downstream), and Araki's relative entropy of 
 `ω_ξ`, `ω_η` is `S(ω_ξ ‖ ω_η) = -⟪ξ, log Δ_{η,ξ} ξ⟫`. In Araki's notation `S_{Φ,Ψ}` this is
 `Φ = η`, `Ψ = ξ`; Ohya–Petz write `S_{η,ξ}` as here.
 
-The equality `S_{η,ξ}† = F̄_{η,ξ}` is proved for `ξ` cyclic and separating and `η` cyclic
-(`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`); for general `η, ξ` only
-`F_{η,ξ} ⊆ S_{η,ξ}†` is proved.
+The equality `S_{η,ξ}† = F̄_{η,ξ}` holds for arbitrary `η, ξ`
+(`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`, in
+`QuantumSystem.Algebra.VonNeumannAlgebra.Modular.TomitaAdjoint`).
 Transformation rules along isometric intertwiners between different Hilbert spaces (spatial
 isomorphisms, amplifications) are in `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial`
-(`VonNeumannAlgebra.mem_graph_relativeTomita_of_intertwiner` and companions).
+(`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_intertwiner` and companions).
 
 A conjugate-linear operator is a real-linear `LinearPMap` satisfying
 `LinearPMap.IsSemilinear (starRingEnd ℂ)`;
@@ -53,11 +53,11 @@ adjoints are real adjoints for the inner product `re ⟪·, ·⟫` (`open Closed
   (`VonNeumannAlgebra.isFormalAdjoint_relativeTomita`), `F ≤ S†`
   (`VonNeumannAlgebra.relativeTomita_commutant_le_adjoint`) and `S_{η,ξ}` is closable
   (`VonNeumannAlgebra.isClosable_relativeTomita`).
-* Transformation rules, as operator identities with graph-form companions (`…_iff`):
+* Transformation rules, as operator identities:
   `S_{w′ η, ξ} = w′ S_{η,ξ}` for `w′ ∈ M′` (`relativeTomita_apply_left`),
   `S_{a η, ξ} = a S_{η,ξ}` (`relativeTomita_smul_left`),
   `S_{η, c ξ} = c̄⁻¹ S_{η,ξ}` for `c ≠ 0` (`relativeTomita_smul_right`) and
-  `S_{η, v′ ξ} = S_{η,ξ} v′⋆` for `v′ ∈ M′` with `v′⋆ v′ ξ = ξ` (`relativeTomita_apply_right`).
+  `S_{η, w′ ξ} = S_{η,ξ} w′⋆` for `w′ ∈ M′` with `w′⋆ w′ ξ = ξ` (`relativeTomita_apply_right`).
 
 ## References
 
@@ -255,8 +255,8 @@ theorem isClosable_relativeTomita : (S⟦η, ξ⟧).IsClosable :=
 
 variable {M η ξ} {u v : H} {w : H →L[ℂ] H}
 
-/-- Replacing `η` by `w′ η` for `w′ ∈ M′`, in graph form: `S_{w′ η, ξ} = w′ S_{η,ξ}`. -/
-theorem mem_graph_relativeTomita_apply_left_iff (hw : w ∈ M′) :
+/-- `S_{w′ η, ξ} = w′ S_{η,ξ}`, pointwise. -/
+private lemma mem_graph_relativeTomita_apply_left_iff (hw : w ∈ M′) :
     (u, v) ∈ (S⟦w η, ξ⟧).graph ↔
       ∃ v₀, (u, v₀) ∈ (S⟦η, ξ⟧).graph ∧ w v₀ = v := by
   have key : ∀ x ∈ M, M.supportProj ξ (star x (w η)) = w (M.supportProj ξ (star x η)) :=
@@ -274,14 +274,13 @@ theorem mem_graph_relativeTomita_apply_left_iff (hw : w ∈ M′) :
 
 /-- Replacing `η` by `w′ η` for `w′ ∈ M′`: `S_{w′ η, ξ} = w′ S_{η,ξ}`. -/
 theorem relativeTomita_apply_left (hw : w ∈ M′) :
-    S⟦w η, ξ⟧ =
-      ((w : H →ₗ[ℂ] H).restrictScalars ℝ).compPMap (S⟦η, ξ⟧) :=
+    S⟦w η, ξ⟧ = w ⬝ S⟦η, ξ⟧ :=
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_apply_left_iff hw, LinearPMap.mem_graph_compPMap]
     rfl
 
-/-- Scaling `η`, in graph form: `S_{a η, ξ} = a S_{η,ξ}`. -/
-theorem mem_graph_relativeTomita_smul_left_iff (a : ℂ) :
+/-- `S_{a η, ξ} = a S_{η,ξ}`, pointwise. -/
+private lemma mem_graph_relativeTomita_smul_left_iff (a : ℂ) :
     (u, v) ∈ (S⟦a • η, ξ⟧).graph ↔
       ∃ v₀, (u, v₀) ∈ (S⟦η, ξ⟧).graph ∧ a • v₀ = v := by
   have hw : a • (1 : H →L[ℂ] H) ∈ M′ := SMulMemClass.smul_mem a (one_mem M′)
@@ -293,8 +292,8 @@ theorem relativeTomita_smul_left (a : ℂ) :
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_smul_left_iff, LinearPMap.mem_graph_smul]
 
-/-- Scaling `ξ` by `c ≠ 0`, in graph form: `S_{η, c ξ} = c̄⁻¹ S_{η,ξ}`. -/
-theorem mem_graph_relativeTomita_smul_right_iff {c : ℂ} (hc : c ≠ 0) :
+/-- `S_{η, c ξ} = c̄⁻¹ S_{η,ξ}`, pointwise. -/
+private lemma mem_graph_relativeTomita_smul_right_iff {c : ℂ} (hc : c ≠ 0) :
     (u, v) ∈ (S⟦η, c • ξ⟧).graph ↔
       ∃ v₀, (u, v₀) ∈ (S⟦η, ξ⟧).graph ∧ (conj c)⁻¹ • v₀ = v := by
   have hK := InnerProductSpace.cyclicSubspace_smul (M : Set (H →L[ℂ] H)) ξ hc
@@ -320,9 +319,8 @@ theorem relativeTomita_smul_right {c : ℂ} (hc : c ≠ 0) :
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_smul_right_iff hc, LinearPMap.mem_graph_smul]
 
-/-- Replacing `ξ` by `v′ ξ` for `v′ ∈ M′` with `v′⋆ v′ ξ = ξ`, in graph form:
-`S_{η, v′ ξ} = S_{η,ξ} v′⋆`. -/
-theorem mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
+/-- `S_{η, w′ ξ} = S_{η,ξ} w′⋆`, pointwise. -/
+private lemma mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
     (u, v) ∈ (S⟦η, w ξ⟧).graph ↔ (star w u, v) ∈ (S⟦η, ξ⟧).graph := by
   have hw' : star w ∈ M′ := star_mem hw
   have hs := supportProj_apply_of_mem_commutant (M := M) hw hwξ
@@ -342,7 +340,7 @@ theorem mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star 
   · obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
     obtain ⟨h₁, rfl⟩ := Prod.ext_iff.mp h
     dsimp only at h₁
-    -- `u = x (v′ ξ) + (u - x (v′ ξ))` with `u - x (v′ ξ) ⊥ [M v′ ξ]`.
+    -- `u = x (w′ ξ) + (u - x (w′ ξ))` with `u - x (w′ ξ) ⊥ [M w′ ξ]`.
     have hζ' : u - x (w ξ) ∈ (cyclicSubspace M (w ξ)).toSubmoduleᗮ := by
       rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
       intro a ha
@@ -353,10 +351,9 @@ theorem mem_graph_relativeTomita_apply_right_iff (hw : w ∈ M′) (hwξ : star 
     · abel
     · rw [hs]
 
-/-- Replacing `ξ` by `v′ ξ` for `v′ ∈ M′` with `v′⋆ v′ ξ = ξ`: `S_{η, v′ ξ} = S_{η,ξ} v′⋆`. -/
+/-- Replacing `ξ` by `w′ ξ` for `w′ ∈ M′` with `w′⋆ w′ ξ = ξ`: `S_{η, w′ ξ} = S_{η,ξ} w′⋆`. -/
 theorem relativeTomita_apply_right (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
-    S⟦η, w ξ⟧ = (S⟦η, ξ⟧).compNat
-      ((((star w : H →L[ℂ] H) : H →ₗ[ℂ] H).restrictScalars ℝ).toPMap ⊤) :=
+    S⟦η, w ξ⟧ = S⟦η, ξ⟧ ⬝ star w :=
   LinearPMap.eq_of_eq_graph <| Submodule.ext fun ⟨_, _⟩ => by
     rw [mem_graph_relativeTomita_apply_right_iff hw hwξ, LinearPMap.mem_graph_compNat_toPMap]
     rfl

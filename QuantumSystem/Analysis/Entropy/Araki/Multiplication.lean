@@ -57,9 +57,8 @@ symmetric extension of the self-adjoint `M_{q/p}` is `M_{q/p}` itself (`IsSelfAd
 
 ## Main results
 
-* `VonNeumannAlgebra.relativeModular_densityVec_eq_mulPMap` — `Δ_{ξ_Q, ξ_P} = M_{q/p}`;
-  `VonNeumannAlgebra.mem_graph_relativeModular_densityVec_iff` — in graph form,
-  `(u, v) ∈ graph Δ ↔ (q / p) u ∈ L² ∧ v = (q / p) u`.
+* `VonNeumannAlgebra.relativeModular_densityVec_eq_mulPMap` — `Δ_{ξ_Q, ξ_P} = M_{q/p}`, with
+  `q / 0 = 0` on `{p = 0}`.
 * `VonNeumannAlgebra.measure_pvm_relativeModular_densityVec` — for `P ≪ μ` with a Lebesgue
   decomposition, the spectral measure of `Δ_{ξ_Q, ξ_P}` at `ξ_P` is `(q / p)_* P`.
 * `VonNeumannAlgebra.arakiVec_densityVec` — `S(ω_{ξ_P} ‖ ω_{ξ_Q}) = ∫ log (dP/dQ) dP` if `P ≪ Q`,
@@ -243,7 +242,7 @@ private theorem mem_graph_relativeModular_densityVec_of_bounded {B : Set α} (hB
     rw [supportProj_commutant, Submodule.starProjection_eq_self_iff, e₃]
     exact InnerProductSpace.apply_mem_cyclicSubspace ξ (mulL2_mem_multiplicationAlgebra K)
   rw [← map_star, hs₂, e₃, e₄] at hFt
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat]
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
   refine ⟨mulL2 G ξ, mem_graph_closure_relativeTomita hS, ?_⟩
   rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita _ _ _)]
   exact LinearPMap.le_graph_of_le (relativeTomita_commutant_le_adjoint _ _ _) hFt
@@ -306,14 +305,14 @@ theorem mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos {u : Lp �
     rw [← hc, ← ContinuousLinearMap.adjoint_inner_right, hEsa, hEu, inner_zero_right]
   have hS' := mk_mem_graph_relativeTomita (M := M) (η := densityVec Q μ) (ξ := ξ) (zero_mem M) hζ
   simp only [zero_apply, zero_add, star_zero, map_zero] at hS'
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat]
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
   exact ⟨0, mem_graph_closure_relativeTomita hS', Submodule.zero_mem _⟩
 
 /-- **The relative modular operator of a multiplication algebra extends multiplication by
 `q / p`**: for finite measures `P, Q` with densities `p, q` with respect to `μ`,
 `Δ_{ξ_Q, ξ_P} u = (q / p) u` whenever `u` and `(q / p) u` are in `L²`. On `{p = 0}` the multiplier
 is `q / 0 = 0`, matching `mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos`. There
-are no other vectors in the domain (`mem_graph_relativeModular_densityVec_iff`). -/
+are no other vectors in the domain (`relativeModular_densityVec_eq_mulPMap`). -/
 theorem mem_graph_relativeModular_densityVec_of_memLp {u : Lp ℂ 2 μ}
     (hu : MemLp (fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x) 2 μ) :
     (u, hu.toLp _) ∈
@@ -413,15 +412,6 @@ theorem relativeModular_densityVec_eq_mulPMap :
       obtain ⟨hu, hv⟩ := L2.mem_graph_mulPMap.mp huv
       convert mem_graph_relativeModular_densityVec_of_memLp hu
       exact Lp.ext (hv.trans hu.coeFn_toLp.symm))
-
-/-- The graph of the relative modular operator of a multiplication algebra:
-`(u, v) ∈ graph Δ_{ξ_Q, ξ_P} ↔ (q / p) u ∈ L² ∧ v = (q / p) u`, with `q / 0 = 0` on `{p = 0}`. -/
-theorem mem_graph_relativeModular_densityVec_iff {u v : Lp ℂ 2 μ} :
-    (u, v) ∈ (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph ↔
-      MemLp (fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x) 2 μ ∧
-        ⇑v =ᵐ[μ] fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x := by
-  rw [relativeModular_densityVec_eq_mulPMap]
-  exact L2.mem_graph_mulPMap
 
 /-- **Spectral measure**: for finite measures `P, Q` with `P ≪ μ`, the spectral measure of
 `Δ_{ξ_Q, ξ_P}` at `ξ_P` is the image of `P` under `q / p`. This needs only a Lebesgue

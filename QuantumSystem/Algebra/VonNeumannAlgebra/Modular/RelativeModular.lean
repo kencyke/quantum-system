@@ -7,6 +7,9 @@ module
 
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Modular.RelativeTomita
 public import QuantumSystem.Algebra.VonNeumannAlgebra.Support
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
+public import QuantumSystem.Analysis.UnboundedOperator.PolarDecomposition
+public import QuantumSystem.Analysis.UnboundedOperator.Power
 public import QuantumSystem.Analysis.UnboundedOperator.SpectralCalculus
 
 /-!
@@ -36,7 +39,10 @@ the polar decomposition `S̄ = J Δ^{1/2}`, `J M J = M′`, `Δ^{it} M Δ^{-it} 
 automorphism group and the KMS condition — describe *properties* of `Δ` and are not used
 anywhere in the construction of the relative entropy or in its monotonicity
 (`QuantumSystem.Analysis.Entropy.Araki.Monotonicity`). The polar decomposition
-`S̄_{η,ξ} = U Δ_{η,ξ}^{1/2}` is the general `IsSelfAdjoint.eq_polarIsometry_compPMap`. For a cyclic
+`S̄_{η,ξ} = J_{η,ξ} Δ_{η,ξ}^{1/2}` is the general `IsSelfAdjoint.eq_polarIsometry_compPMap`, with the
+relative modular conjugation `J_{η,ξ}` (`VonNeumannAlgebra.relativeModularConj`), antiunitary for
+`ξ`, `η` cyclic and separating (`VonNeumannAlgebra.relativeModularConjEquiv`, which rests on
+`S_{η,ξ}† = F̄_{η,ξ}`). For a cyclic
 and separating `Ω`, `Δ_{Ω,Ω}` is the modular operator of the standard subspace
 `H_M = closure (M_sa Ω)` (`VonNeumannAlgebra.relativeModular_self_eq_modular`,
 `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.StandardSubspace`), so `S̄_{Ω,Ω} = J Δ^{1/2}` with
@@ -50,13 +56,19 @@ condition of `ω_Ω`.
 * `VonNeumannAlgebra.relativeModular M η ξ` — the relative modular operator `Δ_{η,ξ} = S̄†S̄`, the
   operator `LinearPMap.adjointCompClosure` of the relative Tomita operator.
 * `VonNeumannAlgebra.relativeModularMeasure M η ξ` — its spectral measure `μ_ξ` at `ξ`.
+* `VonNeumannAlgebra.relativeModularGroup M η ξ t` — the relative modular group
+  `Δ_{η,ξ}^{it} = ∫_{(0,∞)} λ^{it} dE(λ)`, a group of partial isometries on `(ker Δ_{η,ξ})ᗮ`
+  vanishing on `ker Δ_{η,ξ}`.
 
 ## Notation
 
 With the algebra `M` fixed, this file writes `S⟦η, ξ⟧`, `Δ⟦η, ξ⟧` and `μ⟦η, ξ⟧` for
 `S[M]⟦η, ξ⟧`, `Δ[M]⟦η, ξ⟧` and `μ[M]⟦η, ξ⟧` (local notations, not exported); the latter are
 the exported `scoped` notations for `relativeTomita M η ξ`, `relativeModular M η ξ` and
-`relativeModularMeasure M η ξ`. The closure `S̄_{η,ξ}` is `S⟦η, ξ⟧.closure`.
+`relativeModularMeasure M η ξ`. The closure `S̄_{η,ξ}` is `S⟦η, ξ⟧.closure`. The scoped
+notations `Δ[M]⟦η, ξ⟧^{1/2}`, `Δ[M]⟦η, ξ⟧^{i t}` and `Δ[M]⟦η, ξ⟧^{-i t}` write the square root
+`Δ_{η,ξ}^{1/2}` and the relative modular group `Δ_{η,ξ}^{±it}`; the exponent `t` is parsed at `max`
+precedence (`Δ[M]⟦η, ξ⟧^{i (s + t)}`).
 
 ## Main results
 
@@ -64,21 +76,26 @@ the exported `scoped` notations for `relativeTomita M η ξ`, `relativeModular M
   — `Δ_{η,ξ}` is positive self-adjoint.
 * `VonNeumannAlgebra.restrictScalars_relativeModular` — `Δ_{η,ξ} = S̄†S̄` as real operators.
 * `VonNeumannAlgebra.re_inner_eq_norm_sq_of_mem_graph_relativeModular` — `re ⟪u, Δ u⟫ = ‖S̄ u‖²`.
-* `VonNeumannAlgebra.mem_graph_relativeModular_zero_iff` — `ker Δ_{η,ξ} = ker S̄`.
+* `VonNeumannAlgebra.ker_relativeModular` — `ker Δ_{η,ξ} = ker S̄`.
+* `VonNeumannAlgebra.relativeModularGroup_add`, `VonNeumannAlgebra.relativeModularGroup_zero` —
+  `Δ_{η,ξ}^{it}` is a group of partial isometries with unit the support projection of `Δ_{η,ξ}`.
 * `VonNeumannAlgebra.measure_pvm_relativeModular_singleton_zero_eq_zero_iff` — **support
   theorem**: `μ_ξ {0} = 0 ↔ s(ξ) ≤ s(η)`.
-* `VonNeumannAlgebra.lintegral_measure_pvm_relativeModular_le` — `∫ λ dμ_ξ ≤ ‖s(ξ) η‖²`.
+* `VonNeumannAlgebra.lintegral_measure_pvm_relativeModular_le`,
+  `VonNeumannAlgebra.lintegral_measure_pvm_relativeModular_eq` — `∫ λ dμ_ξ = ‖s(ξ) η‖²`.
 * `VonNeumannAlgebra.self_mem_graph_relativeModular_self`,
   `VonNeumannAlgebra.measure_pvm_relativeModular_self` — `Δ_{ξ,ξ} ξ = ξ`, hence
   `μ_ξ = ‖ξ‖² δ₁` for `Δ_{ξ,ξ}`.
 * `VonNeumannAlgebra.relativeModular_apply_left`, `VonNeumannAlgebra.relativeModular_smul_left`,
   `VonNeumannAlgebra.relativeModular_smul_right` — `Δ_{w′ η, ξ} = r Δ_{η,ξ}` for `w′ ∈ M′` with
   `w′⋆ w′ η = r η`; `Δ_{a η, ξ} = |a|² Δ_{η,ξ}`; `Δ_{η, c ξ} = |c|⁻² Δ_{η,ξ}`.
+* `VonNeumannAlgebra.compPMap_relativeModular_le_of_mem_commutant` — `w′ Δ_{η,ξ} ⊆ Δ_{η, w′ ξ} w′`
+  for `w′ ∈ M′` with `w′⋆ w′ ξ = ξ`.
 * `VonNeumannAlgebra.measure_pvm_relativeModular_apply_left`,
   `VonNeumannAlgebra.measure_pvm_relativeModular_smul_left`,
   `VonNeumannAlgebra.measure_pvm_relativeModular_smul_right`,
   `VonNeumannAlgebra.measure_pvm_relativeModular_apply_right` — the corresponding statements
-  for the spectral measure `μ_ξ` (for `v′ ∈ M′` with `v′⋆ v′ ξ = ξ`, `μ_{v′ξ}` of `Δ_{η, v′ ξ}` is
+  for the spectral measure `μ_ξ` (for `w′ ∈ M′` with `w′⋆ w′ ξ = ξ`, `μ_{w′ξ}` of `Δ_{η, w′ ξ}` is
   `μ_ξ` of `Δ_{η,ξ}`).
 * `VonNeumannAlgebra.relativeModular_eq_of_inner_eq_left`,
   `VonNeumannAlgebra.measure_pvm_relativeModular_eq_of_inner_eq_right`,
@@ -87,6 +104,13 @@ the exported `scoped` notations for `relativeTomita M η ξ`, `relativeModular M
 
 Transformations along isometric intertwiners between different Hilbert spaces (spatial
 isomorphisms, amplifications) are in `QuantumSystem.Algebra.VonNeumannAlgebra.Modular.Spatial`.
+
+## References
+
+* H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976).
+* H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
+  (1982), §2 — the relative modular operators and groups for vectors that are not cyclic and
+  separating.
 -/
 
 @[expose] public section
@@ -115,7 +139,8 @@ lemma isClosed_closure_relativeTomita : (S⟦η, ξ⟧).closure.IsClosed :=
   (isClosable_relativeTomita M η ξ).closure_isClosed
 
 variable {M η ξ} in
-/-- The graph of `S_{η,ξ}` lies in that of its closure. -/
+/-- `S_{η,ξ} ⊆ S̄_{η,ξ}` (`LinearPMap.le_closure`) at a single graph point, for computations of
+`S̄_{η,ξ}` on given vectors. -/
 lemma mem_graph_closure_relativeTomita {p : H × H} (hp : p ∈ (S⟦η, ξ⟧).graph) :
     p ∈ (S⟦η, ξ⟧).closure.graph :=
   LinearPMap.le_graph_of_le (LinearPMap.le_closure _) hp
@@ -141,8 +166,9 @@ theorem restrictScalars_relativeModular :
   LinearPMap.restrictScalars_adjointCompClosure _ _
 
 variable {M η ξ} in
-/-- The graph of `Δ_{η,ξ}` is that of `S̄†S̄`. -/
-theorem mem_graph_relativeModular {p : H × H} :
+/-- `Δ_{η,ξ} = S̄†S̄` (`VonNeumannAlgebra.restrictScalars_relativeModular`) at a single graph point,
+for computations of `Δ_{η,ξ}` on given vectors. -/
+lemma mem_graph_relativeModular_iff {p : H × H} :
     p ∈ (Δ⟦η, ξ⟧).graph ↔
       p ∈ ((S⟦η, ξ⟧).closure†.compNat (S⟦η, ξ⟧).closure).graph := by
   rw [← LinearPMap.mem_graph_restrictScalars (R := ℝ), restrictScalars_relativeModular]
@@ -154,6 +180,69 @@ theorem isSelfAdjoint_relativeModular : IsSelfAdjoint (Δ⟦η, ξ⟧) :=
 /-- `Δ_{η,ξ}` is positive. -/
 theorem isPositive_relativeModular : (Δ⟦η, ξ⟧).IsPositive :=
   LinearPMap.isPositive_adjointCompClosure _ _
+
+/-- `Δ[M]⟦η, ξ⟧^{1/2}` is the positive square root `Δ_{η,ξ}^{1/2} = |S̄_{η,ξ}|` of the relative
+modular operator. -/
+scoped notation "Δ[" M "]⟦" η ", " ξ "⟧^{1/2}" =>
+  IsSelfAdjoint.sqrt (VonNeumannAlgebra.isSelfAdjoint_relativeModular M η ξ)
+
+open Lean PrettyPrinter Delaborator SubExpr in
+/-- Delaborator displaying `IsSelfAdjoint.sqrt (VonNeumannAlgebra.isSelfAdjoint_relativeModular M η ξ)`
+as `Δ[M]⟦η, ξ⟧^{1/2}`; an unexpander cannot do this, since the proof argument is elided as `⋯`. -/
+@[scoped delab app.IsSelfAdjoint.sqrt]
+meta def delabSqrtRelativeModular : Delab := do
+  let e ← getExpr
+  guard <| e.appArg!.isAppOfArity ``VonNeumannAlgebra.isSelfAdjoint_relativeModular 7
+  let M ← withAppArg <| withNaryArg 4 delab
+  let η ← withAppArg <| withNaryArg 5 delab
+  let ξ ← withAppArg <| withNaryArg 6 delab
+  `(Δ[$M]⟦$η, $ξ⟧^{1/2})
+
+/-- The **relative modular group** `t ↦ Δ_{η,ξ}^{it} = ∫_{(0,∞)} λ^{it} dE(λ)`
+(`IsSelfAdjoint.imaginaryPower`, with `0^{it} = 0`): partial isometries with initial and final space
+`E_Δ((0, ∞)) H = (ker Δ_{η,ξ})ᗮ` (`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`,
+`IsSelfAdjoint.norm_imaginaryPower_apply`,
+`IsSelfAdjoint.pvm_Ioi_imaginaryPower_apply`), strongly continuous in `t`
+(`IsSelfAdjoint.continuous_imaginaryPower_apply`), and a group of partial isometries on
+`E_Δ((0, ∞)) H`: `Δ_{η,ξ}^{i(s+t)} = Δ_{η,ξ}^{is} Δ_{η,ξ}^{it}`
+(`VonNeumannAlgebra.relativeModularGroup_add`) with unit `Δ_{η,ξ}^{i0} = E_Δ((0, ∞))`
+(`VonNeumannAlgebra.relativeModularGroup_zero`). It is the family of Araki–Masuda 1982 and of Connes'
+cocycle `(Dη : Dξ)_t = Δ_{η,ξ}^{it} Δ_ξ^{-it}`. For `ξ` cyclic and `η` separating, `Δ_{η,ξ}` is injective
+(`VonNeumannAlgebra.ker_relativeModular_eq_bot`) and `Δ_{η,ξ}^{it}` is the unitary group generated
+by `log Δ_{η,ξ}` (`VonNeumannAlgebra.relativeModularGroup_eq_unitaryGroup`); for a cyclic and separating `Ω`,
+`Δ_{Ω,Ω}^{it}` is the modular group of the standard subspace `H_M`
+(`VonNeumannAlgebra.relativeModularGroup_self`). -/
+noncomputable def relativeModularGroup (t : ℝ) : H →L[ℂ] H :=
+  (isSelfAdjoint_relativeModular M η ξ).imaginaryPower t
+
+/-- `Δ[M]⟦η, ξ⟧^{i t}` is the partial isometry `Δ_{η,ξ}^{it}` of the relative modular group. The
+exponent is parsed at `max` precedence, so a compound exponent needs parentheses. -/
+scoped notation "Δ[" M "]⟦" η ", " ξ "⟧^{i " t:max "}" => VonNeumannAlgebra.relativeModularGroup M η ξ t
+
+/-- `Δ[M]⟦η, ξ⟧^{-i t}` is `Δ_{η,ξ}^{-it} = Δ_{η,ξ}^{i(-t)}`. -/
+scoped notation "Δ[" M "]⟦" η ", " ξ "⟧^{-i " t:max "}" =>
+  VonNeumannAlgebra.relativeModularGroup M η ξ (-t)
+
+/-- Displays `VonNeumannAlgebra.relativeModularGroup M η ξ t` as `Δ[M]⟦η, ξ⟧^{i t}`, and
+`VonNeumannAlgebra.relativeModularGroup M η ξ (-t)` as `Δ[M]⟦η, ξ⟧^{-i t}`. -/
+@[scoped app_unexpander VonNeumannAlgebra.relativeModularGroup]
+meta def relativeModularGroupUnexpander : Lean.PrettyPrinter.Unexpander
+  | `($_ $M $η $ξ $t) => match t with
+    | `(-$t') => `(Δ[$M]⟦$η, $ξ⟧^{-i $t'})
+    | _ => `(Δ[$M]⟦$η, $ξ⟧^{i $t})
+  | _ => throw ()
+
+/-- **Group law** of the relative modular group: `Δ_{η,ξ}^{i(s+t)} = Δ_{η,ξ}^{is} Δ_{η,ξ}^{it}`. -/
+lemma relativeModularGroup_add (s t : ℝ) :
+    Δ[M]⟦η, ξ⟧^{i (s + t)} = Δ[M]⟦η, ξ⟧^{i s} * Δ[M]⟦η, ξ⟧^{i t} :=
+  (isSelfAdjoint_relativeModular M η ξ).imaginaryPower_add s t
+
+/-- The unit of the relative modular group is the support projection
+`Δ_{η,ξ}^{i0} = E_Δ((0, ∞))` of `Δ_{η,ξ}`, the projection onto `(ker Δ_{η,ξ})ᗮ`
+(`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`). -/
+lemma relativeModularGroup_zero :
+    Δ[M]⟦η, ξ⟧^{i 0} = (isSelfAdjoint_relativeModular M η ξ).pvm (Set.Ioi 0) :=
+  (isSelfAdjoint_relativeModular M η ξ).imaginaryPower_zero
 
 /-- The **spectral measure** `μ_ξ = ⟪E_{Δ_{η,ξ}}(·) ξ, ξ⟫` of the relative modular operator at
 `ξ`: the finite measure on `ℝ` of total mass `‖ξ‖²` whose `-∫ log λ dμ_ξ(λ)` is Araki's relative
@@ -177,11 +266,11 @@ theorem re_inner_eq_norm_sq_of_mem_graph_relativeModular {u u' y : H}
   (isSelfAdjoint_relativeModular M η ξ).re_inner_eq_norm_sq_of_restrictScalars_eq
     (restrictScalars_relativeModular M η ξ) hu hy
 
-/-- `ker Δ_{η,ξ} = ker S̄_{η,ξ}`, in graph form. -/
-theorem mem_graph_relativeModular_zero_iff {u : H} :
-    (u, 0) ∈ (Δ⟦η, ξ⟧).graph ↔ (u, 0) ∈ (S⟦η, ξ⟧).closure.graph := by
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_adjoint_compNat_self_zero_iff
-    (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))]
+/-- **`ker Δ_{η,ξ} = ker S̄_{η,ξ}`**, since `Δ_{η,ξ} = S̄†S̄`. -/
+lemma ker_relativeModular :
+    (Δ⟦η, ξ⟧).ker.restrictScalars ℝ = (S⟦η, ξ⟧).closure.ker :=
+  (isSelfAdjoint_relativeModular M η ξ).ker_restrictScalars_eq_of_restrictScalars_eq
+    (restrictScalars_relativeModular M η ξ)
 
 /-- A vector `u` in the kernel of `S̄_{η,ξ}` is orthogonal to the range of the relative Tomita
 operator `F_{η,ξ}` of `M′`: `F_{η,ξ} ⊆ S̄_{η,ξ}†` and `ker S̄` is a complex subspace. -/
@@ -206,7 +295,8 @@ theorem measure_pvm_relativeModular_singleton_zero_eq_zero_iff :
   have hK : ∀ u, u ∈ (hΔ.isClosed.eigenspace ((0 : ℝ) : ℂ)).toSubmodule ↔ (u, 0) ∈ S.closure.graph :=
     fun u => by
       rw [ClosedSubmodule.mem_toSubmodule_iff, LinearPMap.IsClosed.mem_eigenspace_iff, ofReal_zero,
-        zero_smul, mem_graph_relativeModular_zero_iff]
+        zero_smul, LinearPMap.mem_graph_zero_iff_mem_ker, LinearPMap.mem_graph_zero_iff_mem_ker,
+        ← ker_relativeModular, Submodule.restrictScalars_mem]
   have hsη := M.isStarProjection_supportProj η
   rw [hΔ.measure_pvm_singleton_eq_zero_iff, Submodule.starProjection_apply_eq_zero_iff,
     Submodule.mem_orthogonal]
@@ -242,18 +332,26 @@ theorem measure_pvm_relativeModular_singleton_zero_eq_zero_iff :
     exact inner_eq_zero_of_mem_graph_closure hu this
 
 /-- **Form bound.** `∫ λ dμ_ξ(λ) ≤ ‖s(ξ) η‖²` for the spectral measure `μ_ξ` of `Δ_{η,ξ}`, since
-`S̄_{η,ξ} ξ = s(ξ) η`. (Equality holds, `S̄` being closed; only this inequality is formalised.) -/
+`S̄_{η,ξ} ξ = s(ξ) η`; equality holds (`VonNeumannAlgebra.lintegral_measure_pvm_relativeModular_eq`). -/
 theorem lintegral_measure_pvm_relativeModular_le :
     ∫⁻ t, ENNReal.ofReal t ∂μ⟦η, ξ⟧ ≤ ENNReal.ofReal (‖M.supportProj ξ η‖ ^ 2) :=
   (isSelfAdjoint_relativeModular M η ξ).lintegral_measure_pvm_le_norm_sq
     (restrictScalars_relativeModular M η ξ)
     (mem_graph_closure_relativeTomita (self_mem_graph_relativeTomita M η ξ))
 
+/-- **Form identity.** `∫ λ dμ_ξ(λ) = ‖s(ξ) η‖² = ‖Δ_{η,ξ}^{1/2} ξ‖²` for the spectral measure
+`μ_ξ` of `Δ_{η,ξ}`, since `S̄_{η,ξ} ξ = s(ξ) η` and `S̄_{η,ξ}` is closed. -/
+lemma lintegral_measure_pvm_relativeModular_eq :
+    ∫⁻ t, ENNReal.ofReal t ∂μ⟦η, ξ⟧ = ENNReal.ofReal (‖M.supportProj ξ η‖ ^ 2) :=
+  (isSelfAdjoint_relativeModular M η ξ).lintegral_measure_pvm_eq_norm_sq
+    (restrictScalars_relativeModular M η ξ) (isClosable_relativeTomita M η ξ).closure_isClosed
+    (mem_graph_closure_relativeTomita (self_mem_graph_relativeTomita M η ξ))
+
 variable (M ξ)
 
 /-- `Δ_{ξ,ξ} ξ = ξ`: `S̄_{ξ,ξ} ξ = s(ξ) ξ = ξ` and `S̄_{ξ,ξ}† ξ = F_{ξ,ξ} ξ = s′(ξ) ξ = ξ`. -/
 theorem self_mem_graph_relativeModular_self : (ξ, ξ) ∈ (Δ⟦ξ, ξ⟧).graph := by
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat]
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
   refine ⟨ξ, ?_, ?_⟩
   · simpa using mem_graph_closure_relativeTomita (self_mem_graph_relativeTomita M ξ ξ)
   · rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita M ξ ξ)]
@@ -290,28 +388,35 @@ private lemma star_apply_apply_of_mem_graph (hw : w ∈ M′) {r : ℂ} (hwη : 
     map_smul]
 
 /-- **Changing `η` along the commutant.** For `w′ ∈ M′` with `w′⋆ w′ η = r η` (`r > 0`),
-`Δ_{w′ η, ξ} = r Δ_{η,ξ}`. -/
+`Δ_{w′ η, ξ} = r Δ_{η,ξ}`: with `C = r⁻¹ w′⋆`, `S_{w′ η, ξ} = w′ S_{η,ξ}` and
+`C S_{w′ η, ξ} = S_{η,ξ}`, so `w′ S̄_{η,ξ} ⊆ S̄_{w′ η, ξ}` and `C S̄_{w′ η, ξ} ⊆ S̄_{η,ξ}`. -/
 theorem relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0 < r)
     (hwη : star w (w η) = (r : ℂ) • η) :
     Δ⟦w η, ξ⟧ = (r : ℂ) • Δ⟦η, ξ⟧ := by
   have hr0 : (r : ℂ) ≠ 0 := ofReal_ne_zero.mpr hr.ne'
   set C : H →L[ℂ] H := (r : ℂ)⁻¹ • star w
+  set wr : H →L[ℝ] H := w.restrictScalars ℝ
+  set Cr : H →L[ℝ] H := C.restrictScalars ℝ
+  have hS₂ : S⟦w η, ξ⟧ = (wr : H →ₗ[ℝ] H).compPMap (S⟦η, ξ⟧) := relativeTomita_apply_left hw
+  -- `w′⋆ w′ = r` on the range of `S_{η,ξ}`
+  have hCw : (Cr : H →ₗ[ℝ] H).compPMap (S⟦w η, ξ⟧) = S⟦η, ξ⟧ := by
+    rw [hS₂, ← LinearPMap.compPMap_comp]
+    refine LinearPMap.ext rfl fun x hx _ => ?_
+    change (r : ℂ)⁻¹ • star w (w (S⟦η, ξ⟧ ⟨x, hx⟩)) = S⟦η, ξ⟧ ⟨x, hx⟩
+    rw [star_apply_apply_of_mem_graph hw hwη ((S⟦η, ξ⟧).mem_graph ⟨x, hx⟩), inv_smul_smul₀ hr0]
+  have hB : (wr : H →ₗ[ℝ] H).compPMap (S⟦η, ξ⟧).closure ≤ (S⟦w η, ξ⟧).closure := by
+    have h := LinearPMap.compPMap_closure_le (isClosable_relativeTomita M η ξ) wr
+      (hS₂ ▸ isClosable_relativeTomita M (w η) ξ)
+    rwa [← hS₂] at h
+  have hC : (Cr : H →ₗ[ℝ] H).compPMap (S⟦w η, ξ⟧).closure ≤ (S⟦η, ξ⟧).closure := by
+    have h := LinearPMap.compPMap_closure_le (isClosable_relativeTomita M (w η) ξ) Cr
+      (hCw ▸ isClosable_relativeTomita M η ξ)
+    rwa [hCw] at h
   have key := LinearPMap.adjoint_compNat_self_eq_smul (𝕜 := ℝ)
     (T₁ := (S⟦η, ξ⟧).closure) (T₂ := (S⟦w η, ξ⟧).closure)
     (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))
     (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M (w η) ξ))
-    (B := w.restrictScalars ℝ) (C := C.restrictScalars ℝ) hr.ne'
-    (fun u v h => LinearPMap.mem_graph_closure_of_mapsTo
-      (isClosable_relativeTomita M (w η) ξ) (f := fun p : H × H => (p.1, w p.2))
-      (by fun_prop) (fun ⟨p₁, p₂⟩ hp =>
-        (mem_graph_relativeTomita_apply_left_iff hw).mpr ⟨p₂, hp, rfl⟩) h)
-    (fun u v h => LinearPMap.mem_graph_closure_of_mapsTo
-      (isClosable_relativeTomita M η ξ) (f := fun p : H × H => (p.1, C p.2))
-      (by fun_prop) (fun ⟨p₁, p₂⟩ hp => by
-        obtain ⟨v₀, hv₀, rfl⟩ := (mem_graph_relativeTomita_apply_left_iff hw).mp hp
-        convert hv₀ using 2
-        change (r : ℂ)⁻¹ • star w (w v₀) = v₀
-        rw [star_apply_apply_of_mem_graph hw hwη hv₀, inv_smul_smul₀ hr0]) h)
+    (B := wr) (C := Cr) hr.ne' hB hC
     (fun y y' => by
       change re ⟪y', w y⟫_ℂ = r * re ⟪((r : ℂ)⁻¹ • star w) y', y⟫_ℂ
       rw [smul_apply, inner_smul_left, ContinuousLinearMap.star_eq_adjoint,
@@ -331,28 +436,37 @@ theorem relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
     rw [conj_mul', ofReal_pow])
   simpa using h
 
-/-- **Scaling `ξ`.** `Δ_{η, c ξ} = |c|⁻² Δ_{η,ξ}` for `c ≠ 0`. -/
+/-- **Scaling `ξ`.** `Δ_{η, c ξ} = |c|⁻² Δ_{η,ξ}` for `c ≠ 0`: with `B = c̄⁻¹` and `C = c̄`,
+`S_{η, c ξ} = B S_{η,ξ}` and `C S_{η, c ξ} = S_{η,ξ}`. -/
 theorem relativeModular_smul_right {c : ℂ} (hc : c ≠ 0) :
     Δ⟦η, c • ξ⟧ = (((‖c‖ ^ 2)⁻¹ : ℝ) : ℂ) • Δ⟦η, ξ⟧ := by
   have hc' : conj c ≠ 0 := (map_ne_zero _).mpr hc
   have hn : 0 < ‖c‖ ^ 2 := by positivity
   set B : H →L[ℂ] H := (conj c)⁻¹ • 1
   set C : H →L[ℂ] H := conj c • 1
+  set Br : H →L[ℝ] H := B.restrictScalars ℝ
+  set Cr : H →L[ℝ] H := C.restrictScalars ℝ
+  have hS₂ : S⟦η, c • ξ⟧ = (Br : H →ₗ[ℝ] H).compPMap (S⟦η, ξ⟧) := by
+    rw [relativeTomita_smul_right hc]
+    exact LinearPMap.ext rfl fun _ _ _ => rfl
+  have hCB : (Cr : H →ₗ[ℝ] H).compPMap (S⟦η, c • ξ⟧) = S⟦η, ξ⟧ := by
+    rw [hS₂, ← LinearPMap.compPMap_comp]
+    refine LinearPMap.ext rfl fun x hx _ => ?_
+    change conj c • ((conj c)⁻¹ • S⟦η, ξ⟧ ⟨x, hx⟩) = S⟦η, ξ⟧ ⟨x, hx⟩
+    rw [smul_smul, mul_inv_cancel₀ hc', one_smul]
+  have hB : (Br : H →ₗ[ℝ] H).compPMap (S⟦η, ξ⟧).closure ≤ (S⟦η, c • ξ⟧).closure := by
+    have h := LinearPMap.compPMap_closure_le (isClosable_relativeTomita M η ξ) Br
+      (hS₂ ▸ isClosable_relativeTomita M η (c • ξ))
+    rwa [← hS₂] at h
+  have hC : (Cr : H →ₗ[ℝ] H).compPMap (S⟦η, c • ξ⟧).closure ≤ (S⟦η, ξ⟧).closure := by
+    have h := LinearPMap.compPMap_closure_le (isClosable_relativeTomita M η (c • ξ)) Cr
+      (hCB ▸ isClosable_relativeTomita M η ξ)
+    rwa [hCB] at h
   have key := LinearPMap.adjoint_compNat_self_eq_smul (𝕜 := ℝ)
     (T₁ := (S⟦η, ξ⟧).closure) (T₂ := (S⟦η, c • ξ⟧).closure)
     (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))
     (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η (c • ξ)))
-    (B := B.restrictScalars ℝ) (C := C.restrictScalars ℝ) (inv_ne_zero hn.ne')
-    (fun u v h => LinearPMap.mem_graph_closure_of_mapsTo
-      (isClosable_relativeTomita M η (c • ξ)) (f := fun p : H × H => (p.1, B p.2))
-      (by fun_prop) (fun ⟨p₁, p₂⟩ hp =>
-        (mem_graph_relativeTomita_smul_right_iff hc).mpr ⟨p₂, hp, by simp [B]⟩) h)
-    (fun u v h => LinearPMap.mem_graph_closure_of_mapsTo
-      (isClosable_relativeTomita M η ξ) (f := fun p : H × H => (p.1, C p.2))
-      (by fun_prop) (fun ⟨p₁, p₂⟩ hp => by
-        obtain ⟨v₀, hv₀, rfl⟩ := (mem_graph_relativeTomita_smul_right_iff hc).mp hp
-        convert hv₀ using 2
-        simp [C, smul_smul, inv_mul_cancel₀ hc']) h)
+    (B := Br) (C := Cr) (inv_ne_zero hn.ne') hB hC
     (fun y y' => by
       change re ⟪y', B y⟫_ℂ = (‖c‖ ^ 2)⁻¹ * re ⟪C y', y⟫_ℂ
       simp only [B, C, smul_apply, one_apply_eq_self, inner_smul_left, inner_smul_right,
@@ -364,40 +478,74 @@ theorem relativeModular_smul_right {c : ℂ} (hc : c ≠ 0) :
     key]
   rfl
 
-/-- **Changing `ξ` along the commutant.** For `v′ ∈ M′` with `v′⋆ v′ ξ = ξ`, `v′` maps the graph of
-`Δ_{η,ξ}` into that of `Δ_{η, v′ ξ}`. -/
-theorem mem_graph_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) {u z : H}
-    (h : (u, z) ∈ (Δ⟦η, ξ⟧).graph) :
-    (w u, w z) ∈ (Δ⟦η, w ξ⟧).graph := by
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat] at h ⊢
-  obtain ⟨y, hy, hyz⟩ := h
-  rw [LinearPMap.mem_graph_adjoint_iff (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ))] at hyz
-  -- `w⋆ w` fixes `[M ξ]` and preserves `[M ξ]ᗮ`.
-  have hww : ∀ a a', (a, a') ∈ (S⟦η, ξ⟧).graph → (star w (w a), a') ∈
-      (S⟦η, ξ⟧).graph := fun a a' ha => by
-    obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp ha
-    obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
-    have hwζ : star w (w ζ) ∈ (cyclicSubspace M ξ).toSubmoduleᗮ := by
-      rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
-      intro b hb
-      rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_right,
-        ← ContinuousLinearMap.adjoint_inner_left, ← ContinuousLinearMap.star_eq_adjoint,
-        apply_apply_of_mem_commutant hw hb, apply_apply_of_mem_commutant (star_mem hw) hb, hwξ]
-      exact hζ b hb
-    convert mk_mem_graph_relativeTomita (η := η) hx hwζ using 2
-    rw [map_add, map_add, apply_apply_of_mem_commutant hw hx,
-      apply_apply_of_mem_commutant (star_mem hw) hx, hwξ]
-  refine ⟨y, LinearPMap.mem_graph_closure_of_mapsTo
-    (isClosable_relativeTomita M η (w ξ)) (f := fun p : H × H => (w p.1, p.2)) (by fun_prop)
-    (fun ⟨p₁, p₂⟩ hp => (mem_graph_relativeTomita_apply_right_iff hw hwξ).mpr (hww _ _ hp)) hy,
-    ?_⟩
-  rw [LinearPMap.mem_graph_adjoint_iff (LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η (w ξ)))]
-  intro b b' hb
-  have hb' := LinearPMap.mem_graph_closure_of_mapsTo
-    (isClosable_relativeTomita M η ξ) (f := fun p : H × H => (star w p.1, p.2)) (by fun_prop)
-    (fun ⟨p₁, p₂⟩ hp => (mem_graph_relativeTomita_apply_right_iff hw hwξ).mp hp) hb
-  rw [hyz _ _ hb', inner_real_eq_re_inner, inner_real_eq_re_inner,
-    ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_left]
+/-- `w′⋆ w′` fixes `[M ξ]` and preserves `[M ξ]ᗮ`, so `S_{η,ξ} ⊆ S_{η,ξ} w′⋆ w′`. -/
+private lemma relativeTomita_le_compNat_star_mul (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
+    S⟦η, ξ⟧ ≤ S⟦η, ξ⟧ ⬝ (star w * w) := by
+  -- the generating vectors `x ξ + ζ` of the domain are fixed one by one
+  refine LinearPMap.le_iff_mem_graph.mpr fun a a' ha => LinearPMap.mem_graph_compNat_toPMap.mpr ?_
+  obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp ha
+  obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
+  have hwζ : star w (w ζ) ∈ (cyclicSubspace M ξ).toSubmoduleᗮ := by
+    rw [InnerProductSpace.mem_orthogonal_cyclicSubspace_iff] at hζ ⊢
+    intro b hb
+    rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_right,
+      ← ContinuousLinearMap.adjoint_inner_left, ← ContinuousLinearMap.star_eq_adjoint,
+      apply_apply_of_mem_commutant hw hb, apply_apply_of_mem_commutant (star_mem hw) hb, hwξ]
+    exact hζ b hb
+  convert mk_mem_graph_relativeTomita (η := η) hx hwζ using 2
+  change star w (w (x ξ + ζ)) = x ξ + star w (w ζ)
+  rw [map_add, map_add, apply_apply_of_mem_commutant hw hx,
+    apply_apply_of_mem_commutant (star_mem hw) hx, hwξ]
+
+/-- **Changing `ξ` along the commutant.** For `w′ ∈ M′` with `w′⋆ w′ ξ = ξ`,
+`w′ Δ_{η,ξ} ⊆ Δ_{η, w′ ξ} w′`. With `S′ = S_{η, w′ ξ} = S_{η,ξ} w′⋆`: `S̄_{η,ξ} ⊆ S̄′ w′`, since
+`S_{η,ξ} ⊆ S_{η,ξ} w′⋆ w′ = S′ w′` and `S̄′ w′` is closed, and
+`w′ S̄_{η,ξ}† ⊆ (S̄_{η,ξ} w′⋆)† ⊆ S̄′†`, since `S̄′ ⊆ S̄_{η,ξ} w′⋆`; hence `w′ S̄† S̄ ⊆ S̄′† S̄′ w′`. -/
+lemma compPMap_relativeModular_le_of_mem_commutant (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
+    (w : H →ₗ[ℂ] H).compPMap Δ⟦η, ξ⟧ ≤ Δ⟦η, w ξ⟧.compNat ((w : H →ₗ[ℂ] H).toPMap ⊤) := by
+  set S := S⟦η, ξ⟧
+  set S' := S⟦η, w ξ⟧
+  set wr : H →L[ℝ] H := w.restrictScalars ℝ
+  set ws : H →L[ℝ] H := (star w).restrictScalars ℝ
+  have hS := isClosable_relativeTomita M η ξ
+  have hS' := isClosable_relativeTomita M η (w ξ)
+  have hd := LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ)
+  have hd' := LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η (w ξ))
+  have hS'eq : S' = S.compNat ((ws : H →ₗ[ℝ] H).toPMap ⊤) := relativeTomita_apply_right hw hwξ
+  -- `S̄ ⊆ S̄′ w′`
+  have h₁ : S.closure ≤ S'.closure.compNat ((wr : H →ₗ[ℝ] H).toPMap ⊤) := by
+    have hle : S ≤ S'.closure.compNat ((wr : H →ₗ[ℝ] H).toPMap ⊤) := by
+      calc S ≤ S ⬝ (star w * w) :=
+            relativeTomita_le_compNat_star_mul hw hwξ
+        _ = S'.compNat ((wr : H →ₗ[ℝ] H).toPMap ⊤) := by
+            rw [hS'eq, ← LinearPMap.compNat_toPMap_comp]
+            rfl
+        _ ≤ S'.closure.compNat ((wr : H →ₗ[ℝ] H).toPMap ⊤) :=
+            LinearPMap.compNat_mono (LinearPMap.le_closure _) le_rfl
+    have hc := hS'.closure_isClosed.compNat_toPMap wr
+    have h := hc.isClosable.closure_mono hle
+    rwa [hc.closure_eq] at h
+  -- `w′ S̄† ⊆ S̄′†`
+  have h₂ : (wr : H →ₗ[ℝ] H).compPMap S.closure† ≤ S'.closure† := by
+    have hle : S'.closure ≤ S.closure.compNat ((ws : H →ₗ[ℝ] H).toPMap ⊤) := by
+      rw [hS'eq]
+      exact LinearPMap.closure_compNat_toPMap_le hS ws
+    have hadj := LinearPMap.compPMap_adjoint_le_adjoint_compNat_toPMap hd ws (hd'.mono hle.1)
+    have hws : ContinuousLinearMap.adjoint ws = wr := by
+      rw [ContinuousLinearMap.adjoint_restrictScalars, ContinuousLinearMap.star_eq_adjoint,
+        ContinuousLinearMap.adjoint_adjoint]
+    rw [hws] at hadj
+    exact hadj.trans (LinearPMap.adjoint_anti hd' hle)
+  rw [← LinearPMap.restrictScalars_le_iff (R := ℝ), LinearPMap.restrictScalars_compPMap,
+    LinearPMap.restrictScalars_compNat, LinearPMap.restrictScalars_toPMap,
+    restrictScalars_relativeModular, restrictScalars_relativeModular]
+  calc (wr : H →ₗ[ℝ] H).compPMap (S.closure†.compNat S.closure)
+      = ((wr : H →ₗ[ℝ] H).compPMap S.closure†).compNat S.closure :=
+        (LinearPMap.compPMap_compNat _ _ _).symm
+    _ ≤ S'.closure†.compNat (S'.closure.compNat ((wr : H →ₗ[ℝ] H).toPMap ⊤)) :=
+        LinearPMap.compNat_mono h₂ h₁
+    _ = (S'.closure†.compNat S'.closure).compNat ((wr : H →ₗ[ℝ] H).toPMap ⊤) :=
+        (LinearPMap.compNat_assoc _ _ _).symm
 
 /-! ### Spectral measures -/
 
@@ -438,13 +586,13 @@ theorem measure_pvm_relativeModular_smul_right (c : ℂ) :
   rw [IsSelfAdjoint.pvm_congr _ hrA h, hrA.pvm.measure_smul,
     (isSelfAdjoint_relativeModular M η ξ).measure_pvm_ofReal_smul ξ (by positivity) hrA]
 
-/-- **Changing `ξ` along the commutant.** For `v′ ∈ M′` with `v′⋆ v′ ξ = ξ`, the spectral measure of
-`Δ_{η, v′ ξ}` at `v′ ξ` equals that of `Δ_{η,ξ}` at `ξ`. -/
+/-- **Changing `ξ` along the commutant.** For `w′ ∈ M′` with `w′⋆ w′ ξ = ξ`, the spectral measure of
+`Δ_{η, w′ ξ}` at `w′ ξ` equals that of `Δ_{η,ξ}` at `ξ`. -/
 theorem measure_pvm_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
     μ⟦η, w ξ⟧ = μ⟦η, ξ⟧ :=
   (isSelfAdjoint_relativeModular M η ξ).measure_pvm_intertwiner
     (isSelfAdjoint_relativeModular M η (w ξ))
-    (fun _ _ h => mem_graph_relativeModular_apply_right hw hwξ h)
+    (compPMap_relativeModular_le_of_mem_commutant hw hwξ)
     (by rw [← ContinuousLinearMap.star_eq_adjoint]; exact hwξ)
 
 /-! ### Independence of the vector representatives -/

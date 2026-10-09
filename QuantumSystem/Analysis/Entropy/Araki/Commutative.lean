@@ -66,14 +66,15 @@ theorem densityFun_count (P : Measure ι) (i : ι) : densityFun P Measure.count 
 
 /-- **The relative modular operator is diagonal**: `Δ_{ξ_Q, ξ_P} eᵢ = (qᵢ / pᵢ) eᵢ` for
 `eᵢ = 1_{{i}}`, `pᵢ = P {i}` and `qᵢ = Q {i}`. When `pᵢ = 0`, the value `qᵢ / 0 = 0` is the genuine
-one: `Δ = M_{q/p}` with `q / 0 = 0` (`VonNeumannAlgebra.mem_graph_relativeModular_densityVec_iff`). -/
+one: `Δ = M_{q/p}` with `q / 0 = 0` (`VonNeumannAlgebra.relativeModular_densityVec_eq_mulPMap`). -/
 theorem mem_graph_relativeModular_densityVec_single (i : ι) :
     (indicatorConstLp 2 (measurableSet_singleton i) (measure_ne_top _ _) (1 : ℂ),
       ((Q.real {i} / P.real {i} : ℝ) : ℂ) •
         indicatorConstLp 2 (measurableSet_singleton i) (measure_ne_top _ _) (1 : ℂ)) ∈
       (Δ[multiplicationAlgebra Measure.count]⟦densityVec Q Measure.count,
         densityVec P Measure.count⟧).graph := by
-  refine mem_graph_relativeModular_densityVec_iff.mpr ⟨MemLp.of_discrete, ?_⟩
+  rw [relativeModular_densityVec_eq_mulPMap]
+  refine L2.mem_graph_mulPMap.mpr ⟨MemLp.of_discrete, ?_⟩
   refine Measure.ae_count_iff.mpr fun j => ?_
   simp only [Measure.ae_count_iff.mp (Lp.coeFn_smul _ _) j, Pi.smul_apply,
     Measure.ae_count_iff.mp (indicatorConstLp_coeFn (p := 2) (hs := measurableSet_singleton i)

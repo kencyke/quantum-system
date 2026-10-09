@@ -187,7 +187,7 @@ theorem mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 
   have hr := (Real.sqrt_pos.mpr hi).ne'
   have hrr := Real.mul_self_sqrt hi.le
   have htt := Real.mul_self_sqrt (hs j)
-  rw [mem_graph_relativeModular, LinearPMap.mem_graph_compNat]
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
   refine ⟨((Real.sqrt (s j) / Real.sqrt (r i) : ℝ) : ℂ) • (g j ⊗ₕ b i), ?_, ?_⟩
   · refine mem_graph_closure_relativeTomita ?_
     have h := isSemilinear_relativeTomita _ _ _ ((Real.sqrt (r i))⁻¹ : ℝ) _ _

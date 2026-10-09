@@ -24,17 +24,17 @@ The self-adjointness comes from a general criterion: a symmetric operator `A` fo
 * `LinearPMap.IsFormalAdjoint.isSelfAdjoint_of_surjective_conj` — a symmetric `A` with `z + A` and
   `z̄ + A` surjective is self-adjoint; `LinearPMap.IsFormalAdjoint.isSelfAdjoint_of_surjective` is
   the case of real `z`.
-* `LinearPMap.exists_mem_graph_adjoint_compNat_self` — `1 + T†T` is surjective.
+* `LinearPMap.surjective_id_vadd_adjoint_compNat_self` — `1 + T†T` is surjective.
 * `LinearPMap.isPositive_adjoint_compNat_self` — `T†T` is positive, with
   `⟪T†T x, x⟫ = ⟪T x, T x⟫` (`LinearPMap.inner_adjoint_compNat_self`).
 * `LinearPMap.isSelfAdjoint_adjoint_compNat_self` — **von Neumann's theorem**: `T†T` is
   self-adjoint.
 * `LinearPMap.hasCore_adjoint_compNat_self` — the domain of `T†T` is a core for `T`.
-* `LinearPMap.mem_graph_adjoint_compNat_self_zero_iff` — `ker (T†T) = ker T`, in graph form.
+* `LinearPMap.ker_adjoint_compNat_self` — `ker (T†T) = ker T`.
 * `LinearPMap.adjoint_compNat_self_eq_smul_of_inner` — `T†T` depends only on the form of `T`:
   `dom T₁ = dom T₂` and `⟪T₂ ·, T₂ ·⟫ = r ⟪T₁ ·, T₁ ·⟫` give `T₂†T₂ = r T₁†T₁`;
-  `LinearPMap.adjoint_compNat_self_eq_smul` is the case of a graph correspondence `T₂ ≈ B T₁`,
-  `T₁ ≈ C T₂` with `B = r C†`.
+  `LinearPMap.adjoint_compNat_self_eq_smul` is the case of a correspondence `B T₁ ⊆ T₂`,
+  `C T₂ ⊆ T₁` with `B = r C†`.
 
 ## References
 
@@ -60,8 +60,12 @@ is then automatically dense.) The usual choice is `z = i`: `A` is self-adjoint w
 surjective. -/
 theorem IsFormalAdjoint.isSelfAdjoint_of_surjective_conj [CompleteSpace E] {A : E →ₗ.[𝕜] E}
     (hA : A.IsFormalAdjoint A) (z : 𝕜)
-    (hsurj : ∀ h, ∃ u v, (u, v) ∈ A.graph ∧ z • u + v = h)
-    (hsurj' : ∀ h, ∃ u v, (u, v) ∈ A.graph ∧ conj z • u + v = h) : IsSelfAdjoint A := by
+    (hz : Function.Surjective ((z • LinearMap.id : E →ₗ[𝕜] E) +ᵥ A))
+    (hz' : Function.Surjective ((conj z • LinearMap.id : E →ₗ[𝕜] E) +ᵥ A)) : IsSelfAdjoint A := by
+  -- the inner-product argument below runs on graph points `(u, A u)`
+  have hsurj := surjective_vadd_iff.mp hz
+  have hsurj' := surjective_vadd_iff.mp hz'
+  simp only [LinearMap.smul_apply, LinearMap.id_apply] at hsurj hsurj'
   have hd : Dense (A.domain : Set E) := by
     rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
       Submodule.eq_bot_iff]
@@ -108,8 +112,9 @@ maps `dom A` onto the whole space for some real `c` is self-adjoint. (Its domain
 automatically dense.) -/
 theorem IsFormalAdjoint.isSelfAdjoint_of_surjective [CompleteSpace E] {A : E →ₗ.[𝕜] E}
     (hA : A.IsFormalAdjoint A) (c : ℝ)
-    (hsurj : ∀ h, ∃ u v, (u, v) ∈ A.graph ∧ (c : 𝕜) • u + v = h) : IsSelfAdjoint A :=
-  hA.isSelfAdjoint_of_surjective_conj c hsurj (by simpa only [conj_ofReal] using hsurj)
+    (hc : Function.Surjective (((c : 𝕜) • LinearMap.id : E →ₗ[𝕜] E) +ᵥ A)) :
+    IsSelfAdjoint A :=
+  hA.isSelfAdjoint_of_surjective_conj c hc (by rwa [conj_ofReal])
 
 variable [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}
 
@@ -138,11 +143,11 @@ lemma re_inner_adjoint_compNat_self (hTd : Dense (T.domain : Set E))
   rw [inner_adjoint_compNat_self hTd, inner_self_eq_norm_sq]
 
 omit [CompleteSpace F] in
-/-- `ker (T†T) = ker T`: `(x, 0)` lies in the graph of `T†T` iff it lies in the graph of `T`, since
-`‖T x‖² = ⟪T†T x, x⟫`. -/
-lemma mem_graph_adjoint_compNat_self_zero_iff (hTd : Dense (T.domain : Set E)) {x : E} :
-    (x, 0) ∈ (T†.compNat T).graph ↔ (x, 0) ∈ T.graph := by
-  rw [mem_graph_compNat]
+/-- **`ker (T†T) = ker T`**, since `‖T x‖² = ⟪T†T x, x⟫`. -/
+lemma ker_adjoint_compNat_self (hTd : Dense (T.domain : Set E)) : (T†.compNat T).ker = T.ker := by
+  ext x
+  -- `T†T x = 0` forces `‖T x‖² = ⟪T†T x, x⟫ = 0`, a computation at the single vector `x`
+  rw [← mem_graph_zero_iff_mem_ker, ← mem_graph_zero_iff_mem_ker, mem_graph_compNat]
   refine ⟨fun ⟨y, hxy, hy⟩ => ?_, fun h => ⟨0, h, (T†).graph.zero_mem⟩⟩
   have := inner_eq_of_mem_graph_adjoint hTd hxy hy
   rw [inner_zero_left, eq_comm, inner_self_eq_zero] at this
@@ -150,14 +155,17 @@ lemma mem_graph_adjoint_compNat_self_zero_iff (hTd : Dense (T.domain : Set E)) {
 
 omit [CompleteSpace F] in
 /-- **`T†T` depends only on the form of `T`.** If densely defined `T₁, T₂` have the same domain and
-`⟪T₂ v, T₂ u⟫ = r ⟪T₁ v, T₁ u⟫` for a real `r ≠ 0` (in graph form), then `T₂†T₂ = r T₁†T₁`. -/
+`⟪T₂ v, T₂ u⟫ = r ⟪T₁ v, T₁ u⟫` for a real `r ≠ 0` (on graph points), then `T₂†T₂ = r T₁†T₁`. -/
 theorem adjoint_compNat_self_eq_smul_of_inner {T₁ T₂ : E →ₗ.[𝕜] F}
     (hT₁ : Dense (T₁.domain : Set E)) (hT₂ : Dense (T₂.domain : Set E)) {r : ℝ} (hr : r ≠ 0)
-    (hdom : ∀ u, (∃ y, (u, y) ∈ T₁.graph) ↔ ∃ y, (u, y) ∈ T₂.graph)
+    (hdom : T₁.domain = T₂.domain)
     (hinner : ∀ u y₁ y₂ v z₁ z₂, (u, y₁) ∈ T₁.graph → (u, y₂) ∈ T₂.graph → (v, z₁) ∈ T₁.graph →
       (v, z₂) ∈ T₂.graph → ⟪z₂, y₂⟫ = (r : 𝕜) * ⟪z₁, y₁⟫) :
     T₂†.compNat T₂ = (r : 𝕜) • T₁†.compNat T₁ := by
   have hr' : (r : 𝕜) ≠ 0 := ofReal_ne_zero.mpr hr
+  -- the adjoints are characterised by inner products with graph points
+  replace hdom : ∀ u, (∃ y, (u, y) ∈ T₁.graph) ↔ ∃ y, (u, y) ∈ T₂.graph := fun u => by
+    simp only [← mem_domain_iff, hdom]
   refine eq_of_eq_graph (Submodule.ext fun ⟨u, w⟩ => ?_)
   rw [mem_graph_smul]
   simp_rw [mem_graph_compNat, mem_graph_adjoint_iff hT₁, mem_graph_adjoint_iff hT₂]
@@ -175,24 +183,24 @@ theorem adjoint_compNat_self_eq_smul_of_inner {T₁ T₂ : E →ₗ.[𝕜] F}
     rw [hinner u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂, h _ _ hz₁, inner_smul_right]
 
 omit [CompleteSpace F] in
-/-- **`T†T` under a graph correspondence.** Let `T₁, T₂` be densely defined, with bounded `B, C`
-such that `(u, v) ∈ graph T₁ ⇒ (u, B v) ∈ graph T₂`, `(u, v) ∈ graph T₂ ⇒ (u, C v) ∈ graph T₁`, and
-`⟪y', B y⟫ = r ⟪C y', y⟫` for a real `r ≠ 0`. Then `T₂†T₂ = r T₁†T₁`
+/-- **`T†T` under a correspondence.** Let `T₁, T₂` be densely defined, with bounded `B, C` such that
+`B T₁ ⊆ T₂`, `C T₂ ⊆ T₁` and `⟪y', B y⟫ = r ⟪C y', y⟫` for a real `r ≠ 0`. Then `T₂†T₂ = r T₁†T₁`
 (`LinearPMap.adjoint_compNat_self_eq_smul_of_inner`). -/
 theorem adjoint_compNat_self_eq_smul {T₁ T₂ : E →ₗ.[𝕜] F} (hT₁ : Dense (T₁.domain : Set E))
     (hT₂ : Dense (T₂.domain : Set E)) {B C : F →L[𝕜] F} {r : ℝ} (hr : r ≠ 0)
-    (hB : ∀ u v, (u, v) ∈ T₁.graph → (u, B v) ∈ T₂.graph)
-    (hC : ∀ u v, (u, v) ∈ T₂.graph → (u, C v) ∈ T₁.graph)
+    (hB : (B : F →ₗ[𝕜] F).compPMap T₁ ≤ T₂) (hC : (C : F →ₗ[𝕜] F).compPMap T₂ ≤ T₁)
     (hBC : ∀ y y', ⟪y', B y⟫ = (r : 𝕜) * ⟪C y', y⟫) :
     T₂†.compNat T₂ = (r : 𝕜) • T₁†.compNat T₁ := by
-  refine adjoint_compNat_self_eq_smul_of_inner hT₁ hT₂ hr
-    (fun u => ⟨fun ⟨y, hy⟩ => ⟨B y, hB _ _ hy⟩, fun ⟨y, hy⟩ => ⟨C y, hC _ _ hy⟩⟩)
+  refine adjoint_compNat_self_eq_smul_of_inner hT₁ hT₂ hr (le_antisymm hB.1 hC.1)
     fun u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂ => ?_
+  -- the inner products are evaluated at graph points
+  replace hB := compPMap_le_iff.mp hB
+  replace hC := compPMap_le_iff.mp hC
   -- The graphs are graphs of functions: `y₂ = B y₁` and `z₁ = C z₂`.
   have e₁ : y₂ = B y₁ := (sub_eq_zero.mp (T₂.graph_fst_eq_zero_snd
-    (T₂.graph.sub_mem hy₂ (hB _ _ hy₁)) (sub_self u)))
+    (T₂.graph.sub_mem hy₂ (hB hy₁)) (sub_self u)))
   have e₂ : z₁ = C z₂ := (sub_eq_zero.mp (T₁.graph_fst_eq_zero_snd
-    (T₁.graph.sub_mem hz₁ (hC _ _ hz₂)) (sub_self v)))
+    (T₁.graph.sub_mem hz₁ (hC hz₂)) (sub_self v)))
   rw [e₁, e₂, hBC]
 
 omit [CompleteSpace F] in
@@ -218,9 +226,10 @@ theorem isPositive_adjoint_compNat_self (hTd : Dense (T.domain : Set E)) :
     exact sq_nonneg _⟩
 
 /-- **Von Neumann.** For a closed, densely defined `T`, the operator `1 + T†T` maps its domain
-onto `E`: every `h` is `x + T†T x` for some `x`. -/
-theorem exists_mem_graph_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.domain : Set E))
-    (h : E) : ∃ x z, (x, z) ∈ (T†.compNat T).graph ∧ x + z = h := by
+onto `E`, in graph form: every `h` is `x + z` for `(x, z)` in the graph of `T†T`. -/
+private lemma exists_mem_graph_adjoint_compNat_self (hT : T.IsClosed)
+    (hTd : Dense (T.domain : Set E)) (h : E) :
+    ∃ x z, (x, z) ∈ (T†.compNat T).graph ∧ x + z = h := by
   let G : Submodule 𝕜 (WithLp 2 (E × F)) := T.graph.comap (WithLp.linearEquiv 2 𝕜 (E × F)).toLinearMap
   have hG : _root_.IsClosed (G : Set (WithLp 2 (E × F))) :=
     hT.preimage (WithLp.prod_continuous_ofLp 2 E F)
@@ -242,6 +251,15 @@ theorem exists_mem_graph_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.
     rwa [Prod.neg_mk, neg_neg, ← eq_neg_of_add_eq_zero_left hpq'.2.symm] at this
   exact ⟨_, _, mem_graph_compNat.mpr ⟨_, hp, hya⟩, hpq'.1.symm⟩
 
+/-- **Von Neumann.** For a closed, densely defined `T`, the operator `1 + T†T` maps its domain
+onto `E`. -/
+lemma surjective_id_vadd_adjoint_compNat_self (hT : T.IsClosed)
+    (hTd : Dense (T.domain : Set E)) : Function.Surjective ((LinearMap.id : E →ₗ[𝕜] E) +ᵥ T†.compNat T) :=
+  fun h => by
+    obtain ⟨x, z, hxz, rfl⟩ := exists_mem_graph_adjoint_compNat_self hT hTd h
+    obtain ⟨p, rfl, rfl⟩ := (mem_graph_iff _).mp hxz
+    exact ⟨p, vadd_apply (LinearMap.id : E →ₗ[𝕜] E) (T†.compNat T) p⟩
+
 /-- For a closed, densely defined `T`, the domain of `T†T` is dense. -/
 theorem dense_adjoint_compNat_self_domain (hT : T.IsClosed) (hTd : Dense (T.domain : Set E)) :
     Dense ((T†.compNat T).domain : Set E) := by
@@ -261,9 +279,9 @@ theorem dense_adjoint_compNat_self_domain (hT : T.IsClosed) (hTd : Dense (T.doma
 `T†T` is self-adjoint. -/
 theorem isSelfAdjoint_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.domain : Set E)) :
     IsSelfAdjoint (T†.compNat T) :=
-  (isFormalAdjoint_adjoint_compNat_self hTd).isSelfAdjoint_of_surjective 1 fun h => by
-      obtain ⟨x, z, hxz, he⟩ := exists_mem_graph_adjoint_compNat_self hT hTd h
-      exact ⟨x, z, hxz, by rw [ofReal_one, one_smul, he]⟩
+  (isFormalAdjoint_adjoint_compNat_self hTd).isSelfAdjoint_of_surjective 1 (by
+    rw [ofReal_one, one_smul]
+    exact surjective_id_vadd_adjoint_compNat_self hT hTd)
 
 /-- For a closed, densely defined `T`, the domain of `T†T` is a core for `T`. -/
 theorem hasCore_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.domain : Set E)) :

@@ -155,12 +155,14 @@ theorem isFormalAdjoint_mulPMap :
   rw [h₁, h₂, RCLike.inner_apply, RCLike.inner_apply, map_mul]
   ring
 
-/-- `M_φ` maps its domain onto `L²` after adding `z`, if `(z + φ)⁻¹` is (almost everywhere) the
-bounded function `Ψ`. -/
-private lemma exists_mem_graph_mulPMap_smul_add {z : ℂ} {Ψ : Lp ℂ ∞ μ} {ψ : α → ℂ}
-    (hΨ : ⇑Ψ =ᵐ[μ] ψ) (hψ : ∀ x, (z + φ x) * ψ x = 1) (g : Lp ℂ 2 μ) :
-    ∃ u v, (u, v) ∈ (mulPMap φ).graph ∧ z • u + v = g := by
-  refine ⟨mulL2 Ψ g, g - z • mulL2 Ψ g, ?_, add_sub_cancel _ _⟩
+/-- `z + M_φ` maps its domain onto `L²`, if `(z + φ)⁻¹` is (almost everywhere) the bounded function
+`Ψ`: the preimage of `g` is `Ψ g`. -/
+private lemma surjective_smul_id_vadd_mulPMap {z : ℂ} {Ψ : Lp ℂ ∞ μ} {ψ : α → ℂ}
+    (hΨ : ⇑Ψ =ᵐ[μ] ψ) (hψ : ∀ x, (z + φ x) * ψ x = 1) :
+    Function.Surjective ((z • LinearMap.id : Lp ℂ 2 μ →ₗ[ℂ] Lp ℂ 2 μ) +ᵥ mulPMap (μ := μ) φ) := by
+  refine LinearPMap.surjective_vadd_iff.mpr fun g => ⟨mulL2 Ψ g, g - z • mulL2 Ψ g, ?_, ?_⟩
+  swap
+  · simp
   have hv : ⇑(g - z • mulL2 Ψ g) =ᵐ[μ] fun x => φ x * mulL2 Ψ g x := by
     filter_upwards [Lp.coeFn_sub g (z • mulL2 Ψ g), Lp.coeFn_smul z (mulL2 Ψ g), coeFn_mulL2 Ψ g,
       hΨ] with x h₁ h₂ h₃ h₄
@@ -179,8 +181,8 @@ theorem isSelfAdjoint_mulPMap (hh : Measurable h) :
       (mulPMap fun x => (h x : ℂ)) := by
     simpa only [conj_ofReal] using isFormalAdjoint_mulPMap (μ := μ) (φ := fun x => (h x : ℂ))
   refine hsymm.isSelfAdjoint_of_surjective_conj I
-    (exists_mem_graph_mulPMap_smul_add (coeFn_resolventFun hh.neg) fun x => ?_)
-    (exists_mem_graph_mulPMap_smul_add (Ψ := -resolventFun hh)
+    (surjective_smul_id_vadd_mulPMap (coeFn_resolventFun hh.neg) fun x => ?_)
+    (surjective_smul_id_vadd_mulPMap (Ψ := -resolventFun hh)
       ((Lp.coeFn_neg _).trans ((coeFn_resolventFun hh).neg)) fun x => ?_)
   · have hne : I + (h x : ℂ) ≠ 0 := fun h => by simpa using congrArg im h
     rw [Pi.neg_apply, ofReal_neg, sub_neg_eq_add, mul_inv_cancel₀ hne]
