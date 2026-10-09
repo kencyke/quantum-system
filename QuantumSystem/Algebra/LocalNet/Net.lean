@@ -250,8 +250,9 @@ open scoped CausalOrthogonality
     corpus's index families do not all satisfy it (see the docstring of `CausalOrthogonality`).
     It is genuinely model-dependent input: what this development draws from it is
     `CausalIndexSet.exists_orthogonalHat` — on a directed index set the locality axiom of a
-    `LocalNet` bites at every region — while the duality theory it really feeds (the dual net, the
-    DHR selection criterion) is not formalized here; the literature's causal index set is not
+    `LocalNet` bites at every region — while the duality theory it really feeds (the dual net, and
+    the DHR analysis built on the selection criterion `LocalNet.SatisfiesDHR`, which itself needs
+    no causal complements) is not formalized here; the literature's causal index set is not
     expressible without it. -/
 class CausalIndexSet (K : Type*) [Preorder K] [CausalOrthogonality K] : Prop where
   /-- Every region admits a causally disjoint region — axiom c) of the

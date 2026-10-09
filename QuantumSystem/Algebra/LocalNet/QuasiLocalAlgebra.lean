@@ -19,7 +19,7 @@ The **algebra of local observables** and the **quasi-local C⋆-algebra** of an 
 union of the local algebras an algebra. Lattice nets (`K = Finset sites`) are directed by unions
 with the empty region as base point.
 
-* `LocalNet.localObservables` is the algebraic inductive limit `‾⋃_O 𝔄(O)` of the local algebras
+* `LocalNet.localObservables` is the algebraic inductive limit `⋃_O 𝔄(O)` of the local algebras
   along the isotony embeddings, with cocone `ιLocal`, exhaustion (`exists_ιLocal`) and locality
   (`ιLocal_commute_of_orthogonal`).
 * For a `Faithful` net the connecting maps are isometric, so the algebra of local observables
@@ -158,7 +158,11 @@ instance : CStarRing N.localObservables where
 noncomputable abbrev quasiLocalCStarAlgebra : Type _ :=
   UniformSpace.Completion N.localObservables
 
-noncomputable example : CStarAlgebra N.quasiLocalCStarAlgebra := inferInstance
+/-- The quasi-local algebra is a C⋆-algebra, by the completion instances. Recorded as a shortcut
+    instance: deriving it through the completion each time is expensive enough to exhaust the
+    instance-search budget inside larger searches, e.g. the operator ring of the conjugated
+    representation `(R.conjBy U).H →L[ℂ] (R.conjBy U).H` of a representation of `𝔄`. -/
+noncomputable instance : CStarAlgebra N.quasiLocalCStarAlgebra := inferInstance
 
 /-- The canonical **local embedding** `𝔄(O) → 𝔄` of a local algebra into the quasi-local
     C⋆-algebra: the completion coercion composed with the inductive-limit cocone, bundled as a

@@ -24,6 +24,7 @@ public import QuantumSystem.Algebra.LocalNet.InfiniteRegion
 public import QuantumSystem.Algebra.LocalNet.Net
 public import QuantumSystem.Algebra.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Algebra.LocalNet.SplitProperty
+public import QuantumSystem.Algebra.LocalNet.Superselection
 public import QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra
 public import QuantumSystem.Algebra.Star.DoubleCommutant.TFAE
 public import QuantumSystem.Algebra.Star.DoubleCommutant.WOTClosedSubAlgebra

@@ -25,13 +25,16 @@ i.e. `U π(a) U†`, since the adjoint of a unitary is its inverse
 The unitary `U` itself intertwines `R` with `R.conjBy U`, so the two
 representations are canonically unitarily equivalent.
 
-This is the operator-algebraic building block of the DHR structure
-theorem: given a DHR-intertwined `R` with witness unitary
-`U : R.H → globalHilbert L Ω`, the conjugated representation
-`R.conjBy U` lives on the same Hilbert space as the vacuum
-representation, and the intertwining condition forces it to agree
-with the vacuum action on operators localised outside the
-DHR-localisation region.
+This is the operator-algebraic building block of the DHR selection
+criterion (`LocalNet.SatisfiesDHR`, in `Algebra/LocalNet/Superselection.lean`):
+given a representation `R` of the quasi-local algebra with a DHR
+intertwiner `U : R.H ≃ₗᵢ[ℂ] H₀` for a region `O`
+(`LocalNet.IsDHRIntertwiner`), the conjugated representation
+`R.conjBy U` lives on the Hilbert space `H₀` of the vacuum
+representation `π₀`, and the intertwining condition forces it to agree
+with `π₀` on the observables localised outside `O`
+(`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`, from
+`CStarRep.conjBy_π_eq_of_intertwined`).
 
 ## Main definitions
 
@@ -44,9 +47,10 @@ DHR-localisation region.
 * `CStarRep.conjBy_π_apply` — `(R.conjBy U).π a = U ∘L R.π a ∘L U.symm`.
 * `CStarRep.conjBy_π_eq_of_intertwined` — if the intertwining identity
   `U ∘L R.π a = T ∘L U` holds at a particular operator `T`, then
-  `(R.conjBy U).π a = T`.  This is the bridge to the DHR structure
-  theorem: the conjugated DHR representation acts as the vacuum
-  representation on operators localised outside the DHR region.
+  `(R.conjBy U).π a = T`.  This is the bridge to the DHR selection
+  criterion: the conjugated representation acts as the vacuum
+  representation on the observables localised outside the region
+  (`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`).
 
 ## References
 
@@ -108,12 +112,11 @@ If a unitary `U : R.H ≃ₗᵢ[ℂ] K` satisfies `U ∘L R.π a = T ∘L U`
 for some `T : K →L[ℂ] K` at a particular `a : A`, then the conjugated
 action `(R.conjBy U).π a` equals `T`.
 
-This is the bridge to the DHR structure theorem: when `U` is the
-witness of a DHR intertwining condition and `T = incl a` is the action
-of a reference inclusion (for instance the vacuum representation
-`Subtype.val`), the conjugated representation agrees with that
-inclusion on every operator where the intertwining condition holds —
-i.e. on operators localised outside the DHR region. -/
+This is the bridge to the DHR selection criterion: when `U` is a DHR
+intertwiner for a region `O` (`LocalNet.IsDHRIntertwiner`) and
+`T = π₀ a` the vacuum action, the conjugated representation agrees with
+the vacuum representation on every observable `a` localised outside `O`
+(`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). -/
 lemma conjBy_π_eq_of_intertwined {R : CStarRep A}
     {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K)
