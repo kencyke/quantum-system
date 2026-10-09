@@ -1054,7 +1054,7 @@ lemma adjoint_relativeModularConj : ((J[M]⟦η, ξ⟧ : H →L[ℝ] H)†) = J[
 space `E_Δ((0, ∞)) H`, so `J_{ξ,η} J_{η,ξ} Δ_{η,ξ}^{1/2} = Δ_{η,ξ}^{1/2}`
 (`IsSelfAdjoint.pvm_Ioi_compPMap_sqrt`). -/
 lemma relativeModularConj_comp_relativeModularConj :
-    (J[M]⟦ξ, η⟧.comp J[M]⟦η, ξ⟧ : H →L[ℂ] H) = (isSelfAdjoint_relativeModular M η ξ).pvm (Ioi 0) := by
+    (J[M]⟦ξ, η⟧.comp J[M]⟦η, ξ⟧ : H →L[ℂ] H) = E_Δ[M]⟦η, ξ⟧ (Ioi 0) := by
   ext u
   change J[M]⟦ξ, η⟧ (J[M]⟦η, ξ⟧ u) = _
   rw [relativeModularConj_apply, relativeModularConj_apply, ← adjoint_polarIsometry_relativeModular,
@@ -1066,7 +1066,7 @@ lemma relativeModularConj_comp_relativeModularConj :
 `ker Δ_{η,ξ} = ker S̄_{η,ξ} = ker s(η) s′(ξ)` (`VonNeumannAlgebra.ker_relativeModular`,
 `VonNeumannAlgebra.ker_closure_relativeTomita`). -/
 lemma pvm_Ioi_relativeModular :
-    (isSelfAdjoint_relativeModular M η ξ).pvm (Ioi 0) = M.supportProj η * M′.supportProj ξ := by
+    E_Δ[M]⟦η, ξ⟧ (Ioi 0) = M.supportProj η * M′.supportProj ξ := by
   have hf : IsStarProjection (M.supportProj η * M′.supportProj ξ) :=
     (M.isStarProjection_supportProj η).mul (M′.isStarProjection_supportProj ξ)
       (commute_supportProj_supportProj_commutant M η ξ)

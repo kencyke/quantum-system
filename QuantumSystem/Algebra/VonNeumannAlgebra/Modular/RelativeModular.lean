@@ -202,6 +202,23 @@ meta def delabSqrtRelativeModular : Delab := do
 (`IsSelfAdjoint.imaginaryPower`, with `0^{it} = 0`): partial isometries with initial and final space
 `E_Δ((0, ∞)) H = (ker Δ_{η,ξ})ᗮ` (`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`,
 `IsSelfAdjoint.norm_imaginaryPower_apply`,
+/-- `E_Δ[M]⟦η, ξ⟧` is the projection-valued (spectral) measure `E_Δ` of the relative modular
+operator `Δ_{η,ξ}` on the Borel sets of `ℝ`, so that `E_Δ[M]⟦η, ξ⟧ (Set.Ioi 0)` is `E_Δ((0, ∞))`. -/
+scoped notation "E_Δ[" M "]⟦" η ", " ξ "⟧" =>
+  IsSelfAdjoint.pvm (VonNeumannAlgebra.isSelfAdjoint_relativeModular M η ξ)
+
+open Lean PrettyPrinter Delaborator SubExpr in
+/-- Delaborator displaying `IsSelfAdjoint.pvm (VonNeumannAlgebra.isSelfAdjoint_relativeModular M η ξ)`
+as `E_Δ[M]⟦η, ξ⟧`; as for `Δ[M]⟦η, ξ⟧^{1/2}`, an unexpander cannot see the elided proof argument. -/
+@[scoped delab app.IsSelfAdjoint.pvm]
+meta def delabPvmRelativeModular : Delab := do
+  let e ← getExpr
+  guard <| e.appArg!.isAppOfArity ``VonNeumannAlgebra.isSelfAdjoint_relativeModular 7
+  let M ← withAppArg <| withNaryArg 4 delab
+  let η ← withAppArg <| withNaryArg 5 delab
+  let ξ ← withAppArg <| withNaryArg 6 delab
+  `(E_Δ[$M]⟦$η, $ξ⟧)
+
 `IsSelfAdjoint.pvm_Ioi_imaginaryPower_apply`), strongly continuous in `t`
 (`IsSelfAdjoint.continuous_imaginaryPower_apply`), and a group of partial isometries on
 `E_Δ((0, ∞)) H`: `Δ_{η,ξ}^{i(s+t)} = Δ_{η,ξ}^{is} Δ_{η,ξ}^{it}`
@@ -241,14 +258,14 @@ lemma relativeModularGroup_add (s t : ℝ) :
 `Δ_{η,ξ}^{i0} = E_Δ((0, ∞))` of `Δ_{η,ξ}`, the projection onto `(ker Δ_{η,ξ})ᗮ`
 (`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`). -/
 lemma relativeModularGroup_zero :
-    Δ[M]⟦η, ξ⟧^{i 0} = (isSelfAdjoint_relativeModular M η ξ).pvm (Set.Ioi 0) :=
+    Δ[M]⟦η, ξ⟧^{i 0} = E_Δ[M]⟦η, ξ⟧ (Set.Ioi 0) :=
   (isSelfAdjoint_relativeModular M η ξ).imaginaryPower_zero
 
 /-- The **spectral measure** `μ_ξ = ⟪E_{Δ_{η,ξ}}(·) ξ, ξ⟫` of the relative modular operator at
 `ξ`: the finite measure on `ℝ` of total mass `‖ξ‖²` whose `-∫ log λ dμ_ξ(λ)` is Araki's relative
 entropy. -/
 noncomputable abbrev relativeModularMeasure : Measure ℝ :=
-  (isSelfAdjoint_relativeModular M η ξ).pvm.measure ξ
+  (E_Δ[M]⟦η, ξ⟧).measure ξ
 
 /-- `μ[M]⟦η, ξ⟧` is the spectral measure `μ_ξ` of `Δ_{η,ξ}` at `ξ`, for the von Neumann algebra
 `M`. -/
