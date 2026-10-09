@@ -36,6 +36,9 @@ descend to the quotient).
 
 * `CStarRep.UnitaryEquiv.isIrreducible_iff` — irreducibility transfers
   along a unitary equivalence.
+* `CStarRep.isIrreducible_iff_centralizer` — **Schur's lemma**: `R` is irreducible iff it is
+  non-null and its commutant `π(A)′` is `ℂ1`; the representation form of
+  `InnerProductSpace.centralizer_eq_scalars_iff`.
 -/
 
 @[expose] public section
@@ -169,5 +172,23 @@ lemma isIrreducible_iff {R₁ R₂ : CStarRep A} (U : UnitaryEquiv R₁ R₂) :
   ⟨isIrreducible_of U, isIrreducible_of U.symm⟩
 
 end UnitaryEquiv
+
+/-! ### Schur's lemma -/
+
+/-- **Schur's lemma** for a representation: `R` is irreducible iff it is non-null and its commutant
+`π(A)′ = Set.centralizer (Set.range R.π)` consists of the scalars `ℂ1` (Murphy, *C\*-algebras and
+Operator Theory*, Thm. 5.1.1 and its converse; Bratteli–Robinson, Prop. 2.3.8). This is the
+operator-theoretic `InnerProductSpace.centralizer_eq_scalars_iff` for the `⋆`-closed set
+`Set.range R.π`, whose closed invariant subspaces are `R.closedInvtSubmodule`. -/
+theorem isIrreducible_iff_centralizer (R : CStarRep A) :
+    R.IsIrreducible ↔
+      R.π ≠ 0 ∧ ∀ x ∈ Set.centralizer (Set.range R.π), ∃ c : ℂ, x = c • (1 : R.H →L[ℂ] R.H) := by
+  rw [InnerProductSpace.centralizer_eq_scalars_iff (S := Set.range R.π)
+    (by rintro _ ⟨a, rfl⟩; exact ⟨star a, map_star _ _⟩)]
+  refine ⟨fun h => ⟨h.ne_zero, fun W hW => h.eq_bot_or_eq_top W
+      (mem_invtSubmodule.mpr fun a => hW _ ⟨a, rfl⟩)⟩,
+    fun ⟨hne, h⟩ => ⟨hne, fun W hW => h W ?_⟩⟩
+  rintro _ ⟨a, rfl⟩
+  exact mem_invtSubmodule.mp hW a
 
 end CStarRep
