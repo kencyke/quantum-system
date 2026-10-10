@@ -122,7 +122,7 @@ private lemma sum_mul_log_div_add_sub_nonneg (hPQ : P ≪ Q) :
     intro i
     rcases (measureReal_nonneg (μ := P) (s := {i})).eq_or_lt with h0 | hpi
     · rw [← h0]; simp
-    · refine mul_log_div_ge_sub' hpi (measureReal_nonneg.lt_of_ne' fun hq => hpi.ne' ?_)
+    · refine Real.sub_le_mul_log_div hpi.le (measureReal_nonneg.lt_of_ne' fun hq => hpi.ne' ?_)
       rw [measureReal_eq_zero_iff] at hq ⊢
       exact hPQ hq
   have := Finset.sum_le_sum fun i (_ : i ∈ Finset.univ) => h i
