@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
@@ -51,6 +52,9 @@ matrix partial trace `Matrix.traceRight`.
 * `ContinuousLinearMap.traceRight_eq_sum`: `tr₂(X) = Σₐ ιₐ† X ιₐ`.
 * `ContinuousLinearMap.traceDual_eq_iff_traceRight`: `Φ*(B) = V† (B ⊗ 1) V` for all `B` iff
   `Φ(A) = tr₂(V A V†)` for all `A`.
+* `Matrix.toMatrix_traceRight`: in the standard bases `tr₂` is the entry-wise matrix partial trace
+  `Matrix.traceRight`, `[tr₂(X)]_e = traceRight [X]_{e ⊗ e'}` — the partial-trace analogue of
+  Mathlib's `LinearMap.trace_eq_matrix_trace`.
 
 ## References
 
@@ -204,3 +208,35 @@ lemma traceLeft_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
   traceDual_traceDual (lTensorStarAlgHom ℂ K H) B
 
 end ContinuousLinearMap
+
+/-! ### The matrix of the partial trace -/
+
+namespace Matrix
+
+variable {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι] [DecidableEq ι]
+
+/-- **The matrix partial trace is the matrix of the operator partial trace.** For an operator `X`
+on `ℂᵐ ⊗ ℂⁱ`, the matrix of `tr₂(X) : ℂᵐ → ℂᵐ` in the standard basis is the matrix partial trace
+over `ι` of the matrix of `X` in the tensor product of the standard bases. Both sides have entries
+`∑ₐ ⟪eᵢ ⊗ eₐ, X (eⱼ ⊗ eₐ)⟫`, by the Kraus form `tr₂(X) = ∑ₐ ιₐ† X ιₐ` of the partial trace
+(`ContinuousLinearMap.traceRight_eq_sum`). -/
+theorem toMatrix_traceRight
+    (X : EuclideanSpace ℂ m ⊗[ℂ] EuclideanSpace ℂ ι →L[ℂ] EuclideanSpace ℂ m ⊗[ℂ] EuclideanSpace ℂ ι) :
+    LinearMap.toMatrix (EuclideanSpace.basisFun m ℂ).toBasis (EuclideanSpace.basisFun m ℂ).toBasis
+        (ContinuousLinearMap.traceRight (EuclideanSpace ℂ m) (EuclideanSpace ℂ ι) X :
+          EuclideanSpace ℂ m →ₗ[ℂ] EuclideanSpace ℂ m) =
+      traceRight (LinearMap.toMatrix
+        ((EuclideanSpace.basisFun m ℂ).tensorProduct (EuclideanSpace.basisFun ι ℂ)).toBasis
+        ((EuclideanSpace.basisFun m ℂ).tensorProduct (EuclideanSpace.basisFun ι ℂ)).toBasis
+        (X : EuclideanSpace ℂ m ⊗[ℂ] EuclideanSpace ℂ ι →ₗ[ℂ]
+          EuclideanSpace ℂ m ⊗[ℂ] EuclideanSpace ℂ ι)) := by
+  ext i j
+  rw [LinearMap.toMatrix_apply, traceRight_apply,
+    ContinuousLinearMap.traceRight_eq_sum (EuclideanSpace.basisFun ι ℂ)]
+  simp only [LinearMap.toMatrix_apply, OrthonormalBasis.coe_toBasis_repr_apply,
+    OrthonormalBasis.repr_apply_apply, OrthonormalBasis.coe_toBasis,
+    OrthonormalBasis.tensorProduct_apply, ContinuousLinearMap.coe_coe,
+    _root_.sum_apply, inner_sum, ContinuousLinearMap.comp_apply,
+    ContinuousLinearMap.adjoint_inner_right, ContinuousLinearMap.flip_apply, mkL_apply_apply]
+
+end Matrix

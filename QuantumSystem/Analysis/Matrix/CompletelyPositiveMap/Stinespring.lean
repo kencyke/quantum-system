@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
+public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 
 /-!
@@ -18,7 +18,10 @@ The environment `E = Fin r` has the dimension `r = rank J(Φ) ≤ nm` of the Cho
 this is minimal: every such `V` has an environment with at least `rank J(Φ)` elements
 (`Matrix.rank_choiMatrix_le_card_of_stinespring`), with equality iff its Kraus blocks are linearly
 independent (`Matrix.rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock`). Here
-`tr₂ = Matrix.traceRight` traces out the environment.
+`tr₂ = Matrix.traceRight` traces out the environment; in the standard bases it is the operator
+partial trace `ContinuousLinearMap.traceRight` of the operator form (`Matrix.toMatrix_traceRight`,
+in `QuantumSystem.Analysis.InnerProductSpace.PartialTrace`), so this `tr₂` is the same operation as in the
+operator form of the theorem.
 
 This is the Schrödinger-picture form of Stinespring's dilation (Watrous, Theorem 2.22 and
 Corollary 2.27). Stinespring's original Heisenberg-picture statement is about the trace dual

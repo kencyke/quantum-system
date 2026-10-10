@@ -19,8 +19,10 @@ traces** over that common factor:
 * `Matrix.traceLeft (M : Matrix (n × l) (n × c) R) : Matrix l c R` — trace out the **left**
   factor `n`, entry-wise `traceLeft M i j = ∑ k, M (k, i) (k, j)`.
 
-In standard bases they correspond to the basis-free partial traces of operators on a tensor product
-of finite-dimensional Hilbert spaces (this correspondence is not formalised). The row and
+In standard bases they are the basis-free partial traces of operators on a tensor product of
+finite-dimensional Hilbert spaces (`Matrix.toMatrix_traceRight`, in
+`QuantumSystem.Analysis.InnerProductSpace.PartialTrace`, the partial-trace analogue of
+`LinearMap.trace_eq_matrix_trace`). The row and
 column "kept" indices `l`, `c` are allowed to differ, so the operations apply to rectangular
 blocks; they are stated over an arbitrary `AddCommMonoid` so they specialise to scalars in any
 finite-dimensional quantum system.
