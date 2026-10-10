@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.Physics.LocalNet.DHRCriterion
-public import QuantumSystem.Physics.LocalNet.InfiniteRegion
+public import QuantumSystem.Physics.LocalNet.HalfChainSplit
 
 /-!
 # Witnesses for the local-net interfaces

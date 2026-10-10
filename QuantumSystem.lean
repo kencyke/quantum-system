@@ -173,6 +173,7 @@ public import QuantumSystem.Physics.LocalNet.Basic
 public import QuantumSystem.Physics.LocalNet.Covariance
 public import QuantumSystem.Physics.LocalNet.DHRCriterion
 public import QuantumSystem.Physics.LocalNet.Examples
+public import QuantumSystem.Physics.LocalNet.HalfChainSplit
 public import QuantumSystem.Physics.LocalNet.InfiniteRegion
 public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Physics.LocalNet.SplitProperty
