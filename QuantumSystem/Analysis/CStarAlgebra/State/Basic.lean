@@ -216,9 +216,10 @@ lemma tendsto_approximateUnit {l : Filter A} (hl : l.IsIncreasingApproximateUnit
 /-- The state `‖f‖ₒₚ⁻¹ f` obtained by normalising a nonzero positive linear functional. -/
 noncomputable def normalize (f : A →ₚ[ℂ] ℂ) (hf : f ≠ 0) : State A :=
   ofContinuousLinearMap (((‖f‖ₒₚ⁻¹ : ℝ) : ℂ) • (PositiveContinuousLinearMap.ofClass f : A →L[ℂ] ℂ))
-    (fun _ ha => mul_nonneg (Complex.zero_le_real.mpr (inv_nonneg.mpr (norm_nonneg _)))
+    (fun _ ha => mul_nonneg (Complex.zero_le_real.mpr (inv_nonneg.mpr (opNorm_nonneg f)))
       (f.map_nonneg ha))
-    (by rw [norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_inv, abs_norm,
+    (by rw [norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_inv,
+      abs_of_nonneg (opNorm_nonneg f), ← opNorm_def,
       inv_mul_cancel₀ ((opNorm_eq_zero_iff f).not.mpr hf)])
 
 /-- `normalize f hf a = ‖f‖ₒₚ⁻¹ f a`. -/

@@ -80,8 +80,11 @@ C⋆-algebras are automatically bounded.
   `CompletelyPositiveMap.norm_stinespringOperator_sq_eq_norm_map_one` (`‖V‖² = ‖φ 1‖`) and
   `CompletelyPositiveMap.exists_unital_stinespring_dilation`. Together with
   `CompletelyPositiveMap.norm_stinespringOperator_sq`, the identity `‖V‖² = ‖φ 1‖` gives
-  `‖φ‖ = ‖φ 1‖`, which holds more generally for `2`-positive maps
-  (`KPositiveMapClass.opNorm_eq_norm_map_one` in `KPositiveMap.lean`) and is not restated here.
+  `‖φ‖ = ‖φ 1‖`, which holds more generally for every positive map on a unital C⋆-algebra
+  (Russo–Dye 1966; Paulsen, Corollary 2.9). That general statement is not restated here: it is
+  proved in the module `QuantumSystem.Analysis.CStarAlgebra.PositiveMap`, which lies outside
+  `ForMathlib/` because it combines several `ForMathlib` files, while a `ForMathlib` file imports
+  Mathlib only.
 
 ## References
 
@@ -92,7 +95,9 @@ C⋆-algebras are automatically bounded.
 * E. C. Lance, *Hilbert C⋆-Modules*, London Math. Soc. Lecture Note Ser. 210 (1995), Ch. 5
   (the KSGNS construction; its case of a Hilbert space `E = H` is the non-unital theorem above).
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
-  (2002), Ch. 4 (uniqueness of the minimal dilation).
+  (2002), Ch. 4 (uniqueness of the minimal dilation) and Corollary 2.9.
+* B. Russo, H. A. Dye, *A note on unitary operators in C⋆-algebras*, Duke Math. J. 33 (1966),
+  413–416.
 -/
 
 @[expose] public section
@@ -322,9 +327,10 @@ namespace CompletelyPositiveMap
 
 /- The operator norm `‖φ‖ₒₚ` of `φ`, taken through `PositiveContinuousLinearMap.ofClass φ` (positive
 linear maps between C⋆-algebras are automatically bounded), the spelling of Mathlib's norm lemmas
-for positive maps. The notation only abbreviates that Mathlib term; it is the same abbreviation as
-the scoped `‖f‖ₒₚ` of `QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal`, repeated
-here (`local`) because `ForMathlib` files import Mathlib only. -/
+for positive maps. The notation only abbreviates that Mathlib term, which is what the scoped `‖f‖ₒₚ`
+of `QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal` (the definition
+`PositiveLinearMap.opNorm`) unfolds to; it is spelled out here (`local`) because `ForMathlib` files
+import Mathlib only. -/
 local notation "‖" φ "‖ₒₚ" =>
   ‖PositiveContinuousLinearMap.toContinuousLinearMap (PositiveContinuousLinearMap.ofClass φ)‖
 

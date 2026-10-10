@@ -28,11 +28,20 @@ Cauchy–Schwarz inequality `φ(x⋆ y)⋆ φ(x⋆ y) ≤ ‖φ(x⋆ x)‖ • �
 `(φ(xᵢ⋆ xⱼ))ᵢⱼ`. With `x = 1` it is `φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` on a unital domain, normalised
 to `φ(a)⋆ φ(a) ≤ φ(a⋆ a)` under `φ 1 ≤ 1`; with `x` running through an approximate unit it is
 `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` on a non-unital domain (Lance, *Hilbert C⋆-modules*, Lemma 5.3, for
-completely positive maps). On a unital domain it gives `‖φ‖ = ‖φ 1‖`. Here `φ : F` is a
-`FunLike` map with `LinearMapClass F ℂ A₁ A₂`, and `‖φ‖` is the operator norm of the bounded
-positive map `PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂`, which exists since a
-`2`-positive linear map is positive (`KPositiveMapClass.instOrderHomClass`) and positive maps
-between C⋆-algebras are bounded.
+completely positive maps). Here `φ : F` is a `FunLike` map with `LinearMapClass F ℂ A₁ A₂`, and
+`‖φ‖` is the operator norm of the bounded positive map
+`PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂`, which exists since a `2`-positive linear map
+is positive (`KPositiveMapClass.instOrderHomClass`) and positive maps between C⋆-algebras are
+bounded.
+
+For merely positive maps the Kadison–Schwarz inequality still holds at normal elements (Kadison
+1952, Choi 1974), and a positive map on a unital domain attains its norm at the unit,
+`‖φ‖ = ‖φ 1‖` (Russo–Dye 1966; Paulsen, Corollary 2.9). Both follow from the `2`-positive case
+treated here, through Stinespring's theorem that a positive map on a commutative C⋆-algebra is
+completely positive and through the Russo–Dye theorem, and are proved not here but in the module
+`QuantumSystem.Analysis.CStarAlgebra.PositiveMap`, which lies outside `ForMathlib/` because it
+combines this file with the Russo–Dye theorem and Stinespring's theorem for commutative domains,
+while a `ForMathlib` file imports Mathlib only.
 
 ## Main definitions
 
@@ -67,20 +76,8 @@ between C⋆-algebras are bounded.
 * `KPositiveMapClass.le_smul_map_star_mul_of_norm_le`, `KPositiveMapClass.le_opNorm_smul_map_star_mul`
   — the Kadison–Schwarz inequality `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` for `2`-positive maps on a
   possibly non-unital domain.
-* `KPositiveMapClass.norm_apply_le_norm_map_one`, `KPositiveMapClass.opNorm_eq_norm_map_one` — a
-  `2`-positive map on a unital domain attains its norm at the unit, `‖φ‖ = ‖φ 1‖`;
-  `KPositiveMapClass.norm_apply_le_of_map_one_le` — so `φ 1 ≤ 1` makes it a contraction.
-* `OrderHomClass.norm_map_one_le_one` — a positive map with `φ 1 ≤ 1` has `‖φ 1‖ ≤ 1`.
-
-## TODO
-
-* `‖φ‖ = ‖φ 1‖` holds for every positive map `φ` on a unital C⋆-algebra, by the Russo–Dye
-  theorem (the closed unit ball is the closed convex hull of the unitaries). Only the `2`-positive
-  case is proved here (`KPositiveMapClass.opNorm_eq_norm_map_one`), through the Kadison–Schwarz
-  inequality; the general positive case needs Russo–Dye, which Mathlib does not provide.
-* Kadison's inequality `φ(a)² ≤ φ(a²)` holds for every positive unital `φ` and self-adjoint `a`
-  (Kadison 1952). Only the `2`-positive form `φ(a)⋆ φ(a) ≤ φ(a⋆ a)`, for all `a`, is proved here
-  (`KPositiveMapClass.le_map_star_mul`).
+* `OrderHomClass.norm_map_one_le_one` — a positive map between unital C⋆-algebras with
+  `φ 1 ≤ 1` has `‖φ 1‖ ≤ 1`.
 
 ## References
 
@@ -90,7 +87,9 @@ between C⋆-algebras are bounded.
   algebras*, Ann. of Math. 56 (1952), 494–503.
 * E. C. Lance, *Hilbert C⋆-Modules*, London Math. Soc. Lecture Note Ser. 210 (1995), Lemma 5.3.
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
-  (2002), Ch. 3.
+  (2002), Ch. 3 and Corollary 2.9.
+* B. Russo, H. A. Dye, *A note on unitary operators in C⋆-algebras*, Duke Math. J. 33 (1966),
+  413–416.
 -/
 
 @[expose] public section
@@ -500,11 +499,6 @@ end NonUnital
 
 /-! ### Unital domain -/
 
-/-- The unit of a C⋆-algebra has norm at most `1`; it is `1` unless the algebra is trivial. -/
-private lemma norm_one_le_one {A : Type*} [CStarAlgebra A] : ‖(1 : A)‖ ≤ 1 := by
-  nontriviality A
-  simp
-
 section Unital
 
 variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁]
@@ -522,40 +516,6 @@ theorem le_norm_smul_map_star_mul (φ : F) (a : A₁) :
     star (φ a) * φ a ≤ ‖φ 1‖ • φ (star a * a) := by
   simpa using star_map_mul_le_norm_smul φ 1 a
 
-/-- A `2`-positive map on a unital C⋆-algebra is bounded by its value at the unit:
-`‖φ a‖ ≤ ‖φ 1‖ ‖a‖`. By Kadison–Schwarz, `‖φ a‖² ≤ ‖φ 1‖ ‖φ(a⋆ a)‖`, and
-`φ(a⋆ a) ≤ ‖a⋆ a‖ • φ 1` by positivity of `φ`. -/
-lemma norm_apply_le_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
-    ‖φ a‖ ≤ ‖φ 1‖ * ‖a‖ := by
-  have h₁ : ‖φ (star a * a)‖ ≤ ‖φ 1‖ * ‖star a * a‖ := by
-    have hle : φ (star a * a) ≤ ‖star a * a‖ • φ 1 := by
-      rw [← Complex.coe_smul, ← map_smul, Complex.coe_smul, ← Algebra.algebraMap_eq_smul_one]
-      exact OrderHomClass.mono φ (IsSelfAdjoint.star_mul_self a).le_algebraMap_norm_self
-    have := CStarAlgebra.norm_le_norm_of_le_of_nonneg hle (map_star_mul_self_nonneg φ a)
-    rwa [norm_smul, norm_norm, mul_comm] at this
-  have h₂ := CStarAlgebra.norm_le_norm_of_le_of_nonneg (le_norm_smul_map_star_mul φ a)
-    (star_mul_self_nonneg _)
-  rw [CStarRing.norm_star_mul_self, norm_smul, norm_norm] at h₂
-  rw [CStarRing.norm_star_mul_self] at h₁
-  have h₃ : ‖φ a‖ * ‖φ a‖ ≤ (‖φ 1‖ * ‖a‖) * (‖φ 1‖ * ‖a‖) := by
-    nlinarith [norm_nonneg (φ 1), norm_nonneg (φ (star a * a))]
-  exact (mul_self_le_mul_self_iff (norm_nonneg _) (by positivity)).2 h₃
-
-/-- A `2`-positive map on a unital C⋆-algebra attains its norm at the unit: `‖φ‖ = ‖φ 1‖`, where
-`‖φ‖` is the norm of the bounded positive map `PositiveContinuousLinearMap.ofClass φ`
-(`KPositiveMapClass.instOrderHomClass`). -/
-lemma opNorm_eq_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) :
-    ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ = ‖φ 1‖ := by
-  refine le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _)
-    (norm_apply_le_norm_map_one φ)) ?_
-  calc ‖φ 1‖ = ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂) 1‖ := rfl
-    _ ≤ ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ * ‖(1 : A₁)‖ :=
-      ContinuousLinearMap.le_opNorm _ _
-    _ ≤ ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ * 1 := by
-      gcongr
-      exact norm_one_le_one
-    _ = _ := mul_one _
-
 end Unital
 
 /-! ### Unital domain and codomain -/
@@ -566,7 +526,7 @@ lemma _root_.OrderHomClass.norm_map_one_le_one {F A₁ A₂ : Type*} [CStarAlgeb
     [CStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂]
     [FunLike F A₁ A₂] [ZeroHomClass F A₁ A₂] [OrderHomClass F A₁ A₂] (φ : F) (hφ : φ 1 ≤ 1) :
     ‖φ 1‖ ≤ 1 :=
-  (CStarAlgebra.norm_le_one_iff_of_nonneg _ (map_zero φ ▸ OrderHomClass.mono φ zero_le_one)).2 hφ
+  (CStarAlgebra.norm_le_one_iff_of_nonneg _ (map_nonneg φ zero_le_one)).2 hφ
 
 section Unital₂
 
@@ -583,14 +543,6 @@ theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
   calc ‖φ 1‖ • φ (star a * a) ≤ (1 : ℝ) • φ (star a * a) :=
         smul_le_smul_of_nonneg_right hn (map_star_mul_self_nonneg φ a)
     _ = φ (star a * a) := one_smul _ _
-
-/-- A `2`-positive map with `φ 1 ≤ 1` is a contraction, `‖φ a‖ ≤ ‖a‖`: `‖φ 1‖ ≤ 1`
-(`OrderHomClass.norm_map_one_le_one`) in `KPositiveMapClass.norm_apply_le_norm_map_one`. -/
-lemma norm_apply_le_of_map_one_le [LinearMapClass F ℂ A₁ A₂] (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
-    ‖φ a‖ ≤ ‖a‖ := by
-  calc ‖φ a‖ ≤ ‖φ 1‖ * ‖a‖ := norm_apply_le_norm_map_one φ a
-    _ ≤ 1 * ‖a‖ := by gcongr; exact OrderHomClass.norm_map_one_le_one φ hφ
-    _ = ‖a‖ := one_mul _
 
 end Unital₂
 

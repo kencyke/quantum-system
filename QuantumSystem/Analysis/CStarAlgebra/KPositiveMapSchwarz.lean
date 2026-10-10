@@ -13,11 +13,10 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 
 By the Kadison–Schwarz inequality of Choi (`KPositiveMapClass.le_smul_map_star_mul_of_norm_le`),
 a `2`-positive contraction `φ` (`‖φ x‖ ≤ ‖x‖`) between possibly non-unital C⋆-algebras is a
-Schwarz map. Between unital C⋆-algebras the condition reads `φ 1 ≤ 1`, since a `2`-positive map
-attains its norm at the unit (`KPositiveMapClass.opNorm_eq_norm_map_one`), so that `φ 1 ≤ 1` makes
-it a contraction (`KPositiveMapClass.norm_apply_le_of_map_one_le`). This file packages
-both as Schwarz maps. It lives outside `ForMathlib/` because it needs both `KPositiveMap.lean` and
-`SchwarzMap.lean`.
+Schwarz map. Between unital C⋆-algebras the condition reads `φ 1 ≤ 1`: the normalised
+Kadison–Schwarz inequality `KPositiveMapClass.le_map_star_mul` holds under it directly. This file
+packages both as Schwarz maps. It lives outside `ForMathlib/` because it needs both
+`KPositiveMap.lean` and `SchwarzMap.lean`, and a `ForMathlib` file imports Mathlib only.
 
 ## Main definitions
 
@@ -57,11 +56,12 @@ variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂] [PartialO
   [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂] [LinearMapClass F ℂ A₁ A₂]
   [KPositiveMapClass F 2 A₁ A₂]
 
-/-- A `2`-positive map with `φ 1 ≤ 1` between unital C⋆-algebras as a Schwarz map: it is a
-contraction (`KPositiveMapClass.norm_apply_le_of_map_one_le`), so
-`KPositiveMapClass.toSchwarzMapOfNormLe` applies. -/
-noncomputable def toSchwarzMap (φ : F) (hφ : φ 1 ≤ 1) : SchwarzMap A₁ A₂ :=
-  toSchwarzMapOfNormLe φ (norm_apply_le_of_map_one_le φ hφ)
+/-- A `2`-positive map with `φ 1 ≤ 1` between unital C⋆-algebras as a Schwarz map:
+`φ(a)⋆ φ(a) ≤ φ(a⋆ a)` is the normalised Kadison–Schwarz inequality
+`KPositiveMapClass.le_map_star_mul`. -/
+noncomputable def toSchwarzMap (φ : F) (hφ : φ 1 ≤ 1) : SchwarzMap A₁ A₂ where
+  toLinearMap := (φ : A₁ →ₗ[ℂ] A₂)
+  le_map_star_mul' := le_map_star_mul φ hφ
 
 /-- `toSchwarzMap φ hφ` evaluates as `φ`. -/
 @[simp] lemma toSchwarzMap_apply (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :

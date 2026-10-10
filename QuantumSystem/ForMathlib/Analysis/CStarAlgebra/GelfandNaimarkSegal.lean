@@ -24,11 +24,14 @@ non-unital case.
 The vector `ξ_f` is the Riesz representative of the functional `[a] ↦ f a` on `f.GNS`.  That
 functional is bounded, with norm `√‖f‖ₒₚ`, by the Cauchy–Schwarz inequality
 `‖f a‖ ≤ √‖f‖ₒₚ √‖f (a* a)‖` (`PositiveContinuousLinearMap.norm_map_le_sqrt_opNorm_mul`).  Here and
-below `‖f‖ₒₚ` is the operator norm of `f`, viewed as a continuous linear map through
-`PositiveContinuousLinearMap.ofClass f` (positive functionals on a C\*-algebra are automatically
-continuous); the notation is scoped to `PositiveLinearMap`.
+below `‖f‖ₒₚ` is the operator norm `PositiveLinearMap.opNorm f` of `f`, viewed as a continuous
+linear map through `PositiveContinuousLinearMap.ofClass f` (positive functionals on a C\*-algebra
+are automatically continuous); the notation is scoped to `PositiveLinearMap`.
 
 ## Main definitions
+
+* `PositiveLinearMap.opNorm f` — the operator norm `‖f‖ₒₚ` of a positive linear map between
+  C\*-algebras.
 
 * `PositiveLinearMap.gnsMk` — the canonical linear map `A →ₗ[ℂ] f.GNS`, `a ↦ [a]`.
 * `PositiveLinearMap.gnsFunctional` — the bounded functional on `f.GNS` extending `[a] ↦ f a`.
@@ -53,8 +56,12 @@ continuous); the notation is scoped to `PositiveLinearMap`.
 
 ## Notation
 
-`‖f‖ₒₚ` is the operator norm of a positive linear functional `f`, taken through
-`PositiveContinuousLinearMap.ofClass f`; activate it with `open scoped PositiveLinearMap`.
+| Symbol | Expansion | How to activate |
+|---|---|---|
+| `‖f‖ₒₚ` | `PositiveLinearMap.opNorm f` | `open scoped PositiveLinearMap` |
+
+`‖f‖ₒₚ` is the operator norm of a positive linear map `f` between C\*-algebras, the norm of
+`PositiveContinuousLinearMap.ofClass f` (`PositiveLinearMap.opNorm_def`).
 
 ## References
 
@@ -68,12 +75,37 @@ open UniformSpace Completion
 
 namespace PositiveLinearMap
 
-/-- The operator norm `‖f‖ₒₚ` of a positive linear functional `f` on a C\*-algebra, taken through
-`PositiveContinuousLinearMap.ofClass f` (positive functionals on a C\*-algebra are automatically
-continuous).  This is the spelling Mathlib's norm lemmas, such as
-`PositiveContinuousLinearMap.norm_map_le_sqrt_opNorm_mul`, are stated in. -/
-scoped notation "‖" f "‖ₒₚ" =>
-  ‖PositiveContinuousLinearMap.toContinuousLinearMap (PositiveContinuousLinearMap.ofClass f)‖
+section OpNorm
+
+variable {F A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁]
+  [StarOrderedRing A₁] [PartialOrder A₂] [StarOrderedRing A₂] [FunLike F A₁ A₂]
+  [LinearMapClass F ℂ A₁ A₂] [OrderHomClass F A₁ A₂]
+
+/-- The operator norm `‖f‖ₒₚ` of a positive linear map `f` between C\*-algebras: the norm of the
+bounded operator `PositiveContinuousLinearMap.ofClass f` (positive linear maps between
+C\*-algebras are automatically continuous).  It is a definition, rather than an abbreviation of
+that term, so that `‖f‖ₒₚ` is displayed in goals; `PositiveLinearMap.opNorm_def` unfolds it to the
+spelling Mathlib's norm lemmas, such as `PositiveContinuousLinearMap.norm_map_le_sqrt_opNorm_mul`,
+are stated in. -/
+noncomputable def opNorm (f : F) : ℝ :=
+  ‖(PositiveContinuousLinearMap.ofClass f : A₁ →L[ℂ] A₂)‖
+
+/-- `‖f‖ₒₚ` is the operator norm `PositiveLinearMap.opNorm f` of a positive linear map `f`. -/
+scoped notation "‖" f "‖ₒₚ" => PositiveLinearMap.opNorm f
+
+/-- `‖f‖ₒₚ` is the operator norm of the bounded operator `PositiveContinuousLinearMap.ofClass f`. -/
+lemma opNorm_def (f : F) : ‖f‖ₒₚ = ‖(PositiveContinuousLinearMap.ofClass f : A₁ →L[ℂ] A₂)‖ :=
+  rfl
+
+/-- The operator norm of a positive linear map is nonnegative. -/
+lemma opNorm_nonneg (f : F) : 0 ≤ ‖f‖ₒₚ :=
+  norm_nonneg _
+
+/-- A positive linear map is bounded by its operator norm: `‖f a‖ ≤ ‖f‖ₒₚ ‖a‖`. -/
+lemma norm_apply_le_opNorm_mul (f : F) (a : A₁) : ‖f a‖ ≤ ‖f‖ₒₚ * ‖a‖ :=
+  (PositiveContinuousLinearMap.ofClass f : A₁ →L[ℂ] A₂).le_opNorm a
+
+end OpNorm
 
 section NonUnital
 
@@ -82,7 +114,7 @@ variable (f : A →ₚ[ℂ] ℂ)
 
 /-- `‖f‖ₒₚ = 0` iff `f = 0`. -/
 lemma opNorm_eq_zero_iff : ‖f‖ₒₚ = 0 ↔ f = 0 := by
-  rw [norm_eq_zero]
+  rw [opNorm_def, norm_eq_zero]
   constructor
   · intro h
     ext a
@@ -121,12 +153,10 @@ lemma norm_gnsMk (a : A) : ‖f.gnsMk a‖ = √‖f (star a * a)‖ := by
 /-- `‖[a]‖ ≤ √‖f‖ₒₚ ‖a‖`. -/
 lemma norm_gnsMk_le (a : A) :
     ‖f.gnsMk a‖ ≤ √‖f‖ₒₚ * ‖a‖ := by
-  rw [norm_gnsMk, ← Real.sqrt_sq (norm_nonneg a), ← Real.sqrt_mul (norm_nonneg _)]
+  rw [norm_gnsMk, ← Real.sqrt_sq (norm_nonneg a), ← Real.sqrt_mul (opNorm_nonneg _)]
   gcongr
   calc ‖f (star a * a)‖
-      = ‖(PositiveContinuousLinearMap.ofClass f : A →L[ℂ] ℂ) (star a * a)‖ := rfl
-    _ ≤ ‖f‖ₒₚ * ‖star a * a‖ :=
-      ContinuousLinearMap.le_opNorm _ _
+    _ ≤ ‖f‖ₒₚ * ‖star a * a‖ := norm_apply_le_opNorm_mul f _
     _ = _ := by rw [CStarRing.norm_star_mul_self, sq]
 
 /-- `[a] = 0` iff `f (a* a) = 0`. -/
@@ -177,7 +207,7 @@ lemma norm_gnsFunctional :
         (LinearMap.mkContinuous_norm_le _ (Real.sqrt_nonneg _) _) x
   · -- `‖f a‖ ≤ ‖F‖ ‖[a]‖ ≤ ‖F‖ c ‖a‖`, so `c² = ‖f‖ₒₚ ≤ ‖F‖ c`.
     have h : c * c ≤ ‖f.gnsFunctional‖ * c := by
-      rw [hc, Real.mul_self_sqrt (norm_nonneg _)]
+      rw [hc, Real.mul_self_sqrt (opNorm_nonneg _), opNorm_def]
       refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun a => ?_
       calc ‖(PositiveContinuousLinearMap.ofClass f : A →L[ℂ] ℂ) a‖
           = ‖f.gnsFunctional (f.gnsMk a)‖ := by simp
@@ -228,11 +258,11 @@ lemma norm_gnsVector :
 /-- `‖ξ_f‖² = ‖f‖ₒₚ`. -/
 lemma norm_gnsVector_sq :
     ‖f.gnsVector‖ ^ 2 = ‖f‖ₒₚ := by
-  rw [norm_gnsVector, Real.sq_sqrt (norm_nonneg _)]
+  rw [norm_gnsVector, Real.sq_sqrt (opNorm_nonneg _)]
 
 /-- `ξ_f = 0` iff `f = 0`. -/
 lemma gnsVector_eq_zero_iff : f.gnsVector = 0 ↔ f = 0 := by
-  rw [← norm_eq_zero, norm_gnsVector, Real.sqrt_eq_zero (norm_nonneg _), opNorm_eq_zero_iff]
+  rw [← norm_eq_zero, norm_gnsVector, Real.sqrt_eq_zero (opNorm_nonneg _), opNorm_eq_zero_iff]
 
 /-! ### The normalised cyclic vector
 
@@ -256,7 +286,7 @@ lemma inner_gnsNonUnitalStarAlgHom_normalize_gnsVector (a : A) :
       (‖f‖ₒₚ⁻¹ : ℝ) * f a := by
   rw [normalize_gnsVector, map_smul, inner_smul_left, inner_smul_right,
     ← apply_eq_inner_gnsNonUnitalStarAlgHom_gnsVector, Complex.conj_ofReal, ← mul_assoc, ← Complex.ofReal_mul,
-    ← mul_inv, Real.mul_self_sqrt (norm_nonneg _)]
+    ← mul_inv, Real.mul_self_sqrt (opNorm_nonneg _)]
 
 /-- Cyclicity of `ζ_f`: for `f ≠ 0` it is a nonzero multiple of the cyclic vector `ξ_f`, and for
 `f = 0` the GNS space is `{0}`. -/
@@ -270,7 +300,8 @@ lemma denseRange_gnsNonUnitalStarAlgHom_apply_normalize_gnsVector :
     rw [map_zero, zero_apply, eq_comm, gnsMk_eq_zero_iff]
     rfl
   set c : ℂ := (((√‖f‖ₒₚ)⁻¹ : ℝ) : ℂ) with hc_def
-  have hc : c ≠ 0 := by simpa [hc_def] using (f.opNorm_eq_zero_iff).not.mpr hf
+  have hc : c ≠ 0 := by
+    simpa [hc_def, Real.sqrt_eq_zero (opNorm_nonneg f)] using (f.opNorm_eq_zero_iff).not.mpr hf
   refine ⟨c⁻¹ • b, ?_⟩
   beta_reduce
   rw [normalize_gnsVector, ← hc_def, map_smul (f.gnsNonUnitalStarAlgHom (c⁻¹ • b)),

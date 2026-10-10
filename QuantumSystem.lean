@@ -17,6 +17,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.KPositiveMapSchwarz
 public import QuantumSystem.Analysis.CStarAlgebra.LiebConcavity
 public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvex
 public import QuantumSystem.Analysis.CStarAlgebra.Perspective
+public import QuantumSystem.Analysis.CStarAlgebra.PositiveMap
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Basic
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Conjugation
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.DirectSum
@@ -92,6 +93,8 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Matrix
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.PositiveMapCommutative
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.RussoDye
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring

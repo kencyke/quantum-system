@@ -55,7 +55,9 @@ converse is **not** formalised here.
 
 * Monotonicity holds for every positive trace-preserving map (Müller-Hermes–Reeb). Only the
   `2`-positive case is proved here: its proof needs the dual to be a Schwarz map, which the
-  Kadison–Schwarz inequality gives for `2`-positive maps but not for merely positive ones.
+  Kadison–Schwarz inequality gives for `2`-positive maps but not for merely positive ones. For
+  a positive map the inequality is guaranteed only at normal elements
+  (`OrderHomClass.le_map_star_mul_of_isStarNormal`), which does not make it a Schwarz map.
 
 ## References
 

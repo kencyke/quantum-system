@@ -204,7 +204,7 @@ end ApproximateUnit
 
 /-- The cyclic vector vanishes exactly for the zero functional, since `‖ξ‖ = √‖f‖ₒₚ`. -/
 lemma ξ_eq_zero_iff (T : Representation f) : T.ξ = 0 ↔ f = 0 := by
-  rw [← norm_eq_zero, T.norm_ξ, Real.sqrt_eq_zero (norm_nonneg _), opNorm_eq_zero_iff]
+  rw [← norm_eq_zero, T.norm_ξ, Real.sqrt_eq_zero (opNorm_nonneg _), opNorm_eq_zero_iff]
 
 /-- The cyclic vector of a GNS triplet of a nonzero functional is nonzero (`ξ_eq_zero_iff`). -/
 lemma ξ_ne_zero (T : Representation f) (hf : f ≠ 0) : T.ξ ≠ 0 :=
