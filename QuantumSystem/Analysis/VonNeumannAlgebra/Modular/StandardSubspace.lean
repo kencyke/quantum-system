@@ -94,7 +94,7 @@ variable {M Ω}
 /-- A vector is separating for `M` iff it is cyclic for the commutant `M′` (Bratteli–Robinson,
 Proposition 2.5.3): the support `s(Ω) ∈ M` is the projection onto `[M′ Ω]`, and `1 - s(Ω)`
 annihilates `Ω`. -/
-theorem isSeparatingVector_iff_isCyclicVector_commutant :
+lemma isSeparatingVector_iff_isCyclicVector_commutant :
     IsSeparatingVector M Ω ↔ IsCyclicVector M′ Ω := by
   refine ⟨fun h => supportProj_eq_one_iff.mp ?_, fun h x hx hxΩ => ?_⟩
   · have h1 := h (1 - M.supportProj Ω) (sub_mem (one_mem M) (M.supportProj_mem Ω))

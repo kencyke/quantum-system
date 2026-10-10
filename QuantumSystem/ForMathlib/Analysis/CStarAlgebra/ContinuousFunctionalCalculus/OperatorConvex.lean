@@ -159,7 +159,7 @@ variable {A : Type*} [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] 
   [Algebra ℝ A] [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint] [NonnegSpectrumClass ℝ A]
 
 /-- The self-adjoint elements with spectrum in `[0, ∞)` are the nonnegative elements. -/
-theorem setOf_isSelfAdjoint_spectrum_subset_Ici :
+lemma setOf_isSelfAdjoint_spectrum_subset_Ici :
     {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ Ici 0} = Ici 0 := by
   ext a
   refine ⟨fun ⟨ha, h⟩ => (StarOrderedRing.nonneg_iff_spectrum_nonneg (R := ℝ) a ha).2
@@ -168,7 +168,7 @@ theorem setOf_isSelfAdjoint_spectrum_subset_Ici :
       (StarOrderedRing.nonneg_iff_spectrum_nonneg (R := ℝ) a (IsSelfAdjoint.of_nonneg h)).1 h x hx⟩⟩
 
 /-- The self-adjoint elements with spectrum in `(0, ∞)` are the strictly positive elements. -/
-theorem setOf_isSelfAdjoint_spectrum_subset_Ioi :
+lemma setOf_isSelfAdjoint_spectrum_subset_Ioi :
     {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ Ioi 0} = {a | IsStrictlyPositive a} := by
   ext a
   refine ⟨fun ⟨ha, h⟩ => (StarOrderedRing.isStrictlyPositive_iff_spectrum_pos (R := ℝ) a ha).2
@@ -178,21 +178,21 @@ theorem setOf_isSelfAdjoint_spectrum_subset_Ioi :
 
 omit [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A] in
 /-- A real scalar `t ∈ s` lies in the domain for `s`. -/
-theorem algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A] {s : Set ℝ} {t : ℝ}
+lemma algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A] {s : Set ℝ} {t : ℝ}
     (ht : t ∈ s) : algebraMap ℝ A t ∈ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} :=
   ⟨IsSelfAdjoint.algebraMap _ (.all t),
     (CFC.spectrum_algebraMap_subset t).trans (singleton_subset_iff.2 ht)⟩
 
 omit [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A] in
 /-- The zero element lies in the domain for `s ∋ 0`. -/
-theorem zero_mem_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A] {s : Set ℝ}
+lemma zero_mem_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A] {s : Set ℝ}
     (h0 : (0 : ℝ) ∈ s) : (0 : A) ∈ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} :=
   map_zero (algebraMap ℝ A) ▸ algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset h0
 
 omit [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A] in
 /-- If the self-adjoint elements with spectrum in `s` of a nontrivial algebra form a convex set,
 then `s` is an interval: it contains the convex combinations of the scalars in it. -/
-theorem Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
+lemma Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
     [Nontrivial A] {s : Set ℝ} (h : Convex ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s}) :
     s.OrdConnected := by
   rw [← convex_iff_ordConnected]
@@ -206,7 +206,7 @@ theorem Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset [StarModu
 /-- If `cfc f` is convex on the self-adjoint elements with spectrum in `s` of a nontrivial algebra,
 then `f` is convex on `s`: the domain contains the scalars `algebraMap ℝ A r`, `r ∈ s`, on which
 `cfc f` is `f` (`cfc_algebraMap`), and the order on the scalars is that of `ℝ`. -/
-theorem ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
+lemma ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
     [Nontrivial A] {s : Set ℝ} {f : ℝ → ℝ}
     (h : ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) : ConvexOn ℝ s f := by
   refine ⟨convex_iff_ordConnected.2
@@ -220,7 +220,7 @@ theorem ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset [StarM
 
 /-- Scalar bounds `lo ≤ a ≤ hi` with `lo, hi` in an order-connected `s` confine the spectrum of a
 self-adjoint `a` to `s`. -/
-theorem Set.OrdConnected.spectrum_subset_of_algebraMap_le {s : Set ℝ} (hs : s.OrdConnected)
+lemma Set.OrdConnected.spectrum_subset_of_algebraMap_le {s : Set ℝ} (hs : s.OrdConnected)
     {a : A} (ha : IsSelfAdjoint a) {lo hi : ℝ} (hlo : lo ∈ s) (hhi : hi ∈ s)
     (h₁ : algebraMap ℝ A lo ≤ a) (h₂ : a ≤ algebraMap ℝ A hi) : spectrum ℝ a ⊆ s :=
   fun x hx => hs.out hlo hhi ⟨(algebraMap_le_iff_le_spectrum ha).1 h₁ x hx,
@@ -229,7 +229,7 @@ theorem Set.OrdConnected.spectrum_subset_of_algebraMap_le {s : Set ℝ} (hs : s.
 /-- A nonempty finite family of self-adjoint elements of a nontrivial algebra with spectra in `s`
 has common scalar bounds `lo ≤ xᵢ ≤ hi` with `lo, hi ∈ s`: the least and the greatest point of the
 compact union of the spectra. -/
-theorem exists_algebraMap_le_and_le_algebraMap [Nontrivial A] {ι : Type*} [Finite ι] [Nonempty ι]
+lemma exists_algebraMap_le_and_le_algebraMap [Nontrivial A] {ι : Type*} [Finite ι] [Nonempty ι]
     {s : Set ℝ} {x : ι → A} (hx : ∀ i, x i ∈ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s}) :
     ∃ lo ∈ s, ∃ hi ∈ s, ∀ i, algebraMap ℝ A lo ≤ x i ∧ x i ≤ algebraMap ℝ A hi := by
   have hK : IsCompact (⋃ i, spectrum ℝ (x i)) :=
@@ -249,7 +249,7 @@ theorem exists_algebraMap_le_and_le_algebraMap [Nontrivial A] {ι : Type*} [Fini
 
 /-- For an order-connected `s ⊆ ℝ`, the self-adjoint elements with spectrum in `s` form a convex
 set. -/
-theorem Set.OrdConnected.convex_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
+lemma Set.OrdConnected.convex_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
     {s : Set ℝ} (hs : s.OrdConnected) :
     Convex ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} := by
   rintro a ha b hb t u ht hu htu
@@ -749,7 +749,7 @@ For operator convex `f` (`IsOperatorConvexOn.cfc_sum_le`), `ψ` is the reindexin
 `n = card ι`, which lies in the universe of `A`. It also covers faithful representations of
 `CStarMatrix ι ι A` on a Hilbert space. The proof reads the inequality for the partial isometry `v`
 with the `aᵢ` in a column and `x = diag(xᵢ)` off a diagonal entry. -/
-theorem cfc_sum_le_of_convexOn_cstarMatrix {ι : Type*} [Fintype ι] [DecidableEq ι]
+lemma cfc_sum_le_of_convexOn_cstarMatrix {ι : Type*} [Fintype ι] [DecidableEq ι]
     {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B]
     {F : Type*} [FunLike F (CStarMatrix ι ι A) B] [AlgHomClass F ℂ (CStarMatrix ι ι A) B]
     [StarHomClass F (CStarMatrix ι ι A) B] (ψ : F) (hψ : Function.Injective ψ)
@@ -829,7 +829,7 @@ theorem cfc_sum_le_of_convexOn_cstarMatrix {ι : Type*} [Fintype ι] [DecidableE
 `Σᵢ aᵢ⋆ aᵢ = 1`, then it holds for families indexed by `ι` with `Σᵢ aᵢ⋆ aᵢ ≤ 1`, provided `0 ∈ s`
 and `f(0) ≤ 0`: the defect `d = (1 - Σᵢ aᵢ⋆ aᵢ)^{1/2}` joins the family with `x = 0`, and
 `d⋆ f(0) d ≤ 0`. -/
-theorem cfc_sum_le_of_le_one_of_forall (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {ι : Type*} [Fintype ι]
+lemma cfc_sum_le_of_le_one_of_forall (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {ι : Type*} [Fintype ι]
     (hJ : ∀ (a x : Option ι → A), (∀ i, x i ∈ {b : A | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s}) →
       ∑ i, star (a i) * a i = 1 →
       cfc f (∑ i, star (a i) * x i * a i) ≤ ∑ i, star (a i) * cfc f (x i) * a i)
@@ -1001,7 +1001,7 @@ projection onto `ker A`, and `ker(a A + b B) = ker A ∩ ker B` for `A, B ⪰ 0`
 is not continuous, hence not operator convex (`not_isOperatorConvexOn_indicator_zero`): the two
 notions differ on discontinuous functions, through the continuity that operator convexity
 requires. -/
-theorem isMatrixConvexOn_indicator_zero :
+lemma isMatrixConvexOn_indicator_zero :
     IsMatrixConvexOn (Ici 0) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) := fun n => by
   open scoped MatrixOrder Matrix.Norms.L2Operator in
   refine ⟨ordConnected_Ici.convex_setOf_isSelfAdjoint_spectrum_subset, ?_⟩
@@ -1037,7 +1037,7 @@ theorem isMatrixConvexOn_indicator_zero :
 /-- The indicator `1_{\{0\}}` of `{0}` is not operator convex on `[0, ∞)`, in any universe: it is
 not continuous at `0`, and the proof uses only the field `IsOperatorConvexOn.continuousOn`. It is
 matrix convex (`isMatrixConvexOn_indicator_zero`). -/
-theorem not_isOperatorConvexOn_indicator_zero :
+lemma not_isOperatorConvexOn_indicator_zero :
     ¬ IsOperatorConvexOn (Ici 0) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) := fun h => by
   have hc : Filter.Tendsto (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) (nhdsWithin 0 (Ioi 0))
       (nhds (({0} : Set ℝ).indicator (1 : ℝ → ℝ) 0)) :=

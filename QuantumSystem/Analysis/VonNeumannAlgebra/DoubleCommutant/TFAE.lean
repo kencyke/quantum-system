@@ -104,7 +104,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 /-- **`F(H)` acts non-degenerately**, on every Hilbert space: the rank-one operator
 `|x⟩⟨x| : z ↦ ⟪x, z⟫ • x` does not annihilate `x` unless `x = 0`. -/
-theorem actsNondegenerately_finiteRankOperators :
+lemma actsNondegenerately_finiteRankOperators :
     ActsNondegenerately (finiteRankOperators (H := H) : Set (H →L[ℂ] H)) := by
   intro x hx
   have h := hx (rankOne ℂ x x) (rankOne_mem_finiteRankOperators x x)
@@ -117,7 +117,7 @@ theorem actsNondegenerately_finiteRankOperators :
 operator commutes in particular with every rank-one operator `|x⟩⟨y|`, and that already forces it
 to be a multiple of the identity
 (`ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm`). -/
-theorem centralizer_finiteRankOperators :
+lemma centralizer_finiteRankOperators :
     (finiteRankOperators (H := H) : Set (H →L[ℂ] H))′
       = Set.range fun c : ℂ => c • (1 : H →L[ℂ] H) := by
   refine Set.Subset.antisymm (fun S hS => ?_) ?_
@@ -136,7 +136,7 @@ their commutant is the scalars (`centralizer_finiteRankOperators`) and the scala
 On an infinite-dimensional `H` this is strictly larger than `F(H)`, which is why all three
 conditions of the bicommutant theorem fail for `F(H)`; on a finite-dimensional `H` it is an
 equality, `F(H)` being all of `B(H)` there. -/
-theorem centralizer_centralizer_finiteRankOperators :
+lemma centralizer_centralizer_finiteRankOperators :
     (finiteRankOperators (H := H) : Set (H →L[ℂ] H))′′ = Set.univ := by
   rw [centralizer_finiteRankOperators, Set.centralizer_eq_top_iff_subset]
   rintro _ ⟨c, rfl⟩
@@ -173,7 +173,7 @@ theorem bicommutant_tfae (A : NonUnitalStarSubalgebra ℂ B) (hnd : ActsNondegen
 /-- Unital special case of `DoubleCommutant.bicommutant_tfae`, and the form in which the theorem is
 usually quoted: since `1 ∈ A`, the algebra acts non-degenerately and no extra hypothesis is
 needed. -/
-theorem bicommutant_tfae_starSubalgebra (A : StarSubalgebra ℂ B) :
+lemma bicommutant_tfae_starSubalgebra (A : StarSubalgebra ℂ B) :
     List.TFAE [
       (A : Set B)′′ = (A : Set B),
       IsWOTClosed (H := H) (A : Set B),
@@ -186,7 +186,7 @@ Stated for the WOT in `WOTClosedSubalgebra.one_mem_of_isWOTClosed`; this is the 
 Together the two say that the extra scope of the non-unital form over the unital one contains only
 *negative* instances: a non-degenerate `*`-subalgebra that does not contain `1` fails all three
 conditions. -/
-theorem one_mem_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
+lemma one_mem_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B)) (hA : IsSOTClosed (H := H) (A : Set B)) :
     (1 : B) ∈ A :=
   WOTClosedSubalgebra.one_mem_of_isWOTClosed A hnd
@@ -205,7 +205,7 @@ three therefore fail together, exactly as the equivalence demands — see
 `DoubleCommutant.not_isSOTClosed_finiteRankOperators` and
 `DoubleCommutant.centralizer_centralizer_ne_finiteRankOperators`, the last of which sharpens the
 failure to `F(H)'' = B(H) ≠ F(H)`. -/
-theorem bicommutant_tfae_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma bicommutant_tfae_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (1 : B) ∉ finiteRankOperators (H := H) ∧
       List.TFAE [
         (finiteRankOperators (H := H) : Set B)′′ = (finiteRankOperators (H := H) : Set B),
@@ -216,13 +216,13 @@ theorem bicommutant_tfae_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
 
 /-- On an infinite-dimensional `H` the finite-rank operators are **not** WOT-closed: they act
 non-degenerately, so WOT-closedness would force `1 ∈ F(H)`. -/
-theorem not_isWOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma not_isWOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     ¬ IsWOTClosed (H := H) (finiteRankOperators (H := H) : Set B) := fun hA =>
   one_notMem_finiteRankOperators h
     (WOTClosedSubalgebra.one_mem_of_isWOTClosed _ actsNondegenerately_finiteRankOperators hA)
 
 /-- On an infinite-dimensional `H` the finite-rank operators are **not** SOT-closed. -/
-theorem not_isSOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma not_isSOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     ¬ IsSOTClosed (H := H) (finiteRankOperators (H := H) : Set B) := fun hA =>
   one_notMem_finiteRankOperators h
     (one_mem_of_isSOTClosed _ actsNondegenerately_finiteRankOperators hA)
@@ -230,7 +230,7 @@ theorem not_isSOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
 /-- On an infinite-dimensional `H` the finite-rank operators are **not** their own double
 commutant: `F(H)'' = B(H)` by `InnerProductSpace.centralizer_centralizer_finiteRankOperators`,
 while `1 ∉ F(H)`. -/
-theorem centralizer_centralizer_ne_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma centralizer_centralizer_ne_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (finiteRankOperators (H := H) : Set B)′′ ≠ (finiteRankOperators (H := H) : Set B) := by
   intro heq
   refine one_notMem_finiteRankOperators h ?_

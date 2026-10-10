@@ -162,7 +162,7 @@ variable (hT : IsStarNormal T) (u : E)
 
 /-- **Spectral integral formula.** For a real function `g` continuous on the spectrum of `T`,
 `∫ g dν_u = re ⟪u, cfc g T u⟫`. -/
-private theorem integral_spectralMeasure {g : ℂ → ℝ} (hg : ContinuousOn g (spectrum ℂ T)) :
+private lemma integral_spectralMeasure {g : ℂ → ℝ} (hg : ContinuousOn g (spectrum ℂ T)) :
     ∫ ζ, g ζ ∂(hT.spectralMeasure u) = re (inner ℂ u (cfc (fun ζ => (g ζ : ℂ)) T u)) := by
   let g' : C_c(spectrum ℂ T, ℝ) :=
     ⟨⟨fun x => g x, hg.domRestrict⟩, HasCompactSupport.of_compactSpace _⟩
@@ -174,14 +174,14 @@ private theorem integral_spectralMeasure {g : ℂ → ℝ} (hg : ContinuousOn g 
 variable {u} in
 /-- **Uniqueness.** A finite measure `ν` on `ℂ` with `∫ g dν = re ⟪u, cfc g T u⟫` for every
 bounded continuous real `g` is the scalar spectral measure `ν_u`. -/
-private theorem eq_spectralMeasure_of_integral (ν : Measure ℂ) [IsFiniteMeasure ν]
+private lemma eq_spectralMeasure_of_integral (ν : Measure ℂ) [IsFiniteMeasure ν]
     (h : ∀ g : ℂ →ᵇ ℝ, ∫ ζ, g ζ ∂ν = re (inner ℂ u (cfc (fun ζ => (g ζ : ℂ)) T u))) :
     ν = hT.spectralMeasure u :=
   ext_of_forall_integral_eq_of_IsFiniteMeasure fun g =>
     (h g).trans (hT.integral_spectralMeasure u g.continuous.continuousOn).symm
 
 /-- `ν_u` is concentrated on the spectrum of `T`. -/
-private theorem spectralMeasure_compl_spectrum : hT.spectralMeasure u (spectrum ℂ T)ᶜ = 0 := by
+private lemma spectralMeasure_compl_spectrum : hT.spectralMeasure u (spectrum ℂ T)ᶜ = 0 := by
   rw [spectralMeasure, Measure.map_apply measurable_subtype_coe
     (spectrum.isClosed _).measurableSet.compl]
   convert measure_empty (μ := RealRMK.rieszMeasure (hT.spectralFunctional u))
@@ -193,11 +193,11 @@ private lemma ae_mem_spectrum_spectralMeasure : ∀ᵐ ζ ∂(hT.spectralMeasure
   ae_iff.mpr (hT.spectralMeasure_compl_spectrum u)
 
 /-- The support of `ν_u` is contained in the spectrum of `T`. -/
-private theorem support_spectralMeasure_subset : (hT.spectralMeasure u).support ⊆ spectrum ℂ T :=
+private lemma support_spectralMeasure_subset : (hT.spectralMeasure u).support ⊆ spectrum ℂ T :=
   Measure.support_subset_of_isClosed (spectrum.isClosed T) (hT.ae_mem_spectrum_spectralMeasure u)
 
 /-- The total mass of `ν_u` is `‖u‖²`, as a real number. -/
-private theorem measureReal_spectralMeasure_univ : (hT.spectralMeasure u).real Set.univ = ‖u‖ ^ 2 := by
+private lemma measureReal_spectralMeasure_univ : (hT.spectralMeasure u).real Set.univ = ‖u‖ ^ 2 := by
   have := hT
   have h := hT.integral_spectralMeasure u (g := fun _ => 1) continuousOn_const
   simp only [integral_const, smul_eq_mul, mul_one, ofReal_one] at h
@@ -207,7 +207,7 @@ private theorem measureReal_spectralMeasure_univ : (hT.spectralMeasure u).real S
 variable {u} in
 /-- `ν_u` has no atom at `ζ₀` when `u` lies in the closure of the range of `T - ζ₀`: then
 `(1 + n² |T - ζ₀|²)⁻¹ u → 0`. -/
-private theorem spectralMeasure_singleton_eq_zero_of_mem_closure_range {ζ₀ : ℂ}
+private lemma spectralMeasure_singleton_eq_zero_of_mem_closure_range {ζ₀ : ℂ}
     (hu : u ∈ closure (Set.range (T - algebraMap ℂ (E →L[ℂ] E) ζ₀))) :
     hT.spectralMeasure u {ζ₀} = 0 := by
   have := hT
@@ -284,7 +284,7 @@ private theorem spectralMeasure_singleton_eq_zero_of_mem_closure_range {ζ₀ : 
   exact le_antisymm h0 measureReal_nonneg
 
 /-- A function continuous on the spectrum of `T` is `ν_u`-integrable. -/
-private theorem integrable_spectralMeasure {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
+private lemma integrable_spectralMeasure {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
     Integrable g (hT.spectralMeasure u) := by
   have := hg.integrableOn_compact (spectrum.isCompact _) (μ := hT.spectralMeasure u)
   rwa [IntegrableOn, Measure.restrict_eq_self_of_ae_mem
@@ -292,7 +292,7 @@ private theorem integrable_spectralMeasure {g : ℂ → ℂ} (hg : ContinuousOn 
 
 /-- **Spectral integral formula**, complex form. For `g` continuous on the spectrum of `T`,
 `⟪u, cfc g T u⟫ = ∫ g dν_u`. -/
-private theorem inner_cfc_eq_integral_spectralMeasure {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
+private lemma inner_cfc_eq_integral_spectralMeasure {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
     inner ℂ u (cfc g T u) = ∫ ζ, g ζ ∂(hT.spectralMeasure u) := by
   have := hT
   have hreal : ∀ h : ℂ → ℝ, ContinuousOn h (spectrum ℂ T) →
@@ -329,7 +329,7 @@ private theorem inner_cfc_eq_integral_spectralMeasure {g : ℂ → ℂ} (hg : Co
 
 /-- **Transformation rule.** For `h` continuous on the spectrum of `T`,
 `∫ g dν_{h(T) u} = ∫ |h|² g dν_u`. -/
-private theorem integral_spectralMeasure_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (spectrum ℂ T))
+private lemma integral_spectralMeasure_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (spectrum ℂ T))
     {g : ℂ → ℝ} (hg : ContinuousOn g (spectrum ℂ T)) :
     ∫ ζ, g ζ ∂(hT.spectralMeasure (cfc h T u)) =
       ∫ ζ, ‖h ζ‖ ^ 2 * g ζ ∂(hT.spectralMeasure u) := by
@@ -352,7 +352,7 @@ private theorem integral_spectralMeasure_cfc_apply {h : ℂ → ℂ} (hh : Conti
 
 /-- **Transformation rule**, measure form. For `h` continuous on the spectrum of `T`,
 `ν_{h(T) u} = |h|² ν_u`. -/
-private theorem spectralMeasure_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (spectrum ℂ T)) :
+private lemma spectralMeasure_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (spectrum ℂ T)) :
     hT.spectralMeasure (cfc h T u) = (hT.spectralMeasure u).withDensity fun ζ => ‖h ζ‖ₑ ^ 2 := by
   classical
   set σ := spectrum ℂ T
@@ -388,7 +388,7 @@ private theorem spectralMeasure_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h
 
 /-- **Spectral mapping.** For `φ` continuous on the spectrum of `T` (and measurable on `ℂ`), the
 scalar spectral measure of the normal operator `cfc φ T` at `u` is the image of `ν_u` under `φ`. -/
-private theorem spectralMeasure_cfc_eq_map {φ : ℂ → ℂ} (hφ : ContinuousOn φ (spectrum ℂ T))
+private lemma spectralMeasure_cfc_eq_map {φ : ℂ → ℂ} (hφ : ContinuousOn φ (spectrum ℂ T))
     (hφm : Measurable φ) (hφT : IsStarNormal (cfc φ T)) :
     hφT.spectralMeasure u = (hT.spectralMeasure u).map φ := by
   have := hT
@@ -455,7 +455,7 @@ variable (x y : E)
 
 /-- **Spectral integral formula**, real part: `∫ g d(re ν_{x,y}) = re ⟪x, cfc g T y⟫` for a
 bounded continuous real `g`. -/
-private theorem integral_re_complexSpectralMeasure (g : ℂ →ᵇ ℝ) :
+private lemma integral_re_complexSpectralMeasure (g : ℂ →ᵇ ℝ) :
     ∫ᵛ ζ, g ζ ∂<•(hT.complexSpectralMeasure x y).re =
       re ⟪x, cfc (fun ζ => (g ζ : ℂ)) T y⟫_ℂ := by
   rw [complexSpectralMeasure, SignedMeasure.re_toComplexMeasure,
@@ -470,7 +470,7 @@ private theorem integral_re_complexSpectralMeasure (g : ℂ →ᵇ ℝ) :
 
 /-- **Spectral integral formula**, imaginary part: `∫ g d(im ν_{x,y}) = im ⟪x, cfc g T y⟫` for a
 bounded continuous real `g`. -/
-private theorem integral_im_complexSpectralMeasure (g : ℂ →ᵇ ℝ) :
+private lemma integral_im_complexSpectralMeasure (g : ℂ →ᵇ ℝ) :
     ∫ᵛ ζ, g ζ ∂<•(hT.complexSpectralMeasure x y).im =
       im ⟪x, cfc (fun ζ => (g ζ : ℂ)) T y⟫_ℂ := by
   rw [complexSpectralMeasure, SignedMeasure.im_toComplexMeasure,
@@ -486,7 +486,7 @@ private theorem integral_im_complexSpectralMeasure (g : ℂ →ᵇ ℝ) :
 variable {x y} in
 /-- **Uniqueness.** A complex measure `ν` on `ℂ` whose real and imaginary parts integrate every
 bounded continuous real `g` to `re ⟪x, cfc g T y⟫` and `im ⟪x, cfc g T y⟫` is `ν_{x,y}`. -/
-private theorem eq_complexSpectralMeasure_of_integral (ν : ComplexMeasure ℂ)
+private lemma eq_complexSpectralMeasure_of_integral (ν : ComplexMeasure ℂ)
     (hre : ∀ g : ℂ →ᵇ ℝ, ∫ᵛ ζ, g ζ ∂<•ν.re = re ⟪x, cfc (fun ζ => (g ζ : ℂ)) T y⟫_ℂ)
     (him : ∀ g : ℂ →ᵇ ℝ, ∫ᵛ ζ, g ζ ∂<•ν.im = im ⟪x, cfc (fun ζ => (g ζ : ℂ)) T y⟫_ℂ) :
     ν = hT.complexSpectralMeasure x y :=
@@ -495,7 +495,7 @@ private theorem eq_complexSpectralMeasure_of_integral (ν : ComplexMeasure ℂ)
     (fun g => (him g).trans (hT.integral_im_complexSpectralMeasure x y g).symm)
 
 /-- The value of `ν_{x,y}` on a measurable set, by polarization. -/
-private theorem complexSpectralMeasure_apply {s : Set ℂ} (hs : MeasurableSet s) :
+private lemma complexSpectralMeasure_apply {s : Set ℂ} (hs : MeasurableSet s) :
     hT.complexSpectralMeasure x y s =
       ⟨4⁻¹ * ((hT.spectralMeasure (x + y)).real s - (hT.spectralMeasure (x - y)).real s),
         4⁻¹ * ((hT.spectralMeasure (x - I • y)).real s -
@@ -507,7 +507,7 @@ private theorem complexSpectralMeasure_apply {s : Set ℂ} (hs : MeasurableSet s
 /-- **Spectral integral formula**, complex form: for `g` continuous on the spectrum of `T`,
 `⟪x, cfc g T y⟫ = ∫ g d(re ν_{x,y}) + i ∫ g d(im ν_{x,y})`, the integral of `g` against the complex
 measure `ν_{x,y}`. -/
-private theorem inner_cfc_eq_integral_complexSpectralMeasure {g : ℂ → ℂ}
+private lemma inner_cfc_eq_integral_complexSpectralMeasure {g : ℂ → ℂ}
     (hg : ContinuousOn g (spectrum ℂ T)) :
     ⟪x, cfc g T y⟫_ℂ = ∫ᵛ ζ, g ζ ∂<•(hT.complexSpectralMeasure x y).re +
       I * ∫ᵛ ζ, g ζ ∂<•(hT.complexSpectralMeasure x y).im := by
@@ -525,7 +525,7 @@ private theorem inner_cfc_eq_integral_complexSpectralMeasure {g : ℂ → ℂ}
 
 /-- **The operator as an integral**: `⟪x, T y⟫ = ∫ ζ d(re ν_{x,y}) + i ∫ ζ d(im ν_{x,y})`, i.e.
 `T = ∫ ζ dE_T(ζ)` weakly. -/
-private theorem inner_apply_eq_integral_complexSpectralMeasure :
+private lemma inner_apply_eq_integral_complexSpectralMeasure :
     ⟪x, T y⟫_ℂ = ∫ᵛ ζ, ζ ∂<•(hT.complexSpectralMeasure x y).re +
       I * ∫ᵛ ζ, ζ ∂<•(hT.complexSpectralMeasure x y).im := by
   have := hT
@@ -540,7 +540,7 @@ private lemma integrable (s : SignedMeasure ℂ) (g : ℂ →ᵇ ℝ) : VectorMe
 variable (z : E)
 
 /-- `ν_{x,y}` is additive in `y`. -/
-private theorem complexSpectralMeasure_add_right :
+private lemma complexSpectralMeasure_add_right :
     hT.complexSpectralMeasure x (y + z) =
       hT.complexSpectralMeasure x y + hT.complexSpectralMeasure x z := by
   have := hT
@@ -553,7 +553,7 @@ private theorem complexSpectralMeasure_add_right :
       inner_add_right, add_im]
 
 /-- `ν_{x,y}` is complex-linear in `y`. -/
-private theorem complexSpectralMeasure_smul_right (c : ℂ) :
+private lemma complexSpectralMeasure_smul_right (c : ℂ) :
     hT.complexSpectralMeasure x (c • y) = c • hT.complexSpectralMeasure x y := by
   have := hT
   refine (hT.eq_complexSpectralMeasure_of_integral _ (fun g => ?_) (fun g => ?_)).symm
@@ -570,7 +570,7 @@ private theorem complexSpectralMeasure_smul_right (c : ℂ) :
 
 /-- **Conjugate symmetry**, as measures: `ν_{y,x}` has the real part of `ν_{x,y}` and the opposite
 imaginary part. -/
-private theorem complexSpectralMeasure_swap :
+private lemma complexSpectralMeasure_swap :
     hT.complexSpectralMeasure y x = SignedMeasure.toComplexMeasure
       (hT.complexSpectralMeasure x y).re (-(hT.complexSpectralMeasure x y).im) := by
   refine (hT.eq_complexSpectralMeasure_of_integral _ (fun g => ?_) (fun g => ?_)).symm
@@ -581,7 +581,7 @@ private theorem complexSpectralMeasure_swap :
       neg_neg]
 
 /-- **Conjugate symmetry**: `ν_{y,x}(s) = conj ν_{x,y}(s)`. -/
-private theorem complexSpectralMeasure_apply_swap (s : Set ℂ) :
+private lemma complexSpectralMeasure_apply_swap (s : Set ℂ) :
     hT.complexSpectralMeasure y x s = conj (hT.complexSpectralMeasure x y s) := by
   rw [complexSpectralMeasure_swap, SignedMeasure.toComplexMeasure_apply]
   refine Complex.ext ?_ ?_
@@ -589,7 +589,7 @@ private theorem complexSpectralMeasure_apply_swap (s : Set ℂ) :
   · simp [ComplexMeasure.im, VectorMeasure.mapRangeL, VectorMeasure.mapRange_apply]
 
 /-- `ν_{x,y}` is additive in `x`. -/
-private theorem complexSpectralMeasure_add_left :
+private lemma complexSpectralMeasure_add_left :
     hT.complexSpectralMeasure (x + z) y =
       hT.complexSpectralMeasure x y + hT.complexSpectralMeasure z y := by
   ext s hs
@@ -598,7 +598,7 @@ private theorem complexSpectralMeasure_add_left :
     ← hT.complexSpectralMeasure_apply_swap, ← hT.complexSpectralMeasure_apply_swap]
 
 /-- `ν_{x,y}` is conjugate-linear in `x`. -/
-private theorem complexSpectralMeasure_smul_left (c : ℂ) :
+private lemma complexSpectralMeasure_smul_left (c : ℂ) :
     hT.complexSpectralMeasure (c • x) y = conj c • hT.complexSpectralMeasure x y := by
   ext s hs
   rw [_root_.smul_apply, hT.complexSpectralMeasure_apply_swap y (c • x) s,
@@ -606,7 +606,7 @@ private theorem complexSpectralMeasure_smul_left (c : ℂ) :
     ← hT.complexSpectralMeasure_apply_swap]
 
 /-- On the diagonal, `ν_{x,x}` is the scalar spectral measure `ν_x`. -/
-private theorem complexSpectralMeasure_self :
+private lemma complexSpectralMeasure_self :
     hT.complexSpectralMeasure x x =
       SignedMeasure.toComplexMeasure (hT.spectralMeasure x).toSignedMeasure 0 := by
   refine (hT.eq_complexSpectralMeasure_of_integral _ (fun g => ?_) (fun g => ?_)).symm
@@ -617,19 +617,19 @@ private theorem complexSpectralMeasure_self :
     exact ((conj_eq_iff_im.mp h.symm)).symm
 
 /-- On the diagonal, `ν_{x,x}(s) = ν_x(s)` for a measurable `s`. -/
-private theorem complexSpectralMeasure_self_apply {s : Set ℂ} (hs : MeasurableSet s) :
+private lemma complexSpectralMeasure_self_apply {s : Set ℂ} (hs : MeasurableSet s) :
     hT.complexSpectralMeasure x x s = ((hT.spectralMeasure x).real s : ℂ) := by
   rw [complexSpectralMeasure_self, SignedMeasure.toComplexMeasure_apply,
     Measure.toSignedMeasure_apply_measurable hs]
   rfl
 
 /-- `ν_{0,y} = 0`. -/
-private theorem complexSpectralMeasure_zero_left : hT.complexSpectralMeasure 0 y = 0 := by
+private lemma complexSpectralMeasure_zero_left : hT.complexSpectralMeasure 0 y = 0 := by
   ext s hs
   simpa using congrArg (fun μ : ComplexMeasure ℂ => μ s) (hT.complexSpectralMeasure_smul_left 0 y 0)
 
 /-- `ν_{x,0} = 0`. -/
-private theorem complexSpectralMeasure_zero_right : hT.complexSpectralMeasure x 0 = 0 := by
+private lemma complexSpectralMeasure_zero_right : hT.complexSpectralMeasure x 0 = 0 := by
   ext s hs
   simpa using congrArg (fun μ : ComplexMeasure ℂ => μ s) (hT.complexSpectralMeasure_smul_right x 0 0)
 
@@ -637,7 +637,7 @@ private theorem complexSpectralMeasure_zero_right : hT.complexSpectralMeasure x 
 
 /-- A crude bound, `‖ν_{x,y}(s)‖ ≤ ‖x‖² + ‖y‖²`, from the polarization formula and the
 parallelogram law. -/
-private theorem norm_complexSpectralMeasure_apply_le_sq (s : Set ℂ) :
+private lemma norm_complexSpectralMeasure_apply_le_sq (s : Set ℂ) :
     ‖hT.complexSpectralMeasure x y s‖ ≤ ‖x‖ ^ 2 + ‖y‖ ^ 2 := by
   by_cases hs : MeasurableSet s
   swap
@@ -668,7 +668,7 @@ private theorem norm_complexSpectralMeasure_apply_le_sq (s : Set ℂ) :
 
 /-- **Boundedness**: `‖ν_{x,y}(s)‖ ≤ 2 ‖x‖ ‖y‖`, by rescaling `(x, y)` to `(t x, t⁻¹ y)`, which
 leaves `ν_{x,y}` unchanged, in the crude bound. -/
-private theorem norm_complexSpectralMeasure_apply_le (s : Set ℂ) :
+private lemma norm_complexSpectralMeasure_apply_le (s : Set ℂ) :
     ‖hT.complexSpectralMeasure x y s‖ ≤ 2 * ‖x‖ * ‖y‖ := by
   rcases eq_or_ne x 0 with rfl | hx
   · simp [complexSpectralMeasure_zero_left]
@@ -821,7 +821,7 @@ private lemma inner_cfc_spectralOp (g : ℂ →ᵇ ℝ≥0) (t : Set ℂ) :
   rw [hHH, mul_apply_eq_comp, ← hcomm, inner_cfc_real_comm hT (sqrtBCF g), inner_spectralOp]
 
 /-- **Restriction**: `ν_{x, E_T(t) y} = ν_{x,y}|_t` for a measurable `t`. -/
-private theorem complexSpectralMeasure_spectralOp {t : Set ℂ} (ht : MeasurableSet t) :
+private lemma complexSpectralMeasure_spectralOp {t : Set ℂ} (ht : MeasurableSet t) :
     hT.complexSpectralMeasure x (hT.spectralOp t y) = (hT.complexSpectralMeasure x y).restrict t := by
   have hfun : ∀ g : ℂ →ᵇ ℝ≥0, (fun ζ => (g ζ : ℝ)) = fun ζ => ((sqrtBCF g) ^ 2 : ℂ →ᵇ ℝ) ζ :=
     fun g => funext fun ζ => by rw [BoundedContinuousFunction.coe_pow, Pi.pow_apply, sqrtBCF_sq]
@@ -852,14 +852,14 @@ private theorem complexSpectralMeasure_spectralOp {t : Set ℂ} (ht : Measurable
     simp only [sqrtBCF_sq]
 
 /-- **Multiplicativity**: `E_T(s ∩ t) = E_T(s) E_T(t)` for measurable `s` and `t`. -/
-private theorem spectralOp_inter {s t : Set ℂ} (hs : MeasurableSet s) (ht : MeasurableSet t) :
+private lemma spectralOp_inter {s t : Set ℂ} (hs : MeasurableSet s) (ht : MeasurableSet t) :
     hT.spectralOp (s ∩ t) = hT.spectralOp s * hT.spectralOp t :=
   spectralOp_ext fun x y => by
     rw [mul_apply_eq_comp, inner_spectralOp, inner_spectralOp,
       hT.complexSpectralMeasure_spectralOp x y ht, VectorMeasure.restrict_apply _ ht hs]
 
 /-- `E_T(s)` is an orthogonal projection. -/
-private theorem isStarProjection_spectralOp (s : Set ℂ) : IsStarProjection (hT.spectralOp s) := by
+private lemma isStarProjection_spectralOp (s : Set ℂ) : IsStarProjection (hT.spectralOp s) := by
   by_cases hs : MeasurableSet s
   · refine ⟨?_, hT.isSelfAdjoint_spectralOp s⟩
     rw [IsIdempotentElem, ← hT.spectralOp_inter hs hs, Set.inter_self]
@@ -867,7 +867,7 @@ private theorem isStarProjection_spectralOp (s : Set ℂ) : IsStarProjection (hT
     exact .zero _
 
 /-- `E_T(ℂ) = 1`: `ν_{x,y}(ℂ) = ⟪x, y⟫` by polarization of `ν_u(ℂ) = ‖u‖²`. -/
-private theorem spectralOp_univ : hT.spectralOp Set.univ = 1 :=
+private lemma spectralOp_univ : hT.spectralOp Set.univ = 1 :=
   spectralOp_ext fun x y => by
     have hG : ∀ u v : E, ⟪u, (1 : E →L[ℂ] E) v⟫_ℂ = ⟪(1 : E →L[ℂ] E) u, v⟫_ℂ := by simp
     have hre := re_polarization hG x y
@@ -879,19 +879,19 @@ private theorem spectralOp_univ : hT.spectralOp Set.univ = 1 :=
     exact Complex.ext hre him
 
 /-- **Finite additivity**: `E_T(s ∪ t) = E_T(s) + E_T(t)` for disjoint measurable `s` and `t`. -/
-private theorem spectralOp_union {s t : Set ℂ} (hst : Disjoint s t) (hs : MeasurableSet s)
+private lemma spectralOp_union {s t : Set ℂ} (hst : Disjoint s t) (hs : MeasurableSet s)
     (ht : MeasurableSet t) : hT.spectralOp (s ∪ t) = hT.spectralOp s + hT.spectralOp t :=
   spectralOp_ext fun x y => by
     rw [inner_spectralOp, _root_.add_apply, inner_add_right, inner_spectralOp, inner_spectralOp,
       VectorMeasure.of_union hst hs ht]
 
 /-- `E_T(∅) = 0`. -/
-private theorem spectralOp_empty : hT.spectralOp ∅ = 0 :=
+private lemma spectralOp_empty : hT.spectralOp ∅ = 0 :=
   spectralOp_ext fun x y => by
     rw [inner_spectralOp, VectorMeasure.empty, zero_apply, inner_zero_right]
 
 /-- `‖E_T(s) x‖² = ν_x(s)` for a measurable `s`. -/
-private theorem norm_spectralOp_apply_sq {s : Set ℂ} (hs : MeasurableSet s) :
+private lemma norm_spectralOp_apply_sq {s : Set ℂ} (hs : MeasurableSet s) :
     ‖hT.spectralOp s x‖ ^ 2 = (hT.spectralMeasure x).real s := by
   have h := (hT.isStarProjection_spectralOp s).inner_apply_self x
   rw [inner_spectralOp, complexSpectralMeasure_self_apply _ _ hs] at h
@@ -899,7 +899,7 @@ private theorem norm_spectralOp_apply_sq {s : Set ℂ} (hs : MeasurableSet s) :
 
 /-- **Strong countable additivity**: `E_T(⋃ sᵢ) x = Σ E_T(sᵢ) x` for pairwise disjoint measurable
 `sᵢ`, since `‖E_T(⋃ sᵢ) x - Σ_{i ∈ F} E_T(sᵢ) x‖² = ν_x(⋃ sᵢ) - Σ_{i ∈ F} ν_x(sᵢ) → 0`. -/
-private theorem hasSum_spectralOp (f : ℕ → Set ℂ) (hf : ∀ i, MeasurableSet (f i))
+private lemma hasSum_spectralOp (f : ℕ → Set ℂ) (hf : ∀ i, MeasurableSet (f i))
     (hd : Pairwise (Function.onFun Disjoint f)) (x : E) :
     HasSum (fun i => hT.spectralOp (f i) x) (hT.spectralOp (⋃ i, f i) x) := by
   set U := ⋃ i, f i
@@ -963,13 +963,13 @@ private lemma inner_pvm_apply (s : Set ℂ) : ⟪x, hT.pvm s y⟫_ℂ = hT.compl
   hT.inner_spectralOp s x y
 
 /-- The complex measures of `E_T` are the complex spectral measures `ν_{x,y}`. -/
-private theorem complexMeasure_pvm : hT.pvm.complexMeasure x y = hT.complexSpectralMeasure x y := by
+private lemma complexMeasure_pvm : hT.pvm.complexMeasure x y = hT.complexSpectralMeasure x y := by
   ext s hs
   rw [ProjectionValuedMeasure.complexMeasure_apply, inner_pvm_apply]
 
 /-- **Functional calculus** through `E_T`: `⟪x, cfc g T y⟫ = ∫ g dE_{x,y}` for `g` continuous on
 the spectrum, the integral against the complex measure `E_{x,y}` being taken part by part. -/
-theorem inner_cfc_eq_integral_pvm {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
+lemma inner_cfc_eq_integral_pvm {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
     ⟪x, cfc g T y⟫_ℂ = ∫ᵛ ζ, g ζ ∂<•(hT.pvm.complexMeasure x y).re +
       I * ∫ᵛ ζ, g ζ ∂<•(hT.pvm.complexMeasure x y).im := by
   rw [complexMeasure_pvm]
@@ -984,11 +984,11 @@ theorem inner_apply_eq_integral_pvm :
   exact hT.inner_apply_eq_integral_complexSpectralMeasure x y
 
 /-- The projections of `E_T` commute with every continuous function of `T`. -/
-theorem commute_pvm_cfc (s : Set ℂ) (h : ℂ → ℂ) : Commute (hT.pvm s) (cfc h T) :=
+lemma commute_pvm_cfc (s : Set ℂ) (h : ℂ → ℂ) : Commute (hT.pvm s) (cfc h T) :=
   hT.spectralOp_mul_cfc s h
 
 /-- The diagonal measures of `E_T` are the scalar spectral measures `ν_x`. -/
-private theorem measure_pvm : hT.pvm.measure x = hT.spectralMeasure x := by
+private lemma measure_pvm : hT.pvm.measure x = hT.spectralMeasure x := by
   ext s hs
   rw [ProjectionValuedMeasure.measure_apply x hs, ← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _),
     pvm_apply, hT.norm_spectralOp_apply_sq x hs, ofReal_measureReal]
@@ -1001,27 +1001,27 @@ here on, and downstream, is about the diagonal measures `E_T.measure x`, which e
 
 omit hT in
 /-- `E_T` transports along equalities of operators, whatever proofs of normality are used. -/
-theorem pvm_congr {S : E →L[ℂ] E} (hT : IsStarNormal T) (hS : IsStarNormal S) (h : T = S) :
+lemma pvm_congr {S : E →L[ℂ] E} (hT : IsStarNormal T) (hS : IsStarNormal S) (h : T = S) :
     hT.pvm = hS.pvm := by
   subst h
   rfl
 
 /-- **Spectral integral formula**: `∫ g dE_x = re ⟪x, cfc g T x⟫` for a real `g` continuous on the
 spectrum of `T`. -/
-theorem integral_measure_pvm {g : ℂ → ℝ} (hg : ContinuousOn g (spectrum ℂ T)) :
+lemma integral_measure_pvm {g : ℂ → ℝ} (hg : ContinuousOn g (spectrum ℂ T)) :
     ∫ ζ, g ζ ∂(hT.pvm.measure x) = re ⟪x, cfc (fun ζ => (g ζ : ℂ)) T x⟫_ℂ := by
   rw [measure_pvm]
   exact hT.integral_spectralMeasure x hg
 
 /-- **Spectral integral formula**, complex form: `⟪x, cfc g T x⟫ = ∫ g dE_x` for `g` continuous on
 the spectrum of `T`. -/
-theorem inner_cfc_eq_integral_measure_pvm {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
+lemma inner_cfc_eq_integral_measure_pvm {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
     ⟪x, cfc g T x⟫_ℂ = ∫ ζ, g ζ ∂(hT.pvm.measure x) := by
   rw [measure_pvm]
   exact hT.inner_cfc_eq_integral_spectralMeasure x hg
 
 /-- A function continuous on the spectrum of `T` is `E_x`-integrable. -/
-theorem integrable_measure_pvm {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
+lemma integrable_measure_pvm {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum ℂ T)) :
     Integrable g (hT.pvm.measure x) := by
   rw [measure_pvm]
   exact hT.integrable_spectralMeasure x hg
@@ -1029,32 +1029,32 @@ theorem integrable_measure_pvm {g : ℂ → ℂ} (hg : ContinuousOn g (spectrum 
 variable {x} in
 /-- **Uniqueness of the diagonal measures**: a finite measure `ν` on `ℂ` with
 `∫ g dν = re ⟪x, cfc g T x⟫` for every bounded continuous real `g` is `E_x`. -/
-theorem eq_measure_pvm_of_integral (ν : Measure ℂ) [IsFiniteMeasure ν]
+lemma eq_measure_pvm_of_integral (ν : Measure ℂ) [IsFiniteMeasure ν]
     (h : ∀ g : ℂ →ᵇ ℝ, ∫ ζ, g ζ ∂ν = re ⟪x, cfc (fun ζ => (g ζ : ℂ)) T x⟫_ℂ) :
     ν = hT.pvm.measure x := by
   rw [measure_pvm]
   exact hT.eq_spectralMeasure_of_integral ν h
 
 /-- `E_x` is concentrated on the spectrum of `T`. -/
-theorem measure_pvm_compl_spectrum : hT.pvm.measure x (spectrum ℂ T)ᶜ = 0 := by
+lemma measure_pvm_compl_spectrum : hT.pvm.measure x (spectrum ℂ T)ᶜ = 0 := by
   rw [measure_pvm]
   exact hT.spectralMeasure_compl_spectrum x
 
 /-- `E_x`-almost every point lies in the spectrum of `T`. -/
-theorem ae_mem_spectrum_measure_pvm : ∀ᵐ ζ ∂(hT.pvm.measure x), ζ ∈ spectrum ℂ T := by
+lemma ae_mem_spectrum_measure_pvm : ∀ᵐ ζ ∂(hT.pvm.measure x), ζ ∈ spectrum ℂ T := by
   rw [measure_pvm]
   exact hT.ae_mem_spectrum_spectralMeasure x
 
 variable {x} in
 /-- `E_x` has no atom at `ζ₀` when `x` lies in the closure of the range of `T - ζ₀`. -/
-theorem measure_pvm_singleton_eq_zero_of_mem_closure_range {ζ₀ : ℂ}
+lemma measure_pvm_singleton_eq_zero_of_mem_closure_range {ζ₀ : ℂ}
     (hx : x ∈ closure (Set.range (T - algebraMap ℂ (E →L[ℂ] E) ζ₀))) :
     hT.pvm.measure x {ζ₀} = 0 := by
   rw [measure_pvm]
   exact hT.spectralMeasure_singleton_eq_zero_of_mem_closure_range hx
 
 /-- **Transformation rule**: `E_{h(T) x} = |h|² E_x` for `h` continuous on the spectrum of `T`. -/
-theorem measure_pvm_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (spectrum ℂ T)) :
+lemma measure_pvm_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (spectrum ℂ T)) :
     hT.pvm.measure (cfc h T x) = (hT.pvm.measure x).withDensity fun ζ => ‖h ζ‖ₑ ^ 2 := by
   rw [measure_pvm, measure_pvm]
   exact hT.spectralMeasure_cfc_apply x hh
@@ -1068,7 +1068,7 @@ theorem pvm_cfc_eq_map {φ : ℂ → ℂ} (hφ : ContinuousOn φ (spectrum ℂ T
       hT.spectralMeasure_cfc_eq_map u hφ hφm hφT]
 
 /-- `E_T` is concentrated on the spectrum of `T`. -/
-theorem pvm_compl_spectrum : hT.pvm (spectrum ℂ T)ᶜ = 0 := by
+lemma pvm_compl_spectrum : hT.pvm (spectrum ℂ T)ᶜ = 0 := by
   have hs : MeasurableSet (spectrum ℂ T)ᶜ := (spectrum.isClosed T).measurableSet.compl
   ext x
   have h := hT.norm_spectralOp_apply_sq x hs
@@ -1311,7 +1311,7 @@ private lemma measure_le_measure_pvm_of_isOpen (F : ProjectionValuedMeasure ℂ 
 
 /-- **Uniqueness of `E_T`**, quadratic-form version: a projection-valued measure `F` on `ℂ`,
 concentrated on a compact set, with `⟪x, T x⟫ = ∫ ζ dF_x(ζ)` for every `x` is `E_T`. -/
-theorem eq_pvm_of_inner_self_eq_integral (F : ProjectionValuedMeasure ℂ E) (hK : IsCompact K)
+lemma eq_pvm_of_inner_self_eq_integral (F : ProjectionValuedMeasure ℂ E) (hK : IsCompact K)
     (hF : F Kᶜ = 0) (h : ∀ x, ⟪x, T x⟫_ℂ = ∫ ζ, ζ ∂(F.measure x)) : F = hT.pvm := by
   refine F.ext_of_measure fun v => ?_
   refine Measure.eq_of_le_of_measure_univ_eq (Measure.le_iff.mpr fun A _ => ?_)
@@ -1378,7 +1378,7 @@ theorem mem_spectrum_iff_forall_pvm_ball_ne_zero {ζ₀ : ℂ} :
 
 /-- **The spectrum is the closed support of the diagonal measures**:
 `σ(T) = closure (⋃ᵤ supp E_u)`. -/
-theorem spectrum_eq_closure_iUnion_support :
+lemma spectrum_eq_closure_iUnion_support :
     spectrum ℂ T = closure (⋃ u, (hT.pvm.measure u).support) := by
   simp only [measure_pvm]
   refine subset_antisymm (fun ζ₀ hζ => ?_) (closure_minimal

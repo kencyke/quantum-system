@@ -317,7 +317,7 @@ private lemma upper_of_lower :
     exact hK t ξ hξ
 
 /-- **Borchers' Theorem B on the lower strip**, modular conjugation: `J₂ W(s) J₁ = W(s - i/2)`. -/
-theorem modularConj_apply_eq_of_lowerStrip (s : ℝ) (x : H₁) :
+lemma modularConj_apply_eq_of_lowerStrip (s : ℝ) (x : H₁) :
     J[K₂] (W s (J[K₁] x)) = W (s - I / 2) x := by
   obtain ⟨h₁, h₂, h₃, h₄⟩ := upper_of_lower hW hB hK hK'
   have h := modularConj_apply_eq_of_upperStrip (W := fun z => W (z - I / 2)) h₁ h₂ h₃ h₄ s
@@ -327,7 +327,7 @@ theorem modularConj_apply_eq_of_lowerStrip (s : ℝ) (x : H₁) :
 
 /-- **Borchers' Theorem B on the lower strip**, modular group: `Δ₂^{it} W(s) Δ₁^{-it} = W(s + t)`.
 -/
-theorem modularGroup_apply_eq_of_lowerStrip (s t : ℝ) (x : H₁) :
+lemma modularGroup_apply_eq_of_lowerStrip (s t : ℝ) (x : H₁) :
     Δ[K₂]^{i t} (W s (Δ[K₁]^{-i t} x)) =
       W (s + t) x := by
   obtain ⟨h₁, h₂, h₃, h₄⟩ := upper_of_lower hW hB hK hK'

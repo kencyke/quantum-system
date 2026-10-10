@@ -61,13 +61,13 @@ section Finite
 variable [Finite ι]
 
 /-- The density of `P` with respect to counting measure is the mass function `i ↦ P {i}`. -/
-theorem densityFun_count (P : Measure ι) (i : ι) : densityFun P Measure.count i = P.real {i} := by
+lemma densityFun_count (P : Measure ι) (i : ι) : densityFun P Measure.count i = P.real {i} := by
   rw [densityFun, measureReal_def, Measure.ae_count_iff.mp (Measure.rnDeriv_count P) i]
 
 /-- **The relative modular operator is diagonal**: `Δ_{ξ_Q, ξ_P} eᵢ = (qᵢ / pᵢ) eᵢ` for
 `eᵢ = 1_{{i}}`, `pᵢ = P {i}` and `qᵢ = Q {i}`. When `pᵢ = 0`, the value `qᵢ / 0 = 0` is the genuine
 one: `Δ = M_{q/p}` with `q / 0 = 0` (`VonNeumannAlgebra.relativeModular_densityVec_eq_mulPMap`). -/
-theorem mem_graph_relativeModular_densityVec_single (i : ι) :
+lemma mem_graph_relativeModular_densityVec_single (i : ι) :
     (indicatorConstLp 2 (measurableSet_singleton i) (measure_ne_top _ _) (1 : ℂ),
       ((Q.real {i} / P.real {i} : ℝ) : ℂ) •
         indicatorConstLp 2 (measurableSet_singleton i) (measure_ne_top _ _) (1 : ℂ)) ∈
@@ -91,7 +91,7 @@ variable [Fintype ι]
 /-- **Spectral measure**: `μ_{ξ_P}` of `Δ_{ξ_Q, ξ_P}` is `Σᵢ pᵢ δ_{qᵢ/pᵢ}`. (A term with `pᵢ = 0`
 carries no mass, whatever its junk location `qᵢ / 0 = 0`.) This is the image `(q / p)_* P` of
 `VonNeumannAlgebra.measure_pvm_relativeModular_densityVec`. -/
-theorem measure_pvm_relativeModular_densityVec_fintype :
+lemma measure_pvm_relativeModular_densityVec_fintype :
     μ[multiplicationAlgebra Measure.count]⟦densityVec Q Measure.count,
         densityVec P Measure.count⟧ =
       ∑ i, P {i} • Measure.dirac (Q.real {i} / P.real {i}) := by
@@ -115,7 +115,7 @@ measures in Araki's convention, with no mass correction `Q(ι) - P(ι)`
 `InformationTheory.klDiv` (`VonNeumannAlgebra.arakiEntropy_ofMeasure_eq_klDiv`). A term with
 `pᵢ = 0` contributes `0`. It is `VonNeumannAlgebra.arakiVec_densityVec` for counting measure on
 `ι`. -/
-theorem arakiVec_densityVec_fintype [Decidable (P ≪ Q)] :
+lemma arakiVec_densityVec_fintype [Decidable (P ≪ Q)] :
     S[multiplicationAlgebra Measure.count]⟦densityVec P Measure.count ∥
         densityVec Q Measure.count⟧ =
       if P ≪ Q then ((∑ i, P.real {i} * Real.log (P.real {i} / Q.real {i}) : ℝ) : EReal)

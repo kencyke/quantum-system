@@ -321,12 +321,12 @@ theorem lieb_concaveOn (T : H →L[ℂ] K) {p q : ℝ} (hp : 0 ≤ p) (hq : 0 �
   simpa [Fin.sum_univ_two] using this
 
 /-- The trace `Tr (Aᵖ T† Bᑫ T)` is nonnegative. -/
-theorem trace_rpow_comp_rpow_nonneg (T : H →L[ℂ] K) (A : H →L[ℂ] H) (B : K →L[ℂ] K)
+lemma trace_rpow_comp_rpow_nonneg (T : H →L[ℂ] K) (A : H →L[ℂ] H) (B : K →L[ℂ] K)
     (p q : ℝ) : 0 ≤ Tr ((A ^ p) ∘L T† ∘L (B ^ q) ∘L T) :=
   trace_comp_adjoint_comp_nonneg T rpow_nonneg rpow_nonneg
 
 /-- The trace `Tr (Aᵖ T† Bᑫ T)` is real: it equals its real part. -/
-theorem trace_rpow_comp_rpow_eq_re (T : H →L[ℂ] K) (A : H →L[ℂ] H) (B : K →L[ℂ] K)
+lemma trace_rpow_comp_rpow_eq_re (T : H →L[ℂ] K) (A : H →L[ℂ] H) (B : K →L[ℂ] K)
     (p q : ℝ) :
     Tr ((A ^ p) ∘L T† ∘L (B ^ q) ∘L T) = ((Tr ((A ^ p) ∘L T† ∘L (B ^ q) ∘L T)).re : ℂ) :=
   Complex.ext (by simp) (by
@@ -334,7 +334,7 @@ theorem trace_rpow_comp_rpow_eq_re (T : H →L[ℂ] K) (A : H →L[ℂ] H) (B : 
 
 /-- The Lieb functional is homogeneous of degree `p + q`:
 `Tr ((c A)ᵖ T† (c B)ᑫ T) = c ^ (p + q) Tr (Aᵖ T† Bᑫ T)` for `0 ≤ c` and positive `A`, `B`. -/
-theorem trace_smul_rpow_comp_smul_rpow (T : H →L[ℂ] K) {A : H →L[ℂ] H} {B : K →L[ℂ] K}
+lemma trace_smul_rpow_comp_smul_rpow (T : H →L[ℂ] K) {A : H →L[ℂ] H} {B : K →L[ℂ] K}
     (hA : 0 ≤ A) (hB : 0 ≤ B) {c p q : ℝ} (hc : 0 ≤ c) (hp : 0 ≤ p) (hq : 0 ≤ q) :
     Tr (((c • A) ^ p) ∘L T† ∘L ((c • B) ^ q) ∘L T) =
       c ^ (p + q) • Tr ((A ^ p) ∘L T† ∘L (B ^ q) ∘L T) := by
@@ -347,7 +347,7 @@ theorem trace_smul_rpow_comp_smul_rpow (T : H →L[ℂ] K) {A : H →L[ℂ] H} {
 /-- For `q = 1 - p` the Lieb functional is **superadditive**:
 `∑ᵢ Tr (Aᵢᵖ T† Bᵢ¹⁻ᵖ T) ≤ Tr ((∑ᵢ Aᵢ)ᵖ T† (∑ᵢ Bᵢ)¹⁻ᵖ T)`, since it is concave and homogeneous
 of degree one. -/
-theorem lieb_superadditive (T : H →L[ℂ] K) {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1) {ι : Type*}
+lemma lieb_superadditive (T : H →L[ℂ] K) {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1) {ι : Type*}
     [Fintype ι] {A : ι → H →L[ℂ] H} {B : ι → K →L[ℂ] K} (hA : ∀ i, 0 ≤ A i)
     (hB : ∀ i, 0 ≤ B i) :
     ∑ i, Tr ((A i ^ p) ∘L T† ∘L (B i ^ (1 - p)) ∘L T) ≤

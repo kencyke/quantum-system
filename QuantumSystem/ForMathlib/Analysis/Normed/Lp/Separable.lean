@@ -46,7 +46,7 @@ exponent `p ≠ ⊤`.
 
 The hypothesis `p ≠ ⊤` cannot be dropped: `lp (fun _ : ℕ => ℂ) ⊤` is `ℓ^∞`, which is not
 separable. The scalar field `𝕜` is explicit because it does not occur in the conclusion. -/
-theorem separableSpace_of_ne_top (𝕜 : Type*) [NontriviallyNormedField 𝕜] [SeparableSpace 𝕜]
+lemma separableSpace_of_ne_top (𝕜 : Type*) [NontriviallyNormedField 𝕜] [SeparableSpace 𝕜]
     [∀ i, NormedSpace 𝕜 (G i)] [Countable ι] [∀ i, SeparableSpace (G i)]
     {p : ℝ≥0∞} [Fact (1 ≤ p)] (hp : p ≠ ⊤) :
     SeparableSpace (lp G p) := by

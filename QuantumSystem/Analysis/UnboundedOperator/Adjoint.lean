@@ -53,7 +53,7 @@ variable {𝕜 E F G : Type*} [RCLike 𝕜]
 
 /-- **Bounded perturbation.** For a bounded, everywhere-defined `A` and a densely defined `T`,
 `(A + T)† = A† + T†`; in particular the adjoint domain is unchanged. -/
-theorem adjoint_vadd [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}
+lemma adjoint_vadd [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}
     (hT : Dense (T.domain : Set E)) (A : E →L[𝕜] F) :
     ((A : E →ₗ[𝕜] F) +ᵥ T)† = ((ContinuousLinearMap.adjoint A : F →L[𝕜] E) : F →ₗ[𝕜] E) +ᵥ T† := by
   have hAT : Dense (((A : E →ₗ[𝕜] F) +ᵥ T).domain : Set E) := hT
@@ -73,7 +73,7 @@ theorem adjoint_vadd [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}
 
 /-- **Adjoint of a composite, general inclusion.** For densely defined `S` with `S T` densely
 defined (on its natural domain; then `T` is densely defined too), `T† S† ⊆ (S T)†`. -/
-theorem adjoint_compNat_le [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}
+lemma adjoint_compNat_le [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] F}
     {S : F →ₗ.[𝕜] G} (hS : Dense (S.domain : Set F)) (hST : Dense ((S.compNat T).domain : Set E)) :
     T†.compNat S† ≤ (S.compNat T)† := by
   have hT : Dense (T.domain : Set E) := hST.mono compNat_domain_le
@@ -85,7 +85,7 @@ theorem adjoint_compNat_le [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[�
 /-- **Adjoint of a composite with a bounded left factor.** For a bounded, everywhere-defined `B`
 and a densely defined `T`, `(B T)† = T† B†`, the right-hand side on its natural domain
 `{y | B† y ∈ dom T†}`. -/
-theorem adjoint_compPMap [CompleteSpace E] [CompleteSpace F] [CompleteSpace G]
+lemma adjoint_compPMap [CompleteSpace E] [CompleteSpace F] [CompleteSpace G]
     {T : E →ₗ.[𝕜] F} (hT : Dense (T.domain : Set E)) (B : F →L[𝕜] G) :
     ((B : F →ₗ[𝕜] G).compPMap T)† =
       T†.compNat (((ContinuousLinearMap.adjoint B : G →L[𝕜] F) : G →ₗ[𝕜] F).toPMap ⊤) := by
@@ -124,7 +124,7 @@ Without the factorisation only `B† T† ⊆ (T B)†` holds (this is `LinearPM
 combined with `ContinuousLinearMap.toPMap_adjoint_eq_adjoint_toPMap_of_dense`). The
 hypothesis holds with `C = B⁻¹` for invertible `B`, and with `C = B†` for a partial isometry `B`
 whose range projection `B B†` does not change `T`. -/
-theorem adjoint_compNat_toPMap [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] G}
+lemma adjoint_compNat_toPMap [CompleteSpace E] [CompleteSpace F] {T : E →ₗ.[𝕜] G}
     (hT : Dense (T.domain : Set E)) (B : F →L[𝕜] E)
     (hTB : Dense ((T.compNat ((B : F →ₗ[𝕜] E).toPMap ⊤)).domain : Set F)) (C : E →L[𝕜] F)
     (hBC : T ≤ T.compNat (((B ∘L C : E →L[𝕜] E) : E →ₗ[𝕜] E).toPMap ⊤)) :

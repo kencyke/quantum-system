@@ -313,7 +313,7 @@ lemma OrthEquivFam.matrixUnit_mem (hF : OrthEquivFam N e F) (p q : F) :
 
 /-- Matrix-unit multiplication law `e_{pq} e_{rs} = δ_{qr} e_{ps}`, diagonal case `q = r`:
 `e_{pq} e_{qs} = e_{ps}`. -/
-theorem OrthEquivFam.matrixUnit_mul_of_eq (hF : OrthEquivFam N e F) (p q s : F) :
+lemma OrthEquivFam.matrixUnit_mul_of_eq (hF : OrthEquivFam N e F) (p q s : F) :
     hF.matrixUnit p q * hF.matrixUnit q s = hF.matrixUnit p s := by
   rw [matrixUnit_def, matrixUnit_def, matrixUnit_def]
   calc hF.pisom p * star (hF.pisom q) * (hF.pisom q * star (hF.pisom s))
@@ -324,7 +324,7 @@ theorem OrthEquivFam.matrixUnit_mul_of_eq (hF : OrthEquivFam N e F) (p q s : F) 
 
 /-- Matrix-unit multiplication law `e_{pq} e_{rs} = δ_{qr} e_{ps}`, off-diagonal case `q ≠ r`:
 `e_{pq} e_{rs} = 0`. -/
-theorem OrthEquivFam.matrixUnit_mul_of_ne (hF : OrthEquivFam N e F) (p s : F) {q r : F}
+lemma OrthEquivFam.matrixUnit_mul_of_ne (hF : OrthEquivFam N e F) (p s : F) {q r : F}
     (hqr : q ≠ r) : hF.matrixUnit p q * hF.matrixUnit r s = 0 := by
   rw [matrixUnit_def, matrixUnit_def]
   calc hF.pisom p * star (hF.pisom q) * (hF.pisom r * star (hF.pisom s))
@@ -335,7 +335,7 @@ theorem OrthEquivFam.matrixUnit_mul_of_ne (hF : OrthEquivFam N e F) (p s : F) {q
 /-- **Multiplicity one.** For a minimal projection `e` and any `a ∈ N`, the matrix entry
 `v_p⋆ a v_q` is a scalar multiple of `e`. This is the corner condition `e N e = ℂ e` transported
 along the equivalences, and is the algebraic content of `N ≅ B(ℓ²(F)) ⊗̄ 1`. -/
-theorem OrthEquivFam.exists_matrixEntry (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.exists_matrixEntry (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e) (p q : F) {a : H →L[ℂ] H} (ha : a ∈ N) :
     ∃ c : ℂ, star (hF.pisom p) * a * hF.pisom q = c • e := by
   have hbN : star (hF.pisom p) * a * hF.pisom q ∈ N :=
@@ -467,7 +467,7 @@ minimal projection `e` acts on a Hilbert space isometric to the `ℓ²` sum `ℓ
 spanning ranges) of minimal projections equivalent to `e`. Composing with the tensor bridge turns
 this `ℓ²` sum into the literal tensor product `H ≅ ℓ²(F) ⊗̂ eH`; that is the statement of
 `exists_tmul_decomposition`, and it — not this one — is the tensor-product form. -/
-theorem IsFactor.exists_lp_decomposition {N : VonNeumannAlgebra H}
+lemma IsFactor.exists_lp_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
       (⨆ f ∈ F, f.range).topologicalClosure = ⊤ ∧

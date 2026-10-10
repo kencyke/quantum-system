@@ -77,16 +77,16 @@ noncomputable def rep : CStarRep A := (pureStateFamily A).toCStarRep
 @[simp] lemma rep_π : (rep A).π = (pureStateFamily A).directSumRep := rfl
 
 /-- The direct sum representation is faithful. -/
-theorem rep_injective : Function.Injective (rep A).π :=
+lemma rep_injective : Function.Injective (rep A).π :=
   (pureStateFamily A).directSumRep_injective_of (pureStateFamily_separatesPoints A)
 
 /-- The direct sum representation is isometric. -/
-theorem rep_isometry : Isometry (rep A).π :=
+lemma rep_isometry : Isometry (rep A).π :=
   (pureStateFamily A).directSumRep_isometry_of (pureStateFamily_separatesPoints A)
 
 /-- The image of `A` under the direct sum representation is norm closed in `H →L[ℂ] H`, so it is a
 C\*-subalgebra. -/
-theorem rep_isClosed_range :
+lemma rep_isClosed_range :
     IsClosed (NonUnitalStarAlgHom.range (rep A).π : Set ((rep A).H →L[ℂ] (rep A).H)) :=
   (pureStateFamily A).directSumRep_isClosed_range_of (pureStateFamily_separatesPoints A)
 
@@ -97,7 +97,7 @@ The non-unital Gelfand–Naimark theorem (`CStarRep.exists_isometric`) does not 
 `CStarRep` carries no non-degeneracy requirement — but the unital form does: for unital `A`
 non-degeneracy is the only input to `rep_π_one`, hence to
 `CStarRep.exists_isometric_unital`. -/
-theorem rep_actsNondegenerately :
+lemma rep_actsNondegenerately :
     InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → ((rep A).H →L[ℂ] (rep A).H))) :=
   (pureStateFamily A).directSumRep_actsNondegenerately_of fun ω =>
     (GNS.Representation.canonical (PositiveLinearMap.ofClass ω.1)).actsNondegenerately
@@ -111,7 +111,7 @@ noncomputable def repRangeEquiv : A ≃⋆ₐ[ℂ] NonUnitalStarAlgHom.range (re
 
 /-- The `*`-isomorphism of `A` onto the image of the direct sum representation is
 isometric: it preserves the norm inherited from `H →L[ℂ] H`. -/
-theorem norm_repRangeEquiv (a : A) :
+lemma norm_repRangeEquiv (a : A) :
     ‖((repRangeEquiv A a : NonUnitalStarAlgHom.range (rep A).π) : ((rep A).H →L[ℂ] (rep A).H))‖ = ‖a‖ :=
   NonUnitalStarAlgHom.norm_map _ rep_injective a
 
@@ -123,7 +123,7 @@ variable {A : Type u} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 /-- For a unital `A`, the direct sum representation is unital, since it acts non-degenerately
 (`rep_actsNondegenerately`): `π a (x - π 1 x) = 0` for every `a`, so `π 1 x = x`. -/
-theorem rep_π_one : (rep A).π 1 = 1 := by
+lemma rep_π_one : (rep A).π 1 = 1 := by
   ext x
   have h := rep_actsNondegenerately (A := A) (x - (rep A).π 1 x) (by
     rintro _ ⟨a, rfl⟩
@@ -150,11 +150,11 @@ noncomputable def repStarAlgHom : A →⋆ₐ[ℂ] ((rep A).H →L[ℂ] (rep A).
 @[simp] lemma repStarAlgHom_apply (a : A) : repStarAlgHom A a = (rep A).π a := rfl
 
 /-- The unital direct sum representation is faithful. -/
-theorem repStarAlgHom_injective : Function.Injective (repStarAlgHom A) :=
+lemma repStarAlgHom_injective : Function.Injective (repStarAlgHom A) :=
   rep_injective
 
 /-- The unital direct sum representation is isometric. -/
-theorem repStarAlgHom_isometry : Isometry (repStarAlgHom A) :=
+lemma repStarAlgHom_isometry : Isometry (repStarAlgHom A) :=
   rep_isometry
 
 end Unital

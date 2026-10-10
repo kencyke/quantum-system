@@ -420,7 +420,7 @@ theorem doubleCommutant_eq_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
 extra content of the non-degenerate form over the unital one: granted, the non-degenerate form
 implies the unital one, and conversely — every commutant contains `1`, so `A = A''` forces
 `1 ∈ A`. -/
-theorem one_mem_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
+lemma one_mem_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B))
     (hA : IsWOTClosed (A : Set B)) :
     (1 : B) ∈ A := by
@@ -432,7 +432,7 @@ theorem one_mem_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
 /-- Unital special case of `doubleCommutant_eq_of_isWOTClosed`: a WOT-closed unital
 `*-`subalgebra equals its own double commutant. Since `1 ∈ A`, the algebra acts
 non-degenerately and the general theorem applies. -/
-theorem doubleCommutant_eq_of_isWOTClosed_starSubalgebra (A : StarSubalgebra ℂ B)
+lemma doubleCommutant_eq_of_isWOTClosed_starSubalgebra (A : StarSubalgebra ℂ B)
     (hA : IsWOTClosed (A : Set B)) :
     Set.centralizer (Set.centralizer (A : Set B)) = (A : Set B) :=
   doubleCommutant_eq_of_isWOTClosed A.toNonUnitalStarSubalgebra

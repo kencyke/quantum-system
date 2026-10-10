@@ -152,13 +152,13 @@ lemma ae_nonneg_measure_pvm_relativeModular :
 /-! ### Basic properties -/
 
 /-- Araki's relative entropy is never `-∞`. -/
-theorem arakiVec_ne_bot : S[M]⟦ξ ∥ η⟧ ≠ ⊥ :=
+lemma arakiVec_ne_bot : S[M]⟦ξ ∥ η⟧ ≠ ⊥ :=
   negLogIntegral_ne_bot_of_lintegral_ne_top
     (ne_top_of_le_ne_top ENNReal.ofReal_ne_top lintegral_measure_pvm_relativeModular_le)
 
 variable {M ξ η} in
 /-- **Support condition.** `S(ω_ξ ‖ ω_η) = +∞` unless `s(ξ) ≤ s(η)`. -/
-theorem arakiVec_eq_top_of_not_supportProj_le (h : ¬ M.supportProj ξ ≤ M.supportProj η) :
+lemma arakiVec_eq_top_of_not_supportProj_le (h : ¬ M.supportProj ξ ≤ M.supportProj η) :
     S[M]⟦ξ ∥ η⟧ = ⊤ := by
   refine negLogIntegral_eq_top_of_measure_Iic_ne_zero (fun h0 => h ?_) (arakiVec_ne_bot M ξ η)
   exact measure_pvm_relativeModular_singleton_zero_eq_zero_iff.mp
@@ -167,7 +167,7 @@ theorem arakiVec_eq_top_of_not_supportProj_le (h : ¬ M.supportProj ξ ≤ M.sup
 variable {M ξ η} in
 /-- `S(ω_ξ ‖ ω_η) = +∞` if `ξ ≠ 0` and `s(ξ) η = 0`: then `∫ λ dμ_ξ = 0`, so `μ_ξ` is concentrated
 at `0`. -/
-theorem arakiVec_eq_top_of_supportProj_apply_eq_zero (hξ : ξ ≠ 0) (h : M.supportProj ξ η = 0) :
+lemma arakiVec_eq_top_of_supportProj_apply_eq_zero (hξ : ξ ≠ 0) (h : M.supportProj ξ η = 0) :
     S[M]⟦ξ ∥ η⟧ = ⊤ := by
   refine negLogIntegral_eq_top_of_lintegral_eq_zero (fun hμ => hξ ?_) ?_
   · have := (isSelfAdjoint_relativeModular M η ξ).pvm.measure_univ ξ
@@ -188,7 +188,7 @@ theorem arakiVec_eq_of_inner_eq {ξ' η' : H} (hξ : ∀ x ∈ M, ⟪ξ, x ξ⟫
 every `x ∈ M` is intertwined with some `y ∈ N` (`y V = V x`, `y⋆ V = V x⋆`) and every `x′ ∈ M′`
 with some `y′ ∈ N′` (e.g. a spatial isomorphism, or an amplification). Then
 `S_N(ω_{Vξ} ‖ ω_{Vη}) = S_M(ω_ξ ‖ ω_η)`. -/
-theorem arakiVec_of_intertwiner {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K]
+lemma arakiVec_of_intertwiner {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K]
     [CompleteSpace K] {N : VonNeumannAlgebra K} {V : H →L[ℂ] K}
     (hM : ∀ x ∈ M, ∃ y ∈ N, y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x)
     (hM' : ∀ x ∈ M′, ∃ y ∈ N′, y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x)
@@ -198,7 +198,7 @@ theorem arakiVec_of_intertwiner {K : Type*} [NormedAddCommGroup K] [InnerProduct
 
 /-- `S(ω_ξ ‖ ω_ξ) = 0`. -/
 @[simp]
-theorem arakiVec_self : S[M]⟦ξ ∥ ξ⟧ = 0 := by
+lemma arakiVec_self : S[M]⟦ξ ∥ ξ⟧ = 0 := by
   rw [arakiVec, measure_pvm_relativeModular_self, negLogIntegral_smul, negLogIntegral_dirac,
     ENNReal.ofReal_one, ENNReal.log_one, neg_zero, mul_zero]
 
@@ -208,7 +208,7 @@ variable {ξ} in
 /-- **Scaling the first functional.**
 `S(|c|² ω_ξ ‖ ω_η) = |c|² (S(ω_ξ ‖ ω_η) + ‖ξ‖² log |c|²)`. At `c = 0` both sides are `0`, using
 Mathlib's `log 0 = 0` and `0 * ⊤ = 0` in `EReal`. -/
-theorem arakiVec_smul_left (c : ℂ) :
+lemma arakiVec_smul_left (c : ℂ) :
     S[M]⟦c • ξ ∥ η⟧ =
       ((‖c‖ ^ 2 : ℝ) : EReal) * (S[M]⟦ξ ∥ η⟧ + ((‖ξ‖ ^ 2 * Real.log (‖c‖ ^ 2) : ℝ) : EReal)) := by
   rw [arakiVec, measure_pvm_relativeModular_smul_right, negLogIntegral_smul]
@@ -221,7 +221,7 @@ theorem arakiVec_smul_left (c : ℂ) :
 variable {η} in
 /-- **Scaling the second functional.** For `a ≠ 0`,
 `S(ω_ξ ‖ |a|² ω_η) = S(ω_ξ ‖ ω_η) - ‖ξ‖² log |a|²`. -/
-theorem arakiVec_smul_right {a : ℂ} (ha : a ≠ 0) :
+lemma arakiVec_smul_right {a : ℂ} (ha : a ≠ 0) :
     S[M]⟦ξ ∥ a • η⟧ = S[M]⟦ξ ∥ η⟧ - ((‖ξ‖ ^ 2 * Real.log (‖a‖ ^ 2) : ℝ) : EReal) := by
   rw [arakiVec, measure_pvm_relativeModular_smul_left ha,
     negLogIntegral_map_mul (by positivity), measureReal_measure_pvm_relativeModular_univ,
@@ -230,7 +230,7 @@ theorem arakiVec_smul_right {a : ℂ} (ha : a ≠ 0) :
 variable {η} in
 /-- **Scaling the second functional** by a real `c > 0`: since `ω_{√c η} = c ω_η`,
 `S(ω_ξ ‖ c ω_η) = S(ω_ξ ‖ ω_η) - ‖ξ‖² log c`. -/
-theorem arakiVec_sqrt_smul_right {c : ℝ} (hc : 0 < c) :
+lemma arakiVec_sqrt_smul_right {c : ℝ} (hc : 0 < c) :
     S[M]⟦ξ ∥ (Real.sqrt c : ℂ) • η⟧ =
       S[M]⟦ξ ∥ η⟧ - ((‖ξ‖ ^ 2 * Real.log c : ℝ) : EReal) := by
   rw [arakiVec_smul_right M ξ (ofReal_ne_zero.mpr (Real.sqrt_pos.mpr hc).ne'), norm_real,
@@ -241,7 +241,7 @@ theorem arakiVec_sqrt_smul_right {c : ℝ} (hc : 0 < c) :
 variable {η} in
 /-- **Klein bound** with an arbitrary upper bound `b ≥ ‖s(ξ) η‖²`:
 `‖ξ‖² log (‖ξ‖² / b) ≤ S(ω_ξ ‖ ω_η)`. -/
-theorem norm_sq_mul_log_le_arakiVec_of_le {b : ℝ} (hb : ‖M.supportProj ξ η‖ ^ 2 ≤ b) :
+lemma norm_sq_mul_log_le_arakiVec_of_le {b : ℝ} (hb : ‖M.supportProj ξ η‖ ^ 2 ≤ b) :
     ((‖ξ‖ ^ 2 * Real.log (‖ξ‖ ^ 2 / b) : ℝ) : EReal) ≤ S[M]⟦ξ ∥ η⟧ := by
   have := mul_log_le_negLogIntegral
     (lintegral_measure_pvm_relativeModular_le.trans (ENNReal.ofReal_le_ofReal hb))
@@ -258,7 +258,7 @@ theorem norm_sq_mul_log_le_arakiVec :
 /-- **Klein bound**: `‖ξ‖² log (‖ξ‖² / ‖η‖²) ≤ S(ω_ξ ‖ ω_η)`, i.e.
 `ψ(1) log (ψ(1) / φ(1)) ≤ S(ψ ‖ φ)`. With Mathlib's conventions the left side is `0` when `ξ = 0`
 or `η = 0`. -/
-theorem norm_sq_mul_log_div_norm_sq_le_arakiVec :
+lemma norm_sq_mul_log_div_norm_sq_le_arakiVec :
     ((‖ξ‖ ^ 2 * Real.log (‖ξ‖ ^ 2 / ‖η‖ ^ 2) : ℝ) : EReal) ≤ S[M]⟦ξ ∥ η⟧ :=
   norm_sq_mul_log_le_arakiVec_of_le M ξ
     (pow_le_pow_left₀ (norm_nonneg _) (Submodule.norm_starProjection_apply_le _ η) 2)
@@ -275,7 +275,7 @@ theorem arakiVec_nonneg (h : ‖M.supportProj ξ η‖ ≤ ‖ξ‖) : 0 ≤ S[M
 
 variable {M ξ η} in
 /-- **Positivity.** `0 ≤ S(ω_ξ ‖ ω_η)` when `ω_η(1) ≤ ω_ξ(1)`; in particular for two states. -/
-theorem arakiVec_nonneg_of_norm_le (h : ‖η‖ ≤ ‖ξ‖) : 0 ≤ S[M]⟦ξ ∥ η⟧ :=
+lemma arakiVec_nonneg_of_norm_le (h : ‖η‖ ≤ ‖ξ‖) : 0 ≤ S[M]⟦ξ ∥ η⟧ :=
   arakiVec_nonneg ((Submodule.norm_starProjection_apply_le _ η).trans h)
 
 /-! ### Domination -/
@@ -287,7 +287,7 @@ variable {M ξ η} in
 With `η' = √c η`, every point `(a ξ + ζ, s(ξ) a⋆ η')` of the graph of `S_{η',ξ}` is dominated by
 the point `(a ξ, s(ξ) a⋆ ξ)` of the graph of `S_{ξ,ξ}`, so the resolvents compare as
 `⟪ξ, (t + Δ_{η',ξ})⁻¹ ξ⟫ ≤ ⟪ξ, (t + Δ_{ξ,ξ})⁻¹ ξ⟫` and `S(ω_ξ ‖ ω_{η'}) ≤ S(ω_ξ ‖ ω_ξ) = 0`. -/
-theorem arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
+lemma arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
     (h : ∀ x ∈ M, ‖x ξ‖ ^ 2 ≤ c * ‖x η‖ ^ 2) :
     S[M]⟦ξ ∥ η⟧ ≤ ((‖ξ‖ ^ 2 * Real.log c : ℝ) : EReal) := by
   set η' : H := (Real.sqrt c : ℂ) • η
@@ -332,7 +332,7 @@ variable {M ξ η} in
 /-- If `M` is finite-dimensional and `s(ξ) ≤ s(η)`, then `ω_ξ ≤ c ω_η` for some `c > 0`, in the
 form `‖x ξ‖² ≤ c ‖x η‖²` for every `x ∈ M`: the kernel of `x ↦ x η` lies in that of `x ↦ x ξ`,
 and on the finite-dimensional `M` this is a norm domination. -/
-theorem exists_norm_sq_le_of_supportProj_le [FiniteDimensional ℂ M]
+lemma exists_norm_sq_le_of_supportProj_le [FiniteDimensional ℂ M]
     (hle : M.supportProj ξ ≤ M.supportProj η) :
     ∃ c > 0, ∀ x ∈ M, ‖x ξ‖ ^ 2 ≤ c * ‖x η‖ ^ 2 := by
   have hξ : M.supportProj η ξ = ξ :=

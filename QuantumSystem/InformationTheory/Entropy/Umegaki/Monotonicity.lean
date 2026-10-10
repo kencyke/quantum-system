@@ -155,7 +155,7 @@ theorem umegakiEntropy_comp_traceDual_le_of_kPositiveMap {F : Type*}
 /-- **Invariance under `⋆`-isomorphisms**: `D(ψ ∘ π ‖ φ ∘ π) = D(ψ ‖ φ)` for `π : B(K) ≃⋆ B(H)`,
 in particular for unitary conjugations `A ↦ U A U†`. Both `π` and `π⁻¹` are unital
 `⋆`-homomorphisms, hence Schwarz maps, so the data-processing inequality applies both ways. -/
-theorem umegakiEntropy_comp_starAlgEquiv (π : (K →L[ℂ] K) ≃⋆ₐ[ℂ] (H →L[ℂ] H))
+lemma umegakiEntropy_comp_starAlgEquiv (π : (K →L[ℂ] K) ≃⋆ₐ[ℂ] (H →L[ℂ] H))
     (hψ : ∀ A, ψ₁ A = ψ (π A)) (hφ : ∀ A, φ₁ A = φ (π A)) : D(ψ₁ ∥ φ₁) = D(ψ ∥ φ) :=
   le_antisymm (umegakiEntropy_comp_le π (map_one π) hψ hφ)
     (umegakiEntropy_comp_le π.symm (map_one π.symm)
@@ -182,7 +182,7 @@ namespace CPTPMap
 
 /-- The Schrödinger-picture output `ψ ∘ Φ*` of a functional `ψ` under a CPTP map `Φ` has density
 `Φ(ρ_ψ)`. -/
-theorem density_comp_traceDual (Φ : CPTPMap H K) (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
+lemma density_comp_traceDual (Φ : CPTPMap H K) (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
     density (ψ.comp (.ofClass (CompletelyPositiveMap.traceDual Φ))) = Φ (density ψ) :=
   density_eq_apply_density Φ fun _ => rfl
 

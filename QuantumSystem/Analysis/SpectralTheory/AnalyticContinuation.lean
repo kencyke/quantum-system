@@ -201,7 +201,7 @@ lemma hasDerivAt_integralApply {F F' : ℂ → X → ℂ} {z₀ : ℂ} {r : ℝ}
 /-- **Holomorphy of parameterized spectral integrals**: if `z ↦ F z x` is holomorphic on an open
 set `U` with derivative `F' z x` for every `x`, and `|F z| ≤ G` on `U` for some `G ∈ L²(E_ξ)`,
 then `z ↦ (∫ F z dE) ξ` is holomorphic on `U`. -/
-theorem differentiableOn_integralApply {U : Set ℂ} (hU : IsOpen U) {F F' : ℂ → X → ℂ}
+lemma differentiableOn_integralApply {U : Set ℂ} (hU : IsOpen U) {F F' : ℂ → X → ℂ}
     (hFm : ∀ z ∈ U, Measurable (F z)) (hF'm : ∀ z ∈ U, Measurable (F' z))
     (hFd : ∀ x, ∀ z ∈ U, HasDerivAt (fun w => F w x) (F' z x) z)
     {G : X → ℝ} (hG : MemLp G 2 (E.measure ξ))

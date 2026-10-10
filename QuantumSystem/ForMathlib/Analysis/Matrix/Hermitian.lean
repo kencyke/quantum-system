@@ -127,7 +127,7 @@ theorem IsHermitian.eq_sum_eigenvalues_smul_vecMulVec [DecidableEq n] {A : Matri
 /-- A positive semidefinite matrix is a sum of `rank M` rank-one matrices: `M = Σᵢ vᵢ vᵢᴴ` with
 `i` ranging over `Fin (rank M)`. The vectors are `vⱼ = √λⱼ uⱼ` for the nonzero eigenvalues `λⱼ`.
 Compare `Matrix.posSemidef_iff_eq_sum_vecMulVec`, which does not bound the number of terms. -/
-theorem PosSemidef.exists_eq_sum_vecMulVec_rank {M : Matrix n n 𝕜} (hM : M.PosSemidef) :
+lemma PosSemidef.exists_eq_sum_vecMulVec_rank {M : Matrix n n 𝕜} (hM : M.PosSemidef) :
     ∃ v : Fin M.rank → n → 𝕜, M = ∑ i, vecMulVec (v i) (star (v i)) := by
   classical
   set hA := hM.isHermitian

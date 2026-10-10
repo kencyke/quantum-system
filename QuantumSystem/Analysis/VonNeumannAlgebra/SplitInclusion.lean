@@ -85,7 +85,7 @@ theorem IsSplitInclusion.commutant {A B : VonNeumannAlgebra H} (h : IsSplitInclu
   ⟨M.commutant, hM.commutant, commutant_le h₂, commutant_le h₁⟩
 
 /-- `A ≤ B` is split iff the commutant inclusion `B′ ≤ A′` is split. -/
-theorem isSplitInclusion_commutant_iff {A B : VonNeumannAlgebra H} :
+lemma isSplitInclusion_commutant_iff {A B : VonNeumannAlgebra H} :
     IsSplitInclusion B.commutant A.commutant ↔ IsSplitInclusion A B :=
   ⟨fun h => by simpa only [VonNeumannAlgebra.commutant_commutant] using h.commutant,
     IsSplitInclusion.commutant⟩
@@ -159,7 +159,7 @@ open MeasureTheory
 /-- **The diagonal algebra is not a factor**: the coordinate projection `M_{1_{\{0\}}}` lies in its
 centre and is not a scalar. The first refuted `IsFactor` in the repository — without it nothing
 built here distinguishes `IsFactor` from `True`. -/
-theorem not_isFactor_multiplicationAlgebra_count :
+lemma not_isFactor_multiplicationAlgebra_count :
     ¬ IsFactor (multiplicationAlgebra (Measure.count : Measure (Fin 2))) :=
   not_isFactor_multiplicationAlgebra (measurableSet_singleton (0 : Fin 2))
     (by simp) (measure_ne_top _ _)
@@ -169,7 +169,7 @@ theorem not_isFactor_multiplicationAlgebra_count :
     (measure_ne_top _ _)
 
 /-- The diagonal algebra is not a type I factor, not being a factor at all. -/
-theorem not_isTypeIFactor_multiplicationAlgebra_count :
+lemma not_isTypeIFactor_multiplicationAlgebra_count :
     ¬ IsTypeIFactor (multiplicationAlgebra (Measure.count : Measure (Fin 2))) := fun h =>
   not_isFactor_multiplicationAlgebra_count h.1
 

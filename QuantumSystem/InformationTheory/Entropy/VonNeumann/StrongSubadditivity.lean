@@ -83,13 +83,13 @@ noncomputable def lTensorTensor :
 
 set_option maxSynthPendingDepth 2 in
 /-- `(Y ⊗ Z) ↦ (1 ⊗ Y) ⊗ Z`. -/
-theorem lTensorTensor_mapL (Y : H_B →L[ℂ] H_B) (Z : H_C →L[ℂ] H_C) :
+lemma lTensorTensor_mapL (Y : H_B →L[ℂ] H_B) (Z : H_C →L[ℂ] H_C) :
     lTensorTensor H_A H_B H_C (mapL Y Z) = mapL (Y.lTensor H_A) Z :=
   tensorProduct_mapL _ _ Y Z
 
 set_option maxSynthPendingDepth 2 in
 /-- The embedding is unital. -/
-theorem lTensorTensor_one : lTensorTensor H_A H_B H_C 1 = 1 := by
+lemma lTensorTensor_one : lTensorTensor H_A H_B H_C 1 = 1 := by
   have h₁ : (1 : H_B ⊗[ℂ] H_C →L[ℂ] H_B ⊗[ℂ] H_C) = mapL 1 1 := by
     rw [one_def, one_def, one_def, mapL_id_id]
   have h₂ : (1 : (H_A ⊗[ℂ] H_B) ⊗[ℂ] H_C →L[ℂ] (H_A ⊗[ℂ] H_B) ⊗[ℂ] H_C) = mapL 1 1 := by
@@ -111,7 +111,7 @@ noncomputable def traceFirst : State (H_B ⊗[ℂ] H_C →L[ℂ] H_B ⊗[ℂ] H_
 
 set_option maxSynthPendingDepth 2 in
 /-- `traceFirst` evaluates `ω` on the ampliation `X ↦ 1 ⊗ X`. -/
-theorem traceFirst_apply (X : H_B ⊗[ℂ] H_C →L[ℂ] H_B ⊗[ℂ] H_C) :
+lemma traceFirst_apply (X : H_B ⊗[ℂ] H_C →L[ℂ] H_B ⊗[ℂ] H_C) :
     ω.traceFirst X = ω (CompletelyPositiveMap.lTensorTensor H_A H_B H_C X) :=
   rfl
 

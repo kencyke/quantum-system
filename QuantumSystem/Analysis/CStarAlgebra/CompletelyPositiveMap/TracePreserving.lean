@@ -76,7 +76,7 @@ variable [FiniteDimensional ℂ H] [FiniteDimensional ℂ K]
 
 /-- A linear map is trace preserving iff its trace dual is unital
 (`ContinuousLinearMap.traceDual_one_iff`). -/
-theorem isTracePreserving_iff_traceDual_one [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
+lemma isTracePreserving_iff_traceDual_one [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
     {Φ : F} : IsTracePreserving Φ ↔ ContinuousLinearMap.traceDual Φ 1 = 1 :=
   ContinuousLinearMap.traceDual_one_iff.symm
 

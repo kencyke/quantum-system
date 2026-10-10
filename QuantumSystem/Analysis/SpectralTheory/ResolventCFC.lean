@@ -38,7 +38,7 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteS
 
 /-- For a self-adjoint operator, the resolvent `(w - A)⁻¹` is normal: its adjoint is the
 resolvent at `w̄`, and resolvents commute. (Outside the resolvent set it is `0`.) -/
-theorem _root_.IsSelfAdjoint.isStarNormal_resolvent (hA : IsSelfAdjoint A) (w : ℂ) :
+lemma _root_.IsSelfAdjoint.isStarNormal_resolvent (hA : IsSelfAdjoint A) (w : ℂ) :
     IsStarNormal (A.resolvent w) := by
   by_cases hw : w ∈ A.resolventSet
   · refine ⟨?_⟩
@@ -50,7 +50,7 @@ theorem _root_.IsSelfAdjoint.isStarNormal_resolvent (hA : IsSelfAdjoint A) (w : 
 /-- For a self-adjoint operator and `z`, `w` in its resolvent set, the resolvent at `z` is a
 continuous function of the resolvent at `w`:
 `(z - A)⁻¹ = cfc (ζ ↦ ζ / (1 - (w - z) ζ)) (w - A)⁻¹`. -/
-theorem _root_.IsSelfAdjoint.resolvent_eq_cfc (hA : IsSelfAdjoint A) (hw : w ∈ A.resolventSet)
+lemma _root_.IsSelfAdjoint.resolvent_eq_cfc (hA : IsSelfAdjoint A) (hw : w ∈ A.resolventSet)
     (hz : z ∈ A.resolventSet) :
     A.resolvent z = cfc (fun ζ => ζ / (1 - (w - z) * ζ)) (A.resolvent w) := by
   have : IsStarNormal (A.resolvent w) := hA.isStarNormal_resolvent w

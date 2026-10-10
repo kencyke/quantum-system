@@ -84,7 +84,7 @@ lemma trace_submatrix_eq {α : Type*} [AddCommMonoid α] (M : Matrix m m α) (e 
   exact trace_reindex e.symm M
 
 /-- Trace is preserved under `reindexStarAlgEquiv`. -/
-theorem trace_reindexStarAlgEquiv [CommSemiring R] [Semiring A] [StarRing A] [Algebra R A]
+lemma trace_reindexStarAlgEquiv [CommSemiring R] [Semiring A] [StarRing A] [Algebra R A]
     (e : m ≃ n) (M : Matrix m m A) :
     (reindexStarAlgEquiv (R := R) e M).trace = M.trace := by
   rw [reindexStarAlgEquiv_apply]
@@ -112,7 +112,7 @@ omit [DecidableEq m] [DecidableEq n] in
 /-- `*-`algebra homomorphisms preserve the Hermitian property.
 
 This generalises the reindex case `IsHermitian.submatrix_equiv` to any `StarAlgEquiv`. -/
-theorem IsHermitian.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.IsHermitian)
+lemma IsHermitian.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.IsHermitian)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
     (φ M).IsHermitian := by
   unfold IsHermitian
@@ -123,7 +123,7 @@ positive semidefinite matrices to positive semidefinite matrices. This covers `*
 equivalences (order isomorphisms of the Löwner order), positive linear maps (`E₁ →ₚ[R] E₂`) and
 completely positive maps (an `OrderHomClass` through the `CompletelyPositiveMapClass` instance).
 Hermiticity is preserved by every `StarHomClass` (`IsSelfAdjoint.map`). -/
-theorem PosSemidef.map {n m F : Type*} [Finite n] [Finite m]
+lemma PosSemidef.map {n m F : Type*} [Finite n] [Finite m]
     [FunLike F (Matrix n n ℂ) (Matrix m m ℂ)] [ZeroHomClass F (Matrix n n ℂ) (Matrix m m ℂ)]
     [OrderHomClass F (Matrix n n ℂ) (Matrix m m ℂ)] {A : Matrix n n ℂ} (hA : A.PosSemidef)
     (φ : F) : (φ A).PosSemidef := by
@@ -134,7 +134,7 @@ theorem PosSemidef.map {n m F : Type*} [Finite n] [Finite m]
 omit [DecidableEq m] [DecidableEq n] in
 /-- `*-`algebra equivalences preserve positive-definiteness: PSD + invertibility, both of
 which are preserved by a `StarAlgEquiv`. -/
-theorem PosDef.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.PosDef)
+lemma PosDef.map_starAlgEquiv {M : Matrix m m ℂ} (hM : M.PosDef)
     (φ : Matrix m m ℂ ≃⋆ₐ[ℂ] Matrix n n ℂ) :
     (φ M).PosDef := by
   classical

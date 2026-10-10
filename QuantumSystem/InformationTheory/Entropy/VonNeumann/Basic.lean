@@ -98,7 +98,7 @@ section Generic
 variable {G : Type*} [FunLike G (H →L[ℂ] H) ℂ] [LinearMapClass G ℂ (H →L[ℂ] H) ℂ]
 
 /-- The von Neumann entropy depends only on the values of the functional. -/
-theorem vonNeumannEntropy_congr {G' : Type*} [FunLike G' (H →L[ℂ] H) ℂ]
+lemma vonNeumannEntropy_congr {G' : Type*} [FunLike G' (H →L[ℂ] H) ℂ]
     [LinearMapClass G' ℂ (H →L[ℂ] H) ℂ] {ω : G} {ω' : G'} (h : ∀ A, ω A = ω' A) :
     S(ω) = S(ω') := by
   rw [vonNeumannEntropy, vonNeumannEntropy, density_eq_density_iff.mpr h]
@@ -106,16 +106,16 @@ theorem vonNeumannEntropy_congr {G' : Type*} [FunLike G' (H →L[ℂ] H) ℂ]
 variable (ω : G)
 
 /-- `S(ω) = -Re ω(log ρ_ω)`. -/
-theorem vonNeumannEntropy_eq_neg_re_apply : S(ω) = -(ω (CFC.log (density ω))).re := by
+lemma vonNeumannEntropy_eq_neg_re_apply : S(ω) = -(ω (CFC.log (density ω))).re := by
   rw [vonNeumannEntropy, trace_density_comp]
 
 /-- `Re ω(log ρ_ω) = -S(ω)`. -/
-theorem re_apply_log_density : (ω (CFC.log (density ω))).re = -S(ω) := by
+lemma re_apply_log_density : (ω (CFC.log (density ω))).re = -S(ω) := by
   rw [vonNeumannEntropy_eq_neg_re_apply, neg_neg]
 
 /-- **Eigenvalue form**: `S(ω) = Σᵢ negMulLog λᵢ = -Σᵢ λᵢ log λᵢ` for a positive functional `ω`
 and an orthonormal eigenbasis `b` of `ρ_ω` with eigenvalues `λ`. -/
-theorem vonNeumannEntropy_eq_sum_negMulLog [OrderHomClass G (H →L[ℂ] H) ℂ] {ι : Type*} [Fintype ι]
+lemma vonNeumannEntropy_eq_sum_negMulLog [OrderHomClass G (H →L[ℂ] H) ℂ] {ι : Type*} [Fintype ι]
     {b : OrthonormalBasis ι ℂ H} {r : ι → ℝ} (hb : ∀ i, density ω (b i) = (r i : ℂ) • b i) :
     S(ω) = ∑ i, Real.negMulLog (r i) := by
   have hsa := IsSelfAdjoint.of_nonneg (density_nonneg ω)
@@ -133,7 +133,7 @@ namespace State
 variable (ω : State (H →L[ℂ] H))
 
 /-- The entropy of a state is that of its underlying element of the dual. -/
-@[simp] theorem vonNeumannEntropy_val : S(ω.val) = S(ω) :=
+@[simp] lemma vonNeumannEntropy_val : S(ω.val) = S(ω) :=
   vonNeumannEntropy_congr fun _ => rfl
 
 /-- **Nonnegativity**: `0 ≤ S(ω)`, since the eigenvalues of `ρ_ω` lie in `[0, 1]`. -/
@@ -149,7 +149,7 @@ theorem vonNeumannEntropy_nonneg : 0 ≤ S(ω) := by
 
 /-- **`D(ω ‖ tr) = -S(ω)`**: the von Neumann entropy is minus the relative entropy with respect to
 the trace, whose density is `1` and whose null ideal is trivial. -/
-theorem umegakiEntropy_trace_eq_neg_vonNeumannEntropy :
+lemma umegakiEntropy_trace_eq_neg_vonNeumannEntropy :
     D(ω ∥ tracePositiveLinearMap ℂ H) = ((-S(ω) : ℝ) : EReal) := by
   have hnull : ∀ A : H →L[ℂ] H, tracePositiveLinearMap ℂ H (star A * A) = 0 →
       ω (star A * A) = 0 := fun A hA => by
@@ -165,7 +165,7 @@ end State
 namespace State
 
 /-- A state on `B(H)` exists only if `H` is nontrivial: otherwise `1 = 0` in `B(H)`. -/
-theorem nontrivial (ω : State (H →L[ℂ] H)) : Nontrivial H := by
+lemma nontrivial (ω : State (H →L[ℂ] H)) : Nontrivial H := by
   by_contra h
   rw [not_nontrivial_iff_subsingleton] at h
   have h1 : (1 : H →L[ℂ] H) = 0 := ContinuousLinearMap.ext fun _ => Subsingleton.elim _ _
@@ -184,14 +184,14 @@ noncomputable def maximallyMixed [Nontrivial H] : State (H →L[ℂ] H) :=
 variable [Nontrivial H]
 
 /-- `τ(A) = tr A / d`. -/
-theorem maximallyMixed_apply (A : H →L[ℂ] H) :
+lemma maximallyMixed_apply (A : H →L[ℂ] H) :
     maximallyMixed H A = (Module.finrank ℂ H : ℂ)⁻¹ * Tr A := by
   simp [maximallyMixed, NNReal.smul_def]
 
 variable (ω : State (H →L[ℂ] H))
 
 /-- **`D(ω ‖ τ) = log d - S(ω)`**. -/
-theorem umegakiEntropy_maximallyMixed :
+lemma umegakiEntropy_maximallyMixed :
     D(ω ∥ maximallyMixed H) = ((Real.log (Module.finrank ℂ H) - S(ω) : ℝ) : EReal) := by
   have hd : (0 : ℝ≥0) < (Module.finrank ℂ H : ℝ≥0)⁻¹ :=
     inv_pos.mpr (Nat.cast_pos.mpr Module.finrank_pos)
@@ -206,7 +206,7 @@ theorem umegakiEntropy_maximallyMixed :
   ring
 
 /-- The maximally mixed state has the maximal entropy: `S(τ) = log d`. -/
-theorem vonNeumannEntropy_maximallyMixed :
+lemma vonNeumannEntropy_maximallyMixed :
     S(maximallyMixed H) = Real.log (Module.finrank ℂ H) := by
   have h := umegakiEntropy_maximallyMixed (maximallyMixed H)
   rw [umegakiEntropy_self] at h
@@ -285,7 +285,7 @@ namespace State
 /-- **Invariance under `⋆`-isomorphisms**: `S(ω ∘ π) = S(ω)` for `π : B(K) ≃⋆ B(H)`, in particular
 for unitary conjugations. Both `D` and the trace are invariant
 (`umegakiEntropy_comp_starAlgEquiv`, `ContinuousLinearMap.trace_map`). -/
-theorem vonNeumannEntropy_comp_starAlgEquiv {K : Type*} [NormedAddCommGroup K]
+lemma vonNeumannEntropy_comp_starAlgEquiv {K : Type*} [NormedAddCommGroup K]
     [InnerProductSpace ℂ K] [FiniteDimensional ℂ K] (π : (K →L[ℂ] K) ≃⋆ₐ[ℂ] (H →L[ℂ] H))
     (ω : State (H →L[ℂ] H)) : S(ω.comp π (map_one π)) = S(ω) := by
   have h := umegakiEntropy_comp_starAlgEquiv π (ψ₁ := ω.comp π (map_one π))

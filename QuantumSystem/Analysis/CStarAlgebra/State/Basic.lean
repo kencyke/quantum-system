@@ -207,7 +207,7 @@ lemma norm_apply_sq_le (a : A) : ‖ω a‖ ^ 2 ≤ (ω (star a * a)).re := by
 
 /-- Evaluation of a state along any increasing approximate unit converges to `1`: `ω e_α → 1`.
 This is the norm-one case of `PositiveContinuousLinearMap.tendsto_nhds_opNorm`. -/
-theorem tendsto_approximateUnit {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
+lemma tendsto_approximateUnit {l : Filter A} (hl : l.IsIncreasingApproximateUnit) :
     Tendsto (fun e : A => ω e) l (𝓝 1) :=
   StateSpace.tendsto_approximateUnit ω.2 hl
 

@@ -143,7 +143,7 @@ lemma mem_commutant_diagonal_iff {n : ℕ}
 
 /-- If `T` is in the double commutant of `A`, then `diagonal T` is in the double commutant of
 `diagonal A`. -/
-theorem diagonal_mem_double_commutant {n : ℕ} {A : Set (H →L[ℂ] H)} {T : H →L[ℂ] H}
+lemma diagonal_mem_double_commutant {n : ℕ} {A : Set (H →L[ℂ] H)} {T : H →L[ℂ] H}
     (hT : T ∈ A.centralizer.centralizer) :
     diagonal (n := n) T ∈ (diagonal (n := n) '' A).centralizer.centralizer := by
   intro S hS

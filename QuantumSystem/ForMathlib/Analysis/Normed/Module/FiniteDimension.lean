@@ -28,7 +28,7 @@ variable {𝕜 G F : Type*} [NontriviallyNormedField 𝕜] [CompleteSpace 𝕜] 
 
 /-- **Kernel domination.** For linear maps `f, g` out of a finite-dimensional space with
 `ker g ≤ ker f`, there is `C` with `‖f x‖ ≤ C * ‖g x‖` for every `x`. -/
-theorem exists_norm_le_mul_norm_of_ker_le (f g : G →ₗ[𝕜] F) (h : ker g ≤ ker f) :
+lemma exists_norm_le_mul_norm_of_ker_le (f g : G →ₗ[𝕜] F) (h : ker g ≤ ker f) :
     ∃ C, ∀ x, ‖f x‖ ≤ C * ‖g x‖ := by
   let Q : range g →ₗ[𝕜] F := (ker g).liftQ f h ∘ₗ g.quotKerEquivRange.symm.toLinearMap
   have hQ : ∀ x, Q ⟨g x, mem_range_self g x⟩ = f x := fun x => by

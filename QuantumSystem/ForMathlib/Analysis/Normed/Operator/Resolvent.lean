@@ -144,7 +144,7 @@ theorem resolvent_sub_resolvent (hz : z ∈ T.resolventSet) (hw : w ∈ T.resolv
   exact (eq_sub_of_add_eq h).symm
 
 /-- Resolvents commute. -/
-theorem commute_resolvent (T : E →ₗ.[𝕜] E) (z w : 𝕜) : Commute (T.resolvent z) (T.resolvent w) := by
+lemma commute_resolvent (T : E →ₗ.[𝕜] E) (z w : 𝕜) : Commute (T.resolvent z) (T.resolvent w) := by
   by_cases hz : z ∈ T.resolventSet
   swap
   · rw [resolvent_of_notMem hz]
@@ -163,7 +163,7 @@ theorem commute_resolvent (T : E →ₗ.[𝕜] E) (z w : 𝕜) : Commute (T.reso
 /-- If `z` and `w` both lie in the resolvent set, `z ≠ w`, then `(w - z)⁻¹` is not in the spectrum
 of the resolvent at `w`: `(w - z)⁻¹ - (w - T)⁻¹` is invertible, with inverse
 `(w - z) (1 + (w - z) (z - T)⁻¹)`. -/
-theorem notMem_spectrum_resolvent (hw : w ∈ T.resolventSet) (hz : z ∈ T.resolventSet)
+lemma notMem_spectrum_resolvent (hw : w ∈ T.resolventSet) (hz : z ∈ T.resolventSet)
     (hne : z ≠ w) : (w - z)⁻¹ ∉ spectrum 𝕜 (T.resolvent w) := by
   have hc : w - z ≠ 0 := sub_ne_zero.mpr hne.symm
   have hid := resolvent_sub_resolvent hz hw
@@ -193,7 +193,7 @@ theorem notMem_spectrum_resolvent (hw : w ∈ T.resolventSet) (hz : z ∈ T.reso
 /-- For `z, w` in the resolvent set, `1 - (w - z) ζ ≠ 0` for every `ζ` in the spectrum of
 `(w - T)⁻¹`: the function `ζ ↦ ζ / (1 - (w - z) ζ)`, which sends `(w - T)⁻¹` to `(z - T)⁻¹`, has
 no pole on that spectrum. -/
-theorem one_sub_mul_ne_zero_of_mem_spectrum (hw : w ∈ T.resolventSet) (hz : z ∈ T.resolventSet)
+lemma one_sub_mul_ne_zero_of_mem_spectrum (hw : w ∈ T.resolventSet) (hz : z ∈ T.resolventSet)
     {ζ : 𝕜} (hζ : ζ ∈ spectrum 𝕜 (T.resolvent w)) : 1 - (w - z) * ζ ≠ 0 := by
   intro h
   have hc : w - z ≠ 0 := by
@@ -205,7 +205,7 @@ theorem one_sub_mul_ne_zero_of_mem_spectrum (hw : w ∈ T.resolventSet) (hz : z 
 
 /-- If `z` lies in the resolvent set and `1 + (w - z) (z - T)⁻¹` is invertible, then `w` lies in
 the resolvent set: `(w - T)⁻¹ = (z - T)⁻¹ (1 + (w - z) (z - T)⁻¹)⁻¹`. -/
-theorem mem_resolventSet_of_isUnit (hz : z ∈ T.resolventSet)
+lemma mem_resolventSet_of_isUnit (hz : z ∈ T.resolventSet)
     (hunit : IsUnit (1 + (w - z) • T.resolvent z)) : w ∈ T.resolventSet := by
   set R := T.resolvent z
   obtain ⟨B, hB⟩ := hunit
@@ -236,7 +236,7 @@ theorem mem_resolventSet_of_isUnit (hz : z ∈ T.resolventSet)
 
 /-- **Neumann series.** If `z` lies in the resolvent set and `‖w - z‖ ‖(z - T)⁻¹‖ < 1`, then `w`
 lies in the resolvent set. -/
-theorem mem_resolventSet_of_norm_mul_lt_one [CompleteSpace E] (hz : z ∈ T.resolventSet)
+lemma mem_resolventSet_of_norm_mul_lt_one [CompleteSpace E] (hz : z ∈ T.resolventSet)
     (h : ‖w - z‖ * ‖T.resolvent z‖ < 1) : w ∈ T.resolventSet := by
   have ht : ‖-((w - z) • T.resolvent z)‖ < 1 := by
     rwa [norm_neg, norm_smul]
@@ -245,7 +245,7 @@ theorem mem_resolventSet_of_norm_mul_lt_one [CompleteSpace E] (hz : z ∈ T.reso
 /-- **Spectral mapping**, the converse of `LinearPMap.notMem_spectrum_resolvent`: for `z` in the
 resolvent set and `w ≠ z`, if `(z - w)⁻¹` is not in the spectrum of `(z - T)⁻¹`, then `w` lies in
 the resolvent set. -/
-theorem mem_resolventSet_of_notMem_spectrum_resolvent (hz : z ∈ T.resolventSet) (hwz : w ≠ z)
+lemma mem_resolventSet_of_notMem_spectrum_resolvent (hz : z ∈ T.resolventSet) (hwz : w ≠ z)
     (h : (z - w)⁻¹ ∉ spectrum 𝕜 (T.resolvent z)) : w ∈ T.resolventSet := by
   refine mem_resolventSet_of_isUnit hz ?_
   have hc : z - w ≠ 0 := sub_ne_zero.mpr hwz.symm
@@ -270,7 +270,7 @@ theorem isOpen_resolventSet [CompleteSpace E] (T : E →ₗ.[𝕜] E) : IsOpen T
 /-- A partially defined operator with nonempty resolvent set is closed: its graph is the range
 of `x ↦ ((z - T)⁻¹ x, z (z - T)⁻¹ x - x)`, which has the continuous left inverse
 `(a, b) ↦ z a - b`. -/
-theorem isClosed_of_mem_resolventSet (hz : z ∈ T.resolventSet) : T.IsClosed := by
+lemma isClosed_of_mem_resolventSet (hz : z ∈ T.resolventSet) : T.IsClosed := by
   let φ : E → E × E := fun x => (T.resolvent z x, z • T.resolvent z x - x)
   let ψ : E × E → E := fun p => z • p.1 - p.2
   have hgraph : (T.graph : Set (E × E)) = {p | φ (ψ p) = p} := by
@@ -292,7 +292,7 @@ variable {F : Type*} [NormedAddCommGroup F] [NormedSpace 𝕜 F] {S : F →ₗ.[
 /-- A bounded operator `V` mapping the graph of `T` into the graph of `S` (so `V (dom T) ⊆ dom S`
 and `S V = V T` on `dom T`) intertwines the resolvents: `V (z - T)⁻¹ = (z - S)⁻¹ V` for `z` in
 both resolvent sets. -/
-theorem comp_resolvent_eq_resolvent_comp (hzT : z ∈ T.resolventSet) (hzS : z ∈ S.resolventSet)
+lemma comp_resolvent_eq_resolvent_comp (hzT : z ∈ T.resolventSet) (hzS : z ∈ S.resolventSet)
     (hV : ∀ u v, (u, v) ∈ T.graph → (V u, V v) ∈ S.graph) :
     V ∘L T.resolvent z = S.resolvent z ∘L V := by
   ext x

@@ -103,14 +103,14 @@ lemma trace_rankOne_comp (A : H →L[𝕜] H) (x y : H) :
 
 /-- Operators are separated by the trace pairing: `X = Y` iff `tr(X ∘ A) = tr(Y ∘ A)` for all `A`,
 already for the rank-one `A` (`ContinuousLinearMap.trace_comp_rankOne`). -/
-theorem ext_iff_trace_comp_right {X Y : H →L[𝕜] H} :
+lemma ext_iff_trace_comp_right {X Y : H →L[𝕜] H} :
     X = Y ↔ ∀ A : H →L[𝕜] H, LinearMap.trace 𝕜 H (X ∘L A) = LinearMap.trace 𝕜 H (Y ∘L A) := by
   refine ⟨fun h _ => h ▸ rfl, fun h => ext fun x => ext_inner_left 𝕜 fun y => ?_⟩
   rw [← trace_comp_rankOne, ← trace_comp_rankOne, h]
 
 /-- Operators are separated by the trace pairing: `X = Y` iff `tr(A ∘ X) = tr(A ∘ Y)` for
 all `A`. -/
-theorem ext_iff_trace_comp_left {X Y : H →L[𝕜] H} :
+lemma ext_iff_trace_comp_left {X Y : H →L[𝕜] H} :
     X = Y ↔ ∀ A : H →L[𝕜] H, LinearMap.trace 𝕜 H (A ∘L X) = LinearMap.trace 𝕜 H (A ∘L Y) := by
   rw [ext_iff_trace_comp_right]
   exact forall_congr' fun A => by rw [trace_comp_comm' A X, trace_comp_comm' A Y]
@@ -128,13 +128,13 @@ omit [FiniteDimensional 𝕜 H] in
 
 /-- The trace form is nondegenerate (`ContinuousLinearMap.ext_iff_trace_comp_right`,
 `ContinuousLinearMap.ext_iff_trace_comp_left`). -/
-theorem traceForm_nondegenerate : (traceForm 𝕜 H).Nondegenerate :=
+lemma traceForm_nondegenerate : (traceForm 𝕜 H).Nondegenerate :=
   ⟨fun A h => ext_iff_trace_comp_right.2 fun X => by simpa using h X,
     fun X h => ext_iff_trace_comp_left.2 fun A => by simpa using h A⟩
 
 /-- Algebra isomorphisms `B(H) ≃ B(K)` preserve the trace: transported to the endomorphism
 algebras, this is `LinearMap.trace_map`. -/
-theorem trace_map [FiniteDimensional 𝕜 K] {F' : Type*} [EquivLike F' (H →L[𝕜] H) (K →L[𝕜] K)]
+lemma trace_map [FiniteDimensional 𝕜 K] {F' : Type*} [EquivLike F' (H →L[𝕜] H) (K →L[𝕜] K)]
     [AlgEquivClass F' 𝕜 (H →L[𝕜] H) (K →L[𝕜] K)] (φ : F') (A : H →L[𝕜] H) :
     LinearMap.trace 𝕜 K (φ A) = LinearMap.trace 𝕜 H A := by
   have h₁ : Module.End.toContinuousLinearMap H (A : H →ₗ[𝕜] H) = A := by ext; rfl
@@ -177,7 +177,7 @@ noncomputable def traceDual (Φ : F) : (K →L[𝕜] K) →ₗ[𝕜] (H →L[�
     LinearMap.lcomp 𝕜 𝕜 (Φ : (H →L[𝕜] H) →ₗ[𝕜] (K →L[𝕜] K)) ∘ₗ (traceForm 𝕜 K).flip
 
 /-- **The defining duality** of the trace dual: `tr(Φ(A) ∘ B) = tr(A ∘ Φ*(B))`. -/
-theorem trace_comp_traceDual (Φ : F) (A : H →L[𝕜] H) (B : K →L[𝕜] K) :
+lemma trace_comp_traceDual (Φ : F) (A : H →L[𝕜] H) (B : K →L[𝕜] K) :
     LinearMap.trace 𝕜 K (Φ A ∘L B) = LinearMap.trace 𝕜 H (A ∘L traceDual Φ B) := by
   have h := LinearMap.BilinForm.apply_toDual_symm_apply (hB := traceForm_nondegenerate)
     ((LinearMap.lcomp 𝕜 𝕜 (Φ : (H →L[𝕜] H) →ₗ[𝕜] (K →L[𝕜] K)) ∘ₗ (traceForm 𝕜 K).flip) B) A
@@ -186,40 +186,40 @@ theorem trace_comp_traceDual (Φ : F) (A : H →L[𝕜] H) (B : K →L[𝕜] K) 
 
 /-- The trace dual is characterised by the trace duality: `Y = Φ*(B)` iff
 `tr(A ∘ Y) = tr(Φ(A) ∘ B)` for all `A`. -/
-theorem eq_traceDual_iff (Φ : F) (B : K →L[𝕜] K) (Y : H →L[𝕜] H) :
+lemma eq_traceDual_iff (Φ : F) (B : K →L[𝕜] K) (Y : H →L[𝕜] H) :
     Y = traceDual Φ B ↔
       ∀ A : H →L[𝕜] H, LinearMap.trace 𝕜 H (A ∘L Y) = LinearMap.trace 𝕜 K (Φ A ∘L B) := by
   simp_rw [ext_iff_trace_comp_left (X := Y), trace_comp_traceDual]
 
 /-- The trace dual depends only on the values of the map: if `Φ A = Ψ A` for all `A`, then
 `Φ* = Ψ*`. -/
-theorem traceDual_congr {G : Type*} [FunLike G (H →L[𝕜] H) (K →L[𝕜] K)]
+lemma traceDual_congr {G : Type*} [FunLike G (H →L[𝕜] H) (K →L[𝕜] K)]
     [LinearMapClass G 𝕜 (H →L[𝕜] H) (K →L[𝕜] K)] {Φ : F} {Ψ : G} (h : ∀ A, Φ A = Ψ A) :
     traceDual Φ = traceDual Ψ :=
   LinearMap.ext fun B => (eq_traceDual_iff Ψ B _).2 fun A => by
     rw [← h, ← trace_comp_traceDual]
 
 /-- The matrix coefficients of the trace dual: `⟪x, Φ*(B) y⟫ = tr(Φ(|y⟩⟨x|) ∘ B)`. -/
-theorem inner_traceDual_apply (Φ : F) (B : K →L[𝕜] K) (x y : H) :
+lemma inner_traceDual_apply (Φ : F) (B : K →L[𝕜] K) (x y : H) :
     ⟪x, traceDual Φ B y⟫_𝕜 = LinearMap.trace 𝕜 K (Φ (rankOne 𝕜 y x) ∘L B) := by
   rw [trace_comp_traceDual, trace_rankOne_comp]
 
 /-- The trace dual is an involution, `Φ** = Φ`: by the defining duality applied twice,
 `tr(B ∘ Φ**(A)) = tr(Φ*(B) ∘ A) = tr(A ∘ Φ*(B)) = tr(Φ(A) ∘ B) = tr(B ∘ Φ(A))`. -/
-theorem traceDual_traceDual [FiniteDimensional 𝕜 K] (Φ : F) (A : H →L[𝕜] H) : traceDual (traceDual Φ) A = Φ A := by
+lemma traceDual_traceDual [FiniteDimensional 𝕜 K] (Φ : F) (A : H →L[𝕜] H) : traceDual (traceDual Φ) A = Φ A := by
   refine ext_iff_trace_comp_left.2 fun B => ?_
   rw [← trace_comp_traceDual, trace_comp_comm', ← trace_comp_traceDual, trace_comp_comm']
 
 /-- A linear map is trace preserving iff its trace dual is unital:
 `tr(Φ(A)) = tr(Φ(A) ∘ 1) = tr(A ∘ Φ*(1))`. -/
-theorem traceDual_one_iff {Φ : F} :
+lemma traceDual_one_iff {Φ : F} :
     traceDual Φ 1 = 1 ↔ ∀ A, LinearMap.trace 𝕜 K (Φ A) = LinearMap.trace 𝕜 H A := by
   rw [eq_comm, eq_traceDual_iff]
   exact forall_congr' fun A => by rw [← mul_def, ← mul_def, mul_one, mul_one, eq_comm]
 
 /-- The trace dual of the Kraus map `A ↦ Σₐ Tₐ A Tₐ†` is `B ↦ Σₐ Tₐ† B Tₐ`, by cyclicity of the
 trace, `tr(Tₐ A Tₐ† B) = tr(A Tₐ† B Tₐ)`. -/
-theorem traceDual_eq_sum_of_kraus [FiniteDimensional 𝕜 K] [CompleteSpace H] [CompleteSpace K] {Φ : F} {ι : Type*}
+lemma traceDual_eq_sum_of_kraus [FiniteDimensional 𝕜 K] [CompleteSpace H] [CompleteSpace K] {Φ : F} {ι : Type*}
     [Fintype ι] {T : ι → H →L[𝕜] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a))
     (B : K →L[𝕜] K) : traceDual Φ B = ∑ a, adjoint (T a) ∘L B ∘L T a := by
   rw [eq_comm, eq_traceDual_iff]
@@ -244,30 +244,30 @@ noncomputable def density (f : G) : H →L[𝕜] H :=
   ((traceForm 𝕜 H).toDual traceForm_nondegenerate).symm (f : (H →L[𝕜] H) →ₗ[𝕜] 𝕜)
 
 /-- **The defining property** of the density: `tr(ρ_f ∘ A) = f(A)`. -/
-theorem trace_density_comp (f : G) (A : H →L[𝕜] H) :
+lemma trace_density_comp (f : G) (A : H →L[𝕜] H) :
     LinearMap.trace 𝕜 H (density f ∘L A) = f A :=
   LinearMap.BilinForm.apply_toDual_symm_apply (hB := traceForm_nondegenerate) _ A
 
 /-- The density is characterised by its defining property: `Y = ρ_f` iff `tr(Y ∘ A) = f(A)` for
 all `A`. -/
-theorem eq_density_iff (f : G) (Y : H →L[𝕜] H) :
+lemma eq_density_iff (f : G) (Y : H →L[𝕜] H) :
     Y = density f ↔ ∀ A : H →L[𝕜] H, LinearMap.trace 𝕜 H (Y ∘L A) = f A := by
   simp_rw [ext_iff_trace_comp_right (Y := density f), trace_density_comp]
 
 /-- Two functionals have the same density iff they agree. -/
-theorem density_eq_density_iff {G' : Type*} [FunLike G' (H →L[𝕜] H) 𝕜]
+lemma density_eq_density_iff {G' : Type*} [FunLike G' (H →L[𝕜] H) 𝕜]
     [LinearMapClass G' 𝕜 (H →L[𝕜] H) 𝕜] {f : G} {g : G'} :
     density f = density g ↔ ∀ A, f A = g A := by
   rw [eq_density_iff]
   simp_rw [trace_density_comp]
 
 /-- The matrix coefficients of the density: `⟪x, ρ_f x⟫ = f(|x⟩⟨x|)`. -/
-theorem inner_density_apply (f : G) (x : H) : ⟪x, density f x⟫_𝕜 = f (rankOne 𝕜 x x) := by
+lemma inner_density_apply (f : G) (x : H) : ⟪x, density f x⟫_𝕜 = f (rankOne 𝕜 x x) := by
   rw [← trace_density_comp, trace_comp_rankOne]
 
 open scoped ComplexOrder in
 /-- The trace has density `1`. -/
-@[simp] theorem density_tracePositiveLinearMap : density (tracePositiveLinearMap 𝕜 H) = 1 := by
+@[simp] lemma density_tracePositiveLinearMap : density (tracePositiveLinearMap 𝕜 H) = 1 := by
   rw [eq_comm, eq_density_iff]
   intro A
   rw [← mul_def, one_mul, tracePositiveLinearMap_apply]
@@ -277,7 +277,7 @@ variable {F : Type*} [FunLike F (H →L[𝕜] H) (K →L[𝕜] K)]
 
 /-- **Pulling back a functional transforms its density by the trace dual**: if `f = g ∘ Φ`, then
 `ρ_f = Φ*(ρ_g)`, since `tr(Φ*(ρ_g) ∘ A) = tr(ρ_g ∘ Φ(A)) = g(Φ(A))`. -/
-theorem density_eq_traceDual [FiniteDimensional 𝕜 K] {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
+lemma density_eq_traceDual [FiniteDimensional 𝕜 K] {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
     [LinearMapClass G' 𝕜 (K →L[𝕜] K) 𝕜] (Φ : F) {f : G} {g : G'} (h : ∀ A, f A = g (Φ A)) :
     density f = traceDual Φ (density g) := by
   rw [eq_comm, eq_density_iff]
@@ -286,7 +286,7 @@ theorem density_eq_traceDual [FiniteDimensional 𝕜 K] {G' : Type*} [FunLike G'
 
 /-- **The Schrödinger picture**: if `f = g ∘ Φ*` for the trace dual `Φ*` of `Φ : B(H) → B(K)`,
 then `ρ_f = Φ(ρ_g)`; for a CPTP map `Φ`, the state `g ∘ Φ*` has density `Φ(ρ_g)`. -/
-theorem density_eq_apply_density [FiniteDimensional 𝕜 K] {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
+lemma density_eq_apply_density [FiniteDimensional 𝕜 K] {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
     [LinearMapClass G' 𝕜 (K →L[𝕜] K) 𝕜] (Φ : F) {f : G'} {g : G}
     (h : ∀ B, f B = g (traceDual Φ B)) : density f = Φ (density g) := by
   rw [density_eq_traceDual (traceDual Φ) h, traceDual_traceDual]
@@ -322,7 +322,7 @@ theorem ContinuousLinearMap.density_nonneg [OrderHomClass G (E →L[ℂ] E) ℂ]
 
 /-- A positive operator vanishes on the vectors where its quadratic form vanishes: with
 `ρ = a⋆ a`, `⟪x, ρ x⟫ = ‖a x‖²`. -/
-theorem ContinuousLinearMap.apply_eq_zero_of_inner_apply_self_eq_zero {ρ : E →L[ℂ] E}
+lemma ContinuousLinearMap.apply_eq_zero_of_inner_apply_self_eq_zero {ρ : E →L[ℂ] E}
     (hρ : 0 ≤ ρ) {x : E} (hx : ⟪x, ρ x⟫_ℂ = 0) : ρ x = 0 := by
   obtain ⟨a, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hρ
   have h : ⟪x, (star a * a) x⟫_ℂ = ((‖a x‖ ^ 2 : ℝ) : ℂ) := by
@@ -336,7 +336,7 @@ theorem ContinuousLinearMap.apply_eq_zero_of_inner_apply_self_eq_zero {ρ : E �
   rw [hax, map_zero]
 
 /-- The trace vanishes on `A⋆ A` only at `A = 0`: `tr(A⋆ A) = Σᵢ ‖A bᵢ‖²`. -/
-theorem ContinuousLinearMap.trace_star_mul_self_eq_zero_iff (A : E →L[ℂ] E) :
+lemma ContinuousLinearMap.trace_star_mul_self_eq_zero_iff (A : E →L[ℂ] E) :
     LinearMap.trace ℂ E ((star A * A : E →L[ℂ] E) : E →ₗ[ℂ] E) = 0 ↔ A = 0 := by
   refine ⟨fun h => ?_, fun h => by simp [h]⟩
   set b := stdOrthonormalBasis ℂ E
@@ -355,7 +355,7 @@ theorem ContinuousLinearMap.trace_star_mul_self_eq_zero_iff (A : E →L[ℂ] E) 
 
 /-- The trace of a product of positive operators is nonnegative: for `A = R† R`,
 `tr(A B) = tr(R B R†)` and `R B R† ≥ 0`. -/
-theorem ContinuousLinearMap.trace_comp_nonneg {A B : E →L[ℂ] E} (hA : 0 ≤ A) (hB : 0 ≤ B) :
+lemma ContinuousLinearMap.trace_comp_nonneg {A B : E →L[ℂ] E} (hA : 0 ≤ A) (hB : 0 ≤ B) :
     0 ≤ LinearMap.trace ℂ E (A ∘L B) := by
   obtain ⟨R, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hA
   have h : 0 ≤ R * B * star R := star_right_conjugate_nonneg hB R

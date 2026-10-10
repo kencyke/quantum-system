@@ -101,11 +101,11 @@ instance (priority := 100) instOrderHomClass : OrderHomClass F A₁ A₂ :=
     exact (star_mul_self_nonneg (f b)).trans (le_map_star_mul f b)
 
 /-- The Kadison–Schwarz inequality in the form `f(a) f(a)⋆ ≤ f(a a⋆)`. -/
-theorem le_map_mul_star (f : F) (a : A₁) : f a * star (f a) ≤ f (a * star a) := by
+lemma le_map_mul_star (f : F) (a : A₁) : f a * star (f a) ≤ f (a * star a) := by
   simpa only [map_star, star_star] using le_map_star_mul f (star a)
 
 /-- Schwarz maps are contractive: `‖f a‖² = ‖f(a)⋆ f(a)‖ ≤ ‖f(a⋆ a)‖ ≤ ‖f‖ ‖a‖²`, so `‖f‖ ≤ 1`. -/
-theorem norm_apply_le (f : F) (a : A₁) : ‖f a‖ ≤ ‖a‖ := by
+lemma norm_apply_le (f : F) (a : A₁) : ‖f a‖ ≤ ‖a‖ := by
   let g : A₁ →L[ℂ] A₂ := ⟨(f : A₁ →ₗ[ℂ] A₂), map_continuous f⟩
   have hg (x : A₁) : g x = f x := rfl
   have hsq (x : A₁) : ‖f x‖ ^ 2 ≤ ‖g‖ * ‖x‖ ^ 2 := by
@@ -126,7 +126,7 @@ theorem norm_apply_le (f : F) (a : A₁) : ‖f a‖ ≤ ‖a‖ := by
     _ ≤ ‖a‖ := mul_le_of_le_one_left (norm_nonneg _) hg1
 
 /-- Schwarz maps are contractive, `‖f a‖₊ ≤ ‖a‖₊`. -/
-theorem nnnorm_apply_le (f : F) (a : A₁) : ‖f a‖₊ ≤ ‖a‖₊ := norm_apply_le f a
+lemma nnnorm_apply_le (f : F) (a : A₁) : ‖f a‖₊ ≤ ‖a‖₊ := norm_apply_le f a
 
 end NonUnital
 
@@ -137,7 +137,7 @@ variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂]
   [FunLike F A₁ A₂] [LinearMapClass F ℂ A₁ A₂] [SchwarzMapClass F A₁ A₂]
 
 /-- A Schwarz map between unital C⋆-algebras is sub-unital: `f 1 ≤ 1`. -/
-theorem map_one_le_one (f : F) : f 1 ≤ 1 := by
+lemma map_one_le_one (f : F) : f 1 ≤ 1 := by
   have h₀ : 0 ≤ f 1 := map_nonneg f zero_le_one
   have h₁ : ‖f 1‖ ≤ 1 := (norm_apply_le f 1).trans (IsStarProjection.norm_le 1 (.one A₁))
   calc f 1 ≤ algebraMap ℝ A₂ ‖f 1‖ := IsSelfAdjoint.le_algebraMap_norm_self (f 1) h₀.isSelfAdjoint

@@ -257,7 +257,7 @@ theorem exists_commute_of_apply_star_mul_self_le (hf : ∀ a, ‖f (star a * a)�
 /-- **Radon–Nikodym for a representation, vector form.** If `f(a⋆a) ≤ ‖ρ(a) ζ‖²` for all `a`,
 then `f` is the vector functional of `R ζ` for some positive `R` commuting with `ρ(A)`:
 `f(a) = ⟪R ζ, ρ(a) (R ζ)⟫`. -/
-theorem exists_commute_inner_eq_of_apply_star_mul_self_le
+lemma exists_commute_inner_eq_of_apply_star_mul_self_le
     (hf : ∀ a, ‖f (star a * a)‖ ≤ ‖ρ a ζ‖ ^ 2) :
     ∃ R : K →L[ℂ] K, (∀ a, Commute R (ρ a)) ∧ 0 ≤ R ∧ ∀ a, f a = ⟪R ζ, ρ a (R ζ)⟫_ℂ := by
   obtain ⟨T, hc, hT0, -, hfT⟩ := exists_commute_of_apply_star_mul_self_le hf

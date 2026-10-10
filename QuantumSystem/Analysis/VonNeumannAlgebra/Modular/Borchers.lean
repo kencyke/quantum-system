@@ -221,7 +221,7 @@ holds for `V† Ω₂ = Ω₁`, `V† η₂ = η₁`, `V M₁ V† ⊆ M₂`, `V
 `V` mapping `[M₁ Ω₁]ᗮ` into `[M₂ Ω₂]ᗮ`
 (`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_adjoint_apply`); for cyclic `Ω₁` and
 separating `Ω₂` this is `VonNeumannAlgebra.exists_relativeModularGroup_continuation`. -/
-theorem exists_relativeModularGroup_continuation_of_le
+lemma exists_relativeModularGroup_continuation_of_le
     (hV : (V : H₁ →ₗ[ℂ] H₂).compPMap (S[M₁]⟦η₁, Ω₁⟧).closureₛₗ ≤
       (S[M₂]⟦η₂, Ω₂⟧).closureₛₗ.compNat ((V : H₁ →ₗ[ℂ] H₂).toPMap ⊤)) :
     ∃ F : ℂ → H₁ →L[ℂ] H₂, DifferentiableOn ℂ F (im ⁻¹' Ioo 0 (1 / 2)) ∧

@@ -813,7 +813,7 @@ variable {V W V' W' : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V
 adjoint for the pairings, `L'(ψ w, v') = L(w, φ v')`, then the projection-valued measure of the
 pullback `U ∘ φ` is the image `ψ_* E_U` of that of `U`. (The adjoint `ψ` of `φ` is unique, the
 transpose of `φ`.) -/
-theorem pvm_compAddMonoidHom (φ : V' →L[ℝ] V) (ψ : W →L[ℝ] W')
+lemma pvm_compAddMonoidHom (φ : V' →L[ℝ] V) (ψ : W →L[ℝ] W')
     (hφψ : ∀ w v', L' (ψ w) v' = L w (φ v')) :
     (hU.compAddMonoidHom (φ : V' →+ V) φ.continuous).pvm L' =
       (hU.pvm L).map ψ ψ.continuous.measurable := by

@@ -93,7 +93,7 @@ lemma isWOTClosed_centralizer (S : Set B) : IsWOTClosed (H := H) (Set.centralize
   exact Set.isClosed_centralizer _
 
 /-- Any double commutant is WOT-closed. -/
-theorem isWOTClosed_centralizer_centralizer (S : Set B) :
+lemma isWOTClosed_centralizer_centralizer (S : Set B) :
     IsWOTClosed (H := H) (Set.centralizer (Set.centralizer S)) :=
   isWOTClosed_centralizer (H := H) (S := Set.centralizer S)
 

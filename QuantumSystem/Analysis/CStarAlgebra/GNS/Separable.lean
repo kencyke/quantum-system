@@ -64,7 +64,7 @@ lemma norm_apply_cyclic_of_norming {ω : State A} (T : Representation (PositiveL
 
 The orbit map `a ↦ T.π a T.ξ` is continuous (`CStarRep.orbit` is a continuous linear map) with
 dense range (cyclicity). -/
-theorem separableSpace_H [SeparableSpace A] {f : A →ₚ[ℂ] ℂ} (T : Representation f) :
+lemma separableSpace_H [SeparableSpace A] {f : A →ₚ[ℂ] ℂ} (T : Representation f) :
     SeparableSpace T.H :=
   T.denseRange_orbit.separableSpace (T.orbit T.ξ).continuous
 
@@ -136,7 +136,7 @@ If every member annihilates `a ≠ 0`, take `aₙ` from the dense sequence withi
 `a`. Then `aₙ ≠ 0`, so it carries an index `i`, and its norming state gives
 `‖π_i(aₙ) ξ_i‖ = ‖aₙ‖`. But `π_i(a) = 0` forces
 `‖aₙ‖ = ‖π_i(aₙ - a) ξ_i‖ ≤ ‖aₙ - a‖ < ‖a‖ / 2`, contradicting `‖aₙ‖ > ‖a‖ / 2`. -/
-theorem normingFamily_separatesPoints [SeparableSpace A] :
+lemma normingFamily_separatesPoints [SeparableSpace A] :
     (normingFamily A).SeparatesPoints := by
   intro a ha
   by_contra hne
@@ -198,19 +198,19 @@ instance [SeparableSpace A] : SeparableSpace (normingRep A).H :=
 
 variable (A) in
 /-- The norming representation is faithful. -/
-theorem normingRep_injective [SeparableSpace A] :
+lemma normingRep_injective [SeparableSpace A] :
     Function.Injective (normingRep A).π :=
   (normingFamily A).directSumRep_injective_of (normingFamily_separatesPoints A)
 
 variable (A) in
 /-- The norming representation is isometric, by faithfulness. -/
-theorem normingRep_isometry [SeparableSpace A] : Isometry (normingRep A).π :=
+lemma normingRep_isometry [SeparableSpace A] : Isometry (normingRep A).π :=
   (normingFamily A).directSumRep_isometry_of (normingFamily_separatesPoints A)
 
 variable (A) in
 /-- The image of the norming representation is norm closed, so it is a C\*-subalgebra of
 the bounded operators on a separable Hilbert space. -/
-theorem normingRep_isClosed_range [SeparableSpace A] :
+lemma normingRep_isClosed_range [SeparableSpace A] :
     IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set ((normingRep A).H →L[ℂ] (normingRep A).H)) :=
   (normingFamily A).directSumRep_isClosed_range_of (normingFamily_separatesPoints A)
 

@@ -115,7 +115,7 @@ end LinearMap
 
 /-- Tracing out the **left** factor equals tracing out the **right** factor after swapping the
 two factors with `Equiv.prodComm`. -/
-theorem traceLeft_eq_traceRight_prodComm {l c n : Type*} [Fintype n]
+lemma traceLeft_eq_traceRight_prodComm {l c n : Type*} [Fintype n]
     (M : Matrix (n × l) (n × c) R) :
     traceLeft M = traceRight (M.reindex (Equiv.prodComm n l) (Equiv.prodComm n c)) := by
   ext i j

@@ -297,7 +297,7 @@ vanish. A point `l` outside the spectrum has a ball around it whose preimage und
 `|u| ≥ 1 / n` has finite positive measure, and its indicator has `‖(l - M_f) 1_t‖ ≤ ε ‖1_t‖`,
 against the boundedness of `(l - M_f)⁻¹` for small `ε`. No hypothesis on `μ` is needed: the parts
 of `μ` carrying no `L²` vectors, such as `∞ • δ` on a point, are not seen by `M_f`. -/
-theorem ae_mem_spectrum_mulL2_of_ne_zero (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) :
+lemma ae_mem_spectrum_mulL2_of_ne_zero (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) :
     ∀ᵐ x ∂μ, u x ≠ 0 → f x ∈ spectrum ℂ (mulL2 f) := by
   set σ := spectrum ℂ (mulL2 f)
   have hfm : Measurable (⇑f) := (Lp.stronglyMeasurable f).measurable
@@ -379,7 +379,7 @@ theorem ae_mem_spectrum_mulL2_of_ne_zero (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) :
 
 /-- For a σ-finite measure, `L²` contains an almost everywhere nonvanishing vector, `√g` for a
 strictly positive integrable `g`. -/
-theorem _root_.MeasureTheory.L2.exists_ae_ne_zero [SigmaFinite μ] :
+lemma _root_.MeasureTheory.L2.exists_ae_ne_zero [SigmaFinite μ] :
     ∃ u : Lp ℂ 2 μ, ∀ᵐ x ∂μ, u x ≠ 0 := by
   obtain ⟨g, hgpos, hgm, hgint⟩ := exists_pos_lintegral_lt_of_sigmaFinite μ one_ne_zero
   set ω₀ : α → ℂ := fun x => (Real.sqrt (g x) : ℂ)
@@ -400,7 +400,7 @@ theorem _root_.MeasureTheory.L2.exists_ae_ne_zero [SigmaFinite μ] :
 the case of `MeasureTheory.Linfty.ae_mem_spectrum_mulL2_of_ne_zero` at an almost everywhere
 nonvanishing `u ∈ L²`. Some such hypothesis is needed: for the measure `∞ • δ` on a point,
 `L²(μ) = 0`, so `M_f` has empty spectrum, while the point is not null. -/
-theorem ae_mem_spectrum_mulL2 [SigmaFinite μ] (f : Lp ℂ ∞ μ) :
+lemma ae_mem_spectrum_mulL2 [SigmaFinite μ] (f : Lp ℂ ∞ μ) :
     ∀ᵐ x ∂μ, f x ∈ spectrum ℂ (mulL2 f) := by
   obtain ⟨u, hu⟩ := L2.exists_ae_ne_zero (μ := μ)
   filter_upwards [ae_mem_spectrum_mulL2_of_ne_zero f u, hu] with x h₁ h₂

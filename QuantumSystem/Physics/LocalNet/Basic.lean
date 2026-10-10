@@ -121,19 +121,19 @@ scoped infixl:50 " ⟂ " => CausalOrthogonality.Orthogonal
 variable {K : Type*} [Preorder K] [CausalOrthogonality K]
 
 /-- Causal orthogonality is symmetric (dot-notation form). -/
-theorem Orthogonal.symm {O₁ O₂ : K} (h : O₁ ⟂ O₂) : O₂ ⟂ O₁ :=
+lemma Orthogonal.symm {O₁ O₂ : K} (h : O₁ ⟂ O₂) : O₂ ⟂ O₁ :=
   orthogonal_symm h
 
 /-- Causal orthogonality is hereditary under shrinking the left region. -/
-theorem Orthogonal.mono_left {O₀ O₁ O₂ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⟂ O₂) : O₀ ⟂ O₂ :=
+lemma Orthogonal.mono_left {O₀ O₁ O₂ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⟂ O₂) : O₀ ⟂ O₂ :=
   orthogonal_mono_left h₀ h
 
 /-- Causal orthogonality is hereditary under shrinking the right region. -/
-theorem Orthogonal.mono_right {O₁ O₂ O₃ : K} (h₀ : O₃ ≤ O₂) (h : O₁ ⟂ O₂) : O₁ ⟂ O₃ :=
+lemma Orthogonal.mono_right {O₁ O₂ O₃ : K} (h₀ : O₃ ≤ O₂) (h : O₁ ⟂ O₂) : O₁ ⟂ O₃ :=
   (h.symm.mono_left h₀).symm
 
 /-- Causal orthogonality is hereditary under shrinking both regions. -/
-theorem Orthogonal.mono {O₁' O₁ O₂' O₂ : K} (h₁ : O₁' ≤ O₁) (h₂ : O₂' ≤ O₂)
+lemma Orthogonal.mono {O₁' O₁ O₂' O₂ : K} (h₁ : O₁' ≤ O₁) (h₂ : O₂' ≤ O₂)
     (h : O₁ ⟂ O₂) : O₁' ⟂ O₂' :=
   (h.mono_left h₁).mono_right h₂
 
@@ -165,39 +165,39 @@ def OrthogonalHat (O₁ O₂ : K) : Prop :=
   O₁ ⟂ O₂ ∧ ∃ O₃, O₁ ≤ O₃ ∧ O₂ ≤ O₃
 
 /-- The derived relation refines causal orthogonality. -/
-theorem OrthogonalHat.orthogonal {O₁ O₂ : K} (h : OrthogonalHat O₁ O₂) : O₁ ⟂ O₂ :=
+lemma OrthogonalHat.orthogonal {O₁ O₂ : K} (h : OrthogonalHat O₁ O₂) : O₁ ⟂ O₂ :=
   h.1
 
 /-- A common upper bound of a pair related by the derived relation. -/
-theorem OrthogonalHat.exists_upperBound {O₁ O₂ : K} (h : OrthogonalHat O₁ O₂) :
+lemma OrthogonalHat.exists_upperBound {O₁ O₂ : K} (h : OrthogonalHat O₁ O₂) :
     ∃ O₃, O₁ ≤ O₃ ∧ O₂ ≤ O₃ :=
   h.2
 
 /-- The derived relation is symmetric. Symmetry of `⟂` is what is used on the first component;
     a common upper bound is symmetric on the nose. -/
-theorem OrthogonalHat.symm {O₁ O₂ : K} (h : OrthogonalHat O₁ O₂) : OrthogonalHat O₂ O₁ :=
+lemma OrthogonalHat.symm {O₁ O₂ : K} (h : OrthogonalHat O₁ O₂) : OrthogonalHat O₂ O₁ :=
   ⟨h.1.symm, h.2.imp fun _ hO => ⟨hO.2, hO.1⟩⟩
 
 /-- The derived relation is hereditary under shrinking the left region: heredity of `⟂` handles
     the first component and transitivity of `≤` the upper bound. -/
-theorem OrthogonalHat.mono_left {O₀ O₁ O₂ : K} (h₀ : O₀ ≤ O₁) (h : OrthogonalHat O₁ O₂) :
+lemma OrthogonalHat.mono_left {O₀ O₁ O₂ : K} (h₀ : O₀ ≤ O₁) (h : OrthogonalHat O₁ O₂) :
     OrthogonalHat O₀ O₂ :=
   ⟨h.1.mono_left h₀, h.2.imp fun _ hO => ⟨h₀.trans hO.1, hO.2⟩⟩
 
 /-- The derived relation is hereditary under shrinking the right region. -/
-theorem OrthogonalHat.mono_right {O₁ O₂ O₃ : K} (h₀ : O₃ ≤ O₂) (h : OrthogonalHat O₁ O₂) :
+lemma OrthogonalHat.mono_right {O₁ O₂ O₃ : K} (h₀ : O₃ ≤ O₂) (h : OrthogonalHat O₁ O₂) :
     OrthogonalHat O₁ O₃ :=
   (h.symm.mono_left h₀).symm
 
 /-- The derived relation is hereditary under shrinking both regions. -/
-theorem OrthogonalHat.mono {O₁' O₁ O₂' O₂ : K} (h₁ : O₁' ≤ O₁) (h₂ : O₂' ≤ O₂)
+lemma OrthogonalHat.mono {O₁' O₁ O₂' O₂ : K} (h₁ : O₁' ≤ O₁) (h₂ : O₂' ≤ O₂)
     (h : OrthogonalHat O₁ O₂) : OrthogonalHat O₁' O₂' :=
   (h.mono_left h₁).mono_right h₂
 
 /-- **Passing to the derived relation is idempotent**: supplementing `⊥̂` with the demand for a
     common upper bound asks for nothing new, since `⊥̂` already carries one. No axiom of
     `CausalOrthogonality` is used. -/
-theorem orthogonalHat_and_exists_upperBound_iff {O₁ O₂ : K} :
+lemma orthogonalHat_and_exists_upperBound_iff {O₁ O₂ : K} :
     (OrthogonalHat O₁ O₂ ∧ ∃ O₃, O₁ ≤ O₃ ∧ O₂ ≤ O₃) ↔ OrthogonalHat O₁ O₂ :=
   ⟨And.left, fun h => ⟨h, h.2⟩⟩
 
@@ -264,7 +264,7 @@ class CausalIndexSet (K : Type*) [Preorder K] [CausalOrthogonality K] : Prop whe
     (`CausalOrthogonality.orthogonalHat_iff`), which is the relation the locality axiom of a
     `LocalNet` actually constrains. So the locality axiom is nowhere vacuous on such an index set:
     `LocalNet.exists_locality_of_orthogonalHat` applies at every region. -/
-theorem CausalIndexSet.exists_orthogonalHat {K : Type*} [Preorder K] [CausalOrthogonality K]
+lemma CausalIndexSet.exists_orthogonalHat {K : Type*} [Preorder K] [CausalOrthogonality K]
     [IsDirectedOrder K] [CausalIndexSet K] (O : K) :
     ∃ O', CausalOrthogonality.OrthogonalHat O O' :=
   let ⟨O', h⟩ := CausalIndexSet.exists_orthogonal O

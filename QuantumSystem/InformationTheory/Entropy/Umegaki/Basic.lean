@@ -98,7 +98,7 @@ variable {G : Type*} [FunLike G (H →L[ℂ] H) ℂ] [LinearMapClass G ℂ (H �
 
 /-- The density of a positive functional has an orthonormal eigenbasis with nonnegative
 eigenvalues (the spectral theorem, `LinearMap.IsSymmetric.eigenvectorBasis`). -/
-theorem exists_orthonormalBasis_density_apply [OrderHomClass G (H →L[ℂ] H) ℂ] (f : G) :
+lemma exists_orthonormalBasis_density_apply [OrderHomClass G (H →L[ℂ] H) ℂ] (f : G) :
     ∃ (b : OrthonormalBasis (Fin (Module.finrank ℂ H)) ℂ H) (r : Fin (Module.finrank ℂ H) → ℝ),
       (∀ i, 0 ≤ r i) ∧ ∀ i, density f (b i) = (r i : ℂ) • b i := by
   have hpos := (nonneg_iff_isPositive.1 (density_nonneg f)).toLinearMap
@@ -109,13 +109,13 @@ variable {ι : Type*} [Fintype ι]
 
 /-- A functional evaluated in an orthonormal eigenbasis `b` of its density, with eigenvalues `r`:
 `f(A) = tr(ρ_f A) = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
-theorem apply_eq_sum_of_density_apply (f : G) (b : OrthonormalBasis ι ℂ H) {r : ι → ℝ}
+lemma apply_eq_sum_of_density_apply (f : G) (b : OrthonormalBasis ι ℂ H) {r : ι → ℝ}
     (hb : ∀ i, density f (b i) = (r i : ℂ) • b i) (A : H →L[ℂ] H) :
     f A = ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
   rw [← trace_density_comp, trace_comp_comm', trace_comp_eq_sum b hb]
 
 /-- `f(1) = Σᵢ rᵢ` in an orthonormal eigenbasis of the density. -/
-theorem apply_one_eq_sum_of_density_apply (f : G) (b : OrthonormalBasis ι ℂ H) {r : ι → ℝ}
+lemma apply_one_eq_sum_of_density_apply (f : G) (b : OrthonormalBasis ι ℂ H) {r : ι → ℝ}
     (hb : ∀ i, density f (b i) = (r i : ℂ) • b i) : f 1 = ((∑ i, r i : ℝ) : ℂ) := by
   classical
   rw [apply_eq_sum_of_density_apply f b hb, Complex.ofReal_sum]
@@ -124,7 +124,7 @@ theorem apply_one_eq_sum_of_density_apply (f : G) (b : OrthonormalBasis ι ℂ H
 
 /-- The eigenvalues of the density of a positive functional are nonnegative:
 `rᵢ = ⟪bᵢ, ρ_f bᵢ⟫ = f(|bᵢ⟩⟨bᵢ|) ≥ 0`. -/
-theorem nonneg_of_density_apply [OrderHomClass G (H →L[ℂ] H) ℂ] {f : G}
+lemma nonneg_of_density_apply [OrderHomClass G (H →L[ℂ] H) ℂ] {f : G}
     {b : OrthonormalBasis ι ℂ H} {r : ι → ℝ} (hb : ∀ i, density f (b i) = (r i : ℂ) • b i)
     (i : ι) : 0 ≤ r i := by
   have h := map_nonneg f (nonneg_iff_isPositive.2
@@ -135,7 +135,7 @@ theorem nonneg_of_density_apply [OrderHomClass G (H →L[ℂ] H) ℂ] {f : G}
 /-- **The support condition in eigenbases.** If the null ideal of `φ` lies in that of `ψ`, then for
 orthonormal eigenbases `b`, `c` of the densities with eigenvalues `r`, `s`,
 `rᵢ |⟪cⱼ, bᵢ⟫|² = 0` whenever `sⱼ = 0`: test the null ideals on the projection `|cⱼ⟩⟨cⱼ|`. -/
-theorem mul_norm_inner_sq_eq_zero_of_apply_star_mul_self [OrderHomClass G (H →L[ℂ] H) ℂ]
+lemma mul_norm_inner_sq_eq_zero_of_apply_star_mul_self [OrderHomClass G (H →L[ℂ] H) ℂ]
     {G' : Type*} [FunLike G' (H →L[ℂ] H) ℂ] [LinearMapClass G' ℂ (H →L[ℂ] H) ℂ] {ψ : G} {φ : G'}
     (h : ∀ A : H →L[ℂ] H, φ (star A * A) = 0 → ψ (star A * A) = 0)
     {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ}
@@ -158,7 +158,7 @@ theorem mul_norm_inner_sq_eq_zero_of_apply_star_mul_self [OrderHomClass G (H →
 density of `φ`, with eigenvalues `s`, `ψ` vanishes on `|cₖ⟩⟨cₖ|` whenever `sₖ = 0`, then the
 null ideal of `φ` lies in that of `ψ`: `φ(Z⋆Z) = Σₖ sₖ ‖Z cₖ‖²` kills `Z cₖ` for `sₖ > 0`, and
 `ψ(Z⋆Z) = Σₖ ⟪ρ_ψ cₖ, Z⋆Z cₖ⟫` with `ρ_ψ cₖ = 0` for `sₖ = 0`. -/
-theorem apply_star_mul_self_eq_zero_of_apply_rankOne [OrderHomClass G (H →L[ℂ] H) ℂ]
+lemma apply_star_mul_self_eq_zero_of_apply_rankOne [OrderHomClass G (H →L[ℂ] H) ℂ]
     {G' : Type*} [FunLike G' (H →L[ℂ] H) ℂ] [LinearMapClass G' ℂ (H →L[ℂ] H) ℂ]
     [OrderHomClass G' (H →L[ℂ] H) ℂ] {ψ : G} {φ : G'} {c : OrthonormalBasis ι ℂ H} {s : ι → ℝ}
     (hc : ∀ k, density φ (c k) = (s k : ℂ) • c k)
@@ -220,13 +220,13 @@ open scoped QuantumInfo
 variable (ψ : G) (φ : G')
 
 /-- `D(ψ ‖ φ)` is Araki's `S(ψ ‖ φ)` on `𝓑(H)`. -/
-theorem umegakiEntropy_def :
+lemma umegakiEntropy_def :
     D(ψ ∥ φ) = S⟦(PositiveLinearMap.ofClass ψ).toNormalFunctional ∥
       (PositiveLinearMap.ofClass φ).toNormalFunctional⟧ :=
   rfl
 
 /-- `D(ψ ‖ φ)` depends only on the functions `ψ`, `φ`. -/
-theorem umegakiEntropy_congr {G₁ G₁' : Type*} [FunLike G₁ (H →L[ℂ] H) ℂ]
+lemma umegakiEntropy_congr {G₁ G₁' : Type*} [FunLike G₁ (H →L[ℂ] H) ℂ]
     [LinearMapClass G₁ ℂ (H →L[ℂ] H) ℂ] [OrderHomClass G₁ (H →L[ℂ] H) ℂ]
     [FunLike G₁' (H →L[ℂ] H) ℂ] [LinearMapClass G₁' ℂ (H →L[ℂ] H) ℂ]
     [OrderHomClass G₁' (H →L[ℂ] H) ℂ] {ψ₁ : G₁} {φ₁ : G₁'} (hψ : ∀ A, ψ A = ψ₁ A)
@@ -240,11 +240,11 @@ theorem umegakiEntropy_congr {G₁ G₁' : Type*} [FunLike G₁ (H →L[ℂ] H) 
   rw [umegakiEntropy_def, umegakiEntropy_def, e₁, e₂]
 
 /-- `D(ψ ‖ φ) ≠ -∞`. -/
-theorem umegakiEntropy_ne_bot : D(ψ ∥ φ) ≠ ⊥ :=
+lemma umegakiEntropy_ne_bot : D(ψ ∥ φ) ≠ ⊥ :=
   VonNeumannAlgebra.arakiEntropy_ne_bot _ _
 
 /-- `D(ψ ‖ ψ) = 0`. -/
-@[simp] theorem umegakiEntropy_self : D(ψ ∥ ψ) = 0 :=
+@[simp] lemma umegakiEntropy_self : D(ψ ∥ ψ) = 0 :=
   VonNeumannAlgebra.arakiEntropy_self _
 
 variable {ψ φ}
@@ -266,7 +266,7 @@ theorem umegakiEntropy_nonneg (h : (φ 1).re ≤ (ψ 1).re) : 0 ≤ D(ψ ∥ φ)
 
 /-- **The support condition, `+∞` side**: if `φ(A⋆A) = 0` but `ψ(A⋆A) ≠ 0` for some `A`, then
 `D(ψ ‖ φ) = +∞` (`VonNeumannAlgebra.arakiEntropy_eq_top_of_apply_star_mul_self`). -/
-theorem umegakiEntropy_eq_top_of_apply_star_mul_self (A : H →L[ℂ] H) (hφ : φ (star A * A) = 0)
+lemma umegakiEntropy_eq_top_of_apply_star_mul_self (A : H →L[ℂ] H) (hφ : φ (star A * A) = 0)
     (hψ : ψ (star A * A) ≠ 0) : D(ψ ∥ φ) = ⊤ :=
   VonNeumannAlgebra.arakiEntropy_eq_top_of_apply_star_mul_self (x := ⟨A, trivial⟩) hφ hψ
 
@@ -275,7 +275,7 @@ variable {ι : Type*} [Fintype ι]
 /-- **Umegaki's formula in eigenbases.** For orthonormal eigenbases `b`, `c` of the densities of
 `ψ`, `φ` with eigenvalues `r`, `s` and `supp ψ ⊆ supp φ`,
 `D(ψ ‖ φ) = Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² (log rᵢ - log sⱼ)`. -/
-theorem umegakiEntropy_eq_sum (h : ∀ A : H →L[ℂ] H, φ (star A * A) = 0 → ψ (star A * A) = 0)
+lemma umegakiEntropy_eq_sum (h : ∀ A : H →L[ℂ] H, φ (star A * A) = 0 → ψ (star A * A) = 0)
     {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ} (hb : ∀ i, density ψ (b i) = (r i : ℂ) • b i)
     (hc : ∀ j, density φ (c j) = (s j : ℂ) • c j) :
     D(ψ ∥ φ) =
@@ -287,7 +287,7 @@ theorem umegakiEntropy_eq_sum (h : ∀ A : H →L[ℂ] H, φ (star A * A) = 0 �
 
 /-- The trace in Umegaki's formula, in eigenbases: `tr ρ_ψ (log ρ_ψ - log ρ_φ)` is
 `Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² (log rᵢ - log sⱼ)`. -/
-theorem trace_density_comp_log_sub_log {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ}
+lemma trace_density_comp_log_sub_log {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ}
     (hb : ∀ i, density ψ (b i) = (r i : ℂ) • b i) (hc : ∀ j, density φ (c j) = (s j : ℂ) • c j) :
     Tr (density ψ ∘L (CFC.log (density ψ) - CFC.log (density φ))) =
       ((∑ i, ∑ j, r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 * (Real.log (r i) - Real.log (s j)) : ℝ) : ℂ) := by
@@ -342,7 +342,7 @@ theorem umegakiEntropy_eq_re_apply
   rw [umegakiEntropy_eq_ite, ite_eq_left_iff.mpr fun h' => absurd h h', trace_density_comp]
 
 /-- **Umegaki's formula**, infinite case: `D(ψ ‖ φ) = +∞` iff `supp ψ ⊄ supp φ`. -/
-theorem umegakiEntropy_eq_top_iff :
+lemma umegakiEntropy_eq_top_iff :
     D(ψ ∥ φ) = ⊤ ↔ ∃ A : H →L[ℂ] H, φ (star A * A) = 0 ∧ ψ (star A * A) ≠ 0 := by
   classical
   refine ⟨fun hD => ?_, fun ⟨A, hφ, hψ⟩ => umegakiEntropy_eq_top_of_apply_star_mul_self A hφ hψ⟩
@@ -361,21 +361,21 @@ section Scaling
 variable {ψ φ : (H →L[ℂ] H) →ₚ[ℂ] ℂ}
 
 /-- **Scaling the second functional**: `D(ψ ‖ c φ) = D(ψ ‖ φ) - ψ(1) log c` for `c > 0`. -/
-theorem umegakiEntropy_smul_right {c : ℝ≥0} (hc : 0 < c) :
+lemma umegakiEntropy_smul_right {c : ℝ≥0} (hc : 0 < c) :
     D(ψ ∥ c • φ) = D(ψ ∥ φ) - (((ψ 1).re * Real.log c : ℝ) : EReal) :=
   VonNeumannAlgebra.arakiEntropy_of_apply_eq_mul_right (NNReal.coe_pos.mpr hc) fun x => by
     change (c • φ) (x : H →L[ℂ] H) = ((c : ℝ) : ℂ) * φ (x : H →L[ℂ] H)
     simp [NNReal.smul_def]
 
 /-- **Scaling the first functional**: `D(c ψ ‖ φ) = c (D(ψ ‖ φ) + ψ(1) log c)`. -/
-theorem umegakiEntropy_smul_left (c : ℝ≥0) :
+lemma umegakiEntropy_smul_left (c : ℝ≥0) :
     D(c • ψ ∥ φ) = ((c : ℝ) : EReal) * (D(ψ ∥ φ) + (((ψ 1).re * Real.log c : ℝ) : EReal)) :=
   VonNeumannAlgebra.arakiEntropy_of_apply_eq_mul_left fun x => by
     change (c • ψ) (x : H →L[ℂ] H) = ((c : ℝ) : ℂ) * ψ (x : H →L[ℂ] H)
     simp [NNReal.smul_def]
 
 /-- **Positive homogeneity**: `D(c ψ ‖ c φ) = c D(ψ ‖ φ)` for `c ≥ 0`. -/
-theorem umegakiEntropy_smul (c : ℝ≥0) : D(c • ψ ∥ c • φ) = ((c : ℝ) : EReal) * D(ψ ∥ φ) := by
+lemma umegakiEntropy_smul (c : ℝ≥0) : D(c • ψ ∥ c • φ) = ((c : ℝ) : EReal) * D(ψ ∥ φ) := by
   rcases eq_zero_or_pos c with rfl | hc
   · rw [umegakiEntropy_smul_left, NNReal.coe_zero, EReal.coe_zero, zero_mul, zero_mul]
   rw [umegakiEntropy_smul_left, umegakiEntropy_smul_right hc, EReal.sub_add_cancel]

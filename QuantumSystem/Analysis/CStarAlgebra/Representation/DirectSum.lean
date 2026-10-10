@@ -198,7 +198,7 @@ def SeparatesPoints (F : SectorFamily.{u, v, w} A) : Prop :=
 /-- **Faithfulness of the direct-sum representation** under a
 points-separation condition on the family: if the family separates `A`,
 then `F.directSumRep` is injective. -/
-theorem directSumRep_injective_of (F : SectorFamily.{u, v, w} A)
+lemma directSumRep_injective_of (F : SectorFamily.{u, v, w} A)
     (h_sep : F.SeparatesPoints) :
     Function.Injective F.directSumRep := by
   intro a b hab
@@ -228,14 +228,14 @@ noncomputable def toCStarRep (F : SectorFamily.{u, v, w} A) : CStarRep A where
 
 /-- If the family separates points, the direct-sum representation is isometric: an injective
 `*`-homomorphism between C\*-algebras is isometric. -/
-theorem directSumRep_isometry_of (F : SectorFamily.{u, v, w} A) (h_sep : F.SeparatesPoints) :
+lemma directSumRep_isometry_of (F : SectorFamily.{u, v, w} A) (h_sep : F.SeparatesPoints) :
     Isometry F.directSumRep :=
   AddMonoidHomClass.isometry_of_norm _ fun a =>
     NonUnitalStarAlgHom.norm_map _ (F.directSumRep_injective_of h_sep) a
 
 /-- If the family separates points, the image of the direct-sum representation is norm closed,
 hence a C\*-subalgebra of `F.directSumHilbert →L[ℂ] F.directSumHilbert`. -/
-theorem directSumRep_isClosed_range_of (F : SectorFamily.{u, v, w} A)
+lemma directSumRep_isClosed_range_of (F : SectorFamily.{u, v, w} A)
     (h_sep : F.SeparatesPoints) :
     IsClosed (NonUnitalStarAlgHom.range F.directSumRep : Set (F.directSumHilbert →L[ℂ] F.directSumHilbert)) := by
   rw [NonUnitalStarAlgHom.coe_range]
@@ -243,7 +243,7 @@ theorem directSumRep_isClosed_range_of (F : SectorFamily.{u, v, w} A)
 
 /-- A direct sum of non-degenerate representations is non-degenerate: a vector killed by every
 `F.directSumRep a` has every coordinate killed by the whole image of the corresponding member. -/
-theorem directSumRep_actsNondegenerately_of (F : SectorFamily.{u, v, w} A)
+lemma directSumRep_actsNondegenerately_of (F : SectorFamily.{u, v, w} A)
     (h : ∀ α, InnerProductSpace.ActsNondegenerately
       (Set.range ((F.rep α).π : A → ((F.rep α).H →L[ℂ] (F.rep α).H)))) :
     InnerProductSpace.ActsNondegenerately

@@ -80,7 +80,7 @@ theorem IsMatrixConvexOn.convexOn_cstarAlgebra (hc : ContinuousOn f s) (hf : IsM
     (hf.convexOn_continuousLinearMap _ hc)
 
 /-- A continuous matrix convex function is operator convex. -/
-theorem IsMatrixConvexOn.isOperatorConvexOn (hc : ContinuousOn f s) (hf : IsMatrixConvexOn s f) :
+lemma IsMatrixConvexOn.isOperatorConvexOn (hc : ContinuousOn f s) (hf : IsMatrixConvexOn s f) :
     IsOperatorConvexOn.{u} s f :=
   ⟨hc, fun B _ _ _ => hf.convexOn_cstarAlgebra B hc⟩
 
@@ -93,7 +93,7 @@ theorem isOperatorConvexOn_iff_continuousOn_and_isMatrixConvexOn :
 /-- Operator convexity does not depend on the universe of the C⋆-algebras it quantifies over:
 `IsOperatorConvexOn.{u} s f ↔ IsOperatorConvexOn.{v} s f`, since both are equivalent to continuity
 and matrix convexity. -/
-theorem isOperatorConvexOn_congr_universe :
+lemma isOperatorConvexOn_congr_universe :
     IsOperatorConvexOn.{u} s f ↔ IsOperatorConvexOn.{v} s f := by
   rw [isOperatorConvexOn_iff_continuousOn_and_isMatrixConvexOn,
     isOperatorConvexOn_iff_continuousOn_and_isMatrixConvexOn]
@@ -101,7 +101,7 @@ theorem isOperatorConvexOn_congr_universe :
 /-- An operator convex function, given as `IsOperatorConvexOn.{u}`, is convex in every unital
 C⋆-algebra of any universe `v` (`isOperatorConvexOn_congr_universe`); the structure field
 `IsOperatorConvexOn.convexOn` covers only the universe `u`. -/
-theorem IsOperatorConvexOn.convexOn_universe (hf : IsOperatorConvexOn.{u} s f) (B : Type v)
+lemma IsOperatorConvexOn.convexOn_universe (hf : IsOperatorConvexOn.{u} s f) (B : Type v)
     [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B] :
     ConvexOn ℝ {b : B | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s} (cfc f) :=
   (isOperatorConvexOn_congr_universe.{u, v}.1 hf).convexOn B

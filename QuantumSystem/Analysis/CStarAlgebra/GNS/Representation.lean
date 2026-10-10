@@ -93,7 +93,7 @@ operator in the image of `π` is `0`.
 Cyclicity is what makes this work.  If `π a x = 0` for every `a`, then
 `⟪x, π a ξ⟫ = ⟪π (star a) x, ξ⟫ = 0`, so the continuous functional `⟪x, ·⟫` vanishes on the dense
 orbit of the cyclic vector, hence everywhere, and in particular `⟪x, x⟫ = 0`. -/
-theorem actsNondegenerately (T : Representation f) :
+lemma actsNondegenerately (T : Representation f) :
     InnerProductSpace.ActsNondegenerately (Set.range (T.π : A → (T.H →L[ℂ] T.H))) := by
   intro x hx
   have h_orbit : Set.EqOn (fun y => ⟪x, y⟫_ℂ) (fun _ => 0) (Set.range (T.orbit T.ξ)) := by
@@ -141,7 +141,7 @@ lemma tendsto_π_approximateUnit_orbit (a : A) :
     ((CStarAlgebra.increasingApproximateUnit (A := A)).tendsto_mul_right a)).const_mul ‖T.ξ‖
 
 /-- Approximate units act as the identity on the whole Hilbert space: `π e_α → 1` strongly. -/
-theorem tendsto_π_approximateUnit (x : T.H) :
+lemma tendsto_π_approximateUnit (x : T.H) :
     Tendsto (fun e : A => T.π e x) (CStarAlgebra.approximateUnit A) (𝓝 x) := by
   rw [Metric.tendsto_nhds]
   intro ε hε
@@ -177,7 +177,7 @@ lemma tendsto_apply_approximateUnit_norm_sq :
 /-- The squared norm of the cyclic vector is the norm of the functional: `‖ξ‖² = ‖f‖ₒₚ`.  Along
 an approximate unit, `f e_α` tends both to `‖ξ‖²` and to `‖f‖ₒₚ`
 (`PositiveContinuousLinearMap.tendsto_nhds_opNorm`). -/
-theorem norm_ξ_sq : ‖T.ξ‖ ^ 2 = ‖f‖ₒₚ := by
+lemma norm_ξ_sq : ‖T.ξ‖ ^ 2 = ‖f‖ₒₚ := by
   have hl := CStarAlgebra.increasingApproximateUnit A
   have : (CStarAlgebra.approximateUnit A).NeBot := hl.toIsApproximateUnit.neBot
   exact_mod_cast tendsto_nhds_unique T.tendsto_apply_approximateUnit_norm_sq
@@ -185,11 +185,11 @@ theorem norm_ξ_sq : ‖T.ξ‖ ^ 2 = ‖f‖ₒₚ := by
 
 /-- `‖ξ‖ = √‖f‖ₒₚ`, the same form as `PositiveLinearMap.norm_gnsVector` for the canonical
 triplet. -/
-theorem norm_ξ : ‖T.ξ‖ = √‖f‖ₒₚ := by
+lemma norm_ξ : ‖T.ξ‖ = √‖f‖ₒₚ := by
   rw [← T.norm_ξ_sq, Real.sqrt_sq (norm_nonneg _)]
 
 /-- The cyclic vector of a GNS triplet of a state is a unit vector. -/
-theorem norm_ξ_eq_one {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω)) :
+lemma norm_ξ_eq_one {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω)) :
     ‖T.ξ‖ = 1 := by
   rw [T.norm_ξ, ω.opNorm_ofClass_eq_one, Real.sqrt_one]
 
@@ -198,7 +198,7 @@ end ApproximateUnit
 /-- A GNS representation is null exactly for the zero functional.  If `π = 0` then
 `f a = ⟪ξ, π a ξ⟫ = 0` for every `a`; conversely, `f = 0` forces `‖ξ‖² = ‖f‖ₒₚ = 0`
 (`norm_ξ_sq`), and the orbit of `ξ = 0` is dense only in the zero space. -/
-theorem π_eq_zero_iff (T : Representation f) : T.π = 0 ↔ f = 0 := by
+lemma π_eq_zero_iff (T : Representation f) : T.π = 0 ↔ f = 0 := by
   constructor
   · intro h
     exact PositiveLinearMap.ext fun a => by simp [T.gns_condition, h]
@@ -211,7 +211,7 @@ theorem π_eq_zero_iff (T : Representation f) : T.π = 0 ↔ f = 0 := by
     simp [hH (T.π a x)]
 
 /-- The GNS representation of a nonzero functional is non-null (`π_eq_zero_iff`). -/
-theorem π_ne_zero (T : Representation f) (hf : f ≠ 0) : T.π ≠ 0 :=
+lemma π_ne_zero (T : Representation f) (hf : f ≠ 0) : T.π ≠ 0 :=
   T.π_eq_zero_iff.not.mpr hf
 
 /-- A unitary equivalence between two GNS representations for the **same** functional `f`.

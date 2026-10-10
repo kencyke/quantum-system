@@ -117,7 +117,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 /-- **Invariance under amplification.** For a unit vector `e ∈ H₁`,
 `S_{𝟙[H₁] ⊗ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)`. -/
-theorem arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
+lemma arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     {e : H₁} (he : ‖e‖ = 1) (ξ η : H) :
     S[𝟙[H₁] ⊗ M]⟦e ⊗ₕ ξ ∥ e ⊗ₕ η⟧ = S[M]⟦ξ ∥ η⟧ := by
   have h₁ : ∀ x : H →L[ℂ] H, 𝟙 ⊗ x ∘L tmulRightL e = tmulRightL e ∘L x := fun x =>
@@ -167,7 +167,7 @@ theorem arakiEntropy_eq_arakiVec {ψ φ : M.NormalFunctional} {Ξψ Ξφ : ℓ²
 variable (M) in
 /-- **Vector functionals.** `S(ω_ξ ‖ ω_η) = arakiVec M ξ η`: the relative entropy of vector
 functionals computed through the amplification is the one computed on `H`. -/
-theorem arakiEntropy_ofVector (ξ η : H) :
+lemma arakiEntropy_ofVector (ξ η : H) :
     S⟦NormalFunctional.ofVector M ξ ∥ NormalFunctional.ofVector M η⟧ =
       S[M]⟦ξ ∥ η⟧ := by
   rw [arakiEntropy_eq_arakiVec (Ξψ := lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₕ ξ)
@@ -179,17 +179,17 @@ theorem arakiEntropy_ofVector (ξ η : H) :
 variable (ψ φ : M.NormalFunctional)
 
 /-- `S(ψ ‖ φ) ≠ -∞`. -/
-theorem arakiEntropy_ne_bot : S⟦ψ ∥ φ⟧ ≠ ⊥ :=
+lemma arakiEntropy_ne_bot : S⟦ψ ∥ φ⟧ ≠ ⊥ :=
   arakiVec_ne_bot _ _ _
 
 /-- `S(ψ ‖ ψ) = 0`. -/
 @[simp]
-theorem arakiEntropy_self : S⟦ψ ∥ ψ⟧ = 0 :=
+lemma arakiEntropy_self : S⟦ψ ∥ ψ⟧ = 0 :=
   arakiVec_self _ _
 
 variable {ψ φ} in
 /-- **Support condition.** `S(ψ ‖ φ) = +∞` unless `s(ψ) ≤ s(φ)`. -/
-theorem arakiEntropy_eq_top_of_not_supportProj_le (h : ¬ ψ.supportProj ≤ φ.supportProj) :
+lemma arakiEntropy_eq_top_of_not_supportProj_le (h : ¬ ψ.supportProj ≤ φ.supportProj) :
     S⟦ψ ∥ φ⟧ = ⊤ := by
   refine arakiVec_eq_top_of_not_supportProj_le fun hle => h ?_
   rwa [← NormalFunctional.amplifyRight_supportProj, ← NormalFunctional.amplifyRight_supportProj,
@@ -200,7 +200,7 @@ variable {ψ φ} in
 /-- **Support condition**, null-ideal form. If `φ(x⋆x) = 0` but `ψ(x⋆x) ≠ 0` for some `x ∈ M` (the
 null ideal of `φ` is not contained in that of `ψ`, equivalently `s(ψ) ≰ s(φ)` by
 `VonNeumannAlgebra.NormalFunctional.supportProj_le_supportProj_iff`), then `S(ψ ‖ φ) = +∞`. -/
-theorem arakiEntropy_eq_top_of_apply_star_mul_self (x : M) (hφ : φ.1 (star x * x) = 0)
+lemma arakiEntropy_eq_top_of_apply_star_mul_self (x : M) (hφ : φ.1 (star x * x) = 0)
     (hψ : ψ.1 (star x * x) ≠ 0) : S⟦ψ ∥ φ⟧ = ⊤ :=
   arakiEntropy_eq_top_of_not_supportProj_le fun hle =>
     hψ ((NormalFunctional.supportProj_le_supportProj_iff ψ φ).mp hle x hφ)
@@ -228,7 +228,7 @@ lemma NormalFunctional.norm_vec_sq : ‖ψ.2.vec‖ ^ 2 = (ψ.1 1).re :=
 variable {ψ φ} in
 /-- **Scaling the second functional.** If `φ′ = c φ` with `c > 0`, then
 `S(ψ ‖ φ′) = S(ψ ‖ φ) - ψ(1) log c`. -/
-theorem arakiEntropy_of_apply_eq_mul_right {φ' : M.NormalFunctional} {c : ℝ} (hc : 0 < c)
+lemma arakiEntropy_of_apply_eq_mul_right {φ' : M.NormalFunctional} {c : ℝ} (hc : 0 < c)
     (h : ∀ x, φ'.1 x = c * φ.1 x) :
     S⟦ψ ∥ φ'⟧ = S⟦ψ ∥ φ⟧ - (((ψ.1 1).re * Real.log c : ℝ) : EReal) := by
   rw [arakiEntropy_eq_arakiVec (Ξψ := ψ.2.vec) (Ξφ := (Real.sqrt c : ℂ) • φ.2.vec)
@@ -241,7 +241,7 @@ variable {ψ φ} in
 /-- **Scaling the first functional.** If `ψ′ = c ψ`, then `S(ψ′ ‖ φ) = c (S(ψ ‖ φ) + ψ(1) log c)`.
 At `c = 0` both sides vanish (`log 0 = 0`); for `c < 0`, positivity forces `ψ = ψ′ = 0`, and both
 sides vanish again. -/
-theorem arakiEntropy_of_apply_eq_mul_left {ψ' : M.NormalFunctional} {c : ℝ}
+lemma arakiEntropy_of_apply_eq_mul_left {ψ' : M.NormalFunctional} {c : ℝ}
     (h : ∀ x, ψ'.1 x = c * ψ.1 x) :
     S⟦ψ' ∥ φ⟧ =
       (c : EReal) * (S⟦ψ ∥ φ⟧ + (((ψ.1 1).re * Real.log c : ℝ) : EReal)) := by
@@ -284,7 +284,7 @@ variable {ψ φ} in
 `ψ(1 - p) = 0` (i.e. `s(ψ) ≤ p`, `NormalFunctional.supportProj_le_iff`),
 `ψ(1) log (ψ(1) / φ(p)) ≤ S(ψ ‖ φ)`; the strongest case `p = s(ψ)` is
 `mul_log_le_arakiEntropy_supportProj`. With Mathlib's conventions the left side is `0` when `ψ(1) = 0` or `φ(p) = 0`. -/
-theorem mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : IsStarProjection p)
+lemma mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : IsStarProjection p)
     (hpM : p ∈ M) (hψp : ψ.1 ⟨1 - p, sub_mem (one_mem M) hpM⟩ = 0) :
     (((ψ.1 1).re * Real.log ((ψ.1 1).re / (φ.1 ⟨p, hpM⟩).re) : ℝ) : EReal) ≤
       S⟦ψ ∥ φ⟧ := by
@@ -314,7 +314,7 @@ theorem mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : Is
 /-- **Sharp Klein bound** (Araki): `ψ(1) log (ψ(1) / φ(s(ψ))) ≤ S(ψ ‖ φ)`, for the support
 projection `s(ψ)`. With Mathlib's conventions the left side is `0` when `ψ(1) = 0` or
 `φ(s(ψ)) = 0`. -/
-theorem mul_log_le_arakiEntropy_supportProj :
+lemma mul_log_le_arakiEntropy_supportProj :
     (((ψ.1 1).re * Real.log ((ψ.1 1).re /
         (φ.1 ⟨ψ.supportProj, NormalFunctional.supportProj_mem ψ⟩).re) : ℝ) : EReal) ≤
       S⟦ψ ∥ φ⟧ :=

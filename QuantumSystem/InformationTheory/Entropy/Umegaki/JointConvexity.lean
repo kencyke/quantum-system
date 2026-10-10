@@ -112,12 +112,12 @@ noncomputable def blockDiagonal (χ : ι → (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
 variable (χ : ι → (H →L[ℂ] H) →ₚ[ℂ] ℂ)
 
 /-- The block-diagonal functional evaluates as `Σᵢ χᵢ(Vᵢ† Z Vᵢ)`. -/
-theorem blockDiagonal_apply (Z : EuclideanSpace ℂ ι ⊗[ℂ] H →L[ℂ] EuclideanSpace ℂ ι ⊗[ℂ] H) :
+lemma blockDiagonal_apply (Z : EuclideanSpace ℂ ι ⊗[ℂ] H →L[ℂ] EuclideanSpace ℂ ι ⊗[ℂ] H) :
     blockDiagonal χ Z = ∑ i, χ i (adjoint (𝕍 i) ∘L Z ∘L (𝕍 i)) :=
   rfl
 
 /-- On the `i`-th block, `⊕ⱼ χⱼ (Vᵢ B Vᵢ†) = χᵢ(B)`. -/
-theorem blockDiagonal_apply_ins (i : ι) (B : H →L[ℂ] H) :
+lemma blockDiagonal_apply_ins (i : ι) (B : H →L[ℂ] H) :
     blockDiagonal χ ((𝕍 i) ∘L B ∘L adjoint (𝕍 i)) = χ i B := by
   rw [blockDiagonal_apply]
   simp only [ContinuousLinearMap.comp_assoc]
@@ -127,7 +127,7 @@ theorem blockDiagonal_apply_ins (i : ι) (B : H →L[ℂ] H) :
 
 /-- **The restriction to `1 ⊗ B(H)`** of the block-diagonal functional is `Σᵢ χᵢ`:
 `Vᵢ† (1 ⊗ A) Vᵢ = A`. -/
-theorem blockDiagonal_comp_lTensor :
+lemma blockDiagonal_comp_lTensor :
     (blockDiagonal χ).comp (.ofClass (lTensorStarAlgHom ℂ H (EuclideanSpace ℂ ι))) = ∑ i, χ i := by
   refine PositiveLinearMap.ext fun A => ?_
   change blockDiagonal χ (A.lTensor (EuclideanSpace ℂ ι)) = _
@@ -136,7 +136,7 @@ theorem blockDiagonal_comp_lTensor :
   simp
 
 /-- **The density of the block-diagonal functional is block diagonal**: `Σᵢ Vᵢ ρ_{χᵢ} Vᵢ†`. -/
-theorem density_blockDiagonal :
+lemma density_blockDiagonal :
     density (blockDiagonal χ) = ∑ i, (𝕍 i) ∘L density (χ i) ∘L adjoint (𝕍 i) := by
   rw [eq_comm, eq_density_iff]
   intro Z
@@ -148,7 +148,7 @@ theorem density_blockDiagonal :
   rw [trace_density_comp]
 
 /-- The block-diagonal density intertwines the insertions: `ρ_{⊕χ} Vᵢ = Vᵢ ρ_{χᵢ}`. -/
-theorem density_blockDiagonal_comp (i : ι) :
+lemma density_blockDiagonal_comp (i : ι) :
     density (blockDiagonal χ) ∘L (𝕍 i) = (𝕍 i) ∘L density (χ i) := by
   rw [density_blockDiagonal, ContinuousLinearMap.finsetSum_comp]
   simp only [ContinuousLinearMap.comp_assoc]
@@ -159,7 +159,7 @@ theorem density_blockDiagonal_comp (i : ι) :
 
 /-- The real functional calculus of the block-diagonal density is block diagonal:
 `Vᵢ† f(ρ_{⊕χ}) Vᵢ = f(ρ_{χᵢ})`. -/
-theorem adjoint_ins_comp_cfc_density_blockDiagonal (f : ℝ → ℝ) (i : ι) :
+lemma adjoint_ins_comp_cfc_density_blockDiagonal (f : ℝ → ℝ) (i : ι) :
     adjoint (𝕍 i) ∘L cfc f (density (blockDiagonal χ)) ∘L (𝕍 i) = cfc f (density (χ i)) := by
   have ha := IsSelfAdjoint.of_nonneg (density_nonneg (χ i))
   have hb := IsSelfAdjoint.of_nonneg (density_nonneg (blockDiagonal χ))
@@ -189,7 +189,7 @@ private lemma adjoint_ins_comp_star_mul_self_comp_ins
 
 /-- **The support condition splits over the blocks**: the null ideal of `⊕ θ` lies in that of
 `⊕ χ` iff the null ideal of each `θᵢ` lies in that of `χᵢ`. -/
-theorem blockDiagonal_null_imp_iff (θ : ι → (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
+lemma blockDiagonal_null_imp_iff (θ : ι → (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
     (∀ Z, blockDiagonal θ (star Z * Z) = 0 → blockDiagonal χ (star Z * Z) = 0) ↔
       ∀ i, ∀ A : H →L[ℂ] H, θ i (star A * A) = 0 → χ i (star A * A) = 0 := by
   refine ⟨fun h i A hA => ?_, fun h Z hZ0 => ?_⟩
@@ -216,7 +216,7 @@ block-diagonal densities are block diagonal
 (`PositiveLinearMap.adjoint_ins_comp_cfc_density_blockDiagonal`), so Umegaki's formula
 `Re ψ(log ρ_ψ - log ρ_φ)` splits over the blocks; if one block violates the support condition,
 both sides are `+∞`. -/
-theorem umegakiEntropy_blockDiagonal (θ : ι → (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
+lemma umegakiEntropy_blockDiagonal (θ : ι → (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
     D(blockDiagonal χ ∥ blockDiagonal θ) = ∑ i, D(χ i ∥ θ i) := by
   by_cases hs : ∀ i, ∀ A : H →L[ℂ] H, θ i (star A * A) = 0 → χ i (star A * A) = 0
   · rw [umegakiEntropy_eq_re_apply ((blockDiagonal_null_imp_iff χ θ).mpr hs)]

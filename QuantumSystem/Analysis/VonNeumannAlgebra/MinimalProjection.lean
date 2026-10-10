@@ -65,7 +65,7 @@ The proof avoids corner-commutant theory and polar decomposition: if `0 ≠ q �
 `IsFactor.exists_mul_ne` produces `a ∈ N` with `z := r a q ≠ 0`. Both `z` and `z⋆` are corner
 elements of `p`, so they commute by abelianness; but `q z = 0` and `q z⋆ = z⋆` force
 `z⋆ z = q (z z⋆) = (q z) z⋆ = 0`, and the C⋆-identity gives `z = 0` — a contradiction. -/
-theorem IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra H}
+lemma IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {p : H →L[ℂ] H} (hp : IsAbelianProjection N p)
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hsub : p * q = q) :
     q = 0 ∨ q = p := by
@@ -480,7 +480,7 @@ proper nonzero subprojection in `N` is a minimal projection, i.e. `p N p = ℂ p
 corner elements are real multiples of `p` by the cut lemma
 (`exists_real_smul_eq_of_forall_subprojection`); a general corner element decomposes into real
 and imaginary self-adjoint parts. -/
-theorem isMinimalProjection_of_forall_subprojection {N : VonNeumannAlgebra H}
+lemma isMinimalProjection_of_forall_subprojection {N : VonNeumannAlgebra H}
     {p : H →L[ℂ] H} (hp : IsStarProjection p) (hpN : p ∈ N) (hp0 : p ≠ 0)
     (hmin : ∀ q, IsStarProjection q → q ∈ N → p * q = q → q = 0 ∨ q = p) :
     IsMinimalProjection N p := by
@@ -553,7 +553,7 @@ lemma isMinimalProjection_rankOne_boundedLinearOperators {u : H} (hu : ‖u‖ =
 
 omit [CompleteSpace H] in
 /-- A normalised nonzero vector of a nontrivial space, packaged as a unit vector. -/
-private theorem exists_unit_vector [Nontrivial H] : ∃ u : H, ‖u‖ = 1 := by
+private lemma exists_unit_vector [Nontrivial H] : ∃ u : H, ‖u‖ = 1 := by
   obtain ⟨v, hv⟩ := exists_ne (0 : H)
   exact ⟨(‖v‖⁻¹ : ℂ) • v, by
     rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,

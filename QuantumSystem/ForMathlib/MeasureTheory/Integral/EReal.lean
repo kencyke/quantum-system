@@ -201,7 +201,7 @@ noncomputable def erealIntegral (μ : Measure α) (f : α → EReal) : EReal :=
   (∫⁻ a, (f a).toENNReal ∂μ : ℝ≥0∞) - (∫⁻ a, (-f a).toENNReal ∂μ : ℝ≥0∞)
 
 /-- A decomposition `u - v ≤ f` with `∫ v < ∞` bounds `∫ f` from below. -/
-theorem lintegral_sub_lintegral_le_erealIntegral (hf : AEMeasurable f μ) {u v : α → ℝ≥0∞}
+lemma lintegral_sub_lintegral_le_erealIntegral (hf : AEMeasurable f μ) {u v : α → ℝ≥0∞}
     (hv : ∫⁻ a, v a ∂μ ≠ ∞) (h : ∀ᵐ a ∂μ, (u a : EReal) - v a ≤ f a) :
     ((∫⁻ a, u a ∂μ : ℝ≥0∞) : EReal) - (∫⁻ a, v a ∂μ : ℝ≥0∞) ≤ erealIntegral μ f := by
   have h' := h.mono fun a ha => add_toENNReal_neg_le_of_sub_le ha
@@ -214,7 +214,7 @@ theorem lintegral_sub_lintegral_le_erealIntegral (hf : AEMeasurable f μ) {u v :
     _ = _ := lintegral_add_right' _ hf.ereal_toENNReal
 
 /-- A decomposition `f ≤ u - v` with `∫ v < ∞` bounds `∫ f` from above. -/
-theorem erealIntegral_le_lintegral_sub_lintegral (hf : AEMeasurable f μ) {u v : α → ℝ≥0∞}
+lemma erealIntegral_le_lintegral_sub_lintegral (hf : AEMeasurable f μ) {u v : α → ℝ≥0∞}
     (hv : ∫⁻ a, v a ∂μ ≠ ∞) (h : ∀ᵐ a ∂μ, f a ≤ (u a : EReal) - v a) :
     erealIntegral μ f ≤ ((∫⁻ a, u a ∂μ : ℝ≥0∞) : EReal) - (∫⁻ a, v a ∂μ : ℝ≥0∞) := by
   rw [erealIntegral]
@@ -231,14 +231,14 @@ theorem erealIntegral_le_lintegral_sub_lintegral (hf : AEMeasurable f μ) {u v :
           add_comm]
 
 /-- Any decomposition `f = u - v` with `∫ v < ∞` computes `∫ f`. -/
-theorem erealIntegral_eq_lintegral_sub_lintegral (hf : AEMeasurable f μ) {u v : α → ℝ≥0∞}
+lemma erealIntegral_eq_lintegral_sub_lintegral (hf : AEMeasurable f μ) {u v : α → ℝ≥0∞}
     (hv : ∫⁻ a, v a ∂μ ≠ ∞) (h : ∀ᵐ a ∂μ, (u a : EReal) - v a = f a) :
     erealIntegral μ f = ((∫⁻ a, u a ∂μ : ℝ≥0∞) : EReal) - (∫⁻ a, v a ∂μ : ℝ≥0∞) :=
   le_antisymm (erealIntegral_le_lintegral_sub_lintegral hf hv (h.mono fun _ ha => ha.ge))
     (lintegral_sub_lintegral_le_erealIntegral hf hv (h.mono fun _ ha => ha.le))
 
 /-- The extended integral is monotone. -/
-theorem erealIntegral_mono_ae (h : ∀ᵐ a ∂μ, f a ≤ g a) : erealIntegral μ f ≤ erealIntegral μ g :=
+lemma erealIntegral_mono_ae (h : ∀ᵐ a ∂μ, f a ≤ g a) : erealIntegral μ f ≤ erealIntegral μ g :=
   EReal.sub_le_sub
     (EReal.coe_ennreal_le_coe_ennreal_iff.mpr
       (lintegral_mono_ae (h.mono fun _ ha => EReal.toENNReal_le_toENNReal ha)))
@@ -247,18 +247,18 @@ theorem erealIntegral_mono_ae (h : ∀ᵐ a ∂μ, f a ≤ g a) : erealIntegral 
         ha))))
 
 /-- The extended integral only depends on the almost-everywhere class of the integrand. -/
-theorem erealIntegral_congr_ae (h : f =ᵐ[μ] g) : erealIntegral μ f = erealIntegral μ g :=
+lemma erealIntegral_congr_ae (h : f =ᵐ[μ] g) : erealIntegral μ f = erealIntegral μ g :=
   le_antisymm (erealIntegral_mono_ae (h.mono fun _ ha => ha.le))
     (erealIntegral_mono_ae (h.mono fun _ ha => ha.ge))
 
 /-- `∫ f⁻ dμ = ∞` exactly when the extended integral is `⊥`. -/
-theorem erealIntegral_eq_bot_iff : erealIntegral μ f = ⊥ ↔ ∫⁻ a, (-f a).toENNReal ∂μ = ∞ := by
+lemma erealIntegral_eq_bot_iff : erealIntegral μ f = ⊥ ↔ ∫⁻ a, (-f a).toENNReal ∂μ = ∞ := by
   rw [erealIntegral, sub_eq_add_neg, EReal.add_eq_bot_iff, EReal.neg_eq_bot_iff,
     EReal.coe_ennreal_eq_top_iff]
   simp [EReal.coe_ennreal_ne_bot]
 
 /-- **Agreement with the Bochner integral** for integrable real functions. -/
-theorem erealIntegral_coe {g : α → ℝ} (hg : Integrable g μ) :
+lemma erealIntegral_coe {g : α → ℝ} (hg : Integrable g μ) :
     erealIntegral μ (fun a => (g a : EReal)) = ((∫ a, g a ∂μ : ℝ) : EReal) := by
   have h₁ : ∫⁻ a, ENNReal.ofReal (g a) ∂μ ≠ ∞ := hg.lintegral_lt_top.ne
   have h₂ : ∫⁻ a, ENNReal.ofReal (-g a) ∂μ ≠ ∞ := hg.neg.lintegral_lt_top.ne
@@ -267,18 +267,18 @@ theorem erealIntegral_coe {g : α → ℝ} (hg : Integrable g μ) :
   simp only [← EReal.coe_neg, EReal.real_coe_toENNReal]
 
 /-- An integrable real function below `f` bounds `∫ f` from below. -/
-theorem integral_le_erealIntegral {g : α → ℝ} (hg : Integrable g μ)
+lemma integral_le_erealIntegral {g : α → ℝ} (hg : Integrable g μ)
     (h : ∀ᵐ a ∂μ, (g a : EReal) ≤ f a) : ((∫ a, g a ∂μ : ℝ) : EReal) ≤ erealIntegral μ f :=
   erealIntegral_coe hg ▸ erealIntegral_mono_ae h
 
 /-- An integrable real function above `f` bounds `∫ f` from above. -/
-theorem erealIntegral_le_integral {g : α → ℝ} (hg : Integrable g μ)
+lemma erealIntegral_le_integral {g : α → ℝ} (hg : Integrable g μ)
     (h : ∀ᵐ a ∂μ, f a ≤ (g a : EReal)) : erealIntegral μ f ≤ ((∫ a, g a ∂μ : ℝ) : EReal) :=
   erealIntegral_coe hg ▸ erealIntegral_mono_ae h
 
 /-- Adding an integrable real function adds its Bochner integral:
 `∫ (f + g) = ∫ f + ∫ g` (unconditionally in `f`, thanks to the value `⊥`). -/
-theorem erealIntegral_add_coe (hf : AEMeasurable f μ) {g : α → ℝ} (hg : Integrable g μ) :
+lemma erealIntegral_add_coe (hf : AEMeasurable f μ) {g : α → ℝ} (hg : Integrable g μ) :
     erealIntegral μ (fun a => f a + g a) = erealIntegral μ f + ((∫ a, g a ∂μ : ℝ) : EReal) := by
   have hgp : ∫⁻ a, ENNReal.ofReal (g a) ∂μ ≠ ∞ := hg.lintegral_lt_top.ne
   have hgn : ∫⁻ a, ENNReal.ofReal (-g a) ∂μ ≠ ∞ := hg.neg.lintegral_lt_top.ne
@@ -311,17 +311,17 @@ theorem erealIntegral_add_coe (hf : AEMeasurable f μ) {g : α → ℝ} (hg : In
 
 /-- The extended integral against the zero measure vanishes. -/
 @[simp]
-theorem erealIntegral_zero_measure (f : α → EReal) : erealIntegral 0 f = 0 := by
+lemma erealIntegral_zero_measure (f : α → EReal) : erealIntegral 0 f = 0 := by
   simp [erealIntegral]
 
 /-- The extended integral against a Dirac mass is the value at the point. -/
 @[simp]
-theorem erealIntegral_dirac [MeasurableSingletonClass α] (a : α) (f : α → EReal) :
+lemma erealIntegral_dirac [MeasurableSingletonClass α] (a : α) (f : α → EReal) :
     erealIntegral (Measure.dirac a) f = f a := by
   rw [erealIntegral, lintegral_dirac, lintegral_dirac, toENNReal_sub_toENNReal_neg]
 
 /-- The extended integral is homogeneous under scaling of the measure. -/
-theorem erealIntegral_smul_measure (c : ℝ≥0) (μ : Measure α) (f : α → EReal) :
+lemma erealIntegral_smul_measure (c : ℝ≥0) (μ : Measure α) (f : α → EReal) :
     erealIntegral (c • μ) f = ((c : ℝ) : EReal) * erealIntegral μ f := by
   rw [erealIntegral, erealIntegral, lintegral_smul_measure, lintegral_smul_measure,
     ENNReal.smul_def, ENNReal.smul_def, smul_eq_mul, smul_eq_mul, EReal.coe_ennreal_mul,
@@ -329,13 +329,13 @@ theorem erealIntegral_smul_measure (c : ℝ≥0) (μ : Measure α) (f : α → E
       (by simp), EReal.coe_nnreal_eq_coe_real]
 
 /-- The extended integral is additive in the measure (unconditionally, thanks to the value `⊥`). -/
-theorem erealIntegral_add_measure (μ ν : Measure α) (f : α → EReal) :
+lemma erealIntegral_add_measure (μ ν : Measure α) (f : α → EReal) :
     erealIntegral (μ + ν) f = erealIntegral μ f + erealIntegral ν f := by
   rw [erealIntegral, erealIntegral, erealIntegral, lintegral_add_measure, lintegral_add_measure,
     coe_add_sub_coe_add]
 
 /-- The extended integral against a finite sum of measures. -/
-theorem erealIntegral_finsetSum_measure {ι : Type*} (s : Finset ι) (μ : ι → Measure α)
+lemma erealIntegral_finsetSum_measure {ι : Type*} (s : Finset ι) (μ : ι → Measure α)
     (f : α → EReal) : erealIntegral (∑ i ∈ s, μ i) f = ∑ i ∈ s, erealIntegral (μ i) f := by
   classical
   induction s using Finset.induction_on with
@@ -344,7 +344,7 @@ theorem erealIntegral_finsetSum_measure {ι : Type*} (s : Finset ι) (μ : ι �
     rw [Finset.sum_insert hi, Finset.sum_insert hi, erealIntegral_add_measure, ih]
 
 /-- Change of variables for the extended integral. -/
-theorem erealIntegral_map {β : Type*} [MeasurableSpace β] {φ : α → β} {f : β → EReal}
+lemma erealIntegral_map {β : Type*} [MeasurableSpace β] {φ : α → β} {f : β → EReal}
     (hφ : AEMeasurable φ μ) (hf : AEMeasurable f (μ.map φ)) :
     erealIntegral (μ.map φ) f = erealIntegral μ (f ∘ φ) := by
   rw [erealIntegral, erealIntegral, lintegral_map' hf.ereal_toENNReal hφ,
@@ -361,7 +361,7 @@ variable {α : Type*} [MeasurableSpace α] {P Q : Measure α}
 
 /-- For `P ≪ Q` with `Q` finite, the negative part of `log (dP/dQ)` has finite `P`-integral:
 `-log c ≤ c⁻¹` and `∫ (dP/dQ)⁻¹ dP ≤ Q(univ)`. -/
-theorem lintegral_ofReal_neg_llr_ne_top [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q) :
+lemma lintegral_ofReal_neg_llr_ne_top [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q) :
     ∫⁻ x, ENNReal.ofReal (-llr P Q x) ∂P ≠ ∞ := by
   refine ne_of_lt (lt_of_le_of_lt (lintegral_mono_ae (g := fun x => (P.rnDeriv Q x)⁻¹) ?_) ?_)
   · filter_upwards [Measure.rnDeriv_pos hPQ, hPQ.ae_le (Measure.rnDeriv_lt_top P Q)] with x h₁ h₂
@@ -378,14 +378,14 @@ theorem lintegral_ofReal_neg_llr_ne_top [SigmaFinite P] [IsFiniteMeasure Q] (hPQ
 
 /-- For `P ≪ Q` with `Q` finite, `∫ log (dP/dQ) dP` is never `-∞`: the extended integral of the
 log-likelihood ratio is a genuine value in `(-∞, +∞]`, not the junk value `⊤ - ⊤ = ⊥`. -/
-theorem erealIntegral_llr_ne_bot [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q) :
+lemma erealIntegral_llr_ne_bot [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q) :
     erealIntegral P (fun x => (llr P Q x : EReal)) ≠ ⊥ := by
   rw [Ne, erealIntegral_eq_bot_iff]
   simp_rw [← EReal.coe_neg, EReal.toENNReal_of_ne_top (EReal.coe_ne_top _), EReal.toReal_coe]
   exact lintegral_ofReal_neg_llr_ne_top hPQ
 
 /-- For `P ≪ Q` with `Q` finite and a non-integrable `log (dP/dQ)`, `∫ log (dP/dQ) dP = +∞`. -/
-theorem erealIntegral_llr_eq_top [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q)
+lemma erealIntegral_llr_eq_top [SigmaFinite P] [IsFiniteMeasure Q] (hPQ : P ≪ Q)
     (hint : ¬Integrable (llr P Q) P) : erealIntegral P (fun x => (llr P Q x : EReal)) = ⊤ := by
   have hpos : ∀ r : ℝ, ((r : EReal)).toENNReal = ENNReal.ofReal r := fun r => by
     rw [EReal.toENNReal_of_ne_top (EReal.coe_ne_top r), EReal.toReal_coe]
@@ -427,33 +427,33 @@ private lemma measurable_negLog : Measurable fun t : ℝ => -ENNReal.log (ENNRea
 
 /-- The integral of `-log` against the zero measure vanishes. -/
 @[simp]
-theorem negLogIntegral_zero : negLogIntegral 0 = 0 :=
+lemma negLogIntegral_zero : negLogIntegral 0 = 0 :=
   erealIntegral_zero_measure _
 
 /-- The integral of `-log` against a Dirac mass is the value of `-log` at the point. -/
 @[simp]
-theorem negLogIntegral_dirac (a : ℝ) :
+lemma negLogIntegral_dirac (a : ℝ) :
     negLogIntegral (Measure.dirac a) = -ENNReal.log (ENNReal.ofReal a) :=
   erealIntegral_dirac a _
 
 /-- `negLogIntegral` is homogeneous under scaling of the measure. -/
-theorem negLogIntegral_smul (c : ℝ≥0) (μ : Measure ℝ) :
+lemma negLogIntegral_smul (c : ℝ≥0) (μ : Measure ℝ) :
     negLogIntegral (c • μ) = ((c : ℝ) : EReal) * negLogIntegral μ :=
   erealIntegral_smul_measure c μ _
 
 /-- `negLogIntegral` is additive (unconditionally, thanks to the value `⊥`). -/
-theorem negLogIntegral_add (μ ν : Measure ℝ) :
+lemma negLogIntegral_add (μ ν : Measure ℝ) :
     negLogIntegral (μ + ν) = negLogIntegral μ + negLogIntegral ν :=
   erealIntegral_add_measure μ ν _
 
 /-- `negLogIntegral` of a finite sum of measures. -/
-theorem negLogIntegral_finsetSum {ι : Type*} (s : Finset ι) (μ : ι → Measure ℝ) :
+lemma negLogIntegral_finsetSum {ι : Type*} (s : Finset ι) (μ : ι → Measure ℝ) :
     negLogIntegral (∑ i ∈ s, μ i) = ∑ i ∈ s, negLogIntegral (μ i) :=
   erealIntegral_finsetSum_measure s μ _
 
 /-- `∫ -log` against a finite weighted sum of Dirac masses whose charged points are positive:
 `∫ -log d(∑ cᵢ δ_{aᵢ}) = -∑ cᵢ log aᵢ` when `aᵢ > 0` for every `cᵢ ≠ 0`. -/
-theorem negLogIntegral_finsetSum_smul_dirac {ι : Type*} (s : Finset ι) (c : ι → ℝ≥0) {a : ι → ℝ}
+lemma negLogIntegral_finsetSum_smul_dirac {ι : Type*} (s : Finset ι) (c : ι → ℝ≥0) {a : ι → ℝ}
     (ha : ∀ i ∈ s, c i ≠ 0 → 0 < a i) :
     negLogIntegral (∑ i ∈ s, c i • Measure.dirac (a i)) =
       ((∑ i ∈ s, -((c i : ℝ) * Real.log (a i)) : ℝ) : EReal) := by
@@ -470,7 +470,7 @@ theorem negLogIntegral_finsetSum_smul_dirac {ι : Type*} (s : Finset ι) (c : ι
       ← EReal.coe_neg, ← EReal.coe_mul, mul_neg]
 
 /-- `negLogIntegral μ` is `⊥` exactly when `∫ log⁺ t dμ(t) = ∞`. -/
-theorem negLogIntegral_eq_bot_iff :
+lemma negLogIntegral_eq_bot_iff :
     negLogIntegral μ = ⊥ ↔ ∫⁻ t, (ENNReal.log (ENNReal.ofReal t)).toENNReal ∂μ = ∞ := by
   rw [negLogIntegral, erealIntegral_eq_bot_iff]
   simp_rw [neg_neg]
@@ -484,14 +484,14 @@ private lemma toENNReal_log_ofReal_le (t : ℝ) :
     exact ENNReal.ofReal_le_ofReal (by linarith [Real.log_le_sub_one_of_pos ht])
 
 /-- A finite first moment `∫ t⁺ dμ(t) < ∞` rules out the value `⊥`. -/
-theorem negLogIntegral_ne_bot_of_lintegral_ne_top (h : ∫⁻ t, ENNReal.ofReal t ∂μ ≠ ∞) :
+lemma negLogIntegral_ne_bot_of_lintegral_ne_top (h : ∫⁻ t, ENNReal.ofReal t ∂μ ≠ ∞) :
     negLogIntegral μ ≠ ⊥ := by
   rw [Ne, negLogIntegral_eq_bot_iff]
   exact ne_top_of_le_ne_top h (lintegral_mono toENNReal_log_ofReal_le)
 
 /-- A positive mass on `(-∞, 0]`, where `-log = +∞`, forces `negLogIntegral μ = ⊤` (unless it is
 `⊥`). -/
-theorem negLogIntegral_eq_top_of_measure_Iic_ne_zero (h0 : μ (Set.Iic 0) ≠ 0)
+lemma negLogIntegral_eq_top_of_measure_Iic_ne_zero (h0 : μ (Set.Iic 0) ≠ 0)
     (hb : negLogIntegral μ ≠ ⊥) : negLogIntegral μ = ⊤ := by
   have hN := hb
   rw [negLogIntegral, Ne, erealIntegral_eq_bot_iff] at hN
@@ -508,7 +508,7 @@ theorem negLogIntegral_eq_top_of_measure_Iic_ne_zero (h0 : μ (Set.Iic 0) ≠ 0)
   exact EReal.top_sub (by rwa [Ne, EReal.coe_ennreal_eq_top_iff])
 
 /-- A finite weighted sum of Dirac masses charging a point of `(-∞, 0]` has `∫ -log = +∞`. -/
-theorem negLogIntegral_finsetSum_smul_dirac_eq_top {ι : Type*} {s : Finset ι} {c : ι → ℝ≥0}
+lemma negLogIntegral_finsetSum_smul_dirac_eq_top {ι : Type*} {s : Finset ι} {c : ι → ℝ≥0}
     {a : ι → ℝ} {i : ι} (hi : i ∈ s) (hc : c i ≠ 0) (ha : a i ≤ 0) :
     negLogIntegral (∑ j ∈ s, c j • Measure.dirac (a j)) = ⊤ := by
   refine negLogIntegral_eq_top_of_measure_Iic_ne_zero (fun h0 => hc ?_)
@@ -520,7 +520,7 @@ theorem negLogIntegral_finsetSum_smul_dirac_eq_top {ι : Type*} {s : Finset ι} 
     exact ENNReal.mul_ne_top ENNReal.coe_ne_top ENNReal.ofReal_ne_top
 
 /-- A nonzero measure with `∫ t⁺ dμ(t) = 0` lives on `(-∞, 0]`, so `negLogIntegral μ = ⊤`. -/
-theorem negLogIntegral_eq_top_of_lintegral_eq_zero (hμ : μ ≠ 0)
+lemma negLogIntegral_eq_top_of_lintegral_eq_zero (hμ : μ ≠ 0)
     (h : ∫⁻ t, ENNReal.ofReal t ∂μ = 0) : negLogIntegral μ = ⊤ := by
   refine negLogIntegral_eq_top_of_measure_Iic_ne_zero (fun h0 => hμ ?_)
     (negLogIntegral_ne_bot_of_lintegral_ne_top (h ▸ ENNReal.zero_ne_top))
@@ -533,7 +533,7 @@ theorem negLogIntegral_eq_top_of_lintegral_eq_zero (hμ : μ ≠ 0)
     add_zero]
 
 /-- A finite measure living on `[δ, ∞)` with `δ > 0` has `negLogIntegral μ < ⊤`. -/
-theorem negLogIntegral_ne_top_of_ae_ge [IsFiniteMeasure μ] {δ : ℝ} (hδ : 0 < δ)
+lemma negLogIntegral_ne_top_of_ae_ge [IsFiniteMeasure μ] {δ : ℝ} (hδ : 0 < δ)
     (h : ∀ᵐ t ∂μ, δ ≤ t) : negLogIntegral μ ≠ ⊤ :=
   ne_top_of_le_ne_top (EReal.coe_ne_top (∫ _, -Real.log δ ∂μ))
     (erealIntegral_le_integral (integrable_const _) (h.mono fun t ht => by
@@ -542,14 +542,14 @@ theorem negLogIntegral_ne_top_of_ae_ge [IsFiniteMeasure μ] {δ : ℝ} (hδ : 0 
 
 /-- **Agreement with the Bochner integral.** If `μ` lives on `(0, ∞)` and `log` is
 `μ`-integrable, then `negLogIntegral μ = -∫ log t dμ(t)`. -/
-theorem negLogIntegral_eq_neg_integral (h0 : ∀ᵐ t ∂μ, 0 < t) (hi : Integrable Real.log μ) :
+lemma negLogIntegral_eq_neg_integral (h0 : ∀ᵐ t ∂μ, 0 < t) (hi : Integrable Real.log μ) :
     negLogIntegral μ = ((-∫ t, Real.log t ∂μ : ℝ) : EReal) := by
   rw [negLogIntegral, erealIntegral_congr_ae (g := fun t => ((-Real.log t : ℝ) : EReal))
     (h0.mono fun t ht => by rw [ENNReal.log_ofReal_of_pos ht, ← EReal.coe_neg]),
     erealIntegral_coe (g := fun t => -Real.log t) hi.neg, integral_neg]
 
 /-- **Scaling.** `∫ -log (c t) dμ(t) = ∫ -log t dμ(t) - μ(ℝ) log c` for `c > 0` and finite `μ`. -/
-theorem negLogIntegral_map_mul [IsFiniteMeasure μ] {c : ℝ} (hc : 0 < c) :
+lemma negLogIntegral_map_mul [IsFiniteMeasure μ] {c : ℝ} (hc : 0 < c) :
     negLogIntegral (μ.map (c * ·)) =
       negLogIntegral μ - ((μ.real Set.univ * Real.log c : ℝ) : EReal) := by
   have hm : Measurable (c * · : ℝ → ℝ) := measurable_const_mul c
@@ -672,7 +672,7 @@ private lemma lintegral_Ioi_inv_add_sub_inv_add {a b : ℝ} (ha : 0 < a) (hab : 
 /-- **Resolvent representation of `-log`**, positive part: for `s ≥ 0`,
 `∫_{t > 0} ((t + s)⁻¹ - (1 + t)⁻¹)⁺ dt = (-log s)⁺`, both sides being `+∞` at `s = 0`. For
 `0 < s ≤ 1` this is `∫_{t > 0} ((t + s)⁻¹ - (1 + t)⁻¹) dt = -log s`. -/
-theorem lintegral_Ioi_ofReal_inv_add_sub_inv_one_add {s : ℝ} (hs : 0 ≤ s) :
+lemma lintegral_Ioi_ofReal_inv_add_sub_inv_one_add {s : ℝ} (hs : 0 ≤ s) :
     ∫⁻ t in Set.Ioi 0, ENNReal.ofReal ((t + s)⁻¹ - (1 + t)⁻¹) =
       (-ENNReal.log (ENNReal.ofReal s)).toENNReal := by
   rcases hs.eq_or_lt with rfl | hs
@@ -700,7 +700,7 @@ theorem lintegral_Ioi_ofReal_inv_add_sub_inv_one_add {s : ℝ} (hs : 0 ≤ s) :
 /-- **Resolvent representation of `-log`**, negative part: for `s ≥ 0`,
 `∫_{t > 0} ((1 + t)⁻¹ - (t + s)⁻¹)⁺ dt = (log s)⁺`. For `s ≥ 1` this is
 `∫_{t > 0} ((1 + t)⁻¹ - (t + s)⁻¹) dt = log s`. -/
-theorem lintegral_Ioi_ofReal_inv_one_add_sub_inv_add {s : ℝ} (hs : 0 ≤ s) :
+lemma lintegral_Ioi_ofReal_inv_one_add_sub_inv_add {s : ℝ} (hs : 0 ≤ s) :
     ∫⁻ t in Set.Ioi 0, ENNReal.ofReal ((1 + t)⁻¹ - (t + s)⁻¹) =
       (ENNReal.log (ENNReal.ofReal s)).toENNReal := by
   rcases le_total s 1 with hs1 | hs1

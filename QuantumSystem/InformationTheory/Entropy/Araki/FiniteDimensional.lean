@@ -105,7 +105,7 @@ lemma amplifyLeft_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : ι)
 
 /-- **The purification represents the weighted functional**: for nonnegative weights and
 orthonormal `g`, `⟪Ω, (1 ⊗ A) Ω⟫ = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
-theorem inner_purification_amplifyRight (hr : ∀ i, 0 ≤ r i) (hg : Orthonormal ℂ g)
+lemma inner_purification_amplifyRight (hr : ∀ i, 0 ≤ r i) (hg : Orthonormal ℂ g)
     (A : H →L[ℂ] H) :
     ⟪b.purification r g, (𝟙 ⊗ A) (b.purification r g)⟫_ℂ =
       ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
@@ -180,7 +180,7 @@ private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
 /-- **The relative modular operator on eigenvectors.** For `rᵢ > 0` and `sⱼ ≥ 0`,
 `Δ_{Ω_σ, Ω_ρ} (gᵢ ⊗ cⱼ) = (sⱼ / rᵢ) gᵢ ⊗ cⱼ`, i.e. `Δ = ρ̃⁻¹ ⊗ σ` on the support, where
 `ρ̃ = Σᵢ rᵢ |gᵢ⟩⟨gᵢ|` acts on `K`. -/
-theorem mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 ≤ s j)
+lemma mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 ≤ s j)
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
     (g i ⊗ₕ c j, ((s j / r i : ℝ) : ℂ) • (g i ⊗ₕ c j)) ∈
       (Δ[𝓜]⟦c.purification s g, b.purification r g⟧).graph := by
@@ -221,7 +221,7 @@ lemma purification_eq_sum :
   simp only [map_smul, HilbertTensor.tmulRightL_apply, smul_smul]
 
 /-- **Spectral measure**: `μ_{Ω_ρ}` of `Δ_{Ω_σ, Ω_ρ}` is `Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² δ_{sⱼ / rᵢ}`. -/
-theorem measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i)
+lemma measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i)
     (hs : ∀ j, 0 ≤ s j) (hg : Orthonormal ℂ g) :
     μ[𝓜]⟦c.purification s g, b.purification r g⟧ =
       ∑ p : ι × ι, (r p.1 * ‖⟪c p.2, b p.1⟫_ℂ‖ ^ 2).toNNReal • Measure.dirac (s p.2 / r p.1) := by
@@ -278,7 +278,7 @@ theorem arakiVec_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i) (hs : �
 local notation "δ_ι" => fun i => lp.single (E := fun _ : ℕ => ℂ) 2 (Fintype.equivFin ι i : ℕ) (1 : ℂ)
 
 /-- The family `δ_ι` is orthonormal in `ℓ²(ℕ)`. -/
-private theorem orthonormal_single_equivFin : Orthonormal ℂ (δ_ι : ι → lp (fun _ : ℕ => ℂ) 2) :=
+private lemma orthonormal_single_equivFin : Orthonormal ℂ (δ_ι : ι → lp (fun _ : ℕ => ℂ) 2) :=
   lp.orthonormal_single.comp _ (Fin.val_injective.comp (Fintype.equivFin ι).injective)
 
 /-- **Araki's relative entropy on `𝓑(H)` is the eigenvalue sum.** If `ψ(A) = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫` and

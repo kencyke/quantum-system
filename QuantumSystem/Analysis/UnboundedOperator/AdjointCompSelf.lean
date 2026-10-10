@@ -77,7 +77,7 @@ namespace LinearPMap
 and `z̄ + A` both map `dom A` onto the whole space for some scalar `z` is self-adjoint. (Its domain
 is then automatically dense.) The usual choice is `z = i`: `A` is self-adjoint when `A ± i` are
 surjective. -/
-theorem IsFormalAdjoint.isSelfAdjoint_of_surjective_conj [CompleteSpace E] {A : E →ₗ.[𝕜] E}
+lemma IsFormalAdjoint.isSelfAdjoint_of_surjective_conj [CompleteSpace E] {A : E →ₗ.[𝕜] E}
     (hA : A.IsFormalAdjoint A) (z : 𝕜)
     (hz : Function.Surjective ((z • LinearMap.id : E →ₗ[𝕜] E) +ᵥ A))
     (hz' : Function.Surjective ((conj z • LinearMap.id : E →ₗ[𝕜] E) +ᵥ A)) : IsSelfAdjoint A := by
@@ -129,7 +129,7 @@ theorem IsFormalAdjoint.isSelfAdjoint_of_surjective_conj [CompleteSpace E] {A : 
 /-- **Self-adjointness criterion.** A symmetric operator `A` on a Hilbert space such that `c + A`
 maps `dom A` onto the whole space for some real `c` is self-adjoint. (Its domain is then
 automatically dense.) -/
-theorem IsFormalAdjoint.isSelfAdjoint_of_surjective [CompleteSpace E] {A : E →ₗ.[𝕜] E}
+lemma IsFormalAdjoint.isSelfAdjoint_of_surjective [CompleteSpace E] {A : E →ₗ.[𝕜] E}
     (hA : A.IsFormalAdjoint A) (c : ℝ)
     (hc : Function.Surjective (((c : 𝕜) • LinearMap.id : E →ₗ[𝕜] E) +ᵥ A)) :
     IsSelfAdjoint A :=
@@ -176,7 +176,7 @@ lemma ker_adjoint_compNat_self (hTd : Dense (T.domain : Set E)) : (T†.compNat 
 omit [CompleteSpace F] in
 /-- **`T†T` depends only on the form of `T`.** If densely defined `T₁, T₂` have the same domain and
 `⟪T₂ v, T₂ u⟫ = r ⟪T₁ v, T₁ u⟫` for a real `r ≠ 0` (on graph points), then `T₂†T₂ = r T₁†T₁`. -/
-theorem adjoint_compNat_self_eq_smul_of_inner {T₁ T₂ : E →ₗ.[𝕜] F}
+lemma adjoint_compNat_self_eq_smul_of_inner {T₁ T₂ : E →ₗ.[𝕜] F}
     (hT₁ : Dense (T₁.domain : Set E)) (hT₂ : Dense (T₂.domain : Set E)) {r : ℝ} (hr : r ≠ 0)
     (hdom : T₁.domain = T₂.domain)
     (hinner : ∀ u y₁ y₂ v z₁ z₂, (u, y₁) ∈ T₁.graph → (u, y₂) ∈ T₂.graph → (v, z₁) ∈ T₁.graph →
@@ -206,7 +206,7 @@ omit [CompleteSpace F] in
 /-- **`T†T` under a correspondence.** Let `T₁, T₂` be densely defined, with bounded `B, C` such that
 `B T₁ ⊆ T₂`, `C T₂ ⊆ T₁` and `⟪y', B y⟫ = r ⟪C y', y⟫` for a real `r ≠ 0`. Then `T₂†T₂ = r T₁†T₁`
 (`LinearPMap.adjoint_compNat_self_eq_smul_of_inner`). -/
-theorem adjoint_compNat_self_eq_smul {T₁ T₂ : E →ₗ.[𝕜] F} (hT₁ : Dense (T₁.domain : Set E))
+lemma adjoint_compNat_self_eq_smul {T₁ T₂ : E →ₗ.[𝕜] F} (hT₁ : Dense (T₁.domain : Set E))
     (hT₂ : Dense (T₂.domain : Set E)) {B C : F →L[𝕜] F} {r : ℝ} (hr : r ≠ 0)
     (hB : (B : F →ₗ[𝕜] F).compPMap T₁ ≤ T₂) (hC : (C : F →ₗ[𝕜] F).compPMap T₂ ≤ T₁)
     (hBC : ∀ y y', ⟪y', B y⟫_𝕜 = (r : 𝕜) * ⟪C y', y⟫_𝕜) :
@@ -239,7 +239,7 @@ lemma isFormalAdjoint_adjoint_compNat_self (hTd : Dense (T.domain : Set E)) :
 
 omit [CompleteSpace F] in
 /-- `T†T` is positive. -/
-theorem isPositive_adjoint_compNat_self (hTd : Dense (T.domain : Set E)) :
+lemma isPositive_adjoint_compNat_self (hTd : Dense (T.domain : Set E)) :
     (T†.compNat T).IsPositive :=
   ⟨isFormalAdjoint_adjoint_compNat_self hTd, fun x => by
     rw [re_inner_adjoint_compNat_self hTd]
@@ -281,7 +281,7 @@ lemma surjective_id_vadd_adjoint_compNat_self (hT : T.IsClosed)
     exact ⟨p, vadd_apply (LinearMap.id : E →ₗ[𝕜] E) (T†.compNat T) p⟩
 
 /-- For a closed, densely defined `T`, the domain of `T†T` is dense. -/
-theorem dense_adjoint_compNat_self_domain (hT : T.IsClosed) (hTd : Dense (T.domain : Set E)) :
+lemma dense_adjoint_compNat_self_domain (hT : T.IsClosed) (hTd : Dense (T.domain : Set E)) :
     Dense ((T†.compNat T).domain : Set E) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
     Submodule.eq_bot_iff]
@@ -304,7 +304,7 @@ theorem isSelfAdjoint_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.dom
     exact surjective_id_vadd_adjoint_compNat_self hT hTd)
 
 /-- For a closed, densely defined `T`, the domain of `T†T` is a core for `T`. -/
-theorem hasCore_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.domain : Set E)) :
+lemma hasCore_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.domain : Set E)) :
     T.HasCore (T†.compNat T).domain := by
   refine ⟨compNat_domain_le, ?_⟩
   set D := (T†.compNat T).domain

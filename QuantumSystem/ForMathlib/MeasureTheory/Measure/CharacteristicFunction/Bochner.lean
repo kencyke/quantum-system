@@ -754,7 +754,7 @@ lemma LinearMap.measurable_flip_apply_of_isContPerfPair (v : V) : Measurable fun
 variable {L} in
 /-- **Uniqueness in Bochner's theorem**: a finite measure `μ` on `W` is determined by its Fourier
 transform `v ↦ ∫ w, exp (i L w v) ∂μ` with respect to a continuous perfect pairing `L`. -/
-theorem MeasureTheory.Measure.ext_of_integral_cexp_eq {μ ν : Measure W} [IsFiniteMeasure μ]
+lemma MeasureTheory.Measure.ext_of_integral_cexp_eq {μ ν : Measure W} [IsFiniteMeasure μ]
     [IsFiniteMeasure ν] (h : ∀ v, ∫ w, cexp (L w v * I) ∂μ = ∫ w, cexp (L w v * I) ∂ν) :
     μ = ν := by
   obtain ⟨n, e, f, hL⟩ := L.exists_euclidean_of_isContPerfPair
@@ -809,14 +809,14 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDim
 /-- **Bochner's theorem** on a finite-dimensional real inner product space: a continuous positive
 definite function is the characteristic function of a unique finite measure. This is the case
 `L = innerₗ E` of `IsPositiveDefinite.existsUnique_finiteMeasure`. -/
-theorem IsPositiveDefinite.existsUnique_charFun_eq (hφ : IsPositiveDefinite φ)
+lemma IsPositiveDefinite.existsUnique_charFun_eq (hφ : IsPositiveDefinite φ)
     (hc : Continuous φ) : ∃! μ : FiniteMeasure E, charFun (μ : Measure E) = φ := by
   convert hφ.existsUnique_finiteMeasure (innerₗ E) hc using 2
   simp [funext_iff, charFun_apply, eq_comm]
 
 /-- **Bochner's theorem** on a finite-dimensional real inner product space: a continuous function
 is positive definite if and only if it is the characteristic function of a finite measure. -/
-theorem isPositiveDefinite_iff_exists_charFun_eq (hc : Continuous φ) :
+lemma isPositiveDefinite_iff_exists_charFun_eq (hc : Continuous φ) :
     IsPositiveDefinite φ ↔ ∃ μ : FiniteMeasure E, charFun (μ : Measure E) = φ :=
   ⟨fun hφ ↦ (hφ.existsUnique_charFun_eq hc).exists, fun ⟨_, hμ⟩ ↦ hμ ▸ isPositiveDefinite_charFun _⟩
 

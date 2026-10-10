@@ -33,7 +33,7 @@ namespace MeasureTheory.Measure
 variable {α : Type*} [Countable α] [MeasurableSpace α]
 
 /-- On a countable type, `μ ≪ ν` iff every `ν`-null point is `μ`-null. -/
-theorem absolutelyContinuous_iff_singleton {μ ν : Measure α} :
+lemma absolutelyContinuous_iff_singleton {μ ν : Measure α} :
     μ ≪ ν ↔ ∀ a, ν {a} = 0 → μ {a} = 0 := by
   refine ⟨fun h a ha => h ha, fun h s hs => ?_⟩
   rw [← Set.biUnion_of_singleton s, measure_biUnion_null_iff s.to_countable]
@@ -59,7 +59,7 @@ private lemma withDensity_div_singleton [Countable α] {μ ν : Measure α} [IsF
 /-- **Kullback–Leibler divergence on a finite type.** For finite measures on a finite type with
 measurable singletons, `klDiv μ ν = ∑ₐ μ{a} log (μ{a} / ν{a}) + ν(univ) - μ(univ)` if `μ ≪ ν`,
 and `∞` otherwise. -/
-theorem klDiv_of_fintype [Fintype α] (μ ν : Measure α) [IsFiniteMeasure μ] [IsFiniteMeasure ν]
+lemma klDiv_of_fintype [Fintype α] (μ ν : Measure α) [IsFiniteMeasure μ] [IsFiniteMeasure ν]
     [Decidable (μ ≪ ν)] :
     klDiv μ ν = if μ ≪ ν then
       ENNReal.ofReal (∑ a, μ.real {a} * Real.log (μ.real {a} / ν.real {a}) +

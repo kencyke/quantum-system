@@ -292,7 +292,7 @@ lemma map_sitePerm {sites : Type*} (e : Finset sites ≃o Finset sites) (Λ : Fi
 variable {sites : Type*} {N : LocalNet (Finset sites)}
 
 /-- **The region automorphism of a lattice covariance is induced by a site permutation.** -/
-theorem exists_sitePerm (a : N.Covariance) :
+lemma exists_sitePerm (a : N.Covariance) :
     ∃ σ : sites ≃ sites, ∀ Λ : Finset sites, a.σ Λ = Λ.map σ.toEmbedding :=
   ⟨sitePerm a.σ, map_sitePerm a.σ⟩
 

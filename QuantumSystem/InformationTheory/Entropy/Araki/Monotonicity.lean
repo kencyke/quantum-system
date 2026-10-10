@@ -100,7 +100,7 @@ variable (α : SchwarzMap N M)
 
 /-- **Contractivity of Petz's map** `y ζ ↦ α(y) ξ`: if `ω_ξ ∘ α = ω_ζ` on `N`, then
 `‖α(y) ξ‖ ≤ ‖y ζ‖`, by the Kadison–Schwarz inequality `α(y)⋆ α(y) ≤ α(y⋆ y)`. -/
-theorem norm_schwarzMap_apply_apply_le {ζ : K} {ξ : H}
+lemma norm_schwarzMap_apply_apply_le {ζ : K} {ξ : H}
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ) (y : N) :
     ‖(α y : H →L[ℂ] H) ξ‖ ≤ ‖(y : K →L[ℂ] K) ζ‖ := by
   have hle := OrderHomClass.mono (M.vectorFunctional ξ) (SchwarzMapClass.le_map_star_mul α y)
@@ -116,7 +116,7 @@ theorem norm_schwarzMap_apply_apply_le {ζ : K} {ξ : H}
 
 The point `(y ζ + z, s(ζ) y⋆ ζ')` of the graph of `S_{ζ',ζ}` (`y ∈ N`, `z ⊥ [N ζ]`) is dominated
 by the point `(x ξ, s(ξ) x⋆ ξ')` of the graph of `S_{ξ',ξ}` for `x = α(y s(ζ))`. -/
-theorem integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H}
+lemma integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H}
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ)
     (hξ' : ∀ y : N, ⟪ζ', (y : K →L[ℂ] K) ζ'⟫_ℂ = ⟪ξ', (α y : H →L[ℂ] H) ξ'⟫_ℂ) {t : ℝ}
     (ht : 0 < t) :
@@ -194,13 +194,13 @@ noncomputable def amplifySchwarzMap (α : SchwarzMap N M) :
 variable {H₁}
 
 /-- `(1 ⊗ α)(1 ⊗ y) = 1 ⊗ α(y)`. -/
-theorem amplifySchwarzMap_amplifyEquiv (α : SchwarzMap N M) (y : N) :
+lemma amplifySchwarzMap_amplifyEquiv (α : SchwarzMap N M) (y : N) :
     amplifySchwarzMap H₁ α (amplifyEquiv H₁ N y) = amplifyEquiv H₁ M (α y) := by
   change amplifyEquiv H₁ M (α ((amplifyEquiv H₁ N).symm (amplifyEquiv H₁ N y))) = _
   rw [StarAlgEquiv.symm_apply_apply]
 
 /-- `1 ⊗ α` is unital when `α` is. -/
-theorem amplifySchwarzMap_one {α : SchwarzMap N M} (hα : α 1 = 1) :
+lemma amplifySchwarzMap_one {α : SchwarzMap N M} (hα : α 1 = 1) :
     amplifySchwarzMap H₁ α 1 = 1 := by
   rw [← amplifyEquiv_one, amplifySchwarzMap_amplifyEquiv, hα, amplifyEquiv_one]
 

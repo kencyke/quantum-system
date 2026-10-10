@@ -87,7 +87,7 @@ variable {A B : Type*} [AddCommGroup A] [Module ℂ A] [Module.Finite ℂ A] [Mo
 omit [Module.Finite ℂ A] [Module.Finite ℂ B] [Module.Free ℂ B] in
 /-- **Commutant of `End A ⊗ 1`, algebra form.** An element of `End ℂ A ⊗ End ℂ B` that commutes
 with every `includeLeft f = f ⊗ 1` is of the form `includeRight g = 1 ⊗ g`. -/
-theorem exists_includeRight_of_commute_includeLeft
+lemma exists_includeRight_of_commute_includeLeft
     (S : Module.End ℂ A ⊗[ℂ] Module.End ℂ B)
     (hS : ∀ f : Module.End ℂ A,
       (Algebra.TensorProduct.includeLeft (R := ℂ) (S := ℂ) (A := Module.End ℂ A)

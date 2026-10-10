@@ -178,7 +178,7 @@ lemma im_nonneg_of_im_mem_Icc {f : ℂ → ℂ} {a b : ℝ} {z : ℂ}
 continuous on its closure, which is real on both boundary lines `im z = a` and `im z = b`, is
 constant on the closed strip `im ⁻¹' [a, b]`: it agrees there with its value at any point `w` of
 the closed strip. -/
-theorem eqOn_const_of_im_eq_zero_on_boundary {f : ℂ → ℂ} {a b : ℝ} {w : ℂ} (hab : a < b)
+lemma eqOn_const_of_im_eq_zero_on_boundary {f : ℂ → ℂ} {a b : ℝ} {w : ℂ} (hab : a < b)
     (hd : DiffContOnCl ℂ f (im ⁻¹' Ioo a b)) (hB : BddAbove ((norm ∘ f) '' (im ⁻¹' Icc a b)))
     (ha : ∀ z : ℂ, z.im = a → (f z).im = 0) (hb : ∀ z : ℂ, z.im = b → (f z).im = 0)
     (hw : w ∈ im ⁻¹' Icc a b) : EqOn f (fun _ ↦ f w) (im ⁻¹' Icc a b) := by

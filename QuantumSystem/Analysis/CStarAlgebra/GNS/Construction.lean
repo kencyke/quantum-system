@@ -164,7 +164,7 @@ lemma gnsCStarRep_π_eq_smul_one_of_map_mul (hω : ∀ a b, ω (a * b) = ω a * 
 /-! ### Faithful states -/
 
 /-- A state is faithful iff the canonical map `a ↦ [a]` into `𝓗[ω]` is injective. -/
-theorem isFaithful_iff_injective_gnsMk :
+lemma isFaithful_iff_injective_gnsMk :
     ω.IsFaithful ↔ Function.Injective (PositiveLinearMap.ofClass ω).gnsMk := by
   rw [injective_iff_map_eq_zero]
   simp only [gnsMk_eq_zero_iff]
@@ -172,7 +172,7 @@ theorem isFaithful_iff_injective_gnsMk :
 
 /-- A state is faithful iff the cyclic vector separates the algebra, i.e. the orbit map
 `a ↦ π[ω] a ξ[ω]` is injective. -/
-theorem isFaithful_iff_separating :
+lemma isFaithful_iff_separating :
     ω.IsFaithful ↔ Function.Injective ((PositiveLinearMap.ofClass ω).gnsCStarRep.orbit ξ[ω]) := by
   rw [ω.isFaithful_iff_injective_gnsMk]
   exact Iff.of_eq (congrArg Function.Injective (funext (gnsRep_apply_gnsVector ω)).symm)

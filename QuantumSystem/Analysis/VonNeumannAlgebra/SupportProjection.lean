@@ -151,7 +151,7 @@ lemma supportProj_commutant :
   simp only [supportProj, commutant_commutant]
 
 /-- The support projection `s(ξ)` lies in `M`: its range `[M′ ξ]` is invariant under `M′`. -/
-theorem supportProj_mem : M.supportProj ξ ∈ M := by
+lemma supportProj_mem : M.supportProj ξ ∈ M := by
   rw [IsStarProjection.mem_iff (M.isStarProjection_supportProj ξ)]
   intro y hy
   rw [supportProj, Submodule.range_starProjection,
@@ -160,14 +160,14 @@ theorem supportProj_mem : M.supportProj ξ ∈ M := by
 
 /-- `s(ξ) ξ = ξ`. -/
 @[simp]
-theorem supportProj_apply_self : M.supportProj ξ ξ = ξ :=
+lemma supportProj_apply_self : M.supportProj ξ ξ = ξ :=
   Submodule.starProjection_eq_self_iff.mpr (self_mem_cyclicSubspace M′ ξ)
 
 variable {M ξ}
 
 /-- For `x ∈ M`, `x s(ξ) = 0 ↔ x ξ = 0`: `x` annihilates `[M′ ξ]` as soon as it annihilates `ξ`,
 since it commutes with `M′`. -/
-theorem mul_supportProj_eq_zero_iff (hx : x ∈ M) : x * M.supportProj ξ = 0 ↔ x ξ = 0 := by
+lemma mul_supportProj_eq_zero_iff (hx : x ∈ M) : x * M.supportProj ξ = 0 ↔ x ξ = 0 := by
   refine ⟨fun h => by simpa using congr($h ξ), fun h => ?_⟩
   have hK : (cyclicSubspace M′ ξ : Set H) ⊆ {v | x v = 0} :=
     cyclicSubspace_subset (isClosed_eq x.continuous continuous_const) fun y hy => by
@@ -178,13 +178,13 @@ theorem mul_supportProj_eq_zero_iff (hx : x ∈ M) : x * M.supportProj ξ = 0 �
 
 /-- For `x ∈ M`, `s(ξ) x = 0 ↔ x⋆ ξ = 0`: the adjoint form of
 `VonNeumannAlgebra.mul_supportProj_eq_zero_iff`. -/
-theorem supportProj_mul_eq_zero_iff (hx : x ∈ M) : M.supportProj ξ * x = 0 ↔ star x ξ = 0 := by
+lemma supportProj_mul_eq_zero_iff (hx : x ∈ M) : M.supportProj ξ * x = 0 ↔ star x ξ = 0 := by
   rw [← mul_supportProj_eq_zero_iff (star_mem hx), ← star_eq_zero, star_mul,
     (M.isStarProjection_supportProj ξ).isSelfAdjoint.star_eq]
 
 /-- The support projection is the smallest projection of `M` fixing `ξ`: for a star projection
 `e ∈ M`, `s(ξ) ≤ e ↔ e ξ = ξ`. -/
-theorem supportProj_le_iff {e : H →L[ℂ] H} (he : IsStarProjection e) (heM : e ∈ M) :
+lemma supportProj_le_iff {e : H →L[ℂ] H} (he : IsStarProjection e) (heM : e ∈ M) :
     M.supportProj ξ ≤ e ↔ e ξ = ξ := by
   obtain ⟨_, he'⟩ := isStarProjection_iff_eq_starProjection_range.mp he
   have hfix : ∀ {v}, v ∈ e.range ↔ e v = v := fun {v} =>
@@ -213,7 +213,7 @@ private lemma apply_eq_self_iff_inner_eq_zero {e : H →L[ℂ] H} (he : IsStarPr
 
 /-- The support projection is the support of the vector functional `ω_ξ = ⟪ξ, (·) ξ⟫`: for a star
 projection `e ∈ M`, `s(ξ) ≤ e ↔ ω_ξ (1 - e) = 0`. -/
-theorem supportProj_le_iff_inner_eq_zero {e : H →L[ℂ] H} (he : IsStarProjection e)
+lemma supportProj_le_iff_inner_eq_zero {e : H →L[ℂ] H} (he : IsStarProjection e)
     (heM : e ∈ M) : M.supportProj ξ ≤ e ↔ ⟪ξ, (1 - e) ξ⟫_ℂ = 0 := by
   rw [supportProj_le_iff he heM, apply_eq_self_iff_inner_eq_zero he]
 
@@ -231,7 +231,7 @@ theorem supportProj_eq_of_inner_eq {η : H} (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ
 
 /-- A vector `v′ ξ` with `v′ ∈ M′` and `v′⋆ v′ ξ = ξ` has the same vector functional on `M` as
 `ξ`: `⟪v′ ξ, x v′ ξ⟫ = ⟪ξ, x ξ⟫`. -/
-theorem inner_apply_eq_of_mem_commutant {w : H →L[ℂ] H} (hw : w ∈ M′)
+lemma inner_apply_eq_of_mem_commutant {w : H →L[ℂ] H} (hw : w ∈ M′)
     (hwξ : star w (w ξ) = ξ) (hx : x ∈ M) : ⟪w ξ, x (w ξ)⟫_ℂ = ⟪ξ, x ξ⟫_ℂ := by
   rw [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.star_eq_adjoint,
     ← mul_apply_eq_comp x w, ← mul_apply_eq_comp (star w), ← mul_assoc,
@@ -240,20 +240,20 @@ theorem inner_apply_eq_of_mem_commutant {w : H →L[ℂ] H} (hw : w ∈ M′)
 
 /-- For `v′ ∈ M′` with `v′⋆ v′ ξ = ξ` (for instance `ξ` in the initial space of a partial
 isometry `v′`), `s(v′ ξ) = s(ξ)`. -/
-theorem supportProj_apply_of_mem_commutant {w : H →L[ℂ] H} (hw : w ∈ M′)
+lemma supportProj_apply_of_mem_commutant {w : H →L[ℂ] H} (hw : w ∈ M′)
     (hwξ : star w (w ξ) = ξ) : M.supportProj (w ξ) = M.supportProj ξ :=
   supportProj_eq_of_inner_eq fun _ hx => inner_apply_eq_of_mem_commutant hw hwξ hx
 
 variable (M) in
 /-- `s(0) = 0`. -/
 @[simp]
-theorem supportProj_zero : M.supportProj 0 = 0 :=
+lemma supportProj_zero : M.supportProj 0 = 0 :=
   le_antisymm ((supportProj_le_iff (IsStarProjection.zero _) (zero_mem M)).mpr (map_zero _))
     (ContinuousLinearMap.nonneg_iff_isPositive.mpr
       (.of_isStarProjection (M.isStarProjection_supportProj 0)))
 
 /-- `s(c ξ) = s(ξ)` for `c ≠ 0`. -/
-theorem supportProj_smul {c : ℂ} (hc : c ≠ 0) : M.supportProj (c • ξ) = M.supportProj ξ := by
+lemma supportProj_smul {c : ℂ} (hc : c ≠ 0) : M.supportProj (c • ξ) = M.supportProj ξ := by
   refine le_antisymm ?_ ?_
   · rw [supportProj_le_iff (M.isStarProjection_supportProj ξ) (M.supportProj_mem ξ), map_smul,
       supportProj_apply_self]
@@ -263,7 +263,7 @@ theorem supportProj_smul {c : ℂ} (hc : c ≠ 0) : M.supportProj (c • ξ) = M
     exact smul_right_injective H hc this
 
 /-- `s(ξ) = 1` iff `ξ` is cyclic for the commutant, `[M′ ξ] = H`. -/
-theorem supportProj_eq_one_iff :
+lemma supportProj_eq_one_iff :
     M.supportProj ξ = 1 ↔ InnerProductSpace.IsCyclicVector M′ ξ := by
   rw [supportProj, ← Submodule.starProjection_top', Submodule.starProjection_inj,
     ← ClosedSubmodule.toSubmodule_top, ClosedSubmodule.toSubmodule_injective.eq_iff]
@@ -272,7 +272,7 @@ theorem supportProj_eq_one_iff :
 variable (M) in
 /-- The support `s(ξ) ∈ M` commutes with the support `s′(η) ∈ M′` of any vector `η` in the
 commutant. -/
-theorem commute_supportProj_supportProj_commutant (ξ η : H) :
+lemma commute_supportProj_supportProj_commutant (ξ η : H) :
     Commute (M.supportProj ξ) (M′.supportProj η) :=
   mem_commutant_iff.mp (M′.supportProj_mem η) _ (M.supportProj_mem ξ)
 
@@ -395,7 +395,7 @@ theorem exists_partialIsometry_mem_commutant_of_inner_eq (h : ∀ x ∈ M, ⟪ξ
 
 /-- Vectors with the same vector functional on `M` have Murray–von Neumann equivalent supports in
 the commutant: `s′(ξ) ∼ s′(η)` in `M′`. -/
-theorem supportProj_commutant_mvNEquiv_of_inner_eq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
+lemma supportProj_commutant_mvNEquiv_of_inner_eq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
     M′.supportProj ξ ∼[M′] M′.supportProj η :=
   let ⟨v, hv, hpi, _, h₁, h₂⟩ := exists_partialIsometry_mem_commutant_of_inner_eq h
   ⟨v, hv, hpi, h₁, h₂⟩

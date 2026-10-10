@@ -142,7 +142,7 @@ lemma rankOne_mem_finiteRankOperators (x y : H) :
 Together with `InnerProductSpace.actsNondegenerately_finiteRankOperators` (proved in
 `QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE`) this exhibits a `*`-subalgebra to which the
 non-unital bicommutant theorem applies and the unital one does not. -/
-theorem one_notMem_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma one_notMem_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (1 : H →L[ℂ] H) ∉ finiteRankOperators (H := H) := by
   intro hmem
   refine h ?_

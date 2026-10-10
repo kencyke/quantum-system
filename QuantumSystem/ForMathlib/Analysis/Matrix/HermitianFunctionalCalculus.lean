@@ -306,7 +306,7 @@ open scoped Kronecker MatrixOrder
 /-- **Functional calculus of a Kronecker product.** For Hermitian `A`, `B` and functions with
 `f (x y) = g₁ x h₁ y + g₂ x h₂ y` for `x ∈ spectrum ℝ A`, `y ∈ spectrum ℝ B`,
 `f(A ⊗ B) = g₁(A) ⊗ h₁(B) + g₂(A) ⊗ h₂(B)`. -/
-theorem cfc_kronecker_eq_add {A : Matrix m m ℂ} {B : Matrix n n ℂ}
+lemma cfc_kronecker_eq_add {A : Matrix m m ℂ} {B : Matrix n n ℂ}
     (hA : A.IsHermitian) (hB : B.IsHermitian) {f g₁ h₁ g₂ h₂ : ℝ → ℝ}
     (hf : ∀ x ∈ spectrum ℝ A, ∀ y ∈ spectrum ℝ B, f (x * y) = g₁ x * h₁ y + g₂ x * h₂ y) :
     cfc f (A ⊗ₖ B) = cfc g₁ A ⊗ₖ cfc h₁ B + cfc g₂ A ⊗ₖ cfc h₂ B := by
@@ -346,7 +346,7 @@ theorem cfc_kronecker_eq_add {A : Matrix m m ℂ} {B : Matrix n n ℂ}
 
 /-- For Hermitian `A`, `B` and `f` multiplicative on their spectra,
 `f(A ⊗ B) = f(A) ⊗ f(B)`. -/
-theorem cfc_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
+lemma cfc_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
     (hA : A.IsHermitian) (hB : B.IsHermitian) {f : ℝ → ℝ}
     (hf : ∀ x ∈ spectrum ℝ A, ∀ y ∈ spectrum ℝ B, f (x * y) = f x * f y) :
     cfc f (A ⊗ₖ B) = cfc f A ⊗ₖ cfc f B := by
@@ -361,7 +361,7 @@ private lemma eq_one_of_mem_spectrum_one [Fintype n] {y : ℝ}
   · rwa [spectrum.one_eq, Set.mem_singleton_iff] at hy
 
 /-- `f(A ⊗ 1) = f(A) ⊗ 1` for Hermitian `A` and any `f : ℝ → ℝ`. -/
-theorem cfc_kronecker_one {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) :
+lemma cfc_kronecker_one {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ → ℝ) :
     cfc f (A ⊗ₖ (1 : Matrix n n ℂ)) = cfc f A ⊗ₖ 1 := by
   rw [cfc_kronecker_eq_add hA isHermitian_one (g₁ := f) (h₁ := fun _ => 1) (g₂ := fun _ => 0)
     (h₂ := fun _ => 0) fun x _ y hy => by simp [eq_one_of_mem_spectrum_one hy],
@@ -369,7 +369,7 @@ theorem cfc_kronecker_one {A : Matrix m m ℂ} (hA : A.IsHermitian) (f : ℝ →
     zero_kronecker, add_zero]
 
 /-- `f(1 ⊗ B) = 1 ⊗ f(B)` for Hermitian `B` and any `f : ℝ → ℝ`. -/
-theorem cfc_one_kronecker {B : Matrix n n ℂ} (hB : B.IsHermitian) (f : ℝ → ℝ) :
+lemma cfc_one_kronecker {B : Matrix n n ℂ} (hB : B.IsHermitian) (f : ℝ → ℝ) :
     cfc f ((1 : Matrix m m ℂ) ⊗ₖ B) = 1 ⊗ₖ cfc f B := by
   rw [cfc_kronecker_eq_add isHermitian_one hB (g₁ := fun _ => 1) (h₁ := f) (g₂ := fun _ => 0)
     (h₂ := fun _ => 0) fun x hx _ _ => by simp [eq_one_of_mem_spectrum_one hx],
@@ -378,7 +378,7 @@ theorem cfc_one_kronecker {B : Matrix n n ℂ} (hB : B.IsHermitian) (f : ℝ →
 
 /-- Real powers distribute over Kronecker products of positive semidefinite matrices:
 `(A ⊗ B)ᵖ = Aᵖ ⊗ Bᵖ` for every `p : ℝ` (including `p ≤ 0`, with Mathlib's `0 ^ p` convention). -/
-theorem PosSemidef.rpow_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
+lemma PosSemidef.rpow_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
     (hA : A.PosSemidef) (hB : B.PosSemidef) (p : ℝ) :
     (A ⊗ₖ B) ^ p = (A ^ p) ⊗ₖ (B ^ p) := by
   rw [CFC.rpow_eq_cfc_real (hA.kronecker hB).nonneg, CFC.rpow_eq_cfc_real hA.nonneg,
@@ -389,7 +389,7 @@ theorem PosSemidef.rpow_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
 /-- **Logarithm of a Kronecker product.** For Hermitian `A`, `B`,
 `log(A ⊗ B) = log A ⊗ P_B + P_A ⊗ log B`, where `P_X = cfc (x ↦ if x = 0 then 0 else 1) X` is
 the support projection. With Mathlib's `Real.log 0 = 0`, no invertibility is needed. -/
-theorem cfc_log_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
+lemma cfc_log_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
     (hA : A.IsHermitian) (hB : B.IsHermitian) :
     cfc Real.log (A ⊗ₖ B) =
       cfc Real.log A ⊗ₖ cfc (fun y : ℝ => if y = 0 then (0 : ℝ) else 1) B +
@@ -402,7 +402,7 @@ theorem cfc_log_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
   simp [hx, hy, Real.log_mul hx hy]
 
 /-- For positive definite `A`, `B`, `log(A ⊗ B) = log A ⊗ 1 + 1 ⊗ log B`. -/
-theorem PosDef.cfc_log_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
+lemma PosDef.cfc_log_kronecker {A : Matrix m m ℂ} {B : Matrix n n ℂ}
     (hA : A.PosDef) (hB : B.PosDef) :
     cfc Real.log (A ⊗ₖ B) = cfc Real.log A ⊗ₖ 1 + 1 ⊗ₖ cfc Real.log B := by
   rw [cfc_kronecker_eq_add hA.isHermitian hB.isHermitian (g₁ := Real.log) (h₁ := fun _ => 1)

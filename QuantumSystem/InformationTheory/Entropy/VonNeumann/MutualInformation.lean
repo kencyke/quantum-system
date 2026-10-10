@@ -77,7 +77,7 @@ variable {G G' : Type*} [FunLike G (H →L[ℂ] H) ℂ] [LinearMapClass G ℂ (H
 /-- The product `f ⊗ g` of functionals on `B(H)` and `B(K)`, read on `B(H ⊗ K)` through
 `B(H) ⊗ B(K) ≅ B(H ⊗ K)`, is `Z ↦ tr((ρ_f ⊗ ρ_g) Z)`: both are linear and agree on the elementary
 tensors `A ⊗ B` (`TensorProduct.ext_mapL`), where they are `f(A) g(B)`. -/
-theorem mul'_map_mapLEquiv_symm_apply (f : G) (g : G') (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
+lemma mul'_map_mapLEquiv_symm_apply (f : G) (g : G') (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
     LinearMap.mul' ℂ ℂ (TensorProduct.map (f : (H →L[ℂ] H) →ₗ[ℂ] ℂ) (g : (K →L[ℂ] K) →ₗ[ℂ] ℂ)
       ((mapLEquiv ℂ H H K K).symm Z)) =
       Tr (mapL (density f) (density g) ∘L Z) := by
@@ -115,17 +115,17 @@ noncomputable def tensorProduct (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (φ : (K 
 variable (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (φ : (K →L[ℂ] K) →ₚ[ℂ] ℂ)
 
 /-- The product functional is `Z ↦ tr((ρ_ψ ⊗ ρ_φ) Z)`. -/
-theorem tensorProduct_apply (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
+lemma tensorProduct_apply (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
     ψ.tensorProduct φ Z = Tr (mapL (density ψ) (density φ) ∘L Z) :=
   mul'_map_mapLEquiv_symm_apply ψ φ Z
 
 /-- **The product functional on elementary tensors**: `(ψ ⊗ φ)(A ⊗ B) = ψ(A) φ(B)`. -/
-@[simp] theorem tensorProduct_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
+@[simp] lemma tensorProduct_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
     ψ.tensorProduct φ (mapL A B) = ψ A * φ B := by
   rw [tensorProduct_apply, ← mapL_comp, trace_mapL, trace_density_comp, trace_density_comp]
 
 /-- The density of the product functional is the tensor product of the densities. -/
-theorem density_tensorProduct : density (ψ.tensorProduct φ) = mapL (density ψ) (density φ) := by
+lemma density_tensorProduct : density (ψ.tensorProduct φ) = mapL (density ψ) (density φ) := by
   rw [eq_comm, eq_density_iff]
   exact fun Z => (tensorProduct_apply ψ φ Z).symm
 
@@ -144,18 +144,18 @@ noncomputable def tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (
 
 /-- The positive functional underlying a product state is the product of the underlying
 positive functionals. -/
-@[simp] theorem ofClass_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
+@[simp] lemma ofClass_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
     PositiveLinearMap.ofClass (ω₁.tensorProduct ω₂) =
       (PositiveLinearMap.ofClass ω₁).tensorProduct (PositiveLinearMap.ofClass ω₂) :=
   rfl
 
 /-- **The product state on elementary tensors**: `(ω₁ ⊗ ω₂)(A ⊗ B) = ω₁(A) ω₂(B)`. -/
-@[simp] theorem tensorProduct_mapL (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K))
+@[simp] lemma tensorProduct_mapL (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K))
     (A : H →L[ℂ] H) (B : K →L[ℂ] K) : ω₁.tensorProduct ω₂ (mapL A B) = ω₁ A * ω₂ B :=
   PositiveLinearMap.tensorProduct_mapL (PositiveLinearMap.ofClass ω₁) (PositiveLinearMap.ofClass ω₂) A B
 
 /-- The density of the product state is the tensor product of the densities. -/
-theorem density_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
+lemma density_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
     density (ω₁.tensorProduct ω₂) = mapL (density ω₁) (density ω₂) := by
   have h₁ : density (PositiveLinearMap.ofClass ω₁) = density ω₁ :=
     density_eq_density_iff.mpr fun _ => rfl
@@ -185,21 +185,21 @@ noncomputable def traceLeft : State (K →L[ℂ] K) :=
   ω.comp (lTensorStarAlgHom ℂ K H) (map_one _)
 
 /-- `traceRight` evaluates `ω` on the ampliation `A ↦ A ⊗ 1`. -/
-@[simp] theorem traceRight_apply (A : H →L[ℂ] H) : ω.traceRight A = ω (A.rTensor K) :=
+@[simp] lemma traceRight_apply (A : H →L[ℂ] H) : ω.traceRight A = ω (A.rTensor K) :=
   rfl
 
 /-- `traceLeft` evaluates `ω` on the ampliation `B ↦ 1 ⊗ B`. -/
-@[simp] theorem traceLeft_apply (B : K →L[ℂ] K) : ω.traceLeft B = ω (B.lTensor H) :=
+@[simp] lemma traceLeft_apply (B : K →L[ℂ] K) : ω.traceLeft B = ω (B.lTensor H) :=
   rfl
 
 /-- The density of the marginal `ω_A` is the partial trace `tr_K ρ_ω`. -/
-theorem density_traceRight :
+lemma density_traceRight :
     density ω.traceRight = ContinuousLinearMap.traceRight H K (density ω) :=
   density_eq_traceDual (rTensorStarAlgHom ℂ H K) fun _ => rfl
 
 /-- The density of the marginal `ω_B` is the partial trace `tr₁(ρ_ω)` of `ρ_ω` over the first
 factor. -/
-theorem density_traceLeft :
+lemma density_traceLeft :
     density ω.traceLeft = ContinuousLinearMap.traceLeft H K (density ω) :=
   density_eq_traceDual (lTensorStarAlgHom ℂ K H) fun _ => rfl
 

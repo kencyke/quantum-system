@@ -38,7 +38,7 @@ variable {I J K R : Type*}
 
 /-- Flattening a block matrix commutes with the conjugate transpose: the conjugate transpose of a
 block matrix transposes the blocks and takes the conjugate transpose of each block. -/
-theorem comp_conjTranspose [Star R] (M : Matrix I J (Matrix K K R)) :
+lemma comp_conjTranspose [Star R] (M : Matrix I J (Matrix K K R)) :
     comp J I K K R Mᴴ = (comp I J K K R M)ᴴ := by
   ext ⟨i, a⟩ ⟨j, b⟩
   simp [conjTranspose_apply, star_apply]
@@ -53,12 +53,12 @@ def compStarAlgEquiv (S : Type*) [Fintype I] [Fintype J] [NonUnitalNonAssocSemir
   map_star' := comp_conjTranspose
 
 @[simp]
-theorem compStarAlgEquiv_apply (S : Type*) [Fintype I] [Fintype J] [NonUnitalNonAssocSemiring R]
+lemma compStarAlgEquiv_apply (S : Type*) [Fintype I] [Fintype J] [NonUnitalNonAssocSemiring R]
     [StarRing R] [SMul S R] (M : Matrix I I (Matrix J J R)) :
     compStarAlgEquiv I J R S M = comp I I J J R M := rfl
 
 @[simp]
-theorem compStarAlgEquiv_symm_apply (S : Type*) [Fintype I] [Fintype J]
+lemma compStarAlgEquiv_symm_apply (S : Type*) [Fintype I] [Fintype J]
     [NonUnitalNonAssocSemiring R] [StarRing R] [SMul S R] (M : Matrix (I × J) (I × J) R) :
     (compStarAlgEquiv I J R S).symm M = (comp I I J J R).symm M := rfl
 
@@ -76,7 +76,7 @@ def compStarAlgEquiv (k n R : Type*) [Fintype k] [Fintype n] [DecidableEq n] [Se
   ofMatrixStarAlgEquiv.symm.trans (Matrix.compStarAlgEquiv k n R ℂ)
 
 @[simp]
-theorem compStarAlgEquiv_apply {k n R : Type*} [Fintype k] [Fintype n] [DecidableEq n] [Semiring R]
+lemma compStarAlgEquiv_apply {k n R : Type*} [Fintype k] [Fintype n] [DecidableEq n] [Semiring R]
     [StarRing R] [SMul ℂ R] (M : CStarMatrix k k (Matrix n n R)) :
     compStarAlgEquiv k n R M = Matrix.comp k k n n R M := rfl
 
@@ -86,7 +86,7 @@ variable {k n : Type*} [Fintype k] [Fintype n] [DecidableEq n]
 `CStarMatrix k k (Matrix n n ℂ)` iff its flattening is positive semidefinite. Both orders are
 the star orders (`StarOrderedRing`: the nonnegative elements form the additive submonoid generated
 by the `star x * x`), so the star algebra isomorphism `CStarMatrix.compStarAlgEquiv` identifies them. -/
-theorem nonneg_iff_posSemidef_comp {M : CStarMatrix k k (Matrix n n ℂ)} :
+lemma nonneg_iff_posSemidef_comp {M : CStarMatrix k k (Matrix n n ℂ)} :
     0 ≤ M ↔ (Matrix.comp k k n n ℂ M).PosSemidef := by
   rw [← Matrix.nonneg_iff_posSemidef, ← map_le_map_iff (compStarAlgEquiv k n ℂ), map_zero]
   rfl

@@ -100,7 +100,7 @@ open scoped ComplexOrder in
 /-- On a complex inner product space an operator is nonnegative (positive in the Loewner order)
 iff its quadratic form is nonnegative, `0 ≤ ⟪x, T x⟫` in the order of `ℂ`; self-adjointness comes
 for free, since the quadratic form is real (`ContinuousLinearMap.isPositive_iff_complex`). -/
-theorem ContinuousLinearMap.nonneg_iff_inner_nonneg {T : E →L[ℂ] E} :
+lemma ContinuousLinearMap.nonneg_iff_inner_nonneg {T : E →L[ℂ] E} :
     0 ≤ T ↔ ∀ x, 0 ≤ ⟪x, T x⟫_ℂ := by
   refine ⟨fun h x => (nonneg_iff_isPositive.1 h).inner_nonneg_right x, fun h => ?_⟩
   rw [nonneg_iff_isPositive, isPositive_iff_complex]

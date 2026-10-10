@@ -932,7 +932,7 @@ private lemma mem_graph_sqrt_modular_map_iff {u v : H₁} :
     (sqrt_modular_compNat_eq V hV) u v).symm
 
 /-- **Covariance of the modular conjugation**: if `V K₁ = K₂`, then `J_{K₂} = V J_{K₁} V⁻¹`. -/
-theorem modularConj_map (x : H₁) : J[K₂] (V x) = V (J[K₁] x) := by
+lemma modularConj_map (x : H₁) : J[K₂] (V x) = V (J[K₁] x) := by
   -- `J_{K₂} V J_{K₁} = V` on the dense domain of `Δ_{K₁}^{1/2}`, hence everywhere
   have key : ∀ x, J[K₂] (V (J[K₁] x)) = V x := by
     have hclosed : IsClosed {x : H₁ | J[K₂] (V (J[K₁] x)) = V x} :=
@@ -977,7 +977,7 @@ variable {H₁ H₂ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H�
 
 /-- **Covariance of the modular group under unitaries**: if a unitary `V` maps `K₁` onto `K₂`, then
 `V Δ_{K₁}^{it} V* = Δ_{K₂}^{it}`. -/
-theorem modularGroup_map (V : H₁ ≃ₗᵢ[ℂ] H₂)
+lemma modularGroup_map (V : H₁ ≃ₗᵢ[ℂ] H₂)
     (hV : ∀ ξ, V ξ ∈ K₂ ↔ ξ ∈ K₁) (t : ℝ) (x : H₁) :
     Δ[K₂]^{i t} (V x) = V (Δ[K₁]^{i t} x) := by
   simpa using modularGroup_map_aux V hV t x

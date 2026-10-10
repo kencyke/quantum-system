@@ -56,7 +56,7 @@ namespace MeasureTheory.Linfty
 
 /-- **Scalar spectral measures of multiplication operators**: for `f ∈ L∞`, the scalar spectral
 measure of `M_f` at `u`, the diagonal measure of its projection-valued measure, is `f_*(|u|² μ)`. -/
-theorem measure_pvm_mulL2 (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) :
+lemma measure_pvm_mulL2 (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) :
     (isStarNormal_mulL2 f).pvm.measure u = (μ.withDensity fun x => ‖u x‖ₑ ^ 2).map f := by
   have hfm : Measurable (⇑f) := (Lp.stronglyMeasurable f).measurable
   refine ((isStarNormal_mulL2 f).eq_measure_pvm_of_integral _ fun g => ?_).symm
@@ -137,7 +137,7 @@ lemma coeFn_mulPMap (u : (mulPMap (μ := μ) φ).domain) :
   MemLp.coeFn_toLp (show MemLp (fun x => φ x * (u : Lp ℂ 2 μ) x) 2 μ from u.2)
 
 /-- The graph of `M_φ`: `(u, v) ∈ graph M_φ ↔ φ u ∈ L² ∧ v = φ u`. -/
-theorem mem_graph_mulPMap {u v : Lp ℂ 2 μ} :
+lemma mem_graph_mulPMap {u v : Lp ℂ 2 μ} :
     (u, v) ∈ (mulPMap φ).graph ↔
       MemLp (fun x => φ x * u x) 2 μ ∧ ⇑v =ᵐ[μ] fun x => φ x * u x := by
   refine ⟨fun huv => ?_, fun ⟨hu, hv⟩ => ?_⟩
@@ -147,7 +147,7 @@ theorem mem_graph_mulPMap {u v : Lp ℂ 2 μ} :
     exact (coeFn_mulPMap ⟨u, hu⟩).trans hv.symm
 
 /-- **`M_φ̄` is a formal adjoint of `M_φ`**: `⟪φ u, w⟫ = ⟪u, φ̄ w⟫` on the domains. -/
-theorem isFormalAdjoint_mulPMap :
+lemma isFormalAdjoint_mulPMap :
     (mulPMap (μ := μ) φ).IsFormalAdjoint (mulPMap fun x => conj (φ x)) := fun u w => by
   rw [MeasureTheory.L2.inner_def, MeasureTheory.L2.inner_def]
   refine integral_congr_ae ?_
@@ -191,7 +191,7 @@ theorem isSelfAdjoint_mulPMap (hh : Measurable h) :
     ring
 
 /-- **Resolvent of a multiplication operator**: `(i - M_h)⁻¹ = M_{(i - h)⁻¹}`. -/
-theorem resolvent_I_mulPMap (hh : Measurable h) :
+lemma resolvent_I_mulPMap (hh : Measurable h) :
     (mulPMap (μ := μ) fun x => (h x : ℂ)).resolvent I = mulL2 (resolventFun hh) := by
   set Ψ := resolventFun (μ := μ) hh
   have hΨ : ⇑Ψ =ᵐ[μ] fun x => (I - (h x : ℂ))⁻¹ := coeFn_resolventFun (μ := μ) hh

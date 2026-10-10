@@ -85,7 +85,7 @@ noncomputable def pvm (hA : IsSelfAdjoint A) : ProjectionValuedMeasure ℝ E :=
 
 /-- The scalar spectral measure `μ_u = ⟪E_A(·) u, u⟫`, the diagonal measure of `E_A` at `u`, is
 the image of the scalar spectral measure of `(i - A)⁻¹` under `ζ ↦ re (i - ζ⁻¹)`. -/
-theorem measure_pvm_eq_map (hA : IsSelfAdjoint A) (u : E) :
+lemma measure_pvm_eq_map (hA : IsSelfAdjoint A) (u : E) :
     hA.pvm.measure u =
       ((hA.isStarNormal_resolvent I).pvm.measure u).map fun ζ => re (I - ζ⁻¹) := by
   rw [pvm, ProjectionValuedMeasure.measure_map]
@@ -95,7 +95,7 @@ variable (hA : IsSelfAdjoint A) (w : ℂ) (u : E)
 variable {w} in
 /-- `ν_u^w` has no atom at `0`: for `w` in the resolvent set, `(w - A)⁻¹` has dense range
 `dom A`. -/
-theorem measure_pvm_resolvent_singleton_zero (hw : w ∈ A.resolventSet) :
+lemma measure_pvm_resolvent_singleton_zero (hw : w ∈ A.resolventSet) :
     (hA.isStarNormal_resolvent w).pvm.measure u {0} = 0 := by
   refine (hA.isStarNormal_resolvent w).measure_pvm_singleton_eq_zero_of_mem_closure_range ?_
   rw [map_zero, sub_zero]
@@ -105,7 +105,7 @@ theorem measure_pvm_resolvent_singleton_zero (hw : w ∈ A.resolventSet) :
 variable {w} in
 /-- The projection-valued measure of `(w - A)⁻¹` vanishes on `{0}`, for `w` in the resolvent set:
 all its diagonal measures `ν_u^w` do (`IsSelfAdjoint.measure_pvm_resolvent_singleton_zero`). -/
-theorem pvm_resolvent_singleton_zero (hw : w ∈ A.resolventSet) :
+lemma pvm_resolvent_singleton_zero (hw : w ∈ A.resolventSet) :
     (hA.isStarNormal_resolvent w).pvm {0} = 0 :=
   ((hA.isStarNormal_resolvent w).pvm.apply_eq_zero_iff (MeasurableSet.singleton 0)).mpr fun v =>
     hA.measure_pvm_resolvent_singleton_zero v hw
@@ -123,7 +123,7 @@ variable {w} in
 /-- **Change of base point.** For `v`, `w` in the resolvent set, `ν_u^w` is the image of `ν_u^v`
 under `ζ ↦ ζ / (1 - (v - w) ζ)`, the function sending `(v - A)⁻¹` to `(w - A)⁻¹`
 (`IsSelfAdjoint.resolvent_eq_cfc`). -/
-theorem measure_pvm_resolvent_eq_map {v : ℂ} (hv : v ∈ A.resolventSet)
+lemma measure_pvm_resolvent_eq_map {v : ℂ} (hv : v ∈ A.resolventSet)
     (hw : w ∈ A.resolventSet) :
     (hA.isStarNormal_resolvent w).pvm.measure u =
       ((hA.isStarNormal_resolvent v).pvm.measure u).map fun ζ => ζ / (1 - (v - w) * ζ) := by
@@ -140,7 +140,7 @@ variable {w} in
 /-- **Base-point independence.** For every `w` in the resolvent set, the scalar spectral measure
 `μ_u` is the image of `ν_u^w` under `ζ ↦ re (w - ζ⁻¹)`: the construction of `μ_u` does not depend
 on the base point `i` used in `IsSelfAdjoint.pvm`. -/
-theorem measure_pvm_eq_map_measure_pvm_resolvent (hw : w ∈ A.resolventSet) :
+lemma measure_pvm_eq_map_measure_pvm_resolvent (hw : w ∈ A.resolventSet) :
     hA.pvm.measure u =
       ((hA.isStarNormal_resolvent w).pvm.measure u).map fun ζ => re (w - ζ⁻¹) := by
   have hφm : Measurable fun ζ : ℂ => ζ / (1 - (I - w) * ζ) := by fun_prop
@@ -158,7 +158,7 @@ theorem measure_pvm_eq_map_measure_pvm_resolvent (hw : w ∈ A.resolventSet) :
 
 variable {w} in
 /-- The spectral measure `μ_u` recovers `ν_u^w` under `λ ↦ (w - λ)⁻¹`. -/
-theorem map_measure_pvm (hw : w ∈ A.resolventSet) :
+lemma map_measure_pvm (hw : w ∈ A.resolventSet) :
     (hA.pvm.measure u).map (fun t : ℝ => (w - t)⁻¹) =
       (hA.isStarNormal_resolvent w).pvm.measure u := by
   have hψ : Measurable fun t : ℝ => (w - t)⁻¹ := by fun_prop
@@ -187,7 +187,7 @@ private lemma integral_measure_pvm_eq_inner_cfc (hw : w ∈ A.resolventSet) {g :
 omit hA in
 /-- The projection-valued measure transports along equalities of operators, whatever proofs of
 self-adjointness are used to build it. -/
-theorem pvm_congr {B : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B) (h : A = B) :
+lemma pvm_congr {B : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B) (h : A = B) :
     hA.pvm = hB.pvm := by
   subst h
   rfl
@@ -195,7 +195,7 @@ theorem pvm_congr {B : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) (hB : IsSelfAdjo
 variable {w} in
 /-- Integration against the spectral measure `μ_u` is integration against `ν_u^w` after the
 change of variables `λ = re (w - ζ⁻¹)`, for any `w` in the resolvent set. -/
-theorem integral_measure_pvm (hw : w ∈ A.resolventSet) {f : ℝ → ℝ}
+lemma integral_measure_pvm (hw : w ∈ A.resolventSet) {f : ℝ → ℝ}
     (hf : AEStronglyMeasurable f (hA.pvm.measure u)) :
     ∫ t, f t ∂(hA.pvm.measure u) =
       ∫ ζ, f (re (w - ζ⁻¹)) ∂((hA.isStarNormal_resolvent w).pvm.measure u) := by
@@ -218,7 +218,7 @@ private lemma continuousOn_resolvent_fun (hA : IsSelfAdjoint A) {z : ℂ} (hz : 
 
 /-- **Stieltjes representation.** For `z` in the resolvent set of `A`,
 `⟪u, (z - A)⁻¹ u⟫ = ∫ (z - λ)⁻¹ dμ_u(λ)`. -/
-theorem inner_resolvent_eq_integral {z : ℂ} (hz : z ∈ A.resolventSet) :
+lemma inner_resolvent_eq_integral {z : ℂ} (hz : z ∈ A.resolventSet) :
     inner ℂ u (A.resolvent z u) = ∫ t, (z - t)⁻¹ ∂(hA.pvm.measure u) := by
   rw [hA.resolvent_eq_cfc hA.I_mem_resolventSet hz,
     ← hA.integral_measure_pvm_eq_inner_cfc u hA.I_mem_resolventSet
@@ -227,7 +227,7 @@ theorem inner_resolvent_eq_integral {z : ℂ} (hz : z ∈ A.resolventSet) :
 
 variable {u} in
 /-- For `z` in the resolvent set, `λ ↦ (z - λ)⁻¹` is `μ_u`-integrable. -/
-theorem integrable_inv_sub_measure_pvm {z : ℂ} (hz : z ∈ A.resolventSet) :
+lemma integrable_inv_sub_measure_pvm {z : ℂ} (hz : z ∈ A.resolventSet) :
     Integrable (fun t : ℝ => (z - t)⁻¹) (hA.pvm.measure u) := by
   have hψ : Measurable fun t : ℝ => (I - t)⁻¹ := by fun_prop
   have h := (hA.isStarNormal_resolvent I).integrable_measure_pvm u

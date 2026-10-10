@@ -185,7 +185,7 @@ the operator form of `Φ : M_n(ℂ) → M_m(ℂ)`, `Ψ(A') = Φ(A)'` for the ope
 `Ψ*(B') = (Vᴴ (B ⊗ 1) V)'` for all `B` iff `Φ(A) = tr₂(V A Vᴴ)` for all `A`. Both sides pair
 `A` against `B` in the trace: `tr(Ψ(A') ∘ B') = Tr (Φ(A) B)` and
 `tr(A' ∘ Ψ*(B')) = Tr (A Vᴴ (B ⊗ 1) V)`. -/
-theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
+lemma traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A))
     (V : Matrix (m × ι) n ℂ) :
     (∀ B, ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (𝕜 := ℂ) B) =
@@ -206,7 +206,7 @@ theorem traceDual_eq_iff_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] 
 
 /-- If `Φ(A) = tr₂(V A Vᴴ)` for all `A`, then the trace dual of the operator form `Ψ` of `Φ` is
 `Ψ*(B') = (Vᴴ (B ⊗ 1) V)'`. -/
-theorem traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
+lemma traceDual_eq_of_stinespring {ι : Type*} [Fintype ι] [DecidableEq ι] {Φ : F} {Ψ : G}
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A))
     (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = traceRight (V * A * Vᴴ)) (B : Matrix m m ℂ) :
     ContinuousLinearMap.traceDual Ψ (toEuclideanCLM (𝕜 := ℂ) B) =
@@ -296,7 +296,7 @@ variable [DecidableEq n] {F : Type*} [FunLike F (Matrix n n ℂ) (Matrix m m ℂ
 environment `ι` has at least `rank J(Φ)` elements, the dimension attained for completely positive
 maps (`CompletelyPositiveMap.exists_stinespringMatrix`): the Kraus blocks of `V` are Kraus operators
 of `Φ` (`Matrix.rank_choiMatrix_le_card_of_kraus`). -/
-theorem rank_choiMatrix_le_card_of_stinespring {Φ : F} {ι : Type*} [Fintype ι]
+lemma rank_choiMatrix_le_card_of_stinespring {Φ : F} {ι : Type*} [Fintype ι]
     (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = traceRight (V * A * Vᴴ)) :
     (choiMatrix Φ).rank ≤ Fintype.card ι :=
   rank_choiMatrix_le_card_of_kraus (krausBlock V) fun A => by
@@ -304,7 +304,7 @@ theorem rank_choiMatrix_le_card_of_stinespring {Φ : F} {ι : Type*} [Fintype ι
 
 /-- The environment of `Φ(A) = tr₂(V A Vᴴ)` has the minimal dimension `rank J(Φ)` iff the Kraus
 blocks `Kᵢ = Matrix.krausBlock V i` of `V` are linearly independent. -/
-theorem rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock {Φ : F} {ι : Type*} [Fintype ι]
+lemma rank_choiMatrix_eq_card_iff_linearIndependent_krausBlock {Φ : F} {ι : Type*} [Fintype ι]
     (V : Matrix (m × ι) n ℂ) (hV : ∀ A, Φ A = traceRight (V * A * Vᴴ)) :
     (choiMatrix Φ).rank = Fintype.card ι ↔ LinearIndependent ℂ (krausBlock V) :=
   rank_choiMatrix_eq_card_iff_linearIndependent (krausBlock V) fun A => by

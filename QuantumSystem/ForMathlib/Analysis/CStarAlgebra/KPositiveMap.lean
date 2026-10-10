@@ -104,7 +104,7 @@ variable {n A : Type*} [Fintype n] [NonUnitalCStarAlgebra A] [PartialOrder A] [S
 
 /-- The diagonal entries of a nonnegative `CStarMatrix` are nonnegative. The positive matrices are the
 additive closure of the `X⋆ X` (`StarOrderedRing.le_iff`), and `(X⋆ X) i i = ∑ₖ (X k i)⋆ (X k i)`. -/
-theorem diag_nonneg {M : CStarMatrix n n A} (hM : 0 ≤ M) {i : n} : 0 ≤ M i i := by
+lemma diag_nonneg {M : CStarMatrix n n A} (hM : 0 ≤ M) {i : n} : 0 ≤ M i i := by
   obtain ⟨P, hP, rfl⟩ := (StarOrderedRing.le_iff 0 M).mp hM
   clear hM
   rw [zero_add]
@@ -121,7 +121,7 @@ theorem diag_nonneg {M : CStarMatrix n n A} (hM : 0 ≤ M) {i : n} : 0 ≤ M i i
 gives a nonnegative matrix `(M (f i) (f j))ᵢⱼ`. The positive matrices are the additive closure of
 the `X⋆ X`, and `(X⋆ X) (f a) (f b) = Σ_c (X c (f a))⋆ X c (f b)` is the sum over `c` of `Z_c⋆ Z_c`
 for the matrix `Z_c` whose only nonzero row is `(X c (f b))_b`. No unit of `A` is used. -/
-theorem submatrix_nonneg {m : Type*} [Fintype m] {M : CStarMatrix n n A} (hM : 0 ≤ M) (f : m → n) :
+lemma submatrix_nonneg {m : Type*} [Fintype m] {M : CStarMatrix n n A} (hM : 0 ≤ M) (f : m → n) :
     0 ≤ ofMatrix ((ofMatrix.symm M).submatrix f f) := by
   classical
   cases isEmpty_or_nonempty m with
@@ -154,7 +154,7 @@ theorem submatrix_nonneg {m : Type*} [Fintype m] {M : CStarMatrix n n A} (hM : 0
 `CStarMatrix.star_mul_le_norm_smul_of_nonneg` for unital `A`. For `μ : ℝ` the lower-right entry of
 `Y⋆ N Y`, `Y = !![1, -μ b; 0, 1]`, is `q - 2μ b⋆ b + μ² b⋆ p b ≥ 0`, and `b⋆ p b ≤ ‖p‖ • b⋆ b`. Take
 `μ = ‖p‖⁻¹` when `p ≠ 0`; when `p = 0` let `μ → ∞` to get `b⋆ b = 0`. -/
-private theorem star_mul_le_norm_smul_of_nonneg_of_unital {A : Type*} [CStarAlgebra A]
+private lemma star_mul_le_norm_smul_of_nonneg_of_unital {A : Type*} [CStarAlgebra A]
     [PartialOrder A] [StarOrderedRing A] {p b q : A} (hN : 0 ≤ ofMatrix !![p, b; star b, q]) :
     star b * b ≤ ‖p‖ • q := by
   have hp : 0 ≤ p := by simpa using diag_nonneg hN (i := 0)
@@ -203,7 +203,7 @@ private theorem star_mul_le_norm_smul_of_nonneg_of_unital {A : Type*} [CStarAlge
 nonnegative, then `b⋆ b ≤ ‖p‖ • q`. No unit of `A` is needed: the matrix stays nonnegative in the
 unitization `A⁺¹`, which is order-embedded in `A` (`Unitization.inr_le_inr_iff`), and there the
 estimate is proved by conjugating with `!![1, -μ b; 0, 1]`. -/
-theorem star_mul_le_norm_smul_of_nonneg {p b q : A} (hN : 0 ≤ ofMatrix !![p, b; star b, q]) :
+lemma star_mul_le_norm_smul_of_nonneg {p b q : A} (hN : 0 ≤ ofMatrix !![p, b; star b, q]) :
     star b * b ≤ ‖p‖ • q := by
   let ι : A →CP Unitization ℂ A :=
     CompletelyPositiveMapClass.toCompletelyPositiveLinearMap (Unitization.inrNonUnitalStarAlgHom ℂ A)
@@ -289,7 +289,7 @@ variable {F A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgeb
 compression of the nonnegative `k × k` matrix `(M (g a) (g b))_{ab}` along `Fin.castLE`, where
 `g : Fin k → Fin j` is a retraction of `Fin.castLE` (`CStarMatrix.submatrix_nonneg`); applying `φ`
 entrywise commutes with both reindexings. -/
-theorem of_le {k j : ℕ} [KPositiveMapClass F k A₁ A₂] (hjk : j ≤ k) :
+lemma of_le {k j : ℕ} [KPositiveMapClass F k A₁ A₂] (hjk : j ≤ k) :
     KPositiveMapClass F j A₁ A₂ where
   map_cstarMatrix_nonneg' φ M hM := by
     rcases Nat.eq_zero_or_pos j with rfl | hj
@@ -305,7 +305,7 @@ theorem of_le {k j : ℕ} [KPositiveMapClass F k A₁ A₂] (hjk : j ≤ k) :
 /-- A `k`-positive map preserves the nonnegativity of block matrices indexed by any finite type `ι`
 with at most `k` elements: reindex along `ι ≃ Fin (card ι)` (`CStarMatrix.submatrix_nonneg`) and use
 `card ι`-positivity (`KPositiveMapClass.of_le`). -/
-theorem map_nonneg_of_card_le {k : ℕ} [KPositiveMapClass F k A₁ A₂] (φ : F) {ι : Type*}
+lemma map_nonneg_of_card_le {k : ℕ} [KPositiveMapClass F k A₁ A₂] (φ : F) {ι : Type*}
     [Fintype ι] (hι : Fintype.card ι ≤ k) {M : CStarMatrix ι ι A₁} (hM : 0 ≤ M) :
     0 ≤ M.map φ := by
   have := of_le (F := F) hι
@@ -319,7 +319,7 @@ theorem map_nonneg_of_card_le {k : ℕ} [KPositiveMapClass F k A₁ A₂] (φ : 
 /-- A `k`-positive map with `k ≥ 1` is positive: it is `1`-positive (`KPositiveMapClass.of_le`), and
 a nonnegative `a = b⋆ b` is the entry of the nonnegative `1 × 1` matrix `[b]⋆ [b]`, whose image under
 `φ` has the nonnegative entry `φ a` (`CStarMatrix.diag_nonneg`). -/
-theorem orderHomClass {k : ℕ} [KPositiveMapClass F k A₁ A₂] [LinearMapClass F ℂ A₁ A₂]
+lemma orderHomClass {k : ℕ} [KPositiveMapClass F k A₁ A₂] [LinearMapClass F ℂ A₁ A₂]
     (hk : 1 ≤ k) : OrderHomClass F A₁ A₂ := by
   have := of_le (F := F) hk
   refine .of_addMonoidHom fun φ a ha => ?_
@@ -415,7 +415,7 @@ variable {F A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgeb
 
 /-- A `2`-positive map sends `y⋆ y` to a nonnegative element: it is the upper-left entry of the
 image of `X⋆ X`, `X = !![y, 0; 0, 0]` (`CStarMatrix.diag_nonneg`). -/
-theorem map_star_mul_self_nonneg (φ : F) (y : A₁) : 0 ≤ φ (star y * y) := by
+lemma map_star_mul_self_nonneg (φ : F) (y : A₁) : 0 ≤ φ (star y * y) := by
   let X : CStarMatrix (Fin 2) (Fin 2) A₁ := CStarMatrix.ofMatrix !![y, 0; 0, 0]
   have h := CStarMatrix.diag_nonneg (map_cstarMatrix_nonneg' φ _ (star_mul_self_nonneg X)) (i := 0)
   simpa [X, CStarMatrix.mul_apply, CStarMatrix.star_apply, CStarMatrix.map_apply,
@@ -425,7 +425,7 @@ theorem map_star_mul_self_nonneg (φ : F) (y : A₁) : 0 ≤ φ (star y * y) := 
 `φ(x⋆ y)⋆ φ(x⋆ y) ≤ ‖φ(x⋆ x)‖ • φ(y⋆ y)`. The matrix `(φ(xᵢ⋆ xⱼ))ᵢⱼ` for `(x₁, x₂) = (x, y)` is the
 image of `X⋆ X`, `X = !![x, y; 0, 0]`, hence nonnegative; being self-adjoint, it has
 `φ(y⋆ x) = φ(x⋆ y)⋆`, and `CStarMatrix.star_mul_le_norm_smul_of_nonneg` applies. -/
-theorem star_map_mul_le_norm_smul (φ : F) (x y : A₁) :
+lemma star_map_mul_le_norm_smul (φ : F) (x y : A₁) :
     star (φ (star x * y)) * φ (star x * y) ≤ ‖φ (star x * x)‖ • φ (star y * y) := by
   let X : CStarMatrix (Fin 2) (Fin 2) A₁ := CStarMatrix.ofMatrix !![x, y; 0, 0]
   have hN : 0 ≤ (star X * X).map φ := map_cstarMatrix_nonneg' φ _ (star_mul_self_nonneg X)
@@ -452,7 +452,7 @@ unit `e → 1` with `‖e‖ ≤ 1` and `e⋆ = e`, the Cauchy–Schwarz inequal
 (`KPositiveMapClass.star_map_mul_le_norm_smul`) gives
 `φ(e a)⋆ φ(e a) ≤ ‖φ(e⋆ e)‖ • φ(a⋆ a) ≤ C • φ(a⋆ a)`, and `φ(e a) → φ(a)`; the order is closed.
 For the operator norm of `φ` see `KPositiveMapClass.le_opNorm_smul_map_star_mul`. -/
-theorem le_smul_map_star_mul_of_norm_le [LinearMapClass F ℂ A₁ A₂] (φ : F) {C : ℝ}
+lemma le_smul_map_star_mul_of_norm_le [LinearMapClass F ℂ A₁ A₂] (φ : F) {C : ℝ}
     (hC : ∀ x, ‖φ x‖ ≤ C * ‖x‖) (a : A₁) : star (φ a) * φ a ≤ C • φ (star a * a) := by
   by_cases hC0 : 0 ≤ C
   swap
@@ -484,7 +484,7 @@ C⋆-algebra, in terms of its operator norm: `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ
 completely positive maps). A `2`-positive map is positive (`KPositiveMapClass.instOrderHomClass`),
 positive linear maps between C⋆-algebras are bounded, and `‖φ‖` is the norm of
 `PositiveContinuousLinearMap.ofClass φ`. -/
-theorem le_opNorm_smul_map_star_mul [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
+lemma le_opNorm_smul_map_star_mul [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
     star (φ a) * φ a ≤
       ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ • φ (star a * a) :=
   le_smul_map_star_mul_of_norm_le φ (fun x => (PositiveContinuousLinearMap.ofClass φ :
@@ -506,7 +506,7 @@ variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] 
   [KPositiveMapClass F 2 A₁ A₂]
 
 /-- A `2`-positive map sends `1` to a nonnegative element. -/
-theorem map_one_nonneg (φ : F) : 0 ≤ φ 1 := by
+lemma map_one_nonneg (φ : F) : 0 ≤ φ 1 := by
   simpa using map_star_mul_self_nonneg φ (1 : A₁)
 
 /-- **Kadison–Schwarz inequality**, unnormalised form (Choi 1974): every `2`-positive map on a
@@ -519,7 +519,7 @@ theorem le_norm_smul_map_star_mul (φ : F) (a : A₁) :
 /-- A `2`-positive map on a unital C⋆-algebra is bounded by its value at the unit:
 `‖φ a‖ ≤ ‖φ 1‖ ‖a‖`. By Kadison–Schwarz, `‖φ a‖² ≤ ‖φ 1‖ ‖φ(a⋆ a)‖`, and
 `φ(a⋆ a) ≤ ‖a⋆ a‖ • φ 1` by positivity of `φ`. -/
-theorem norm_apply_le_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
+lemma norm_apply_le_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
     ‖φ a‖ ≤ ‖φ 1‖ * ‖a‖ := by
   have h₁ : ‖φ (star a * a)‖ ≤ ‖φ 1‖ * ‖star a * a‖ := by
     have hle : φ (star a * a) ≤ ‖star a * a‖ • φ 1 := by
@@ -538,7 +538,7 @@ theorem norm_apply_le_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) (a 
 /-- A `2`-positive map on a unital C⋆-algebra attains its norm at the unit: `‖φ‖ = ‖φ 1‖`, where
 `‖φ‖` is the norm of the bounded positive map `PositiveContinuousLinearMap.ofClass φ`
 (`KPositiveMapClass.instOrderHomClass`). -/
-theorem opNorm_eq_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) :
+lemma opNorm_eq_norm_map_one [LinearMapClass F ℂ A₁ A₂] (φ : F) :
     ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ = ‖φ 1‖ := by
   refine le_antisymm (ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _)
     (norm_apply_le_norm_map_one φ)) ?_
@@ -556,7 +556,7 @@ end Unital
 
 /-- A positive map between unital C⋆-algebras with `φ 1 ≤ 1` has `‖φ 1‖ ≤ 1`, since
 `0 ≤ φ 1 ≤ 1`. A `2`-positive linear map is positive (`KPositiveMapClass.instOrderHomClass`). -/
-theorem _root_.OrderHomClass.norm_map_one_le_one {F A₁ A₂ : Type*} [CStarAlgebra A₁]
+lemma _root_.OrderHomClass.norm_map_one_le_one {F A₁ A₂ : Type*} [CStarAlgebra A₁]
     [CStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂]
     [FunLike F A₁ A₂] [ZeroHomClass F A₁ A₂] [OrderHomClass F A₁ A₂] (φ : F) (hφ : φ 1 ≤ 1) :
     ‖φ 1‖ ≤ 1 :=
@@ -580,7 +580,7 @@ theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
 
 /-- A `2`-positive map with `φ 1 ≤ 1` is a contraction, `‖φ a‖ ≤ ‖a‖`: `‖φ 1‖ ≤ 1`
 (`OrderHomClass.norm_map_one_le_one`) in `KPositiveMapClass.norm_apply_le_norm_map_one`. -/
-theorem norm_apply_le_of_map_one_le [LinearMapClass F ℂ A₁ A₂] (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
+lemma norm_apply_le_of_map_one_le [LinearMapClass F ℂ A₁ A₂] (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
     ‖φ a‖ ≤ ‖a‖ := by
   calc ‖φ a‖ ≤ ‖φ 1‖ * ‖a‖ := norm_apply_le_norm_map_one φ a
     _ ≤ 1 * ‖a‖ := by gcongr; exact OrderHomClass.norm_map_one_le_one φ hφ

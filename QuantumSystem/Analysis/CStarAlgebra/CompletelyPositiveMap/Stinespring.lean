@@ -111,7 +111,7 @@ noncomputable def krausBlock (f : OrthonormalBasis κ ℂ E) (V : H →L[ℂ] K 
 
 /-- Conjugation by `V : H → K ⊗ E` followed by the partial trace is the Kraus map of the Kraus
 blocks `Tₐ` of `V`: `tr₂(V A V†) = Σₐ Tₐ A Tₐ†` (`ContinuousLinearMap.traceRight_eq_sum`). -/
-theorem traceRight_comp_comp_adjoint (f : OrthonormalBasis κ ℂ E) (V : H →L[ℂ] K ⊗[ℂ] E)
+lemma traceRight_comp_comp_adjoint (f : OrthonormalBasis κ ℂ E) (V : H →L[ℂ] K ⊗[ℂ] E)
     (A : H →L[ℂ] H) :
     traceRight K E (V ∘L A ∘L adjoint V) =
       ∑ a, krausBlock f V a ∘L A ∘L adjoint (krausBlock f V a) := by
@@ -123,7 +123,7 @@ variable {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
 /-- **Minimality of the environment**: if `Φ(A) = tr₂(V A V†)` for `V : H → K ⊗ E`, then
 `dim E ≥ rank J_b(Φ)`: the Kraus blocks of `V` along an orthonormal basis of `E` are `dim E` Kraus
 operators of `Φ` (`ContinuousLinearMap.finrank_range_choi_le_card`). -/
-theorem finrank_range_choi_le_finrank_of_stinespring (b : OrthonormalBasis ι ℂ H) {Φ : F}
+lemma finrank_range_choi_le_finrank_of_stinespring (b : OrthonormalBasis ι ℂ H) {Φ : F}
     (V : H →L[ℂ] K ⊗[ℂ] E) (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L adjoint V)) :
     Module.finrank ℂ ((choi b Φ).range) ≤
       Module.finrank ℂ E := by
@@ -135,7 +135,7 @@ theorem finrank_range_choi_le_finrank_of_stinespring (b : OrthonormalBasis ι �
 /-- The environment of `Φ(A) = tr₂(V A V†)` has the minimal dimension `rank J_b(Φ)` iff the Kraus
 blocks of `V` are linearly independent
 (`ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent`). -/
-theorem finrank_range_choi_eq_card_iff_linearIndependent_krausBlock (b : OrthonormalBasis ι ℂ H)
+lemma finrank_range_choi_eq_card_iff_linearIndependent_krausBlock (b : OrthonormalBasis ι ℂ H)
     {Φ : F} (f : OrthonormalBasis κ ℂ E) (V : H →L[ℂ] K ⊗[ℂ] E)
     (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L adjoint V)) :
     Module.finrank ℂ ((choi b Φ).range) = Fintype.card κ ↔
@@ -151,7 +151,7 @@ Kraus blocks of `V : H → K ⊗ E` are linearly independent: if `Σₐ cₐ T�
 `U (ξ₀ ⊗ Σₐ c̄ₐ fₐ)` is orthogonal to every `π(B) W ξ`, hence zero, so `Σₐ c̄ₐ fₐ = 0`. A nonzero
 `ξ₀ ∈ K` is needed: for `K = 0` and `E ≠ 0` the other hypotheses hold with `L = 0`, while the
 Kraus blocks all vanish. -/
-theorem linearIndependent_krausBlock_of_dense {L : Type*} [NormedAddCommGroup L]
+lemma linearIndependent_krausBlock_of_dense {L : Type*} [NormedAddCommGroup L]
     [InnerProductSpace ℂ L] [CompleteSpace L] (π : (K →L[ℂ] K) →⋆ₐ[ℂ] (L →L[ℂ] L))
     (W : H →L[ℂ] L)
     (hmin : (Submodule.span ℂ (Set.range fun p : (K →L[ℂ] K) × H => π p.1 (W p.2))).topologicalClosure
@@ -220,7 +220,7 @@ standard basis of `ℂᵈ` are linearly independent. The operator `V = U† W` c
 dilation `φ*(B) = W† π(B) W` of the trace dual and the multiplicity decomposition
 `π(B) = U (B ⊗ 1) U†` of the representation `π` of `B(K)`; the Kraus blocks are linearly
 independent by minimality of the dilation. -/
-theorem exists_stinespring_linearIndependent_krausBlock (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
+lemma exists_stinespring_linearIndependent_krausBlock (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     ∃ (d : ℕ) (V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ (Fin d)),
       (∀ A, φ A = traceRight K (EuclideanSpace ℂ (Fin d)) (V ∘L A ∘L adjoint V)) ∧
         LinearIndependent ℂ (krausBlock (EuclideanSpace.basisFun (Fin d) ℂ) V) := by
@@ -296,7 +296,7 @@ theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H)
 with exactly `rank J_b(φ)` operators, the minimal number
 (`ContinuousLinearMap.finrank_range_choi_le_card`): the Kraus blocks of the Stinespring operator
 (`CompletelyPositiveMap.exists_stinespring`). -/
-theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)
+lemma exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)
     (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     ∃ T : Fin (Module.finrank ℂ ((choi b φ).range)) →
         H →L[ℂ] K,
@@ -309,7 +309,7 @@ theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)
 /-- The rank of the Choi operator of a completely positive map does not depend on the orthonormal
 basis: each is the minimal number of Kraus operators (`CompletelyPositiveMap.exists_kraus_finrank_range_choi`,
 `ContinuousLinearMap.finrank_range_choi_le_card`). -/
-theorem finrank_range_choi_congr {ι' : Type*} [Fintype ι'] (b : OrthonormalBasis ι ℂ H)
+lemma finrank_range_choi_congr {ι' : Type*} [Fintype ι'] (b : OrthonormalBasis ι ℂ H)
     (b' : OrthonormalBasis ι' ℂ H) (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     Module.finrank ℂ ((choi b φ).range) =
       Module.finrank ℂ ((choi b' φ).range) := by
@@ -401,7 +401,7 @@ theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
 /-- A CPTP map `Φ : B(H) → B(K)` has a Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` with
 exactly `rank J_b(Φ)` operators, satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`
 (`isTracePreserving_iff_sum_adjoint_comp_eq_one`). -/
-theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
+lemma exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
     ∃ T : Fin (Module.finrank ℂ ((choi b Φ).range)) →
         H →L[ℂ] K,
       (∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) ∧ ∑ a, adjoint (T a) ∘L T a = 1 := by

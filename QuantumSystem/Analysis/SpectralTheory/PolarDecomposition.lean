@@ -308,7 +308,7 @@ lemma norm_eq_of_mem_graph_sqrt (hT : T.IsClosedₛₗ) {x u : E} {v : F}
 include hA in
 /-- **Form identity**: for `A = T†T` with `T` closed and `u ∈ dom T`, `∫ λ dμ_u(λ) = ‖T u‖²`; the
 inequality `≤` holds without closedness (`IsSelfAdjoint.lintegral_measure_pvm_le_norm_sq`). -/
-theorem lintegral_measure_pvm_eq_norm_sq (hT : T.IsClosedₛₗ) {u : E} {u' : F}
+lemma lintegral_measure_pvm_eq_norm_sq (hT : T.IsClosedₛₗ) {u : E} {u' : F}
     (hu : (u, u') ∈ T.graphₛₗ) :
     ∫⁻ s, ENNReal.ofReal s ∂(hA.pvm.measure u) = ENNReal.ofReal (‖u'‖ ^ 2) := by
   have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAT
@@ -1022,7 +1022,7 @@ private lemma mem_graph_sqrt_polarIsometryEquiv {x u : E} (hu : (x, u) ∈ hA.sq
   rwa [← hx, LinearIsometryEquiv.symm_apply_apply]
 
 /-- **`J² = 1`** for the isometric part of a `σ`-semilinear closed involution `S = J |S|`. -/
-theorem polarIsometryEquiv_apply_apply (x : E) :
+lemma polarIsometryEquiv_apply_apply (x : E) :
     𝐉 (𝐉 x) = x := by
   set J := 𝐉
   set E' := hA.pvm

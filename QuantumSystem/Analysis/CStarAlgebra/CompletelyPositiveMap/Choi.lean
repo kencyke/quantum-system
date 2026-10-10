@@ -88,13 +88,13 @@ noncomputable def choi (b : OrthonormalBasis ι ℂ H) (Φ : F) : H ⊗[ℂ] K �
 
 /-- The Choi operator through the insertions `ιᵢ = mkL ℂ H K (bᵢ) : y ↦ bᵢ ⊗ y`:
 `J_b(Φ) = Σᵢⱼ ιᵢ Φ(|bᵢ⟩⟨bⱼ|) ιⱼ†` (`TensorProduct.mapL_rankOne_left`). -/
-theorem choi_eq_sum_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) :
+lemma choi_eq_sum_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) :
     choi b Φ = ∑ i, ∑ j,
       mkL ℂ H K (b i) ∘L Φ (rankOne ℂ (b i) (b j)) ∘L adjoint (mkL ℂ H K (b j)) := by
   simp only [choi, mapL_rankOne_left]
 
 /-- The blocks of the Choi operator: `ιᵢ† J_b(Φ) ιⱼ = Φ(|bᵢ⟩⟨bⱼ|)`. -/
-theorem adjoint_mkL_comp_choi_comp_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) (i j : ι) :
+lemma adjoint_mkL_comp_choi_comp_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) (i j : ι) :
     adjoint (mkL ℂ H K (b i)) ∘L choi b Φ ∘L mkL ℂ H K (b j) = Φ (rankOne ℂ (b i) (b j)) := by
   classical
   ext y
@@ -102,7 +102,7 @@ theorem adjoint_mkL_comp_choi_comp_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) 
 
 /-- The quadratic form of the Choi operator is the quadratic form of the block matrix
 `(Φ(|bᵢ⟩⟨bⱼ|))ᵢⱼ` at the components `ιᵢ† z` of `z`: `⟪z, J_b(Φ) z⟫ = Σᵢⱼ ⟪ιᵢ† z, Φ(|bᵢ⟩⟨bⱼ|) ιⱼ† z⟫`. -/
-theorem inner_choi_apply (b : OrthonormalBasis ι ℂ H) (Φ : F) (z : H ⊗[ℂ] K) :
+lemma inner_choi_apply (b : OrthonormalBasis ι ℂ H) (Φ : F) (z : H ⊗[ℂ] K) :
     ⟪z, choi b Φ z⟫_ℂ = ∑ i, ∑ j,
       ⟪adjoint (mkL ℂ H K (b i)) z, Φ (rankOne ℂ (b i) (b j)) (adjoint (mkL ℂ H K (b j)) z)⟫_ℂ := by
   simp only [choi_eq_sum_mkL, sum_apply, comp_apply, inner_sum, adjoint_inner_left]
@@ -110,7 +110,7 @@ theorem inner_choi_apply (b : OrthonormalBasis ι ℂ H) (Φ : F) (z : H ⊗[ℂ
 /-- The Choi operator of a `k`-positive map with `k ≥ dim H` is positive: its quadratic form is that
 of the block matrix `(Φ(|bᵢ⟩⟨bⱼ|))ᵢⱼ` (`ContinuousLinearMap.inner_choi_apply`), the image under
 `id_{dim H} ⊗ Φ` of the nonnegative block matrix `(|bᵢ⟩⟨bⱼ|)ᵢⱼ` (`CStarMatrix.rankOne_nonneg`). -/
-theorem choi_nonneg {k : ℕ} [KPositiveMapClass F k (H →L[ℂ] H) (K →L[ℂ] K)]
+lemma choi_nonneg {k : ℕ} [KPositiveMapClass F k (H →L[ℂ] H) (K →L[ℂ] K)]
     (hk : Module.finrank ℂ H ≤ k) (b : OrthonormalBasis ι ℂ H) (Φ : F) : 0 ≤ choi b Φ := by
   have hι : Fintype.card ι ≤ k := by rwa [← Module.finrank_eq_card_basis b.toBasis]
   have hQ := KPositiveMapClass.map_nonneg_of_card_le Φ hι (CStarMatrix.rankOne_nonneg b)
@@ -124,7 +124,7 @@ theorem choi_nonneg {k : ℕ} [KPositiveMapClass F k (H →L[ℂ] H) (K →L[ℂ
 `J_b(Φ) = Σₐ |uₐ⟩⟨uₐ|` (`ContinuousLinearMap.isPositive_iff_eq_sum_rankOne`), the blocks are
 `Φ(|bᵢ⟩⟨bⱼ|) = Σₐ |ιᵢ† uₐ⟩⟨ιⱼ† uₐ|`, so `Tₐ = Σᵢ |ιᵢ† uₐ⟩⟨bᵢ|` works on the `|bᵢ⟩⟨bⱼ|`, and by
 linearity everywhere (`ContinuousLinearMap.eq_sum_inner_smul_rankOne`). -/
-theorem exists_kraus_of_choi_nonneg [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
+lemma exists_kraus_of_choi_nonneg [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
     (b : OrthonormalBasis ι ℂ H) {Φ : F} (h : 0 ≤ choi b Φ) :
     ∃ (m : ℕ) (T : Fin m → H →L[ℂ] K), ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a) := by
   classical
@@ -148,7 +148,7 @@ theorem exists_kraus_of_choi_nonneg [LinearMapClass F ℂ (H →L[ℂ] H) (K →
 
 /-- The Choi operator of a Kraus map `Φ(A) = Σₐ Tₐ A Tₐ†` is `J_b(Φ) = Σₐ |vₐ⟩⟨vₐ|` with the
 vectorised Kraus operators `vₐ = Σᵢ bᵢ ⊗ Tₐ bᵢ`. -/
-theorem choi_eq_sum_rankOne_of_kraus (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
+lemma choi_eq_sum_rankOne_of_kraus (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
     {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
     choi b Φ = ∑ a, rankOne ℂ (∑ i, b i ⊗ₜ[ℂ] T a (b i)) (∑ i, b i ⊗ₜ[ℂ] T a (b i)) := by
   have hE (i j : ι) : Φ (rankOne ℂ (b i) (b j)) = ∑ a, rankOne ℂ (T a (b i)) (T a (b j)) := by
@@ -164,7 +164,7 @@ theorem choi_eq_sum_rankOne_of_kraus (b : OrthonormalBasis ι ℂ H) {Φ : F} {�
 
 /-- Every Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` has at least `rank J_b(Φ)` operators: the range
 of `J_b(Φ) = Σₐ |vₐ⟩⟨vₐ|` is spanned by the `|κ|` vectors `vₐ`. -/
-theorem finrank_range_choi_le_card (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
+lemma finrank_range_choi_le_card (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
     {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
     Module.finrank ℂ ((choi b Φ).range) ≤ Fintype.card κ := by
   rw [choi_eq_sum_rankOne_of_kraus b hT, range_sum_rankOne_self]
@@ -173,7 +173,7 @@ theorem finrank_range_choi_le_card (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ 
 /-- A Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` has exactly `rank J_b(Φ)` operators iff its Kraus
 operators are linearly independent: the range of `J_b(Φ)` is spanned by the vectorised Kraus
 operators `vₐ = Σᵢ bᵢ ⊗ Tₐ bᵢ`, and vectorisation `T ↦ Σᵢ bᵢ ⊗ T bᵢ` is injective. -/
-theorem finrank_range_choi_eq_card_iff_linearIndependent (b : OrthonormalBasis ι ℂ H) {Φ : F}
+lemma finrank_range_choi_eq_card_iff_linearIndependent (b : OrthonormalBasis ι ℂ H) {Φ : F}
     {κ : Type*} [Fintype κ] {T : κ → H →L[ℂ] K}
     (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
     Module.finrank ℂ ((choi b Φ).range) = Fintype.card κ ↔

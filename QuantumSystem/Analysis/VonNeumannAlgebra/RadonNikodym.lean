@@ -62,7 +62,7 @@ theorem exists_mem_commutant_of_apply_star_mul_self_le {ω : N →ₚ[ℂ] ℂ} 
 
 /-- **Radon–Nikodym, vector form.** If `ω(x⋆x) ≤ ‖x ζ‖²` for all `x ∈ N`, then `ω` is the vector
 functional of `R ζ` for some positive `R ∈ N′`: `ω(x) = ⟪R ζ, x (R ζ)⟫`. -/
-theorem exists_mem_commutant_inner_eq_of_apply_star_mul_self_le {ω : N →ₚ[ℂ] ℂ} {ζ : K}
+lemma exists_mem_commutant_inner_eq_of_apply_star_mul_self_le {ω : N →ₚ[ℂ] ℂ} {ζ : K}
     (hω : ∀ x : N, ‖ω (star x * x)‖ ≤ ‖(x : K →L[ℂ] K) ζ‖ ^ 2) :
     ∃ R ∈ N′, 0 ≤ R ∧ ∀ x : N, ω x = ⟪R ζ, (x : K →L[ℂ] K) (R ζ)⟫_ℂ := by
   obtain ⟨R, hc, h0, h⟩ :=

@@ -61,7 +61,7 @@ namespace CStarMatrix
 `Q, M ∈ M_n(B(K))`, the trace of `QM` on `Kⁿ` is nonnegative, `0 ≤ Σᵢⱼ tr(Qⱼᵢ Mᵢⱼ)`. Writing
 `Q = R⋆ R`, the sum is `Σₗ tr((R M R⋆)ₗₗ)` by cyclicity of the trace, a sum of traces of the
 nonnegative diagonal entries of the nonnegative matrix `R M R⋆`. -/
-theorem sum_trace_comp_nonneg {n : Type*} [Fintype n] {Q M : CStarMatrix n n (K →L[ℂ] K)}
+lemma sum_trace_comp_nonneg {n : Type*} [Fintype n] {Q M : CStarMatrix n n (K →L[ℂ] K)}
     (hQ : 0 ≤ Q) (hM : 0 ≤ M) :
     0 ≤ ∑ i, ∑ j, Tr (Q j i ∘L M i j) := by
   obtain ⟨P, hP, rfl⟩ := (StarOrderedRing.le_iff 0 Q).mp hQ
@@ -153,7 +153,7 @@ omit [FiniteDimensional ℂ K] in
 non-increasing** on positive operators, `Re tr φ(A) ≤ Re tr A`: `tr φ(A) = tr(A φ*(1))`
 (`ContinuousLinearMap.trace_comp_traceDual`), and the positive cone is self-dual, tested here on
 the rank-one operators `|x⟩⟨x|`. -/
-theorem traceDual_one_le_one_iff [OrderHomClass F (H →L[ℂ] H) (K →L[ℂ] K)] (φ : F) :
+lemma traceDual_one_le_one_iff [OrderHomClass F (H →L[ℂ] H) (K →L[ℂ] K)] (φ : F) :
     traceDual φ 1 ≤ 1 ↔ ∀ A : H →L[ℂ] H, 0 ≤ A →
       (Tr (φ A)).re ≤ (Tr A).re := by
   have key (A : H →L[ℂ] H) :

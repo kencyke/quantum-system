@@ -116,7 +116,7 @@ variable {P Q}
 
 /-- **`Δ` multiplies by `q / p` on good vectors**: for `u` bounded by `n` on a measurable set `B`
 where `p ≥ 1/n` and `q ≤ n p`, and vanishing off `B`, `Δ_{ξ_Q, ξ_P} u = (q / p) u`. -/
-private theorem mem_graph_relativeModular_densityVec_of_bounded {B : Set α} (hB : MeasurableSet B) {n : ℝ}
+private lemma mem_graph_relativeModular_densityVec_of_bounded {B : Set α} (hB : MeasurableSet B) {n : ℝ}
     (hn : 0 < n) (hBp : ∀ x ∈ B, n⁻¹ ≤ densityFun P μ x)
     (hBq : ∀ x ∈ B, densityFun Q μ x ≤ n * densityFun P μ x) {u : Lp ℂ 2 μ}
     (hub : ∀ x ∈ B, ‖u x‖ ≤ n) (hu0 : ∀ᵐ x ∂μ, x ∉ B → u x = 0) {v : Lp ℂ 2 μ}
@@ -250,7 +250,7 @@ private theorem mem_graph_relativeModular_densityVec_of_bounded {B : Set α} (hB
 /-- **`Δ` multiplies by `q / p` on good vectors, a.e. form**: for `u` bounded by `n` almost
 everywhere on a measurable set `B` where `p ≥ 1/n` and `q ≤ n p`, and vanishing off `B`,
 `Δ_{ξ_Q, ξ_P} u = (q / p) u`. -/
-private theorem mem_graph_relativeModular_densityVec_of_bounded_ae {B : Set α} (hB : MeasurableSet B)
+private lemma mem_graph_relativeModular_densityVec_of_bounded_ae {B : Set α} (hB : MeasurableSet B)
     {n : ℝ} (hn : 0 < n) (hBp : ∀ x ∈ B, n⁻¹ ≤ densityFun P μ x)
     (hBq : ∀ x ∈ B, densityFun Q μ x ≤ n * densityFun P μ x) {u : Lp ℂ 2 μ}
     (hub : ∀ᵐ x ∂μ, x ∈ B → ‖u x‖ ≤ n) (hu0 : ∀ᵐ x ∂μ, x ∉ B → u x = 0) {v : Lp ℂ 2 μ}
@@ -267,7 +267,7 @@ private theorem mem_graph_relativeModular_densityVec_of_bounded_ae {B : Set α} 
 
 /-- **`Δ` kills the vectors vanishing where `p > 0`**: such a `u` is orthogonal to `M ξ_P`, so
 `S_{ξ_Q, ξ_P} u = 0` and `Δ_{ξ_Q, ξ_P} u = 0`. -/
-theorem mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos {u : Lp ℂ 2 μ}
+lemma mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos {u : Lp ℂ 2 μ}
     (hu : ∀ᵐ x ∂μ, 0 < densityFun P μ x → u x = 0) :
     (u, 0) ∈ (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph := by
   set p := densityFun P μ
@@ -313,7 +313,7 @@ theorem mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos {u : Lp �
 `Δ_{ξ_Q, ξ_P} u = (q / p) u` whenever `u` and `(q / p) u` are in `L²`. On `{p = 0}` the multiplier
 is `q / 0 = 0`, matching `mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos`. There
 are no other vectors in the domain (`relativeModular_densityVec_eq_mulPMap`). -/
-theorem mem_graph_relativeModular_densityVec_of_memLp {u : Lp ℂ 2 μ}
+lemma mem_graph_relativeModular_densityVec_of_memLp {u : Lp ℂ 2 μ}
     (hu : MemLp (fun x => ((densityFun Q μ x / densityFun P μ x : ℝ) : ℂ) * u x) 2 μ) :
     (u, hu.toLp _) ∈
       (Δ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧).graph := by
@@ -416,7 +416,7 @@ theorem relativeModular_densityVec_eq_mulPMap :
 /-- **Spectral measure**: for finite measures `P, Q` with `P ≪ μ`, the spectral measure of
 `Δ_{ξ_Q, ξ_P}` at `ξ_P` is the image of `P` under `q / p`. This needs only a Lebesgue
 decomposition of `P` with respect to `μ` (automatic for σ-finite `μ`), so that `|ξ_P|² μ = P`. -/
-theorem measure_pvm_relativeModular_densityVec [P.HaveLebesgueDecomposition μ] (hP : P ≪ μ) :
+lemma measure_pvm_relativeModular_densityVec [P.HaveLebesgueDecomposition μ] (hP : P ≪ μ) :
     μ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧ =
       P.map fun x => densityFun Q μ x / densityFun P μ x := by
   have hh := (measurable_densityFun Q μ).div (measurable_densityFun P μ)
@@ -435,7 +435,7 @@ natural logarithm: the Kullback–Leibler divergence `InformationTheory.klDivERe
 hypothesis on `Q` beyond finiteness is needed: `ξ_Q` represents only the `μ`-absolutely
 continuous part `Q_ac` of `Q`, but `P ≪ Q ↔ P ≪ Q_ac` and `dP/dQ = dP/dQ_ac` `P`-almost
 everywhere, because `P ≪ μ` and the singular part of `Q` lives on a `μ`-null set. -/
-theorem arakiVec_densityVec (hP : P ≪ μ) :
+lemma arakiVec_densityVec (hP : P ≪ μ) :
     S[multiplicationAlgebra μ]⟦densityVec P μ ∥ densityVec Q μ⟧ = InformationTheory.klDivEReal P Q := by
   classical
   rw [InformationTheory.klDivEReal]
@@ -499,7 +499,7 @@ variable [SigmaFinite μ] in
 correction `Q(α) - P(α)` built into `klDiv`, which Araki's relative entropy does not carry. Here
 `Q(α)` is the full mass of `Q`, including its `μ`-singular part, which may exceed the mass
 `‖ξ_Q‖² = Q_ac(α)` of the functional `ω_{ξ_Q}`. -/
-theorem arakiVec_densityVec_eq_klDiv_add_sub (hP : P ≪ μ) :
+lemma arakiVec_densityVec_eq_klDiv_add_sub (hP : P ≪ μ) :
     S[multiplicationAlgebra μ]⟦densityVec P μ ∥ densityVec Q μ⟧ =
       (InformationTheory.klDiv P Q : EReal) + P.real Set.univ - Q.real Set.univ := by
   rw [arakiVec_densityVec hP, InformationTheory.klDivEReal_eq_klDiv_add_sub]
@@ -510,7 +510,7 @@ relative entropy of their normal functionals `ω_P : M_f ↦ ∫ f dP` and `ω_Q
 `S(ω_P ‖ ω_Q) = ∫ log (dP/dQ) dP` if `P ≪ Q`, and `+∞` otherwise, with the natural logarithm: the
 Kullback–Leibler divergence `InformationTheory.klDivEReal P Q`. Every normal functional is some
 `ω_P` (`VonNeumannAlgebra.existsUnique_eq_ofMeasure`). -/
-theorem arakiEntropy_ofMeasure (hP : P ≪ μ) (hQ : Q ≪ μ) :
+lemma arakiEntropy_ofMeasure (hP : P ≪ μ) (hQ : Q ≪ μ) :
     S⟦NormalFunctional.ofMeasure P hP ∥ NormalFunctional.ofMeasure Q hQ⟧ =
       InformationTheory.klDivEReal P Q := by
   rw [NormalFunctional.ofMeasure_eq_ofVector, NormalFunctional.ofMeasure_eq_ofVector,
@@ -520,7 +520,7 @@ variable [SigmaFinite μ] in
 /-- **Araki = Mathlib's Kullback–Leibler divergence** on the multiplication algebra: for finite
 measures `P, Q ≪ μ`, `S(ω_P ‖ ω_Q) = klDiv P Q + P(α) - Q(α)`. The term `P(α) - Q(α)` cancels the
 mass correction `Q(α) - P(α)` built into `klDiv`. -/
-theorem arakiEntropy_ofMeasure_eq_klDiv_add_sub (hP : P ≪ μ) (hQ : Q ≪ μ) :
+lemma arakiEntropy_ofMeasure_eq_klDiv_add_sub (hP : P ≪ μ) (hQ : Q ≪ μ) :
     S⟦NormalFunctional.ofMeasure P hP ∥ NormalFunctional.ofMeasure Q hQ⟧ =
       (InformationTheory.klDiv P Q : EReal) + P.real Set.univ - Q.real Set.univ := by
   rw [NormalFunctional.ofMeasure_eq_ofVector, NormalFunctional.ofMeasure_eq_ofVector,

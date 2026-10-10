@@ -96,7 +96,7 @@ variable {H K : Type*}
 operators satisfy the **completeness relation** `Σₐ Tₐ† Tₐ = 1`: its trace dual is
 `B ↦ Σₐ Tₐ† B Tₐ` (`ContinuousLinearMap.traceDual_eq_sum_of_kraus`), and `Φ` is trace preserving
 iff the trace dual is unital (`isTracePreserving_iff_traceDual_one`). -/
-theorem isTracePreserving_iff_sum_adjoint_comp_eq_one {F : Type*}
+lemma isTracePreserving_iff_sum_adjoint_comp_eq_one {F : Type*}
     [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)] [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {Φ : F}
     {ι : Type*} [Fintype ι] {T : ι → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
     IsTracePreserving Φ ↔ ∑ a, adjoint (T a) ∘L T a = 1 := by

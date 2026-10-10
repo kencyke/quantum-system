@@ -94,7 +94,7 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteS
 
 /-- An eigenvector `A u = c u` (`c` real) has `ν_u^w = ‖u‖² δ_{(w - c)⁻¹}` for `w` in the
 resolvent set. -/
-theorem measure_pvm_resolvent_of_mem_graph {w : ℂ} (hw : w ∈ A.resolventSet) {u : E} {c : ℝ}
+lemma measure_pvm_resolvent_of_mem_graph {w : ℂ} (hw : w ∈ A.resolventSet) {u : E} {c : ℝ}
     (hu : (u, (c : ℂ) • u) ∈ A.graph) :
     (hA.isStarNormal_resolvent w).pvm.measure u = (‖u‖₊ ^ 2) • Measure.dirac (w - (c : ℂ))⁻¹ := by
   have : IsStarNormal (A.resolvent w) := hA.isStarNormal_resolvent w
@@ -108,7 +108,7 @@ theorem measure_pvm_resolvent_of_mem_graph {w : ℂ} (hw : w ∈ A.resolventSet)
   norm_cast
 
 /-- An eigenvector `A u = c u` (`c` real) has spectral measure `μ_u = ‖u‖² δ_c`. -/
-theorem measure_pvm_of_mem_graph {u : E} {c : ℝ} (hu : (u, (c : ℂ) • u) ∈ A.graph) :
+lemma measure_pvm_of_mem_graph {u : E} {c : ℝ} (hu : (u, (c : ℂ) • u) ∈ A.graph) :
     hA.pvm.measure u = (‖u‖₊ ^ 2) • Measure.dirac c := by
   have hlam : Measurable fun ζ : ℂ => re (I - ζ⁻¹) := by fun_prop
   rw [measure_pvm_eq_map, hA.measure_pvm_resolvent_of_mem_graph hA.I_mem_resolventSet hu,
@@ -124,7 +124,7 @@ variable {w : ℂ}
 /-- **Splitting off an eigenvector.** If `A x = c x` (`c` real) and `y ⊥ x`, then
 `ν_{x + y}^w = ν_x^w + ν_y^w`: the cross terms `⟪x, g(R) y⟫` vanish because `g(R) x = g((w - c)⁻¹) x`.
 -/
-theorem measure_pvm_resolvent_add_of_mem_graph (hw : w ∈ A.resolventSet) {x y : E} {c : ℝ}
+lemma measure_pvm_resolvent_add_of_mem_graph (hw : w ∈ A.resolventSet) {x y : E} {c : ℝ}
     (hx : (x, (c : ℂ) • x) ∈ A.graph) (hxy : inner ℂ x y = 0) :
     (hA.isStarNormal_resolvent w).pvm.measure (x + y) =
       (hA.isStarNormal_resolvent w).pvm.measure x +
@@ -152,7 +152,7 @@ theorem measure_pvm_resolvent_add_of_mem_graph (hw : w ∈ A.resolventSet) {x y 
 
 /-- **Finite eigenvector sums.** For pairwise orthogonal eigenvectors `A x_i = c_i x_i` (`c_i`
 real), `ν_{Σ x_i}^w = Σ ‖x_i‖² δ_{(w - c_i)⁻¹}`. -/
-theorem measure_pvm_resolvent_sum_of_mem_graph (hw : w ∈ A.resolventSet) {ι : Type*} (s : Finset ι)
+lemma measure_pvm_resolvent_sum_of_mem_graph (hw : w ∈ A.resolventSet) {ι : Type*} (s : Finset ι)
     {x : ι → E} {c : ι → ℝ} (hx : ∀ i ∈ s, (x i, (c i : ℂ) • x i) ∈ A.graph)
     (horth : (s : Set ι).Pairwise fun i j => inner ℂ (x i) (x j) = 0) :
     (hA.isStarNormal_resolvent w).pvm.measure (∑ i ∈ s, x i) =
@@ -173,7 +173,7 @@ theorem measure_pvm_resolvent_sum_of_mem_graph (hw : w ∈ A.resolventSet) {ι :
 
 /-- **Finite eigenvector sums.** For pairwise orthogonal eigenvectors `A x_i = c_i x_i` (`c_i`
 real), the spectral measure of `Σ x_i` is `Σ ‖x_i‖² δ_{c_i}`. -/
-theorem measure_pvm_sum_of_mem_graph {ι : Type*} (s : Finset ι) {x : ι → E} {c : ι → ℝ}
+lemma measure_pvm_sum_of_mem_graph {ι : Type*} (s : Finset ι) {x : ι → E} {c : ι → ℝ}
     (hx : ∀ i ∈ s, (x i, (c i : ℂ) • x i) ∈ A.graph)
     (horth : (s : Set ι).Pairwise fun i j => inner ℂ (x i) (x j) = 0) :
     hA.pvm.measure (∑ i ∈ s, x i) = ∑ i ∈ s, (‖x i‖₊ ^ 2) • Measure.dirac (c i) := by
@@ -188,7 +188,7 @@ theorem measure_pvm_sum_of_mem_graph {ι : Type*} (s : Finset ι) {x : ι → E}
 /-! ### Atoms -/
 
 /-- For `w` in the resolvent set, `ker (A - c) = ker ((w - A)⁻¹ - (w - c)⁻¹)`. -/
-theorem mem_eigenspace_iff_resolvent_apply (hw : w ∈ A.resolventSet) {c : ℂ} {v : E} :
+lemma mem_eigenspace_iff_resolvent_apply (hw : w ∈ A.resolventSet) {c : ℂ} {v : E} :
     v ∈ hA.isClosed.eigenspace c ↔ A.resolvent w v = (w - c)⁻¹ • v := by
   rw [LinearPMap.IsClosed.mem_eigenspace_iff]
   refine ⟨LinearPMap.resolvent_apply_of_mem_graph hw, fun h => ?_⟩
@@ -207,7 +207,7 @@ theorem mem_eigenspace_iff_resolvent_apply (hw : w ∈ A.resolventSet) {c : ℂ}
     ring
 
 /-- The eigenspace `ker (A - c)` is the kernel of `(w - A)⁻¹ - (w - c)⁻¹`. -/
-theorem toSubmodule_eigenspace_eq_ker (hw : w ∈ A.resolventSet) (c : ℂ) :
+lemma toSubmodule_eigenspace_eq_ker (hw : w ∈ A.resolventSet) (c : ℂ) :
     (hA.isClosed.eigenspace c).toSubmodule =
       (A.resolvent w - algebraMap ℂ (E →L[ℂ] E) (w - c)⁻¹).ker := by
   ext v
@@ -217,7 +217,7 @@ theorem toSubmodule_eigenspace_eq_ker (hw : w ∈ A.resolventSet) (c : ℂ) :
 
 /-- **Atoms of `ν_u^w`.** For `w` in the resolvent set and `c` real,
 `ν_u^w {(w - c)⁻¹} = ‖P u‖²`, where `P` is the orthogonal projection onto `ker (A - c)`. -/
-theorem measure_pvm_resolvent_singleton (hw : w ∈ A.resolventSet) (u : E) (c : ℝ) :
+lemma measure_pvm_resolvent_singleton (hw : w ∈ A.resolventSet) (u : E) (c : ℝ) :
     (hA.isStarNormal_resolvent w).pvm.measure u {(w - (c : ℂ))⁻¹} =
       ENNReal.ofReal (‖(hA.isClosed.eigenspace (c : ℂ)).toSubmodule.starProjection u‖ ^ 2) := by
   have : IsStarNormal (A.resolvent w) := hA.isStarNormal_resolvent w
@@ -261,7 +261,7 @@ theorem measure_pvm_singleton (u : E) (c : ℝ) :
   simp
 
 /-- `μ_u` has no atom at `c` iff `u` is orthogonal to the eigenspace `ker (A - c)`. -/
-theorem measure_pvm_singleton_eq_zero_iff (u : E) (c : ℝ) :
+lemma measure_pvm_singleton_eq_zero_iff (u : E) (c : ℝ) :
     hA.pvm.measure u {c} = 0 ↔
       (hA.isClosed.eigenspace (c : ℂ)).toSubmodule.starProjection u = 0 := by
   rw [hA.measure_pvm_singleton, ENNReal.ofReal_eq_zero]
@@ -287,7 +287,7 @@ variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteS
 
 /-- **Covariance under intertwiners.** Let `V A ⊆ B V`. If `V† V u = u`, as for `u` in the initial
 space of a partial isometry, then `ν_{V u}^w` for `B` equals `ν_u^w` for `A`. -/
-theorem measure_pvm_resolvent_intertwiner
+lemma measure_pvm_resolvent_intertwiner
     (hV : (V : E →ₗ[ℂ] F).compPMap A ≤ B.compNat ((V : E →ₗ[ℂ] F).toPMap ⊤))
     {w : ℂ} (hwA : w ∈ A.resolventSet) (hwB : w ∈ B.resolventSet) {u : E}
     (hVu : (V†) (V u) = u) :
@@ -308,7 +308,7 @@ theorem measure_pvm_resolvent_intertwiner
 
 /-- **Covariance under intertwiners.** If `V A ⊆ B V` and `V† V u = u`, then the spectral measure
 of `V u` for `B` equals that of `u` for `A`. -/
-theorem measure_pvm_intertwiner
+lemma measure_pvm_intertwiner
     (hV : (V : E →ₗ[ℂ] F).compPMap A ≤ B.compNat ((V : E →ₗ[ℂ] F).toPMap ⊤)) {u : E}
     (hVu : (V†) (V u) = u) :
     hB.pvm.measure (V u) = hA.pvm.measure u := by
@@ -323,7 +323,7 @@ variable {u : E}
 
 variable (u) in
 /-- `μ_u` vanishes on every measurable set of real points of the resolvent set of `A`. -/
-theorem measure_pvm_eq_zero_of_subset_resolventSet {s : Set ℝ} (hs : MeasurableSet s)
+lemma measure_pvm_eq_zero_of_subset_resolventSet {s : Set ℝ} (hs : MeasurableSet s)
     (h : ∀ t ∈ s, (t : ℂ) ∈ A.resolventSet) : hA.pvm.measure u s = 0 := by
   have hφ : Measurable fun ζ : ℂ => re (I - ζ⁻¹) := by fun_prop
   rw [measure_pvm_eq_map, Measure.map_apply hφ hs, measure_eq_zero_iff_ae_notMem]
@@ -340,7 +340,7 @@ variable (u) in
 /-- The support of `μ_u` is contained in the real spectrum of `A`, the real `t` outside the
 resolvent set: that set is closed (`LinearPMap.isOpen_resolventSet`) and carries `μ_u`
 (`IsSelfAdjoint.measure_pvm_eq_zero_of_subset_resolventSet`). -/
-theorem support_measure_pvm_subset :
+lemma support_measure_pvm_subset :
     (hA.pvm.measure u).support ⊆ {t : ℝ | (t : ℂ) ∉ A.resolventSet} := by
   have hopen : IsOpen {t : ℝ | (t : ℂ) ∈ A.resolventSet} :=
     (LinearPMap.isOpen_resolventSet A).preimage continuous_ofReal
@@ -388,7 +388,7 @@ theorem notMem_resolventSet_iff_forall_pvm_ball_ne_zero {t : ℝ} :
 
 /-- **The real spectrum is the closed support of the spectral measures**:
 `{t ∈ ℝ | t ∉ ρ(A)} = closure (⋃ᵤ supp μ_u)`. -/
-theorem closure_iUnion_support_measure_pvm :
+lemma closure_iUnion_support_measure_pvm :
     closure (⋃ u, (hA.pvm.measure u).support) = {t : ℝ | (t : ℂ) ∉ A.resolventSet} := by
   have hclosed : IsClosed {t : ℝ | (t : ℂ) ∉ A.resolventSet} :=
     ((LinearPMap.isOpen_resolventSet A).preimage continuous_ofReal).isClosed_compl
@@ -405,7 +405,7 @@ theorem closure_iUnion_support_measure_pvm :
 
 /-- On a finite-dimensional space, all the spectral measures `μ_u` are concentrated on one finite
 set of real numbers: the image of the (finite) spectrum of `(i - A)⁻¹` under `ζ ↦ re (i - ζ⁻¹)`. -/
-theorem exists_finite_measure_pvm_compl_eq_zero [FiniteDimensional ℂ E] :
+lemma exists_finite_measure_pvm_compl_eq_zero [FiniteDimensional ℂ E] :
     ∃ F : Set ℝ, F.Finite ∧ ∀ u, hA.pvm.measure u Fᶜ = 0 := by
   have hφ : Measurable fun ζ : ℂ => re (I - ζ⁻¹) := by fun_prop
   have hfin : (spectrum ℂ (A.resolvent I)).Finite := by
@@ -420,7 +420,7 @@ variable (u) in
 /-- **Stieltjes representation at real points.** For real `-t` in the resolvent set of `A` (for
 instance `t > 0` and `A` positive), `⟪u, (t + A)⁻¹ u⟫ = ∫ (t + λ)⁻¹ dμ_u(λ)`, written with
 `(t + A)⁻¹ = -(-t - A)⁻¹`. In particular `⟪u, (t + A)⁻¹ u⟫` is real. -/
-theorem inner_resolvent_neg_eq_integral {t : ℝ} (ht : (-t : ℂ) ∈ A.resolventSet) :
+lemma inner_resolvent_neg_eq_integral {t : ℝ} (ht : (-t : ℂ) ∈ A.resolventSet) :
     inner ℂ u (A.resolvent (-t) u) = -((∫ s, (t + s)⁻¹ ∂(hA.pvm.measure u) : ℝ) : ℂ) := by
   rw [hA.inner_resolvent_eq_integral u ht]
   have : ∀ s : ℝ, (-(t : ℂ) - s)⁻¹ = ((-(t + s)⁻¹ : ℝ) : ℂ) := fun s => by
@@ -432,14 +432,14 @@ theorem inner_resolvent_neg_eq_integral {t : ℝ} (ht : (-t : ℂ) ∈ A.resolve
 
 variable (u) in
 /-- For a positive self-adjoint operator, `μ_u` has no mass on the negative half-line. -/
-theorem measure_pvm_Iio_zero (hpos : A.IsPositive) :
+lemma measure_pvm_Iio_zero (hpos : A.IsPositive) :
     hA.pvm.measure u (Set.Iio 0) = 0 :=
   hA.measure_pvm_eq_zero_of_subset_resolventSet u measurableSet_Iio fun t ht =>
     hpos.mem_resolventSet hA (by simpa using ht)
 
 variable (u) in
 /-- For a positive self-adjoint operator, `μ_u` is concentrated on `[0, ∞)`. -/
-theorem ae_nonneg_measure_pvm (hpos : A.IsPositive) : ∀ᵐ t ∂(hA.pvm.measure u), 0 ≤ t := by
+lemma ae_nonneg_measure_pvm (hpos : A.IsPositive) : ∀ᵐ t ∂(hA.pvm.measure u), 0 ≤ t := by
   have := hA.measure_pvm_Iio_zero u hpos
   rw [measure_eq_zero_iff_ae_notMem] at this
   filter_upwards [this] with t ht
@@ -447,7 +447,7 @@ theorem ae_nonneg_measure_pvm (hpos : A.IsPositive) : ∀ᵐ t ∂(hA.pvm.measur
 
 variable (u) in
 /-- For a positive self-adjoint operator and `t > 0`, `λ ↦ (t + λ)⁻¹` is `μ_u`-integrable. -/
-theorem integrable_inv_add_measure_pvm (hpos : A.IsPositive) {t : ℝ} (ht : 0 < t) :
+lemma integrable_inv_add_measure_pvm (hpos : A.IsPositive) {t : ℝ} (ht : 0 < t) :
     Integrable (fun s => (t + s)⁻¹) (hA.pvm.measure u) := by
   refine Integrable.of_bound (by fun_prop) t⁻¹ ?_
   filter_upwards [hA.ae_nonneg_measure_pvm u hpos] with s hs
@@ -459,7 +459,7 @@ theorem integrable_inv_add_measure_pvm (hpos : A.IsPositive) {t : ℝ} (ht : 0 <
 variable (u) in
 /-- **Scaling the operator.** For real `r ≠ 0` and self-adjoint `A` and `r A`, the spectral measure
 of `r A` at `u` is the image of that of `A` under `λ ↦ r λ`. -/
-theorem measure_pvm_ofReal_smul {r : ℝ} (hr : r ≠ 0) (hrA : IsSelfAdjoint ((r : ℂ) • A)) :
+lemma measure_pvm_ofReal_smul {r : ℝ} (hr : r ≠ 0) (hrA : IsSelfAdjoint ((r : ℂ) • A)) :
     hrA.pvm.measure u = (hA.pvm.measure u).map fun t => r * t := by
   set w : ℂ := (r : ℂ)⁻¹ * I
   have hr0 : (r : ℂ) ≠ 0 := ofReal_ne_zero.mpr hr
@@ -564,7 +564,7 @@ include hA in
 /-- **Value at the minimiser** of the variational formula
 (`IsSelfAdjoint.isLeast_re_inner_resolvent_neg`). For self-adjoint `A = T†T`, `t > 0` and
 `r = (-t - A)⁻¹ u`, `re ⟪u, r⟫ = -(t ‖r‖² + ‖T r‖²)`. -/
-theorem re_inner_resolvent_neg_eq {t : ℝ} (ht : 0 < t) (u : E) {y : F}
+lemma re_inner_resolvent_neg_eq {t : ℝ} (ht : 0 < t) (u : E) {y : F}
     (hy : (A.resolvent (-t) u, y) ∈ T.graphₛₗ) :
     re (inner ℂ u (A.resolvent (-t) u)) = -(t * ‖A.resolvent (-t) u‖ ^ 2 + ‖y‖ ^ 2) := by
   obtain ⟨y₀, hy₀, key⟩ := exists_mem_graph_resolvent_neg hA hAT ht u
@@ -602,7 +602,7 @@ theorem isLeast_re_inner_resolvent_neg {t : ℝ} (ht : 0 < t) (u : E) :
 (`IsSelfAdjoint.domain_le_domain_sqrt_of_eq_adjointₛₗ_compNat`). For closed `T`,
 `dom T = dom A^{1/2}` (`IsSelfAdjoint.domain_sqrt_eq_domain`) and equality holds
 (`IsSelfAdjoint.lintegral_measure_pvm_eq_norm_sq`). -/
-theorem lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.graphₛₗ) :
+lemma lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.graphₛₗ) :
     ∫⁻ s, ENNReal.ofReal s ∂(hA.pvm.measure u) ≤ ENNReal.ofReal (‖u'‖ ^ 2) := by
   have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAT
   set μ := hA.pvm.measure u
@@ -673,7 +673,7 @@ every `t > 0`, i.e. `⟪u', (t + B)⁻¹ u'⟫ ≤ ⟪u, (t + A)⁻¹ u⟫`.
 
 The domination is only required on the graph of `S`, not on that of its closure: the variational
 formula (`IsSelfAdjoint.isLeast_re_inner_resolvent_neg`) passes to the closure by continuity. -/
-theorem integral_inv_add_measure_pvm_le_of_forall_mem_graph
+lemma integral_inv_add_measure_pvm_le_of_forall_mem_graph
     {E' F' : Type*} [NormedAddCommGroup E'] [InnerProductSpace ℂ E'] [CompleteSpace E']
     [NormedAddCommGroup F'] [InnerProductSpace ℂ F']
     {B : E' →ₗ.[ℂ] E'} (hB : IsSelfAdjoint B) {S : E' →ₛₗ.[σ] F'} (hS : S.IsClosableₛₗ)

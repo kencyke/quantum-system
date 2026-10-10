@@ -173,12 +173,12 @@ lemma mem_graph_relativeModular_iff {p : H × H} :
   rw [LinearPMap.mem_graphₛₗ_iff_mem_graph, relativeModular_def]
 
 /-- `Δ_{η,ξ}` is self-adjoint (von Neumann's theorem). -/
-theorem isSelfAdjoint_relativeModular : IsSelfAdjoint (Δ⟦η, ξ⟧) :=
+lemma isSelfAdjoint_relativeModular : IsSelfAdjoint (Δ⟦η, ξ⟧) :=
   LinearPMap.isSelfAdjoint_adjointₛₗ_compNat_self (isClosed_closure_relativeTomita M η ξ)
     (LinearPMap.dense_domain_closureₛₗ (dense_domain_relativeTomita M η ξ))
 
 /-- `Δ_{η,ξ}` is positive. -/
-theorem isPositive_relativeModular : (Δ⟦η, ξ⟧).IsPositive :=
+lemma isPositive_relativeModular : (Δ⟦η, ξ⟧).IsPositive :=
   LinearPMap.isPositive_adjointₛₗ_compNat_self
     (LinearPMap.dense_domain_closureₛₗ (dense_domain_relativeTomita M η ξ))
 
@@ -278,7 +278,7 @@ local notation "μ⟦" η ", " ξ "⟧" => VonNeumannAlgebra.relativeModularMeas
 variable {M η ξ}
 
 /-- `re ⟪u, Δ_{η,ξ} u⟫ = ‖S̄_{η,ξ} u‖²`, in graph form. -/
-theorem re_inner_eq_norm_sq_of_mem_graph_relativeModular {u u' y : H}
+lemma re_inner_eq_norm_sq_of_mem_graph_relativeModular {u u' y : H}
     (hu : (u, u') ∈ (Δ⟦η, ξ⟧).graph)
     (hy : (u, y) ∈ (S⟦η, ξ⟧).closureₛₗ.graphₛₗ) : re ⟪u, u'⟫_ℂ = ‖y‖ ^ 2 :=
   (isSelfAdjoint_relativeModular M η ξ).re_inner_eq_norm_sq_of_eq_adjointₛₗ_compNat
@@ -349,7 +349,7 @@ theorem measure_pvm_relativeModular_singleton_zero_eq_zero_iff :
 
 /-- **Form bound.** `∫ λ dμ_ξ(λ) ≤ ‖s(ξ) η‖²` for the spectral measure `μ_ξ` of `Δ_{η,ξ}`, since
 `S̄_{η,ξ} ξ = s(ξ) η`; equality holds (`VonNeumannAlgebra.lintegral_measure_pvm_relativeModular_eq`). -/
-theorem lintegral_measure_pvm_relativeModular_le :
+lemma lintegral_measure_pvm_relativeModular_le :
     ∫⁻ t, ENNReal.ofReal t ∂μ⟦η, ξ⟧ ≤ ENNReal.ofReal (‖M.supportProj ξ η‖ ^ 2) :=
   (isSelfAdjoint_relativeModular M η ξ).lintegral_measure_pvm_le_norm_sq
     (relativeModular_def M η ξ)
@@ -366,7 +366,7 @@ lemma lintegral_measure_pvm_relativeModular_eq :
 variable (M ξ)
 
 /-- `Δ_{ξ,ξ} ξ = ξ`: `S̄_{ξ,ξ} ξ = s(ξ) ξ = ξ` and `S̄_{ξ,ξ}† ξ = F_{ξ,ξ} ξ = s′(ξ) ξ = ξ`. -/
-theorem self_mem_graph_relativeModular_self : (ξ, ξ) ∈ (Δ⟦ξ, ξ⟧).graph := by
+lemma self_mem_graph_relativeModular_self : (ξ, ξ) ∈ (Δ⟦ξ, ξ⟧).graph := by
   rw [mem_graph_relativeModular_iff, LinearPMap.mem_graphₛₗ_compNat]
   refine ⟨ξ, ?_, ?_⟩
   · simpa using mem_graph_closure_relativeTomita (self_mem_graph_relativeTomita M ξ ξ)
@@ -375,7 +375,7 @@ theorem self_mem_graph_relativeModular_self : (ξ, ξ) ∈ (Δ⟦ξ, ξ⟧).grap
     simpa using self_mem_graph_relativeTomita M′ ξ ξ
 
 /-- For `Δ_{ξ,ξ}`, the spectral measure at `ξ` is `‖ξ‖² δ₁`. -/
-theorem measure_pvm_relativeModular_self :
+lemma measure_pvm_relativeModular_self :
     μ⟦ξ, ξ⟧ = (‖ξ‖₊ ^ 2) • Measure.dirac 1 :=
   (isSelfAdjoint_relativeModular M ξ ξ).measure_pvm_of_mem_graph (c := 1)
     (by simpa using self_mem_graph_relativeModular_self M ξ)
@@ -398,7 +398,7 @@ private lemma star_apply_apply_of_mem_graph (hw : w ∈ M′) {r : ℂ} (hwη : 
 /-- **Changing `η` along the commutant.** For `w′ ∈ M′` with `w′⋆ w′ η = r η` (`r > 0`),
 `Δ_{w′ η, ξ} = r Δ_{η,ξ}`: with `C = r⁻¹ w′⋆`, `S_{w′ η, ξ} = w′ S_{η,ξ}` and
 `C S_{w′ η, ξ} = S_{η,ξ}`, so `w′ S̄_{η,ξ} ⊆ S̄_{w′ η, ξ}` and `C S̄_{w′ η, ξ} ⊆ S̄_{η,ξ}`. -/
-theorem relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0 < r)
+lemma relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0 < r)
     (hwη : star w (w η) = (r : ℂ) • η) :
     Δ⟦w η, ξ⟧ = (r : ℂ) • Δ⟦η, ξ⟧ := by
   have hr0 : (r : ℂ) ≠ 0 := ofReal_ne_zero.mpr hr.ne'
@@ -427,7 +427,7 @@ theorem relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0 < r)
         mul_inv_cancel₀ hr0, one_mul]
 
 /-- **Scaling `η`.** `Δ_{a η, ξ} = |a|² Δ_{η,ξ}` for `a ≠ 0`. -/
-theorem relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
+lemma relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
     Δ⟦a • η, ξ⟧ = ((‖a‖ ^ 2 : ℝ) : ℂ) • Δ⟦η, ξ⟧ := by
   have hw : a • (1 : H →L[ℂ] H) ∈ M′ := SMulMemClass.smul_mem a (one_mem M′)
   have h := relativeModular_apply_left (ξ := ξ) (η := η) hw (r := ‖a‖ ^ 2) (by positivity) (by
@@ -437,7 +437,7 @@ theorem relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
 
 /-- **Scaling `ξ`.** `Δ_{η, c ξ} = |c|⁻² Δ_{η,ξ}` for `c ≠ 0`: with `B = c̄⁻¹` and `C = c̄`,
 `S_{η, c ξ} = B S_{η,ξ}` and `C S_{η, c ξ} = S_{η,ξ}`. -/
-theorem relativeModular_smul_right {c : ℂ} (hc : c ≠ 0) :
+lemma relativeModular_smul_right {c : ℂ} (hc : c ≠ 0) :
     Δ⟦η, c • ξ⟧ = (((‖c‖ ^ 2)⁻¹ : ℝ) : ℂ) • Δ⟦η, ξ⟧ := by
   have hc' : conj c ≠ 0 := (map_ne_zero _).mpr hc
   have hn : 0 < ‖c‖ ^ 2 := by positivity
@@ -538,7 +538,7 @@ lemma compPMap_relativeModular_le_of_mem_commutant (hw : w ∈ M′) (hwξ : sta
 
 /-- For `w′ ∈ M′` with `w′⋆ w′ η = r η` (`r > 0`), the spectral measure of `Δ_{w′ η, ξ}` at `ξ` is
 the image of that of `Δ_{η,ξ}` under `λ ↦ r λ`. -/
-theorem measure_pvm_relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0 < r)
+lemma measure_pvm_relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0 < r)
     (hwη : star w (w η) = (r : ℂ) • η) :
     μ⟦w η, ξ⟧ = (μ⟦η, ξ⟧).map fun t => r * t := by
   have h := relativeModular_apply_left (ξ := ξ) hw hr hwη
@@ -550,7 +550,7 @@ theorem measure_pvm_relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr :
 
 /-- **Scaling `η`.** For `a ≠ 0`, the spectral measure of `Δ_{a η, ξ}` at `ξ` is the image of that
 of `Δ_{η,ξ}` under `λ ↦ |a|² λ`. -/
-theorem measure_pvm_relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
+lemma measure_pvm_relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
     μ⟦a • η, ξ⟧ = (μ⟦η, ξ⟧).map fun t => ‖a‖ ^ 2 * t := by
   have h := relativeModular_smul_left (η := η) (ξ := ξ) (M := M) ha
   unfold relativeModularMeasure
@@ -561,7 +561,7 @@ theorem measure_pvm_relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
 
 /-- **Scaling `ξ`.** The spectral measure of `Δ_{η, c ξ}` at `c ξ` is `|c|²` times the image of
 that of `Δ_{η,ξ}` at `ξ` under `λ ↦ |c|⁻² λ` (both sides vanish for `c = 0`). -/
-theorem measure_pvm_relativeModular_smul_right (c : ℂ) :
+lemma measure_pvm_relativeModular_smul_right (c : ℂ) :
     μ⟦η, c • ξ⟧ = (‖c‖₊ ^ 2) • (μ⟦η, ξ⟧).map fun t => (‖c‖ ^ 2)⁻¹ * t := by
   unfold relativeModularMeasure
   rcases eq_or_ne c 0 with rfl | hc
@@ -575,7 +575,7 @@ theorem measure_pvm_relativeModular_smul_right (c : ℂ) :
 
 /-- **Changing `ξ` along the commutant.** For `w′ ∈ M′` with `w′⋆ w′ ξ = ξ`, the spectral measure of
 `Δ_{η, w′ ξ}` at `w′ ξ` equals that of `Δ_{η,ξ}` at `ξ`. -/
-theorem measure_pvm_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
+lemma measure_pvm_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (w ξ) = ξ) :
     μ⟦η, w ξ⟧ = μ⟦η, ξ⟧ :=
   (isSelfAdjoint_relativeModular M η ξ).measure_pvm_intertwiner
     (isSelfAdjoint_relativeModular M η (w ξ))
@@ -586,7 +586,7 @@ theorem measure_pvm_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w
 
 /-- **Independence of the representative of `ω_η`.** If `η, η′` have the same vector functional on
 `M`, then `Δ_{η′,ξ} = Δ_{η,ξ}`. -/
-theorem relativeModular_eq_of_inner_eq_left {η' : H}
+lemma relativeModular_eq_of_inner_eq_left {η' : H}
     (h : ∀ x ∈ M, ⟪η, x η⟫_ℂ = ⟪η', x η'⟫_ℂ) :
     Δ⟦η', ξ⟧ = Δ⟦η, ξ⟧ := by
   obtain ⟨v, hv, -, rfl, hvv, -⟩ := exists_partialIsometry_mem_commutant_of_inner_eq h
@@ -596,7 +596,7 @@ theorem relativeModular_eq_of_inner_eq_left {η' : H}
 
 /-- **Independence of the representative of `ω_ξ`.** If `ξ, ξ′` have the same vector functional on
 `M`, then the spectral measure of `Δ_{η,ξ′}` at `ξ′` equals that of `Δ_{η,ξ}` at `ξ`. -/
-theorem measure_pvm_relativeModular_eq_of_inner_eq_right {ξ' : H}
+lemma measure_pvm_relativeModular_eq_of_inner_eq_right {ξ' : H}
     (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪ξ', x ξ'⟫_ℂ) :
     μ⟦η, ξ'⟧ = μ⟦η, ξ⟧ := by
   obtain ⟨v, hv, -, rfl, hvv, -⟩ := exists_partialIsometry_mem_commutant_of_inner_eq h

@@ -128,7 +128,7 @@ matrix `A`, then `J(Φ)` is the matrix of the Choi operator `J_e(Ψ)` (`Continuo
 in the product `e ⊗ e'` of the standard bases. Its entries are
 `⟪eᵢ ⊗ e'ₖ, J_e(Ψ) (eⱼ ⊗ e'ₗ)⟫ = ⟪e'ₖ, Ψ(|eᵢ⟩⟨eⱼ|) e'ₗ⟫ = Φ(Eᵢⱼ) k l`
 (`ContinuousLinearMap.adjoint_mkL_comp_choi_comp_mkL`, `Matrix.toEuclideanCLM_single`). -/
-theorem choiMatrix_eq_toMatrix_choi {Φ : F} {Ψ : G}
+lemma choiMatrix_eq_toMatrix_choi {Φ : F} {Ψ : G}
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     choiMatrix Φ =
       LinearMap.toMatrix
@@ -148,7 +148,7 @@ theorem choiMatrix_eq_toMatrix_choi {Φ : F} {Ψ : G}
 
 /-- The Choi matrix is positive semidefinite iff the Choi operator `J_e(Ψ)` of the operator form
 `Ψ` is positive (`Matrix.choiMatrix_eq_toMatrix_choi`). -/
-theorem posSemidef_choiMatrix_iff_nonneg_choi {Φ : F} {Ψ : G}
+lemma posSemidef_choiMatrix_iff_nonneg_choi {Φ : F} {Ψ : G}
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     (choiMatrix Φ).PosSemidef ↔ 0 ≤ ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ := by
   rw [choiMatrix_eq_toMatrix_choi h, LinearMap.posSemidef_toMatrix_iff,
@@ -156,7 +156,7 @@ theorem posSemidef_choiMatrix_iff_nonneg_choi {Φ : F} {Ψ : G}
 
 /-- The rank of the Choi matrix is the rank of the Choi operator `J_e(Ψ)` of the operator form `Ψ`
 (`Matrix.choiMatrix_eq_toMatrix_choi`). -/
-theorem rank_choiMatrix_eq_finrank_range_choi {Φ : F} {Ψ : G}
+lemma rank_choiMatrix_eq_finrank_range_choi {Φ : F} {Ψ : G}
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     (choiMatrix Φ).rank = Module.finrank ℂ (LinearMap.range
       (ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ :
@@ -180,7 +180,7 @@ omit [DecidableEq m] in
 /-- Every Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` has at least `rank J(Φ)` operators: its
 operators `K'ₐ` are a Kraus representation of the operator form
 (`ContinuousLinearMap.finrank_range_choi_le_card`). -/
-theorem rank_choiMatrix_le_card_of_kraus {Φ : F} {ι : Type*} [Fintype ι] (K : ι → Matrix m n ℂ)
+lemma rank_choiMatrix_le_card_of_kraus {Φ : F} {ι : Type*} [Fintype ι] (K : ι → Matrix m n ℂ)
     (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
     (choiMatrix Φ).rank ≤ Fintype.card ι := by
   classical
@@ -197,7 +197,7 @@ omit [DecidableEq m] in
 operators iff its Kraus operators are linearly independent: so are their operators `K'ₐ`, a Kraus
 representation of the operator form
 (`ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent`). -/
-theorem rank_choiMatrix_eq_card_iff_linearIndependent {Φ : F} {ι : Type*} [Fintype ι]
+lemma rank_choiMatrix_eq_card_iff_linearIndependent {Φ : F} {ι : Type*} [Fintype ι]
     (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
     (choiMatrix Φ).rank = Fintype.card ι ↔ LinearIndependent ℂ K := by
   classical
@@ -299,7 +299,7 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- A linear map with a Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ`, indexed by any finite type, is
 completely positive: its operator form is the Kraus map of the operators of the `Kₐ`
 (`CompletelyPositiveMap.ofKraus`). -/
-theorem exists_coe_eq_of_kraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
+lemma exists_coe_eq_of_kraus (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) {ι : Type*} [Fintype ι]
     (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
     ∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ := by
   refine (exists_coe_eq_iff_toEuclideanCLM (arrowCongr_toEuclideanCLM_apply Φ)).2
@@ -314,7 +314,7 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 `rank J(φ)` operators. This is the minimal number (`Matrix.rank_choiMatrix_le_card_of_kraus`). The
 `Kₐ` are the matrices of Kraus operators of the operator form of `φ`
 (`CompletelyPositiveMap.exists_kraus_finrank_range_choi`). -/
-theorem exists_kraus_rank (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
+lemma exists_kraus_rank (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
     ∃ K : Fin (choiMatrix φ).rank → Matrix m n ℂ, ∀ A, φ A = ∑ a, K a * A * (K a)ᴴ := by
   set ψ := arrowCongr (toEuclideanCLM (𝕜 := ℂ)) (toEuclideanCLM (𝕜 := ℂ)) φ
   have hψ (A : Matrix n n ℂ) : ψ (toEuclideanCLM (𝕜 := ℂ) A) =

@@ -198,7 +198,7 @@ scoped infixr:100 " ⊗ₕ " => HilbertTensor.tmul
 
 /-- The inner product of two pure tensors in the completed tensor product factorises as the
 product of the inner products of the factors. -/
-@[simp] theorem inner_tmul (x x' : H₁) (y y' : H₂) :
+@[simp] lemma inner_tmul (x x' : H₁) (y y' : H₂) :
     inner ℂ (x ⊗ₕ y) (x' ⊗ₕ y') = inner ℂ x x' * inner ℂ y y' := by
   rw [tmul, tmul, UniformSpace.Completion.inner_coe, TensorProduct.inner_tmul]
 
@@ -207,19 +207,19 @@ product of the inner products of the factors. -/
   rw [tmul, UniformSpace.Completion.norm_coe, TensorProduct.norm_tmul]
 
 /-- The pure tensor is additive in its right argument. -/
-theorem tmul_add (x : H₁) (y y' : H₂) : x ⊗ₕ (y + y') = x ⊗ₕ y + x ⊗ₕ y' := by
+lemma tmul_add (x : H₁) (y y' : H₂) : x ⊗ₕ (y + y') = x ⊗ₕ y + x ⊗ₕ y' := by
   rw [tmul, tmul, tmul, ← UniformSpace.Completion.coe_add, TensorProduct.tmul_add]
 
 /-- The pure tensor is additive in its left argument. -/
-theorem add_tmul (x x' : H₁) (y : H₂) : (x + x') ⊗ₕ y = x ⊗ₕ y + x' ⊗ₕ y := by
+lemma add_tmul (x x' : H₁) (y : H₂) : (x + x') ⊗ₕ y = x ⊗ₕ y + x' ⊗ₕ y := by
   rw [tmul, tmul, tmul, ← UniformSpace.Completion.coe_add, TensorProduct.add_tmul]
 
 /-- A scalar in the left argument of a pure tensor factors out. -/
-theorem tmul_smul_left (c : ℂ) (x : H₁) (y : H₂) : (c • x) ⊗ₕ y = c • x ⊗ₕ y := by
+lemma tmul_smul_left (c : ℂ) (x : H₁) (y : H₂) : (c • x) ⊗ₕ y = c • x ⊗ₕ y := by
   rw [tmul, tmul, ← UniformSpace.Completion.coe_smul, TensorProduct.smul_tmul']
 
 /-- A scalar in the right argument of a pure tensor factors out. -/
-theorem smul_tmul_right (c : ℂ) (x : H₁) (y : H₂) : x ⊗ₕ (c • y) = c • x ⊗ₕ y := by
+lemma smul_tmul_right (c : ℂ) (x : H₁) (y : H₂) : x ⊗ₕ (c • y) = c • x ⊗ₕ y := by
   rw [tmul, tmul, ← UniformSpace.Completion.coe_smul, TensorProduct.tmul_smul]
 
 /-- A pure tensor with a zero left argument vanishes. -/
@@ -290,7 +290,7 @@ lemma norm_sq_sum_tmul_of_orthonormal {n : ℕ} {e : Fin n → H₂} (he : Ortho
 /-- **Cross-norm bound (left factor).** On the algebraic Hilbert tensor product, tensoring a
 bounded operator `A : H₁ → H₃` with the identity of the second factor does not increase the norm
 beyond a factor of `‖A‖`: `‖(A ⊗ 1) z‖ ≤ ‖A‖ * ‖z‖`. -/
-theorem norm_map_left_le (A : H₁ →L[ℂ] H₃) (z : H₁ ⊗[ℂ] H₂) :
+lemma norm_map_left_le (A : H₁ →L[ℂ] H₃) (z : H₁ ⊗[ℂ] H₂) :
     ‖TensorProduct.map A.toLinearMap LinearMap.id z‖ ≤ ‖A‖ * ‖z‖ := by
   obtain ⟨n, e, ξ, he, rfl⟩ := exists_orthonormal_rep z
   have key₁ := norm_sq_sum_tmul_of_orthonormal he (H₃ := H₁)
@@ -317,7 +317,7 @@ lemma commIsometry_map_id (B : H₂ →L[ℂ] H₂) (z : H₁ ⊗[ℂ] H₂) :
 
 /-- **Cross-norm bound (right factor).** `‖(1 ⊗ B) z‖ ≤ ‖B‖ * ‖z‖`, obtained from the left bound
 by conjugating with the commutation isometry. -/
-theorem norm_map_right_le (B : H₂ →L[ℂ] H₂) (z : H₁ ⊗[ℂ] H₂) :
+lemma norm_map_right_le (B : H₂ →L[ℂ] H₂) (z : H₁ ⊗[ℂ] H₂) :
     ‖TensorProduct.map LinearMap.id B.toLinearMap z‖ ≤ ‖B‖ * ‖z‖ := by
   rw [← (commIsometry ℂ H₁ H₂).norm_map (TensorProduct.map LinearMap.id B.toLinearMap z),
     commIsometry_map_id, ← (commIsometry ℂ H₁ H₂).norm_map z]

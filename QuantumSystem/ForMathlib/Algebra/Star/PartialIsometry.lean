@@ -67,14 +67,14 @@ variable {R : Type*} [Semigroup R] [StarMul R]
 namespace IsPartialIsometry
 
 /-- The source projection `v⋆ * v` of a partial isometry is a star projection. -/
-theorem isStarProjection_star_mul_self {v : R} (h : IsPartialIsometry v) :
+lemma isStarProjection_star_mul_self {v : R} (h : IsPartialIsometry v) :
     IsStarProjection (star v * v) :=
   ⟨by calc (star v * v) * (star v * v) = star v * (v * star v * v) := by simp only [mul_assoc]
         _ = star v * v := by rw [h],
    IsSelfAdjoint.star_mul_self v⟩
 
 /-- The range projection `v * v⋆` of a partial isometry is a star projection. -/
-theorem isStarProjection_mul_star_self {v : R} (h : IsPartialIsometry v) :
+lemma isStarProjection_mul_star_self {v : R} (h : IsPartialIsometry v) :
     IsStarProjection (v * star v) :=
   ⟨by calc (v * star v) * (v * star v) = (v * star v * v) * star v := by simp only [mul_assoc]
         _ = v * star v := by rw [h],
@@ -93,7 +93,7 @@ lemma IsStarProjection.mul_eq_left_of_mul_eq_right {e f : R} (he : IsStarProject
   rwa [star_mul, he.isSelfAdjoint.star_eq, hf.isSelfAdjoint.star_eq] at this
 
 /-- The adjoint of a partial isometry is a partial isometry. -/
-protected theorem IsPartialIsometry.star {v : R} (h : IsPartialIsometry v) :
+protected lemma IsPartialIsometry.star {v : R} (h : IsPartialIsometry v) :
     IsPartialIsometry (star v) := by
   unfold IsPartialIsometry at *
   rw [star_star]
@@ -111,7 +111,7 @@ variable {R : Type*} [NonUnitalNormedRing R] [StarRing R] [CStarRing R]
 projection `v⋆ * v` is a star projection, then `v` is a partial isometry. With `a := v - v v⋆ v`
 the idempotence of `v⋆ * v` gives `a⋆ * a = 0`, and the C⋆-identity `‖a‖² = ‖a⋆ a‖` forces
 `a = 0`. -/
-theorem isPartialIsometry_of_isStarProjection_star_mul_self {v : R}
+lemma isPartialIsometry_of_isStarProjection_star_mul_self {v : R}
     (h : IsStarProjection (star v * v)) : IsPartialIsometry v := by
   have hidem : star v * v * (star v * v) = star v * v := h.isIdempotentElem.eq
   have hstar : star (v * star v * v) = star v * v * star v := by
@@ -136,7 +136,7 @@ theorem isPartialIsometry_of_isStarProjection_star_mul_self {v : R}
 /-- The C⋆-ring converse to `IsPartialIsometry.isStarProjection_mul_star_self`: if the range
 projection `v * v⋆` is a star projection, then `v` is a partial isometry. This is the source
 statement applied to `v⋆`. -/
-theorem isPartialIsometry_of_isStarProjection_mul_star_self {v : R}
+lemma isPartialIsometry_of_isStarProjection_mul_star_self {v : R}
     (h : IsStarProjection (v * star v)) : IsPartialIsometry v := by
   have h' : IsStarProjection (star (star v) * star v) := by rwa [star_star]
   have hv := IsPartialIsometry.star (isPartialIsometry_of_isStarProjection_star_mul_self h')
@@ -144,14 +144,14 @@ theorem isPartialIsometry_of_isStarProjection_mul_star_self {v : R}
 
 /-- In a C⋆-ring, `v` is a partial isometry iff its source projection `v⋆ * v` is a star
 projection. -/
-theorem isPartialIsometry_iff_isStarProjection_star_mul_self {v : R} :
+lemma isPartialIsometry_iff_isStarProjection_star_mul_self {v : R} :
     IsPartialIsometry v ↔ IsStarProjection (star v * v) :=
   ⟨IsPartialIsometry.isStarProjection_star_mul_self,
     isPartialIsometry_of_isStarProjection_star_mul_self⟩
 
 /-- In a C⋆-ring, `v` is a partial isometry iff its range projection `v * v⋆` is a star
 projection. -/
-theorem isPartialIsometry_iff_isStarProjection_mul_star_self {v : R} :
+lemma isPartialIsometry_iff_isStarProjection_mul_star_self {v : R} :
     IsPartialIsometry v ↔ IsStarProjection (v * star v) :=
   ⟨IsPartialIsometry.isStarProjection_mul_star_self,
     isPartialIsometry_of_isStarProjection_mul_star_self⟩

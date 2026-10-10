@@ -427,7 +427,7 @@ lemma _root_.LinearPMap.resolvent_eq_comp_of_compNat_toPMap_eq {T : E →ₗ.[�
 include hA in
 /-- **Covariance of the projection-valued measure**: if a semilinear isometric equivalence `V`
 (unitary or antiunitary) satisfies `B V = V A` for a self-adjoint `B`, then `E_B = V E_A V⁻¹`. -/
-theorem pvm_eq_transport {B : K →ₗ.[ℂ] K} (hB : IsSelfAdjoint B) (V : E ≃ₛₗᵢ[σ] K)
+lemma pvm_eq_transport {B : K →ₗ.[ℂ] K} (hB : IsSelfAdjoint B) (V : E ≃ₛₗᵢ[σ] K)
     (hAB : B.compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) = (V : E →ₛₗ[σ] K).compPMap A) :
     hB.pvm = hA.pvm.transport V := by
   refine (hB.eq_pvm_of_eq_integralPMap _ (hB.eq_of_resolvent_I_eq

@@ -28,7 +28,7 @@ variable {ι : Type*}
 
 /-- The coercion `ℝ → EReal` commutes with finite sums. -/
 @[simp, norm_cast]
-theorem coe_finsetSum (s : Finset ι) (f : ι → ℝ) :
+lemma coe_finsetSum (s : Finset ι) (f : ι → ℝ) :
     ((∑ i ∈ s, f i : ℝ) : EReal) = ∑ i ∈ s, (f i : EReal) := by
   classical
   induction s using Finset.induction_on with
@@ -36,7 +36,7 @@ theorem coe_finsetSum (s : Finset ι) (f : ι → ℝ) :
   | insert i s hi ih => rw [Finset.sum_insert hi, Finset.sum_insert hi, coe_add, ih]
 
 /-- A finite sum of extended reals none of which is `⊥` is not `⊥`. -/
-theorem finsetSum_ne_bot {s : Finset ι} {f : ι → EReal} (h : ∀ i ∈ s, f i ≠ ⊥) :
+lemma finsetSum_ne_bot {s : Finset ι} {f : ι → EReal} (h : ∀ i ∈ s, f i ≠ ⊥) :
     ∑ i ∈ s, f i ≠ ⊥ := by
   classical
   induction s using Finset.induction_on with
@@ -47,7 +47,7 @@ theorem finsetSum_ne_bot {s : Finset ι} {f : ι → EReal} (h : ∀ i ∈ s, f 
       ih fun j hj => h j (Finset.mem_insert_of_mem hj)⟩
 
 /-- A finite sum of extended reals none of which is `⊥` is `⊤` as soon as one term is `⊤`. -/
-theorem finsetSum_eq_top {s : Finset ι} {f : ι → EReal} (hbot : ∀ i ∈ s, f i ≠ ⊥) {i : ι}
+lemma finsetSum_eq_top {s : Finset ι} {f : ι → EReal} (hbot : ∀ i ∈ s, f i ≠ ⊥) {i : ι}
     (hi : i ∈ s) (htop : f i = ⊤) : ∑ j ∈ s, f j = ⊤ := by
   classical
   rw [← Finset.add_sum_erase s f hi, htop]

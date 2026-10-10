@@ -92,7 +92,7 @@ lemma isSOTClosed_centralizer (S : Set B) : IsSOTClosed (H := H) (Set.centralize
       (PointwiseConvergenceCLM.precomp H a).continuous
 
 /-- Any double commutant is SOT-closed. -/
-theorem isSOTClosed_centralizer_centralizer (S : Set B) :
+lemma isSOTClosed_centralizer_centralizer (S : Set B) :
     IsSOTClosed (H := H) (Set.centralizer (Set.centralizer S)) :=
   isSOTClosed_centralizer (H := H) (S := Set.centralizer S)
 

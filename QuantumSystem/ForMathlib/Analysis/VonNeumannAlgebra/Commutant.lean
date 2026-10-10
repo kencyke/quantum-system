@@ -79,7 +79,7 @@ applies to composites assembled on the spot — the generating sets `π(𝔄(O))
 Neumann algebras of a net are of exactly that shape — and it is what discharges the star-closedness
 hypothesis of `VonNeumannAlgebra.coe_commutantSet_of_star_eq` and
 `VonNeumannAlgebra.coe_generated_of_star_eq` below. -/
-theorem Set.star_range {A B : Type*} [InvolutiveStar A] [InvolutiveStar B] {f : A → B}
+lemma Set.star_range {A B : Type*} [InvolutiveStar A] [InvolutiveStar B] {f : A → B}
     (hf : ∀ a, f (star a) = star (f a)) : star (Set.range f) = Set.range f := by
   ext x
   simp only [Set.mem_star, Set.mem_range]

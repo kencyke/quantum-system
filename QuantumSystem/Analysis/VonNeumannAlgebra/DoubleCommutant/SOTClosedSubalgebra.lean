@@ -93,7 +93,7 @@ lemma Set.toSOT_eq_preimage_toWOT (S : Set B) :
 
 /-- A WOT-closed set is SOT-closed. No hypothesis on `S` is needed: this is nothing but SOT being
 the finer topology. The converse needs convexity and is not proved here. -/
-theorem isSOTClosed_of_isWOTClosed {S : Set B} (hS : IsWOTClosed S) :
+lemma isSOTClosed_of_isWOTClosed {S : Set B} (hS : IsWOTClosed S) :
     IsSOTClosed S := by
   rw [IsSOTClosed, Set.toSOT_eq_preimage_toWOT]
   exact hS.preimage continuous_sotToWOT
@@ -320,7 +320,7 @@ theorem wotClosure_eq_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B)
     exact hsub hSOT
 
 /-- A SOT-closed (possibly non-unital) *-subalgebra acting non-degenerately is WOT-closed. -/
-theorem isWOTClosed_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
+lemma isWOTClosed_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B))
     (hSOT : IsSOTClosed (A : Set B)) :
     IsWOTClosed (A : Set B) := by
@@ -338,7 +338,7 @@ theorem isWOTClosed_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
 
 /-- Unital special case of `isWOTClosed_of_isSOTClosed`: a SOT-closed unital *-subalgebra is
 WOT-closed. -/
-theorem isWOTClosed_of_isSOTClosed_starSubalgebra (A : StarSubalgebra ℂ B)
+lemma isWOTClosed_of_isSOTClosed_starSubalgebra (A : StarSubalgebra ℂ B)
     (hSOT : IsSOTClosed (A : Set B)) :
     IsWOTClosed (A : Set B) :=
   isWOTClosed_of_isSOTClosed A.toNonUnitalStarSubalgebra
@@ -360,7 +360,7 @@ theorem doubleCommutant_eq_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
 /-- Unital special case of `doubleCommutant_eq_of_isSOTClosed`: a SOT-closed unital
 *-subalgebra equals its double commutant. Since `1 ∈ A`, the algebra acts non-degenerately
 and the general theorem applies. -/
-theorem doubleCommutant_eq_of_isSOTClosed_starSubalgebra (A : StarSubalgebra ℂ B)
+lemma doubleCommutant_eq_of_isSOTClosed_starSubalgebra (A : StarSubalgebra ℂ B)
     (hSOT : IsSOTClosed (A : Set B)) :
     Set.centralizer (Set.centralizer (A : Set B)) = (A : Set B) :=
   doubleCommutant_eq_of_isSOTClosed A.toNonUnitalStarSubalgebra

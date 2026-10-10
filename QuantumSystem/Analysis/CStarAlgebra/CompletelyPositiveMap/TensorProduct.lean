@@ -88,7 +88,7 @@ lemma tensorProductLinearMap_mapL (φ : (H₁ →L[ℂ] H₁) →ₗ[ℂ] (K₁ 
 /-- Kraus operators `Tₐ` of `φ` and `S_b` of `ψ` give the Kraus operators `Tₐ ⊗ S_b` of the tensor
 product: `(φ ⊗ ψ)(X) = Σₐ_b (Tₐ ⊗ S_b) X (Tₐ ⊗ S_b)†`, checked on `X = A ⊗ B` by
 `(Tₐ ⊗ S_b)(A ⊗ B)(Tₐ ⊗ S_b)† = Tₐ A Tₐ† ⊗ S_b B S_b†`. -/
-theorem tensorProductLinearMap_apply_eq_sum_kraus {φ : (H₁ →L[ℂ] H₁) →ₗ[ℂ] (K₁ →L[ℂ] K₁)}
+lemma tensorProductLinearMap_apply_eq_sum_kraus {φ : (H₁ →L[ℂ] H₁) →ₗ[ℂ] (K₁ →L[ℂ] K₁)}
     {ψ : (H₂ →L[ℂ] H₂) →ₗ[ℂ] (K₂ →L[ℂ] K₂)} {κ₁ κ₂ : Type*} [Fintype κ₁] [Fintype κ₂]
     {T : κ₁ → H₁ →L[ℂ] K₁} {S : κ₂ → H₂ →L[ℂ] K₂}
     (hT : ∀ A, φ A = ∑ a, T a ∘L A ∘L adjoint (T a))
@@ -136,7 +136,7 @@ noncomputable def tensorProduct (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ
 
 /-- Tracing out the second factor intertwines `φ ⊗ ψ` with `φ` when `ψ` is trace preserving:
 `tr₂((φ ⊗ ψ)(X)) = φ(tr₂ X)`, since `tr₂(φ(A) ⊗ ψ(B)) = tr ψ(B) • φ(A) = φ(tr B • A)`. -/
-theorem traceRight_tensorProduct (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁))
+lemma traceRight_tensorProduct (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁))
     (ψ : (H₂ →L[ℂ] H₂) →CP (K₂ →L[ℂ] K₂)) (hψ : IsTracePreserving ψ)
     (X : H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) :
     ContinuousLinearMap.traceRight K₁ K₂ (tensorProduct φ ψ X) =
@@ -179,7 +179,7 @@ noncomputable def tensorProduct (Φ : CPTPMap H₁ K₁) (Ψ : CPTPMap H₂ K₂
 
 /-- Tracing out the second factor intertwines `Φ ⊗ Ψ` with `Φ`: `tr₂((Φ ⊗ Ψ)(X)) = Φ(tr₂ X)`
 (`CompletelyPositiveMap.traceRight_tensorProduct`, which needs only `Ψ` trace preserving). -/
-theorem traceRight_tensorProduct (Φ : CPTPMap H₁ K₁) (Ψ : CPTPMap H₂ K₂)
+lemma traceRight_tensorProduct (Φ : CPTPMap H₁ K₁) (Ψ : CPTPMap H₂ K₂)
     (X : H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) :
     ContinuousLinearMap.traceRight K₁ K₂ (tensorProduct Φ Ψ X) =
       Φ (ContinuousLinearMap.traceRight H₁ H₂ X) :=

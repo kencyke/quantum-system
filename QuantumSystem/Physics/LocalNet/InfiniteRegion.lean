@@ -83,7 +83,7 @@ open scoped ProperContainment in
     `ofCThickening α δ`, `S₁ ⋐ S₂` puts the closure of `S₁` inside the interior of `S₂`. The open
     `δ`-thickening of `S₁` is an open set containing `closure S₁` (this is where `0 < δ` enters)
     and contained in the closed one, hence in `S₂`. -/
-theorem closure_subset_interior_of_properlyContained {α : Type*} [PseudoMetricSpace α]
+lemma closure_subset_interior_of_properlyContained {α : Type*} [PseudoMetricSpace α]
     {δ : {δ : ℝ // 0 < δ}} {S₁ S₂ : Set α}
     (h : letI := ofCThickening α δ; S₁ ⋐ S₂) : closure S₁ ⊆ interior S₂ :=
   (Metric.closure_subset_thickening δ.2 S₁).trans <| interior_maximal

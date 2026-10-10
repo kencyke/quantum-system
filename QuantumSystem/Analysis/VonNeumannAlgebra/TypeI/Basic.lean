@@ -141,7 +141,7 @@ theorem IsFactor.isTypeI_iff_exists_isMinimalProjection [Nontrivial H] {N : VonN
 abelian-projection type I property and factor-ness. `[Nontrivial H]` is load-bearing here, not
 decoration: on a subsingleton `H` *every* von Neumann algebra satisfies `IsFactor N ∧ IsTypeI N`
 while *none* satisfies `IsTypeIFactor N`, since a minimal projection must be nonzero. -/
-theorem isTypeIFactor_iff_isFactor_and_isTypeI [Nontrivial H] {N : VonNeumannAlgebra H} :
+lemma isTypeIFactor_iff_isFactor_and_isTypeI [Nontrivial H] {N : VonNeumannAlgebra H} :
     IsTypeIFactor N ↔ IsFactor N ∧ IsTypeI N := by
   constructor
   · rintro ⟨hf, he⟩
@@ -224,7 +224,7 @@ inclusion `A ≤ N ≤ B`, then for some minimal projection `e` of `N` there is
 `vnTensorLeft` and `B′` into `vnTensorRight`. This is the `IsTypeIFactor` form of
 `IsFactor.exists_split_tensor_decomposition`, which gives the same for *every* minimal projection
 `e` of a factor. -/
-theorem IsTypeIFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
+lemma IsTypeIFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     ∃ e : H →L[ℂ] H, IsMinimalProjection N e ∧ ∃ (F : Set (H →L[ℂ] H))
       (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
@@ -241,7 +241,7 @@ theorem IsTypeIFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H
 vector `u ∈ H₂`: every element of `1 ⊗̄ B(H₂) = (B(H₁) ⊗̄ 1)′` is a right amplification `1 ⊗̂ S`
 (`HilbertTensor.exists_amplifyRight_of_commutes`), so the corner reduces to the corner of the
 rank-one projection in `B(H₂)`. -/
-theorem isTypeIFactor_vnTensorRight {H₁ H₂ : Type*} [NormedAddCommGroup H₁]
+lemma isTypeIFactor_vnTensorRight {H₁ H₂ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] [CompleteSpace H₁] [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂]
     [CompleteSpace H₂] [Nontrivial H₁] [Nontrivial H₂] :
     IsTypeIFactor (vnTensorRight (H₁ := H₁) (H₂ := H₂)) := by
@@ -268,7 +268,7 @@ section Conj
 variable {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H'] [CompleteSpace H']
 
 /-- **Type I factors are spatially invariant**: `U N U⋆` is a type I factor iff `N` is. -/
-theorem isTypeIFactor_conj_iff {N : VonNeumannAlgebra H} (U : H ≃ₗᵢ[ℂ] H') :
+lemma isTypeIFactor_conj_iff {N : VonNeumannAlgebra H} (U : H ≃ₗᵢ[ℂ] H') :
     IsTypeIFactor (conj U N) ↔ IsTypeIFactor N := by
   refine ⟨fun ⟨hf, e, he⟩ => ⟨(isFactor_conj_iff U).mp hf, U.conjStarAlgEquiv.symm e, ?_⟩,
     fun ⟨hf, e, he⟩ => ⟨hf.conj U, _, he.conj U⟩⟩
@@ -276,7 +276,7 @@ theorem isTypeIFactor_conj_iff {N : VonNeumannAlgebra H} (U : H ≃ₗᵢ[ℂ] H
   exact he
 
 /-- If `N` is a type I factor, so is `U N U⋆`. -/
-theorem IsTypeIFactor.conj {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) (U : H ≃ₗᵢ[ℂ] H') :
+lemma IsTypeIFactor.conj {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) (U : H ≃ₗᵢ[ℂ] H') :
     IsTypeIFactor (conj U N) :=
   (isTypeIFactor_conj_iff U).mpr hN
 
@@ -305,7 +305,7 @@ theorem IsTypeIFactor.commutant {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N)
   exact isTypeIFactor_vnTensorRight
 
 /-- A von Neumann algebra is a type I factor iff its commutant is. -/
-theorem isTypeIFactor_commutant_iff {N : VonNeumannAlgebra H} :
+lemma isTypeIFactor_commutant_iff {N : VonNeumannAlgebra H} :
     IsTypeIFactor N′ ↔ IsTypeIFactor N :=
   ⟨fun h => VonNeumannAlgebra.commutant_commutant N ▸ h.commutant, IsTypeIFactor.commutant⟩
 
@@ -336,7 +336,7 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
 open InnerProductSpace
 
 /-- **`B(H)` is a type I factor** (for nonzero `H`). -/
-theorem isTypeIFactor_boundedLinearOperators [Nontrivial H] :
+lemma isTypeIFactor_boundedLinearOperators [Nontrivial H] :
     IsTypeIFactor 𝓑(H) :=
   ⟨isFactor_boundedLinearOperators, exists_isMinimalProjection_boundedLinearOperators⟩
 
@@ -349,7 +349,7 @@ lemma exists_eq_smul_one_of_mem_commutant_boundedLinearOperators {x : H →L[ℂ
     the type I factor `B(H)` (`IsTypeIFactor.commutant`); concretely its only elements are scalars
     and `1` is a minimal projection. This is the degenerate type I factor of the escape clause
     "either `𝓡 = ℂ1` or …" of the type III₁ literature. -/
-theorem isTypeIFactor_commutant_boundedLinearOperators [Nontrivial H] :
+lemma isTypeIFactor_commutant_boundedLinearOperators [Nontrivial H] :
     IsTypeIFactor (𝓑(H))′ :=
   isTypeIFactor_boundedLinearOperators.commutant
 
@@ -364,7 +364,7 @@ carrying none of the classification content: the content is exactly that `K` may
 form `ℓ²(ι)`, which is what `IsTypeIFactor.exists_starAlgEquiv` hides behind its existential and
 what the type `I_{|ι|}` reading of `B(H)` needs. Nonzeroness of `H` is not required: for `H = 0`
 the Hilbert basis is empty and both sides are trivial. -/
-theorem exists_starAlgEquiv_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
+lemma exists_starAlgEquiv_boundedLinearOperators {H : Type u} [NormedAddCommGroup H]
     [InnerProductSpace ℂ H] [CompleteSpace H] :
     ∃ (ι : Type u) (U : H ≃ₗᵢ[ℂ] ℓ²(ι, ℂ))
       (e : (𝓑(H) : VonNeumannAlgebra H) ≃⋆ₐ[ℂ] (ℓ²(ι, ℂ) →L[ℂ] ℓ²(ι, ℂ))),
@@ -382,7 +382,7 @@ infinite-dimensional. Expressing type I_∞ this way is the standard reading: a 
 
 As in `exists_starAlgEquiv_boundedLinearOperators`, the `ℓ²` model is part of the statement: an
 unconstrained `∃ K` with `¬FiniteDimensional ℂ K` would be discharged by `K := H`. -/
-theorem exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type u}
+lemma exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type u}
     [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
     (hinf : ¬FiniteDimensional ℂ H) :
     ∃ ι : Type u, Infinite ι ∧ ¬FiniteDimensional ℂ (ℓ²(ι, ℂ)) ∧

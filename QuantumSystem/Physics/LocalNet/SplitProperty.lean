@@ -165,34 +165,34 @@ scoped infixl:50 " ⋐ " => ProperContainment.ProperlyContained
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [ProperContainment K]
 
 /-- Proper containment implies containment (dot-notation form). -/
-theorem ProperlyContained.le {O₁ O₂ : K} (h : O₁ ⋐ O₂) : O₁ ≤ O₂ :=
+lemma ProperlyContained.le {O₁ O₂ : K} (h : O₁ ⋐ O₂) : O₁ ≤ O₂ :=
   le_of_properlyContained h
 
 /-- Proper containment survives shrinking the inner region and enlarging the outer one
     (dot-notation form). -/
-theorem ProperlyContained.mono {O₀ O₁ O₂ O₃ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⋐ O₂)
+lemma ProperlyContained.mono {O₀ O₁ O₂ O₃ : K} (h₀ : O₀ ≤ O₁) (h : O₁ ⋐ O₂)
     (h₃ : O₂ ≤ O₃) : O₀ ⋐ O₃ :=
   properlyContained_mono h₀ h h₃
 
 /-- The causal collar of a proper containment (dot-notation form). -/
-theorem ProperlyContained.exists_orthogonal {O₁ O₂ : K} (h : O₁ ⋐ O₂) :
+lemma ProperlyContained.exists_orthogonal {O₁ O₂ : K} (h : O₁ ⋐ O₂) :
     ∃ O₃, O₃ ≤ O₂ ∧ O₁ ⟂ O₃ ∧ ¬ O₃ ≤ O₁ :=
   exists_orthogonal_of_properlyContained h
 
 /-- **Proper containment is irreflexive**: no region is properly contained in itself. This is the
     content of the collar's nondegeneracy clause — a collar inside `O` that is not contained in
     `O` cannot exist — and it is what the literature's `Ī₁ ⊂ I₂` typography encodes. -/
-theorem irrefl (O : K) : ¬ (O ⋐ O) := by
+lemma irrefl (O : K) : ¬ (O ⋐ O) := by
   rintro h
   obtain ⟨_, hle, -, hnle⟩ := h.exists_orthogonal
   exact hnle hle
 
 /-- A properly contained region is not above its container. -/
-theorem ProperlyContained.not_ge {O₁ O₂ : K} (h : O₁ ⋐ O₂) : ¬ O₂ ≤ O₁ :=
+lemma ProperlyContained.not_ge {O₁ O₂ : K} (h : O₁ ⋐ O₂) : ¬ O₂ ≤ O₁ :=
   fun hge => irrefl O₁ (h.mono le_rfl hge)
 
 /-- **Proper containment is strict**: `O₁ ⋐ O₂` implies `O₁ < O₂`. -/
-theorem ProperlyContained.lt {O₁ O₂ : K} (h : O₁ ⋐ O₂) : O₁ < O₂ :=
+lemma ProperlyContained.lt {O₁ O₂ : K} (h : O₁ ⋐ O₂) : O₁ < O₂ :=
   lt_of_le_not_ge h.le h.not_ge
 
 /-- **On lattice regions the collar clause says only that `O₂` is not below `O₁`.** In a

@@ -320,7 +320,7 @@ theorem not_splitProperty_diagonalNet_extend : ¬ diagonalNet.extend.SplitProper
     not form a split pair of `diagonalNet.extend`. The diagonal algebra is its own commutant
     (`VonNeumannAlgebra.commutant_multiplicationAlgebra`), so a split pair would make its identity
     inclusion split. This keeps `VonNeumannNet.IsSplitPair` at Matsui's pair from being automatic. -/
-theorem not_isSplitPair_diagonalNet_extend :
+lemma not_isSplitPair_diagonalNet_extend :
     ¬ diagonalNet.extend.IsSplitPair (Set.Iic 0) (Set.Ici 1) := fun h => by
   rw [VonNeumannNet.IsSplitPair, diagonalNet_extend_algebra, diagonalNet_extend_algebra,
     VonNeumannAlgebra.commutant_multiplicationAlgebra] at h
@@ -329,13 +329,13 @@ theorem not_isSplitPair_diagonalNet_extend :
 /-- **The extended constant net at `𝓑(ℂ)` has the infinite-region split property.** Evidence of
     inhabitation only: it is an instance of `VonNeumannNet.splitProperty_of_complex`, and on `ℂ`
     every net splits. A non-trivial positive model needs a spin net, which is not built here. -/
-theorem scalarNet_extend_splitProperty : scalarNet.extend.SplitProperty :=
+lemma scalarNet_extend_splitProperty : scalarNet.extend.SplitProperty :=
   VonNeumannNet.splitProperty_of_complex _
 
 /-- **Every pair of regions splits for the extended constant net at `𝓑(ℂ)`**, in particular
     Matsui's gap-free half-chain pair. Evidence of inhabitation only: on `ℂ` every von Neumann
     algebra, commutants included, is `𝓑(ℂ)`. -/
-theorem scalarNet_extend_isSplitPair (S₁ S₂ : Set ℤ) : scalarNet.extend.IsSplitPair S₁ S₂ := by
+lemma scalarNet_extend_isSplitPair (S₁ S₂ : Set ℤ) : scalarNet.extend.IsSplitPair S₁ S₂ := by
   rw [VonNeumannNet.IsSplitPair,
     VonNeumannAlgebra.eq_boundedLinearOperators_complex (scalarNet.extend.algebra S₁),
     VonNeumannAlgebra.eq_boundedLinearOperators_complex (scalarNet.extend.algebra S₂)′]
@@ -370,7 +370,7 @@ noncomputable def zeroRep : CStarRep trivialNet.quasiLocalCStarAlgebra where
 /-- **The trivial net has the split property in the zero representation.** Its local von Neumann
     algebras act on `ℂ`, where the only von Neumann algebra is `𝓑(ℂ)`, a type I factor. This
     inhabits `LocalNet.SplitProperty` itself, not merely the `VonNeumannNet` form. -/
-theorem trivialNet_splitProperty : trivialNet.SplitProperty zeroRep :=
+lemma trivialNet_splitProperty : trivialNet.SplitProperty zeroRep :=
   VonNeumannNet.splitProperty_of_complex (trivialNet.vonNeumannNet zeroRep)
 
 /-! #### A unital representation
@@ -473,7 +473,7 @@ noncomputable def unitalRep : CStarRep trivialNet.quasiLocalCStarAlgebra where
     representation being unital changes the `*`-map but not the Hilbert space, and it is
     `dim H = 1` that makes the property hold. Recorded so that the witness set for
     `LocalNet.SplitProperty` is not confined to a degenerate representation. -/
-theorem unitalRep_splitProperty : trivialNet.SplitProperty unitalRep :=
+lemma unitalRep_splitProperty : trivialNet.SplitProperty unitalRep :=
   VonNeumannNet.splitProperty_of_complex (trivialNet.vonNeumannNet unitalRep)
 
 /-! ### Matsui's half-chain split property for a state
@@ -541,7 +541,7 @@ attribute [local instance] CStarAlgebra.spectralOrder CStarAlgebra.spectralOrder
     order hypotheses of `evalState_hasHalfChainSplit` are satisfiable, and are discharged here by
     the spectral order of the quasi-local C⋆-algebra (`CStarAlgebra.spectralOrder`), so
     `LocalNet.HasHalfChainSplit` is inhabited outright. -/
-theorem evalState_hasHalfChainSplit_spectralOrder : trivialNet.HasHalfChainSplit evalState :=
+lemma evalState_hasHalfChainSplit_spectralOrder : trivialNet.HasHalfChainSplit evalState :=
   evalState_hasHalfChainSplit
 
 end SpectralOrder

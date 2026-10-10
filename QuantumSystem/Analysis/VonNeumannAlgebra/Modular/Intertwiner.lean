@@ -67,7 +67,7 @@ private lemma adjoint_apply_apply_of_star_comp {x : H →L[ℂ] H} {y : K →L[�
 
 /-- **Compression.** `V† y V ∈ M` for `y ∈ N`, when every `x′ ∈ M′` is intertwined by `V` with
 some `y′ ∈ N′` (`y′ V = V x′`, `y′⋆ V = V x′⋆`). -/
-theorem adjoint_comp_comp_mem
+lemma adjoint_comp_comp_mem
     (hM' : ∀ x ∈ M′, ∃ y ∈ N′, y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x)
     {y : K →L[ℂ] K} (hy : y ∈ N) : V† ∘L y ∘L V ∈ M := by
   rw [← commutant_commutant M, mem_commutant_iff]
@@ -81,7 +81,7 @@ theorem adjoint_comp_comp_mem
 
 /-- **Compression of the commutants.** `V† y V ∈ M′` for `y ∈ N′`, when every `x ∈ M` is
 intertwined by `V` with some `y ∈ N`. -/
-theorem adjoint_comp_comp_mem_commutant
+lemma adjoint_comp_comp_mem_commutant
     (hM : ∀ x ∈ M, ∃ y ∈ N, y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x)
     {y : K →L[ℂ] K} (hy : y ∈ N′) : V† ∘L y ∘L V ∈ M′ := by
   rw [mem_commutant_iff]
@@ -119,7 +119,7 @@ lemma adjoint_apply_mem_orthogonal_cyclicSubspace_of_intertwiner {ξ : H} {ζ : 
 
 include hM hM' in
 /-- **Support projections.** `s_N(V ξ) V = V s_M(ξ)`. -/
-theorem supportProj_comp_eq_comp_supportProj (ξ : H) :
+lemma supportProj_comp_eq_comp_supportProj (ξ : H) :
     N.supportProj (V ξ) ∘L V = V ∘L M.supportProj ξ := by
   ext u
   change N.supportProj (V ξ) (V u) = V (M.supportProj ξ u)
@@ -145,7 +145,7 @@ theorem supportProj_comp_eq_comp_supportProj (ξ : H) :
 
 include hM hM' in
 /-- **Support projections**, adjoint form: `V† s_N(V ξ) = s_M(ξ) V†`. -/
-theorem adjoint_comp_supportProj (ξ : H) :
+lemma adjoint_comp_supportProj (ξ : H) :
     V† ∘L N.supportProj (V ξ) = M.supportProj ξ ∘L V† := by
   have h := congrArg ContinuousLinearMap.adjoint (supportProj_comp_eq_comp_supportProj hM hM' ξ)
   rwa [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.adjoint_comp,
@@ -258,7 +258,7 @@ theorem measure_pvm_relativeModular_of_intertwiner {η ξ : H} (hV : (V†) (V �
 
 /-- For a unitary `U`, the intertwining relation `y U = U x` implies `y⋆ U = U x⋆`: the second
 half of the hypotheses above is automatic for spatial isomorphisms. -/
-theorem star_comp_eq_of_comp_eq (U : H ≃ₗᵢ[ℂ] K) {x : H →L[ℂ] H} {y : K →L[ℂ] K}
+lemma star_comp_eq_of_comp_eq (U : H ≃ₗᵢ[ℂ] K) {x : H →L[ℂ] H} {y : K →L[ℂ] K}
     (h : y ∘L (U : H →L[ℂ] K) = U ∘L x) : star y ∘L (U : H →L[ℂ] K) = U ∘L star x := by
   have h' := congrArg ContinuousLinearMap.adjoint h
   rw [ContinuousLinearMap.adjoint_comp, ContinuousLinearMap.adjoint_comp, U.adjoint_eq_symm,

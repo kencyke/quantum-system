@@ -190,7 +190,7 @@ variable [SigmaFinite μ]
 
 /-- **The commutant of the multiplication operators** (σ-finite `μ`): an operator commuting with
 every `M_f` is `M_h` for some `h ∈ L∞(μ)`. -/
-theorem mem_commutant_multiplicationAlgebra_iff {T : Lp ℂ 2 μ →L[ℂ] Lp ℂ 2 μ} :
+lemma mem_commutant_multiplicationAlgebra_iff {T : Lp ℂ 2 μ →L[ℂ] Lp ℂ 2 μ} :
     T ∈ (multiplicationAlgebra μ)′ ↔ ∃ f : Lp ℂ ∞ μ, T = mulL2 f := by
   refine ⟨fun hT => ?_, by rintro ⟨f, rfl⟩; exact mulL2_mem_commutant_multiplicationAlgebra f⟩
   -- an almost everywhere nonvanishing vector `ω`, cyclic for the multiplication operators
@@ -243,7 +243,7 @@ theorem mem_commutant_multiplicationAlgebra_iff {T : Lp ℂ 2 μ →L[ℂ] Lp �
 
 /-- **The multiplication algebra consists of multiplication operators** (σ-finite `μ`): its
 members are exactly the `M_f`, `f ∈ L∞(μ)`. -/
-theorem mem_multiplicationAlgebra_iff {T : Lp ℂ 2 μ →L[ℂ] Lp ℂ 2 μ} :
+lemma mem_multiplicationAlgebra_iff {T : Lp ℂ 2 μ →L[ℂ] Lp ℂ 2 μ} :
     T ∈ multiplicationAlgebra μ ↔ ∃ f : Lp ℂ ∞ μ, T = mulL2 f :=
   ⟨fun hT => mem_commutant_multiplicationAlgebra_iff.mp (multiplicationAlgebra_le_commutant hT),
     by rintro ⟨f, rfl⟩; exact mulL2_mem_multiplicationAlgebra f⟩
@@ -284,7 +284,7 @@ lemma coeFn_densityVec (P : Measure α) [IsFiniteMeasure P] (μ : Measure α) :
 omit [SigmaFinite μ] in
 /-- `|ξ_P|² μ = P` for `P ≪ μ`, whenever `P` has a Lebesgue decomposition with respect to `μ`
 (automatic for σ-finite `μ`). -/
-theorem withDensity_enorm_sq_densityVec (P : Measure α) [IsFiniteMeasure P]
+lemma withDensity_enorm_sq_densityVec (P : Measure α) [IsFiniteMeasure P]
     [P.HaveLebesgueDecomposition μ] (hP : P ≪ μ) :
     μ.withDensity (fun x => ‖densityVec P μ x‖ₑ ^ 2) = P := by
   calc μ.withDensity (fun x => ‖densityVec P μ x‖ₑ ^ 2) = μ.withDensity (P.rnDeriv μ) :=
@@ -298,7 +298,7 @@ theorem withDensity_enorm_sq_densityVec (P : Measure α) [IsFiniteMeasure P]
 omit [SigmaFinite μ] in
 /-- **`ξ_P` represents `P`**: for `P ≪ μ`, `⟪ξ_P, M_f ξ_P⟫ = ∫ f dP` for every `f ∈ L∞(μ)`,
 whenever `P` has a Lebesgue decomposition with respect to `μ` (automatic for σ-finite `μ`). -/
-theorem inner_densityVec_mulL2 (P : Measure α) [IsFiniteMeasure P] [P.HaveLebesgueDecomposition μ]
+lemma inner_densityVec_mulL2 (P : Measure α) [IsFiniteMeasure P] [P.HaveLebesgueDecomposition μ]
     (hP : P ≪ μ) (f : Lp ℂ ∞ μ) :
     ⟪densityVec P μ, mulL2 f (densityVec P μ)⟫_ℂ = ∫ x, f x ∂P := by
   rw [inner_mulL2_self_eq_integral, withDensity_enorm_sq_densityVec P hP]
@@ -307,7 +307,7 @@ omit [SigmaFinite μ] in
 /-- **Normal functionals of the multiplication algebra are finite measures**: every normal
 positive functional `ψ` on `L∞(μ)` is `M_f ↦ ∫ f dP` for a finite measure `P ≪ μ`. Writing
 `ψ = Σₙ ω_{ξₙ}` with `Σₙ ‖ξₙ‖² < ∞`, the measure is `P = Σₙ |ξₙ|² μ`. -/
-theorem exists_measure_of_normalFunctional (ψ : (multiplicationAlgebra μ).NormalFunctional) :
+lemma exists_measure_of_normalFunctional (ψ : (multiplicationAlgebra μ).NormalFunctional) :
     ∃ (P : Measure α) (_ : IsFiniteMeasure P), P ≪ μ ∧
       ∀ f : Lp ℂ ∞ μ, ψ.1 ⟨mulL2 f, mulL2_mem_multiplicationAlgebra f⟩ = ∫ x, f x ∂P := by
   obtain ⟨ξ, hξ⟩ := isNormal_iff_exists_lp.mp ψ.2
@@ -385,16 +385,16 @@ namespace NormalFunctional
 variable (P : Measure α) [IsFiniteMeasure P] (hP : P ≪ μ)
 
 /-- **`ω_P` integrates against `P`**: `ω_P(M_f) = ∫ f dP` for every `f ∈ L∞(μ)`. -/
-theorem ofMeasure_apply (f : Lp ℂ ∞ μ) :
+lemma ofMeasure_apply (f : Lp ℂ ∞ μ) :
     (ofMeasure P hP).1 ⟨mulL2 f, mulL2_mem_multiplicationAlgebra f⟩ = ∫ x, f x ∂P :=
   (integral_multiplier_eq_inner P hP _).trans (inner_densityVec_mulL2 P hP f)
 
 /-- **`ω_P` is a vector functional**: `ω_P = ω_{ξ_P}` for `ξ_P = √(dP/dμ)`. -/
-theorem ofMeasure_eq_ofVector : ofMeasure P hP = ofVector _ (densityVec P μ) :=
+lemma ofMeasure_eq_ofVector : ofMeasure P hP = ofVector _ (densityVec P μ) :=
   Subtype.ext (PositiveLinearMap.ext fun x => integral_multiplier_eq_inner P hP x)
 
 /-- The mass of `ω_P` is the mass of `P`: `ω_P(1) = P(α)`. -/
-theorem ofMeasure_apply_one : (ofMeasure P hP).1 1 = (P.real Set.univ : ℂ) := by
+lemma ofMeasure_apply_one : (ofMeasure P hP).1 1 = (P.real Set.univ : ℂ) := by
   have h1 : (1 : multiplicationAlgebra μ) = ⟨mulL2 1, mulL2_mem_multiplicationAlgebra 1⟩ :=
     Subtype.ext (map_one mulL2).symm
   rw [h1, ofMeasure_apply, integral_congr_ae (hP.ae_le coeFn_one)]
@@ -403,7 +403,7 @@ theorem ofMeasure_apply_one : (ofMeasure P hP).1 1 = (P.real Set.univ : ℂ) := 
 variable {P hP} in
 /-- **Measures are determined by their normal functionals**: for finite `P, Q ≪ μ`,
 `ω_P = ω_Q ↔ P = Q`. -/
-theorem ofMeasure_inj {Q : Measure α} [IsFiniteMeasure Q] {hQ : Q ≪ μ} :
+lemma ofMeasure_inj {Q : Measure α} [IsFiniteMeasure Q] {hQ : Q ≪ μ} :
     ofMeasure P hP = ofMeasure Q hQ ↔ P = Q := by
   refine ⟨fun h => Measure.ext fun s hs => ?_, fun h => by subst h; rfl⟩
   have hint : ∀ (R : Measure α) [IsFiniteMeasure R] (hR : R ≪ μ),
@@ -420,7 +420,7 @@ end NormalFunctional
 
 /-- **A normal functional with the values of `P` is `ω_P`**: if `ψ(M_f) = ∫ f dP` for every
 `f ∈ L∞(μ)`, for a finite measure `P ≪ μ`, then `ψ = ω_P`. -/
-theorem eq_ofMeasure_of_apply {ψ : (multiplicationAlgebra μ).NormalFunctional}
+lemma eq_ofMeasure_of_apply {ψ : (multiplicationAlgebra μ).NormalFunctional}
     {P : Measure α} [IsFiniteMeasure P] (hP : P ≪ μ)
     (hψ : ∀ f : Lp ℂ ∞ μ, ψ.1 ⟨mulL2 f, mulL2_mem_multiplicationAlgebra f⟩ = ∫ x, f x ∂P) :
     ψ = NormalFunctional.ofMeasure P hP := by

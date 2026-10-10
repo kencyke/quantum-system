@@ -103,7 +103,7 @@ noncomputable def ιLocal (O : K) :
 
 /-- **Exhaustion**: every element of the algebra of local observables is the image of a local
     observable from some region — the union of the local algebras is the whole limit. -/
-theorem exists_ιLocal (z : N.localObservables) :
+lemma exists_ιLocal (z : N.localObservables) :
     ∃ (O : K) (X : N.algebra O), z = N.ιLocal O X := by
   induction z using DirectLimit.induction with
   | _ O X => exact ⟨O, X, rfl⟩
@@ -111,7 +111,7 @@ theorem exists_ιLocal (z : N.localObservables) :
 /-- **Locality in the algebra of local observables**: observables localised in causally orthogonal
     regions commute inside `𝔄_loc`. Pushes both observables into a directed upper bound of the two
     regions and lifts the net's `locality` along the ring-hom cocone. -/
-theorem ιLocal_commute_of_orthogonal {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+lemma ιLocal_commute_of_orthogonal {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
     (X : N.algebra O₁) (Y : N.algebra O₂) :
     Commute (N.ιLocal O₁ X) (N.ιLocal O₂ Y) := by
   obtain ⟨O, h₁, h₂⟩ := directed_of (· ≤ ·) O₁ O₂
