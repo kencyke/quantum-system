@@ -154,11 +154,11 @@ public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
 public import QuantumSystem.Geometry.Minkowski
-public import QuantumSystem.InformationTheory.Entropy.Araki.Basic
-public import QuantumSystem.InformationTheory.Entropy.Araki.FiniteDimensional
-public import QuantumSystem.InformationTheory.Entropy.Araki.KullbackLeibler
+public import QuantumSystem.InformationTheory.Entropy.Araki.BoundedOperators
 public import QuantumSystem.InformationTheory.Entropy.Araki.Monotonicity
 public import QuantumSystem.InformationTheory.Entropy.Araki.Multiplication
+public import QuantumSystem.InformationTheory.Entropy.Araki.Multiplication.Fintype
+public import QuantumSystem.InformationTheory.Entropy.Araki.NormalFunctional
 public import QuantumSystem.InformationTheory.Entropy.Araki.VectorFunctional
 public import QuantumSystem.InformationTheory.Entropy.Umegaki.Basic
 public import QuantumSystem.InformationTheory.Entropy.Umegaki.JointConvexity

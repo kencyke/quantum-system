@@ -9,7 +9,7 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Exp
 public import Mathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
-public import QuantumSystem.InformationTheory.Entropy.Araki.FiniteDimensional
+public import QuantumSystem.InformationTheory.Entropy.Araki.BoundedOperators
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!

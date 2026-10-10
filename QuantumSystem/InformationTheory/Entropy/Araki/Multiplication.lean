@@ -8,7 +8,7 @@ module
 public import Mathlib.InformationTheory.KullbackLeibler.Basic
 public import QuantumSystem.Analysis.SpectralTheory.Multiplication
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Multiplication
-public import QuantumSystem.InformationTheory.Entropy.Araki.Basic
+public import QuantumSystem.InformationTheory.Entropy.Araki.NormalFunctional
 public import QuantumSystem.InformationTheory.KullbackLeibler.EReal
 
 /-!
@@ -35,7 +35,7 @@ image of `P` under `q / p`, and for σ-finite `μ` Araki's relative entropy is t
 with the natural logarithm. σ-finiteness of `μ` enters only through the Radon–Nikodym calculus
 of the densities (`MeasureTheory.Measure.rnDeriv_mul_rnDeriv`); the multiplication operators and
 their spectral measures need no hypothesis on `μ`. The prose writes `S(ψ ‖ φ)`; the
-code notation is `S⟦ψ ∥ φ⟧`, with `∥` (U+2225), as in `QuantumSystem.InformationTheory.Entropy.Araki.Basic`.
+code notation is `S⟦ψ ∥ φ⟧`, with `∥` (U+2225), as in `QuantumSystem.InformationTheory.Entropy.Araki.NormalFunctional`.
 
 This is the divergence `InformationTheory.klDivEReal P Q`
 (`QuantumSystem.InformationTheory.KullbackLeibler.EReal`), *without* the mass correction `Q(α) - P(α)`
@@ -54,6 +54,10 @@ operator of the commutant sends `G ξ_P` to `Ḡ ξ_Q = (q / p) u`, for bounded 
 vanishing on `{p > 0}` are orthogonal to `M ξ_P` and killed by `Δ`, and the closedness of `Δ`
 extends the relation to every `u` with `(q / p) u ∈ L²`. So `Δ` extends `M_{q/p}`, and a
 symmetric extension of the self-adjoint `M_{q/p}` is `M_{q/p}` itself (`IsSelfAdjoint.eq_of_le`).
+
+For counting measure on a finite type the formulas become the eigenvalue sum
+`S(ω_P ‖ ω_Q) = Σᵢ pᵢ log (pᵢ / qᵢ)` on the diagonal algebra `ℓ^∞(ι)`
+(`QuantumSystem.InformationTheory.Entropy.Araki.Multiplication.Fintype`).
 
 ## Main results
 

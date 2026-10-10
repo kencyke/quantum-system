@@ -36,7 +36,7 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
   Umegaki's relative entropy `umegakiEntropy ψ φ` (`D(ψ ∥ φ)`), which is defined as `S(ψ ‖ φ)`:
   `VonNeumannAlgebra.arakiVec_purification`; for normal functionals,
   `VonNeumannAlgebra.arakiEntropy_boundedLinearOperators_eq_sum`
-  (`QuantumSystem.InformationTheory.Entropy.Araki.FiniteDimensional`).
+  (`QuantumSystem.InformationTheory.Entropy.Araki.BoundedOperators`).
 * **Commutative algebras.** On the diagonal algebra it is the Kullback–Leibler divergence
   `Σᵢ pᵢ log (pᵢ / qᵢ)` (`VonNeumannAlgebra.arakiVec_densityVec_fintype`), which pins the order: the
   first argument carries the weights `pᵢ` outside the logarithm. On the multiplication algebra

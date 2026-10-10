@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
-public import QuantumSystem.InformationTheory.Entropy.Araki.Basic
+public import QuantumSystem.InformationTheory.Entropy.Araki.NormalFunctional
 
 /-!
 # Monotonicity of Araki's relative entropy

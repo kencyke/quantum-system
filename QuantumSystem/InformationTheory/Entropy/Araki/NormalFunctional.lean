@@ -73,7 +73,7 @@ The **data-processing inequality** `S(ψ ∘ α ‖ φ ∘ α) ≤ S(ψ ‖ φ)`
 is `VonNeumannAlgebra.arakiEntropy_comp_le` (`QuantumSystem.InformationTheory.Entropy.Araki.Monotonicity`),
 and the evaluation in finite dimension by the eigenvalue sum of Umegaki's `tr ρ (log ρ - log σ)` is
 `VonNeumannAlgebra.arakiEntropy_boundedLinearOperators_eq_sum`
-(`QuantumSystem.InformationTheory.Entropy.Araki.FiniteDimensional`);
+(`QuantumSystem.InformationTheory.Entropy.Araki.BoundedOperators`);
 Umegaki's relative entropy `umegakiEntropy` is defined as this functional on the normal functionals
 `tr (ρ ·)` of `B(H)`, and its monotonicity under CPTP maps is the data-processing inequality for
 the trace-dual map.

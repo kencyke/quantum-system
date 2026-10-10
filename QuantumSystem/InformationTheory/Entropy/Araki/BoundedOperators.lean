@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.InformationTheory.Entropy.Araki.Basic
+public import QuantumSystem.InformationTheory.Entropy.Araki.NormalFunctional
 
 /-!
 # Araki's relative entropy on `B(H)` in finite dimension

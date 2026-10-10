@@ -75,6 +75,6 @@ Notable results formalized in this repository include:
 - **Araki relative entropy of vectors.** S(ω_ξ‖ω_η) = −⟨ξ, log Δ_{η,ξ} ξ⟩, defined as −∫ log λ dμ_ξ(λ) ∈ EReal.
   - [`InformationTheory/Entropy/Araki/VectorFunctional.lean`](QuantumSystem/InformationTheory/Entropy/Araki/VectorFunctional.lean) · `VonNeumannAlgebra.arakiVec`
 - **Araki relative entropy of normal functionals.** S(ψ‖φ) via vector representatives on the amplification ℓ²(ℕ) ⊗̂ H (in place of natural-cone vectors); independent of the representatives.
-  - [`InformationTheory/Entropy/Araki/Basic.lean`](QuantumSystem/InformationTheory/Entropy/Araki/Basic.lean) · `VonNeumannAlgebra.arakiEntropy` · `VonNeumannAlgebra.arakiEntropy_eq_arakiVec`
+  - [`InformationTheory/Entropy/Araki/NormalFunctional.lean`](QuantumSystem/InformationTheory/Entropy/Araki/NormalFunctional.lean) · `VonNeumannAlgebra.arakiEntropy` · `VonNeumannAlgebra.arakiEntropy_eq_arakiVec`
 - **Data-processing inequality.** S(ψ ∘ α‖φ ∘ α) ≤ S(ψ‖φ) for unital normal Schwarz maps α (Petz's resolvent argument).
   - [`InformationTheory/Entropy/Araki/Monotonicity.lean`](QuantumSystem/InformationTheory/Entropy/Araki/Monotonicity.lean) · `VonNeumannAlgebra.arakiEntropy_comp_le`
