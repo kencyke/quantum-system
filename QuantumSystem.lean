@@ -53,10 +53,10 @@ public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.SelfAdjoint
 public import QuantumSystem.Analysis.SpectralTheory.SpectralTheorem
 public import QuantumSystem.Analysis.SpectralTheory.Stone
 public import QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation
-public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
-public import QuantumSystem.Analysis.UnboundedOperator.AdjointCompSelf
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.AddComp
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.CompSelf
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.Semilinear
 public import QuantumSystem.Analysis.UnboundedOperator.Resolvent
-public import QuantumSystem.Analysis.UnboundedOperator.SemilinearAdjoint
 public import QuantumSystem.Analysis.VonNeumannAlgebra.BoundedOperators
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Comparison
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra

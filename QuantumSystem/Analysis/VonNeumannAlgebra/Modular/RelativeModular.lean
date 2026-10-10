@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.Analysis.SpectralTheory.Power
 public import QuantumSystem.Analysis.SpectralTheory.ScalarSpectralMeasure
-public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.AddComp
 public import QuantumSystem.Analysis.SpectralTheory.PolarDecomposition
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.RelativeTomita
 public import QuantumSystem.Analysis.VonNeumannAlgebra.SupportProjection

@@ -6,8 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.SelfAdjoint
-public import QuantumSystem.Analysis.UnboundedOperator.AdjointCompSelf
-public import QuantumSystem.Analysis.UnboundedOperator.SemilinearAdjoint
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.CompSelf
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.Semilinear
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint

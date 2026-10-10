@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.UnboundedOperator.SemilinearAdjoint
+public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.Semilinear
 public import QuantumSystem.Analysis.VonNeumannAlgebra.SupportProjection
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 
