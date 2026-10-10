@@ -141,6 +141,8 @@ public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempotents
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.MemLpMulSelf
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
@@ -165,7 +167,6 @@ public import QuantumSystem.InformationTheory.Entropy.VonNeumann.Basic
 public import QuantumSystem.InformationTheory.Entropy.VonNeumann.MutualInformation
 public import QuantumSystem.InformationTheory.Entropy.VonNeumann.StrongSubadditivity
 public import QuantumSystem.InformationTheory.KullbackLeibler.EReal
-public import QuantumSystem.Notation
 public import QuantumSystem.Physics.BorchersTriple.Basic
 public import QuantumSystem.Physics.BorchersTriple.RindlerWedge
 public import QuantumSystem.Physics.LocalNet.Basic

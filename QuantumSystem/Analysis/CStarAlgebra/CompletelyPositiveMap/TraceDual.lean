@@ -9,7 +9,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePre
 public import QuantumSystem.Analysis.CStarAlgebra.KPositiveMapSchwarz
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
 # The trace dual of a completely positive map

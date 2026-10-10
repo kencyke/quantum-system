@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.InformationTheory.Entropy.VonNeumann.Basic
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
 # Quantum mutual information

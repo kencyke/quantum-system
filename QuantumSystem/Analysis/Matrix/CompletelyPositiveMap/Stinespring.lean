@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
 
 /-!
 # Stinespring's theorem for completely positive maps of matrices

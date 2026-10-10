@@ -10,7 +10,7 @@ public import Mathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.InformationTheory.Entropy.Araki.FiniteDimensional
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
 # Umegaki's relative entropy

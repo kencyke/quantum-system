@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
 public import QuantumSystem.InformationTheory.Entropy.Umegaki.JointConvexity
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
 # Von Neumann entropy

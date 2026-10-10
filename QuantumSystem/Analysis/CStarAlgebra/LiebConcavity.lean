@@ -8,7 +8,7 @@ module
 public import QuantumSystem.Analysis.CStarAlgebra.Perspective
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.HilbertSchmidt
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
 # Lieb's concavity theorem
@@ -36,7 +36,7 @@ real traces.
 
 ## Notation
 
-`Tr A` is the trace of an operator `A` (`QuantumSystem/Notation.lean`) and `T†` the adjoint
+`Tr A` is the trace of an operator `A` (`QuantumSystem.ForMathlib.LinearAlgebra.Trace`) and `T†` the adjoint
 (Mathlib, `open scoped InnerProduct`). Composition `∘L` and the real power `^` have the same
 precedence, so the powers are parenthesised: `(A ^ p) ∘L T† ∘L (B ^ q) ∘L T` is `Aᵖ T† Bᑫ T`.
 

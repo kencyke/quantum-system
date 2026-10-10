@@ -11,7 +11,7 @@ public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
 # Completely positive trace-preserving maps on bounded operators

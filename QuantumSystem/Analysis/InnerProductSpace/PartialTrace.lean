@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
-public import QuantumSystem.Notation
+public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 /-!
 # The partial trace
