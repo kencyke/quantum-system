@@ -33,9 +33,8 @@ for `ξ`, `η` cyclic and separating `J_{η,ξ}` is antiunitary.
 * `J[M]⟦η, ξ⟧` (`open scoped VonNeumannAlgebra`) — `J_{η,ξ}`, with the index order of
   `S_{η,ξ}` and `Δ_{η,ξ}`: Araki's `J_{Φ,Ψ}` with `Φ = η` and `Ψ = ξ`, where
   `S_{Φ,Ψ} x Ψ = x⋆ Φ`.
-* `U†` (`open scoped InnerProduct`) — the adjoint of a bounded real-linear `U` for the real inner
-  products `re ⟪·, ·⟫`; for the conjugate-linear `J_{η,ξ}` it is the antilinear adjoint
-  `⟪J† y, x⟫ = ⟪J x, y⟫` of the literature (`VonNeumannAlgebra.inner_relativeModularConj_left`).
+* `J†` — for the conjugate-linear `J_{η,ξ}`, its antilinear adjoint `ContinuousLinearMap.adjointₛₗ`,
+  with `⟪J† y, x⟫ = ⟪J x, y⟫` (`VonNeumannAlgebra.inner_relativeModularConj_left`).
 
 ## Main results
 
@@ -56,7 +55,7 @@ for `ξ`, `η` cyclic and separating `J_{η,ξ}` is antiunitary.
   — the relative
   modular conjugation `J_{η,ξ}` (`J[M]⟦η, ξ⟧`) of arbitrary vectors `η, ξ`, the partial isometry of
   the polar decomposition `S̄_{η,ξ} = J_{η,ξ} Δ_{η,ξ}^{1/2}`.
-* `VonNeumannAlgebra.adjoint_relativeModularConj`,
+* `VonNeumannAlgebra.adjointₛₗ_relativeModularConj`,
   `VonNeumannAlgebra.inner_relativeModularConj_left`,
   `VonNeumannAlgebra.relativeModularConj_comp_relativeModularConj` —
   `J_{ξ,η} = J_{η,ξ}†` for arbitrary `η, ξ`, so `J_{ξ,η} J_{η,ξ} = E_Δ((0, ∞))`, the support
@@ -108,14 +107,13 @@ private lemma dense_of_forall_apply_mem (hc : IsCyclicVector M η) {s : Set H}
 
 /-- For `ξ` separating and `η` cyclic, `S̄_{η,ξ}` has dense range: it contains `M η`. -/
 lemma dense_range_closure_relativeTomita (hs : IsSeparatingVector M ξ)
-    (hcη : IsCyclicVector M η) : Dense (range (S[M]⟦η, ξ⟧).closure) := by
+    (hcη : IsCyclicVector M η) : Dense (range (S[M]⟦η, ξ⟧).closureₛₗ) := by
   have hsupp : M.supportProj ξ = 1 := supportProj_eq_one_iff.mpr hs.isCyclicVector_commutant
   refine dense_of_forall_apply_mem hcη fun y hy => ?_
   have h := mem_graph_closure_relativeTomita (apply_mem_graph_relativeTomita (η := η) (ξ := ξ)
     (star_mem hy))
   rw [hsupp, star_star, one_apply_eq_self] at h
-  obtain ⟨p, -, hp⟩ := ((S[M]⟦η, ξ⟧).closure.mem_graph_iff).mp h
-  exact ⟨p, hp⟩
+  exact LinearPMap.mem_range_iff_mem_graphₛₗ.mpr ⟨_, h⟩
 
 variable (M η ξ) in
 /-- The **relative modular conjugation** `J_{η,ξ}` of a pair of vectors: the partial isometry of the
@@ -130,8 +128,8 @@ and everywhere for `ξ` cyclic and `η` separating
 it is the modular conjugation of the standard subspace `H_M`
 (`VonNeumannAlgebra.relativeModularConj_self`). -/
 noncomputable def relativeModularConj : H →L⋆[ℂ] H :=
-  (isSelfAdjoint_relativeModular M η ξ).polarIsometrySL (restrictScalars_relativeModular M η ξ)
-    (isClosed_closure_relativeTomita M η ξ) (isSemilinear_closure_relativeTomita M η ξ)
+  (isSelfAdjoint_relativeModular M η ξ).polarIsometry (relativeModular_def M η ξ)
+    (isClosed_closure_relativeTomita M η ξ)
 
 /-- `J[M]⟦η, ξ⟧` is the relative modular conjugation `J_{η,ξ}` of `M`
 (`VonNeumannAlgebra.relativeModularConj`). -/
@@ -148,32 +146,25 @@ variable (M η ξ) in
 (`IsSelfAdjoint.polarIsometry`). -/
 lemma relativeModularConj_apply (x : H) :
     J[M]⟦η, ξ⟧ x = (isSelfAdjoint_relativeModular M η ξ).polarIsometry
-      (restrictScalars_relativeModular M η ξ) (isClosed_closure_relativeTomita M η ξ) x := rfl
+      (relativeModular_def M η ξ) (isClosed_closure_relativeTomita M η ξ) x := rfl
 
 /-- `J_{η,ξ}` is a contraction. -/
 lemma norm_relativeModularConj_le : ‖J[M]⟦η, ξ⟧‖ ≤ 1 :=
-  (isSelfAdjoint_relativeModular M η ξ).norm_polarIsometrySL_le _ _ _
+  (isSelfAdjoint_relativeModular M η ξ).norm_polarIsometry_le _ _
 
-/-- **Polar decomposition** `S̄_{η,ξ} = J_{η,ξ} Δ_{η,ξ}^{1/2}` for arbitrary `η, ξ`, as real-linear
-operators. -/
+/-- **Polar decomposition** `S̄_{η,ξ} = J_{η,ξ} Δ_{η,ξ}^{1/2}` for arbitrary `η, ξ`. -/
 lemma closure_relativeTomita_eq_compPMap :
-    (S[M]⟦η, ξ⟧).closure =
-      ((J[M]⟦η, ξ⟧ : H →L[ℝ] H) : H →ₗ[ℝ] H).compPMap (Δ[M]⟦η, ξ⟧^{1/2}.restrictScalars ℝ) :=
+    (S[M]⟦η, ξ⟧).closureₛₗ = (J[M]⟦η, ξ⟧ : H →ₗ⋆[ℂ] H).compPMap Δ[M]⟦η, ξ⟧^{1/2} :=
   (isSelfAdjoint_relativeModular M η ξ).eq_polarIsometry_compPMap
-    (restrictScalars_relativeModular M η ξ) (isClosed_closure_relativeTomita M η ξ)
+    (relativeModular_def M η ξ) (isClosed_closure_relativeTomita M η ξ)
 
 /-- `S̄_{η,ξ} = J_{η,ξ} Δ_{η,ξ}^{1/2}`, pointwise. -/
 private lemma mem_graph_closure_relativeTomita_iff {u v : H} :
-    (u, v) ∈ (S[M]⟦η, ξ⟧).closure.graph ↔
+    (u, v) ∈ (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ ↔
       ∃ w, (u, w) ∈ Δ[M]⟦η, ξ⟧^{1/2}.graph ∧ J[M]⟦η, ξ⟧ w = v := by
-  have h := closure_relativeTomita_eq_compPMap (M := M) (η := η) (ξ := ξ)
-  constructor
-  · intro huv
-    obtain ⟨w, hw, rfl⟩ := LinearPMap.mem_graph_compPMap.mp (LinearPMap.le_graph_of_le h.le huv)
-    exact ⟨w, LinearPMap.mem_graph_restrictScalars.mp hw, rfl⟩
-  · rintro ⟨w, hw, rfl⟩
-    exact LinearPMap.le_graph_of_le h.ge
-      (LinearPMap.mem_graph_compPMap.mpr ⟨w, LinearPMap.mem_graph_restrictScalars.mpr hw, rfl⟩)
+  rw [closure_relativeTomita_eq_compPMap, LinearPMap.mem_graphₛₗ_compPMap]
+  simp only [LinearPMap.mem_graphₛₗ_iff_mem_graph]
+  rfl
 
 /-! #### Supports, and `S̄_{ξ,η}` as the inverse of `S̄_{η,ξ}` -/
 
@@ -181,10 +172,10 @@ private lemma mem_graph_closure_relativeTomita_iff {u v : H} :
 `(b, s(η) s′(ξ) a)` lies in the graph of `S̄_{ξ,η}`. On `x ξ + ζ` (`x ∈ M`, `ζ ⊥ [M ξ]`) this is
 `S_{ξ,η} (s(ξ) x⋆ η) = s(η) x s(ξ) ξ = s(η) x ξ`; the closure is a limit argument. -/
 private lemma mem_graph_closure_relativeTomita_swap {a b : H}
-    (h : (a, b) ∈ (S[M]⟦η, ξ⟧).closure.graph) :
-    (b, M.supportProj η (M′.supportProj ξ a)) ∈ (S[M]⟦ξ, η⟧).closure.graph := by
-  have hS : ∀ p ∈ ((S[M]⟦η, ξ⟧).graph : Set (H × H)),
-      (p.2, M.supportProj η (M′.supportProj ξ p.1)) ∈ (S[M]⟦ξ, η⟧).graph := by
+    (h : (a, b) ∈ (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ) :
+    (b, M.supportProj η (M′.supportProj ξ a)) ∈ (S[M]⟦ξ, η⟧).closureₛₗ.graphₛₗ := by
+  have hS : ∀ p ∈ ((S[M]⟦η, ξ⟧).graphₛₗ : Set (H × H)),
+      (p.2, M.supportProj η (M′.supportProj ξ p.1)) ∈ (S[M]⟦ξ, η⟧).graphₛₗ := by
     intro p hp
     obtain ⟨x, hx, ζ, hζ, rfl⟩ := mem_graph_relativeTomita.mp hp
     have hy : M.supportProj ξ * star x ∈ M := mul_mem (M.supportProj_mem ξ) (star_mem hx)
@@ -199,9 +190,8 @@ private lemma mem_graph_closure_relativeTomita_swap {a b : H}
     · rw [mul_apply_eq_comp]
     · rw [star_mul, star_star, (M.isStarProjection_supportProj ξ).isSelfAdjoint.star_eq,
         mul_apply_eq_comp, supportProj_apply_self, map_add, hxξ, hζ0, add_zero]
-  rw [← (isClosable_relativeTomita M η ξ).graph_closure_eq_closure_graph] at h
-  rw [← (isClosable_relativeTomita M ξ η).graph_closure_eq_closure_graph]
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at h ⊢
+  rw [← SetLike.mem_coe, (isClosable_relativeTomita M η ξ).coe_graphₛₗ_closureₛₗ] at h
+  rw [← SetLike.mem_coe, (isClosable_relativeTomita M ξ η).coe_graphₛₗ_closureₛₗ]
   have hc : Continuous fun p : H × H => (p.2, M.supportProj η (M′.supportProj ξ p.1)) :=
     continuous_snd.prodMk ((M.supportProj η).continuous.comp
       ((M′.supportProj ξ).continuous.comp continuous_fst))
@@ -211,10 +201,10 @@ private lemma mem_graph_closure_relativeTomita_swap {a b : H}
 `S_{η,ξ} ((1 - s(η)) x ξ) = s(ξ) x⋆ (1 - s(η)) η = 0`; the closure is a limit argument. -/
 private lemma mem_graph_closure_relativeTomita_of_supportProj_apply_eq_zero {z : H}
     (hz : M.supportProj η (M′.supportProj ξ z) = 0) :
-    (z, 0) ∈ (S[M]⟦η, ξ⟧).closure.graph := by
+    (z, 0) ∈ (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ := by
   set w := M′.supportProj ξ z
   -- `z - w ⊥ [M ξ]`
-  have hζ : (z - w, 0) ∈ (S[M]⟦η, ξ⟧).closure.graph := by
+  have hζ : (z - w, 0) ∈ (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ := by
     have hmem : z - w ∈ (cyclicSubspace M ξ).toSubmoduleᗮ := by
       simp only [w, supportProj_commutant]
       exact Submodule.sub_starProjection_mem_orthogonal z
@@ -222,12 +212,11 @@ private lemma mem_graph_closure_relativeTomita_of_supportProj_apply_eq_zero {z :
     simp only [zero_apply, zero_add, star_zero, map_zero] at h
     exact mem_graph_closure_relativeTomita h
   -- `w ∈ [M ξ]` with `s(η) w = 0` is a limit of the kernel vectors `(1 - s(η)) x ξ`
-  have hw : (w, 0) ∈ (S[M]⟦η, ξ⟧).closure.graph := by
+  have hw : (w, 0) ∈ (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ := by
     have hφ : Continuous fun v : H => (v - M.supportProj η v, (0 : H)) :=
       (continuous_id.sub (M.supportProj η).continuous).prodMk continuous_const
     have hS : ∀ v ∈ Set.range fun x : M => (x : H →L[ℂ] H) ξ,
-        (v - M.supportProj η v, (0 : H)) ∈ (((S[M]⟦η, ξ⟧).closure.graph : Submodule ℝ (H × H)) :
-          Set (H × H)) := by
+        (v - M.supportProj η v, (0 : H)) ∈ ((S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ : Set (H × H)) := by
       rintro _ ⟨⟨x, hx⟩, rfl⟩
       have hy : (1 - M.supportProj η) * x ∈ M := mul_mem (sub_mem (one_mem M) (M.supportProj_mem η)) hx
       have h := apply_mem_graph_relativeTomita (η := η) (ξ := ξ) hy
@@ -241,77 +230,71 @@ private lemma mem_graph_closure_relativeTomita_of_supportProj_apply_eq_zero {z :
       simp only [w, supportProj_commutant]
       exact Submodule.starProjection_apply_mem _ z
     have h := map_mem_closure hφ hwmem hS
-    have hcl : IsClosed (((S[M]⟦η, ξ⟧).closure.graph : Submodule ℝ (H × H)) : Set (H × H)) :=
+    have hcl : IsClosed ((S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ : Set (H × H)) :=
       isClosed_closure_relativeTomita M η ξ
     rw [hcl.closure_eq] at h
     rwa [hz, sub_zero] at h
-  have h := (S[M]⟦η, ξ⟧).closure.graph.add_mem hζ hw
+  have h := (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ.add_mem hζ hw
   rwa [Prod.mk_add_mk, sub_add_cancel, add_zero] at h
 
 /-- `ker S̄_{η,ξ} = ker s(η) s′(ξ)`, pointwise. -/
 private lemma mem_graph_closure_relativeTomita_zero_iff {x : H} :
-    (x, 0) ∈ (S[M]⟦η, ξ⟧).closure.graph ↔ M.supportProj η (M′.supportProj ξ x) = 0 :=
-  ⟨fun hx => (S[M]⟦ξ, η⟧).closure.graph_fst_eq_zero_snd
-    (mem_graph_closure_relativeTomita_swap hx) rfl,
+    (x, 0) ∈ (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ ↔ M.supportProj η (M′.supportProj ξ x) = 0 :=
+  ⟨fun hx => LinearPMap.graphₛₗ_fst_eq_zero_snd (mem_graph_closure_relativeTomita_swap hx) rfl,
     mem_graph_closure_relativeTomita_of_supportProj_apply_eq_zero⟩
 
 /-- **`S̄_{ξ,η} S̄_{η,ξ} ⊆ s(η) s′(ξ)`**: `S̄_{ξ,η}` inverts `S̄_{η,ξ}` between the supports. -/
 lemma closure_relativeTomita_compNat_le :
-    (S[M]⟦ξ, η⟧).closure.compNat (S[M]⟦η, ξ⟧).closure ≤
-      (((M.supportProj η * M′.supportProj ξ : H →L[ℂ] H) : H →ₗ[ℂ] H).restrictScalars ℝ).toPMap ⊤ :=
-  LinearPMap.le_iff_mem_graph.mpr fun a c hac => by
+    (S[M]⟦ξ, η⟧).closureₛₗ.compNat (S[M]⟦η, ξ⟧).closureₛₗ ≤
+      ((M.supportProj η * M′.supportProj ξ : H →L[ℂ] H) : H →ₗ[ℂ] H).toPMap ⊤ :=
+  LinearPMap.le_iff_mem_graphₛₗ.mpr fun a c hac => by
     -- the graph of `S̄_{ξ,η}` is that of a function
-    obtain ⟨b, hab, hbc⟩ := LinearPMap.mem_graph_compNat.mp hac
+    obtain ⟨b, hab, hbc⟩ := LinearPMap.mem_graphₛₗ_compNat.mp hac
     obtain rfl : c = M.supportProj η (M′.supportProj ξ a) :=
-      sub_eq_zero.mp ((S[M]⟦ξ, η⟧).closure.graph_fst_eq_zero_snd
-        ((S[M]⟦ξ, η⟧).closure.graph.sub_mem hbc (mem_graph_closure_relativeTomita_swap hab))
-        (sub_self b))
-    exact (LinearPMap.mem_graph_iff _).mpr
-      ⟨⟨a, Submodule.mem_top⟩, rfl, mul_apply_eq_comp (M.supportProj η) (M′.supportProj ξ) a⟩
+      LinearPMap.mem_graphₛₗ_snd_inj hbc (mem_graph_closure_relativeTomita_swap hab)
+    exact ⟨⟨a, Submodule.mem_top⟩, rfl, mul_apply_eq_comp (M.supportProj η) (M′.supportProj ξ) a⟩
 
 /-- **`ker S̄_{η,ξ} = ker s(η) s′(ξ)`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2: the support of
 `Δ_{η,ξ}` is `s(η) s′(ξ)`): `S̄_{ξ,η} S̄_{η,ξ} ⊆ s(η) s′(ξ)`
 (`VonNeumannAlgebra.closure_relativeTomita_compNat_le`), and conversely `(1 - s(η) s′(ξ)) H` lies
 in the kernel, as `S_{η,ξ} ((1 - s(η)) x ξ) = 0` and `S_{η,ξ} [M ξ]ᗮ = 0`. -/
 lemma ker_closure_relativeTomita :
-    (S[M]⟦η, ξ⟧).closure.ker =
-      (LinearMap.ker ((M.supportProj η * M′.supportProj ξ : H →L[ℂ] H) : H →ₗ[ℂ] H)).restrictScalars
-        ℝ := by
+    (S[M]⟦η, ξ⟧).closureₛₗ.ker =
+      LinearMap.ker ((M.supportProj η * M′.supportProj ξ : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
   ext x
-  rw [← LinearPMap.mem_graph_zero_iff_mem_ker, Submodule.restrictScalars_mem, LinearMap.mem_ker,
-    ContinuousLinearMap.coe_coe, mul_apply_eq_comp]
+  rw [← LinearPMap.mem_graphₛₗ_zero_iff_mem_ker, LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
+    mul_apply_eq_comp]
   exact mem_graph_closure_relativeTomita_zero_iff
 
 /-- **`ker S̄_{η,ξ} = [M′ η]ᗮ`** for `ξ` cyclic: then `s′(ξ) = 1`, and `s(η)` is the projection
 onto `[M′ η]` (`VonNeumannAlgebra.ker_closure_relativeTomita`). -/
 lemma ker_closure_relativeTomita_eq_orthogonal (hc : IsCyclicVector M ξ) :
-    (S[M]⟦η, ξ⟧).closure.ker = (cyclicSubspace M′ η).toSubmoduleᗮ.restrictScalars ℝ := by
+    (S[M]⟦η, ξ⟧).closureₛₗ.ker = (cyclicSubspace M′ η).toSubmoduleᗮ := by
   have hsupp : M′.supportProj ξ = 1 := by
     rw [supportProj_eq_one_iff, commutant_commutant]
     exact hc
   ext x
-  rw [ker_closure_relativeTomita, hsupp, mul_one, Submodule.restrictScalars_mem,
-    Submodule.restrictScalars_mem, LinearMap.mem_ker, ContinuousLinearMap.coe_coe, supportProj,
-    Submodule.starProjection_apply_eq_zero_iff]
+  rw [ker_closure_relativeTomita, hsupp, mul_one, LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
+    supportProj, Submodule.starProjection_apply_eq_zero_iff]
 
 /-- For `ξ` cyclic and `η` separating, `S̄_{η,ξ}` is injective: its kernel `[M′ η]ᗮ`
 (`VonNeumannAlgebra.ker_closure_relativeTomita_eq_orthogonal`) is `0`. -/
 lemma ker_closure_relativeTomita_eq_bot (hc : IsCyclicVector M ξ)
-    (hsη : IsSeparatingVector M η) : (S[M]⟦η, ξ⟧).closure.ker = ⊥ := by
+    (hsη : IsSeparatingVector M η) : (S[M]⟦η, ξ⟧).closureₛₗ.ker = ⊥ := by
   rw [ker_closure_relativeTomita_eq_orthogonal hc, hsη.isCyclicVector_commutant]
   simp
 
 /-- **`ker Δ_{η,ξ} = [M′ η]ᗮ`** for `ξ` cyclic: `ker Δ_{η,ξ} = ker S̄_{η,ξ}`
 (`VonNeumannAlgebra.ker_relativeModular`, `VonNeumannAlgebra.ker_closure_relativeTomita_eq_orthogonal`). -/
 lemma ker_relativeModular_eq_orthogonal (hc : IsCyclicVector M ξ) :
-    (Δ[M]⟦η, ξ⟧).ker.restrictScalars ℝ = (cyclicSubspace M′ η).toSubmoduleᗮ.restrictScalars ℝ :=
+    (Δ[M]⟦η, ξ⟧).ker = (cyclicSubspace M′ η).toSubmoduleᗮ :=
   ker_relativeModular.trans (ker_closure_relativeTomita_eq_orthogonal hc)
 
 /-- For `ξ` cyclic and `η` separating, `Δ_{η,ξ}` is injective: `ker Δ_{η,ξ} = ker S̄_{η,ξ}`. -/
 lemma ker_relativeModular_eq_bot (hc : IsCyclicVector M ξ) (hsη : IsSeparatingVector M η) :
     (Δ[M]⟦η, ξ⟧).ker = ⊥ :=
-  ((isSelfAdjoint_relativeModular M η ξ).ker_eq_bot_iff_of_restrictScalars_eq
-    (restrictScalars_relativeModular M η ξ)).mpr (ker_closure_relativeTomita_eq_bot hc hsη)
+  ((isSelfAdjoint_relativeModular M η ξ).ker_eq_bot_iff_of_eq_adjointₛₗ_compNat
+    (relativeModular_def M η ξ)).mpr (ker_closure_relativeTomita_eq_bot hc hsη)
 
 /-- For `ξ` cyclic and `η` separating, the relative modular group `Δ_{η,ξ}^{it}` is the unitary
 group generated by `log Δ_{η,ξ}` (`IsSelfAdjoint.unitaryGroup`). -/
@@ -323,9 +306,9 @@ lemma relativeModularGroup_eq_unitaryGroup (hc : IsCyclicVector M ξ) (hsη : Is
 
 /-- `ran S̄_{η,ξ} ⊆ s(ξ) s′(η) H`, pointwise; the closure is a limit argument. -/
 private lemma supportProj_apply_supportProj_of_mem_graph_closure {a b : H}
-    (h : (a, b) ∈ (S[M]⟦η, ξ⟧).closure.graph) :
+    (h : (a, b) ∈ (S[M]⟦η, ξ⟧).closureₛₗ.graphₛₗ) :
     M.supportProj ξ (M′.supportProj η b) = b := by
-  have hS : ∀ p ∈ ((S[M]⟦η, ξ⟧).graph : Set (H × H)),
+  have hS : ∀ p ∈ ((S[M]⟦η, ξ⟧).graphₛₗ : Set (H × H)),
       M.supportProj ξ (M′.supportProj η p.2) = p.2 := by
     intro p hp
     obtain ⟨x, hx, ζ, hζ, rfl⟩ := mem_graph_relativeTomita.mp hp
@@ -339,32 +322,32 @@ private lemma supportProj_apply_supportProj_of_mem_graph_closure {a b : H}
   have hcl : IsClosed {p : H × H | M.supportProj ξ (M′.supportProj η p.2) = p.2} :=
     isClosed_eq ((M.supportProj ξ).continuous.comp ((M′.supportProj η).continuous.comp
       continuous_snd)) continuous_snd
-  rw [← (isClosable_relativeTomita M η ξ).graph_closure_eq_closure_graph, ← SetLike.mem_coe,
-    Submodule.topologicalClosure_coe] at h
+  rw [← SetLike.mem_coe, (isClosable_relativeTomita M η ξ).coe_graphₛₗ_closureₛₗ] at h
   have h' : (a, b) ∈ {p : H × H | M.supportProj ξ (M′.supportProj η p.2) = p.2} :=
-    closure_minimal (s := ((S[M]⟦η, ξ⟧).graph : Set (H × H))) hS hcl h
+    closure_minimal (s := ((S[M]⟦η, ξ⟧).graphₛₗ : Set (H × H))) hS hcl h
   exact h'
 
 /-- **`ran S̄_{η,ξ} ⊆ s(ξ) s′(η) H`**: `s(ξ) s′(η) S̄_{η,ξ} = S̄_{η,ξ}`, since
 `S_{η,ξ} (x ξ + ζ) = s(ξ) x⋆ η ∈ s(ξ) [M η]`. -/
 lemma supportProj_compPMap_closure_relativeTomita :
-    (M.supportProj ξ * M′.supportProj η) ⬝ (S[M]⟦η, ξ⟧).closure = (S[M]⟦η, ξ⟧).closure :=
+    ((M.supportProj ξ * M′.supportProj η : H →L[ℂ] H) : H →ₗ[ℂ] H).compPMap
+      (S[M]⟦η, ξ⟧).closureₛₗ = (S[M]⟦η, ξ⟧).closureₛₗ :=
   LinearPMap.ext rfl fun x hx _ => by
-    change (M.supportProj ξ * M′.supportProj η) ((S[M]⟦η, ξ⟧).closure ⟨x, hx⟩) = _
+    change (M.supportProj ξ * M′.supportProj η) ((S[M]⟦η, ξ⟧).closureₛₗ ⟨x, hx⟩) = _
     rw [mul_apply_eq_comp]
-    exact supportProj_apply_supportProj_of_mem_graph_closure ((S[M]⟦η, ξ⟧).closure.mem_graph ⟨x, hx⟩)
+    exact supportProj_apply_supportProj_of_mem_graph_closure
+      ((S[M]⟦η, ξ⟧).closureₛₗ.mem_graphₛₗ ⟨x, hx⟩)
 
 /-- **`s(ξ) s′(η) H ⊆ closure (ran S̄_{η,ξ})`**: `s(ξ) x η = S_{η,ξ} (x⋆ ξ)` for `x ∈ M`. -/
 lemma supportProj_apply_supportProj_mem_closure_range (z : H) :
-    M.supportProj ξ (M′.supportProj η z) ∈ closure (Set.range (S[M]⟦η, ξ⟧).closure) := by
+    M.supportProj ξ (M′.supportProj η z) ∈ closure (Set.range (S[M]⟦η, ξ⟧).closureₛₗ) := by
   have hS : ∀ v ∈ Set.range fun x : M => (x : H →L[ℂ] H) η,
-      M.supportProj ξ v ∈ Set.range (S[M]⟦η, ξ⟧).closure := by
+      M.supportProj ξ v ∈ Set.range (S[M]⟦η, ξ⟧).closureₛₗ := by
     rintro _ ⟨⟨x, hx⟩, rfl⟩
     have h := mem_graph_closure_relativeTomita (apply_mem_graph_relativeTomita (η := η) (ξ := ξ)
       (star_mem hx))
     rw [star_star] at h
-    obtain ⟨p, -, hp⟩ := ((S[M]⟦η, ξ⟧).closure.mem_graph_iff).mp h
-    exact ⟨p, hp⟩
+    exact LinearPMap.mem_range_iff_mem_graphₛₗ.mpr ⟨_, h⟩
   have hmem : M′.supportProj η z ∈ closure (Set.range fun x : M => (x : H →L[ℂ] H) η) := by
     rw [← coe_cyclicSubspace, supportProj_commutant]
     exact Submodule.starProjection_apply_mem _ z
@@ -376,13 +359,13 @@ lemma supportProj_apply_supportProj_relativeModularConj (x : H) :
     M.supportProj ξ (M′.supportProj η (J[M]⟦η, ξ⟧ x)) = J[M]⟦η, ξ⟧ x := by
   have hcl : IsClosed {v : H | M.supportProj ξ (M′.supportProj η v) = v} :=
     isClosed_eq ((M.supportProj ξ).continuous.comp (M′.supportProj η).continuous) continuous_id
-  have hsub : Set.range (S[M]⟦η, ξ⟧).closure ⊆
+  have hsub : Set.range (S[M]⟦η, ξ⟧).closureₛₗ ⊆
       {v : H | M.supportProj ξ (M′.supportProj η v) = v} := by
     rintro _ ⟨p, rfl⟩
-    exact supportProj_apply_supportProj_of_mem_graph_closure ((S[M]⟦η, ξ⟧).closure.mem_graph p)
+    exact supportProj_apply_supportProj_of_mem_graph_closure ((S[M]⟦η, ξ⟧).closureₛₗ.mem_graphₛₗ p)
   exact closure_minimal hsub hcl
     ((isSelfAdjoint_relativeModular M η ξ).polarIsometry_apply_mem_closure_range
-      (restrictScalars_relativeModular M η ξ) (isClosed_closure_relativeTomita M η ξ) x)
+      (relativeModular_def M η ξ) (isClosed_closure_relativeTomita M η ξ) x)
 
 /-- **`ran J_{η,ξ} = s(ξ) s′(η) H`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2): the final space
 of the partial isometry `J_{η,ξ}`. The range of `J_{η,ξ}` is closed and contains `ran S̄_{η,ξ}`,
@@ -400,24 +383,24 @@ lemma range_relativeModularConj :
     have h := supportProj_apply_supportProj_mem_closure_range (M := M) (η := η) (ξ := ξ) y
     rw [← mul_apply_eq_comp] at h
     have hA := isSelfAdjoint_relativeModular M η ξ
-    have hAT := restrictScalars_relativeModular M η ξ
+    have hAT := relativeModular_def M η ξ
     have hT := isClosed_closure_relativeTomita M η ξ
     exact (hA.isClosed_range_polarIsometry hAT hT).closure_subset_iff.mpr
       (hA.range_subset_range_polarIsometry hAT hT) h
 
-/-- `J_{η,ξ}† = J_{ξ,η}` for the polar isometries (`adjoint_relativeModularConj`). -/
-private lemma adjoint_polarIsometry_relativeModular :
+/-- `J_{η,ξ}† = J_{ξ,η}` for the polar isometries (`adjointₛₗ_relativeModularConj`). -/
+private lemma adjointₛₗ_polarIsometry_relativeModular :
     ((isSelfAdjoint_relativeModular M η ξ).polarIsometry
-      (restrictScalars_relativeModular M η ξ) (isClosed_closure_relativeTomita M η ξ))† =
-    (isSelfAdjoint_relativeModular M ξ η).polarIsometry (restrictScalars_relativeModular M ξ η)
+      (relativeModular_def M η ξ) (isClosed_closure_relativeTomita M η ξ)).adjointₛₗ =
+    (isSelfAdjoint_relativeModular M ξ η).polarIsometry (relativeModular_def M ξ η)
       (isClosed_closure_relativeTomita M ξ η) := by
   set hA := isSelfAdjoint_relativeModular M η ξ
-  set hAT := restrictScalars_relativeModular M η ξ
+  set hAT := relativeModular_def M η ξ
   set hT := isClosed_closure_relativeTomita M η ξ
-  set T := (S[M]⟦η, ξ⟧).closure
-  set T' := (S[M]⟦ξ, η⟧).closure
+  set T := (S[M]⟦η, ξ⟧).closureₛₗ
+  set T' := (S[M]⟦ξ, η⟧).closureₛₗ
   set J := hA.polarIsometry hAT hT
-  set W := J†
+  set W := J.adjointₛₗ
   set P := hA.pvm (Ioi 0)
   -- the supports `e = s(ξ) s′(η)` (final space of `J`) and `f = s(η) s′(ξ)` (initial space)
   set e := M.supportProj ξ * M′.supportProj η
@@ -426,75 +409,69 @@ private lemma adjoint_polarIsometry_relativeModular :
     (M′.isStarProjection_supportProj η) (commute_supportProj_supportProj_commutant M ξ η)
   have hf : IsStarProjection f := (M.isStarProjection_supportProj η).mul
     (M′.isStarProjection_supportProj ξ) (commute_supportProj_supportProj_commutant M η ξ)
-  have hsym : ∀ {q : H →L[ℂ] H}, IsStarProjection q → ∀ a b, inner ℝ (q a) b = inner ℝ a (q b) :=
+  have hsym : ∀ {q : H →L[ℂ] H}, IsStarProjection q → ∀ a b, ⟪q a, b⟫_ℂ = ⟪a, q b⟫_ℂ :=
     fun hq a b => by
-      rw [inner_real_eq_re_inner, inner_real_eq_re_inner, ← ContinuousLinearMap.adjoint_inner_right,
-        ← ContinuousLinearMap.star_eq_adjoint, hq.isSelfAdjoint.star_eq]
+      rw [← ContinuousLinearMap.adjoint_inner_right, ← ContinuousLinearMap.star_eq_adjoint,
+        hq.isSelfAdjoint.star_eq]
   have hidem : ∀ {q : H →L[ℂ] H}, IsStarProjection q → ∀ a, q (q a) = q a := fun hq a => by
     rw [← mul_apply_eq_comp, hq.isIdempotentElem.eq]
-  have hP : ∀ a b, inner ℝ (P a) b = inner ℝ a (P b) := hsym (hA.pvm.isStarProjection _)
+  have hP : ∀ a b, ⟪P a, b⟫_ℂ = ⟪a, P b⟫_ℂ := hsym (hA.pvm.isStarProjection _)
   -- polar decomposition of `T` and the swap
-  have hpol : ∀ w v, (w, v) ∈ T.graph ↔ ∃ q, (w, q) ∈ hA.sqrt.graph ∧ J q = v := fun w v =>
+  have hpol : ∀ w v, (w, v) ∈ T.graphₛₗ ↔ ∃ q, (w, q) ∈ hA.sqrt.graph ∧ J q = v := fun w v =>
     mem_graph_closure_relativeTomita_iff
-  have hswap : ∀ y w, (y, w) ∈ T'.graph → (w, e y) ∈ T.graph := fun y w h => by
+  have hswap : ∀ y w, (y, w) ∈ T'.graphₛₗ → (w, e y) ∈ T.graphₛₗ := fun y w h => by
     simpa only [e, mul_apply_eq_comp] using mem_graph_closure_relativeTomita_swap h
-  have hkey : ∀ y w, (y, w) ∈ T'.graph → ∃ q, (w, q) ∈ hA.sqrt.graph ∧ J q = e y :=
+  have hkey : ∀ y w, (y, w) ∈ T'.graphₛₗ → ∃ q, (w, q) ∈ hA.sqrt.graph ∧ J q = e y :=
     fun y w h => (hpol w (e y)).mp (hswap y w h)
   have hPq : ∀ w q, (w, q) ∈ hA.sqrt.graph → P q = q := fun w q h => by
     -- `E_Δ((0, ∞)) Δ^{1/2} = Δ^{1/2}` at the graph point `(w, q)`
     have h' : (w, P q) ∈ hA.sqrt.graph := by
       rw [← hA.pvm_Ioi_compPMap_sqrt]
       exact LinearPMap.mem_graph_compPMap.mpr ⟨q, h, rfl⟩
-    exact sub_eq_zero.mp (hA.sqrt.graph_fst_eq_zero_snd (hA.sqrt.graph.sub_mem h' h) (sub_self w))
+    exact hA.sqrt.mem_graph_snd_inj h' h rfl
   -- `ran J ⊆ e H`
   have hJe : ∀ x, e (J x) = J x := fun x => by
     rw [mul_apply_eq_comp]
     exact supportProj_apply_supportProj_relativeModularConj x
   -- `ran S̄_{ξ,η} ⊆ f H ⊆ E_Δ((0, ∞)) H`
-  have hran : ∀ y w, (y, w) ∈ T'.graph → P w = w := fun y w h => by
+  have hran : ∀ y w, (y, w) ∈ T'.graphₛₗ → P w = w := fun y w h => by
     have hfw : f w = w := by
       rw [mul_apply_eq_comp]
       exact supportProj_apply_supportProj_of_mem_graph_closure h
     refine hA.pvm_Ioi_apply_eq_self hAT hT ((Submodule.mem_orthogonal _ _).mpr fun k hk => ?_)
     have hfk : f k = 0 := by
       rw [mul_apply_eq_comp]
-      exact mem_graph_closure_relativeTomita_zero_iff.mp (LinearPMap.mem_graph_zero_iff_mem_ker.mpr hk)
+      exact mem_graph_closure_relativeTomita_zero_iff.mp
+        (LinearPMap.mem_graphₛₗ_zero_iff_mem_ker.mpr hk)
     rw [← hfw, ← hsym hf, hfk, inner_zero_left]
-  have hWJ : ∀ w, W (J w) = P w := hA.adjoint_polarIsometry_apply_polarIsometry hAT hT
-  have hJq : ∀ w q, (w, q) ∈ hA.sqrt.graph → ∀ a, inner ℝ (J a) (J q) = inner ℝ a q :=
+  have hWJ : ∀ w, W (J w) = P w := hA.adjointₛₗ_polarIsometry_apply_polarIsometry hAT hT
+  have hJq : ∀ w q, (w, q) ∈ hA.sqrt.graph → ∀ a, ⟪J a, J q⟫_ℂ = conj ⟪a, q⟫_ℂ :=
     fun w q h a => by
       rw [hA.inner_polarIsometry_apply hAT hT, hP, hidem (hA.pvm.isStarProjection _), hPq w q h]
-  -- `R = J S̄_{ξ,η}`
-  set R : H →ₗ.[ℝ] H := (J : H →ₗ[ℝ] H).compPMap T'
-  have hRg : ∀ y v, (y, v) ∈ R.graph ↔ ∃ w, (y, w) ∈ T'.graph ∧ J w = v := fun _ _ =>
-    LinearPMap.mem_graph_compPMap
-  have hRsemi : LinearPMap.IsSemilinear (RingHom.id ℂ) R := fun c y v h => by
-    obtain ⟨w, hw, rfl⟩ := (hRg y v).mp h
-    refine (hRg _ _).mpr ⟨_, isSemilinear_closure_relativeTomita M ξ η c y w hw, ?_⟩
-    rw [hA.polarIsometry_smul_of_isSemilinear hAT hT (isSemilinear_closure_relativeTomita M η ξ),
-      starRingEnd_self_apply, RingHom.id_apply]
-  -- `⟪J w, y'⟫ = ⟪w, q'⟫` for `(y', w') ∈ S̄_{ξ,η}`, `Δ^{1/2} w' = q'`
-  have hside : ∀ w y' w' q', (y', w') ∈ T'.graph → (w', q') ∈ hA.sqrt.graph → J q' = e y' →
-      inner ℝ (J w) y' = inner ℝ w q' := fun w y' w' q' _ hq' hJq' => by
-    rw [← hJe w, hsym he, ← hJq', hJq w' q' hq']
+  -- `R = J S̄_{ξ,η}`, the composite of two conjugate-linear operators, is complex-linear
+  set R : H →ₗ.[ℂ] H := (J : H →ₗ⋆[ℂ] H).compPMap T'
+  have hRg : ∀ y v, (y, v) ∈ R.graph ↔ ∃ w, (y, w) ∈ T'.graphₛₗ ∧ J w = v := fun _ _ => by
+    rw [← LinearPMap.mem_graphₛₗ_iff_mem_graph, LinearPMap.mem_graphₛₗ_compPMap]
+    rfl
+  -- `⟪J w, y'⟫ = ⟪q', w⟫` for `(y', w') ∈ S̄_{ξ,η}`, `Δ^{1/2} w' = q'`
+  have hside : ∀ w y' w' q', (y', w') ∈ T'.graphₛₗ → (w', q') ∈ hA.sqrt.graph → J q' = e y' →
+      ⟪J w, y'⟫_ℂ = ⟪q', w⟫_ℂ := fun w y' w' q' _ hq' hJq' => by
+    rw [← hJe w, hsym he, ← hJq', hJq w' q' hq', inner_conj_symm]
   have hRsym : R.IsFormalAdjoint R := LinearPMap.isFormalAdjoint_of_mem_graph
     fun y v y' v' h h' => by
       obtain ⟨w, hw, rfl⟩ := (hRg y v).mp h
       obtain ⟨w', hw', rfl⟩ := (hRg y' v').mp h'
       obtain ⟨q, hq, hJq₁⟩ := hkey y w hw
       obtain ⟨q', hq', hJq₂⟩ := hkey y' w' hw'
-      rw [hside w y' w' q' hw' hq' hJq₂, real_inner_comm (J w') y, hside w' y w q hw hq hJq₁,
-        inner_real_eq_re_inner, inner_real_eq_re_inner,
-        ← hA.isSelfAdjoint_sqrt.isFormalAdjoint.inner_eq_of_mem_graph hq hq', ← inner_conj_symm,
-        conj_re]
+      rw [hside w y' w' q' hw' hq' hJq₂, ← inner_conj_symm y, hside w' y w q hw hq hJq₁,
+        hA.isSelfAdjoint_sqrt.isFormalAdjoint.inner_eq_of_mem_graph hq hq', inner_conj_symm]
   have hRpos : R.IsPositive := by
     refine ⟨hRsym, fun x => ?_⟩
     obtain ⟨w, hw, hJw⟩ := (hRg x (R x)).mp (R.mem_graph x)
     obtain ⟨q, hq, hJq₁⟩ := hkey x w hw
     obtain ⟨⟨w₀, hw₀⟩, rfl, rfl⟩ := (LinearPMap.mem_graph_iff _).mp hq
     have h := hA.isPositive_sqrt.re_inner_nonneg_left ⟨w₀, hw₀⟩
-    rw [RCLike.re_to_real, ← hJw, hside _ _ _ _ hw (hA.sqrt.mem_graph ⟨w₀, hw₀⟩) hJq₁,
-      inner_real_eq_re_inner, ← inner_conj_symm, conj_re]
+    rw [← hJw, hside _ _ _ _ hw (hA.sqrt.mem_graph ⟨w₀, hw₀⟩) hJq₁]
     exact h
   -- `ran (R + 1) = H`
   have hrange : ∀ z, ∃ y v, (y, v) ∈ R.graph ∧ v + y = z := by
@@ -510,23 +487,23 @@ private lemma adjoint_polarIsometry_relativeModular :
     have hac : a + c = p₀ := by
       simp only [a, c, neg_smul, one_smul, neg_sub, sub_neg_eq_add]
       abel
-    have h₁ : (a, J c) ∈ T.graph := (hpol _ _).mpr ⟨c, hr, rfl⟩
+    have h₁ : (a, J c) ∈ T.graphₛₗ := (hpol _ _).mpr ⟨c, hr, rfl⟩
     have h₂ := mem_graph_closure_relativeTomita_swap h₁
     rw [← mul_apply_eq_comp] at h₂
     have hJfa : J (f a) = J a := by
-      have hk : (a - f a, 0) ∈ T.graph := by
+      have hk : (a - f a, 0) ∈ T.graphₛₗ := by
         refine mem_graph_closure_relativeTomita_of_supportProj_apply_eq_zero ?_
         rw [← mul_apply_eq_comp, map_sub, hidem hf, sub_self]
       have hk0 : hA.pvm (Ioi 0) (a - f a) = 0 :=
-        hA.ker_le_ker_pvm_Ioi hAT hT (LinearPMap.mem_graph_zero_iff_mem_ker.mp hk)
+        hA.ker_le_ker_pvm_Ioi hAT hT (LinearPMap.mem_graphₛₗ_zero_iff_mem_ker.mp hk)
       have hJk : J (a - f a) = 0 := norm_eq_zero.mp (by
         rw [hA.norm_polarIsometry_apply hAT hT, hk0, norm_zero])
       rw [map_sub, sub_eq_zero] at hJk
       exact hJk.symm
-    have h₃ : (z - e z, 0) ∈ T'.graph := by
+    have h₃ : (z - e z, 0) ∈ T'.graphₛₗ := by
       refine mem_graph_closure_relativeTomita_of_supportProj_apply_eq_zero ?_
       rw [← mul_apply_eq_comp, map_sub, hidem he, sub_self]
-    refine ⟨J c + (z - e z), J a + 0, (hRg _ _).mpr ⟨f a + 0, T'.graph.add_mem h₂ h₃, ?_⟩, ?_⟩
+    refine ⟨J c + (z - e z), J a + 0, (hRg _ _).mpr ⟨f a + 0, T'.graphₛₗ.add_mem h₂ h₃, ?_⟩, ?_⟩
     · rw [add_zero, add_zero, hJfa]
     · rw [add_zero, ← add_assoc, ← map_add, hac, hp₀, add_sub_cancel]
   have hRsa : IsSelfAdjoint R := hRsym.isSelfAdjoint_of_surjective 1
@@ -534,18 +511,15 @@ private lemma adjoint_polarIsometry_relativeModular :
       obtain ⟨y, v, h, hvy⟩ := hrange z
       exact ⟨y, v, h, by rw [← hvy, add_comm, LinearMap.smul_apply, LinearMap.id_apply,
         RCLike.ofReal_one, one_smul]⟩)
-  have hBg : ∀ y v, (y, v) ∈ hRsemi.toLinearPMap.graph ↔ (y, v) ∈ R.graph := fun _ _ =>
-    hRsemi.mem_graph_toLinearPMap
   refine (isSelfAdjoint_relativeModular M ξ η).eq_polarIsometry_of_eq_compPMap
-    (restrictScalars_relativeModular M ξ η) (isClosed_closure_relativeTomita M ξ η)
-    (hRsemi.isSelfAdjoint_toLinearPMap hRsa) (hRsemi.isPositive_toLinearPMap hRpos) W
+    (relativeModular_def M ξ η) (isClosed_closure_relativeTomita M ξ η) hRsa hRpos W
     (fun y hy => ?_) (fun x hx => ?_) ?_
   · obtain ⟨x, h⟩ := LinearPMap.mem_range_iff.mp hy
-    obtain ⟨w, -, rfl⟩ := (hRg x y).mp ((hBg x y).mp h)
+    obtain ⟨w, -, rfl⟩ := (hRg x y).mp h
     rw [hWJ, hA.norm_polarIsometry_apply hAT hT]
   · have h := LinearPMap.mem_graph_zero_iff_mem_ker.mpr hx
     change W x = 0
-    obtain ⟨w, hw, hJw⟩ := (hRg x 0).mp ((hBg x 0).mp h)
+    obtain ⟨w, hw, hJw⟩ := (hRg x 0).mp h
     obtain ⟨q, hq, hJq₁⟩ := hkey x w hw
     have hPw : P w = 0 := by
       rw [← norm_eq_zero, ← hA.norm_polarIsometry_apply hAT hT, hJw, norm_zero]
@@ -556,11 +530,11 @@ private lemma adjoint_polarIsometry_relativeModular :
       rw [hPw, hPq w q hq] at h'
       exact hA.sqrt.graph_fst_eq_zero_snd h' rfl
     have hex : e x = 0 := by rw [← hJq₁, hq0, map_zero]
-    refine hA.adjoint_polarIsometry_apply_eq_zero hAT hT fun v => ?_
+    refine hA.adjointₛₗ_polarIsometry_apply_eq_zero hAT hT fun v => ?_
     rw [← hJe v, ← hsym he, hex, inner_zero_left]
-  · rw [hRsemi.restrictScalars_toLinearPMap]
-    refine LinearPMap.eq_of_eq_graph (Submodule.ext fun ⟨y, v⟩ => ?_)
-    rw [LinearPMap.mem_graph_compPMap]
+  · refine LinearPMap.eq_of_eq_graphₛₗ (AddSubgroup.ext fun ⟨y, v⟩ => ?_)
+    rw [LinearPMap.mem_graphₛₗ_compPMap]
+    simp only [LinearPMap.mem_graphₛₗ_iff_mem_graph]
     constructor
     · intro h
       exact ⟨J v, (hRg _ _).mpr ⟨v, h, rfl⟩, by rw [ContinuousLinearMap.coe_coe, hWJ, hran y v h]⟩
@@ -569,16 +543,18 @@ private lemma adjoint_polarIsometry_relativeModular :
       rw [ContinuousLinearMap.coe_coe, hWJ, hran y w hw]
       exact hw
 
-/-- **`J_{η,ξ}† = J_{ξ,η}`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2): the real adjoint `J†` of
-the polar isometry `J = J_{η,ξ}` of `S̄_{η,ξ}` is the polar isometry of `S̄_{ξ,η}`; in complex form,
-`⟪J_{ξ,η} x, y⟫ = ⟪J_{η,ξ} y, x⟫` (`VonNeumannAlgebra.inner_relativeModularConj_left`).
+/-- **`J_{η,ξ}† = J_{ξ,η}`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2): the antilinear adjoint
+`J†` (`ContinuousLinearMap.adjointₛₗ`) of the polar isometry `J = J_{η,ξ}` of `S̄_{η,ξ}` is the polar
+isometry of `S̄_{ξ,η}`; in inner-product form, `⟪J_{ξ,η} x, y⟫ = ⟪J_{η,ξ} y, x⟫`
+(`VonNeumannAlgebra.inner_relativeModularConj_left`).
 
 The proof is the uniqueness of the polar decomposition
 (`IsSelfAdjoint.eq_polarIsometry_of_eq_compPMap`). `S̄_{ξ,η}` inverts `S̄_{η,ξ}` between the supports
 (`VonNeumannAlgebra.closure_relativeTomita_compNat_le`), so on the supports
 `S̄_{ξ,η} = S̄_{η,ξ}⁻¹ = Δ_{η,ξ}^{-1/2} J†`, and `R = J S̄_{ξ,η}`, which is `J Δ_{η,ξ}^{-1/2} J†`
-there, is positive and self-adjoint (`LinearPMap.IsFormalAdjoint.isSelfAdjoint_of_surjective`); then
-`S̄_{ξ,η} = J† R` is a polar decomposition of `S̄_{ξ,η}`.
+there, is complex-linear, positive and self-adjoint
+(`LinearPMap.IsFormalAdjoint.isSelfAdjoint_of_surjective`); then `S̄_{ξ,η} = J† R` is a polar
+decomposition of `S̄_{ξ,η}`.
 
 TODO: the same computation gives `Δ_{ξ,η} = J_{η,ξ} Δ_{η,ξ}^{-1} J_{η,ξ}†` and
 `Δ_{ξ,η}^{it} = J_{η,ξ} Δ_{η,ξ}^{it} J_{η,ξ}†`. With it the boundary value
@@ -586,8 +562,8 @@ TODO: the same computation gives `Δ_{ξ,η} = J_{η,ξ} Δ_{η,ξ}^{-1} J_{η,�
 (`VonNeumannAlgebra.exists_relativeModularGroup_continuation`) becomes
 `J_{Ω₂,η₂} Ṽ(t) J_{η₁,Ω₁}` with `Ṽ(t) = Δ_{Ω₂,η₂}^{-it} V Δ_{Ω₁,η₁}^{it}`, the continuation for the
 swapped pairs; it is Borchers' form `J V(t) J` only for `ηᵢ = Ωᵢ`. -/
-lemma adjoint_relativeModularConj : ((J[M]⟦η, ξ⟧ : H →L[ℝ] H)†) = J[M]⟦ξ, η⟧ :=
-  adjoint_polarIsometry_relativeModular
+lemma adjointₛₗ_relativeModularConj : J[M]⟦η, ξ⟧.adjointₛₗ = J[M]⟦ξ, η⟧ :=
+  adjointₛₗ_polarIsometry_relativeModular
 
 /-- **`J_{ξ,η} J_{η,ξ} = E_Δ((0, ∞))`**, the support projection of `Δ_{η,ξ}`, for arbitrary `η, ξ`
 (Araki–Masuda 1982, §2, where `J_{η,ξ}† = J_{ξ,η}`): `J_{η,ξ}` is a partial isometry with initial
@@ -597,8 +573,8 @@ lemma relativeModularConj_comp_relativeModularConj :
     (J[M]⟦ξ, η⟧.comp J[M]⟦η, ξ⟧ : H →L[ℂ] H) = E_Δ[M]⟦η, ξ⟧ (Ioi 0) := by
   ext u
   change J[M]⟦ξ, η⟧ (J[M]⟦η, ξ⟧ u) = _
-  rw [relativeModularConj_apply, relativeModularConj_apply, ← adjoint_polarIsometry_relativeModular,
-    IsSelfAdjoint.adjoint_polarIsometry_apply_polarIsometry]
+  rw [relativeModularConj_apply, relativeModularConj_apply, ← adjointₛₗ_polarIsometry_relativeModular,
+    IsSelfAdjoint.adjointₛₗ_polarIsometry_apply_polarIsometry]
 
 /-- **The initial projection of `J_{η,ξ}`**: the support projection `E_Δ((0, ∞))` of `Δ_{η,ξ}` is
 `s(η) s′(ξ)` for arbitrary `η, ξ` (Araki–Masuda 1982, §2), since `E_Δ((0, ∞))` projects onto
@@ -612,7 +588,6 @@ lemma pvm_Ioi_relativeModular :
       (commute_supportProj_supportProj_commutant M η ξ)
   obtain ⟨K, hK, hfK⟩ := isStarProjection_iff_eq_starProjection.mp hf
   have hker : (Δ[M]⟦η, ξ⟧).ker = Kᗮ := by
-    apply Submodule.restrictScalars_injective ℝ
     rw [ker_relativeModular, ker_closure_relativeTomita, hfK, Submodule.ker_starProjection]
   rw [(isSelfAdjoint_relativeModular M η ξ).pvm_Ioi_eq_starProjection_orthogonal
     (isPositive_relativeModular M η ξ), hfK]
@@ -628,18 +603,17 @@ lemma relativeModularConj_self {Ω : H} (hc : IsCyclicVector M Ω) (hs : IsSepar
     J[M]⟦Ω, Ω⟧ = (J[H[M, Ω]] : H →L⋆[ℂ] H) := by
   refine ContinuousLinearMap.ext fun x => ?_
   set K := H[M, Ω]
-  set Jr := K.isSelfAdjoint_modular.polarIsometry K.restrictScalars_modular K.isClosed_tomita
+  set Jr := K.isSelfAdjoint_modular.polarIsometry K.modular_def K.isClosed_tomita
   have hJr : ∀ y, J[K] y = Jr y := fun _ => rfl
-  have hT : (S[M]⟦Ω, Ω⟧).closure =
-      (Jr : H →ₗ[ℝ] H).compPMap (Δ[K]^{1/2}.restrictScalars ℝ) := by
+  have hT : (S[M]⟦Ω, Ω⟧).closureₛₗ = (Jr : H →ₗ⋆[ℂ] H).compPMap Δ[K]^{1/2} := by
     rw [closure_relativeTomita_self_eq_tomita hc hs]
     exact K.tomita_eq_modularConj_compPMap
   have h := (isSelfAdjoint_relativeModular M Ω Ω).eq_polarIsometry_of_eq_compPMap
-    (restrictScalars_relativeModular M Ω Ω) (isClosed_closure_relativeTomita M Ω Ω)
+    (relativeModular_def M Ω Ω) (isClosed_closure_relativeTomita M Ω Ω)
     K.isSelfAdjoint_modular.isSelfAdjoint_sqrt K.isSelfAdjoint_modular.isPositive_sqrt Jr
-    (fun y _ => K.isSelfAdjoint_modular.norm_polarIsometry_of_ker_eq_bot K.restrictScalars_modular
+    (fun y _ => K.isSelfAdjoint_modular.norm_polarIsometry_of_ker_eq_bot K.modular_def
       K.isClosed_tomita K.ker_tomita_eq_bot y)
-    (by rw [K.ker_sqrt_modular_eq_bot, Submodule.restrictScalars_bot]; exact bot_le) hT
+    (by rw [K.ker_sqrt_modular_eq_bot]; exact bot_le) hT
   change J[M]⟦Ω, Ω⟧ x = J[K] x
   rw [relativeModularConj_apply, hJr, h]
 
@@ -647,27 +621,16 @@ lemma relativeModularConj_self {Ω : H} (hc : IsCyclicVector M Ω) (hs : IsSepar
 `⟪J_{ξ,η} x, y⟫ = ⟪J_{η,ξ} y, x⟫`, the adjoint relation of conjugate-linear operators. -/
 lemma inner_relativeModularConj_left (x y : H) :
     ⟪J[M]⟦ξ, η⟧ x, y⟫_ℂ = ⟪J[M]⟦η, ξ⟧ y, x⟫_ℂ := by
-  have hre : ∀ x, re ⟪J[M]⟦ξ, η⟧ x, y⟫_ℂ = re ⟪x, J[M]⟦η, ξ⟧ y⟫_ℂ := fun x => by
-    rw [← inner_real_eq_re_inner, ← inner_real_eq_re_inner, relativeModularConj_apply,
-      relativeModularConj_apply, ← adjoint_polarIsometry_relativeModular,
-      ContinuousLinearMap.adjoint_inner_left]
-  have h₁ := hre x
-  have h₂ := hre (I • x)
-  rw [map_smulₛₗ, inner_smul_left, inner_smul_left, starRingEnd_self_apply, conj_I] at h₂
-  simp only [mul_re, I_re, I_im, zero_mul, one_mul, zero_sub, neg_re, neg_mul] at h₂
-  refine Complex.ext ?_ ?_
-  · rw [h₁, ← inner_conj_symm, conj_re]
-  · rw [← inner_conj_symm (J[M]⟦η, ξ⟧ y), conj_im]
-    linarith
+  rw [← adjointₛₗ_relativeModularConj, ContinuousLinearMap.adjointₛₗ_inner_left, inner_conj_symm]
 
 /-- **`J_{ξ,η} J_{η,ξ} = 1`** for `ξ` cyclic and `η` separating: then `S̄_{η,ξ}` is injective
 (`VonNeumannAlgebra.ker_closure_relativeTomita_eq_bot`), so `J_{η,ξ}` is isometric and
 `J_{ξ,η} = J_{η,ξ}†` (`VonNeumannAlgebra.inner_relativeModularConj_left`) is a left inverse. -/
 lemma relativeModularConj_relativeModularConj (hc : IsCyclicVector M ξ)
     (hsη : IsSeparatingVector M η) (x : H) : J[M]⟦ξ, η⟧ (J[M]⟦η, ξ⟧ x) = x := by
-  rw [relativeModularConj_apply, relativeModularConj_apply, ← adjoint_polarIsometry_relativeModular,
-    IsSelfAdjoint.adjoint_polarIsometry_apply_polarIsometry,
-    IsSelfAdjoint.pvm_Ioi_eq_one_of_ker_eq_bot _ (restrictScalars_relativeModular M η ξ)
+  rw [relativeModularConj_apply, relativeModularConj_apply, ← adjointₛₗ_polarIsometry_relativeModular,
+    IsSelfAdjoint.adjointₛₗ_polarIsometry_apply_polarIsometry,
+    IsSelfAdjoint.pvm_Ioi_eq_one_of_ker_eq_bot _ (relativeModular_def M η ξ)
       (ker_closure_relativeTomita_eq_bot hc hsη), one_apply_eq_self]
 
 /-- For `ξ` cyclic and `η` separating, `J_{η,ξ}` is isometric, since `S̄_{η,ξ}` is injective. -/
@@ -675,7 +638,7 @@ lemma norm_relativeModularConj_apply (hc : IsCyclicVector M ξ) (hsη : IsSepara
     (x : H) : ‖J[M]⟦η, ξ⟧ x‖ = ‖x‖ := by
   rw [relativeModularConj_apply]
   exact (isSelfAdjoint_relativeModular M η ξ).norm_polarIsometry_of_ker_eq_bot
-    (restrictScalars_relativeModular M η ξ) (isClosed_closure_relativeTomita M η ξ)
+    (relativeModular_def M η ξ) (isClosed_closure_relativeTomita M η ξ)
     (ker_closure_relativeTomita_eq_bot hc hsη) x
 
 /-- For `η` cyclic and `ξ` separating, `J_{η,ξ}` is onto, with right inverse `J_{ξ,η}`. Together
@@ -694,9 +657,9 @@ lemma surjective_relativeModularConj (hcη : IsCyclicVector M η) (hs : IsSepara
 noncomputable def relativeModularConjEquiv (hc : IsCyclicVector M ξ)
     (hs : IsSeparatingVector M ξ) (hcη : IsCyclicVector M η) (hsη : IsSeparatingVector M η) :
     H ≃ₗᵢ⋆[ℂ] H :=
-  (isSelfAdjoint_relativeModular M η ξ).polarIsometryEquiv (restrictScalars_relativeModular M η ξ)
+  (isSelfAdjoint_relativeModular M η ξ).polarIsometryEquiv (relativeModular_def M η ξ)
     (isClosed_closure_relativeTomita M η ξ) (ker_closure_relativeTomita_eq_bot hc hsη)
-    (dense_range_closure_relativeTomita hs hcη) (isSemilinear_closure_relativeTomita M η ξ)
+    (dense_range_closure_relativeTomita hs hcη)
 
 section Equiv
 

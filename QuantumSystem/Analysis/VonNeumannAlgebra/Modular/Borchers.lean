@@ -66,7 +66,7 @@ Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω
 
 * The boundary value of the relative Theorem A in conjugated form: with
   `Δ_{ξ,η}^{it} = J_{η,ξ} Δ_{η,ξ}^{it} J_{η,ξ}†` (Araki–Masuda 1982), which is not formalised
-  (see `VonNeumannAlgebra.adjoint_relativeModularConj`), it reads
+  (see `VonNeumannAlgebra.adjointₛₗ_relativeModularConj`), it reads
   `V(t + i/2) = J_{Ω₂,η₂} Ṽ(t) J_{η₁,Ω₁}` with `Ṽ(t) = Δ_{Ω₂,η₂}^{-it} V Δ_{Ω₁,η₁}^{it}` the family
   for the swapped pairs. It is Borchers' form `V(t + i/2) = J V(t) J` only for `ηᵢ = Ωᵢ`.
 * Theorem B for relative modular operators. The proof of Theorem B uses that the auxiliary
@@ -170,7 +170,7 @@ private lemma apply_mem_graph_relativeTomita_of_supportProj (hVΩ : (V†) Ω₂
     (hVs : M₂.supportProj Ω₂ ∘L V ∘L M₁.supportProj Ω₁ = V ∘L M₁.supportProj Ω₁)
     (hVs' : ∀ ζ ∈ (InnerProductSpace.cyclicSubspace M₁ Ω₁).toSubmoduleᗮ,
       V ζ ∈ (InnerProductSpace.cyclicSubspace M₂ Ω₂).toSubmoduleᗮ) {u v : H₁}
-    (h : (u, v) ∈ (S[M₁]⟦η₁, Ω₁⟧).graph) : (V u, V v) ∈ (S[M₂]⟦η₂, Ω₂⟧).graph := by
+    (h : (u, v) ∈ (S[M₁]⟦η₁, Ω₁⟧).graphₛₗ) : (V u, V v) ∈ (S[M₂]⟦η₂, Ω₂⟧).graphₛₗ := by
   have hVs₀ : V ∘L M₁.supportProj Ω₁ = M₂.supportProj Ω₂ ∘L V := by
     ext z
     have h₀ := congr($(supportProj_comp_comp_one_sub_supportProj_eq_zero hVΩ hVM) z)
@@ -189,24 +189,23 @@ private lemma apply_mem_graph_relativeTomita_of_supportProj (hVΩ : (V†) Ω₂
       ContinuousLinearMap.star_eq_adjoint, ← ContinuousLinearMap.comp_apply V, hVs₀]
     simp [hVη]
 
-open ClosedSubmodule in
 /-- **`V S̄_{η₁,Ω₁} ⊆ S̄_{η₂,Ω₂} V`** for `V† Ω₂ = Ω₁`, `V† η₂ = η₁`, `V M₁ V† ⊆ M₂`, `V` mapping
 `s(Ω₁) H₁` into `s(Ω₂) H₂` and `[M₁ Ω₁]ᗮ` into `[M₂ Ω₂]ᗮ`: `V S_{η₁,Ω₁} ⊆ S_{η₂,Ω₂} V` on the
 generating vectors, hence `V S̄_{η₁,Ω₁} ⊆ closure (V S_{η₁,Ω₁}) ⊆ closure (S_{η₂,Ω₂} V) ⊆ S̄_{η₂,Ω₂} V`
-(`LinearPMap.compPMap_closure_le`, `LinearPMap.closure_compNat_toPMap_le`). -/
+(`LinearPMap.compPMap_closureₛₗ_le_closureₛₗ_compNat_toPMap`). -/
 lemma compPMap_closure_relativeTomita_le_of_adjoint_apply (hVΩ : (V†) Ω₂ = Ω₁)
     (hVη : (V†) η₂ = η₁) (hVM : ∀ x ∈ M₁, V ∘L x ∘L V† ∈ M₂)
     (hVs : M₂.supportProj Ω₂ ∘L V ∘L M₁.supportProj Ω₁ = V ∘L M₁.supportProj Ω₁)
     (hVs' : ∀ ζ ∈ (InnerProductSpace.cyclicSubspace M₁ Ω₁).toSubmoduleᗮ,
       V ζ ∈ (InnerProductSpace.cyclicSubspace M₂ Ω₂).toSubmoduleᗮ) :
-    V ⬝ (S[M₁]⟦η₁, Ω₁⟧).closure ≤ (S[M₂]⟦η₂, Ω₂⟧).closure ⬝ V :=
+    (V : H₁ →ₗ[ℂ] H₂).compPMap (S[M₁]⟦η₁, Ω₁⟧).closureₛₗ ≤
+      (S[M₂]⟦η₂, Ω₂⟧).closureₛₗ.compNat ((V : H₁ →ₗ[ℂ] H₂).toPMap ⊤) :=
   -- `V S ⊆ S V` on the generating vectors of the domain
-  LinearPMap.compPMap_closure_le_closure_compNat_toPMap (isClosable_relativeTomita M₁ η₁ Ω₁)
-    (isClosable_relativeTomita M₂ η₂ Ω₂) (V.restrictScalars ℝ) (V.restrictScalars ℝ)
-    (LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun _ _ h =>
+  LinearPMap.compPMap_closureₛₗ_le_closureₛₗ_compNat_toPMap (isClosable_relativeTomita M₁ η₁ Ω₁)
+    (isClosable_relativeTomita M₂ η₂ Ω₂) V V
+    (LinearPMap.compPMap_le_compNat_toPMap_iffₛₗ.mpr fun _ _ h =>
       apply_mem_graph_relativeTomita_of_supportProj hVΩ hVη hVM hVs hVs' h)
 
-open ClosedSubmodule in
 /-- **Relative version of Borchers' Theorem A** for arbitrary vectors: let `Δᵢ = Δ_{ηᵢ,Ωᵢ}` be the
 relative modular operators of `(Mᵢ, ηᵢ, Ωᵢ)`, with imaginary powers `Δᵢ^{it}` (partial isometries
 vanishing on `ker Δᵢ`) and relative modular conjugations `J_{ηᵢ,Ωᵢ}`, and let `V` be bounded with
@@ -216,14 +215,15 @@ the closed strip, with `‖V(z)‖ ≤ ‖V‖` and `V(t + i/2) = Δ₂^{-it} J_
 
 It is Theorem A for semilinear operators in polar decomposition form
 (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`) applied to the closed relative Tomita
-operators `S̄_{ηᵢ,Ωᵢ} = J_{ηᵢ,Ωᵢ} Δᵢ^{1/2}`, where the real adjoint of `J_{η₂,Ω₂}` is
-`J_{Ω₂,η₂}` (`VonNeumannAlgebra.adjoint_relativeModularConj`). The intertwining
+operators `S̄_{ηᵢ,Ωᵢ} = J_{ηᵢ,Ωᵢ} Δᵢ^{1/2}`, where the antilinear adjoint of `J_{η₂,Ω₂}` is
+`J_{Ω₂,η₂}` (`VonNeumannAlgebra.adjointₛₗ_relativeModularConj`). The intertwining
 holds for `V† Ω₂ = Ω₁`, `V† η₂ = η₁`, `V M₁ V† ⊆ M₂`, `V` mapping `s(Ω₁) H₁` into `s(Ω₂) H₂` and
 `V` mapping `[M₁ Ω₁]ᗮ` into `[M₂ Ω₂]ᗮ`
 (`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_adjoint_apply`); for cyclic `Ω₁` and
 separating `Ω₂` this is `VonNeumannAlgebra.exists_relativeModularGroup_continuation`. -/
 theorem exists_relativeModularGroup_continuation_of_le
-    (hV : V ⬝ (S[M₁]⟦η₁, Ω₁⟧).closure ≤ (S[M₂]⟦η₂, Ω₂⟧).closure ⬝ V) :
+    (hV : (V : H₁ →ₗ[ℂ] H₂).compPMap (S[M₁]⟦η₁, Ω₁⟧).closureₛₗ ≤
+      (S[M₂]⟦η₂, Ω₂⟧).closureₛₗ.compNat ((V : H₁ →ₗ[ℂ] H₂).toPMap ⊤)) :
     ∃ F : ℂ → H₁ →L[ℂ] H₂, DifferentiableOn ℂ F (im ⁻¹' Ioo 0 (1 / 2)) ∧
       (∀ x, ContinuousOn (fun z => F z x) (im ⁻¹' Icc 0 (1 / 2))) ∧
       (∀ y, ContinuousOn (fun z => ((F z)†) y) (im ⁻¹' Icc 0 (1 / 2))) ∧
@@ -233,16 +233,14 @@ theorem exists_relativeModularGroup_continuation_of_le
         Δ[M₂]⟦η₂, Ω₂⟧^{-i t} (J[M₂]⟦Ω₂, η₂⟧ (V (J[M₁]⟦η₁, Ω₁⟧ (Δ[M₁]⟦η₁, Ω₁⟧^{i t} x)))) := by
   obtain ⟨F, hFd, hFs, hFs', hFb, hF0, hF1⟩ :=
     (isSelfAdjoint_relativeModular M₁ η₁ Ω₁).exists_stripContinuation_polarIsometry
-      (isSelfAdjoint_relativeModular M₂ η₂ Ω₂) (restrictScalars_relativeModular M₁ η₁ Ω₁)
-      (restrictScalars_relativeModular M₂ η₂ Ω₂) (isClosed_closure_relativeTomita M₁ η₁ Ω₁)
-      (isClosed_closure_relativeTomita M₂ η₂ Ω₂) (isSemilinear_closure_relativeTomita M₁ η₁ Ω₁)
-      (isSemilinear_closure_relativeTomita M₂ η₂ Ω₂) V hV
+      (isSelfAdjoint_relativeModular M₂ η₂ Ω₂) (relativeModular_def M₁ η₁ Ω₁)
+      (relativeModular_def M₂ η₂ Ω₂) (isClosed_closure_relativeTomita M₁ η₁ Ω₁)
+      (isClosed_closure_relativeTomita M₂ η₂ Ω₂) V hV
   refine ⟨F, hFd, hFs, hFs', hFb, hF0, fun t x => ?_⟩
   rw [hF1]
-  change Δ[M₂]⟦η₂, Ω₂⟧^{-i t} (((J[M₂]⟦η₂, Ω₂⟧ : H₂ →L[ℝ] H₂)†)
+  change Δ[M₂]⟦η₂, Ω₂⟧^{-i t} (J[M₂]⟦η₂, Ω₂⟧.adjointₛₗ
     (V (J[M₁]⟦η₁, Ω₁⟧ (Δ[M₁]⟦η₁, Ω₁⟧^{i t} x)))) = _
-  rw [adjoint_relativeModularConj]
-  rfl
+  rw [adjointₛₗ_relativeModularConj]
 
 include hc₁ hs₂ in
 /-- **Relative version of Borchers' Theorem A** for a cyclic `Ω₁`, a separating `Ω₂` and arbitrary

@@ -29,7 +29,7 @@ operators on the strip `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in
 (`StandardSubspace.compPMap_tomita_le_of_apply_mem`), and Theorem A for semilinear operators in polar
 decomposition form (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`), for `Sᵢ = Jᵢ Δᵢ^{1/2}`,
 continues `Δ₂^{-it} V Δ₁^{it}` to the strip, with boundary value `Δ₂^{-it} J₂† V J₁ Δ₁^{it}` on
-`im z = 1/2`, where the real adjoint `J₂†` is `J₂` (`StandardSubspace.adjoint_modularConj`);
+`im z = 1/2`, where the antilinear adjoint `J₂†` is `J₂` (`StandardSubspace.adjointₛₗ_modularConj`);
 here `J` commutes with `Δ^{it}`, and the modular operators are injective, so the imaginary powers
 are the modular groups. Borchers states
 the theorem for a unitary `V` on a single Hilbert space; here `V` is any bounded operator between
@@ -118,14 +118,13 @@ theorem exists_modularGroup_continuation (V : H₁ →L[ℂ] H₂)
       ∀ (t : ℝ) (x : H₁), F (t + I / 2) x = J[K₂] (F t (J[K₁] x)) := by
   obtain ⟨F, hFd, hFs, hFs', hFb, hF0, hF1⟩ :=
     K₁.isSelfAdjoint_modular.exists_stripContinuation_polarIsometry K₂.isSelfAdjoint_modular
-      K₁.restrictScalars_modular K₂.restrictScalars_modular K₁.isClosed_tomita K₂.isClosed_tomita
-      K₁.isSemilinear_tomita K₂.isSemilinear_tomita V
+      K₁.modular_def K₂.modular_def K₁.isClosed_tomita K₂.isClosed_tomita V
       (compPMap_tomita_le_of_apply_mem V hV)
   refine ⟨F, hFd, hFs, hFs', hFb, hF0, fun t x => ?_⟩
   rw [hF1, hF0]
-  change Δ[K₂]^{-i t} (((J[K₂] : H₂ →L[ℝ] H₂)†) (V (J[K₁] (Δ[K₁]^{i t} x)))) =
+  change Δ[K₂]^{-i t} ((J[K₂] : H₂ →L⋆[ℂ] H₂).adjointₛₗ (V (J[K₁] (Δ[K₁]^{i t} x)))) =
     J[K₂] (Δ[K₂]^{-i t} (V (Δ[K₁]^{i t} (J[K₁] x))))
-  rw [K₂.adjoint_modularConj]
+  rw [K₂.adjointₛₗ_modularConj]
   change Δ[K₂]^{-i t} (J[K₂] (V (J[K₁] (Δ[K₁]^{i t} x)))) =
     J[K₂] (Δ[K₂]^{-i t} (V (Δ[K₁]^{i t} (J[K₁] x))))
   rw [K₁.modularConj_comm_modularGroup, K₂.modularConj_comm_modularGroup]

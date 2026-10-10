@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.UnboundedOperator.RestrictScalars
+public import QuantumSystem.Analysis.UnboundedOperator.SemilinearAdjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
@@ -21,10 +21,10 @@ For a closed, densely defined operator `T : E → F` between Hilbert spaces, the
 The self-adjointness comes from a general criterion: a symmetric operator `A` for which `z + A` and
 `z̄ + A` are surjective for some scalar `z` is self-adjoint; here `z` is real.
 
-For a densely defined real-linear `T` that is `σ`-semilinear over `ℂ` (`σ` the identity or the
-conjugation), the same theorem applied to the closure `T̄` makes `T̄†T̄` a positive self-adjoint
-complex operator (`LinearPMap.adjointCompClosure`); for the Tomita operator `S` of a standard
-subspace it is the modular operator `Δ = S̄†S̄`.
+The theorem extends to a closed, densely defined `σ`-semilinear `T : E →ₛₗ.[σ] F` between complex
+Hilbert spaces (`σ` the identity or the conjugation): with the semilinear adjoint
+`T.adjointₛₗ : F →ₛₗ.[σ] E`, the composite `T†T` is a complex-linear positive self-adjoint operator.
+For the Tomita operator `S` of a standard subspace it is the modular operator `Δ = S†S`.
 
 ## Main results
 
@@ -42,10 +42,20 @@ subspace it is the modular operator `Δ = S̄†S̄`.
   `dom T₁ = dom T₂` and `⟪T₂ ·, T₂ ·⟫ = r ⟪T₁ ·, T₁ ·⟫` give `T₂†T₂ = r T₁†T₁`;
   `LinearPMap.adjoint_compNat_self_eq_smul` is the case of a correspondence `B T₁ ⊆ T₂`,
   `C T₂ ⊆ T₁` with `B = r C†`.
-* `LinearPMap.adjointCompClosure`, `LinearPMap.isSelfAdjoint_adjointCompClosure`,
-  `LinearPMap.isPositive_adjointCompClosure` — for a densely defined closable `σ`-semilinear `T`
-  (`σ` the identity or the conjugation), `T̄†T̄` as a positive self-adjoint complex operator; for a
-  Tomita operator it is the modular operator.
+* `LinearPMap.isSelfAdjoint_adjointₛₗ_compNat_self` — **von Neumann's theorem for semilinear
+  operators**: `T†T` is self-adjoint for a closed, densely defined `σ`-semilinear `T`.
+* `LinearPMap.isPositive_adjointₛₗ_compNat_self`, `LinearPMap.ker_adjointₛₗ_compNat_self`,
+  `LinearPMap.mem_closure_graphₛₗ_adjointₛₗ_compNat_self` — `T†T` is positive with
+  `re ⟪T†T x, x⟫ = ‖T x‖²`, `ker (T†T) = ker T`, and the domain of `T†T` is a core for `T`.
+* `LinearPMap.adjointₛₗ_compNat_self_eq_smul_of_inner`, `LinearPMap.adjointₛₗ_compNat_self_eq_smul`
+  — the semilinear versions of the form comparison.
+
+## Implementation notes
+
+The semilinear von Neumann theorem is reduced to the complex-linear one through the realification
+`LinearPMap.restrictScalars ℝ`, which turns the semilinear adjoint into the adjoint for the real
+inner product `re ⟪·, ·⟫` (`LinearPMap.restrictScalars_adjointₛₗ`). The realification is only a
+proof device; every statement is about the semilinear operator itself.
 
 ## References
 
@@ -341,40 +351,148 @@ theorem hasCore_adjoint_compNat_self (hT : T.IsClosed) (hTd : Dense (T.domain : 
 
 end LinearPMap
 
-/-! ### The operator `T̄†T̄` of a closable semilinear operator -/
+/-! ### Von Neumann's theorem for semilinear operators -/
 
 namespace LinearPMap
 
 open ClosedSubmodule
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
-  [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F] {σ : ℂ →+* ℂ}
-  [RingHomIsometric σ] [RingHomInvPair σ σ] {T : E →ₗ.[ℝ] F} (hT : T.IsSemilinear σ)
-  (hTd : Dense (T.domain : Set E))
+  [NormedAddCommGroup F] [InnerProductSpace ℂ F] {σ : ℂ →+* ℂ} [RingHomInvPair σ σ]
+  [RingHomIsometric σ] {T : E →ₛₗ.[σ] F}
 
-/-- The operator `T̄†T̄ = |T̄|²` of a densely defined `σ`-semilinear real-linear operator `T`, for
-`σ` the identity or the complex conjugation, as a complex operator. For a closable `T` it is
-positive self-adjoint (`LinearPMap.isSelfAdjoint_adjointCompClosure`), so that
-`T̄ = U (T̄†T̄)^{1/2}` (`IsSelfAdjoint.eq_polarIsometry_compPMap`); for the Tomita operator `S` of a
-standard subspace it is the modular operator `Δ = S̄†S̄` (`StandardSubspace.modular`). -/
-noncomputable def adjointCompClosure : E →ₗ.[ℂ] E :=
-  ((hT.closure.adjoint (dense_domain_closure hTd)).compNat hT.closure).toLinearPMap
+/-- A complex operator whose underlying real-linear operator is self-adjoint for the real inner
+products `re ⟪·, ·⟫` is self-adjoint. -/
+private lemma isSelfAdjoint_of_restrictScalars {A : E →ₗ.[ℂ] E}
+    (hA : IsSelfAdjoint (A.restrictScalars ℝ fun _ => rfl)) : IsSelfAdjoint A := by
+  have hd : Dense (A.domain : Set E) := hA.dense_domain
+  rw [isSelfAdjoint_def] at hA ⊢
+  refine restrictScalars_injective (R₀ := ℝ) (hσ := fun _ => rfl) ?_
+  rw [← adjointₛₗ_eq_adjoint, restrictScalars_adjointₛₗ hd]
+  exact hA
 
-omit [CompleteSpace F] in
-/-- `T̄†T̄` as real operators. -/
-lemma restrictScalars_adjointCompClosure :
-    (T.adjointCompClosure hT hTd).restrictScalars ℝ = T.closure†.compNat T.closure :=
-  IsSemilinear.restrictScalars_toLinearPMap _
+/-- `⟪T†T x, y⟫ = σ ⟪T x, T y⟫` for `x` in the domain of `T†T` and `y` in that of `T`. -/
+lemma inner_adjointₛₗ_compNat_self (hTd : Dense (T.domain : Set E))
+    (x : (T.adjointₛₗ.compNat T).domain) (y : T.domain) :
+    ⟪T.adjointₛₗ.compNat T x, (y : E)⟫_ℂ = σ ⟪T ⟨x, compNat_domain_le x.2⟩, T y⟫_ℂ := by
+  rw [compNat_apply]
+  exact inner_adjointₛₗ_apply hTd ⟨_, compNat_apply_mem x⟩ y
 
-/-- `T̄†T̄` is self-adjoint for a closable `T` (von Neumann's theorem). -/
-lemma isSelfAdjoint_adjointCompClosure (hc : T.IsClosable) :
-    IsSelfAdjoint (T.adjointCompClosure hT hTd) :=
-  IsSemilinear.isSelfAdjoint_toLinearPMap _
-    (isSelfAdjoint_adjoint_compNat_self hc.closure_isClosed (dense_domain_closure hTd))
+/-- `re ⟪T†T x, x⟫ = ‖T x‖²` for `x` in the domain of `T†T`. -/
+lemma re_inner_adjointₛₗ_compNat_self (hTd : Dense (T.domain : Set E))
+    (x : (T.adjointₛₗ.compNat T).domain) :
+    (⟪T.adjointₛₗ.compNat T x, (x : E)⟫_ℂ).re = ‖T ⟨x, compNat_domain_le x.2⟩‖ ^ 2 := by
+  have h : ∀ v : F, ⟪v, v⟫_ℂ = ((‖v‖ ^ 2 : ℝ) : ℂ) := fun v => by
+    simp [inner_self_eq_norm_sq_to_K]
+  rw [inner_adjointₛₗ_compNat_self hTd x ⟨x, compNat_domain_le x.2⟩, h,
+    RingHom.apply_ofReal_of_isometric σ, Complex.ofReal_re]
 
-omit [CompleteSpace F] in
-/-- `T̄†T̄` is positive. -/
-lemma isPositive_adjointCompClosure : (T.adjointCompClosure hT hTd).IsPositive :=
-  IsSemilinear.isPositive_toLinearPMap _ (isPositive_adjoint_compNat_self (dense_domain_closure hTd))
+/-- `T†T` is positive, for a densely defined `σ`-semilinear `T`. -/
+lemma isPositive_adjointₛₗ_compNat_self (hTd : Dense (T.domain : Set E)) :
+    (T.adjointₛₗ.compNat T).IsPositive := by
+  refine ⟨fun x y => ?_, fun x => ?_⟩
+  · rw [inner_adjointₛₗ_compNat_self hTd x ⟨y, compNat_domain_le y.2⟩, ← inner_conj_symm (x : E),
+      inner_adjointₛₗ_compNat_self hTd y ⟨x, compNat_domain_le x.2⟩,
+      ← RingHom.apply_conj_of_isometric σ, inner_conj_symm]
+  · rw [RCLike.re_to_complex, re_inner_adjointₛₗ_compNat_self hTd]
+    positivity
+
+/-- **`ker (T†T) = ker T`**, since `‖T x‖² = ⟪T†T x, x⟫`. -/
+lemma ker_adjointₛₗ_compNat_self (hTd : Dense (T.domain : Set E)) :
+    (T.adjointₛₗ.compNat T).ker = T.ker := by
+  ext x
+  rw [← mem_graphₛₗ_zero_iff_mem_ker, ← mem_graphₛₗ_zero_iff_mem_ker, mem_graphₛₗ_compNat]
+  refine ⟨fun ⟨y, hxy, hy⟩ => ?_, fun h => ⟨0, h, T.adjointₛₗ.graphₛₗ.zero_mem⟩⟩
+  have h := inner_eq_of_mem_graphₛₗ_adjointₛₗ hTd hxy hy
+  rw [inner_zero_left, eq_comm, map_eq_zero, inner_self_eq_zero] at h
+  rwa [h] at hxy
+
+/-- **`T†T` depends only on the form of `T`.** If densely defined `σ`-semilinear `T₁, T₂` have the
+same domain and `⟪T₂ v, T₂ u⟫ = r ⟪T₁ v, T₁ u⟫` for a real `r ≠ 0` (on graph points), then
+`T₂†T₂ = r T₁†T₁`. -/
+lemma adjointₛₗ_compNat_self_eq_smul_of_inner {T₁ T₂ : E →ₛₗ.[σ] F}
+    (hT₁ : Dense (T₁.domain : Set E)) (hT₂ : Dense (T₂.domain : Set E)) {r : ℝ} (hr : r ≠ 0)
+    (hdom : T₁.domain = T₂.domain)
+    (hinner : ∀ u y₁ y₂ v z₁ z₂, (u, y₁) ∈ T₁.graphₛₗ → (u, y₂) ∈ T₂.graphₛₗ →
+      (v, z₁) ∈ T₁.graphₛₗ → (v, z₂) ∈ T₂.graphₛₗ → ⟪z₂, y₂⟫_ℂ = (r : ℂ) * ⟪z₁, y₁⟫_ℂ) :
+    T₂.adjointₛₗ.compNat T₂ = (r : ℂ) • T₁.adjointₛₗ.compNat T₁ := by
+  have hr' : (r : ℂ) ≠ 0 := ofReal_ne_zero.mpr hr
+  -- the adjoints are characterised by inner products with graph points
+  replace hdom : ∀ u, (∃ y, (u, y) ∈ T₁.graphₛₗ) ↔ ∃ y, (u, y) ∈ T₂.graphₛₗ := fun u => by
+    simp only [← mem_domain_iff_exists_mem_graphₛₗ, hdom]
+  have key : ∀ u y₁ y₂ v z₁ z₂, (u, y₁) ∈ T₁.graphₛₗ → (u, y₂) ∈ T₂.graphₛₗ →
+      (v, z₁) ∈ T₁.graphₛₗ → (v, z₂) ∈ T₂.graphₛₗ →
+      σ ⟪y₂, z₂⟫_ℂ = (r : ℂ) * σ ⟪y₁, z₁⟫_ℂ := fun u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂ => by
+    rw [← inner_conj_symm y₂ z₂, hinner u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂, map_mul, Complex.conj_ofReal,
+      inner_conj_symm, map_mul, RingHom.apply_ofReal_of_isometric σ]
+  refine eq_of_eq_graphₛₗ (AddSubgroup.ext fun ⟨u, w⟩ => ?_)
+  rw [mem_graphₛₗ_smul]
+  simp_rw [mem_graphₛₗ_compNat, mem_graphₛₗ_adjointₛₗ_iff hT₁, mem_graphₛₗ_adjointₛₗ_iff hT₂]
+  constructor
+  · rintro ⟨y₂, hy₂, h⟩
+    obtain ⟨y₁, hy₁⟩ := (hdom u).mpr ⟨y₂, hy₂⟩
+    refine ⟨(r : ℂ)⁻¹ • w, ⟨y₁, hy₁, fun v z₁ hz₁ => ?_⟩, by rw [smul_inv_smul₀ hr']⟩
+    obtain ⟨z₂, hz₂⟩ := (hdom v).mp ⟨z₁, hz₁⟩
+    rw [inner_smul_left, ← Complex.ofReal_inv, Complex.conj_ofReal, h _ _ hz₂,
+      key u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂, Complex.ofReal_inv, inv_mul_cancel_left₀ hr']
+  · rintro ⟨z, ⟨y₁, hy₁, h⟩, rfl⟩
+    obtain ⟨y₂, hy₂⟩ := (hdom u).mp ⟨y₁, hy₁⟩
+    refine ⟨y₂, hy₂, fun v z₂ hz₂ => ?_⟩
+    obtain ⟨z₁, hz₁⟩ := (hdom v).mpr ⟨z₂, hz₂⟩
+    rw [key u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂, ← h _ _ hz₁, inner_smul_left, Complex.conj_ofReal]
+
+/-- **`T†T` under a correspondence.** Let `T₁, T₂` be densely defined and `σ`-semilinear, with
+bounded complex-linear `B, C` such that `B T₁ ⊆ T₂`, `C T₂ ⊆ T₁` and `⟪y', B y⟫ = r ⟪C y', y⟫` for a
+real `r ≠ 0`. Then `T₂†T₂ = r T₁†T₁` (`LinearPMap.adjointₛₗ_compNat_self_eq_smul_of_inner`). -/
+lemma adjointₛₗ_compNat_self_eq_smul {T₁ T₂ : E →ₛₗ.[σ] F} (hT₁ : Dense (T₁.domain : Set E))
+    (hT₂ : Dense (T₂.domain : Set E)) {B C : F →L[ℂ] F} {r : ℝ} (hr : r ≠ 0)
+    (hB : (B : F →ₗ[ℂ] F).compPMap T₁ ≤ T₂) (hC : (C : F →ₗ[ℂ] F).compPMap T₂ ≤ T₁)
+    (hBC : ∀ y y', ⟪y', B y⟫_ℂ = (r : ℂ) * ⟪C y', y⟫_ℂ) :
+    T₂.adjointₛₗ.compNat T₂ = (r : ℂ) • T₁.adjointₛₗ.compNat T₁ := by
+  refine adjointₛₗ_compNat_self_eq_smul_of_inner hT₁ hT₂ hr (le_antisymm hB.1 hC.1)
+    fun u y₁ y₂ v z₁ z₂ hy₁ hy₂ hz₁ hz₂ => ?_
+  -- the inner products are evaluated at graph points
+  replace hB := compPMap_le_iffₛₗ.mp hB
+  replace hC := compPMap_le_iffₛₗ.mp hC
+  -- The graphs are graphs of functions: `y₂ = B y₁` and `z₁ = C z₂`.
+  have e₁ : y₂ = B y₁ := mem_graphₛₗ_snd_inj hy₂ (hB hy₁)
+  have e₂ : z₁ = C z₂ := mem_graphₛₗ_snd_inj hz₁ (hC hz₂)
+  rw [e₁, e₂, hBC]
+
+variable [CompleteSpace F]
+
+/-- **Von Neumann's theorem for semilinear operators.** For a closed, densely defined
+`σ`-semilinear `T` between complex Hilbert spaces, `σ` the identity or the conjugation, the
+complex-linear operator `T†T` is self-adjoint. For the Tomita operator `S` of a standard subspace
+it is the modular operator `Δ = S†S`. -/
+theorem isSelfAdjoint_adjointₛₗ_compNat_self (hT : T.IsClosedₛₗ) (hTd : Dense (T.domain : Set E)) :
+    IsSelfAdjoint (T.adjointₛₗ.compNat T) := by
+  have hσ := RingHom.apply_real_smul_one_of_isometric σ
+  refine isSelfAdjoint_of_restrictScalars ?_
+  rw [restrictScalars_compNat (hτ := hσ) (hσ := hσ), restrictScalars_adjointₛₗ hTd]
+  exact isSelfAdjoint_adjoint_compNat_self (isClosed_restrictScalars_iff.mpr hT) hTd
+
+/-- For a closed, densely defined `σ`-semilinear `T`, the domain of `T†T` is a core for `T`: every
+point of the graph of `T` is a limit of points of the graph over the domain of `T†T`. -/
+lemma mem_closure_graphₛₗ_adjointₛₗ_compNat_self (hT : T.IsClosedₛₗ)
+    (hTd : Dense (T.domain : Set E)) {p : E × F} (hp : p ∈ T.graphₛₗ) :
+    p ∈ _root_.closure
+      {q : E × F | q.1 ∈ (T.adjointₛₗ.compNat T).domain ∧ q ∈ T.graphₛₗ} := by
+  have hσ := RingHom.apply_real_smul_one_of_isometric σ
+  set Tr := T.restrictScalars ℝ hσ
+  have hTr : Tr.IsClosed := isClosed_restrictScalars_iff.mpr hT
+  have hcore := hasCore_adjoint_compNat_self hTr hTd
+  have hKc : (Tr.domRestrict (Tr†.compNat Tr).domain).IsClosable :=
+    hTr.isClosable.leIsClosable domRestrict_le
+  have hp' : p ∈ (Tr.domRestrict (Tr†.compNat Tr).domain).graph.topologicalClosure := by
+    rw [hKc.graph_closure_eq_closure_graph, hcore.closure_eq]
+    exact mem_graph_restrictScalars.mpr hp
+  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hp'
+  refine closure_mono (fun q hq => ?_) hp'
+  obtain ⟨q₁, q₂⟩ := q
+  obtain ⟨hq₁, hq⟩ := mem_graph_domRestrict.mp hq
+  refine ⟨?_, mem_graph_restrictScalars.mp hq⟩
+  rw [← restrictScalars_adjointₛₗ hTd, ← restrictScalars_compNat (hρ := fun _ => rfl)] at hq₁
+  exact hq₁
 
 end LinearPMap

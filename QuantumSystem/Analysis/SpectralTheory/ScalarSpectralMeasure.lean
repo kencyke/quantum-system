@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure
 public import QuantumSystem.Analysis.UnboundedOperator.AdjointCompSelf
-public import QuantumSystem.Analysis.UnboundedOperator.RestrictScalars
+public import QuantumSystem.Analysis.UnboundedOperator.SemilinearAdjoint
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
@@ -62,19 +62,18 @@ transformation rule is `μ_{f(A) u} = |f|² μ_u`
 
 ## Operators of the form `T†T`
 
-Let `T : E → F` be a real-linear operator between complex Hilbert spaces, with the real inner
-products `re ⟪·, ·⟫` (`open ClosedSubmodule`), and let `A` be a self-adjoint operator with
-`A = T†T` as real operators (`A.restrictScalars ℝ = T†.compNat T`); `T` is then densely defined.
+Let `T : E → F` be a `σ`-semilinear operator between complex Hilbert spaces, `σ` the identity or
+the complex conjugation, and let `A` be a self-adjoint operator with `A = T†T`
+(`A = T.adjointₛₗ.compNat T`, a complex-linear operator); `T` is then densely defined.
 
-* `LinearPMap.isPositive_of_restrictScalars_eq`, `IsSelfAdjoint.isPositive_of_restrictScalars_eq`
-  — `A` is positive, with `re ⟪x, A x⟫ = ‖T x‖²`
-  (`IsSelfAdjoint.re_inner_eq_norm_sq_of_restrictScalars_eq`).
+* `IsSelfAdjoint.isPositive_of_eq_adjointₛₗ_compNat` — `A` is positive, with
+  `re ⟪x, A x⟫ = ‖T x‖²` (`IsSelfAdjoint.re_inner_eq_norm_sq_of_eq_adjointₛₗ_compNat`).
 * `IsSelfAdjoint.isLeast_re_inner_resolvent_neg` — **variational formula**: for `t > 0`,
   `re ⟪u, (t + A)⁻¹ u⟫ = max_{w ∈ dom T} (2 re ⟪u, w⟫ - t ‖w‖² - ‖T w‖²)`, attained at
   `w = (t + A)⁻¹ u` (`IsSelfAdjoint.re_inner_resolvent_neg_eq`).
 * `IsSelfAdjoint.lintegral_measure_pvm_le_norm_sq` — **form bound**: `∫ λ dμ_u ≤ ‖T u‖²` for
   `u ∈ dom T`, so that `dom T ⊆ dom A^{1/2}`
-  (`IsSelfAdjoint.domain_le_domain_sqrt_of_restrictScalars_eq`). For closed `T` equality holds
+  (`IsSelfAdjoint.domain_le_domain_sqrt_of_eq_adjointₛₗ_compNat`). For closed `T` equality holds
   (`IsSelfAdjoint.lintegral_measure_pvm_eq_norm_sq`) and `dom T = dom A^{1/2}`
   (`IsSelfAdjoint.domain_sqrt_eq_domain`).
 * `IsSelfAdjoint.integral_inv_add_measure_pvm_le_of_forall_mem_graph` — **comparison of
@@ -494,75 +493,67 @@ theorem measure_pvm_ofReal_smul {r : ℝ} (hr : r ≠ 0) (hrA : IsSelfAdjoint ((
 
 section Form
 
-open ClosedSubmodule
-
-variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℂ F] {T : E →ₗ.[ℝ] F}
+variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℂ F] {σ : ℂ →+* ℂ}
+  [RingHomInvPair σ σ] [RingHomIsometric σ] {T : E →ₛₗ.[σ] F}
 
 private lemma re_inner_self {G : Type*} [NormedAddCommGroup G] [InnerProductSpace ℂ G] (x : G) :
     re (inner ℂ x x) = ‖x‖ ^ 2 :=
   inner_self_eq_norm_sq (𝕜 := ℂ) x
 
-/-- A complex operator `A` with `A = T†T` as real operators, for a densely defined real-linear
-`T`, is positive. -/
-theorem _root_.LinearPMap.isPositive_of_restrictScalars_eq (hTd : Dense (T.domain : Set E))
-    (hAT : A.restrictScalars ℝ = T†.compNat T) : A.IsPositive := by
-  have h := LinearPMap.isPositive_adjoint_compNat_self hTd
-  rw [← hAT] at h
-  simpa using (LinearPMap.isSemilinear_restrictScalars A).isPositive_toLinearPMap h
-
-variable (hAT : A.restrictScalars ℝ = T†.compNat T)
+variable (hAT : A = T.adjointₛₗ.compNat T)
 include hAT
 
 /-- For `A = T†T`, a point `(w, w')` of the graph of `A` factors as `w' = T† y` with `y = T w`. -/
-private lemma exists_mem_graph_of_restrictScalars_eq {w w' : E} (hw : (w, w') ∈ A.graph) :
-    ∃ y, (w, y) ∈ T.graph ∧ (y, w') ∈ T†.graph := by
-  rw [← LinearPMap.mem_graph_restrictScalars (R := ℝ), hAT] at hw
-  exact LinearPMap.mem_graph_compNat.mp hw
+private lemma exists_mem_graph_of_eq_adjointₛₗ_compNat {w w' : E} (hw : (w, w') ∈ A.graph) :
+    ∃ y, (w, y) ∈ T.graphₛₗ ∧ (y, w') ∈ T.adjointₛₗ.graphₛₗ := by
+  rw [← LinearPMap.mem_graphₛₗ_iff_mem_graph, hAT] at hw
+  exact LinearPMap.mem_graphₛₗ_compNat.mp hw
 
 include hA in
 /-- For self-adjoint `A = T†T`, `dom T ⊇ dom A` is dense. -/
-private lemma dense_domain_of_restrictScalars_eq : Dense (T.domain : Set E) :=
+private lemma dense_domain_of_eq_adjointₛₗ_compNat : Dense (T.domain : Set E) :=
   hA.dense_domain.mono fun w hw => by
-    obtain ⟨y, hwy, -⟩ := exists_mem_graph_of_restrictScalars_eq hAT (A.mem_graph ⟨w, hw⟩)
-    exact LinearPMap.mem_domain_of_mem_graph hwy
+    obtain ⟨y, hwy, -⟩ := exists_mem_graph_of_eq_adjointₛₗ_compNat hAT (A.mem_graph ⟨w, hw⟩)
+    exact LinearPMap.mem_domain_of_mem_graphₛₗ hwy
 
 include hA in
 /-- The form identity for `A = T†T`: `re ⟪v, A w⟫ = re ⟪T v, T w⟫` for `v ∈ dom T`, `w ∈ dom A`,
 in graph form. -/
-private lemma re_inner_eq_of_mem_graph {v w w' : E} {v' y : F} (hv : (v, v') ∈ T.graph)
-    (hw : (w, w') ∈ A.graph) (hy : (w, y) ∈ T.graph) :
+private lemma re_inner_eq_of_mem_graph {v w w' : E} {v' y : F} (hv : (v, v') ∈ T.graphₛₗ)
+    (hw : (w, w') ∈ A.graph) (hy : (w, y) ∈ T.graphₛₗ) :
     re (inner ℂ v w') = re (inner ℂ v' y) := by
-  obtain ⟨y₀, hwy₀, hyw⟩ := exists_mem_graph_of_restrictScalars_eq hAT hw
-  obtain rfl : y = y₀ :=
-    sub_eq_zero.mp (T.graph_fst_eq_zero_snd (T.graph.sub_mem hy hwy₀) (sub_self w))
-  have := LinearPMap.inner_eq_of_mem_graph_adjoint
-    (dense_domain_of_restrictScalars_eq hA hAT) hv hyw
-  rw [inner_real_eq_re_inner, inner_real_eq_re_inner] at this
-  rw [← inner_conj_symm, conj_re, this, ← inner_conj_symm, conj_re]
+  obtain ⟨y₀, hwy₀, hyw⟩ := exists_mem_graph_of_eq_adjointₛₗ_compNat hAT hw
+  obtain rfl : y = y₀ := LinearPMap.mem_graphₛₗ_snd_inj hy hwy₀
+  have := LinearPMap.inner_eq_of_mem_graphₛₗ_adjointₛₗ
+    (dense_domain_of_eq_adjointₛₗ_compNat hA hAT) hv hyw
+  rw [← inner_conj_symm, conj_re, this, ← inner_conj_symm v']
+  rcases RingHom.eq_id_or_conj_of_isometric σ with rfl | rfl
+  · exact (conj_re _).symm
+  · rfl
 
 include hA in
 /-- For self-adjoint `A = T†T` and `x ∈ dom A`, `re ⟪x, A x⟫ = ‖T x‖²` (in graph form). -/
-theorem re_inner_eq_norm_sq_of_restrictScalars_eq {x x' : E} {y : F} (hx : (x, x') ∈ A.graph)
-    (hy : (x, y) ∈ T.graph) : re (inner ℂ x x') = ‖y‖ ^ 2 := by
+lemma re_inner_eq_norm_sq_of_eq_adjointₛₗ_compNat {x x' : E} {y : F} (hx : (x, x') ∈ A.graph)
+    (hy : (x, y) ∈ T.graphₛₗ) : re (inner ℂ x x') = ‖y‖ ^ 2 := by
   rw [re_inner_eq_of_mem_graph hA hAT hy hx hy, re_inner_self]
 
 include hA in
 /-- For self-adjoint `A = T†T`, `A` is positive. -/
-theorem isPositive_of_restrictScalars_eq : A.IsPositive :=
-  LinearPMap.isPositive_of_restrictScalars_eq (dense_domain_of_restrictScalars_eq hA hAT) hAT
+lemma isPositive_of_eq_adjointₛₗ_compNat : A.IsPositive :=
+  hAT ▸ LinearPMap.isPositive_adjointₛₗ_compNat_self (dense_domain_of_eq_adjointₛₗ_compNat hA hAT)
 
 include hA in
 /-- For self-adjoint `A = T†T`, `t > 0` and `r = (-t - A)⁻¹ u`, there is `y = T r`, and
 `re ⟪u, v⟫ = -t re ⟪v, r⟫ - re ⟪T v, y⟫` for every `v ∈ dom T`. -/
 private lemma exists_mem_graph_resolvent_neg {t : ℝ} (ht : 0 < t) (u : E) :
-    ∃ y, (A.resolvent (-t) u, y) ∈ T.graph ∧ ∀ v v', (v, v') ∈ T.graph →
+    ∃ y, (A.resolvent (-t) u, y) ∈ T.graphₛₗ ∧ ∀ v v', (v, v') ∈ T.graphₛₗ →
       re (inner ℂ u v) = -(t * re (inner ℂ v (A.resolvent (-t) u))) - re (inner ℂ v' y) := by
   have hz : (-t : ℂ) ∈ A.resolventSet :=
-    (hA.isPositive_of_restrictScalars_eq hAT).mem_resolventSet hA (by simpa using ht)
+    (hA.isPositive_of_eq_adjointₛₗ_compNat hAT).mem_resolventSet hA (by simpa using ht)
   set r := A.resolvent (-t) u
   have hr : (r, -((t : ℂ) • r) - u) ∈ A.graph := by
     simpa only [neg_smul] using LinearPMap.resolvent_mem_graph hz u
-  obtain ⟨y, hry, -⟩ := exists_mem_graph_of_restrictScalars_eq hAT hr
+  obtain ⟨y, hry, -⟩ := exists_mem_graph_of_eq_adjointₛₗ_compNat hAT hr
   refine ⟨y, hry, fun v v' hv => ?_⟩
   have := re_inner_eq_of_mem_graph hA hAT hv hr hry
   rw [inner_sub_right, inner_neg_right, inner_smul_right, sub_re, neg_re, re_ofReal_mul] at this
@@ -574,29 +565,28 @@ include hA in
 (`IsSelfAdjoint.isLeast_re_inner_resolvent_neg`). For self-adjoint `A = T†T`, `t > 0` and
 `r = (-t - A)⁻¹ u`, `re ⟪u, r⟫ = -(t ‖r‖² + ‖T r‖²)`. -/
 theorem re_inner_resolvent_neg_eq {t : ℝ} (ht : 0 < t) (u : E) {y : F}
-    (hy : (A.resolvent (-t) u, y) ∈ T.graph) :
+    (hy : (A.resolvent (-t) u, y) ∈ T.graphₛₗ) :
     re (inner ℂ u (A.resolvent (-t) u)) = -(t * ‖A.resolvent (-t) u‖ ^ 2 + ‖y‖ ^ 2) := by
   obtain ⟨y₀, hy₀, key⟩ := exists_mem_graph_resolvent_neg hA hAT ht u
-  obtain rfl : y = y₀ :=
-    sub_eq_zero.mp (T.graph_fst_eq_zero_snd (T.graph.sub_mem hy hy₀) (sub_self _))
+  obtain rfl : y = y₀ := LinearPMap.mem_graphₛₗ_snd_inj hy hy₀
   rw [key _ _ hy, re_inner_self, re_inner_self]
   ring
 
 include hA in
-/-- **Variational formula for the resolvent.** For self-adjoint `A = T†T`, with `T` real-linear,
-and `t > 0`,
+/-- **Variational formula for the resolvent.** For self-adjoint `A = T†T`, with `T`
+`σ`-semilinear, and `t > 0`,
 `re ⟪u, (-t - A)⁻¹ u⟫ = min_{w ∈ dom T} (t ‖w‖² + ‖T w‖² - 2 re ⟪u, w⟫)`, the minimum being
 attained at `w = (t + A)⁻¹ u = -(-t - A)⁻¹ u` (`IsSelfAdjoint.re_inner_resolvent_neg_eq`).
 Equivalently, `re ⟪u, (t + A)⁻¹ u⟫` is the maximum of `2 re ⟪u, w⟫ - t ‖w‖² - ‖T w‖²` over
 `w ∈ dom T`. -/
 theorem isLeast_re_inner_resolvent_neg {t : ℝ} (ht : 0 < t) (u : E) :
-    IsLeast {x | ∃ w w', (w, w') ∈ T.graph ∧ x = t * ‖w‖ ^ 2 + ‖w'‖ ^ 2 - 2 * re (inner ℂ u w)}
+    IsLeast {x | ∃ w w', (w, w') ∈ T.graphₛₗ ∧ x = t * ‖w‖ ^ 2 + ‖w'‖ ^ 2 - 2 * re (inner ℂ u w)}
       (re (inner ℂ u (A.resolvent (-t) u))) := by
   obtain ⟨y, hry, key⟩ := exists_mem_graph_resolvent_neg hA hAT ht u
   set r := A.resolvent (-t) u
   have hrr := key r y hry
   rw [re_inner_self, re_inner_self] at hrr
-  refine ⟨⟨-r, -y, T.graph.neg_mem hry, ?_⟩, ?_⟩
+  refine ⟨⟨-r, -y, T.graphₛₗ.neg_mem hry, ?_⟩, ?_⟩
   · rw [norm_neg, norm_neg, inner_neg_right, neg_re, hrr]
     ring
   · rintro _ ⟨w, w', hw, rfl⟩
@@ -607,14 +597,14 @@ theorem isLeast_re_inner_resolvent_neg {t : ℝ} (ht : 0 < t) (u : E) :
     rw [hw', hrr]
     nlinarith [sq_nonneg ‖w + r‖, sq_nonneg ‖w' + y‖]
 
-/-- **Form bound.** For self-adjoint `A = T†T`, with `T` real-linear, and `u ∈ dom T`,
+/-- **Form bound.** For self-adjoint `A = T†T`, with `T` `σ`-semilinear, and `u ∈ dom T`,
 `∫ λ dμ_u(λ) ≤ ‖T u‖²`, so that `dom T ⊆ dom A^{1/2}`
-(`IsSelfAdjoint.domain_le_domain_sqrt_of_restrictScalars_eq`). For closed `T`, `dom T = dom A^{1/2}`
-(`IsSelfAdjoint.domain_sqrt_eq_domain`) and equality holds
+(`IsSelfAdjoint.domain_le_domain_sqrt_of_eq_adjointₛₗ_compNat`). For closed `T`,
+`dom T = dom A^{1/2}` (`IsSelfAdjoint.domain_sqrt_eq_domain`) and equality holds
 (`IsSelfAdjoint.lintegral_measure_pvm_eq_norm_sq`). -/
-theorem lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.graph) :
+theorem lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.graphₛₗ) :
     ∫⁻ s, ENNReal.ofReal s ∂(hA.pvm.measure u) ≤ ENNReal.ofReal (‖u'‖ ^ 2) := by
-  have hpos := hA.isPositive_of_restrictScalars_eq hAT
+  have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAT
   set μ := hA.pvm.measure u
   have hnn := hA.ae_nonneg_measure_pvm u hpos
   have hμ : μ.real Set.univ = ‖u‖ ^ 2 := by
@@ -640,7 +630,7 @@ theorem lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.gr
     rw [integral_congr_ae hae, integral_sub (integrable_const t) (hint.const_mul _),
       integral_const, integral_const_mul, hS, hμ, smul_eq_mul]
     have hmin := (hA.isLeast_re_inner_resolvent_neg hAT ht u).2
-      ⟨t⁻¹ • u, t⁻¹ • u', T.graph.smul_mem t⁻¹ hu, rfl⟩
+      ⟨t⁻¹ • u, t⁻¹ • u', LinearPMap.real_smul_mem_graphₛₗ t⁻¹ hu, rfl⟩
     rw [norm_smul, norm_smul, Real.norm_of_nonneg (inv_nonneg.mpr ht.le), ← Complex.coe_smul,
       inner_smul_right, re_ofReal_mul, re_inner_self] at hmin
     have e : t ^ 2 * (t * (t⁻¹ * ‖u‖) ^ 2 + (t⁻¹ * ‖u'‖) ^ 2 - 2 * (t⁻¹ * ‖u‖ ^ 2)) =
@@ -675,8 +665,8 @@ theorem lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.gr
 
 include hA in
 /-- **Comparison of resolvents** (Petz). Let `A = T†T` on `E` and `B = S̄†S̄` on `E'` be
-self-adjoint, with `S : E' → F'` closable and real-linear, and let `u ∈ E`, `u' ∈ E'`. Suppose every
-point `(w, w')` of the graph of `S` is dominated by a point `(v, v')` of the graph of `T`:
+self-adjoint, with `S : E' → F'` closable and `σ`-semilinear, and let `u ∈ E`, `u' ∈ E'`. Suppose
+every point `(w, w')` of the graph of `S` is dominated by a point `(v, v')` of the graph of `T`:
 `‖v‖ ≤ ‖w‖`, `‖v'‖ ≤ ‖w'‖` and `re ⟪u', w⟫ ≤ re ⟪u, v⟫` (for instance `v = V w` for a contraction
 `V` with `V† u = u'` and `‖T V w‖ ≤ ‖S w‖`). Then `∫ (t + λ)⁻¹ dμ^B_{u'} ≤ ∫ (t + λ)⁻¹ dμ^A_u` for
 every `t > 0`, i.e. `⟪u', (t + B)⁻¹ u'⟫ ≤ ⟪u, (t + A)⁻¹ u⟫`.
@@ -686,16 +676,16 @@ formula (`IsSelfAdjoint.isLeast_re_inner_resolvent_neg`) passes to the closure b
 theorem integral_inv_add_measure_pvm_le_of_forall_mem_graph
     {E' F' : Type*} [NormedAddCommGroup E'] [InnerProductSpace ℂ E'] [CompleteSpace E']
     [NormedAddCommGroup F'] [InnerProductSpace ℂ F']
-    {B : E' →ₗ.[ℂ] E'} (hB : IsSelfAdjoint B) {S : E' →ₗ.[ℝ] F'} (hS : S.IsClosable)
-    (hBS : B.restrictScalars ℝ = S.closure†.compNat S.closure) (u : E) (u' : E')
-    (hdom : ∀ w w', (w, w') ∈ S.graph → ∃ v v', (v, v') ∈ T.graph ∧ ‖v‖ ≤ ‖w‖ ∧ ‖v'‖ ≤ ‖w'‖ ∧
+    {B : E' →ₗ.[ℂ] E'} (hB : IsSelfAdjoint B) {S : E' →ₛₗ.[σ] F'} (hS : S.IsClosableₛₗ)
+    (hBS : B = S.closureₛₗ.adjointₛₗ.compNat S.closureₛₗ) (u : E) (u' : E')
+    (hdom : ∀ w w', (w, w') ∈ S.graphₛₗ → ∃ v v', (v, v') ∈ T.graphₛₗ ∧ ‖v‖ ≤ ‖w‖ ∧ ‖v'‖ ≤ ‖w'‖ ∧
       re (inner ℂ u' w) ≤ re (inner ℂ u v))
     {t : ℝ} (ht : 0 < t) :
     ∫ s, (t + s)⁻¹ ∂(hB.pvm.measure u') ≤ ∫ s, (t + s)⁻¹ ∂(hA.pvm.measure u) := by
   have hzA : (-t : ℂ) ∈ A.resolventSet :=
-    (hA.isPositive_of_restrictScalars_eq hAT).mem_resolventSet hA (by simpa using ht)
+    (hA.isPositive_of_eq_adjointₛₗ_compNat hAT).mem_resolventSet hA (by simpa using ht)
   have hzB : (-t : ℂ) ∈ B.resolventSet :=
-    (hB.isPositive_of_restrictScalars_eq hBS).mem_resolventSet hB (by simpa using ht)
+    (hB.isPositive_of_eq_adjointₛₗ_compNat hBS).mem_resolventSet hB (by simpa using ht)
   rw [← neg_neg (∫ s, (t + s)⁻¹ ∂(hB.pvm.measure u')),
     ← neg_neg (∫ s, (t + s)⁻¹ ∂(hA.pvm.measure u)), neg_le_neg_iff,
     ← ofReal_re (-∫ s, (t + s)⁻¹ ∂(hA.pvm.measure u)),
@@ -707,9 +697,9 @@ theorem integral_inv_add_measure_pvm_le_of_forall_mem_graph
   have hclosed : IsClosed
       {p : E' × F' | m ≤ t * ‖p.1‖ ^ 2 + ‖p.2‖ ^ 2 - 2 * re (inner ℂ u' p.1)} :=
     isClosed_le continuous_const (by fun_prop)
-  have hsub : (S.closure.graph : Set (E' × F')) ⊆
+  have hsub : (S.closureₛₗ.graphₛₗ : Set (E' × F')) ⊆
       {p : E' × F' | m ≤ t * ‖p.1‖ ^ 2 + ‖p.2‖ ^ 2 - 2 * re (inner ℂ u' p.1)} := by
-    rw [← hS.graph_closure_eq_closure_graph, Submodule.topologicalClosure_coe]
+    rw [hS.coe_graphₛₗ_closureₛₗ]
     refine closure_minimal (fun p hp => ?_) hclosed
     obtain ⟨v, v', hv, h₁, h₂, h₃⟩ := hdom p.1 p.2 hp
     have hm := hmA ⟨v, v', hv, rfl⟩

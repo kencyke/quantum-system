@@ -54,7 +54,7 @@ public import QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation
 public import QuantumSystem.Analysis.UnboundedOperator.Adjoint
 public import QuantumSystem.Analysis.UnboundedOperator.AdjointCompSelf
 public import QuantumSystem.Analysis.UnboundedOperator.Resolvent
-public import QuantumSystem.Analysis.UnboundedOperator.RestrictScalars
+public import QuantumSystem.Analysis.UnboundedOperator.SemilinearAdjoint
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Basic
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE
@@ -108,7 +108,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.SemilinearIsometry
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.StandardSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion

@@ -157,8 +157,8 @@ theorem adjoint_comp_supportProj (ξ : H) :
 include hM hM' in
 /-- `V S^M_{η,ξ} ⊆ S^N_{Vη,Vξ} V`, pointwise on the generating vectors. -/
 private lemma mem_graph_relativeTomita_of_intertwiner {η ξ a b : H}
-    (h : (a, b) ∈ (S[M]⟦η, ξ⟧).graph) :
-    (V a, V b) ∈ (S[N]⟦V η, V ξ⟧).graph := by
+    (h : (a, b) ∈ (S[M]⟦η, ξ⟧).graphₛₗ) :
+    (V a, V b) ∈ (S[N]⟦V η, V ξ⟧).graphₛₗ := by
   obtain ⟨x, hx, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
   obtain ⟨y, hy, h₁, h₂⟩ := hM x hx
@@ -172,8 +172,8 @@ private lemma mem_graph_relativeTomita_of_intertwiner {η ξ a b : H}
 include hM hM' in
 /-- `V† S^N_{Vη,Vξ} ⊆ S^M_{η,ξ} V†`, pointwise on the generating vectors. -/
 private lemma adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
-    {a b : K} (h : (a, b) ∈ (S[N]⟦V η, V ξ⟧).graph) :
-    ((V†) a, (V†) b) ∈ (S[M]⟦η, ξ⟧).graph := by
+    {a b : K} (h : (a, b) ∈ (S[N]⟦V η, V ξ⟧).graphₛₗ) :
+    ((V†) a, (V†) b) ∈ (S[M]⟦η, ξ⟧).graphₛₗ := by
   obtain ⟨y, hy, ζ, hζ, h⟩ := mem_graph_relativeTomita.mp h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
   have hyM := adjoint_comp_comp_mem hM' hy
@@ -189,21 +189,23 @@ private lemma adjoint_mem_graph_relativeTomita_of_intertwiner {η ξ : H}
 
 include hM hM' in
 /-- **`V S̄^M_{η,ξ} ⊆ S̄^N_{Vη,Vξ} V`**: `V S^M_{η,ξ} ⊆ S^N_{Vη,Vξ} V` on the generating vectors,
-hence on the closures (`LinearPMap.compPMap_closure_le`, `LinearPMap.closure_compNat_toPMap_le`). -/
+hence on the closures (`LinearPMap.compPMap_closureₛₗ_le_closureₛₗ_compNat_toPMap`). -/
 lemma compPMap_closure_relativeTomita_le_of_intertwiner {η ξ : H} :
-    V ⬝ (S[M]⟦η, ξ⟧).closure ≤ (S[N]⟦V η, V ξ⟧).closure ⬝ V :=
-  LinearPMap.compPMap_closure_le_closure_compNat_toPMap (isClosable_relativeTomita M η ξ)
-    (isClosable_relativeTomita N (V η) (V ξ)) (V.restrictScalars ℝ) (V.restrictScalars ℝ)
-    (LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun _ _ h =>
+    (V : H →ₗ[ℂ] K).compPMap (S[M]⟦η, ξ⟧).closureₛₗ ≤
+      (S[N]⟦V η, V ξ⟧).closureₛₗ.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤) :=
+  LinearPMap.compPMap_closureₛₗ_le_closureₛₗ_compNat_toPMap (isClosable_relativeTomita M η ξ)
+    (isClosable_relativeTomita N (V η) (V ξ)) V V
+    (LinearPMap.compPMap_le_compNat_toPMap_iffₛₗ.mpr fun _ _ h =>
       mem_graph_relativeTomita_of_intertwiner hM hM' h)
 
 include hM hM' in
 /-- **`V† S̄^N_{Vη,Vξ} ⊆ S̄^M_{η,ξ} V†`**, as for `V`. -/
 lemma adjoint_compPMap_closure_relativeTomita_le_of_intertwiner {η ξ : H} :
-    V† ⬝ (S[N]⟦V η, V ξ⟧).closure ≤ (S[M]⟦η, ξ⟧).closure ⬝ V† :=
-  LinearPMap.compPMap_closure_le_closure_compNat_toPMap (isClosable_relativeTomita N (V η) (V ξ))
-    (isClosable_relativeTomita M η ξ) ((V†).restrictScalars ℝ) ((V†).restrictScalars ℝ)
-    (LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun _ _ h =>
+    ((V† : K →L[ℂ] H) : K →ₗ[ℂ] H).compPMap (S[N]⟦V η, V ξ⟧).closureₛₗ ≤
+      (S[M]⟦η, ξ⟧).closureₛₗ.compNat (((V† : K →L[ℂ] H) : K →ₗ[ℂ] H).toPMap ⊤) :=
+  LinearPMap.compPMap_closureₛₗ_le_closureₛₗ_compNat_toPMap
+    (isClosable_relativeTomita N (V η) (V ξ)) (isClosable_relativeTomita M η ξ) (V†) (V†)
+    (LinearPMap.compPMap_le_compNat_toPMap_iffₛₗ.mpr fun _ _ h =>
       adjoint_mem_graph_relativeTomita_of_intertwiner hM hM' h)
 
 include hM hM' in
@@ -211,36 +213,38 @@ include hM hM' in
 `V S̄ ⊆ S̄′ V` and `V S̄† ⊆ (S̄ V†)† ⊆ (V† S̄′)† = S̄′† V`, so `V S̄† S̄ ⊆ S̄′† S̄′ V`. -/
 lemma compPMap_relativeModular_le_of_intertwiner {η ξ : H} :
     (V : H →ₗ[ℂ] K).compPMap Δ[M]⟦η, ξ⟧ ≤ Δ[N]⟦V η, V ξ⟧.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤) := by
-  set S := (S[M]⟦η, ξ⟧).closure
-  set S' := (S[N]⟦V η, V ξ⟧).closure
-  set v : H →L[ℝ] K := V.restrictScalars ℝ
-  set va : K →L[ℝ] H := (V†).restrictScalars ℝ
-  have hd := LinearPMap.dense_domain_closure (dense_domain_relativeTomita M η ξ)
-  have hd' := LinearPMap.dense_domain_closure (dense_domain_relativeTomita N (V η) (V ξ))
-  have h₁ : (v : H →ₗ[ℝ] K).compPMap S ≤ S'.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) :=
+  set S := (S[M]⟦η, ξ⟧).closureₛₗ
+  set S' := (S[N]⟦V η, V ξ⟧).closureₛₗ
+  have hd := LinearPMap.dense_domain_closureₛₗ (dense_domain_relativeTomita M η ξ)
+  have hd' := LinearPMap.dense_domain_closureₛₗ (dense_domain_relativeTomita N (V η) (V ξ))
+  have h₁ : (V : H →ₗ[ℂ] K).compPMap S ≤ S'.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤) :=
     compPMap_closure_relativeTomita_le_of_intertwiner hM hM'
-  have h₂ : (v : H →ₗ[ℝ] K).compPMap S† ≤ S'†.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) := by
-    have hle : (va : K →ₗ[ℝ] H).compPMap S' ≤ S.compNat ((va : K →ₗ[ℝ] H).toPMap ⊤) :=
+  have h₂ : (V : H →ₗ[ℂ] K).compPMap S.adjointₛₗ ≤
+      S'.adjointₛₗ.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤) := by
+    have hle : ((V† : K →L[ℂ] H) : K →ₗ[ℂ] H).compPMap S' ≤
+        S.compNat (((V† : K →L[ℂ] H) : K →ₗ[ℂ] H).toPMap ⊤) :=
       adjoint_compPMap_closure_relativeTomita_le_of_intertwiner hM hM'
-    have hva : va† = v := by
-      rw [ContinuousLinearMap.adjoint_restrictScalars, ContinuousLinearMap.adjoint_adjoint]
-    have hadj := LinearPMap.compPMap_adjoint_le_adjoint_compNat_toPMap hd va (hd'.mono hle.1)
-    rw [hva] at hadj
-    have hanti : (S.compNat ((va : K →ₗ[ℝ] H).toPMap ⊤))† ≤ ((va : K →ₗ[ℝ] H).compPMap S')† :=
-      LinearPMap.adjoint_anti hd' hle
-    have heq : ((va : K →ₗ[ℝ] H).compPMap S')† = S'†.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) := by
-      rw [LinearPMap.adjoint_compPMap hd' va, hva]
+    have hadj := LinearPMap.compPMap_adjoint_le_adjointₛₗ_compNat_toPMap hd (V†) (hd'.mono hle.1)
+    rw [ContinuousLinearMap.adjoint_adjoint] at hadj
+    have hanti : (S.compNat (((V† : K →L[ℂ] H) : K →ₗ[ℂ] H).toPMap ⊤)).adjointₛₗ ≤
+        (((V† : K →L[ℂ] H) : K →ₗ[ℂ] H).compPMap S').adjointₛₗ :=
+      LinearPMap.adjointₛₗ_anti hd' hle
+    have heq : (((V† : K →L[ℂ] H) : K →ₗ[ℂ] H).compPMap S').adjointₛₗ =
+        S'.adjointₛₗ.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤) := by
+      rw [LinearPMap.adjointₛₗ_compPMap hd' (V†), ContinuousLinearMap.adjointₛₗ_eq_adjoint,
+        ContinuousLinearMap.adjoint_adjoint]
     exact hadj.trans (hanti.trans_eq heq)
-  rw [← LinearPMap.restrictScalars_le_iff (R := ℝ), LinearPMap.restrictScalars_compPMap,
-    LinearPMap.restrictScalars_compNat, LinearPMap.restrictScalars_toPMap,
-    restrictScalars_relativeModular, restrictScalars_relativeModular]
-  calc (v : H →ₗ[ℝ] K).compPMap (S†.compNat S)
-      = ((v : H →ₗ[ℝ] K).compPMap S†).compNat S := (LinearPMap.compPMap_compNat _ _ _).symm
-    _ ≤ (S'†.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤)).compNat S := LinearPMap.compNat_mono h₂ le_rfl
-    _ = S'†.compNat ((v : H →ₗ[ℝ] K).compPMap S) := by
+  rw [relativeModular_def, relativeModular_def]
+  calc (V : H →ₗ[ℂ] K).compPMap (S.adjointₛₗ.compNat S)
+      = ((V : H →ₗ[ℂ] K).compPMap S.adjointₛₗ).compNat S := (LinearPMap.compPMap_compNat _ _ _).symm
+    _ ≤ (S'.adjointₛₗ.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤)).compNat S :=
+        LinearPMap.compNat_mono h₂ le_rfl
+    _ = S'.adjointₛₗ.compNat ((V : H →ₗ[ℂ] K).compPMap S) := by
         rw [LinearPMap.compNat_assoc, LinearPMap.toPMap_compNat]
-    _ ≤ S'†.compNat (S'.compNat ((v : H →ₗ[ℝ] K).toPMap ⊤)) := LinearPMap.compNat_mono le_rfl h₁
-    _ = (S'†.compNat S').compNat ((v : H →ₗ[ℝ] K).toPMap ⊤) := (LinearPMap.compNat_assoc _ _ _).symm
+    _ ≤ S'.adjointₛₗ.compNat (S'.compNat ((V : H →ₗ[ℂ] K).toPMap ⊤)) :=
+        LinearPMap.compNat_mono le_rfl h₁
+    _ = (S'.adjointₛₗ.compNat S').compNat ((V : H →ₗ[ℂ] K).toPMap ⊤) :=
+        (LinearPMap.compNat_assoc _ _ _).symm
 
 include hM hM' in
 /-- **Transport of spectral measures.** If moreover `V† V ξ = ξ`, the spectral measure of

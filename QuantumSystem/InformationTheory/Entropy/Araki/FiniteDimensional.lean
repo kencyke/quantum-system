@@ -156,7 +156,7 @@ lemma supportProj_commutant_purification_tmul {i : ι} (hi : 0 < r i) (x : H) :
 private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i)
     (j : ι) :
     ((√ᶜ r i) • (g i ⊗ₕ c j), (√ᶜ s j) • (g j ⊗ₕ b i)) ∈
-      (S[𝓜]⟦c.purification s g, b.purification r g⟧).graph := by
+      (S[𝓜]⟦c.purification s g, b.purification r g⟧).graphₛₗ := by
   have h := apply_mem_graph_relativeTomita (η := c.purification s g) (ξ := b.purification r g)
     (amplifyRight_mem_amplify (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ (c j) (b i))))
   rwa [b.amplifyRight_rankOne_purification, HilbertTensor.amplifyRight_star,
@@ -168,7 +168,7 @@ private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i 
 private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
     ((√ᶜ r i) • (g j ⊗ₕ b i), (√ᶜ s j) • (g i ⊗ₕ c j)) ∈
-      (S[(𝓜)′]⟦c.purification s g, b.purification r g⟧).graph := by
+      (S[(𝓜)′]⟦c.purification s g, b.purification r g⟧).graphₛₗ := by
   have h := apply_mem_graph_relativeTomita (M := (𝓜)′) (η := c.purification s g)
     (ξ := b.purification r g)
     (amplifyLeft_mem_commutant_amplify (M := 𝓑(H)) (rankOne ℂ (g j) (g i)))
@@ -187,16 +187,16 @@ theorem mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 
   have hr := (Real.sqrt_pos.mpr hi).ne'
   have hrr := Real.mul_self_sqrt hi.le
   have htt := Real.mul_self_sqrt (hs j)
-  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graphₛₗ_compNat]
   refine ⟨((Real.sqrt (s j) / Real.sqrt (r i) : ℝ) : ℂ) • (g j ⊗ₕ b i), ?_, ?_⟩
   · refine mem_graph_closure_relativeTomita ?_
-    have h := isSemilinear_relativeTomita _ _ _ ((Real.sqrt (r i))⁻¹ : ℝ) _ _
+    have h := LinearPMap.smul_mem_graphₛₗ (((Real.sqrt (r i))⁻¹ : ℝ) : ℂ)
       (mem_graph_relativeTomita_purification (b := b) (c := c) (s := s) hg hi j)
     rwa [Complex.conj_ofReal, smul_smul, smul_smul, ← Complex.ofReal_mul, ← Complex.ofReal_mul,
       inv_mul_cancel₀ hr, Complex.ofReal_one, one_smul, inv_mul_eq_div] at h
-  · rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita _ _ _)]
-    refine LinearPMap.le_graph_of_le (relativeTomita_commutant_le_adjoint _ _ _) ?_
-    have h := isSemilinear_relativeTomita _ _ _ ((Real.sqrt (s j) / r i : ℝ) : ℂ) _ _
+  · rw [LinearPMap.adjointₛₗ_closureₛₗ (dense_domain_relativeTomita _ _ _)]
+    refine LinearPMap.le_graphₛₗ_of_le (relativeTomita_commutant_le_adjoint _ _ _) ?_
+    have h := LinearPMap.smul_mem_graphₛₗ ((Real.sqrt (s j) / r i : ℝ) : ℂ)
       (mem_graph_relativeTomita_commutant_purification (b := b) (c := c) (s := s) hg hi j)
     have c₁ : Real.sqrt (s j) / r i * Real.sqrt (r i) = Real.sqrt (s j) / Real.sqrt (r i) := by
       rw [div_mul_eq_mul_div, div_eq_div_iff hi.ne' hr]

@@ -302,8 +302,8 @@ theorem arakiVec_le_of_norm_sq_le {c : ℝ} (hc : 0 < c)
         ∫ s, (t + s)⁻¹ ∂μ[M]⟦ξ, ξ⟧ := by
     intro t ht
     refine (isSelfAdjoint_relativeModular M ξ ξ).integral_inv_add_measure_pvm_le_of_forall_mem_graph
-      (restrictScalars_relativeModular M ξ ξ) (isSelfAdjoint_relativeModular M η' ξ)
-      (isClosable_relativeTomita M η' ξ) (restrictScalars_relativeModular M η' ξ) ξ ξ ?_ ht
+      (relativeModular_def M ξ ξ) (isSelfAdjoint_relativeModular M η' ξ)
+      (isClosable_relativeTomita M η' ξ) (relativeModular_def M η' ξ) ξ ξ ?_ ht
     intro w w' hw
     obtain ⟨a, ha, z, hz, hwz⟩ := mem_graph_relativeTomita.mp hw
     obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp hwz

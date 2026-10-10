@@ -291,7 +291,7 @@ include hc hs in
 /-- For a cyclic and separating `Ω`, the graph of `S_{η,Ω}` is `{(x Ω, x⋆ η) | x ∈ M}`: the
 orthogonal complement of `[M Ω] = H` is `0` and the support is `s(Ω) = 1`. -/
 lemma mem_graph_relativeTomita_iff_of_isCyclicVector_of_isSeparatingVector {η u v : H} :
-    (u, v) ∈ (S[M]⟦η, Ω⟧).graph ↔ ∃ x ∈ M, x Ω = u ∧ star x η = v := by
+    (u, v) ∈ (S[M]⟦η, Ω⟧).graphₛₗ ↔ ∃ x ∈ M, x Ω = u ∧ star x η = v := by
   have hsupp : M.supportProj Ω = 1 := supportProj_eq_one_iff.mpr hs.isCyclicVector_commutant
   rw [mem_graph_relativeTomita]
   refine ⟨fun ⟨x, hx, ζ, hζ, h⟩ => ⟨x, hx, ?_⟩, fun ⟨x, hx, hu, hv⟩ =>
@@ -307,21 +307,20 @@ operator `S_{H_M} : a + i b ↦ a - i b` of the standard subspace `H_M`. Writing
 shows `S_{Ω,Ω} ⊆ S_{H_M}`, and conversely `(a + i b, a - i b)` with `a, b ∈ H_M` is a limit of
 `(x Ω, x⋆ Ω)` with `x = c + i d`, `c, d` self-adjoint. -/
 theorem closure_relativeTomita_self_eq_tomita :
-    (S[M]⟦Ω, Ω⟧).closure = S[H[M, Ω]] := by
+    (S[M]⟦Ω, Ω⟧).closureₛₗ = S[H[M, Ω]] := by
   set K := H[M, Ω]
-  have hle : (S[M]⟦Ω, Ω⟧).graph ≤ S[K].graph := by
+  have hle : (S[M]⟦Ω, Ω⟧).graphₛₗ ≤ S[K].graphₛₗ := by
     rintro ⟨u, v⟩ h
     obtain ⟨x, hx, rfl, rfl⟩ :=
       (mem_graph_relativeTomita_iff_of_isCyclicVector_of_isSeparatingVector hc hs).mp h
     obtain ⟨a, ha, b, hb, h₁, h₂⟩ := exists_apply_eq_add (Ω := Ω) hx
     exact K.mem_graph_tomita.mpr ⟨a, Submodule.mem_closure_iff.mpr (subset_closure ha), b,
       Submodule.mem_closure_iff.mpr (subset_closure hb), h₁.symm, h₂.symm⟩
-  refine LinearPMap.eq_of_eq_graph ?_
-  rw [← (isClosable_relativeTomita M Ω Ω).graph_closure_eq_closure_graph]
-  refine le_antisymm (Submodule.topologicalClosure_minimal _ hle K.isClosed_tomita) ?_
+  refine LinearPMap.eq_of_eq_graphₛₗ (SetLike.coe_injective ?_)
+  rw [(isClosable_relativeTomita M Ω Ω).coe_graphₛₗ_closureₛₗ]
+  refine subset_antisymm (closure_minimal hle K.isClosed_tomita) ?_
   rintro ⟨u, v⟩ h
   obtain ⟨a, ha, b, hb, rfl, rfl⟩ := K.mem_graph_tomita.mp h
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe]
   have ha' : a ∈ closure (M.selfAdjointOrbit Ω : Set H) := by
     rw [← coe_standardSubspace hc hs]
     exact ha
@@ -340,9 +339,7 @@ theorem closure_relativeTomita_self_eq_tomita :
 /-- **The modular operator of `(M, Ω)`**: `Δ_{Ω,Ω} = S̄_{Ω,Ω}† S̄_{Ω,Ω}` is the modular operator
 `Δ_{H_M}` of the standard subspace `H_M`. -/
 theorem relativeModular_self_eq_modular : Δ[M]⟦Ω, Ω⟧ = Δ[H[M, Ω]] := by
-  refine LinearPMap.restrictScalars_injective (R := ℝ) ?_
-  rw [restrictScalars_relativeModular, StandardSubspace.restrictScalars_modular,
-    closure_relativeTomita_self_eq_tomita hc hs]
+  rw [relativeModular_def, StandardSubspace.modular_def, closure_relativeTomita_self_eq_tomita hc hs]
 
 /-- **The modular group of `(M, Ω)`**: `Δ_{Ω,Ω}^{it}` is the modular group `Δ_{H_M}^{it}` of the
 standard subspace `H_M`. -/

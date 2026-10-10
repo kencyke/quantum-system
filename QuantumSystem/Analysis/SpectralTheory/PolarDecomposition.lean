@@ -10,20 +10,21 @@ public import QuantumSystem.Analysis.SpectralTheory.Power
 /-!
 # Polar decomposition
 
-Let `T : E → F` be a closed, densely defined real-linear operator between complex Hilbert spaces
-(adjoints are real adjoints for `re ⟪·, ·⟫`, `open ClosedSubmodule`), and let `A` be a self-adjoint
-complex operator with `A = T†T` as real operators. The operator `|T| = A^{1/2}`
+Let `T : E → F` be a closed, densely defined `σ`-semilinear operator between complex Hilbert
+spaces, `σ` the identity or the complex conjugation (`T : E →ₛₗ.[σ] F`, with adjoint
+`T† = LinearPMap.adjointₛₗ T`), and let `A` be a self-adjoint operator with `A = T†T`; the
+composite `T†T` (`LinearPMap.compNat`) is complex-linear. The operator `|T| = A^{1/2}`
 (`IsSelfAdjoint.sqrt`) has the same domain as `T` and `‖|T| x‖ = ‖T x‖`
 (`IsSelfAdjoint.domain_sqrt_eq_domain`, `IsSelfAdjoint.norm_eq_of_mem_graph_sqrt`): both are
 closed, `dom A` is a core for both (von Neumann's theorem and the spectral cutoffs), and on `dom A`
 the identity is `‖|T| x‖² = ⟪x, A x⟫ = ‖T x‖²`. The **polar decomposition** `T = U |T|`
-(`IsSelfAdjoint.eq_polarIsometry_compPMap`) has the partial isometry
+(`IsSelfAdjoint.eq_polarIsometry_compPMap`) has the `σ`-semilinear partial isometry
 `U x = lim T (∫ 1_{λ > 1/(n+1)} λ^{-1/2} dE_A(λ)) x` (`IsSelfAdjoint.polarIsometry`), isometric on
-`E_A((0, ∞)) E` and zero on `ker T`; `U` is `σ`-semilinear when `T` is. The decomposition is
-unique (`IsSelfAdjoint.eq_sqrt_of_eq_compPMap`, `IsSelfAdjoint.eq_polarIsometry_of_eq_compPMap`):
-`T = V B` with `B` positive self-adjoint and `V` isometric on the range of `B` forces `B B = A` and
-`B = A^{1/2}`, and if moreover `V` vanishes on `ker B`, then `V = U`. Making `T` real-linear treats complex-linear and
-conjugate-linear operators at once.
+`E_A((0, ∞)) E` and zero on `ker T`. The decomposition is unique
+(`IsSelfAdjoint.eq_sqrt_of_eq_compPMap`, `IsSelfAdjoint.eq_polarIsometry_of_eq_compPMap`): `T = V B`
+with `B` positive self-adjoint and `V` isometric on the range of `B` forces `B B = A` and
+`B = A^{1/2}`, and if moreover `V` vanishes on `ker B`, then `V = U`. Letting `σ` vary treats
+complex-linear and conjugate-linear operators at once.
 
 If `T` is injective with dense range, then `A = T†T` is injective, `E_A((0, ∞)) = 1`, and `U` is a
 `σ`-semilinear isometric equivalence of `E` onto `F` (`IsSelfAdjoint.polarIsometryEquiv`): it is
@@ -36,49 +37,45 @@ and uniqueness applied to
 
 ## Notation
 
-* `U†` — for a bounded real-linear `U : E →L[ℝ] F`, its adjoint for the real inner products
-  `re ⟪·, ·⟫` (`ContinuousLinearMap.adjoint`, `open scoped InnerProduct`); for a conjugate-linear
-  `U` this is the antilinear adjoint `⟪U† y, x⟫ = conj ⟪y, U x⟫` of the literature.
+* `U†` — for a bounded `σ`-semilinear `U : E →SL[σ] F`, its adjoint
+  `ContinuousLinearMap.adjointₛₗ U`, with `⟪U† y, x⟫ = σ ⟪y, U x⟫`; for a conjugate-linear `U`
+  this is the antilinear adjoint `⟪U† y, x⟫ = conj ⟪y, U x⟫` of the literature.
 * `𝐉` — in the section on involutions, the isometric part `J` of `S = J |S|`; the notation is local,
-  so the statements display `hA.polarIsometryEquiv hAS hS _ _ hσ` elsewhere.
+  so the statements display `hA.polarIsometryEquiv hAS hS _ _` elsewhere.
 
 ## Main definitions
 
 * `IsSelfAdjoint.polarIsometry hA hAT hT` — the partial isometry `U` of `T = U |T|`, a bounded
-  real-linear operator.
-* `IsSelfAdjoint.polarIsometrySL` — for a `σ`-semilinear `T`, the partial isometry `U` as a
-  bounded `σ`-semilinear operator.
-* `IsSelfAdjoint.adjointPolarIsometrySL` — its real adjoint `U†`, as a bounded `σ'`-semilinear
-  operator.
+  `σ`-semilinear operator.
 * `IsSelfAdjoint.polarIsometryEquiv` — for an injective `T` with dense range, the isometric part
   `U` as a semilinear isometric equivalence.
 
 ## Main results
 
-* `LinearPMap.exists_mem_graph_norm_eq_of_mem_closure`, `LinearPMap.HasCore.mem_closure` — closed
-  operators isometric to each other on a common core.
-* `IsSelfAdjoint.domain_le_domain_sqrt_of_restrictScalars_eq` — `dom T ⊆ dom A^{1/2}` for any `T`
+* `LinearPMap.exists_mem_graphₛₗ_norm_eq_of_mem_closure`, `LinearPMap.HasCore.mem_closure` —
+  closed operators isometric to each other on a common core.
+* `IsSelfAdjoint.domain_le_domain_sqrt_of_eq_adjointₛₗ_compNat` — `dom T ⊆ dom A^{1/2}` for any `T`
   with `A = T†T`.
 * `IsSelfAdjoint.domain_sqrt_eq_domain`, `IsSelfAdjoint.norm_eq_of_mem_graph_sqrt` —
   `dom |T| = dom T` and `‖|T| x‖ = ‖T x‖`.
-* `IsSelfAdjoint.norm_polarIsometry_apply`, `IsSelfAdjoint.polarIsometry_smul_of_isSemilinear` —
-  `‖U x‖ = ‖E_A((0, ∞)) x‖`, and `U` is semilinear with `T`.
+* `IsSelfAdjoint.norm_polarIsometry_apply` — `‖U x‖ = ‖E_A((0, ∞)) x‖`.
 * `IsSelfAdjoint.eq_polarIsometry_compPMap` — **polar decomposition** `T = U |T|`.
 * `IsSelfAdjoint.pvm_compPMap_sqrt_le`, `IsSelfAdjoint.pvm_Ioi_compPMap_sqrt` —
   `E_A(s) A^{1/2} ⊆ A^{1/2} E_A(s)` and `E_A((0, ∞)) A^{1/2} = A^{1/2}`.
 * `IsSelfAdjoint.eq_sqrt_of_eq_compPMap`, `IsSelfAdjoint.eq_polarIsometry_of_eq_compPMap` —
   **uniqueness** of the polar decomposition.
-* `IsSelfAdjoint.adjoint_polarIsometry_compPMap` — `|T| = U† T`.
-* `IsSelfAdjoint.adjoint_polarIsometry_apply_polarIsometry`,
-  `IsSelfAdjoint.adjoint_polarIsometry_apply_eq_zero`, `IsSelfAdjoint.isClosed_range_polarIsometry`,
-  `IsSelfAdjoint.polarIsometry_apply_mem_closure_range` — `U` is a partial isometry: `U† U =
-  E_A((0, ∞))` for its real adjoint `U†`, which vanishes on `(ran U)ᗮ`, and `ran U` is the closure
-  of `ran T`.
+* `IsSelfAdjoint.adjointₛₗ_polarIsometry_compPMap` — `|T| = U† T`.
+* `IsSelfAdjoint.adjointₛₗ_polarIsometry_apply_polarIsometry`,
+  `IsSelfAdjoint.inner_polarIsometry_apply`, `IsSelfAdjoint.adjointₛₗ_polarIsometry_apply_eq_zero`,
+  `IsSelfAdjoint.isClosed_range_polarIsometry`,
+  `IsSelfAdjoint.polarIsometry_apply_mem_closure_range` — `U` is a partial isometry:
+  `U† U = E_A((0, ∞))`, `⟪U x, U y⟫ = σ ⟪E_A((0, ∞)) x, E_A((0, ∞)) y⟫`, `U†` vanishes on
+  `(ran U)ᗮ`, and `ran U` is the closure of `ran T`.
 * `IsSelfAdjoint.pvm_Ioi_apply_eq_self`, `IsSelfAdjoint.ker_le_ker_pvm_Ioi` —
   `E_A((0, ∞)) E = (ker T)ᗮ`.
 * `IsSelfAdjoint.lintegral_measure_pvm_eq_norm_sq` — the **form identity** `∫ λ dμ_x = ‖T x‖²`.
-* `IsSelfAdjoint.ker_restrictScalars_eq_of_restrictScalars_eq`,
-  `IsSelfAdjoint.ker_eq_bot_iff_of_restrictScalars_eq` — `ker T†T = ker T`.
+* `IsSelfAdjoint.ker_eq_of_eq_adjointₛₗ_compNat`,
+  `IsSelfAdjoint.ker_eq_bot_iff_of_eq_adjointₛₗ_compNat` — `ker T†T = ker T`.
 * `IsSelfAdjoint.pvm_Ioi_eq_one_of_ker_eq_bot`, `IsSelfAdjoint.norm_polarIsometry_of_ker_eq_bot`,
   `IsSelfAdjoint.surjective_polarIsometry_of_dense_range` — for an injective `T`,
   `E_A((0, ∞)) = 1` and `U` is an isometry, onto `F` if `T` has dense range.
@@ -91,13 +88,6 @@ and uniqueness applied to
 * `IsSelfAdjoint.pvm_transport_polarIsometryEquiv`, `IsSelfAdjoint.polarIsometryEquiv_integral_apply`
   — `J E_Δ J = inv_* E_Δ` and `J f(Δ) J = (σ ∘ f ∘ inv)(Δ)`.
 
-## TODO
-
-Mathlib's `LinearPMap` is semilinear (`E →ₛₗ.[σ] F`); stating the polar decomposition for a
-`σ`-semilinear partial map directly, with a `σ`-adjoint, would replace the real-linear `T` with the
-predicate `LinearPMap.IsSemilinear σ T` and the bundling maps `IsSelfAdjoint.polarIsometrySL`,
-`IsSelfAdjoint.adjointPolarIsometrySL`.
-
 ## References
 
 * [K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*][schmudgen2012], §7.1
@@ -107,32 +97,33 @@ predicate `LinearPMap.IsSemilinear σ T` and the bundling maps `IsSelfAdjoint.po
 
 @[expose] public section
 
-open Set Filter Topology MeasureTheory Complex ClosedSubmodule
+open Set Filter Topology MeasureTheory Complex
 open scoped InnerProductSpace InnerProduct ComplexConjugate LinearPMap
 
 /-! ### Closed operators isometric on a common core -/
 
 namespace LinearPMap
 
-variable {E F₁ F₂ : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-  [NormedAddCommGroup F₁] [NormedSpace ℝ F₁] [CompleteSpace F₁]
-  [NormedAddCommGroup F₂] [NormedSpace ℝ F₂]
+variable {R R₁ R₂ : Type*} [Ring R] [Ring R₁] [Ring R₂] {σ₁ : R →+* R₁} {σ₂ : R →+* R₂}
+  {E F₁ F₂ : Type*} [NormedAddCommGroup E] [Module R E]
+  [NormedAddCommGroup F₁] [Module R₁ F₁] [CompleteSpace F₁]
+  [NormedAddCommGroup F₂] [Module R₂ F₂]
 
 /-- Let `S` be closed, `D` a subspace of its domain on which `‖S x‖ = ‖T x‖`, and `(x, v)` a limit
 of points `(d, T d)` with `d ∈ D`. Then `x ∈ dom S` and `‖S x‖ = ‖v‖`. -/
-lemma exists_mem_graph_norm_eq_of_mem_closure {S : E →ₗ.[ℝ] F₁} {T : E →ₗ.[ℝ] F₂}
-    {D : Submodule ℝ E} (hS : S.IsClosed) (hDS : D ≤ S.domain)
-    (hnorm : ∀ d ∈ D, ∀ u w, (d, u) ∈ S.graph → (d, w) ∈ T.graph → ‖u‖ = ‖w‖)
-    {x : E} {v : F₂} (hxv : (x, v) ∈ _root_.closure {p : E × F₂ | p.1 ∈ D ∧ p ∈ T.graph}) :
-    ∃ u, (x, u) ∈ S.graph ∧ ‖u‖ = ‖v‖ := by
+lemma exists_mem_graphₛₗ_norm_eq_of_mem_closure {S : E →ₛₗ.[σ₁] F₁} {T : E →ₛₗ.[σ₂] F₂}
+    {D : Submodule R E} (hS : S.IsClosedₛₗ) (hDS : D ≤ S.domain)
+    (hnorm : ∀ d ∈ D, ∀ u w, (d, u) ∈ S.graphₛₗ → (d, w) ∈ T.graphₛₗ → ‖u‖ = ‖w‖)
+    {x : E} {v : F₂} (hxv : (x, v) ∈ _root_.closure {p : E × F₂ | p.1 ∈ D ∧ p ∈ T.graphₛₗ}) :
+    ∃ u, (x, u) ∈ S.graphₛₗ ∧ ‖u‖ = ‖v‖ := by
   obtain ⟨p, hp, hpt⟩ := mem_closure_iff_seq_limit.mp hxv
   choose hpD hpT using hp
   set u : ℕ → F₁ := fun n => S ⟨(p n).1, hDS (hpD n)⟩
-  have hu : ∀ n, ((p n).1, u n) ∈ S.graph := fun n => S.mem_graph ⟨_, hDS (hpD n)⟩
+  have hu : ∀ n, ((p n).1, u n) ∈ S.graphₛₗ := fun n => S.mem_graphₛₗ ⟨_, hDS (hpD n)⟩
   have hdist : ∀ m n, dist (u m) (u n) = dist (p m).2 (p n).2 := fun m n => by
     rw [dist_eq_norm, dist_eq_norm]
-    exact hnorm _ (D.sub_mem (hpD m) (hpD n)) _ _ (S.graph.sub_mem (hu m) (hu n))
-      (T.graph.sub_mem (hpT m) (hpT n))
+    exact hnorm _ (D.sub_mem (hpD m) (hpD n)) _ _ (S.graphₛₗ.sub_mem (hu m) (hu n))
+      (T.graphₛₗ.sub_mem (hpT m) (hpT n))
   have hp2 : Tendsto (fun n => (p n).2) atTop (𝓝 v) := (continuous_snd.tendsto _).comp hpt
   have hcau : CauchySeq u := by
     rw [Metric.cauchySeq_iff]
@@ -140,7 +131,7 @@ lemma exists_mem_graph_norm_eq_of_mem_closure {S : E →ₗ.[ℝ] F₁} {T : E �
     obtain ⟨N, hN⟩ := Metric.cauchySeq_iff.mp hp2.cauchySeq ε hε
     exact ⟨N, fun m hm n hn => by rw [hdist]; exact hN m hm n hn⟩
   obtain ⟨u₀, hu₀⟩ := cauchySeq_tendsto_of_complete hcau
-  have hmem : (x, u₀) ∈ S.graph := by
+  have hmem : (x, u₀) ∈ S.graphₛₗ := by
     refine (_root_.IsClosed.closure_eq hS).subset ?_
     exact mem_closure_of_tendsto (((continuous_fst.tendsto _).comp hpt).prodMk_nhds hu₀)
       (Eventually.of_forall hu)
@@ -181,7 +172,8 @@ namespace IsSelfAdjoint
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F]
-  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {T : E →ₗ.[ℝ] F}
+  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {σ : ℂ →+* ℂ} [RingHomInvPair σ σ] [RingHomIsometric σ]
+  {T : E →ₛₗ.[σ] F}
 
 /-- `∫ λ² dμ_y < ∞` forces `∫ |√λ|² dμ_y < ∞`. -/
 lemma memLp_sqrt_of_memLp {y : E} (h : MemLp (fun t : ℝ => (t : ℂ)) 2 (hA.pvm.measure y)) :
@@ -220,20 +212,20 @@ lemma hasCore_sqrt (hpos : A.IsPositive) : hA.sqrt.HasCore A.domain :=
   hA.pvm.hasCore_integralPMap (Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable)
     hA.domain_le_domain_sqrt (hA.mem_domain_apply_cutoff_sqrt hpos)
 
-variable (hAT : A.restrictScalars ℝ = T†.compNat T)
+variable (hAT : A = T.adjointₛₗ.compNat T)
 include hAT
 
 omit [CompleteSpace F] in
 include hA in
 /-- For `A = T†T` and `x ∈ dom A`, `‖A^{1/2} x‖ = ‖T x‖` (in graph form). -/
 lemma norm_eq_of_mem_graph_sqrt_of_mem_domain {x : E} (hx : x ∈ A.domain) {u : E} {v : F}
-    (hu : (x, u) ∈ hA.sqrt.graph) (hv : (x, v) ∈ T.graph) : ‖u‖ = ‖v‖ := by
-  have hpos := hA.isPositive_of_restrictScalars_eq hAT
+    (hu : (x, u) ∈ hA.sqrt.graph) (hv : (x, v) ∈ T.graphₛₗ) : ‖u‖ = ‖v‖ := by
+  have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAT
   have hsq : Measurable fun t : ℝ => (Real.sqrt t : ℂ) :=
     Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable
   obtain ⟨hux, rfl⟩ := (hA.pvm.mem_graph_integralPMap).mp hu
   have hAx := A.mem_graph ⟨x, hx⟩
-  have h₁ := hA.re_inner_eq_norm_sq_of_restrictScalars_eq hAT hAx hv
+  have h₁ := hA.re_inner_eq_norm_sq_of_eq_adjointₛₗ_compNat hAT hAx hv
   rw [hA.inner_eq_integral_of_mem_graph hAx, integral_complex_ofReal, ofReal_re] at h₁
   have h₂ := hA.pvm.norm_integralApply_sq hsq hux
   have h₃ : ∫ t, ‖(Real.sqrt t : ℂ)‖ ^ 2 ∂(hA.pvm.measure x) = ∫ t, t ∂(hA.pvm.measure x) :=
@@ -244,18 +236,17 @@ lemma norm_eq_of_mem_graph_sqrt_of_mem_domain {x : E} (hx : x ∈ A.domain) {u :
 
 omit [CompleteSpace F] in
 /-- For `A = T†T`, the domain of `A` lies in that of `T`. -/
-lemma domain_le_domain_of_restrictScalars_eq : A.domain.restrictScalars ℝ ≤ T.domain := by
-  rw [← LinearPMap.restrictScalars_domain, hAT]
-  exact LinearPMap.compNat_domain_le
+lemma domain_le_domain_of_eq_adjointₛₗ_compNat : A.domain ≤ T.domain :=
+  hAT ▸ LinearPMap.compNat_domain_le
 
 omit [CompleteSpace F] in
 include hA in
 /-- **`dom T ⊆ dom |T|`**: for `A = T†T`, the domain of `T` lies in that of `A^{1/2}`, the form
 domain of `A`, by the form bound `∫ λ dμ_x ≤ ‖T x‖²`
 (`IsSelfAdjoint.lintegral_measure_pvm_le_norm_sq`). -/
-lemma domain_le_domain_sqrt_of_restrictScalars_eq : T.domain ≤ hA.sqrt.domain.restrictScalars ℝ := by
+lemma domain_le_domain_sqrt_of_eq_adjointₛₗ_compNat : T.domain ≤ hA.sqrt.domain := by
   intro x hx
-  have hle := hA.lintegral_measure_pvm_le_norm_sq hAT (T.mem_graph ⟨x, hx⟩)
+  have hle := hA.lintegral_measure_pvm_le_norm_sq hAT (T.mem_graphₛₗ ⟨x, hx⟩)
   change MemLp (fun t : ℝ => (Real.sqrt t : ℂ)) 2 (hA.pvm.measure x)
   refine (memLp_two_iff_integrable_sq_norm (by fun_prop : Measurable _).aestronglyMeasurable).mpr
     ⟨(by fun_prop : Measurable _).aestronglyMeasurable, ?_⟩
@@ -267,68 +258,60 @@ lemma domain_le_domain_sqrt_of_restrictScalars_eq : T.domain ≤ hA.sqrt.domain.
 
 include hA in
 /-- `dom |T| = dom T`, pointwise. -/
-private lemma exists_mem_graph_sqrt_iff (hT : T.IsClosed) {x : E} :
-    (∃ u, (x, u) ∈ hA.sqrt.graph) ↔ ∃ v, (x, v) ∈ T.graph := by
-  have hpos := hA.isPositive_of_restrictScalars_eq hAT
-  have hDT := domain_le_domain_of_restrictScalars_eq hAT
+private lemma exists_mem_graph_sqrt_iff (hT : T.IsClosedₛₗ) {x : E} :
+    (∃ u, (x, u) ∈ hA.sqrt.graph) ↔ ∃ v, (x, v) ∈ T.graphₛₗ := by
+  have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAT
+  have hDT := domain_le_domain_of_eq_adjointₛₗ_compNat hAT
   have hTd : Dense (T.domain : Set E) := hA.dense_domain.mono hDT
-  have hnorm : ∀ d ∈ A.domain.restrictScalars ℝ, ∀ u w, (d, u) ∈ hA.sqrt.graph →
-      (d, w) ∈ T.graph → ‖u‖ = ‖w‖ := fun d hd u w hu hw =>
-    hA.norm_eq_of_mem_graph_sqrt_of_mem_domain hAT hd hu hw
+  have hS : hA.sqrt.IsClosedₛₗ := LinearPMap.isClosedₛₗ_iff_isClosed.mpr hA.isSelfAdjoint_sqrt.isClosed
+  have hnorm : ∀ d ∈ A.domain, ∀ u w, (d, u) ∈ hA.sqrt.graphₛₗ → (d, w) ∈ T.graphₛₗ → ‖u‖ = ‖w‖ :=
+    fun d hd u w hu hw => hA.norm_eq_of_mem_graph_sqrt_of_mem_domain hAT hd
+      (LinearPMap.mem_graphₛₗ_iff_mem_graph.mp hu) hw
   constructor
   · rintro ⟨u, hu⟩
     have hcl := (hA.hasCore_sqrt hpos).mem_closure hu
-    have hset : {q : E × E | q.1 ∈ A.domain ∧ q ∈ hA.sqrt.graph} =
-        {q : E × E | q.1 ∈ A.domain.restrictScalars ℝ ∧ q ∈ (hA.sqrt.restrictScalars ℝ).graph} := by
-      ext q
-      exact and_congr Iff.rfl LinearPMap.mem_graph_restrictScalars.symm
-    rw [hset] at hcl
-    obtain ⟨v, hv, -⟩ := LinearPMap.exists_mem_graph_norm_eq_of_mem_closure hT hDT
-      (fun d hd w u hw hu => (hnorm d hd u w (LinearPMap.mem_graph_restrictScalars.mp hu) hw).symm)
-      hcl
+    simp_rw [← LinearPMap.mem_graphₛₗ_iff_mem_graph] at hcl
+    obtain ⟨v, hv, -⟩ := LinearPMap.exists_mem_graphₛₗ_norm_eq_of_mem_closure hT hDT
+      (fun d hd w u hw hu => (hnorm d hd u w hu hw).symm) hcl
     exact ⟨v, hv⟩
   · rintro ⟨v, hv⟩
-    have hcl := (LinearPMap.hasCore_adjoint_compNat_self hT hTd).mem_closure hv
+    have hcl := LinearPMap.mem_closure_graphₛₗ_adjointₛₗ_compNat_self hT hTd hv
     rw [← hAT] at hcl
-    obtain ⟨u, hu, -⟩ := LinearPMap.exists_mem_graph_norm_eq_of_mem_closure
-      (LinearPMap.isClosed_restrictScalars_iff.mpr hA.isSelfAdjoint_sqrt.isClosed)
-      (fun d hd => hA.domain_le_domain_sqrt hd)
-      (fun d hd u w hu hw => hnorm d hd u w (LinearPMap.mem_graph_restrictScalars.mp hu) hw) hcl
-    exact ⟨u, LinearPMap.mem_graph_restrictScalars.mp hu⟩
+    obtain ⟨u, hu, -⟩ := LinearPMap.exists_mem_graphₛₗ_norm_eq_of_mem_closure hS
+      (fun d hd => hA.domain_le_domain_sqrt hd) hnorm hcl
+    exact ⟨u, LinearPMap.mem_graphₛₗ_iff_mem_graph.mp hu⟩
 
 include hA in
 /-- **`dom |T| = dom T`**: for `A = T†T` with `T` closed, the domain of `A^{1/2}` is that of `T`;
 `‖A^{1/2} x‖ = ‖T x‖` there (`IsSelfAdjoint.norm_eq_of_mem_graph_sqrt`). -/
-lemma domain_sqrt_eq_domain (hT : T.IsClosed) : hA.sqrt.domain.restrictScalars ℝ = T.domain :=
-  le_antisymm (fun _ hx => LinearPMap.mem_domain_iff.mpr
+lemma domain_sqrt_eq_domain (hT : T.IsClosedₛₗ) : hA.sqrt.domain = T.domain :=
+  le_antisymm (fun _ hx => LinearPMap.mem_domain_iff_exists_mem_graphₛₗ.mpr
       ((hA.exists_mem_graph_sqrt_iff hAT hT).mp (LinearPMap.mem_domain_iff.mp hx)))
-    (hA.domain_le_domain_sqrt_of_restrictScalars_eq hAT)
+    (hA.domain_le_domain_sqrt_of_eq_adjointₛₗ_compNat hAT)
 
 include hA in
 /-- **`‖|T| x‖ = ‖T x‖`**: for `A = T†T` with `T` closed, `‖A^{1/2} x‖ = ‖T x‖` (on graph points). -/
-lemma norm_eq_of_mem_graph_sqrt (hT : T.IsClosed) {x u : E} {v : F}
-    (hu : (x, u) ∈ hA.sqrt.graph) (hv : (x, v) ∈ T.graph) : ‖u‖ = ‖v‖ := by
-  have hpos := hA.isPositive_of_restrictScalars_eq hAT
-  have hDT := domain_le_domain_of_restrictScalars_eq hAT
+lemma norm_eq_of_mem_graph_sqrt (hT : T.IsClosedₛₗ) {x u : E} {v : F}
+    (hu : (x, u) ∈ hA.sqrt.graph) (hv : (x, v) ∈ T.graphₛₗ) : ‖u‖ = ‖v‖ := by
+  have hDT := domain_le_domain_of_eq_adjointₛₗ_compNat hAT
   have hTd : Dense (T.domain : Set E) := hA.dense_domain.mono hDT
-  have hcl := (LinearPMap.hasCore_adjoint_compNat_self hT hTd).mem_closure hv
+  have hS : hA.sqrt.IsClosedₛₗ := LinearPMap.isClosedₛₗ_iff_isClosed.mpr hA.isSelfAdjoint_sqrt.isClosed
+  have hcl := LinearPMap.mem_closure_graphₛₗ_adjointₛₗ_compNat_self hT hTd hv
   rw [← hAT] at hcl
-  obtain ⟨u', hu', hnorm⟩ := LinearPMap.exists_mem_graph_norm_eq_of_mem_closure
-    (LinearPMap.isClosed_restrictScalars_iff.mpr hA.isSelfAdjoint_sqrt.isClosed)
+  obtain ⟨u', hu', hnorm⟩ := LinearPMap.exists_mem_graphₛₗ_norm_eq_of_mem_closure hS
     (fun d hd => hA.domain_le_domain_sqrt hd)
     (fun d hd u w hu hw => hA.norm_eq_of_mem_graph_sqrt_of_mem_domain hAT hd
-      (LinearPMap.mem_graph_restrictScalars.mp hu) hw) hcl
-  have huu : u' = u := sub_eq_zero.mp (hA.sqrt.graph_fst_eq_zero_snd
-    (hA.sqrt.graph.sub_mem (LinearPMap.mem_graph_restrictScalars.mp hu') hu) (sub_self x))
+      (LinearPMap.mem_graphₛₗ_iff_mem_graph.mp hu) hw) hcl
+  have huu : u' = u := hA.sqrt.mem_graph_snd_inj (LinearPMap.mem_graphₛₗ_iff_mem_graph.mp hu') hu rfl
   rwa [huu] at hnorm
 
 include hA in
 /-- **Form identity**: for `A = T†T` with `T` closed and `u ∈ dom T`, `∫ λ dμ_u(λ) = ‖T u‖²`; the
 inequality `≤` holds without closedness (`IsSelfAdjoint.lintegral_measure_pvm_le_norm_sq`). -/
-theorem lintegral_measure_pvm_eq_norm_sq (hT : T.IsClosed) {u : E} {u' : F}
-    (hu : (u, u') ∈ T.graph) :
+theorem lintegral_measure_pvm_eq_norm_sq (hT : T.IsClosedₛₗ) {u : E} {u' : F}
+    (hu : (u, u') ∈ T.graphₛₗ) :
     ∫⁻ s, ENNReal.ofReal s ∂(hA.pvm.measure u) = ENNReal.ofReal (‖u'‖ ^ 2) := by
-  have hpos := hA.isPositive_of_restrictScalars_eq hAT
+  have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAT
   have hsq : Measurable fun t : ℝ => (Real.sqrt t : ℂ) :=
     Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable
   obtain ⟨w, hw⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mpr ⟨u', hu⟩
@@ -412,34 +395,15 @@ lemma sqrt_mul_polarCutoff (n : ℕ) :
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F]
-  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {T : E →ₗ.[ℝ] F}
+  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {σ : ℂ →+* ℂ}
 
 /-- The partial isometry `x ↦ lim T (∫ 1_{λ > 1/(n+1)} λ^{-1/2} dE_A(λ)) x` of the polar
 decomposition of `T`, for `A = T†T`, as a function; `IsSelfAdjoint.polarIsometry` is the bounded
-real-linear operator. -/
-noncomputable def polarIsometryFun (T : E →ₗ.[ℝ] F) (x : E) : F :=
+semilinear operator. -/
+noncomputable def polarIsometryFun (T : E →ₛₗ.[σ] F) (x : E) : F :=
   limUnder atTop fun n : ℕ => Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) x)
 
-end IsSelfAdjoint
-
-namespace LinearPMap
-
-variable {R E F : Type*} [Ring R] [AddCommGroup E] [Module R E] [AddCommGroup F] [Module R F]
-
-/-- Extending a partially defined map by zero does not change it on its domain. -/
-lemma mem_graph_extend {T : E →ₗ.[R] F} {v : E} (hv : v ∈ T.domain) :
-    (v, Function.extend Subtype.val T 0 v) ∈ T.graph := by
-  have h := Subtype.val_injective.extend_apply T 0 ⟨v, hv⟩
-  rw [h]
-  exact T.mem_graph ⟨v, hv⟩
-
-end LinearPMap
-
-namespace IsSelfAdjoint
-
-variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
-  [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F]
-  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {T : E →ₗ.[ℝ] F}
+variable [RingHomInvPair σ σ] [RingHomIsometric σ] {T : E →ₛₗ.[σ] F}
 
 /-- `A^{1/2} (∫ 1_{λ > 1/(n+1)} λ^{-1/2} dE_A) x = E_A((1/(n+1), ∞)) x`. -/
 private lemma mem_graph_sqrt_integral_polarCutoff (n : ℕ) (x : E) :
@@ -459,16 +423,16 @@ private lemma mem_graph_sqrt_integral_polarCutoff (n : ℕ) (x : E) :
     hmem, sqrt_mul_polarCutoff, ← hA.pvm.integral_apply (measurable_one.indicator measurableSet_Ioi)
     ⟨1, hb⟩, hA.pvm.integral_indicator_one measurableSet_Ioi]
 
-variable (hAT : A.restrictScalars ℝ = T†.compNat T) (hT : T.IsClosed)
+variable (hAT : A = T.adjointₛₗ.compNat T) (hT : T.IsClosedₛₗ)
 include hAT hT
 
 /-- The approximants `T (∫ 1_{λ > 1/(n+1)} λ^{-1/2} dE_A) x` of the partial isometry. -/
 private lemma mem_graph_polarCutoff (n : ℕ) (x : E) :
     (hA.pvm.integral (polarCutoff n) x,
-      Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) x)) ∈ T.graph := by
+      Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) x)) ∈ T.graphₛₗ := by
   obtain ⟨v, hv⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mp
     ⟨_, hA.mem_graph_sqrt_integral_polarCutoff n x⟩
-  exact LinearPMap.mem_graph_extend (LinearPMap.mem_domain_of_mem_graph hv)
+  exact LinearPMap.mem_graphₛₗ_extend (LinearPMap.mem_domain_of_mem_graphₛₗ hv)
 
 /-- The approximants of the partial isometry converge. -/
 lemma tendsto_polarIsometryFun (x : E) :
@@ -481,7 +445,7 @@ lemma tendsto_polarIsometryFun (x : E) :
     exact (hA.norm_eq_of_mem_graph_sqrt hAT hT
       (hA.sqrt.graph.sub_mem (hA.mem_graph_sqrt_integral_polarCutoff m x)
         (hA.mem_graph_sqrt_integral_polarCutoff n x))
-      (T.graph.sub_mem (hA.mem_graph_polarCutoff hAT hT m x)
+      (T.graphₛₗ.sub_mem (hA.mem_graph_polarCutoff hAT hT m x)
         (hA.mem_graph_polarCutoff hAT hT n x))).symm
   have hcau : CauchySeq w := by
     rw [Metric.cauchySeq_iff]
@@ -502,16 +466,15 @@ lemma norm_polarIsometryFun (x : E) :
   simp_rw [h]
   exact (hA.tendsto_pvm_Ioi_inv x).norm
 
-/-- The value of `T` on the approximating vectors is additive and homogeneous. -/
+/-- The value of `T` on the approximating vectors is additive. -/
 private lemma extend_polarCutoff_add (n : ℕ) (x y : E) :
     Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) (x + y)) =
       Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) x) +
         Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) y) := by
-  have h := T.graph.add_mem (hA.mem_graph_polarCutoff hAT hT n x)
+  have h := T.graphₛₗ.add_mem (hA.mem_graph_polarCutoff hAT hT n x)
     (hA.mem_graph_polarCutoff hAT hT n y)
   rw [Prod.mk_add_mk, ← map_add] at h
-  exact sub_eq_zero.mp (T.graph_fst_eq_zero_snd
-    (T.graph.sub_mem (hA.mem_graph_polarCutoff hAT hT n (x + y)) h) (sub_self _))
+  exact LinearPMap.mem_graphₛₗ_snd_inj (hA.mem_graph_polarCutoff hAT hT n (x + y)) h
 
 /-- `U` is additive. -/
 lemma polarIsometryFun_add (x y : E) :
@@ -520,37 +483,22 @@ lemma polarIsometryFun_add (x y : E) :
   simp_rw [hA.extend_polarCutoff_add hAT hT]
   exact (hA.tendsto_polarIsometryFun hAT hT x).add (hA.tendsto_polarIsometryFun hAT hT y)
 
-/-- `U` is real-linear. -/
-lemma polarIsometryFun_smul (r : ℝ) (x : E) :
-    hA.polarIsometryFun T (r • x) = r • hA.polarIsometryFun T x := by
-  refine tendsto_nhds_unique (hA.tendsto_polarIsometryFun hAT hT (r • x)) ?_
-  have h : ∀ n : ℕ, Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) (r • x)) =
-      r • Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) x) := fun n => by
-    have h := T.graph.smul_mem r (hA.mem_graph_polarCutoff hAT hT n x)
-    rw [Prod.smul_mk, ← ContinuousLinearMap.map_smul_of_tower] at h
-    exact sub_eq_zero.mp (T.graph_fst_eq_zero_snd
-      (T.graph.sub_mem (hA.mem_graph_polarCutoff hAT hT n (r • x)) h) (sub_self _))
-  simp_rw [h]
-  exact (hA.tendsto_polarIsometryFun hAT hT x).const_smul r
-
-/-- `U` is `σ`-semilinear when `T` is: `U (c x) = σ c U x`. -/
-lemma polarIsometryFun_smul_of_isSemilinear {σ : ℂ →+* ℂ} (hσ : LinearPMap.IsSemilinear σ T)
-    (c : ℂ) (x : E) : hA.polarIsometryFun T (c • x) = σ c • hA.polarIsometryFun T x := by
+/-- `U` is `σ`-semilinear: `U (c x) = σ c U x`. -/
+lemma polarIsometryFun_smul (c : ℂ) (x : E) :
+    hA.polarIsometryFun T (c • x) = σ c • hA.polarIsometryFun T x := by
   refine tendsto_nhds_unique (hA.tendsto_polarIsometryFun hAT hT (c • x)) ?_
   have h : ∀ n : ℕ, Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) (c • x)) =
       σ c • Function.extend Subtype.val T 0 (hA.pvm.integral (polarCutoff n) x) := fun n => by
-    have h := hσ c _ _ (hA.mem_graph_polarCutoff hAT hT n x)
+    have h := LinearPMap.smul_mem_graphₛₗ c (hA.mem_graph_polarCutoff hAT hT n x)
     rw [← map_smul] at h
-    exact sub_eq_zero.mp (T.graph_fst_eq_zero_snd
-      (T.graph.sub_mem (hA.mem_graph_polarCutoff hAT hT n (c • x)) h) (sub_self _))
+    exact LinearPMap.mem_graphₛₗ_snd_inj (hA.mem_graph_polarCutoff hAT hT n (c • x)) h
   simp_rw [h]
   exact (hA.tendsto_polarIsometryFun hAT hT x).const_smul (σ c)
 
 /-- The **partial isometry** `U` of the polar decomposition `T = U |T|`, for `A = T†T` and `T`
-closed: a bounded real-linear operator, isometric on `E_A((0, ∞)) E` and zero on `ker T`
-(`IsSelfAdjoint.norm_polarIsometry_apply`), semilinear when `T` is
-(`IsSelfAdjoint.polarIsometry_smul_of_isSemilinear`). -/
-noncomputable def polarIsometry : E →L[ℝ] F :=
+closed: a bounded `σ`-semilinear operator, isometric on `E_A((0, ∞)) E` and zero on `ker T`
+(`IsSelfAdjoint.norm_polarIsometry_apply`). -/
+noncomputable def polarIsometry : E →SL[σ] F :=
   LinearMap.mkContinuous
     { toFun := hA.polarIsometryFun T
       map_add' := hA.polarIsometryFun_add hAT hT
@@ -567,23 +515,6 @@ lemma polarIsometry_apply (x : E) : hA.polarIsometry hAT hT x = hA.polarIsometry
 lemma norm_polarIsometry_apply (x : E) :
     ‖hA.polarIsometry hAT hT x‖ = ‖hA.pvm (Ioi 0) x‖ :=
   hA.norm_polarIsometryFun hAT hT x
-
-/-- `U` is `σ`-semilinear when `T` is. -/
-lemma polarIsometry_smul_of_isSemilinear {σ : ℂ →+* ℂ} (hσ : LinearPMap.IsSemilinear σ T)
-    (c : ℂ) (x : E) : hA.polarIsometry hAT hT (c • x) = σ c • hA.polarIsometry hAT hT x :=
-  hA.polarIsometryFun_smul_of_isSemilinear hAT hT hσ c x
-
-/-- The partial isometry `U` of the polar decomposition of a `σ`-semilinear `T`, as a bounded
-`σ`-semilinear operator. -/
-noncomputable def polarIsometrySL {σ : ℂ →+* ℂ} (hσ : LinearPMap.IsSemilinear σ T) : E →SL[σ] F where
-  toFun := hA.polarIsometry hAT hT
-  map_add' := map_add _
-  map_smul' := hA.polarIsometry_smul_of_isSemilinear hAT hT hσ
-  cont := (hA.polarIsometry hAT hT).continuous
-
-/-- The semilinear `U` is the partial isometry of the polar decomposition. -/
-lemma polarIsometrySL_apply {σ : ℂ →+* ℂ} (hσ : LinearPMap.IsSemilinear σ T) (x : E) :
-    hA.polarIsometrySL hAT hT hσ x = hA.polarIsometry hAT hT x := rfl
 
 /-! ### The polar decomposition -/
 
@@ -655,21 +586,21 @@ private lemma integral_polarCutoff_apply_of_mem_graph_sqrt {y u : E} (hu : (y, u
 
 /-- **Polar decomposition**, pointwise: `U (|T| y) = T y`. -/
 private lemma polarIsometry_apply_of_mem_graph {y u : E} {v : F} (hu : (y, u) ∈ hA.sqrt.graph)
-    (hv : (y, v) ∈ T.graph) : hA.polarIsometry hAT hT u = v := by
+    (hv : (y, v) ∈ T.graphₛₗ) : hA.polarIsometry hAT hT u = v := by
   refine tendsto_nhds_unique (hA.tendsto_polarIsometryFun hAT hT u) ?_
   simp_rw [hA.integral_polarCutoff_apply_of_mem_graph_sqrt hu]
   -- `E_A(s_n) y ∈ dom T`, with `T E_A(s_n) y → T y`
   have hmem : ∀ n : ℕ, (hA.pvm (Ioi ((n : ℝ) + 1)⁻¹) y,
-      Function.extend Subtype.val T 0 (hA.pvm (Ioi ((n : ℝ) + 1)⁻¹) y)) ∈ T.graph := fun n => by
+      Function.extend Subtype.val T 0 (hA.pvm (Ioi ((n : ℝ) + 1)⁻¹) y)) ∈ T.graphₛₗ := fun n => by
     obtain ⟨w, hw⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mp
       ⟨_, hA.mem_graph_sqrt_apply hu measurableSet_Ioi⟩
-    exact LinearPMap.mem_graph_extend (LinearPMap.mem_domain_of_mem_graph hw)
+    exact LinearPMap.mem_graphₛₗ_extend (LinearPMap.mem_domain_of_mem_graphₛₗ hw)
   rw [tendsto_iff_norm_sub_tendsto_zero]
   have hnorm : ∀ n : ℕ, ‖Function.extend Subtype.val T 0 (hA.pvm (Ioi ((n : ℝ) + 1)⁻¹) y) - v‖ =
       ‖hA.pvm (Ioi ((n : ℝ) + 1)⁻¹) u - u‖ := fun n =>
     (hA.norm_eq_of_mem_graph_sqrt hAT hT
       (hA.sqrt.graph.sub_mem (hA.mem_graph_sqrt_apply hu measurableSet_Ioi) hu)
-      (T.graph.sub_mem (hmem n) hv)).symm
+      (T.graphₛₗ.sub_mem (hmem n) hv)).symm
   simp_rw [hnorm]
   have h := (hA.tendsto_pvm_Ioi_inv u).sub (tendsto_const_nhds (x := u))
   have hu0 : hA.pvm (Ioi 0) u = u := by
@@ -686,57 +617,48 @@ private lemma polarIsometry_apply_of_mem_graph {y u : E} {v : F} (hu : (y, u) �
 /-- **Polar decomposition** `T = U |T|`: for `A = T†T` with `T` closed, `T` is the composite of
 `|T| = A^{1/2}` with the partial isometry `U`. -/
 theorem eq_polarIsometry_compPMap :
-    T = (hA.polarIsometry hAT hT : E →ₗ[ℝ] F).compPMap (hA.sqrt.restrictScalars ℝ) := by
+    T = (hA.polarIsometry hAT hT : E →ₛₗ[σ] F).compPMap hA.sqrt := by
   refine LinearPMap.ext ?_ fun y hy hy' => ?_
   · ext y
     change y ∈ T.domain ↔ y ∈ hA.sqrt.domain
-    constructor
-    · intro hy
-      obtain ⟨u, hu⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mpr ⟨_, T.mem_graph ⟨y, hy⟩⟩
-      exact LinearPMap.mem_domain_of_mem_graph hu
-    · intro hy
-      obtain ⟨v, hv⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mp ⟨_, hA.sqrt.mem_graph ⟨y, hy⟩⟩
-      exact LinearPMap.mem_domain_of_mem_graph hv
+    rw [hA.domain_sqrt_eq_domain hAT hT]
   · change T ⟨y, hy⟩ = hA.polarIsometry hAT hT (hA.sqrt ⟨y, hy'⟩)
     exact (hA.polarIsometry_apply_of_mem_graph hAT hT (hA.sqrt.mem_graph ⟨y, hy'⟩)
-      (T.mem_graph ⟨y, hy⟩)).symm
+      (T.mem_graphₛₗ ⟨y, hy⟩)).symm
 
 omit hT [CompleteSpace F] in
 /-- **Uniqueness of the positive part of the polar decomposition**: if `T = V B` with `B` positive
-self-adjoint and `V` a real-linear map isometric on the range of `B`, then `B = |T| = (T†T)^{1/2}`.
--/
+self-adjoint and `V` a bounded `σ`-semilinear map isometric on the range of `B`, then
+`B = |T| = (T†T)^{1/2}`. -/
 theorem eq_sqrt_of_eq_compPMap {B : E →ₗ.[ℂ] E} (hB : IsSelfAdjoint B) (hBpos : B.IsPositive)
-    (V : E →L[ℝ] F) (hV : ∀ y ∈ LinearMap.range B.toFun, ‖V y‖ = ‖y‖)
-    (hTVB : T = (V : E →ₗ[ℝ] F).compPMap (B.restrictScalars ℝ)) : B = hA.sqrt := by
+    (V : E →SL[σ] F) (hV : ∀ y ∈ LinearMap.range B.toFun, ‖V y‖ = ‖y‖)
+    (hTVB : T = (V : E →ₛₗ[σ] F).compPMap B) : B = hA.sqrt := by
   -- the inner products below are taken at graph points
   replace hV : ∀ x y, (x, y) ∈ B.graph → ‖V y‖ = ‖y‖ := fun x y h =>
     hV y (LinearPMap.mem_range_iff.mpr ⟨x, h⟩)
   have hTd : Dense (T.domain : Set E) :=
-    hA.dense_domain.mono (domain_le_domain_of_restrictScalars_eq hAT)
+    hA.dense_domain.mono (domain_le_domain_of_eq_adjointₛₗ_compNat hAT)
   -- the graph of `T = V B`
-  have hgraph : ∀ a b, (a, b) ∈ T.graph ↔ ∃ c, (a, c) ∈ B.graph ∧ V c = b := fun a b => by
-    rw [hTVB, LinearPMap.mem_graph_iff]
-    constructor
-    · rintro ⟨⟨a', ha'⟩, rfl, rfl⟩
-      exact ⟨B ⟨a', ha'⟩, B.mem_graph ⟨a', ha'⟩, rfl⟩
-    · rintro ⟨c, hac, rfl⟩
-      obtain ⟨⟨a', ha'⟩, rfl, rfl⟩ := (LinearPMap.mem_graph_iff B).mp hac
-      exact ⟨⟨a', ha'⟩, rfl, rfl⟩
+  have hgraph : ∀ a b, (a, b) ∈ T.graphₛₗ ↔ ∃ c, (a, c) ∈ B.graph ∧ V c = b := fun a b => by
+    rw [hTVB, LinearPMap.mem_graphₛₗ_compPMap]
+    simp only [LinearPMap.mem_graphₛₗ_iff_mem_graph]
+    rfl
   -- `B B ⊆ T†T = A`
   have hle : B.compNat B ≤ A := by
     refine LinearPMap.le_of_le_graph fun ⟨x, z⟩ hxz => ?_
     obtain ⟨w, hxw, hwz⟩ := LinearPMap.mem_graph_compNat.mp hxz
-    rw [← LinearPMap.mem_graph_restrictScalars (R := ℝ), hAT, LinearPMap.mem_graph_compNat]
+    rw [← LinearPMap.mem_graphₛₗ_iff_mem_graph, hAT, LinearPMap.mem_graphₛₗ_compNat]
     refine ⟨V w, (hgraph x (V w)).mpr ⟨w, hxw, rfl⟩, ?_⟩
-    rw [LinearPMap.adjoint_graph_eq_graph_adjoint hTd, Submodule.mem_adjoint_iff]
+    rw [LinearPMap.mem_graphₛₗ_adjointₛₗ_iff_re hTd]
     intro a b hab
     obtain ⟨c, hac, rfl⟩ := (hgraph a b).mp hab
-    have h := hB.isFormalAdjoint.inner_eq_of_mem_graph hac hwz
-    have hVi : inner ℝ (V c) (V w) = inner ℝ c w := by
-      rw [real_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two,
-        real_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two, ← map_add,
-        hV _ _ (B.graph.add_mem hac hxw), hV _ _ hac, hV _ _ hxw]
-    rw [hVi, inner_real_eq_re_inner, inner_real_eq_re_inner, h, sub_self]
+    have h := hB.isFormalAdjoint.inner_eq_of_mem_graph hwz hac
+    have hVi : (⟪V w, V c⟫_ℂ).re = (⟪w, c⟫_ℂ).re := by
+      simp only [← RCLike.re_to_complex]
+      rw [re_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two (𝕜 := ℂ),
+        re_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two (𝕜 := ℂ),
+        ← map_add, hV _ _ (B.graph.add_mem hxw hac), hV _ _ hxw, hV _ _ hac]
+    rw [hVi, h]
   -- `B B` is self-adjoint
   have hsa : IsSelfAdjoint (B.compNat B) := by
     have hid : Measurable fun t : ℝ => (t : ℂ) := Complex.measurable_ofReal
@@ -772,12 +694,12 @@ private lemma mem_graph_sqrt_pvm_Iic_apply_zero (x : E) : (hA.pvm (Iic 0) x, 0) 
     zero_smul, zero_apply]
 
 /-- **Uniqueness of the polar decomposition**: if `T = V B` with `B` positive self-adjoint and `V` a
-real-linear map isometric on the range of `B` and vanishing on `ker B`, then `B = |T|`
+bounded `σ`-semilinear map isometric on the range of `B` and vanishing on `ker B`, then `B = |T|`
 (`IsSelfAdjoint.eq_sqrt_of_eq_compPMap`) and `V = U` is the partial isometry. -/
 theorem eq_polarIsometry_of_eq_compPMap {B : E →ₗ.[ℂ] E} (hB : IsSelfAdjoint B)
-    (hBpos : B.IsPositive) (V : E →L[ℝ] F) (hV : ∀ y ∈ LinearMap.range B.toFun, ‖V y‖ = ‖y‖)
-    (hVker : B.ker.restrictScalars ℝ ≤ LinearMap.ker (V : E →ₗ[ℝ] F))
-    (hTVB : T = (V : E →ₗ[ℝ] F).compPMap (B.restrictScalars ℝ)) :
+    (hBpos : B.IsPositive) (V : E →SL[σ] F) (hV : ∀ y ∈ LinearMap.range B.toFun, ‖V y‖ = ‖y‖)
+    (hVker : B.ker ≤ LinearMap.ker (V : E →ₛₗ[σ] F))
+    (hTVB : T = (V : E →ₛₗ[σ] F).compPMap B) :
     V = hA.polarIsometry hAT hT := by
   obtain rfl := hA.eq_sqrt_of_eq_compPMap hAT hB hBpos V hV hTVB
   set U := hA.polarIsometry hAT hT
@@ -786,9 +708,9 @@ theorem eq_polarIsometry_of_eq_compPMap {B : E →ₗ.[ℂ] E} (hB : IsSelfAdjoi
   have hIoi : ∀ x, V (P (Ioi 0) x) = U (P (Ioi 0) x) := fun x => by
     have hn : ∀ n : ℕ, V (P (Ioi ((n : ℝ) + 1)⁻¹) x) = U (P (Ioi ((n : ℝ) + 1)⁻¹) x) := fun n => by
       have hu := hA.mem_graph_sqrt_integral_polarCutoff n x
-      have hv : (P.integral (polarCutoff n) x, V (P (Ioi ((n : ℝ) + 1)⁻¹) x)) ∈ T.graph := by
-        rw [hTVB, LinearPMap.mem_graph_compPMap]
-        exact ⟨_, LinearPMap.mem_graph_restrictScalars.mpr hu, rfl⟩
+      have hv : (P.integral (polarCutoff n) x, V (P (Ioi ((n : ℝ) + 1)⁻¹) x)) ∈ T.graphₛₗ := by
+        rw [hTVB, LinearPMap.mem_graphₛₗ_compPMap]
+        exact ⟨_, LinearPMap.mem_graphₛₗ_iff_mem_graph.mpr hu, rfl⟩
       exact (hA.polarIsometry_apply_of_mem_graph hAT hT hu hv).symm
     exact tendsto_nhds_unique ((V.continuous.tendsto _).comp (hA.tendsto_pvm_Ioi_inv x))
       (((U.continuous.tendsto _).comp (hA.tendsto_pvm_Ioi_inv x)).congr fun n => (hn n).symm)
@@ -834,10 +756,10 @@ lemma pvm_Ioi_compPMap_sqrt :
 
 /-- **`ker T ⊆ ker E_A((0, ∞))`**: the kernel of `T` lies in `E_A((-∞, 0]) E`. -/
 lemma ker_le_ker_pvm_Ioi :
-    T.ker ≤ (LinearMap.ker ((hA.pvm (Ioi 0) : E →L[ℂ] E) : E →ₗ[ℂ] E)).restrictScalars ℝ := by
+    T.ker ≤ LinearMap.ker ((hA.pvm (Ioi 0) : E →L[ℂ] E) : E →ₗ[ℂ] E) := by
   intro k hk
   -- the spectral cutoffs are evaluated at the single vector `k`
-  replace hk := LinearPMap.mem_graph_zero_iff_mem_ker.mpr hk
+  replace hk := LinearPMap.mem_graphₛₗ_zero_iff_mem_ker.mpr hk
   change hA.pvm (Ioi 0) k = 0
   obtain ⟨u, hu⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mpr ⟨0, hk⟩
   have hu0 : u = 0 := norm_eq_zero.mp ((hA.norm_eq_of_mem_graph_sqrt hAT hT hu hk).trans norm_zero)
@@ -858,7 +780,7 @@ lemma ker_le_ker_pvm_Ioi :
 /-- **`(ker T)ᗮ ⊆ E_A((0, ∞)) E`**: vectors orthogonal to the kernel of `T` lie in `E_A((0, ∞)) E`. -/
 lemma pvm_Ioi_apply_eq_self {z : E} (hz : z ∈ T.kerᗮ) : hA.pvm (Ioi 0) z = z := by
   set k := hA.pvm (Iic 0) z
-  have hk : (k, 0) ∈ T.graph := by
+  have hk : (k, 0) ∈ T.graphₛₗ := by
     obtain ⟨v, hv⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mp
       ⟨0, hA.mem_graph_sqrt_pvm_Iic_apply_zero z⟩
     have hv0 : v = 0 := norm_eq_zero.mp
@@ -867,12 +789,12 @@ lemma pvm_Ioi_apply_eq_self {z : E} (hz : z ∈ T.kerᗮ) : hA.pvm (Ioi 0) z = z
     rwa [hv0] at hv
   have h₀ : k = 0 := by
     have h := Submodule.inner_right_of_mem_orthogonal
-      (LinearPMap.mem_graph_zero_iff_mem_ker.mp hk) hz
+      (LinearPMap.mem_graphₛₗ_zero_iff_mem_ker.mp hk) hz
     have hkk : ⟪k, k⟫_ℂ = ⟪k, z⟫_ℂ := by
       simp only [k]
       rw [← hA.pvm.inner_apply_left, hA.pvm.apply_apply_self measurableSet_Iic]
-    rw [inner_real_eq_re_inner, ← hkk] at h
-    exact inner_self_eq_zero.mp (Complex.ext h (by simpa using inner_self_im (𝕜 := ℂ) k))
+    rw [← hkk] at h
+    exact inner_self_eq_zero.mp h
   have h := hA.pvm.apply_union (Set.Iic_disjoint_Ioi (le_refl (0 : ℝ))) measurableSet_Iic
     measurableSet_Ioi
   rw [Iic_union_Ioi, ProjectionValuedMeasure.apply_univ] at h
@@ -888,58 +810,74 @@ lemma polarIsometry_pvm_Ioi_apply (x : E) :
   rw [← sub_eq_zero, ← map_sub, ← norm_eq_zero, hA.norm_polarIsometry_apply hAT hT, map_sub,
     hA.pvm.apply_apply_self measurableSet_Ioi, sub_self, norm_zero]
 
-/-- `⟪U x, U y⟫ = ⟪E_A((0, ∞)) x, E_A((0, ∞)) y⟫` (real inner products): `U` is isometric on
-`E_A((0, ∞)) E`. -/
-lemma inner_polarIsometry_apply (x y : E) :
-    inner ℝ (hA.polarIsometry hAT hT x) (hA.polarIsometry hAT hT y) =
-      inner ℝ (hA.pvm (Ioi 0) x) (hA.pvm (Ioi 0) y) := by
-  rw [real_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two,
-    real_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two,
+/-- `re ⟪U x, U y⟫ = re ⟪E_A((0, ∞)) x, E_A((0, ∞)) y⟫`: `U` is isometric on `E_A((0, ∞)) E`. -/
+private lemma re_inner_polarIsometry_apply (x y : E) :
+    (⟪hA.polarIsometry hAT hT x, hA.polarIsometry hAT hT y⟫_ℂ).re =
+      (⟪hA.pvm (Ioi 0) x, hA.pvm (Ioi 0) y⟫_ℂ).re := by
+  simp only [← RCLike.re_to_complex]
+  rw [re_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two,
+    re_inner_eq_norm_add_mul_self_sub_norm_mul_self_sub_norm_mul_self_div_two,
     ← map_add (hA.polarIsometry hAT hT), ← map_add (hA.pvm (Ioi 0)),
     hA.norm_polarIsometry_apply hAT hT, hA.norm_polarIsometry_apply hAT hT,
     hA.norm_polarIsometry_apply hAT hT]
 
-/-- `U† U = E_A((0, ∞))`, for the real adjoint `U†` of the partial isometry. -/
-lemma adjoint_polarIsometry_apply_polarIsometry (x : E) :
-    ((hA.polarIsometry hAT hT)†) (hA.polarIsometry hAT hT x) =
-      hA.pvm (Ioi 0) x := by
-  refine ext_inner_right ℝ fun y => ?_
-  rw [ContinuousLinearMap.adjoint_inner_left, hA.inner_polarIsometry_apply hAT hT,
-    inner_real_eq_re_inner, inner_real_eq_re_inner, ← hA.pvm.inner_apply_left,
-    hA.pvm.apply_apply_self measurableSet_Ioi]
+/-- `U† U = E_A((0, ∞))`, for the adjoint `U†` of the partial isometry. -/
+lemma adjointₛₗ_polarIsometry_apply_polarIsometry (x : E) :
+    (hA.polarIsometry hAT hT).adjointₛₗ (hA.polarIsometry hAT hT x) = hA.pvm (Ioi 0) x := by
+  rw [← sub_eq_zero, ← inner_self_eq_zero (𝕜 := ℂ), ← inner_self_ofReal_re, RCLike.ofReal_eq_zero,
+    RCLike.re_to_complex]
+  -- `re ⟪U† U x, y⟫ = re ⟪U x, U y⟫ = re ⟪E x, E y⟫ = re ⟪E x, y⟫` for every `y`
+  have hre : ∀ z : ℂ, (σ z).re = z.re := fun z => by
+    rcases RingHom.eq_id_or_conj_of_isometric σ with rfl | rfl
+    · rfl
+    · exact conj_re z
+  have h : ∀ y, (⟪(hA.polarIsometry hAT hT).adjointₛₗ (hA.polarIsometry hAT hT x), y⟫_ℂ).re =
+      (⟪hA.pvm (Ioi 0) x, y⟫_ℂ).re := fun y => by
+    rw [ContinuousLinearMap.adjointₛₗ_inner_left, hre, hA.re_inner_polarIsometry_apply hAT hT,
+      ← hA.pvm.inner_apply_left, hA.pvm.apply_apply_self measurableSet_Ioi]
+  rw [inner_sub_left, sub_re, h, sub_self]
+
+/-- `⟪U x, U y⟫ = σ ⟪E_A((0, ∞)) x, E_A((0, ∞)) y⟫`: `U` is isometric on `E_A((0, ∞)) E`. -/
+lemma inner_polarIsometry_apply (x y : E) :
+    ⟪hA.polarIsometry hAT hT x, hA.polarIsometry hAT hT y⟫_ℂ =
+      σ ⟪hA.pvm (Ioi 0) x, hA.pvm (Ioi 0) y⟫_ℂ := by
+  rw [← hA.pvm.inner_apply_left, hA.pvm.apply_apply_self measurableSet_Ioi,
+    ← hA.adjointₛₗ_polarIsometry_apply_polarIsometry hAT hT, ContinuousLinearMap.adjointₛₗ_inner_left,
+    RingHomInvPair.comp_apply_eq₂]
 
 /-- `U†` vanishes on the orthogonal complement of the range of `U`. -/
-lemma adjoint_polarIsometry_apply_eq_zero {y : F}
-    (hy : ∀ x, inner ℝ y (hA.polarIsometry hAT hT x) = 0) :
-    ((hA.polarIsometry hAT hT)†) y = 0 :=
-  ext_inner_right ℝ fun x => by rw [ContinuousLinearMap.adjoint_inner_left, hy, inner_zero_left]
+lemma adjointₛₗ_polarIsometry_apply_eq_zero {y : F}
+    (hy : ∀ x, ⟪y, hA.polarIsometry hAT hT x⟫_ℂ = 0) :
+    (hA.polarIsometry hAT hT).adjointₛₗ y = 0 :=
+  ContinuousLinearMap.adjointₛₗ_apply_eq _ fun x => by rw [hy, map_zero, inner_zero_left]
 
 /-- The range of the partial isometry is closed. -/
 lemma isClosed_range_polarIsometry : IsClosed (range (hA.polarIsometry hAT hT)) := by
   set U := hA.polarIsometry hAT hT
-  have h : range U = {y | U ((U†) y) = y} := by
+  have h : range U = {y | U (U.adjointₛₗ y) = y} := by
     ext y
     constructor
     · rintro ⟨x, rfl⟩
-      change U ((U†) (U x)) = U x
-      rw [hA.adjoint_polarIsometry_apply_polarIsometry hAT hT, hA.polarIsometry_pvm_Ioi_apply hAT hT]
+      change U (U.adjointₛₗ (U x)) = U x
+      rw [hA.adjointₛₗ_polarIsometry_apply_polarIsometry hAT hT,
+        hA.polarIsometry_pvm_Ioi_apply hAT hT]
     · intro hy
       exact ⟨_, hy⟩
   rw [h]
-  exact isClosed_eq (U.continuous.comp (U†).continuous) continuous_id
+  exact isClosed_eq (U.continuous.comp U.adjointₛₗ.continuous) continuous_id
 
 /-- The partial isometry takes values in the closure of the range of `T`. -/
 lemma polarIsometry_apply_mem_closure_range (x : E) :
     hA.polarIsometry hAT hT x ∈ closure (range T) :=
   mem_closure_of_tendsto (hA.tendsto_polarIsometryFun hAT hT x) (Eventually.of_forall fun n => by
-    obtain ⟨p, -, hp⟩ := (LinearPMap.mem_graph_iff T).mp (hA.mem_graph_polarCutoff hAT hT n x)
+    obtain ⟨p, -, hp⟩ := hA.mem_graph_polarCutoff hAT hT n x
     exact ⟨p, hp⟩)
 
 /-- The range of `T` lies in that of the partial isometry: `T x = U |T| x`. -/
 lemma range_subset_range_polarIsometry : range T ⊆ range (hA.polarIsometry hAT hT) := by
   rintro _ ⟨x, rfl⟩
-  obtain ⟨u, hu⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mpr ⟨_, T.mem_graph x⟩
-  exact ⟨u, hA.polarIsometry_apply_of_mem_graph hAT hT hu (T.mem_graph x)⟩
+  obtain ⟨u, hu⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mpr ⟨_, T.mem_graphₛₗ x⟩
+  exact ⟨u, hA.polarIsometry_apply_of_mem_graph hAT hT hu (T.mem_graphₛₗ x)⟩
 
 /-- The partial isometry is a contraction: `‖U‖ ≤ 1`. -/
 lemma norm_polarIsometry_le : ‖hA.polarIsometry hAT hT‖ ≤ 1 :=
@@ -947,65 +885,31 @@ lemma norm_polarIsometry_le : ‖hA.polarIsometry hAT hT‖ ≤ 1 :=
     rw [one_mul, hA.norm_polarIsometry_apply hAT hT]
     exact hA.pvm.norm_apply_le _ x
 
-/-- **`|T| = U† T`**: the real adjoint `U†` inverts `U` on the range of `|T|`
-(`IsSelfAdjoint.adjoint_polarIsometry_apply_polarIsometry`, `IsSelfAdjoint.pvm_Ioi_compPMap_sqrt`),
+/-- The adjoint of the partial isometry is a contraction: `‖U†‖ ≤ 1`. -/
+lemma norm_adjointₛₗ_polarIsometry_le : ‖(hA.polarIsometry hAT hT).adjointₛₗ‖ ≤ 1 :=
+  (ContinuousLinearMap.norm_adjointₛₗ_le _).trans (hA.norm_polarIsometry_le hAT hT)
+
+/-- **`|T| = U† T`**: the adjoint `U†` inverts `U` on the range of `|T|`
+(`IsSelfAdjoint.adjointₛₗ_polarIsometry_apply_polarIsometry`, `IsSelfAdjoint.pvm_Ioi_compPMap_sqrt`),
 so `U† T = U† U |T| = E_A((0, ∞)) |T| = |T|`. -/
-lemma adjoint_polarIsometry_compPMap :
-    (((hA.polarIsometry hAT hT)† : F →L[ℝ] E) : F →ₗ[ℝ] E).compPMap T =
-      hA.sqrt.restrictScalars ℝ := by
+lemma adjointₛₗ_polarIsometry_compPMap :
+    ((hA.polarIsometry hAT hT).adjointₛₗ : F →ₛₗ[σ] E).compPMap T = hA.sqrt := by
   set U := hA.polarIsometry hAT hT
-  have hUU : ((U† : F →L[ℝ] E) : F →ₗ[ℝ] E) ∘ₗ (U : E →ₗ[ℝ] F) =
-      ((hA.pvm (Ioi 0) : E →L[ℂ] E) : E →ₗ[ℂ] E).restrictScalars ℝ :=
-    LinearMap.ext (hA.adjoint_polarIsometry_apply_polarIsometry hAT hT)
-  calc ((U† : F →L[ℝ] E) : F →ₗ[ℝ] E).compPMap T
-      = ((U† : F →L[ℝ] E) : F →ₗ[ℝ] E).compPMap
-          ((U : E →ₗ[ℝ] F).compPMap (hA.sqrt.restrictScalars ℝ)) :=
-        congrArg (fun S => ((U† : F →L[ℝ] E) : F →ₗ[ℝ] E).compPMap S)
+  have hUU : (U.adjointₛₗ : F →ₛₗ[σ] E).comp (U : E →ₛₗ[σ] F) =
+      ((hA.pvm (Ioi 0) : E →L[ℂ] E) : E →ₗ[ℂ] E) :=
+    LinearMap.ext (hA.adjointₛₗ_polarIsometry_apply_polarIsometry hAT hT)
+  calc (U.adjointₛₗ : F →ₛₗ[σ] E).compPMap T
+      = (U.adjointₛₗ : F →ₛₗ[σ] E).compPMap ((U : E →ₛₗ[σ] F).compPMap hA.sqrt) :=
+        congrArg (fun S => (U.adjointₛₗ : F →ₛₗ[σ] E).compPMap S)
           (hA.eq_polarIsometry_compPMap hAT hT)
-    _ = hA.sqrt.restrictScalars ℝ := by
-        rw [← LinearPMap.compPMap_comp, hUU, ← LinearPMap.restrictScalars_compPMap,
-          hA.pvm_Ioi_compPMap_sqrt]
+    _ = hA.sqrt := by
+        rw [← LinearPMap.compPMap_comp, hUU, hA.pvm_Ioi_compPMap_sqrt]
 
 /-- `T ⊇ U |T|`, pointwise. -/
 private lemma mem_graph_polarIsometry_apply {x u : E} (hu : (x, u) ∈ hA.sqrt.graph) :
-    (x, hA.polarIsometry hAT hT u) ∈ T.graph :=
-  LinearPMap.le_graph_of_le (hA.eq_polarIsometry_compPMap hAT hT).ge
-    (LinearPMap.mem_graph_compPMap.mpr ⟨u, LinearPMap.mem_graph_restrictScalars.mpr hu, rfl⟩)
-
-/-- The semilinear partial isometry is a contraction. -/
-lemma norm_polarIsometrySL_le {σ : ℂ →+* ℂ} (hσ : LinearPMap.IsSemilinear σ T) :
-    ‖hA.polarIsometrySL hAT hT hσ‖ ≤ 1 :=
-  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x =>
-    ((hA.polarIsometry hAT hT).le_opNorm x).trans
-      (mul_le_mul_of_nonneg_right (hA.norm_polarIsometry_le hAT hT) (norm_nonneg x))
-
-/-- The real adjoint `U†` of the partial isometry of a `σ`-semilinear `T`, as a bounded
-`σ'`-semilinear operator (`ContinuousLinearMap.adjoint_map_smul_of_map_smul`). -/
-noncomputable def adjointPolarIsometrySL {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ']
-    (hσ : LinearPMap.IsSemilinear σ T) : F →SL[σ'] E where
-  toFun := (hA.polarIsometry hAT hT)†
-  map_add' := map_add _
-  map_smul' := ContinuousLinearMap.adjoint_map_smul_of_map_smul _
-    (hA.polarIsometry_smul_of_isSemilinear hAT hT hσ)
-  cont := (ContinuousLinearMap.adjoint _).continuous
-
-/-- The semilinear `U†` is the real adjoint of the partial isometry. -/
-lemma adjointPolarIsometrySL_apply {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ']
-    (hσ : LinearPMap.IsSemilinear σ T) (y : F) :
-    hA.adjointPolarIsometrySL hAT hT hσ y =
-      ((hA.polarIsometry hAT hT)†) y := rfl
-
-/-- The semilinear `U†` is a contraction. -/
-lemma norm_adjointPolarIsometrySL_le {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ']
-    (hσ : LinearPMap.IsSemilinear σ T) : ‖hA.adjointPolarIsometrySL hAT hT hσ‖ ≤ 1 :=
-  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun y => by
-    rw [one_mul, adjointPolarIsometrySL_apply]
-    calc ‖((hA.polarIsometry hAT hT)†) y‖
-        ≤ ‖(hA.polarIsometry hAT hT)†‖ * ‖y‖ := ContinuousLinearMap.le_opNorm _ _
-      _ ≤ 1 * ‖y‖ := by
-          rw [LinearIsometryEquiv.norm_map]
-          exact mul_le_mul_of_nonneg_right (hA.norm_polarIsometry_le hAT hT) (norm_nonneg _)
-      _ = ‖y‖ := one_mul _
+    (x, hA.polarIsometry hAT hT u) ∈ T.graphₛₗ :=
+  LinearPMap.le_graphₛₗ_of_le (hA.eq_polarIsometry_compPMap hAT hT).ge
+    (LinearPMap.mem_graphₛₗ_compPMap.mpr ⟨u, LinearPMap.mem_graphₛₗ_iff_mem_graph.mpr hu, rfl⟩)
 
 end IsSelfAdjoint
 
@@ -1015,22 +919,22 @@ namespace IsSelfAdjoint
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F]
-  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {T : E →ₗ.[ℝ] F}
-  (hAT : A.restrictScalars ℝ = T†.compNat T) (hT : T.IsClosed) (hTk : T.ker = ⊥)
+  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {σ : ℂ →+* ℂ} [RingHomInvPair σ σ] [RingHomIsometric σ]
+  {T : E →ₛₗ.[σ] F} (hAT : A = T.adjointₛₗ.compNat T) (hT : T.IsClosedₛₗ) (hTk : T.ker = ⊥)
 
 omit [CompleteSpace F] in
 include hA hAT in
 /-- **`ker T†T = ker T`**: for `A = T†T`, the kernel of `A` is that of `T`. -/
-lemma ker_restrictScalars_eq_of_restrictScalars_eq : A.ker.restrictScalars ℝ = T.ker := by
-  rw [← LinearPMap.restrictScalars_ker, hAT, LinearPMap.ker_adjoint_compNat_self
-    (hA.dense_domain.mono (domain_le_domain_of_restrictScalars_eq hAT))]
+lemma ker_eq_of_eq_adjointₛₗ_compNat : A.ker = T.ker := by
+  rw [hAT, LinearPMap.ker_adjointₛₗ_compNat_self
+    (hA.dense_domain.mono (domain_le_domain_of_eq_adjointₛₗ_compNat hAT))]
 
 omit [CompleteSpace F] in
 include hA hAT in
 /-- For `A = T†T`, `A` is injective iff `T` is
-(`IsSelfAdjoint.ker_restrictScalars_eq_of_restrictScalars_eq`). -/
-lemma ker_eq_bot_iff_of_restrictScalars_eq : A.ker = ⊥ ↔ T.ker = ⊥ := by
-  rw [← Submodule.restrictScalars_eq_bot_iff ℝ, hA.ker_restrictScalars_eq_of_restrictScalars_eq hAT]
+(`IsSelfAdjoint.ker_eq_of_eq_adjointₛₗ_compNat`). -/
+lemma ker_eq_bot_iff_of_eq_adjointₛₗ_compNat : A.ker = ⊥ ↔ T.ker = ⊥ := by
+  rw [hA.ker_eq_of_eq_adjointₛₗ_compNat hAT]
 
 include hAT hTk
 
@@ -1039,8 +943,8 @@ include hA in
 /-- For an injective `T`, `A = T†T` is positive and injective, so `E_A((0, ∞)) = 1`
 (`IsSelfAdjoint.pvm_Ioi_eq_one`). -/
 lemma pvm_Ioi_eq_one_of_ker_eq_bot : hA.pvm (Ioi 0) = 1 :=
-  hA.pvm_Ioi_eq_one (hA.isPositive_of_restrictScalars_eq hAT)
-    ((hA.ker_eq_bot_iff_of_restrictScalars_eq hAT).mpr hTk)
+  hA.pvm_Ioi_eq_one (hA.isPositive_of_eq_adjointₛₗ_compNat hAT)
+    ((hA.ker_eq_bot_iff_of_eq_adjointₛₗ_compNat hAT).mpr hTk)
 
 include hA hT in
 /-- For an injective `T`, the partial isometry of `T = U |T|` is an isometry. -/
@@ -1051,39 +955,25 @@ lemma norm_polarIsometry_of_ker_eq_bot (x : E) : ‖hA.polarIsometry hAT hT x‖
 variable (hTr : Dense (range T))
 include hTr
 
+omit hTk in
 include hA hT in
-/-- For an injective `T` with dense range, the partial isometry of `T = U |T|` is surjective: its
-range is closed and contains the range of `T`. -/
+/-- For `T` with dense range, the partial isometry of `T = U |T|` is surjective: its range is closed
+and contains the range of `T`. -/
 lemma surjective_polarIsometry_of_dense_range : Function.Surjective (hA.polarIsometry hAT hT) := by
-  set Ui : E →ₗᵢ[ℝ] F :=
-    { toLinearMap := hA.polarIsometry hAT hT, norm_map' := hA.norm_polarIsometry_of_ker_eq_bot hAT hT hTk }
-  have hcl : IsClosed (range (hA.polarIsometry hAT hT)) :=
-    Ui.antilipschitzWith.isClosed_range Ui.isometry.uniformContinuous
-  -- `T x = U (|T| x)`
-  have hsub : range T ⊆ range (hA.polarIsometry hAT hT) := by
-    rintro _ ⟨x, rfl⟩
-    have hxv := T.mem_graph x
-    obtain ⟨u, hu⟩ := (hA.exists_mem_graph_sqrt_iff hAT hT).mpr ⟨_, hxv⟩
-    exact ⟨u, hA.polarIsometry_apply_of_mem_graph hAT hT hu hxv⟩
-  rw [← range_eq_univ, ← hcl.closure_eq]
-  exact (hTr.mono hsub).closure_eq
-
-variable {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ'] [RingHomInvPair σ' σ]
-  (hσ : LinearPMap.IsSemilinear σ T)
+  rw [← range_eq_univ, ← (hA.isClosed_range_polarIsometry hAT hT).closure_eq]
+  exact (hTr.mono (hA.range_subset_range_polarIsometry hAT hT)).closure_eq
 
 /-- The **isometric part** `U` of the polar decomposition `T = U |T|` of a `σ`-semilinear closed
 injective operator `T` with dense range, as a semilinear isometric equivalence. -/
 noncomputable def polarIsometryEquiv : E ≃ₛₗᵢ[σ] F :=
   LinearIsometryEquiv.ofSurjective
-    { toFun := hA.polarIsometry hAT hT
-      map_add' := map_add _
-      map_smul' := hA.polarIsometry_smul_of_isSemilinear hAT hT hσ
+    { toLinearMap := (hA.polarIsometry hAT hT : E →ₛₗ[σ] F)
       norm_map' := hA.norm_polarIsometry_of_ker_eq_bot hAT hT hTk }
-    (hA.surjective_polarIsometry_of_dense_range hAT hT hTk hTr)
+    (hA.surjective_polarIsometry_of_dense_range hAT hT hTr)
 
 /-- `U` is the partial isometry of the polar decomposition. -/
 lemma polarIsometryEquiv_apply (x : E) :
-    hA.polarIsometryEquiv hAT hT hTk hTr hσ x = hA.polarIsometry hAT hT x := rfl
+    hA.polarIsometryEquiv hAT hT hTk hTr x = hA.polarIsometry hAT hT x := rfl
 
 end IsSelfAdjoint
 
@@ -1092,38 +982,34 @@ end IsSelfAdjoint
 namespace IsSelfAdjoint
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
-  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {S : E →ₗ.[ℝ] E}
-  (hAS : A.restrictScalars ℝ = S†.compNat S) (hS : S.IsClosed)
-  (hinv : S.compNat S = (LinearMap.id : E →ₗ[ℝ] E).toPMap S.domain)
+  {A : E →ₗ.[ℂ] E} (hA : IsSelfAdjoint A) {σ : ℂ →+* ℂ} [RingHomInvPair σ σ] [RingHomIsometric σ]
+  {S : E →ₛₗ.[σ] E} (hAS : A = S.adjointₛₗ.compNat S) (hS : S.IsClosedₛₗ)
+  (hinv : S.compNat S = (LinearMap.id : E →ₗ[ℂ] E).toPMap S.domain)
 include hAS hinv
 
-omit [CompleteSpace E] hAS in
+omit [CompleteSpace E] [RingHomIsometric σ] hAS in
 /-- An involution is injective. -/
 lemma _root_.LinearPMap.ker_eq_bot_of_involution : S.ker = ⊥ :=
   -- `S x = 0` gives `x = S 0 = 0`, at the single vector `x`
-  LinearPMap.ker_eq_bot_iff_mem_graph.mpr fun _ hx =>
-    S.graph_fst_eq_zero_snd (LinearPMap.compNat_self_eq_id_iff.mp hinv hx) rfl
+  LinearPMap.ker_eq_bot_iff_mem_graphₛₗ.mpr fun _ hx =>
+    LinearPMap.graphₛₗ_fst_eq_zero_snd (LinearPMap.compNat_self_eq_id_iff.mp hinv hx) rfl
 
-omit [CompleteSpace E] hAS in
+omit [CompleteSpace E] [RingHomIsometric σ] hAS in
 /-- A densely defined involution has dense range: its range is its domain. -/
 lemma _root_.LinearPMap.dense_range_of_involution (hd : Dense (S.domain : Set E)) :
     Dense (range S) := by
   refine hd.mono ?_
   intro x hx
-  have hxv := S.mem_graph ⟨x, hx⟩
-  have hvx := LinearPMap.compNat_self_eq_id_iff.mp hinv hxv
-  exact ⟨⟨_, LinearPMap.mem_domain_of_mem_graph hvx⟩, (S.image_iff _).mpr hvx |>.symm⟩
-
-variable {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ'] [RingHomInvPair σ' σ]
-  (hσ : LinearPMap.IsSemilinear σ S)
+  exact LinearPMap.mem_range_iff_mem_graphₛₗ.mpr
+    ⟨_, LinearPMap.compNat_self_eq_id_iff.mp hinv (S.mem_graphₛₗ ⟨x, hx⟩)⟩
 
 /-- `𝐉` is the isometric part `J` of the polar decomposition `S = J |S|` of the involution `S`,
-`hA.polarIsometryEquiv hAS hS _ _ hσ`, which exists since `S` is injective with dense range
+`hA.polarIsometryEquiv hAS hS _ _`, which exists since `S` is injective with dense range
 (`LinearPMap.ker_eq_bot_of_involution`, `LinearPMap.dense_range_of_involution`). The notation is
 local to this section: outside it, the statements below display the expanded form. -/
 local notation "𝐉" => hA.polarIsometryEquiv hAS hS (LinearPMap.ker_eq_bot_of_involution hinv)
   (LinearPMap.dense_range_of_involution hinv
-    (hA.dense_domain.mono (domain_le_domain_of_restrictScalars_eq hAS))) hσ
+    (hA.dense_domain.mono (domain_le_domain_of_eq_adjointₛₗ_compNat hAS)))
 
 /-- From `S = J |S|` and `S² = 1`: `|S| J u = J⁻¹ x` for `|S| x = u` (in graph form). -/
 private lemma mem_graph_sqrt_polarIsometryEquiv {x u : E} (hu : (x, u) ∈ hA.sqrt.graph) :
@@ -1132,21 +1018,21 @@ private lemma mem_graph_sqrt_polarIsometryEquiv {x u : E} (hu : (x, u) ∈ hA.sq
   have h₁ := LinearPMap.compNat_self_eq_id_iff.mp hinv (hA.mem_graph_polarIsometry_apply hAS hS hu)
   obtain ⟨w, hw⟩ := (hA.exists_mem_graph_sqrt_iff hAS hS).mpr ⟨_, h₁⟩
   have h₂ := hA.mem_graph_polarIsometry_apply hAS hS hw
-  have hx : J w = x := sub_eq_zero.mp (S.graph_fst_eq_zero_snd (S.graph.sub_mem h₂ h₁) (sub_self _))
+  have hx : J w = x := LinearPMap.mem_graphₛₗ_snd_inj h₂ h₁
   rwa [← hx, LinearIsometryEquiv.symm_apply_apply]
 
 /-- **`J² = 1`** for the isometric part of a `σ`-semilinear closed involution `S = J |S|`. -/
-theorem polarIsometryEquiv_apply_apply [RingHomIsometric σ] (x : E) :
+theorem polarIsometryEquiv_apply_apply (x : E) :
     𝐉 (𝐉 x) = x := by
   set J := 𝐉
   set E' := hA.pvm
   have hSk := LinearPMap.ker_eq_bot_of_involution hinv
-  have hpos := hA.isPositive_of_restrictScalars_eq hAS
+  have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAS
   have hc : Measurable fun t : ℝ => (Real.sqrt t : ℂ) :=
     Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable
   have hc0 : ∀ y, ∀ᵐ t ∂(E'.measure y), (Real.sqrt t : ℂ) ≠ 0 := fun y => by
     have h := measure_eq_zero_iff_ae_notMem.mp (hA.measure_pvm_Iic_zero hpos
-      ((hA.ker_eq_bot_iff_of_restrictScalars_eq hAS).mpr hSk) y)
+      ((hA.ker_eq_bot_iff_of_eq_adjointₛₗ_compNat hAS).mpr hSk) y)
     exact h.mono fun t ht => ofReal_ne_zero.mpr (Real.sqrt_pos.mpr (not_le.mp ht)).ne'
   -- `P = J |S|⁻¹ J⁻¹`, the transported inverse of `|S|`
   set P := (E'.transport J).integralPMap fun t : ℝ => (((Real.sqrt t)⁻¹ : ℝ) : ℂ)
@@ -1166,47 +1052,33 @@ theorem polarIsometryEquiv_apply_apply [RingHomIsometric σ] (x : E) :
   have hPpos : P.IsPositive :=
     (E'.transport J).isPositive_integralPMap_ofReal Real.continuous_sqrt.measurable.inv
       fun t => inv_nonneg.mpr (Real.sqrt_nonneg t)
-  -- `|S| = W P` with the real isometry `W = J⁻¹ J⁻¹`
-  have hJr : ∀ (r : ℝ) (x : E), J.symm (r • x) = r • J.symm x := fun r x => by
-    rw [← Complex.coe_smul, J.symm.map_smulₛₗ, RingHom.apply_ofReal_of_ringHomInvPair σ, Complex.coe_smul]
-  let Wl : E →ₗ[ℝ] E :=
-    { toFun := fun x => J.symm (J.symm x)
-      map_add' := fun x y => by simp
-      map_smul' := fun r x => by simp only [RingHom.id_apply, hJr] }
-  let W : E →L[ℝ] E := Wl.mkContinuous 1 fun x => by simp [Wl]
-  have hW : ∀ x, ‖W x‖ = ‖x‖ := fun x => by simp [W, Wl]
+  -- `|S| = W P` with the complex-linear isometry `W = J⁻¹ J⁻¹`
+  let W : E →L[ℂ] E := (J.symm : E →SL[σ] E).comp (J.symm : E →SL[σ] E)
+  have hW : ∀ x, ‖W x‖ = ‖x‖ := fun x => by simp [W]
   have hCP : ∀ x u, (x, u) ∈ hA.sqrt.graph ↔ ∃ z, (x, z) ∈ P.graph ∧ W z = u := fun x u => by
     constructor
     · intro hu
-      refine ⟨J (J u), (hP _ _).mpr ?_, by simp [W, Wl]⟩
+      refine ⟨J (J u), (hP _ _).mpr ?_, by simp [W]⟩
       rw [LinearIsometryEquiv.symm_apply_apply]
-      exact hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hσ hu
+      exact hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hu
     · rintro ⟨z, hz, rfl⟩
-      have h := hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hσ ((hP _ _).mp hz)
+      have h := hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv ((hP _ _).mp hz)
       rwa [LinearIsometryEquiv.apply_symm_apply] at h
-  have hCWP : hA.sqrt.restrictScalars ℝ = (W : E →ₗ[ℝ] E).compPMap (P.restrictScalars ℝ) := by
+  have hCWP : hA.sqrt = (W : E →ₗ[ℂ] E).compPMap P := by
     refine LinearPMap.eq_of_eq_graph (Submodule.ext fun ⟨x, u⟩ => ?_)
-    rw [LinearPMap.mem_graph_restrictScalars, hCP, LinearPMap.mem_graph_iff]
-    constructor
-    · rintro ⟨z, hz, rfl⟩
-      obtain ⟨⟨x', hx'⟩, rfl, rfl⟩ := (LinearPMap.mem_graph_iff P).mp hz
-      exact ⟨⟨x', hx'⟩, rfl, rfl⟩
-    · rintro ⟨⟨x', hx'⟩, rfl, rfl⟩
-      exact ⟨P ⟨x', hx'⟩, P.mem_graph ⟨x', hx'⟩, rfl⟩
-  -- `A = |S|†|S|` as real operators
-  have hAC : A.restrictScalars ℝ =
-      (hA.sqrt.restrictScalars ℝ)†.compNat (hA.sqrt.restrictScalars ℝ) := by
-    rw [LinearPMap.adjoint_restrictScalars hA.isSelfAdjoint_sqrt.dense_domain,
-      LinearPMap.isSelfAdjoint_def.mp hA.isSelfAdjoint_sqrt, ← LinearPMap.restrictScalars_compNat,
+    rw [hCP, LinearPMap.mem_graph_compPMap]
+    rfl
+  -- `A = |S|†|S|`
+  have hAC : A = hA.sqrt.adjointₛₗ.compNat hA.sqrt := by
+    rw [LinearPMap.adjointₛₗ_eq_adjoint, LinearPMap.isSelfAdjoint_def.mp hA.isSelfAdjoint_sqrt,
       hA.sqrt_compNat_sqrt hpos]
   have hPC : P = hA.sqrt := hA.eq_sqrt_of_eq_compPMap hAC hPsa hPpos W (fun y _ => hW y) hCWP
   -- `J (J u) = u` on the range of `|S|`, which is dense
   have hJJ : ∀ x u, (x, u) ∈ hA.sqrt.graph → J (J u) = u := fun x u hu => by
-    have h := (hCP x u).mp hu
     have h' : (x, J (J u)) ∈ hA.sqrt.graph := by
       rw [← hPC, hP, LinearIsometryEquiv.symm_apply_apply]
-      exact hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hσ hu
-    exact sub_eq_zero.mp (hA.sqrt.graph_fst_eq_zero_snd (hA.sqrt.graph.sub_mem h' hu) (sub_self _))
+      exact hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hu
+    exact hA.sqrt.mem_graph_snd_inj h' hu rfl
   have hall : ∀ y, J (J y) = y := fun y => by
     have hclosed : IsClosed {u : E | J (J u) = u} :=
       isClosed_eq (J.continuous.comp J.continuous) continuous_id
@@ -1217,48 +1089,48 @@ theorem polarIsometryEquiv_apply_apply [RingHomIsometric σ] (x : E) :
   exact hall x
 
 /-- `J⁻¹ = J`. -/
-lemma polarIsometryEquiv_symm_apply [RingHomIsometric σ] (x : E) :
+lemma polarIsometryEquiv_symm_apply (x : E) :
     (𝐉).symm x = 𝐉 x := by
-  conv_lhs => rw [← hA.polarIsometryEquiv_apply_apply hAS hS hinv hσ x]
+  conv_lhs => rw [← hA.polarIsometryEquiv_apply_apply hAS hS hinv x]
   exact LinearIsometryEquiv.symm_apply_apply _ _
 
 /-- `J |S| J = |S|⁻¹` in graph form: `|S| x = u` iff `|S| (J u) = J x`. -/
-private lemma mem_graph_sqrt_polarIsometryEquiv_swap [RingHomIsometric σ] {x u : E} :
+private lemma mem_graph_sqrt_polarIsometryEquiv_swap {x u : E} :
     (x, u) ∈ hA.sqrt.graph ↔
       (𝐉 u, 𝐉 x) ∈ hA.sqrt.graph := by
   constructor
   · intro hu
-    have h := hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hσ hu
+    have h := hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hu
     rwa [polarIsometryEquiv_symm_apply] at h
   · intro hu
-    have h := hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hσ hu
+    have h := hA.mem_graph_sqrt_polarIsometryEquiv hAS hS hinv hu
     rwa [polarIsometryEquiv_symm_apply, polarIsometryEquiv_apply_apply,
       polarIsometryEquiv_apply_apply] at h
 
 /-- **`|S| J = J |S|⁻¹`**, i.e. `J |S| J⁻¹ = |S|⁻¹`, for a `σ`-semilinear closed involution
 `S = J |S|`. For the Tomita operator this is `J Δ^{1/2} J = Δ^{-1/2}`. -/
-lemma sqrt_compNat_polarIsometryEquiv [RingHomIsometric σ] :
+lemma sqrt_compNat_polarIsometryEquiv :
     hA.sqrt.compNat ((𝐉 : E →ₛₗ[σ] E).toPMap ⊤) = (𝐉 : E →ₛₗ[σ] E).compPMap hA.sqrt.inverse := by
   -- the swap `|S| x = u ↔ |S| (J u) = J x` is a statement about graph points
   refine (LinearPMap.compNat_toPMap_eq_compPMap_iff (𝐉).toLinearEquiv).mpr fun x u => ?_
   simp only [LinearIsometryEquiv.coe_toLinearEquiv]
-  rw [LinearPMap.mem_graph_inverse_iff (hA.ker_sqrt_eq_bot (hA.isPositive_of_restrictScalars_eq hAS)
-    ((hA.ker_eq_bot_iff_of_restrictScalars_eq hAS).mpr (LinearPMap.ker_eq_bot_of_involution hinv)))]
-  exact hA.mem_graph_sqrt_polarIsometryEquiv_swap hAS hS hinv hσ
+  rw [LinearPMap.mem_graph_inverse_iff (hA.ker_sqrt_eq_bot (hA.isPositive_of_eq_adjointₛₗ_compNat hAS)
+    ((hA.ker_eq_bot_iff_of_eq_adjointₛₗ_compNat hAS).mpr (LinearPMap.ker_eq_bot_of_involution hinv)))]
+  exact hA.mem_graph_sqrt_polarIsometryEquiv_swap hAS hS hinv
 
 /-- **`J Δ J = Δ⁻¹`** for a `σ`-semilinear closed involution `S = J Δ^{1/2}` with `Δ = S†S`, in
 spectral form: transporting `E_Δ` along `J` gives its image under `λ ↦ λ⁻¹`. -/
-lemma pvm_transport_polarIsometryEquiv [RingHomIsometric σ] :
+lemma pvm_transport_polarIsometryEquiv :
     hA.pvm.transport (𝐉) = hA.pvm.map (fun t => t⁻¹) measurable_inv := by
   set J := 𝐉
   set E' := hA.pvm
   have hSk := LinearPMap.ker_eq_bot_of_involution hinv
-  have hpos := hA.isPositive_of_restrictScalars_eq hAS
+  have hpos := hA.isPositive_of_eq_adjointₛₗ_compNat hAS
   have hc : Measurable fun t : ℝ => (Real.sqrt t : ℂ) :=
     Complex.measurable_ofReal.comp Real.continuous_sqrt.measurable
   have hpos' : ∀ y, ∀ᵐ t ∂(E'.measure y), 0 < t := fun y =>
     (measure_eq_zero_iff_ae_notMem.mp (hA.measure_pvm_Iic_zero hpos
-      ((hA.ker_eq_bot_iff_of_restrictScalars_eq hAS).mpr hSk) y)).mono
+      ((hA.ker_eq_bot_iff_of_eq_adjointₛₗ_compNat hAS).mpr hSk) y)).mono
       fun t ht => not_le.mp ht
   have hc0 : ∀ y, ∀ᵐ t ∂(E'.measure y), (Real.sqrt t : ℂ) ≠ 0 := fun y =>
     (hpos' y).mono fun t ht => ofReal_ne_zero.mpr (Real.sqrt_pos.mpr ht).ne'
@@ -1269,7 +1141,7 @@ lemma pvm_transport_polarIsometryEquiv [RingHomIsometric σ] :
     simp_rw [ofReal_inv]
     exact E'.integralPMap_inv hc hc0
   have h₁ := hCi.pvm_eq_transport hA.isSelfAdjoint_sqrt J
-    (by convert hA.sqrt_compNat_polarIsometryEquiv hAS hS hinv hσ using 2)
+    (by convert hA.sqrt_compNat_polarIsometryEquiv hAS hS hinv using 2)
   change (E'.isSelfAdjoint_integralPMap_ofReal hsqrt).pvm = _ at h₁
   rw [E'.pvm_integralPMap_ofReal hsqrt, E'.pvm_integralPMap_ofReal hsqrt.inv] at h₁
   -- apply `λ ↦ λ²` to both sides
@@ -1281,14 +1153,14 @@ lemma pvm_transport_polarIsometryEquiv [RingHomIsometric σ] :
       simp [Real.sq_sqrt ht.le], ProjectionValuedMeasure.map_id,
     E'.map_congr_ae (hsq.comp hsqrt.inv) measurable_inv fun y => (hpos' y).mono fun t ht => by
       simp [inv_pow, Real.sq_sqrt ht.le]] at h₂
-  have hJJ := hA.polarIsometryEquiv_apply_apply hAS hS hinv hσ
+  have hJJ := hA.polarIsometryEquiv_apply_apply hAS hS hinv
   conv_lhs => rw [h₂]
   exact ProjectionValuedMeasure.transport_transport _ _ hJJ
 
 /-- **`J f(Δ) J = (σ ∘ f ∘ inv)(Δ)`** for bounded measurable `f`, for a `σ`-semilinear closed
 involution `S = J Δ^{1/2}` with `Δ = S†S`. For the Tomita operator (`σ` the conjugation) and
 `f(λ) = λ^{it}` this is `J Δ^{it} J = Δ^{it}`. -/
-lemma polarIsometryEquiv_integral_apply [RingHomIsometric σ] {f : ℝ → ℂ} (hf : Measurable f)
+lemma polarIsometryEquiv_integral_apply {f : ℝ → ℂ} (hf : Measurable f)
     (hfb : ∃ C, ∀ t, ‖f t‖ ≤ C) (y : E) :
     𝐉 (hA.pvm.integral f (𝐉 y)) = hA.pvm.integral (fun t => σ (f t⁻¹)) y := by
   set J := 𝐉
@@ -1300,9 +1172,9 @@ lemma polarIsometryEquiv_integral_apply [RingHomIsometric σ] {f : ℝ → ℂ} 
   have h := congrArg (fun T => T y) (hA.pvm.integral_transport J hg hgb)
   simp only [ContinuousLinearMap.comp_apply, LinearIsometry.coe_toContinuousLinearMap,
     LinearIsometryEquiv.coe_toLinearIsometry, RingHomInvPair.comp_apply_eq] at h
-  rw [hA.pvm_transport_polarIsometryEquiv hAS hS hinv hσ,
+  rw [hA.pvm_transport_polarIsometryEquiv hAS hS hinv,
     ProjectionValuedMeasure.integral_map hg hgb measurable_inv hA.pvm,
-    hA.polarIsometryEquiv_symm_apply hAS hS hinv hσ] at h
+    hA.polarIsometryEquiv_symm_apply hAS hS hinv] at h
   exact h.symm
 
 end IsSelfAdjoint

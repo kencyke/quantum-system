@@ -123,8 +123,8 @@ theorem integral_inv_add_measure_pvm_relativeModular_le {ζ ζ' : K} {ξ ξ' : H
     ∫ s, (t + s)⁻¹ ∂μ[N]⟦ζ', ζ⟧ ≤
       ∫ s, (t + s)⁻¹ ∂μ[M]⟦ξ', ξ⟧ := by
   refine (isSelfAdjoint_relativeModular M ξ' ξ).integral_inv_add_measure_pvm_le_of_forall_mem_graph
-    (restrictScalars_relativeModular M ξ' ξ) (isSelfAdjoint_relativeModular N ζ' ζ)
-    (isClosable_relativeTomita N ζ' ζ) (restrictScalars_relativeModular N ζ' ζ) ξ ζ ?_ ht
+    (relativeModular_def M ξ' ξ) (isSelfAdjoint_relativeModular N ζ' ζ)
+    (isClosable_relativeTomita N ζ' ζ) (relativeModular_def N ζ' ζ) ξ ζ ?_ ht
   intro w w' hw
   obtain ⟨y, hy, z, hz, h⟩ := mem_graph_relativeTomita.mp hw
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h

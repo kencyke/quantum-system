@@ -1089,28 +1089,29 @@ theorem exists_stripContinuation (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B)
 
 section Semilinear
 
-variable {T₁ : H₁ →ₗ.[ℝ] H₁} {T₂ : H₂ →ₗ.[ℝ] H₂} {σ : ℂ →+* ℂ} [RingHomInvPair σ σ]
-  [RingHomIsometric σ]
+variable {σ : ℂ →+* ℂ} [RingHomInvPair σ σ] [RingHomIsometric σ] {T₁ : H₁ →ₛₗ.[σ] H₁}
+  {T₂ : H₂ →ₛₗ.[σ] H₂}
 
 /-- **Borchers' Theorem A for semilinear contractions.** Let `T₁` on `H₁` and `T₂` on `H₂` be
-real-linear operators, `A`, `B` self-adjoint operators on `H₁`, `H₂`, and `U₁`, `U₂` `σ`-semilinear
-contractions with `U₁ A^{1/2} ⊆ T₁` and `U₂ T₂ ⊆ B^{1/2}` (as real-linear operators). Let `V` be a
-bounded operator with `V T₁ ⊆ T₂ V`. Then `t ↦ B^{-it} V A^{it}`, with the imaginary powers
-(`IsSelfAdjoint.imaginaryPower`, partial isometries vanishing on `E((-∞, 0])`), extends to a family
-`F z` of bounded operators on the strip `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in the
-interior and `*`-strongly continuous on the closed strip, with `‖F z‖ ≤ ‖V‖` and
-`F (t + i/2) = B^{-it} U₂ V U₁ A^{it}`.
+`σ`-semilinear operators, `σ` the identity or the conjugation, `A`, `B` self-adjoint operators on
+`H₁`, `H₂`, and `U₁`, `U₂` `σ`-semilinear contractions with `U₁ A^{1/2} ⊆ T₁` and
+`U₂ T₂ ⊆ B^{1/2}`. Let `V` be a bounded operator with `V T₁ ⊆ T₂ V`. Then `t ↦ B^{-it} V A^{it}`,
+with the imaginary powers (`IsSelfAdjoint.imaginaryPower`, partial isometries vanishing on
+`E((-∞, 0])`), extends to a family `F z` of bounded operators on the strip `0 ≤ im z ≤ 1/2`,
+holomorphic in the operator norm in the interior and `*`-strongly continuous on the closed strip,
+with `‖F z‖ ≤ ‖V‖` and `F (t + i/2) = B^{-it} U₂ V U₁ A^{it}`.
 
-The three inclusions give `(U₂ V U₁) A^{1/2} ⊆ U₂ V T₁ ⊆ U₂ T₂ V ⊆ B^{1/2} V`, and the interpolation theorem
-`IsSelfAdjoint.exists_stripContinuation` applies. The intended case is that of polar
-decompositions `Tᵢ = Jᵢ Δᵢ^{1/2}`, with `U₁ = J₁` and `U₂ = J₂†`:
+The three inclusions give `(U₂ V U₁) A^{1/2} ⊆ U₂ V T₁ ⊆ U₂ T₂ V ⊆ B^{1/2} V`, where the composite
+`U₂ V U₁` of two `σ`-semilinear maps and a complex-linear one is complex-linear, and the
+interpolation theorem `IsSelfAdjoint.exists_stripContinuation` applies. The intended case is that
+of polar decompositions `Tᵢ = Jᵢ Δᵢ^{1/2}`, with `U₁ = J₁` and `U₂ = J₂†`:
 `IsSelfAdjoint.exists_stripContinuation_polarIsometry`. -/
 theorem exists_stripContinuation_of_le (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B)
     (U₁ : H₁ →SL[σ] H₁) (U₂ : H₂ →SL[σ] H₂) (hU₁n : ‖U₁‖ ≤ 1) (hU₂n : ‖U₂‖ ≤ 1)
-    (hU₁ : (U₁.toRealCLM : H₁ →ₗ[ℝ] H₁).compPMap (hA.sqrt.restrictScalars ℝ) ≤ T₁)
-    (hU₂ : (U₂.toRealCLM : H₂ →ₗ[ℝ] H₂).compPMap T₂ ≤ hB.sqrt.restrictScalars ℝ)
+    (hU₁ : (U₁ : H₁ →ₛₗ[σ] H₁).compPMap hA.sqrt ≤ T₁)
+    (hU₂ : (U₂ : H₂ →ₛₗ[σ] H₂).compPMap T₂ ≤ hB.sqrt)
     (V : H₁ →L[ℂ] H₂)
-    (hV : V ⬝ T₁ ≤ T₂ ⬝ V) :
+    (hV : (V : H₁ →ₗ[ℂ] H₂).compPMap T₁ ≤ T₂.compNat ((V : H₁ →ₗ[ℂ] H₂).toPMap ⊤)) :
     ∃ F : ℂ → H₁ →L[ℂ] H₂, DifferentiableOn ℂ F (im ⁻¹' Ioo 0 (1 / 2)) ∧
       (∀ x, ContinuousOn (fun z => F z x) (im ⁻¹' Icc 0 (1 / 2))) ∧
       (∀ y, ContinuousOn (fun z => ((F z)†) y) (im ⁻¹' Icc 0 (1 / 2))) ∧
@@ -1131,22 +1132,19 @@ theorem exists_stripContinuation_of_le (hA : IsSelfAdjoint A) (hB : IsSelfAdjoin
             ((U₁.le_opNorm _).trans (mul_le_mul_of_nonneg_right hU₁n (norm_nonneg _)))
             (norm_nonneg _))
       _ = ‖V‖ * ‖u‖ := by rw [one_mul]
-  -- `V' A^{1/2} = U₂ V U₁ A^{1/2} ⊆ U₂ V T₁ ⊆ U₂ T₂ V ⊆ B^{1/2} V`, as real-linear operators
-  set u₁ := (U₁.toRealCLM : H₁ →ₗ[ℝ] H₁)
-  set u₂ := (U₂.toRealCLM : H₂ →ₗ[ℝ] H₂)
-  set v := (V : H₁ →ₗ[ℂ] H₂).restrictScalars ℝ
-  have hV'r : (V' : H₁ →ₗ[ℂ] H₂).restrictScalars ℝ = u₂ ∘ₗ v ∘ₗ u₁ := LinearMap.ext fun _ => rfl
-  have hVV' : (V' : H₁ →ₗ[ℂ] H₂).compPMap hA.sqrt ≤
-      hB.sqrt.compNat ((V : H₁ →ₗ[ℂ] H₂).toPMap ⊤) := by
-    rw [← LinearPMap.restrictScalars_le_iff (R := ℝ), LinearPMap.restrictScalars_compPMap,
-      LinearPMap.restrictScalars_compNat, LinearPMap.restrictScalars_toPMap, hV'r,
-      LinearPMap.compPMap_comp, LinearPMap.compPMap_comp]
-    calc u₂.compPMap (v.compPMap (u₁.compPMap (hA.sqrt.restrictScalars ℝ)))
+  -- `V' A^{1/2} = U₂ V U₁ A^{1/2} ⊆ U₂ V T₁ ⊆ U₂ T₂ V ⊆ B^{1/2} V`
+  set u₁ := (U₁ : H₁ →ₛₗ[σ] H₁)
+  set u₂ := (U₂ : H₂ →ₛₗ[σ] H₂)
+  set v := (V : H₁ →ₗ[ℂ] H₂)
+  have hV'r : (V' : H₁ →ₗ[ℂ] H₂) = u₂.comp (v.comp u₁) := LinearMap.ext fun _ => rfl
+  have hVV' : (V' : H₁ →ₗ[ℂ] H₂).compPMap hA.sqrt ≤ hB.sqrt.compNat (v.toPMap ⊤) := by
+    rw [hV'r, LinearPMap.compPMap_comp, LinearPMap.compPMap_comp]
+    calc u₂.compPMap (v.compPMap (u₁.compPMap hA.sqrt))
         ≤ u₂.compPMap (v.compPMap T₁) :=
           LinearPMap.compPMap_mono _ (LinearPMap.compPMap_mono _ hU₁)
       _ ≤ u₂.compPMap (T₂.compNat (v.toPMap ⊤)) := LinearPMap.compPMap_mono _ hV
       _ = (u₂.compPMap T₂).compNat (v.toPMap ⊤) := (LinearPMap.compPMap_compNat _ _ _).symm
-      _ ≤ (hB.sqrt.restrictScalars ℝ).compNat (v.toPMap ⊤) := LinearPMap.compNat_mono hU₂ le_rfl
+      _ ≤ hB.sqrt.compNat (v.toPMap ⊤) := LinearPMap.compNat_mono hU₂ le_rfl
   obtain ⟨F, hFd, hFs, hFs', hFb, hF0, hF1⟩ := hA.exists_stripContinuation hB hVV'
   refine ⟨F, hFd, hFs, hFs', fun z hz => (hFb z hz).trans ?_, hF0, fun t x => ?_⟩
   · -- `‖V‖^{1 - 2y} ‖V'‖^{2y} ≤ ‖V‖^{1 - 2y} ‖V‖^{2y} = ‖V‖`
@@ -1158,40 +1156,38 @@ theorem exists_stripContinuation_of_le (hA : IsSelfAdjoint A) (hB : IsSelfAdjoin
   · rw [hF1]
     rfl
 
-open ClosedSubmodule in
 /-- **Borchers' Theorem A for semilinear operators, polar decomposition form.** Let `T₁` on `H₁`
 and `T₂` on `H₂` be closed `σ`-semilinear operators, with polar decompositions `Tᵢ = Jᵢ Δᵢ^{1/2}`:
-`Δ₁ = T₁†T₁`, `Δ₂ = T₂†T₂` and the partial isometries `Jᵢ` (`IsSelfAdjoint.polarIsometrySL`). Let
+`Δ₁ = T₁†T₁`, `Δ₂ = T₂†T₂` and the partial isometries `Jᵢ` (`IsSelfAdjoint.polarIsometry`). Let
 `V` be a bounded operator with `V T₁ ⊆ T₂ V`. Then `t ↦ Δ₂^{-it} V Δ₁^{it}` extends to a family
 `F z` of bounded operators on the strip `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in the
 interior and `*`-strongly continuous on the closed strip, with `‖F z‖ ≤ ‖V‖` and
-`F (t + i/2) = Δ₂^{-it} J₂† V J₁ Δ₁^{it}`, for the real adjoint `J₂†` of `J₂`
-(`IsSelfAdjoint.adjointPolarIsometrySL`), which inverts `J₂` on the range of `Δ₂^{1/2}`.
+`F (t + i/2) = Δ₂^{-it} J₂† V J₁ Δ₁^{it}`, for the adjoint `J₂†` of `J₂`
+(`ContinuousLinearMap.adjointₛₗ`), which inverts `J₂` on the range of `Δ₂^{1/2}`.
 
 This is `IsSelfAdjoint.exists_stripContinuation_of_le` with `U₁ = J₁` and `U₂ = J₂†`:
 `T₁ = J₁ Δ₁^{1/2}` and `Δ₂^{1/2} = J₂† T₂` hold for every polar decomposition
-(`IsSelfAdjoint.eq_polarIsometry_compPMap`, `IsSelfAdjoint.adjoint_polarIsometry_compPMap`). For the
-Tomita operators of standard subspaces, `J₂† = J₂` and it is Borchers' Theorem A
+(`IsSelfAdjoint.eq_polarIsometry_compPMap`, `IsSelfAdjoint.adjointₛₗ_polarIsometry_compPMap`). For
+the Tomita operators of standard subspaces, `J₂† = J₂` and it is Borchers' Theorem A
 (`StandardSubspace.exists_modularGroup_continuation`); for relative Tomita operators,
 `J₂† = J_{Ω₂,η₂}` and it is the relative version
 (`VonNeumannAlgebra.exists_relativeModularGroup_continuation_of_le`). -/
 theorem exists_stripContinuation_polarIsometry (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B)
-    (hAT : A.restrictScalars ℝ = T₁†.compNat T₁) (hBT : B.restrictScalars ℝ = T₂†.compNat T₂)
-    (hT₁ : T₁.IsClosed) (hT₂ : T₂.IsClosed) (hσ₁ : T₁.IsSemilinear σ) (hσ₂ : T₂.IsSemilinear σ)
-    (V : H₁ →L[ℂ] H₂)
-    (hV : V ⬝ T₁ ≤ T₂ ⬝ V) :
+    (hAT : A = T₁.adjointₛₗ.compNat T₁) (hBT : B = T₂.adjointₛₗ.compNat T₂)
+    (hT₁ : T₁.IsClosedₛₗ) (hT₂ : T₂.IsClosedₛₗ) (V : H₁ →L[ℂ] H₂)
+    (hV : (V : H₁ →ₗ[ℂ] H₂).compPMap T₁ ≤ T₂.compNat ((V : H₁ →ₗ[ℂ] H₂).toPMap ⊤)) :
     ∃ F : ℂ → H₁ →L[ℂ] H₂, DifferentiableOn ℂ F (im ⁻¹' Ioo 0 (1 / 2)) ∧
       (∀ x, ContinuousOn (fun z => F z x) (im ⁻¹' Icc 0 (1 / 2))) ∧
       (∀ y, ContinuousOn (fun z => ((F z)†) y) (im ⁻¹' Icc 0 (1 / 2))) ∧
       (∀ z ∈ im ⁻¹' Icc 0 (1 / 2), ‖F z‖ ≤ ‖V‖) ∧
       (∀ t : ℝ, F t = hB.imaginaryPower (-t) ∘L V ∘L hA.imaginaryPower t) ∧
       ∀ (t : ℝ) (x : H₁), F (t + I / 2) x =
-        hB.imaginaryPower (-t) (hB.adjointPolarIsometrySL hBT hT₂ hσ₂
-          (V (hA.polarIsometrySL hAT hT₁ hσ₁ (hA.imaginaryPower t x)))) :=
-  hA.exists_stripContinuation_of_le hB (hA.polarIsometrySL hAT hT₁ hσ₁)
-    (hB.adjointPolarIsometrySL hBT hT₂ hσ₂) (hA.norm_polarIsometrySL_le hAT hT₁ hσ₁)
-    (hB.norm_adjointPolarIsometrySL_le hBT hT₂ hσ₂)
-    (hA.eq_polarIsometry_compPMap hAT hT₁).ge (hB.adjoint_polarIsometry_compPMap hBT hT₂).le V hV
+        hB.imaginaryPower (-t) ((hB.polarIsometry hBT hT₂).adjointₛₗ
+          (V (hA.polarIsometry hAT hT₁ (hA.imaginaryPower t x)))) :=
+  hA.exists_stripContinuation_of_le hB (hA.polarIsometry hAT hT₁)
+    (hB.polarIsometry hBT hT₂).adjointₛₗ (hA.norm_polarIsometry_le hAT hT₁)
+    (hB.norm_adjointₛₗ_polarIsometry_le hBT hT₂)
+    (hA.eq_polarIsometry_compPMap hAT hT₁).ge (hB.adjointₛₗ_polarIsometry_compPMap hBT hT₂).le V hV
 
 end Semilinear
 

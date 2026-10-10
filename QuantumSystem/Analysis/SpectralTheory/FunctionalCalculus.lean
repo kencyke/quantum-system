@@ -8,7 +8,7 @@ module
 public import QuantumSystem.Analysis.SpectralTheory.ScalarSpectralMeasure
 public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure
 public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.SemilinearIsometry
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear
 
 /-!
 # The functional calculus of a self-adjoint operator

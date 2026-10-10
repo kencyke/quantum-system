@@ -242,10 +242,10 @@ private theorem mem_graph_relativeModular_densityVec_of_bounded {B : Set α} (hB
     rw [supportProj_commutant, Submodule.starProjection_eq_self_iff, e₃]
     exact InnerProductSpace.apply_mem_cyclicSubspace ξ (mulL2_mem_multiplicationAlgebra K)
   rw [← map_star, hs₂, e₃, e₄] at hFt
-  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graphₛₗ_compNat]
   refine ⟨mulL2 G ξ, mem_graph_closure_relativeTomita hS, ?_⟩
-  rw [LinearPMap.adjoint_closure (dense_domain_relativeTomita _ _ _)]
-  exact LinearPMap.le_graph_of_le (relativeTomita_commutant_le_adjoint _ _ _) hFt
+  rw [LinearPMap.adjointₛₗ_closureₛₗ (dense_domain_relativeTomita _ _ _)]
+  exact LinearPMap.le_graphₛₗ_of_le (relativeTomita_commutant_le_adjoint _ _ _) hFt
 
 /-- **`Δ` multiplies by `q / p` on good vectors, a.e. form**: for `u` bounded by `n` almost
 everywhere on a measurable set `B` where `p ≥ 1/n` and `q ≤ n p`, and vanishing off `B`,
@@ -305,8 +305,8 @@ theorem mem_graph_relativeModular_densityVec_zero_of_ae_eq_zero_on_pos {u : Lp �
     rw [← hc, ← ContinuousLinearMap.adjoint_inner_right, hEsa, hEu, inner_zero_right]
   have hS' := mk_mem_graph_relativeTomita (M := M) (η := densityVec Q μ) (ξ := ξ) (zero_mem M) hζ
   simp only [zero_apply, zero_add, star_zero, map_zero] at hS'
-  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graph_compNat]
-  exact ⟨0, mem_graph_closure_relativeTomita hS', Submodule.zero_mem _⟩
+  rw [mem_graph_relativeModular_iff, LinearPMap.mem_graphₛₗ_compNat]
+  exact ⟨0, mem_graph_closure_relativeTomita hS', zero_mem _⟩
 
 /-- **The relative modular operator of a multiplication algebra extends multiplication by
 `q / p`**: for finite measures `P, Q` with densities `p, q` with respect to `μ`,
