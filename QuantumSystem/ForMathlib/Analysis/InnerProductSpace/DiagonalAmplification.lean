@@ -54,6 +54,7 @@ noncomputable def single {n : ℕ} (i : Fin n) : H →L[ℂ] Hn H n :=
   (PiLp.continuousLinearEquiv (2 : ℝ≥0∞) ℂ (fun _ : Fin n => H)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.single ℂ (fun _ : Fin n => H) i
 
+/-- `single i v` is the vector of `H^n` with `i`-th component `v` and all other components `0`. -/
 @[simp]
 lemma single_apply {n : ℕ} (i : Fin n) (v : H) :
     single i v = PiLp.single 2 i v := rfl
@@ -63,6 +64,8 @@ noncomputable def diagonal {n : ℕ} (T : H →L[ℂ] H) : Hn H n →L[ℂ] Hn H
   classical
   exact ∑ i : Fin n, single i ∘L (T ∘L PiLp.proj 2 (fun _ : Fin n => H) i)
 
+/-- `diagonal T` acts componentwise: the `i`-th component of `diagonal T x` is `T` applied to the
+`i`-th component of `x`. -/
 @[simp]
 lemma diagonal_apply {n : ℕ} (T : H →L[ℂ] H) (x : Hn H n) (i : Fin n) :
     (diagonal T x).ofLp i = T (x.ofLp i) := by
@@ -74,12 +77,14 @@ noncomputable def matrixComponent {n : ℕ} (S : Hn H n →L[ℂ] Hn H n)
     (i j : Fin n) : H →L[ℂ] H :=
   PiLp.proj 2 (fun _ : Fin n => H) i ∘L (S ∘L single j)
 
+/-- The `(i, j)`-th matrix component of `S` sends `v` to the `i`-th component of `S (single j v)`. -/
 @[simp]
 lemma matrixComponent_apply {n : ℕ} (S : Hn H n →L[ℂ] Hn H n)
     (i j : Fin n) (v : H) :
     matrixComponent S i j v = (S (single j v)).ofLp i := by
   rfl
 
+/-- `diagonal T` sends the vector `single j v` to `single j (T v)`. -/
 lemma diagonal_single {n : ℕ} (T : H →L[ℂ] H) (j : Fin n) (v : H) :
     diagonal T (single j v) =
     single j (T v) := by
@@ -88,6 +93,7 @@ lemma diagonal_single {n : ℕ} (T : H →L[ℂ] H) (j : Fin n) (v : H) :
   rw [diagonal_apply]
   simp [apply_ite T]
 
+/-- Every vector of `H^n` is the sum of its components: `x = ∑ⱼ single j xⱼ`. -/
 lemma single_sum_eq {n : ℕ} (x : Hn H n) :
     x = ∑ j : Fin n, single j (x.ofLp j) := by
   classical

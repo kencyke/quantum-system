@@ -50,11 +50,13 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 def IsFiniteRank (T : H →L[ℂ] H) : Prop :=
   FiniteDimensional ℂ (T.range)
 
+/-- The zero operator has finite rank. -/
 lemma isFiniteRank_zero : IsFiniteRank (0 : H →L[ℂ] H) := by
   have h : (0 : H →L[ℂ] H).range = ⊥ := by simp
   rw [IsFiniteRank, h]
   infer_instance
 
+/-- The sum of two finite-rank operators has finite rank: `ran (S + T) ⊆ ran S ⊔ ran T`. -/
 lemma IsFiniteRank.add {S T : H →L[ℂ] H} (hS : IsFiniteRank S) (hT : IsFiniteRank T) :
     IsFiniteRank (S + T) := by
   have : FiniteDimensional ℂ (S.range) := hS
@@ -83,6 +85,7 @@ lemma IsFiniteRank.mul_right {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H �
   rintro _ ⟨x, rfl⟩
   exact ⟨S x, rfl⟩
 
+/-- A scalar multiple of a finite-rank operator has finite rank. -/
 lemma IsFiniteRank.smul {T : H →L[ℂ] H} (hT : IsFiniteRank T) (c : ℂ) :
     IsFiniteRank (c • T) := by
   have : FiniteDimensional ℂ (T.range) := hT
@@ -129,6 +132,7 @@ noncomputable def finiteRankOperators : NonUnitalStarSubalgebra ℂ (H →L[ℂ]
   smul_mem' := fun c _ hT => IsFiniteRank.smul hT c
   star_mem' := fun hT => IsFiniteRank.adjoint hT
 
+/-- An operator lies in `F(H)` exactly when it has finite rank. -/
 @[simp] lemma mem_finiteRankOperators_iff {T : H →L[ℂ] H} :
     T ∈ finiteRankOperators (H := H) ↔ IsFiniteRank T := Iff.rfl
 

@@ -54,6 +54,7 @@ instance : SMul ℝ≥0 (E₁ →ₚ[R] E₂) where
 instance : IsSMulApply ℝ≥0 (E₁ →ₚ[R] E₂) E₁ E₂ where
   smul_apply _ _ _ := rfl
 
+/-- The underlying linear map of `c • f` is `c` times the underlying linear map of `f`. -/
 @[simp]
 lemma toLinearMap_smul (c : ℝ≥0) (f : E₁ →ₚ[R] E₂) : (c • f).toLinearMap = c • f.toLinearMap :=
   rfl

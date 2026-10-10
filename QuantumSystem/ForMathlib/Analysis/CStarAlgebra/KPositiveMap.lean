@@ -231,6 +231,8 @@ maps that are `k`-positive for every `k`. -/
 structure KPositiveMap (k : ℕ) (A₁ : Type*) (A₂ : Type*) [NonUnitalCStarAlgebra A₁]
     [NonUnitalCStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁]
     [StarOrderedRing A₂] extends A₁ →ₗ[ℂ] A₂ where
+  /-- Applying the map entrywise to a nonnegative `k × k` matrix over `A₁` gives a nonnegative
+  matrix over `A₂`. -/
   map_cstarMatrix_nonneg' (M : CStarMatrix (Fin k) (Fin k) A₁) (hM : 0 ≤ M) :
     0 ≤ M.map toLinearMap
 
@@ -241,6 +243,8 @@ type. -/
 class KPositiveMapClass (F : Type*) (k : ℕ) (A₁ A₂ : outParam Type*)
     [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂]
     [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂] : Prop where
+  /-- Applying `φ` entrywise to a nonnegative `k × k` matrix over `A₁` gives a nonnegative
+  matrix over `A₂`. -/
   map_cstarMatrix_nonneg' (φ : F) (M : CStarMatrix (Fin k) (Fin k) A₁) (hM : 0 ≤ M) :
     0 ≤ M.map φ
 
@@ -258,10 +262,12 @@ instance : FunLike (KPositiveMap k A₁ A₂) A₁ A₂ where
     apply DFunLike.coe_injective
     exact h
 
+/-- A `k`-positive map is `ℂ`-linear. -/
 instance : LinearMapClass (KPositiveMap k A₁ A₂) ℂ A₁ A₂ where
   map_add f := map_add f.toLinearMap
   map_smulₛₗ f := map_smulₛₗ f.toLinearMap
 
+/-- A bundled `k`-positive map is `k`-positive in the sense of `KPositiveMapClass`. -/
 instance : KPositiveMapClass (KPositiveMap k A₁ A₂) k A₁ A₂ where
   map_cstarMatrix_nonneg' f := f.map_cstarMatrix_nonneg'
 

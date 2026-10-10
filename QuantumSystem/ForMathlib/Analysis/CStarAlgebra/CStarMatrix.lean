@@ -52,11 +52,14 @@ def compStarAlgEquiv (S : Type*) [Fintype I] [Fintype J] [NonUnitalNonAssocSemir
   map_smul' _ _ := rfl
   map_star' := comp_conjTranspose
 
+/-- `Matrix.compStarAlgEquiv` flattens a block matrix by `Matrix.comp`. -/
 @[simp]
 lemma compStarAlgEquiv_apply (S : Type*) [Fintype I] [Fintype J] [NonUnitalNonAssocSemiring R]
     [StarRing R] [SMul S R] (M : Matrix I I (Matrix J J R)) :
     compStarAlgEquiv I J R S M = comp I I J J R M := rfl
 
+/-- The inverse of `Matrix.compStarAlgEquiv` cuts a matrix into blocks by the inverse of
+`Matrix.comp`. -/
 @[simp]
 lemma compStarAlgEquiv_symm_apply (S : Type*) [Fintype I] [Fintype J]
     [NonUnitalNonAssocSemiring R] [StarRing R] [SMul S R] (M : Matrix (I × J) (I × J) R) :
@@ -75,6 +78,7 @@ def compStarAlgEquiv (k n R : Type*) [Fintype k] [Fintype n] [DecidableEq n] [Se
     [StarRing R] [SMul ℂ R] : CStarMatrix k k (Matrix n n R) ≃⋆ₐ[ℂ] Matrix (k × n) (k × n) R :=
   ofMatrixStarAlgEquiv.symm.trans (Matrix.compStarAlgEquiv k n R ℂ)
 
+/-- `CStarMatrix.compStarAlgEquiv` flattens a block matrix by `Matrix.comp`. -/
 @[simp]
 lemma compStarAlgEquiv_apply {k n R : Type*} [Fintype k] [Fintype n] [DecidableEq n] [Semiring R]
     [StarRing R] [SMul ℂ R] (M : CStarMatrix k k (Matrix n n R)) :

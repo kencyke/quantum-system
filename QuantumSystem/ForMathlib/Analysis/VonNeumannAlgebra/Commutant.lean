@@ -114,10 +114,12 @@ noncomputable def commutantSet (s : Set (H →L[ℂ] H)) : VonNeumannAlgebra H w
   toStarSubalgebra := StarSubalgebra.centralizer ℂ s
   centralizer_centralizer' := by simp
 
+/-- The carrier of `commutantSet s` is the centralizer of the symmetrized set `s ∪ s⋆`. -/
 @[simp] lemma coe_commutantSet (s : Set (H →L[ℂ] H)) :
     (commutantSet s : Set (H →L[ℂ] H)) = (s ∪ star s).centralizer :=
   StarSubalgebra.coe_centralizer ℂ s
 
+/-- `z ∈ commutantSet s` exactly when `z` commutes with every `g ∈ s` and with its adjoint `g⋆`. -/
 lemma mem_commutantSet_iff {s : Set (H →L[ℂ] H)} {z : H →L[ℂ] H} :
     z ∈ commutantSet s ↔ ∀ g ∈ s, g * z = z * g ∧ star g * z = z * star g :=
   StarSubalgebra.mem_centralizer_iff ℂ
@@ -251,6 +253,7 @@ noncomputable def conj (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) : Von
       StarSubalgebra.coe_map _ _
     rw [hcoe, ← Set.image_centralizer, ← Set.image_centralizer, N.centralizer_centralizer]
 
+/-- The carrier of the spatial conjugate `U N U⋆` is the image of `N` under `x ↦ U x U⋆`. -/
 @[simp] lemma coe_conj (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) :
     (conj U N : Set (H' →L[ℂ] H')) = ⇑U.conjStarAlgEquiv '' (N : Set (H →L[ℂ] H)) :=
   StarSubalgebra.coe_map _ _

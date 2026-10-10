@@ -75,9 +75,11 @@ def ofCLM : (H →L[ℂ] K) ≃ₗ[ℂ] HilbertSchmidt H K := LinearEquiv.refl �
 
 variable {H K}
 
+/-- Passing from an operator to the Hilbert–Schmidt space and back is the identity. -/
 @[simp]
 lemma ofCLM_symm_ofCLM (X : H →L[ℂ] K) : (ofCLM H K).symm (ofCLM H K X) = X := rfl
 
+/-- Passing from the Hilbert–Schmidt space to the operators and back is the identity. -/
 @[simp]
 lemma ofCLM_ofCLM_symm (X : HilbertSchmidt H K) : ofCLM H K ((ofCLM H K).symm X) = X := rfl
 
@@ -90,6 +92,7 @@ lemma ofCLM_induction {P : HilbertSchmidt H K → Prop} (h : ∀ X, P (ofCLM H K
 
 variable [FiniteDimensional ℂ H] [FiniteDimensional ℂ K]
 
+/-- For finite-dimensional `H` and `K`, the Hilbert–Schmidt space is finite-dimensional. -/
 instance : FiniteDimensional ℂ (HilbertSchmidt H K) :=
   inferInstanceAs (FiniteDimensional ℂ (H →L[ℂ] K))
 
@@ -140,6 +143,7 @@ instance : NormedAddCommGroup (HilbertSchmidt H K) :=
 
 instance : InnerProductSpace ℂ (HilbertSchmidt H K) := InnerProductSpace.ofCore _
 
+/-- The Hilbert–Schmidt space is complete, being finite-dimensional, hence a Hilbert space. -/
 instance : CompleteSpace (HilbertSchmidt H K) := FiniteDimensional.complete ℂ _
 
 /-- The Hilbert–Schmidt inner product: `⟪X, Y⟫ = tr(X† Y)`. -/
@@ -255,11 +259,13 @@ def rightMul :
     rw [← MulOpposite.op_star, MulOpposite.op_inj, star_eq_adjoint, star_eq_adjoint,
       adjoint_sandwich, adjoint_one]
 
+/-- Left multiplication by `B` sends `X` to the composite `B X`. -/
 @[simp]
 lemma leftMul_ofCLM (B : K →L[ℂ] K) (X : H →L[ℂ] K) :
     leftMul H B (ofCLM H K X) = ofCLM H K (B ∘L X) :=
   rfl
 
+/-- Right multiplication by `A` sends `X` to the composite `X A`. -/
 @[simp]
 lemma unop_rightMul_ofCLM (A : H →L[ℂ] H) (X : H →L[ℂ] K) :
     MulOpposite.unop (rightMul K A) (ofCLM H K X) = ofCLM H K (X ∘L A) :=

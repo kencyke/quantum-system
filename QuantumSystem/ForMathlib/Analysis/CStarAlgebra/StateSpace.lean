@@ -58,6 +58,8 @@ def QuasiStateSpace : Set (WeakDual ℂ A) :=
 
 namespace QuasiStateSpace
 
+/-- The quasi-state space is convex: positivity and the bound `‖φ‖ ≤ 1` are both preserved by
+convex combinations. -/
 lemma convex : Convex ℝ (QuasiStateSpace A) := by
   apply Convex.inter
   · -- Positivity is preserved by convex combinations.
@@ -82,11 +84,14 @@ lemma isClosed_setOf_nonneg : IsClosed { φ : WeakDual ℂ A | ∀ a : A, 0 ≤ 
   exact isClosed_iInter fun a => isClosed_iInter fun _ =>
     isClosed_le continuous_const (WeakDual.eval_continuous a)
 
+/-- The quasi-state space is weak-\* compact: it is a weak-\* closed subset of the closed unit
+ball, which is weak-\* compact by the Banach–Alaoglu theorem. -/
 lemma compact : IsCompact (QuasiStateSpace A) := by
   rw [QuasiStateSpace, Set.inter_comm]
   exact (WeakDual.isCompact_closedBall (0 : StrongDual ℂ A) 1).inter_right
     (isClosed_setOf_nonneg A)
 
+/-- The zero functional lies in the quasi-state space; in particular it is nonempty. -/
 lemma non_empty : (0 : WeakDual ℂ A) ∈ QuasiStateSpace A := by
   constructor
   · intro a _

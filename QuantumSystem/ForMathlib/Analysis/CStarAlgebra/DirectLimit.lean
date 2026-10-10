@@ -43,6 +43,7 @@ noncomputable def cstarNorm : DirectLimit F f → ℝ :=
     (fun i j h x => (NonUnitalStarAlgHom.norm_map (f i j h) (hf i j h) x).symm)
 
 omit [Nonempty ι] in
+/-- The norm of the class of `x ∈ F i` in the direct limit is `‖x‖`. -/
 @[simp] lemma cstarNorm_mk (i) (x : F i) :
     cstarNorm hf (⟦⟨i, x⟩⟧ : DirectLimit F f) = ‖x‖ := rfl
 

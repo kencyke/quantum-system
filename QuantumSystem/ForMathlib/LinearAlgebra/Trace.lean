@@ -67,6 +67,7 @@ noncomputable def endTensorEndAlgEquiv :
     rw [hcoe]
     exact (homTensorHomEquiv R M N M N).bijective
 
+/-- `endTensorEndAlgEquiv` sends `f ⊗ g` to the tensor product map `TensorProduct.map f g`. -/
 @[simp]
 lemma endTensorEndAlgEquiv_tmul (f : Module.End R M) (g : Module.End R N) :
     (endTensorEndAlgEquiv (R := R) (M := M) (N := N)) (f ⊗ₜ[R] g) = TensorProduct.map f g := by

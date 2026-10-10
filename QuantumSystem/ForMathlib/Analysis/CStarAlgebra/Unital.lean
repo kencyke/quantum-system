@@ -39,6 +39,8 @@ lemma norm_character_eq_one [Nontrivial B]
     rw [h_one, norm_one] at h_le
     exact h_le
 
+/-- For self-adjoint `a` and real `t`, `‖a + (i t) • 1‖ ^ 2 = ‖a‖ ^ 2 + t ^ 2`. By the C⋆-identity the
+left side is `‖a ^ 2 + t ^ 2 • 1‖`, which the spectral mapping theorem evaluates. -/
 lemma norm_sq_add_imaginary_unit_of_selfAdjoint [Nontrivial B] (a : B) (ha : IsSelfAdjoint a) (t : ℝ) :
     ‖a + (Complex.I * t) • (1 : B)‖^2 = ‖a‖^2 + t^2 := by
   set x := a + (Complex.I * t) • (1 : B) with hx_def

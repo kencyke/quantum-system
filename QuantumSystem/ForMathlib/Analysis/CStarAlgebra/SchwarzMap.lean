@@ -163,10 +163,13 @@ instance : FunLike (SchwarzMap A₁ A₂) A₁ A₂ where
     apply DFunLike.coe_injective
     exact h
 
+/-- A Schwarz map is `ℂ`-linear. -/
 instance : LinearMapClass (SchwarzMap A₁ A₂) ℂ A₁ A₂ where
   map_add f := map_add f.toLinearMap
   map_smulₛₗ f := map_smulₛₗ f.toLinearMap
 
+/-- A bundled Schwarz map satisfies the Kadison–Schwarz inequality in the sense of
+`SchwarzMapClass`. -/
 instance : SchwarzMapClass (SchwarzMap A₁ A₂) A₁ A₂ where
   le_map_star_mul f := f.le_map_star_mul'
 

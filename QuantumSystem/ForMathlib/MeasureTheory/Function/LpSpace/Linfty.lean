@@ -69,8 +69,11 @@ variable {R : Type*} [NormedRing R]
 noncomputable instance instMul : Mul (Lp R ∞ μ) where
   mul f g := f • g
 
+/-- Multiplication on `L∞` is Hölder multiplication: `f * g = f • g`. -/
 lemma mul_def (f g : Lp R ∞ μ) : f * g = f • g := rfl
 
+/-- Multiplication on `L∞` is pointwise almost everywhere: `(f * g) x = f x * g x` for almost every
+`x`. -/
 lemma coeFn_mul (f g : Lp R ∞ μ) : ⇑(f * g) =ᵐ[μ] ⇑f * ⇑g :=
   Lp.coeFn_lpSMul f g
 
@@ -78,6 +81,7 @@ lemma coeFn_mul (f g : Lp R ∞ μ) : ⇑(f * g) =ᵐ[μ] ⇑f * ⇑g :=
 noncomputable instance instOne : One (Lp R ∞ μ) where
   one := (memLp_top_const (1 : R)).toLp _
 
+/-- The unit of `L∞` is the constant function `1` almost everywhere. -/
 lemma coeFn_one : ⇑(1 : Lp R ∞ μ) =ᵐ[μ] 1 :=
   (memLp_top_const (μ := μ) (1 : R)).coeFn_toLp
 
@@ -121,9 +125,11 @@ section NormedAlgebra
 
 variable {𝕜 : Type*} [NormedField 𝕜] [NormedAlgebra 𝕜 R]
 
+/-- Scalars in `𝕜` associate with multiplication on `L∞`: `(c • f) * g = c • (f * g)`. -/
 instance : IsScalarTower 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
   smul_assoc := Lp.smul_assoc
 
+/-- Scalars in `𝕜` commute with left multiplication on `L∞`: `c • (f * g) = f * (c • g)`. -/
 instance : SMulCommClass 𝕜 (Lp R ∞ μ) (Lp R ∞ μ) where
   smul_comm := Lp.smul_comm
 
@@ -177,6 +183,7 @@ section CStarAlgebra
 
 variable {R : Type*} [CStarAlgebra R]
 
+/-- The involution on `L∞` of a C⋆-algebra is conjugate-linear: `star (c • f) = star c • star f`. -/
 noncomputable instance : StarModule ℂ (Lp R ∞ μ) where
   star_smul c f := Lp.ext <| by
     filter_upwards [Lp.coeFn_star (c • f), Lp.coeFn_smul c f, Lp.coeFn_smul (star c) (star f),
@@ -203,6 +210,7 @@ this definition by `indicatorConstLp ∞ hs _ c`. -/
 noncomputable def indicatorConst (hs : MeasurableSet s) (c : E) : Lp E ∞ μ :=
   ((memLp_top_const c).indicator hs).toLp _
 
+/-- `indicatorConst hs c` is the indicator function of `s` with value `c`, almost everywhere. -/
 lemma coeFn_indicatorConst (hs : MeasurableSet s) (c : E) :
     ⇑(indicatorConst (μ := μ) hs c) =ᵐ[μ] s.indicator fun _ => c :=
   MemLp.coeFn_toLp _
@@ -223,8 +231,10 @@ noncomputable def mulL2CLM (f : Lp ℂ ∞ μ) : Lp ℂ 2 μ →L[ℂ] Lp ℂ 2 
       map_smul' c u := (Lp.smul_comm c f u).symm }
     ‖f‖ fun u => Lp.norm_smul_le f u
 
+/-- `mulL2CLM f` acts on `u ∈ L²` by Hölder multiplication `f • u`. -/
 lemma mulL2CLM_apply (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) : mulL2CLM f u = f • u := rfl
 
+/-- `mulL2CLM f u` is the pointwise product `f u` almost everywhere. -/
 lemma coeFn_mulL2CLM (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) : ⇑(mulL2CLM f u) =ᵐ[μ] ⇑f * ⇑u :=
   Lp.coeFn_lpSMul f u
 
@@ -261,11 +271,14 @@ noncomputable def mulL2 : Lp ℂ ∞ μ →⋆ₐ[ℂ] (Lp ℂ 2 μ →L[ℂ] Lp
     simp only [RCLike.inner_apply, map_mul, RCLike.star_def, Complex.conj_conj]
     ring
 
+/-- The multiplication operator `M_f = mulL2 f` acts on `u ∈ L²` by Hölder multiplication `f • u`. -/
 lemma mulL2_apply (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) : mulL2 f u = f • u := rfl
 
+/-- The multiplication operator acts pointwise: `M_f u = f u` almost everywhere. -/
 lemma coeFn_mulL2 (f : Lp ℂ ∞ μ) (u : Lp ℂ 2 μ) : ⇑(mulL2 f u) =ᵐ[μ] ⇑f * ⇑u :=
   Lp.coeFn_lpSMul f u
 
+/-- The multiplication operator is bounded by the `L∞` norm: `‖M_f‖ ≤ ‖f‖`. -/
 lemma norm_mulL2_le (f : Lp ℂ ∞ μ) : ‖mulL2 f‖ ≤ ‖f‖ :=
   LinearMap.mkContinuous_norm_le _ (norm_nonneg f) fun u => Lp.norm_smul_le f u
 
@@ -411,6 +424,7 @@ noncomputable def compBCF (g : ℂ →ᵇ ℂ) (f : Lp ℂ ∞ μ) : Lp ℂ ∞ 
   (memLp_top_of_bound (g.continuous.comp_aestronglyMeasurable (Lp.aestronglyMeasurable f)) ‖g‖
     (Eventually.of_forall fun x => g.norm_coe_le_norm (f x))).toLp _
 
+/-- `compBCF g f` is the composite `g ∘ f` almost everywhere. -/
 lemma coeFn_compBCF (g : ℂ →ᵇ ℂ) (f : Lp ℂ ∞ μ) : ⇑(compBCF g f) =ᵐ[μ] g ∘ f :=
   MemLp.coeFn_toLp _
 
@@ -510,6 +524,7 @@ theorem cfc_mulL2 (g : ℂ →ᵇ ℂ) (f : Lp ℂ ∞ μ) :
 lemma measurable_enorm_sq (u : Lp ℂ 2 μ) : Measurable fun x => ‖u x‖ₑ ^ 2 :=
   (Lp.stronglyMeasurable u).measurable.enorm.pow_const 2
 
+/-- For `u ∈ L²`, the measure `|u|² μ` is finite: its total mass is `∫ |u|² dμ = ‖u‖² < ∞`. -/
 instance isFiniteMeasure_withDensity_enorm_sq (u : Lp ℂ 2 μ) :
     IsFiniteMeasure (μ.withDensity fun x => ‖u x‖ₑ ^ 2) := by
   refine isFiniteMeasure_withDensity ?_
@@ -523,6 +538,7 @@ noncomputable def boundedLinfty (f : α → ℂ) (hf : Measurable f) (C : ℝ) (
     Lp ℂ ∞ μ :=
   (memLp_top_of_bound hf.aestronglyMeasurable C (Eventually.of_forall hC)).toLp f
 
+/-- `boundedLinfty f hf C hC` is the function `f` almost everywhere. -/
 lemma coeFn_boundedLinfty (f : α → ℂ) (hf : Measurable f) (C : ℝ) (hC : ∀ x, ‖f x‖ ≤ C) :
     ⇑(boundedLinfty (μ := μ) f hf C hC) =ᵐ[μ] f :=
   MemLp.coeFn_toLp _

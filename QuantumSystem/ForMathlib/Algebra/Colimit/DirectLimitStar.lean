@@ -38,6 +38,7 @@ noncomputable instance : Star (DirectLimit F f) where
   star := DirectLimit.map (F₁ := F) (F₂ := F) f f (fun _ => star)
     (fun _ _ h x => map_star (f _ _ h) x)
 
+/-- The involution on a direct limit acts componentwise: `star ⟦⟨i, x⟩⟧ = ⟦⟨i, star x⟩⟧`. -/
 @[simp] lemma star_mk (i) (x : F i) :
     star (⟦⟨i, x⟩⟧ : DirectLimit F f) = ⟦⟨i, star x⟩⟧ := rfl
 

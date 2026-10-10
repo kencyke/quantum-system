@@ -125,8 +125,12 @@ positive maps as morphisms. -/
 structure CStarAlgCP : Type (u + 1) where
   /-- The underlying C⋆-algebra. -/
   carrier : Type u
+  /-- The C⋆-algebra structure of the carrier. -/
   [instNonUnitalCStarAlgebra : NonUnitalCStarAlgebra carrier]
+  /-- The partial order of the carrier. -/
   [instPartialOrder : PartialOrder carrier]
+  /-- The partial order of the carrier is the star order: `a ≤ b` exactly when `b - a` lies in the
+  additive closure of the elements `star x * x`. -/
   [instStarOrderedRing : StarOrderedRing carrier]
 
 namespace CStarAlgCP

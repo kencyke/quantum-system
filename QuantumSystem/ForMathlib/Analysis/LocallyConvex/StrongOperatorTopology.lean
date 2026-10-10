@@ -62,6 +62,7 @@ open ContinuousLinearMap (toUniformConvergenceCLM)
 def Set.toSOT (S : Set B) : Set BSOT :=
   (toUniformConvergenceCLM _ _ _).symm ⁻¹' S
 
+/-- `T` lies in the SOT copy of `S` exactly when its underlying operator lies in `S`. -/
 lemma Set.mem_toSOT_iff {S : Set B} {T : BSOT} :
     T ∈ Set.toSOT (H := H) S ↔ (toUniformConvergenceCLM _ _ _).symm T ∈ S :=
   Iff.rfl

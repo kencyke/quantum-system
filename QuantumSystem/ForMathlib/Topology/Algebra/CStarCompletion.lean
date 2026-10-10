@@ -33,7 +33,7 @@ section StarRing
 
 variable [NormedRing A] [StarRing A] [NormedStarGroup A]
 
-lemma uniformContinuous_star : UniformContinuous (star : A → A) := by
+private lemma uniformContinuous_star : UniformContinuous (star : A → A) := by
   have h : Isometry (star : A → A) :=
     AddMonoidHomClass.isometry_of_norm (starAddEquiv (R := A)) fun x => norm_star x
   exact h.uniformContinuous
@@ -41,9 +41,11 @@ lemma uniformContinuous_star : UniformContinuous (star : A → A) := by
 /-- Involution on a completion, the continuous extension of the involution on the dense image. -/
 noncomputable instance : Star (Completion A) := ⟨Completion.map star⟩
 
+/-- The involution on the completion extends that of `A`: `star ↑a = ↑(star a)`. -/
 @[simp] lemma star_coe (a : A) : star (↑a : Completion A) = (↑(star a) : Completion A) :=
   map_coe uniformContinuous_star a
 
+/-- The involution on a completion is continuous. -/
 instance : ContinuousStar (Completion A) := ⟨continuous_map⟩
 
 noncomputable instance : InvolutiveStar (Completion A) where
@@ -66,6 +68,7 @@ noncomputable instance : StarRing (Completion A) where
     intro a b
     rw [← coe_add, star_coe, star_coe, star_coe, ← coe_add, star_add]
 
+/-- The involution on a completion is isometric: `‖star a‖ = ‖a‖`. -/
 instance : NormedStarGroup (Completion A) where
   norm_star_le a := by
     refine induction_on a (isClosed_le continuous_id.star.norm continuous_norm) ?_
@@ -79,6 +82,7 @@ section CStarRing
 
 variable [NormedRing A] [StarRing A] [NormedStarGroup A] [CStarRing A]
 
+/-- The completion of a C⋆-normed ring satisfies the C⋆-identity `‖star a * a‖ = ‖a‖ * ‖a‖`. -/
 instance : CStarRing (Completion A) where
   norm_mul_self_le a := by
     refine induction_on a
@@ -95,6 +99,8 @@ section StarModule
 variable {𝕜 : Type*} [NormedField 𝕜] [StarRing 𝕜] [NormedRing A] [StarRing A]
   [NormedStarGroup A] [NormedAlgebra 𝕜 A] [StarModule 𝕜 A]
 
+/-- The involution on the completion of a star module over `𝕜` is conjugate-linear:
+`star (c • a) = star c • star a`. -/
 noncomputable instance : StarModule 𝕜 (Completion A) where
   star_smul c a := by
     refine induction_on a
@@ -169,11 +175,14 @@ noncomputable def mapStarAlgEquiv (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinu
     intro a
     rw [star_coe, map_coe he, map_coe he, star_coe, map_star]
 
+/-- `mapStarAlgEquiv e he he'` extends `e` on the image of the completion embedding
+`A → Completion A`. -/
 @[simp] lemma mapStarAlgEquiv_coe (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
     (he' : UniformContinuous e.symm) (a : A) :
     mapStarAlgEquiv e he he' (↑a : Completion A) = (↑(e a) : Completion B) :=
   map_coe he a
 
+/-- As a function, `mapStarAlgEquiv e he he'` is the completion map `Completion.map e`. -/
 lemma coe_mapStarAlgEquiv (e : A ≃⋆ₐ[𝕜] B) (he : UniformContinuous e)
     (he' : UniformContinuous e.symm) :
     ⇑(mapStarAlgEquiv e he he') = Completion.map e :=
