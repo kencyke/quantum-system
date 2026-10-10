@@ -133,7 +133,7 @@ are topologically irreducible: their only closed invariant subspaces are `⊥` a
 
 Non-nullness is part of the definition: without it the zero representation on a
 one-dimensional space would be irreducible, and no family of non-null representations could
-be a complete system of irreducible representatives (`SectorFamily.IsComplete`). -/
+be a complete system of representatives of the irreducible representations. -/
 structure IsIrreducible (R : CStarRep A) : Prop where
   /-- The representation is non-null: `π ≠ 0`. -/
   ne_zero : R.π ≠ 0

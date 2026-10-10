@@ -18,12 +18,12 @@ physical selection condition `P` (DHR, KMS, cone-localised, ...): for
 every physical representation `R` there is some index `α` with
 `R ≃ F.rep α`, and indices give pairwise inequivalent representations.
 
-The selection condition `P` and the completeness/skeleton conditions are
-*separate* structures (`SectorFamily.IsComplete`, `IsSkeleton`), so the
-basic `SectorFamily` data carries no condition — it is just an indexed
-family of representations.  The direct sum
-`SectorFamily.directSumHilbert` (in `CStarAlgebra/Representation/DirectSum.lean`) and its
-universal `*`-representation `directSumRep` need only the family data.
+The selection condition `P` and the completeness of the family are not part of the data: the
+basic `SectorFamily` carries no condition — it is just an indexed family of representations, and
+any such condition is stated as a hypothesis where a result needs it.  The direct sum
+`SectorFamily.directSumHilbert` (in
+`QuantumSystem.Analysis.CStarAlgebra.Representation.DirectSum`) and its universal
+`*`-representation `directSumRep` need only the family data.
 
 ## Design rationale
 
@@ -39,10 +39,6 @@ identified up to unitary equivalence.
 ## Main definitions
 
 * `SectorFamily A` — an indexed family of `CStarRep`s.
-* `SectorFamily.IsPhysical` — every member satisfies `P`.
-* `SectorFamily.IsComplete` — every `P`-representation is unitarily
-  equivalent to some `F.rep α`.
-* `SectorFamily.IsSkeleton` — `IsComplete` and pairwise non-equivalent.
 -/
 
 @[expose] public section
@@ -56,32 +52,3 @@ structure SectorFamily (A : Type u) [NonUnitalCStarAlgebra A] where
   Index : Type w
   /-- The representation at each index. -/
   rep : Index → CStarRep.{u, v} A
-
-namespace SectorFamily
-
-variable {A : Type u} [NonUnitalCStarAlgebra A]
-
-/-- Every member of the family satisfies the predicate `P`. -/
-structure IsPhysical (F : SectorFamily.{u, v, w} A)
-    (P : CStarRep.{u, v} A → Prop) : Prop where
-  /-- Each `F.rep α` is physical. -/
-  isPhysical : ∀ α, P (F.rep α)
-
-/-- The family `F` is a *complete system of physical representatives*:
-every representation satisfying `P` is unitarily equivalent to some
-`F.rep α`. -/
-structure IsComplete (F : SectorFamily.{u, v, w} A)
-    (P : CStarRep.{u, v} A → Prop) : Prop extends F.IsPhysical P where
-  /-- Every `P`-representation is unitarily equivalent to some `F.rep α`. -/
-  complete : ∀ R : CStarRep.{u, v} A, P R → ∃ α,
-    Nonempty (CStarRep.UnitaryEquiv R (F.rep α))
-
-/-- The family `F` is a *skeleton* for the `P`-representations: it is
-complete and any two indices give non-equivalent representations. -/
-structure IsSkeleton (F : SectorFamily.{u, v, w} A)
-    (P : CStarRep.{u, v} A → Prop) : Prop extends F.IsComplete P where
-  /-- Distinct indices give non-equivalent representations. -/
-  pairwise : ∀ α β,
-    Nonempty (CStarRep.UnitaryEquiv (F.rep α) (F.rep β)) → α = β
-
-end SectorFamily

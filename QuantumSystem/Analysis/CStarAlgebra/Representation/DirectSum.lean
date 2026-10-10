@@ -41,9 +41,9 @@ Both Gelfand–Naimark witnesses are direct sums of sector families:
 norming subfamily.  Two pure states whose GNS representations are
 unitarily equivalent contribute the "same sector" twice (once per
 state), so the pure-state direct sum is not a true sector
-decomposition.  Applied to a family satisfying `SectorFamily.IsSkeleton`
-(one representative per unitary-equivalence class), the construction of
-this file avoids the over-counting.
+decomposition.  Applied to a family with one representative per
+unitary-equivalence class, the construction of this file avoids the
+over-counting.
 
 ## Main definitions
 
