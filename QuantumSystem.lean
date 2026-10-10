@@ -126,10 +126,6 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorT
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
-public import QuantumSystem.ForMathlib.Analysis.Matrix.Basic
-public import QuantumSystem.ForMathlib.Analysis.Matrix.Hermitian
-public import QuantumSystem.ForMathlib.Analysis.Matrix.HermitianFunctionalCalculus
-public import QuantumSystem.ForMathlib.Analysis.Matrix.Order
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
@@ -142,8 +138,6 @@ public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempotents
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
-public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv
-public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.MemLpMulSelf
 public import QuantumSystem.ForMathlib.MeasureTheory.Integral.EReal
