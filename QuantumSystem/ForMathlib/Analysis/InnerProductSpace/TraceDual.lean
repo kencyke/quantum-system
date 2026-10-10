@@ -26,8 +26,8 @@ pairing** `(A, X) ↦ tr(A ∘ X)` on `B(H) = H →L[𝕜] H` is nondegenerate
 `𝕜`-linear in `Φ`. It is not in general the adjoint for the Hilbert–Schmidt inner product
 `⟪A, B⟫ = tr(A† ∘ B)`, which is conjugate-linear in `Φ` (for `Φ = i • id`, `Φ* = i • id` while the
 Hilbert–Schmidt adjoint is `-i • id`). The two agree exactly when `Φ` preserves self-adjointness,
-`Φ(A†) = Φ(A)†`, in particular for positive maps; for a quantum channel `Φ*` is the Heisenberg
-picture of `Φ`.
+`Φ(A†) = Φ(A)†`, in particular for positive maps; for a completely positive trace-preserving (CPTP)
+map `Φ`, `Φ*` is the Heisenberg picture of `Φ`.
 
 The same nondegeneracy represents every linear functional `f` on `B(H)` by its **density**
 `ρ_f = ContinuousLinearMap.density f`, the operator with `f(A) = tr(ρ_f ∘ A)`

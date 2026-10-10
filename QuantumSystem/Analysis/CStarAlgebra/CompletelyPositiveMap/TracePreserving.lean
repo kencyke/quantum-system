@@ -34,9 +34,9 @@ quantum system; matrix algebras are the case `H = EuclideanSpace ℂ n`.
   `CompletelyPositiveMap` by trace preservation, with `FunLike`, `LinearMapClass` and
   `CompletelyPositiveMapClass` instances.
 * `CPTPMap.id`, `CPTPMap.comp`: identity and composition.
-* `CPTPMap.ofStarAlgEquiv`: a `⋆`-algebra equivalence `B(H) ≃⋆ₐ B(K)` as a channel.
-* `CPTPMap.ofLinearIsometryEquiv`: the unitary channel `A ↦ U A U†` of a unitary
-  `U : H ≃ K`.
+* `CPTPMap.ofStarAlgEquiv`: a `⋆`-algebra equivalence `B(H) ≃⋆ₐ B(K)` as a CPTP map.
+* `CPTPMap.ofLinearIsometryEquiv`: the unitary conjugation `A ↦ U A U†` of a unitary
+  `U : H ≃ K` as a CPTP map.
 
 ## Main statements
 
@@ -149,11 +149,11 @@ protected noncomputable def id : CPTPMap H H where
   toCompletelyPositiveMap := CompletelyPositiveMap.id _
   isTracePreserving' _ := rfl
 
-/-- The identity channel is the identity function. -/
+/-- The identity CPTP map is the identity function. -/
 @[simp] lemma coe_id : ⇑(CPTPMap.id H) = id :=
   rfl
 
-/-- The identity channel fixes every operator. -/
+/-- The identity CPTP map fixes every operator. -/
 lemma id_apply (A : H →L[ℂ] H) : CPTPMap.id H A = A :=
   rfl
 
@@ -163,11 +163,11 @@ noncomputable def comp (Ψ : CPTPMap K L) (Φ : CPTPMap H K) : CPTPMap H L where
   toCompletelyPositiveMap := Ψ.toCompletelyPositiveMap.comp Φ.toCompletelyPositiveMap
   isTracePreserving' A := (Ψ.trace_map (Φ A)).trans (Φ.trace_map A)
 
-/-- The composite channel `Ψ.comp Φ` is the composite function `Ψ ∘ Φ`. -/
+/-- The composite CPTP map `Ψ.comp Φ` is the composite function `Ψ ∘ Φ`. -/
 @[simp] lemma coe_comp (Ψ : CPTPMap K L) (Φ : CPTPMap H K) : ⇑(Ψ.comp Φ) = Ψ ∘ Φ :=
   rfl
 
-/-- The composite channel `Ψ.comp Φ` sends `A` to `Ψ (Φ A)`. -/
+/-- The composite CPTP map `Ψ.comp Φ` sends `A` to `Ψ (Φ A)`. -/
 lemma comp_apply (Ψ : CPTPMap K L) (Φ : CPTPMap H K) (A : H →L[ℂ] H) :
     Ψ.comp Φ A = Ψ (Φ A) :=
   rfl
@@ -175,23 +175,23 @@ lemma comp_apply (Ψ : CPTPMap K L) (Φ : CPTPMap H K) (A : H →L[ℂ] H) :
 /-- A `⋆`-algebra equivalence `φ : B(H) ≃⋆ₐ B(K)` is a CPTP map: it is completely
 positive as a `⋆`-homomorphism (`NonUnitalStarAlgHomClass.instCompletelyPositiveMapClass`), and
 it preserves the trace as an algebra isomorphism (`ContinuousLinearMap.trace_map`). By
-Skolem–Noether every such `φ` is conjugation by a unitary, so these are the unitary channels; that
+Skolem–Noether every such `φ` is conjugation by a unitary, so these are the unitary CPTP maps; that
 characterisation is not formalised here. -/
 noncomputable def ofStarAlgEquiv (φ : (H →L[ℂ] H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : CPTPMap H K where
   toCompletelyPositiveMap := CompletelyPositiveMapClass.toCompletelyPositiveLinearMap φ
   isTracePreserving' := ContinuousLinearMap.trace_map φ
 
-/-- The channel of a `⋆`-algebra equivalence `φ` is `φ` as a function. -/
+/-- The CPTP map of a `⋆`-algebra equivalence `φ` is `φ` as a function. -/
 @[simp] lemma coe_ofStarAlgEquiv (φ : (H →L[ℂ] H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
     ⇑(ofStarAlgEquiv φ) = φ :=
   rfl
 
-/-- The **unitary channel** `A ↦ U A U†` of a unitary `U : H ≃ K`: the channel of the
-`⋆`-algebra equivalence `LinearIsometryEquiv.conjStarAlgEquiv U`. -/
+/-- The **unitary conjugation** `A ↦ U A U†` by a unitary `U : H ≃ K` as a CPTP map: the CPTP map
+of the `⋆`-algebra equivalence `LinearIsometryEquiv.conjStarAlgEquiv U`. -/
 noncomputable def ofLinearIsometryEquiv (U : H ≃ₗᵢ[ℂ] K) : CPTPMap H K :=
   ofStarAlgEquiv U.conjStarAlgEquiv
 
-/-- The unitary channel of `U` acts as `A ↦ U A U†`. -/
+/-- The unitary conjugation by `U` acts as `A ↦ U A U†`. -/
 lemma ofLinearIsometryEquiv_apply (U : H ≃ₗᵢ[ℂ] K) (A : H →L[ℂ] H) :
     ofLinearIsometryEquiv U A =
       (U : H →L[ℂ] K) ∘L A ∘L (U : H →L[ℂ] K)† := by

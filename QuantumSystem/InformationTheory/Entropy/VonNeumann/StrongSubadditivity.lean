@@ -28,7 +28,7 @@ of `ω_BC`. The unital completely positive map `j : Y ⊗ Z ↦ (1 ⊗ Y) ⊗ Z`
 `ω_AB ⊗ ω_C` back to `ω_B ⊗ ω_C`, so the data-processing inequality along `j`
 (`umegakiEntropy_comp_le_of_kPositiveMap`) and `D(ω ‖ ω_A ⊗ ω_B) = I(A:B)`
 (`State.umegakiEntropy_eq_mutualInformation`) give `I(B:C) ≤ I(AB:C)`. No associator and no
-partial-trace channel is used.
+partial-trace CPTP map is used.
 
 ## Implementation notes
 

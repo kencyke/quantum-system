@@ -281,7 +281,7 @@ variable {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B]
 
 /-- The **pullback** `ω ∘ α` of a state along a unital positive map `α : B → A`, for instance the
 restriction of a state to a subalgebra, or a state transformed by the Heisenberg-picture dual of a
-quantum channel. -/
+CPTP map. -/
 noncomputable def comp (α : F) (hα : α 1 = 1) : State B :=
   ofPositiveLinearMap ((PositiveLinearMap.ofClass ω).comp (PositiveLinearMap.ofClass α)) (by
     change ω (α 1) = 1

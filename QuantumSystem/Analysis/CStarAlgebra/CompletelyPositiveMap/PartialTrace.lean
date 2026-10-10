@@ -45,7 +45,7 @@ noncomputable def traceRight : CPTPMap (H ⊗[ℂ] K) H where
     CompletelyPositiveMap.traceDual (ContinuousLinearMap.rTensorStarAlgHom ℂ H K)
   isTracePreserving' := ContinuousLinearMap.trace_traceRight
 
-/-- The partial-trace channel acts as the partial trace. -/
+/-- The partial-trace CPTP map acts as the partial trace. -/
 @[simp] lemma traceRight_apply (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
     traceRight H K X = ContinuousLinearMap.traceRight H K X :=
   rfl
@@ -58,7 +58,7 @@ noncomputable def traceLeft : CPTPMap (H ⊗[ℂ] K) K where
     CompletelyPositiveMap.traceDual (ContinuousLinearMap.lTensorStarAlgHom ℂ K H)
   isTracePreserving' := ContinuousLinearMap.trace_traceLeft
 
-/-- The partial-trace channel over the left factor acts as the partial trace. -/
+/-- The partial-trace CPTP map over the left factor acts as the partial trace. -/
 @[simp] lemma traceLeft_apply (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
     traceLeft H K X = ContinuousLinearMap.traceLeft H K X :=
   rfl

@@ -19,9 +19,9 @@ It is Araki's data-processing inequality `VonNeumannAlgebra.arakiEntropy_comp_le
 Neumann algebras `𝓑(K)` and `𝓑(H)`, where every map is normal in finite dimension.
 
 By the Kadison–Schwarz inequality, unital `2`-positive maps, in particular unital completely
-positive maps and `⋆`-homomorphisms, are Schwarz maps. For a quantum channel `Φ : B(H) → B(K)` the
+positive maps and `⋆`-homomorphisms, are Schwarz maps. For a CPTP map `Φ : B(H) → B(K)` the
 Schrödinger-picture output of `ψ` is `ψ ∘ Φ*`, with `Φ*` the trace dual, and its density is
-`Φ(ρ_ψ)` (`CPTPMap.density_comp_traceDual`); so monotonicity under channels is
+`Φ(ρ_ψ)` (`CPTPMap.density_comp_traceDual`); so monotonicity under CPTP maps is
 `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` (`CPTPMap.umegakiEntropy_comp_traceDual_le`), and more generally
 under `2`-positive trace-preserving maps.
 
@@ -38,7 +38,7 @@ under `2`-positive trace-preserving maps.
   maps; `umegakiEntropy_comp_le_of_kPositiveMap` for unital `2`-positive maps.
 * `umegakiEntropy_comp_traceDual_le_of_kPositiveMap`,
   `CPTPMap.umegakiEntropy_comp_traceDual_le` — monotonicity under `2`-positive
-  trace-preserving maps and quantum channels, in the Schrödinger picture.
+  trace-preserving maps and CPTP maps, in the Schrödinger picture.
 * `umegakiEntropy_comp_starAlgEquiv` — invariance under `⋆`-isomorphisms
   (unitary conjugations) `B(K) ≃ B(H)`.
 * `umegakiEntropy_comp_eq_of_recoverable` — equality in monotonicity when the map
@@ -46,7 +46,7 @@ under `2`-positive trace-preserving maps.
 
 ## Recovery and equality
 
-If a channel `R` recovers both inputs, `R(Φ(ρ)) = ρ` and `R(Φ(σ)) = σ`, equality holds in
+If a CPTP map `R` recovers both inputs, `R(Φ(ρ)) = ρ` and `R(Φ(σ)) = σ`, equality holds in
 monotonicity (`umegakiEntropy_comp_eq_of_recoverable`). Petz's theorem gives the
 converse, with the Petz recovery map `R(·) = σ^(1/2) Φ*(Φ(σ)^(-1/2) · Φ(σ)^(-1/2)) σ^(1/2)`; that
 converse is **not** formalised here.
@@ -164,8 +164,8 @@ theorem umegakiEntropy_comp_starAlgEquiv (π : (K →L[ℂ] K) ≃⋆ₐ[ℂ] (H
 
 /-- **Equality in monotonicity for reversible maps**: if a unital Schwarz map `β : B(H) → B(K)`
 undoes `α` on `ψ` and `φ`, `ψ ∘ α ∘ β = ψ` and `φ ∘ α ∘ β = φ`, then
-`D(ψ ∘ α ‖ φ ∘ α) = D(ψ ‖ φ)`. For a channel `Φ` with `α = Φ*` and a recovery channel `R` with
-`β = R*`, the hypotheses say `R(Φ(ρ)) = ρ` and `R(Φ(σ)) = σ`. -/
+`D(ψ ∘ α ‖ φ ∘ α) = D(ψ ‖ φ)`. For a CPTP map `Φ` with `α = Φ*` and a recovery CPTP map `R`
+with `β = R*`, the hypotheses say `R(Φ(ρ)) = ρ` and `R(Φ(σ)) = σ`. -/
 theorem umegakiEntropy_comp_eq_of_recoverable {F F' : Type*}
     [FunLike F (K →L[ℂ] K) (H →L[ℂ] H)] [LinearMapClass F ℂ (K →L[ℂ] K) (H →L[ℂ] H)]
     [SchwarzMapClass F (K →L[ℂ] K) (H →L[ℂ] H)] [FunLike F' (H →L[ℂ] H) (K →L[ℂ] K)]
@@ -180,13 +180,13 @@ end DPI
 
 namespace CPTPMap
 
-/-- The Schrödinger-picture output `ψ ∘ Φ*` of a functional `ψ` under a quantum channel `Φ` has
-density `Φ(ρ_ψ)`. -/
+/-- The Schrödinger-picture output `ψ ∘ Φ*` of a functional `ψ` under a CPTP map `Φ` has density
+`Φ(ρ_ψ)`. -/
 theorem density_comp_traceDual (Φ : CPTPMap H K) (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
     density (ψ.comp (.ofClass (CompletelyPositiveMap.traceDual Φ))) = Φ (density ψ) :=
   density_eq_apply_density Φ fun _ => rfl
 
-/-- **Monotonicity under quantum channels**: `D(ψ ∘ Φ* ‖ φ ∘ Φ*) ≤ D(ψ ‖ φ)`, i.e.
+/-- **Monotonicity under CPTP maps**: `D(ψ ∘ Φ* ‖ φ ∘ Φ*) ≤ D(ψ ‖ φ)`, i.e.
 `D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` for the densities (`CPTPMap.density_comp_traceDual`). -/
 theorem umegakiEntropy_comp_traceDual_le (Φ : CPTPMap H K) (ψ φ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
     D(ψ.comp (.ofClass (CompletelyPositiveMap.traceDual Φ)) ∥
