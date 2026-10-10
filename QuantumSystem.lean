@@ -71,6 +71,7 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.StandardSubspace
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.TomitaAdjoint
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Multiplication
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Normal
+public import QuantumSystem.Analysis.VonNeumannAlgebra.PolarDecomposition
 public import QuantumSystem.Analysis.VonNeumannAlgebra.RadonNikodym
 public import QuantumSystem.Analysis.VonNeumannAlgebra.SplitInclusion
 public import QuantumSystem.Analysis.VonNeumannAlgebra.SupportProjection
