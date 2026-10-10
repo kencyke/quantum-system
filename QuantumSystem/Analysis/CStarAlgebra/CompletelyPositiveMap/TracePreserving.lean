@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import Mathlib.Analysis.Normed.Operator.ContinuousAlgEquiv
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
@@ -44,6 +45,9 @@ quantum system; matrix algebras are the case `H = EuclideanSpace ℂ n`.
   `ContinuousLinearMap.traceDual Φ` is unital.
 * `CPTPMap.trace_map`: a CPTP map preserves the trace.
 * `CPTPMap.ext`: CPTP maps agreeing on every operator are equal.
+* `CPTPMap.exists_ofStarAlgEquiv_eq_ofLinearIsometryEquiv`: **Skolem–Noether** — the CPTP map of a
+  `⋆`-algebra equivalence `B(H) ≃⋆ₐ B(K)` is a unitary conjugation, with the unitary unique up to a
+  phase (`CPTPMap.ofLinearIsometryEquiv_eq_iff`).
 
 ## References
 
@@ -175,8 +179,8 @@ lemma comp_apply (Ψ : CPTPMap K L) (Φ : CPTPMap H K) (A : H →L[ℂ] H) :
 /-- A `⋆`-algebra equivalence `φ : B(H) ≃⋆ₐ B(K)` is a CPTP map: it is completely
 positive as a `⋆`-homomorphism (`NonUnitalStarAlgHomClass.instCompletelyPositiveMapClass`), and
 it preserves the trace as an algebra isomorphism (`ContinuousLinearMap.trace_map`). By
-Skolem–Noether every such `φ` is conjugation by a unitary, so these are the unitary CPTP maps; that
-characterisation is not formalised here. -/
+Skolem–Noether every such `φ` is conjugation by a unitary, so these are the unitary CPTP maps
+(`CPTPMap.exists_ofStarAlgEquiv_eq_ofLinearIsometryEquiv`). -/
 noncomputable def ofStarAlgEquiv (φ : (H →L[ℂ] H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : CPTPMap H K where
   toCompletelyPositiveMap := CompletelyPositiveMapClass.toCompletelyPositiveLinearMap φ
   isTracePreserving' := ContinuousLinearMap.trace_map φ
@@ -197,5 +201,23 @@ lemma ofLinearIsometryEquiv_apply (U : H ≃ₗᵢ[ℂ] K) (A : H →L[ℂ] H) :
       (U : H →L[ℂ] K) ∘L A ∘L (U : H →L[ℂ] K)† := by
   rw [U.adjoint_eq_symm]
   rfl
+
+/-- **Skolem–Noether** for operator algebras: the CPTP map of a `⋆`-algebra equivalence
+`φ : B(H) ≃⋆ₐ B(K)` is the conjugation `A ↦ U A U†` by a unitary `U : H ≃ K`. This is Mathlib's
+`StarAlgEquiv.eq_linearIsometryEquivConjStarAlgEquiv`, whose continuity hypothesis holds
+automatically in finite dimension. -/
+theorem exists_ofStarAlgEquiv_eq_ofLinearIsometryEquiv (φ : (H →L[ℂ] H) ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
+    ∃ U : H ≃ₗᵢ[ℂ] K, ofStarAlgEquiv φ = ofLinearIsometryEquiv U := by
+  obtain ⟨U, hU⟩ := StarAlgEquiv.eq_linearIsometryEquivConjStarAlgEquiv φ
+    (LinearMap.continuous_of_finiteDimensional φ.toAlgEquiv.toLinearMap)
+  exact ⟨U, by rw [hU, ofLinearIsometryEquiv]⟩
+
+/-- The unitary of a unitary conjugation is unique up to a phase: `A ↦ U A U†` and `A ↦ V A V†`
+agree iff `U = α V` for a scalar `α` of modulus one. -/
+lemma ofLinearIsometryEquiv_eq_iff (U V : H ≃ₗᵢ[ℂ] K) :
+    ofLinearIsometryEquiv U = ofLinearIsometryEquiv V ↔ ∃ α : unitary ℂ, U = α • V := by
+  rw [← LinearIsometryEquiv.conjStarAlgEquiv_ext_iff]
+  refine ⟨fun h => StarAlgEquiv.ext fun A => ?_, fun h => by rw [ofLinearIsometryEquiv, h]; rfl⟩
+  exact congrArg (fun Φ : CPTPMap H K => Φ A) h
 
 end CPTPMap
