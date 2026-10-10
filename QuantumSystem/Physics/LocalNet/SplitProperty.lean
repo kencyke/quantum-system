@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.VonNeumannAlgebra.SplitInclusion
+public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion
 public import QuantumSystem.Physics.LocalNet.VonNeumannNet
 
 /-!

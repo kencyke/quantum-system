@@ -552,7 +552,7 @@ Neumann algebras admits an intermediate factor `N ⊆ B(H)` with minimal project
 `A ≤ N ≤ B` with `N` type I. The existence of such an `N` is precisely what makes `A ≤ B` a
 *split inclusion* in the sense of Doplicher–Longo (*Standard and split inclusions of von Neumann
 algebras*, Invent. Math. 75, 1984); the named form of that definition, `IsSplitInclusion`, and its
-consequences live in `QuantumSystem.Analysis.VonNeumannAlgebra.SplitInclusion`. In AQFT the split
+consequences live in `QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion`. In AQFT the split
 inclusions of interest are `𝓡(O₁) ≤ 𝓡(O₂)` for properly contained regions — the *split property*
 of a local net (Buchholz, *Product states for local algebras*, Comm. Math. Phys. 36, 1974).
 

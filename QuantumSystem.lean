@@ -77,12 +77,12 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.MurrayVonNeumann
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Normal
 public import QuantumSystem.Analysis.VonNeumannAlgebra.PolarDecomposition
 public import QuantumSystem.Analysis.VonNeumannAlgebra.RadonNikodym
-public import QuantumSystem.Analysis.VonNeumannAlgebra.SplitInclusion
 public import QuantumSystem.Analysis.VonNeumannAlgebra.SupportProjection
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Classification
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Defs
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SpatialDecomposition
+public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.ForMathlib.Algebra.Colimit.DirectLimitStar
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
