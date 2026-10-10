@@ -28,11 +28,11 @@ representations are canonically unitarily equivalent.
 This is the operator-algebraic building block of the DHR selection
 criterion (`LocalNet.SatisfiesDHR`, in `Physics/LocalNet/DHRCriterion.lean`):
 given a representation `R` of the quasi-local algebra with a DHR
-intertwiner `U : R.H ≃ₗᵢ[ℂ] H₀` for a region `O`
+intertwiner `U : R.H ≃ₗᵢ[ℂ] H₀` for a localisation region `Λ`
 (`LocalNet.IsDHRIntertwiner`), the conjugated representation
 `R.conjBy U` lives on the Hilbert space `H₀` of the vacuum
 representation `π₀`, and the intertwining condition forces it to agree
-with `π₀` on the observables localised outside `O`
+with `π₀` on the observables localised outside `Λ`
 (`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`, from
 `CStarRep.conjBy_π_eq_of_intertwined`).
 
@@ -113,9 +113,9 @@ for some `T : K →L[ℂ] K` at a particular `a : A`, then the conjugated
 action `(R.conjBy U).π a` equals `T`.
 
 This is the bridge to the DHR selection criterion: when `U` is a DHR
-intertwiner for a region `O` (`LocalNet.IsDHRIntertwiner`) and
+intertwiner for a localisation region `Λ` (`LocalNet.IsDHRIntertwiner`) and
 `T = π₀ a` the vacuum action, the conjugated representation agrees with
-the vacuum representation on every observable `a` localised outside `O`
+the vacuum representation on every observable `a` localised outside `Λ`
 (`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). -/
 lemma conjBy_π_eq_of_intertwined {R : CStarRep A}
     {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
