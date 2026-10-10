@@ -62,6 +62,11 @@ The file is organised in three parts:
 * `VonNeumannAlgebra.IsFactor.commutant` / `isFactor_commutant_iff` — `N` is a factor iff `N′` is.
 * `VonNeumannAlgebra.isFactor_conj_iff`, `VonNeumannAlgebra.isMinimalProjection_conj_iff` —
   factors and minimal projections are invariant under spatial isomorphisms `N ↦ U N U⋆`.
+* `VonNeumannAlgebra.isFactor_iff_of_starAlgEquiv`,
+  `VonNeumannAlgebra.isMinimalProjection_starAlgEquiv_iff` — more generally, both are invariant
+  under abstract `⋆`-isomorphisms `N ≃⋆ₐ M`, being intrinsic to the `⋆`-algebra
+  (`VonNeumannAlgebra.isFactor_iff_forall_commute`,
+  `VonNeumannAlgebra.isMinimalProjection_coe_iff`).
 * `VonNeumannAlgebra.IsFactor.central_projection_eq` — in a factor every central projection is
   `0` or `1`.
 * `VonNeumannAlgebra.isStarProjection_mem_commutant_iff` — a star projection lies in the commutant
@@ -709,5 +714,80 @@ lemma isMinimalProjection_conj_iff {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
       map_smul, StarAlgEquiv.symm_apply_apply] at this
 
 end Conj
+
+/-! ### Invariance under abstract `⋆`-isomorphisms
+
+Being a factor and being a minimal projection are properties of the abstract `⋆`-algebra `N`,
+not of the way it sits inside `B(H)`: the centre `N ∩ N′` is the centre of the ring `N`, and the
+corner condition `e N e = ℂ e` only involves products inside `N`. Both are therefore carried along
+any `⋆`-algebra isomorphism `N ≃⋆ₐ M` between von Neumann algebras on possibly different Hilbert
+spaces — not only along the spatial ones `N ↦ U N U⋆` of the previous section. A `⋆`-isomorphism
+`N ≃⋆ₐ (K →L[ℂ] K)` onto the operator type is covered by composing with
+`boundedLinearOperators.starAlgEquiv.symm`, which lands in `𝓑(K)`. -/
+
+section StarAlgEquiv
+
+variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
+  {N : VonNeumannAlgebra H} {M : VonNeumannAlgebra K}
+
+/-- **Being a factor is intrinsic to the `⋆`-algebra.** `N` is a factor iff every element of the
+ring `N` commuting with all of `N` is a scalar: the centre `N ∩ N′` is computed inside `N`. -/
+lemma isFactor_iff_forall_commute :
+    IsFactor N ↔ ∀ x : N, (∀ y : N, y * x = x * y) → ∃ c : ℂ, x = c • 1 := by
+  refine ⟨fun h x hx => ?_, fun h x hxN hx' => ?_⟩
+  · obtain ⟨c, hc⟩ := h x x.2 (mem_commutant_iff.mpr fun y hy => congrArg Subtype.val (hx ⟨y, hy⟩))
+    exact ⟨c, Subtype.ext hc⟩
+  · obtain ⟨c, hc⟩ := h ⟨x, hxN⟩ fun y => Subtype.ext (mem_commutant_iff.mp hx' y y.2)
+    exact ⟨c, congrArg Subtype.val hc⟩
+
+/-- A `⋆`-isomorphism carries a factor to a factor: it preserves the centre and the scalars. -/
+private lemma IsFactor.of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] M) (hN : IsFactor N) : IsFactor M := by
+  rw [isFactor_iff_forall_commute] at hN ⊢
+  intro x hx
+  obtain ⟨c, hc⟩ := hN (φ.symm x) fun y => EquivLike.injective φ (by
+    rw [map_mul, map_mul, StarAlgEquiv.apply_symm_apply, hx])
+  exact ⟨c, by rw [← φ.apply_symm_apply x, hc, map_smul, map_one]⟩
+
+/-- **Factors are invariant under `⋆`-isomorphisms**: if `N ≃⋆ₐ M`, then `M` is a factor iff `N`
+is. -/
+lemma isFactor_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] M) : IsFactor M ↔ IsFactor N :=
+  ⟨IsFactor.of_starAlgEquiv φ.symm, IsFactor.of_starAlgEquiv φ⟩
+
+/-- **Minimality is intrinsic to the `⋆`-algebra.** For `x ∈ N`, being a minimal projection of `N`
+is the algebraic condition that `x` is a nonzero star projection of the `⋆`-algebra `N` with trivial
+corner `x N x = ℂ x`, computed inside `N`. -/
+lemma isMinimalProjection_coe_iff {x : N} :
+    IsMinimalProjection N (x : H →L[ℂ] H) ↔
+      IsStarProjection x ∧ x ≠ 0 ∧ ∀ a : N, ∃ c : ℂ, x * a * x = c • x := by
+  have hproj : IsStarProjection (x : H →L[ℂ] H) ↔ IsStarProjection x := by
+    simp only [isStarProjection_iff, IsIdempotentElem, isSelfAdjoint_iff, Subtype.ext_iff]
+    rfl
+  simp only [IsMinimalProjection, hproj, x.2, true_and, ne_eq, Subtype.ext_iff]
+  refine and_congr_right fun _ => and_congr_right fun _ => ⟨fun h a => ?_, fun h a ha => ?_⟩
+  · exact h a a.2
+  · exact h ⟨a, ha⟩
+
+/-- **Minimal projections are carried along `⋆`-isomorphisms**: if `x` is a minimal projection of
+`N` and `φ : N ≃⋆ₐ M`, then `φ x` is a minimal projection of `M`. The corner condition at `φ x`
+against `a ∈ M` is the image under `φ` of the corner condition at `x` against `φ⁻¹ a`. -/
+lemma IsMinimalProjection.map_starAlgEquiv {x : N} (hx : IsMinimalProjection N (x : H →L[ℂ] H))
+    (φ : N ≃⋆ₐ[ℂ] M) : IsMinimalProjection M (φ x : K →L[ℂ] K) := by
+  rw [isMinimalProjection_coe_iff] at hx ⊢
+  obtain ⟨hp, hne, hcorner⟩ := hx
+  refine ⟨hp.map φ, (map_ne_zero_iff φ (EquivLike.injective φ)).mpr hne, fun a => ?_⟩
+  obtain ⟨c, hc⟩ := hcorner (φ.symm a)
+  refine ⟨c, ?_⟩
+  have := congrArg φ hc
+  rwa [map_mul, map_mul, StarAlgEquiv.apply_symm_apply, map_smul] at this
+
+/-- **Minimal projections are invariant under `⋆`-isomorphisms**: for `φ : N ≃⋆ₐ M`, `φ x` is a
+minimal projection of `M` iff `x` is a minimal projection of `N`. -/
+lemma isMinimalProjection_starAlgEquiv_iff (φ : N ≃⋆ₐ[ℂ] M) {x : N} :
+    IsMinimalProjection M (φ x : K →L[ℂ] K) ↔ IsMinimalProjection N (x : H →L[ℂ] H) := by
+  refine ⟨fun h => ?_, fun h => h.map_starAlgEquiv φ⟩
+  have := h.map_starAlgEquiv φ.symm
+  rwa [StarAlgEquiv.symm_apply_apply] at this
+
+end StarAlgEquiv
 
 end VonNeumannAlgebra

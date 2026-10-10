@@ -131,6 +131,7 @@ public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.Data.EReal.BigOperators
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.Fintype
 public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
+public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempotents
 public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.StarAlgEquiv

@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.Analysis.VonNeumannAlgebra.MinimalProjection
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem
+public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempotents
 
 /-!
 # Type I von Neumann algebras
@@ -22,7 +23,11 @@ abelian projection of a factor is minimal
 This file is also the home of the factor-level type I predicates `IsTypeIFactor` and
 `IsTypeIInfinite`, and of the abstract structure theorem `IsTypeIFactor.exists_starAlgEquiv`
 identifying a type I factor with `B(K)` for some Hilbert space `K` (whose spatial content lives in
-`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem`).
+`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem`). For a type I_∞ factor the
+Hilbert space `K` is infinite-dimensional, and conversely
+(`isTypeIInfinite_iff_exists_starAlgEquiv`): through `N ≃⋆ₐ B(K)` the minimal projections are the
+rank-one projections, of which `B(K)` has an infinite orthogonal family exactly when `K` is
+infinite-dimensional.
 
 Finally, the file develops the **fundamental example** `B(H)`: the algebra of *all* bounded
 operators, `𝓑(H) : VonNeumannAlgebra H`, is a factor (`isFactor_boundedLinearOperators`, in
@@ -68,6 +73,18 @@ infinite-dimensional this exhibits `B(H)` as a **type I_∞ factor**.
   is a type I_∞ factor, packaged as the intrinsic predicate `IsTypeIInfinite 𝓑(H)`.
 * `VonNeumannAlgebra.exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators` — for
   infinite-dimensional `H`, the same with `ι` infinite, hence `ℓ²(ι)` infinite-dimensional.
+* `VonNeumannAlgebra.isMinimalProjection_iff_of_starAlgEquiv` — through `φ : N ≃⋆ₐ B(K)` the
+  minimal projections of `N` are the rank-one projections `φ⁻¹ |u⟩⟨u|`, `‖u‖ = 1`.
+* `VonNeumannAlgebra.isTypeIFactor_of_starAlgEquiv` — conversely, `N ≃⋆ₐ B(K)` with `K ≠ 0` makes
+  `N` a type I factor.
+* `VonNeumannAlgebra.isTypeIInfinite_iff_of_starAlgEquiv` — if `N ≃⋆ₐ B(K)`, then `N` is type I_∞
+  iff `K` is infinite-dimensional.
+* `VonNeumannAlgebra.IsTypeIInfinite.exists_starAlgEquiv`,
+  `VonNeumannAlgebra.isTypeIInfinite_iff_exists_starAlgEquiv` — the type I_∞ factors are exactly
+  the von Neumann algebras `⋆`-isomorphic to `B(K)` for an infinite-dimensional `K`.
+* `VonNeumannAlgebra.OrthEquivFam.isTypeIInfinite_iff_infinite`,
+  `VonNeumannAlgebra.IsTypeIInfinite.exists_spatial_tensor_decomposition` — spatially, a factor is
+  type I_∞ iff the covering family `F` of the structure theorem `N ≅ B(ℓ²(F)) ⊗̄ 1` is infinite.
 
 ## Notation
 
@@ -152,15 +169,21 @@ lemma isTypeIFactor_iff_isFactor_and_isTypeI [Nontrivial H] {N : VonNeumannAlgeb
 /-! ### Type I_∞ factors
 
 A **type I_∞ factor** is a type I factor of infinite multiplicity, recorded intrinsically as the
-existence of an infinite orthogonal family of minimal projections. -/
+existence of an infinite orthogonal family of minimal projections. Its identification with `B(K)`
+for an infinite-dimensional `K` is proved at the end of the file. -/
 
 /-- A **type I_∞ factor**: a type I factor carrying an infinite sequence of pairwise orthogonal
 minimal projections. This is the intrinsic form of *infinite multiplicity*: through the structure
-theorem `N ≃⋆ₐ B(K)` the minimal projections are the rank-one projections, and an infinite
-orthogonal family of them exists exactly when `K` is infinite-dimensional — a type `I_n` factor
-`B(ℂⁿ)` has at most `n` pairwise orthogonal nonzero projections. As with `IsTypeIFactor`, the
+theorem `N ≃⋆ₐ B(K)` (`IsTypeIFactor.exists_starAlgEquiv`) the minimal projections are the rank-one
+projections (`isMinimalProjection_iff_of_starAlgEquiv`), and an infinite orthogonal family of them
+exists exactly when `K` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv`) — a type
+`I_n` factor `B(ℂⁿ)` has at most `n` pairwise orthogonal nonzero projections
+(`ContinuousLinearMap.natCard_le_finrank_of_orthogonalIdempotents`). As with `IsTypeIFactor`, the
 spatial identification with an infinite-dimensional `B(K)` is then a theorem, not part of the
-definition. -/
+definition: abstractly `IsTypeIInfinite.exists_starAlgEquiv`, with converse
+`isTypeIInfinite_iff_exists_starAlgEquiv`, and spatially
+`IsTypeIInfinite.exists_spatial_tensor_decomposition` — `N` is `B(ℓ²(F)) ⊗̄ 1` for an infinite
+covering family `F` (`OrthEquivFam.isTypeIInfinite_iff_infinite`). -/
 def IsTypeIInfinite (N : VonNeumannAlgebra H) : Prop :=
   IsTypeIFactor N ∧
     ∃ e : ℕ → (H →L[ℂ] H),
@@ -199,6 +222,13 @@ implementing unitary and the multiplicity model `K = ℓ²(F)` — is
 abstract `⋆`-isomorphism. -/
 
 universe u
+
+/-- The range of a minimal projection is a nonzero subspace, the projection being nonzero. -/
+private lemma IsMinimalProjection.nontrivial_range {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) : Nontrivial (e.range) := by
+  rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
+  exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
+    (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
 
 section SpatialTensor
 
@@ -293,10 +323,7 @@ theorem IsTypeIFactor.commutant {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N)
   classical
   obtain ⟨e, he, F, U, ⟨i⟩, -, hU', -, -⟩ := hN.exists_split_tensor_decomposition le_rfl le_rfl
   have : CompleteSpace (e.range) := he.1.completeSpace_range
-  have : Nontrivial (e.range) := by
-    rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
-    exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
-      (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
+  have : Nontrivial (e.range) := he.nontrivial_range
   have : Nontrivial (ℓ²(F, ℂ)) := by
     refine ⟨⟨lp.single 2 i 1, 0, fun h => ?_⟩⟩
     have := congrArg (fun f : ℓ²(F, ℂ) => f i) h
@@ -324,10 +351,7 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
       Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
   obtain ⟨e, he, F, U, hU, -⟩ := hN.exists_spatial_tensor_decomposition
   have : CompleteSpace (e.range) := he.1.completeSpace_range
-  have : Nontrivial (e.range) := by
-    rw [Submodule.nontrivial_iff_ne_bot, ne_eq, LinearMap.range_eq_bot]
-    exact fun h => he.2.2.1 (ContinuousLinearMap.coe_injective
-      (h.trans ContinuousLinearMap.toLinearMap_zero.symm))
+  have : Nontrivial (e.range) := he.nontrivial_range
   exact ⟨ℓ²(F, ℂ), inferInstance, inferInstance, inferInstance,
     ⟨(conjEquiv U N).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
 
@@ -391,18 +415,9 @@ lemma exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators {H : Type u
         ∀ (x : (𝓑(H) : VonNeumannAlgebra H)) (v : ℓ²(ι, ℂ)),
           e x v = U ((x : H →L[ℂ] H) (U.symm v)) := by
   obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
-  have hwinf : Infinite w := by
-    rw [← not_finite_iff_infinite]
-    intro hfin
-    have : Finite w := hfin
-    have : Fintype w := Fintype.ofFinite w
-    exact hinf b.toOrthonormalBasis.toBasis.finiteDimensional_of_finite
-  have hnfd : ¬FiniteDimensional ℂ (ℓ²(w, ℂ)) := by
-    intro hK
-    have := hK
-    exact hinf b.repr.symm.toLinearEquiv.finiteDimensional
-  exact ⟨w, hwinf, hnfd, b.repr, boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv,
-    fun _ _ => rfl⟩
+  have hwinf : Infinite w := by rwa [← not_finite_iff_infinite, ← b.finiteDimensional_iff_finite]
+  exact ⟨w, hwinf, by rwa [lp.finiteDimensional_iff_finite, not_finite_iff_infinite], b.repr,
+    boundedLinearOperators.starAlgEquiv.trans b.repr.conjStarAlgEquiv, fun _ _ => rfl⟩
 
 /-- **`B(H)` is a type I_∞ factor when `H` is infinite-dimensional.** Packaged as the intrinsic
 predicate `IsTypeIInfinite`: `𝓑(H) = B(H)` is a type I factor (`isTypeIFactor_boundedLinearOperators`)
@@ -414,13 +429,7 @@ theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup 
     [InnerProductSpace ℂ H] [CompleteSpace H] (hinf : ¬FiniteDimensional ℂ H) :
     IsTypeIInfinite 𝓑(H) := by
   obtain ⟨w, b, -⟩ := exists_hilbertBasis ℂ H
-  have hwinf : Infinite w := by
-    rw [← not_finite_iff_infinite]
-    intro hfin
-    have : Finite w := hfin
-    have : Fintype w := Fintype.ofFinite w
-    exact hinf b.toOrthonormalBasis.toBasis.finiteDimensional_of_finite
-  have := hwinf
+  have : Infinite w := by rwa [← not_finite_iff_infinite, ← b.finiteDimensional_iff_finite]
   let g : ℕ ↪ w := Infinite.natEmbedding w
   set u : ℕ → H := fun n => b (g n) with hu_def
   have hon : Orthonormal ℂ u := by
@@ -434,5 +443,173 @@ theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup 
   have : Nontrivial H :=
     nontrivial_of_ne (u 0) 0 (by rw [← norm_ne_zero_iff, hnorm 0]; norm_num)
   exact ⟨isTypeIFactor_boundedLinearOperators, fun n => rankOne ℂ (u n) (u n), hmin, horth⟩
+
+/-! ### Type I_∞ factors are `B(K)` with `K` infinite-dimensional
+
+Through a `⋆`-isomorphism `φ : N ≃⋆ₐ B(K)` the minimal projections of `N` are the rank-one
+projections of `B(K)` (`isMinimalProjection_iff_of_starAlgEquiv`), and `N` carries an infinite
+orthogonal family of them iff `K` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv`):
+on a finite-dimensional `K` a family of nonzero orthogonal projections has at most `dim K` members
+(`ContinuousLinearMap.natCard_le_finrank_of_orthogonalIdempotents`), while an infinite-dimensional
+`K` carries the rank-one projections onto an orthonormal sequence
+(`isTypeIInfinite_boundedLinearOperators`). Combined with the structure theorem this identifies the
+type I_∞ factors with the `B(K)` for infinite-dimensional `K`, abstractly
+(`isTypeIInfinite_iff_exists_starAlgEquiv`) and spatially as `B(ℓ²(F)) ⊗̄ 1` for an infinite
+covering family `F` (`IsTypeIInfinite.exists_spatial_tensor_decomposition`). -/
+
+section TypeIInfinite
+
+variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
+  {N : VonNeumannAlgebra H}
+
+/-- Minimality transported along a `⋆`-isomorphism onto the operator type `K →L[ℂ] K`, which
+lands in `𝓑(K)` after composing with `boundedLinearOperators.starAlgEquiv.symm`. -/
+private lemma isMinimalProjection_apply_iff (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) {x : N} :
+    IsMinimalProjection 𝓑(K) (φ x) ↔ IsMinimalProjection N (x : H →L[ℂ] H) :=
+  isMinimalProjection_starAlgEquiv_iff (M := 𝓑(K))
+    (φ.trans boundedLinearOperators.starAlgEquiv.symm)
+
+/-- The preimage form of `isMinimalProjection_apply_iff`. -/
+private lemma isMinimalProjection_symm_apply_iff (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) {y : K →L[ℂ] K} :
+    IsMinimalProjection N (φ.symm y : H →L[ℂ] H) ↔ IsMinimalProjection 𝓑(K) y := by
+  rw [← isMinimalProjection_apply_iff φ, StarAlgEquiv.apply_symm_apply]
+
+/-- **Through `N ≃⋆ₐ B(K)` the minimal projections are the rank-one projections.** For a
+`⋆`-isomorphism `φ : N ≃⋆ₐ B(K)`, an element `x ∈ N` is a minimal projection iff `φ x = |u⟩⟨u|`
+for a unit vector `u ∈ K`: minimality is invariant under `⋆`-isomorphisms
+(`isMinimalProjection_starAlgEquiv_iff`), and the minimal projections of `B(K)` are the rank-one
+projections (`isMinimalProjection_boundedLinearOperators_iff`). -/
+lemma isMinimalProjection_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) {x : N} :
+    IsMinimalProjection N (x : H →L[ℂ] H) ↔ ∃ u : K, ‖u‖ = 1 ∧ φ x = rankOne ℂ u u := by
+  rw [← isMinimalProjection_apply_iff φ, isMinimalProjection_boundedLinearOperators_iff]
+
+/-- A von Neumann algebra `⋆`-isomorphic to `B(K)` is a factor: being a factor is invariant under
+`⋆`-isomorphisms (`isFactor_iff_of_starAlgEquiv`) and `B(K)` is a factor
+(`isFactor_boundedLinearOperators`). -/
+lemma isFactor_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : IsFactor N :=
+  (isFactor_iff_of_starAlgEquiv (M := 𝓑(K))
+    (φ.trans boundedLinearOperators.starAlgEquiv.symm)).mp isFactor_boundedLinearOperators
+
+/-- **A von Neumann algebra `⋆`-isomorphic to `B(K)`, `K ≠ 0`, is a type I factor** — the converse
+of `IsTypeIFactor.exists_starAlgEquiv`. It is a factor (`isFactor_of_starAlgEquiv`), and the
+preimage of a rank-one projection of `B(K)` is a minimal projection
+(`isMinimalProjection_starAlgEquiv_iff`). -/
+lemma isTypeIFactor_of_starAlgEquiv [Nontrivial K] (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
+    IsTypeIFactor N :=
+  let ⟨_, he⟩ := exists_isMinimalProjection_boundedLinearOperators (H := K)
+  ⟨isFactor_of_starAlgEquiv φ, _, (isMinimalProjection_symm_apply_iff φ).mpr he⟩
+
+/-- **Type I_∞ is infinite dimension of the model.** If `N ≃⋆ₐ B(K)`, then `N` is a type I_∞ factor
+iff `K` is infinite-dimensional. Forward: an infinite orthogonal sequence of minimal projections of
+`N` is carried to an infinite family of nonzero orthogonal idempotents of `B(K)`, which a
+finite-dimensional `K` does not admit
+(`ContinuousLinearMap.finite_of_orthogonalIdempotents`). Backward: an infinite-dimensional `K`
+carries the rank-one projections onto an orthonormal sequence
+(`isTypeIInfinite_boundedLinearOperators`), whose preimages are orthogonal minimal projections of
+`N`; and `N` is a type I factor (`isTypeIFactor_of_starAlgEquiv`). -/
+theorem isTypeIInfinite_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
+    IsTypeIInfinite N ↔ ¬FiniteDimensional ℂ K := by
+  constructor
+  · rintro ⟨-, e, hmin, horth⟩ _
+    let x : ℕ → N := fun n => ⟨e n, (hmin n).2.1⟩
+    have hmin' : ∀ n, IsMinimalProjection 𝓑(K) (φ (x n)) := fun n =>
+      (isMinimalProjection_apply_iff φ).mpr (hmin n)
+    have hp : OrthogonalIdempotents fun n => φ (x n) :=
+      ⟨fun n => (hmin' n).1.isIdempotentElem, fun m n hmn => show φ (x m) * φ (x n) = 0 by
+        rw [← map_mul, show x m * x n = 0 from Subtype.ext (horth m n hmn), map_zero]⟩
+    exact not_finite_iff_infinite.mpr (inferInstance : Infinite ℕ)
+      (ContinuousLinearMap.finite_of_orthogonalIdempotents hp fun n => (hmin' n).2.2.1)
+  · intro hK
+    have : Nontrivial K := by
+      by_contra h
+      rw [not_nontrivial_iff_subsingleton] at h
+      exact hK inferInstance
+    obtain ⟨-, f, hmin, horth⟩ := isTypeIInfinite_boundedLinearOperators hK
+    refine ⟨isTypeIFactor_of_starAlgEquiv φ, fun n => φ.symm (f n),
+      fun n => (isMinimalProjection_symm_apply_iff φ).mpr (hmin n), fun m n hmn => ?_⟩
+    have h : φ.symm (f m) * φ.symm (f n) = 0 := by rw [← map_mul, horth m n hmn, map_zero]
+    exact congrArg Subtype.val h
+
+/-- **A type I_∞ factor is `B(K)` for an infinite-dimensional `K`.** A type I_∞ factor is
+`⋆`-isomorphic to the algebra `B(K)` of all bounded operators on an infinite-dimensional complex
+Hilbert space `K`: the structure theorem `IsTypeIFactor.exists_starAlgEquiv` gives some `K`, and
+`isTypeIInfinite_iff_of_starAlgEquiv` forces it to be infinite-dimensional. The converse is
+`isTypeIInfinite_iff_exists_starAlgEquiv`; the spatial form is
+`IsTypeIInfinite.exists_spatial_tensor_decomposition`. -/
+theorem IsTypeIInfinite.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] {N : VonNeumannAlgebra H}
+    (hN : IsTypeIInfinite N) :
+    ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
+      ¬FiniteDimensional ℂ K ∧ Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
+  obtain ⟨K, _, _, _, ⟨φ⟩⟩ := hN.isTypeIFactor.exists_starAlgEquiv
+  exact ⟨K, _, _, _, (isTypeIInfinite_iff_of_starAlgEquiv φ).mp hN, ⟨φ⟩⟩
+
+/-- **Type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional.** A von Neumann
+algebra is a type I_∞ factor iff it is `⋆`-isomorphic to the algebra `B(K)` of all bounded operators
+on an infinite-dimensional complex Hilbert space `K`. The forward direction is
+`IsTypeIInfinite.exists_starAlgEquiv`, the backward one `isTypeIInfinite_iff_of_starAlgEquiv`. -/
+theorem isTypeIInfinite_iff_exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
+    [InnerProductSpace ℂ H] [CompleteSpace H] {N : VonNeumannAlgebra H} :
+    IsTypeIInfinite N ↔
+      ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
+        ¬FiniteDimensional ℂ K ∧ Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :=
+  ⟨IsTypeIInfinite.exists_starAlgEquiv,
+    fun ⟨_, _, _, _, hK, ⟨φ⟩⟩ => (isTypeIInfinite_iff_of_starAlgEquiv φ).mpr hK⟩
+
+open HilbertTensor in
+/-- **A factor is type I_∞ iff its covering family is infinite.** Let `e` be a minimal projection
+of a factor `N` and `F` a covering family of pairwise orthogonal projections equivalent to `e`
+(`IsFactor.exists_orthEquivFam_top`). Then `N` is type I_∞ iff `F` is infinite. Forward: the
+spatial isomorphism `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` of the structure theorem carries `N` onto
+`B(ℓ²(F)) ⊗̄ 1` (`OrthEquivFam.conj_spatialEquiv_eq_vnTensorLeft`), whence `N ≃⋆ₐ B(ℓ²(F))`; so
+`ℓ²(F)` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv`), i.e. `F` is infinite
+(`lp.finiteDimensional_iff_finite`). Backward: the members of an infinite `F` are themselves an
+infinite orthogonal family of minimal projections (`OrthEquivFam.isMinimalProjection_of_mem`). -/
+lemma OrthEquivFam.isTypeIInfinite_iff_infinite {e : H →L[ℂ] H} {F : Set (H →L[ℂ] H)}
+    (hF : OrthEquivFam N e F) (hN : IsFactor N) (he : IsMinimalProjection N e)
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
+    IsTypeIInfinite N ↔ Infinite F := by
+  constructor
+  · intro hI
+    have := he.nontrivial
+    have : Nonempty F := OrthEquivFam.nonempty_of_top htop
+    have : DecidableEq F := Classical.decEq _
+    have : CompleteSpace (e.range) := he.1.completeSpace_range
+    have : Nontrivial (e.range) := he.nontrivial_range
+    have φ := (conjEquiv (hF.spatialEquiv htop) N).trans
+      ((equivOfEq (hF.conj_spatialEquiv_eq_vnTensorLeft he htop)).trans
+        amplifyLeftStarAlgEquiv.symm)
+    rw [← not_finite_iff_infinite, ← lp.finiteDimensional_iff_finite (𝕜 := ℂ)]
+    exact (isTypeIInfinite_iff_of_starAlgEquiv φ).mp hI
+  · intro _
+    let g : ℕ ↪ F := Infinite.natEmbedding F
+    exact ⟨⟨hN, e, he⟩, fun n => g n, fun n => hF.isMinimalProjection_of_mem he (g n).2,
+      fun m n hmn => hF.2 (g m).2 (g n).2 fun h => hmn (g.injective (Subtype.ext h))⟩
+
+open HilbertTensor in
+/-- **Spatial structure theorem for a type I_∞ factor.** A type I_∞ factor `N ⊆ B(H)` is spatially
+`B(ℓ²(F)) ⊗̄ 1` for an *infinite* covering family `F`: for a minimal projection `e` of `N` and a
+covering family `F` of pairwise orthogonal projections equivalent to `e`, `F` is infinite
+(`OrthEquivFam.isTypeIInfinite_iff_infinite`), and the spatial isomorphism
+`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` carries `N` onto `vnTensorLeft` and `N′` onto `vnTensorRight`
+(`OrthEquivFam.conj_spatialEquiv_eq_vnTensorLeft`). This is the type I_∞ refinement of
+`IsTypeIFactor.exists_spatial_tensor_decomposition`. -/
+theorem IsTypeIInfinite.exists_spatial_tensor_decomposition (hN : IsTypeIInfinite N) :
+    ∃ e : H →L[ℂ] H, IsMinimalProjection N e ∧ ∃ F : Set (H →L[ℂ] H),
+      OrthEquivFam N e F ∧ (⨆ f ∈ F, f.range).topologicalClosure = ⊤ ∧ Infinite F ∧
+      ∃ U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range,
+        VonNeumannAlgebra.conj U N = vnTensorLeft ∧
+        VonNeumannAlgebra.conj U N′ = vnTensorRight := by
+  obtain ⟨hf, e, he⟩ := hN.isTypeIFactor
+  obtain ⟨F, hF, htop⟩ := hf.exists_orthEquivFam_top he
+  have := he.nontrivial
+  have : Nonempty F := OrthEquivFam.nonempty_of_top htop
+  have : DecidableEq F := Classical.decEq _
+  have : CompleteSpace (e.range) := he.1.completeSpace_range
+  exact ⟨e, he, F, hF, htop, (hF.isTypeIInfinite_iff_infinite hf he htop).mp hN,
+    hF.spatialEquiv htop, hF.conj_spatialEquiv_eq_vnTensorLeft he htop,
+    hF.conj_spatialEquiv_commutant_eq_vnTensorRight he htop⟩
+
+end TypeIInfinite
 
 end VonNeumannAlgebra

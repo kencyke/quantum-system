@@ -27,7 +27,8 @@ a nonzero star projection with trivial corner `p N p = ℂ p`).
 * **In a factor, abelian projections are minimal.** An abelian projection of a factor is
   order-minimal, by a corner-commutation argument through the central-support lemma
   `IsFactor.exists_mul_ne`; hence it is minimal.
-* **`B(H)` has minimal projections**: the rank-one projections `|u⟩⟨u|`, `‖u‖ = 1`.
+* **The minimal projections of `B(H)` are the rank-one projections** `|u⟩⟨u|`, `‖u‖ = 1`;
+  equivalently, the star projections with one-dimensional range.
 
 These are the ingredients of the minimal-projection characterisation of type I factors
 (`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Basic`).
@@ -49,6 +50,10 @@ These are the ingredients of the minimal-projection characterisation of type I f
 * `VonNeumannAlgebra.isMinimalProjection_rankOne_boundedLinearOperators`,
   `VonNeumannAlgebra.exists_isMinimalProjection_boundedLinearOperators` — rank-one projections are
   minimal in `B(H)`, which therefore has a minimal projection when `H ≠ 0`.
+* `VonNeumannAlgebra.isMinimalProjection_boundedLinearOperators_iff`,
+  `VonNeumannAlgebra.isMinimalProjection_boundedLinearOperators_iff_finrank` — conversely, every
+  minimal projection of `B(H)` is a rank-one projection `|u⟩⟨u|`, `‖u‖ = 1`; equivalently, the
+  minimal projections of `B(H)` are the star projections with one-dimensional range.
 -/
 
 @[expose] public section
@@ -564,6 +569,70 @@ theorem exists_isMinimalProjection_boundedLinearOperators [Nontrivial H] :
     ∃ e : H →L[ℂ] H, IsMinimalProjection 𝓑(H) e :=
   let ⟨u, hu⟩ := exists_unit_vector (H := H)
   ⟨rankOne ℂ u u, isMinimalProjection_rankOne_boundedLinearOperators hu⟩
+
+/-- **The minimal projections of `B(H)` are exactly the rank-one projections** `|u⟩⟨u|`,
+`‖u‖ = 1`. The converse direction is `isMinimalProjection_rankOne_boundedLinearOperators`. For the
+forward direction pick a unit vector `u` in the range of the minimal projection `e`, so `e u = u`;
+the corner condition against `a = |u⟩⟨u|` reads `|u⟩⟨u| = e |u⟩⟨u| e = c • e`, and evaluating at
+`u` forces `c = 1`. -/
+lemma isMinimalProjection_boundedLinearOperators_iff {e : H →L[ℂ] H} :
+    IsMinimalProjection 𝓑(H) e ↔ ∃ u : H, ‖u‖ = 1 ∧ e = rankOne ℂ u u := by
+  refine ⟨fun he => ?_, fun ⟨u, hu, he⟩ => he ▸ isMinimalProjection_rankOne_boundedLinearOperators hu⟩
+  obtain ⟨hp, -, hne, hcorner⟩ := he
+  obtain ⟨v, hv⟩ := ContinuousLinearMap.exists_ne_zero hne
+  set u : H := (‖e v‖⁻¹ : ℂ) • e v with hu_def
+  have hu : ‖u‖ = 1 := by
+    rw [hu_def, norm_smul, norm_inv, Complex.norm_real, norm_norm,
+      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hv)]
+  have heu : e u = u := by
+    rw [hu_def, map_smul, show e (e v) = (e * e) v from rfl, hp.isIdempotentElem]
+  obtain ⟨c, hc⟩ := hcorner (rankOne ℂ u u) (mem_boundedLinearOperators _)
+  rw [ContinuousLinearMap.mul_def, ContinuousLinearMap.mul_def, comp_rankOne, heu, rankOne_comp,
+    hp.isSelfAdjoint.adjoint_eq, heu] at hc
+  have hc1 : c = 1 := by
+    have h := congrArg (fun T : H →L[ℂ] H => T u) hc
+    simp only [rankOne_apply, smul_apply, heu, inner_self_eq_norm_sq_to_K, hu] at h
+    norm_num at h
+    exact (smul_left_injective ℂ (ne_zero_of_norm_ne_zero (hu ▸ one_ne_zero))
+      (show (1 : ℂ) • u = c • u by rw [one_smul]; exact h)).symm
+  exact ⟨u, hu, by rw [hc, hc1, one_smul]⟩
+
+/-- **The minimal projections of `B(H)` are exactly the star projections of rank one**: a star
+projection `e` is minimal in `𝓑(H)` iff its range is one-dimensional. Through
+`isMinimalProjection_boundedLinearOperators_iff` this is the statement that a star projection is
+determined by its range (`ContinuousLinearMap.IsStarProjection.ext_iff`), the range of `|u⟩⟨u|`
+being the line `ℂ u`. -/
+lemma isMinimalProjection_boundedLinearOperators_iff_finrank {e : H →L[ℂ] H} :
+    IsMinimalProjection 𝓑(H) e ↔ IsStarProjection e ∧ Module.finrank ℂ e.range = 1 := by
+  have hrange : ∀ {u : H}, ‖u‖ = 1 → (rankOne ℂ u u : H →L[ℂ] H).range = ℂ ∙ u := fun {u} hu => by
+    rw [rankOne_def, ContinuousLinearMap.range_smulRight_apply]
+    intro h
+    have := congrArg (fun f : H →L[ℂ] ℂ => f u) h
+    simp only [innerSL_apply_apply, inner_self_eq_norm_sq_to_K, hu, zero_apply] at this
+    norm_num at this
+  rw [isMinimalProjection_boundedLinearOperators_iff]
+  constructor
+  · rintro ⟨u, hu, rfl⟩
+    exact ⟨isStarProjection_rankOne_self hu, by
+      rw [hrange hu, finrank_span_singleton (ne_zero_of_norm_ne_zero (hu ▸ one_ne_zero))]⟩
+  · rintro ⟨hp, hrank⟩
+    obtain ⟨w, hw0, hw⟩ := finrank_eq_one_iff'.mp hrank
+    have hw0' : (w : H) ≠ 0 := fun h => hw0 (Subtype.ext h)
+    set u : H := (‖(w : H)‖⁻¹ : ℂ) • (w : H) with hu_def
+    have hu : ‖u‖ = 1 := by
+      rw [hu_def, norm_smul, norm_inv, Complex.norm_real, norm_norm,
+        inv_mul_cancel₀ (norm_ne_zero_iff.mpr hw0')]
+    have hspan : e.range = ℂ ∙ u := by
+      refine le_antisymm (fun z hz => ?_) ((Submodule.span_singleton_le_iff_mem _ _).mpr
+        (Submodule.smul_mem _ _ w.2))
+      obtain ⟨c, hc⟩ := hw ⟨z, hz⟩
+      rw [Submodule.mem_span_singleton]
+      refine ⟨c * ‖(w : H)‖, ?_⟩
+      rw [hu_def, smul_smul, mul_assoc, mul_inv_cancel₀ (by exact_mod_cast norm_ne_zero_iff.mpr hw0'),
+        mul_one]
+      exact congrArg Subtype.val hc
+    exact ⟨u, hu, ContinuousLinearMap.IsStarProjection.ext hp (isStarProjection_rankOne_self hu)
+      (hspan.trans (hrange hu).symm)⟩
 
 end BoundedLinearOperators
 
