@@ -161,7 +161,7 @@ theorem inner_apply_self_eq_sum (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
 
 omit [CompleteSpace E] in
 /-- The trace in an orthonormal eigenbasis: `tr (A ∘ a) = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
-theorem trace_comp_eq_sum [FiniteDimensional ℂ E] (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
+theorem trace_comp_eq_sum (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
     (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (A : E →L[ℂ] E) :
     LinearMap.trace ℂ E (A ∘L a) = ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
   rw [LinearMap.trace_eq_sum_inner _ b]

@@ -76,7 +76,7 @@ amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
   under composition with normal maps.
 * `VonNeumannAlgebra.isNormal_of_finiteDimensional`,
   `VonNeumannAlgebra.isNormalMap_of_finiteDimensional` — every positive functional on, and every
-  linear map between, von Neumann algebras on finite-dimensional spaces is normal.
+  linear map out of, a von Neumann algebra on a finite-dimensional space is normal.
 * `VonNeumannAlgebra.NormalFunctional.supportProj_mem`,
   `VonNeumannAlgebra.NormalFunctional.isStarProjection_supportProj` — `s(ψ)` is a projection in `M`.
 * `VonNeumannAlgebra.NormalFunctional.supportProj_le_iff` — `s(ψ) ≤ p ↔ ψ(1 - p) = 0` for
@@ -390,10 +390,10 @@ functional is σ-weakly continuous. -/
 theorem isNormal_of_finiteDimensional [FiniteDimensional ℂ H] (ω : M →ₚ[ℂ] ℂ) : M.IsNormal ω :=
   LinearMap.continuous_of_finiteDimensional (ω.toLinearMap ∘ₗ M.ofSigmaWeak)
 
-/-- **Linear maps between finite-dimensional von Neumann algebras are normal**: in finite
-dimensions the σ-weak topology is the unique Hausdorff vector-space topology, so every linear map is
-σ-weakly continuous. -/
-theorem isNormalMap_of_finiteDimensional [FiniteDimensional ℂ H] [FiniteDimensional ℂ K]
+/-- **Linear maps out of a finite-dimensional von Neumann algebra are normal**: in finite
+dimensions the σ-weak topology is the unique Hausdorff vector-space topology, so every linear map out
+of it is σ-weakly continuous, whatever the target. -/
+theorem isNormalMap_of_finiteDimensional [FiniteDimensional ℂ K]
     [FunLike F N M] [LinearMapClass F ℂ N M] (α : F) : IsNormalMap α := by
   let e : M →ₗ[ℂ] M.sigmaWeak :=
     { toFun := M.toSigmaWeak

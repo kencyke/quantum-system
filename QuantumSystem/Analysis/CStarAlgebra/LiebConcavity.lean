@@ -116,7 +116,7 @@ private lemma inner_unop_rightMul_leftMul (T : H →L[ℂ] K) (A : H →L[ℂ] H
 
 /-- The quadratic form of an operator is monotone in the operator. -/
 private lemma inner_le_inner {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-    [CompleteSpace E] {X Y : E →L[ℂ] E} (h : X ≤ Y) (x : E) : ⟪x, X x⟫_ℂ ≤ ⟪x, Y x⟫_ℂ := by
+    {X Y : E →L[ℂ] E} (h : X ≤ Y) (x : E) : ⟪x, X x⟫_ℂ ≤ ⟪x, Y x⟫_ℂ := by
   have := (nonneg_iff_isPositive.1 (sub_nonneg.2 h)).inner_nonneg_right x
   rwa [sub_apply, inner_sub_right, sub_nonneg] at this
 

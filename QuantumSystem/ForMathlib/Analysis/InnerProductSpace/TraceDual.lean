@@ -168,14 +168,13 @@ variable {F : Type*} [FunLike F (H →L[𝕜] H) (K →L[𝕜] K)]
 /-- The **trace dual** `Φ* : B(K) →ₗ B(H)` of a linear map `Φ : B(H) → B(K)`, its transpose for
 the bilinear trace pairing, characterised by `tr(Φ(A) ∘ B) = tr(A ∘ Φ*(B))`
 (`ContinuousLinearMap.trace_comp_traceDual`): `Φ*(B)` is the operator that the nondegenerate trace
-form `ContinuousLinearMap.traceForm` identifies with the functional `A ↦ tr(Φ(A) ∘ B)`. Both
-spaces are finite-dimensional, where the trace is the trace; Mathlib's `LinearMap.trace` is `0`
-on infinite-dimensional spaces. -/
-noncomputable def traceDual [FiniteDimensional 𝕜 K] (Φ : F) : (K →L[𝕜] K) →ₗ[𝕜] (H →L[𝕜] H) :=
+form `ContinuousLinearMap.traceForm` identifies with the functional `A ↦ tr(Φ(A) ∘ B)`. The
+definition only needs `H` finite-dimensional, so that the trace form of `B(H)` is nondegenerate;
+`K` is arbitrary, `tr` on `B(K)` being Mathlib's `LinearMap.trace` (which is `0` on
+infinite-dimensional spaces). -/
+noncomputable def traceDual (Φ : F) : (K →L[𝕜] K) →ₗ[𝕜] (H →L[𝕜] H) :=
   ((traceForm 𝕜 H).toDual traceForm_nondegenerate).symm.toLinearMap ∘ₗ
     LinearMap.lcomp 𝕜 𝕜 (Φ : (H →L[𝕜] H) →ₗ[𝕜] (K →L[𝕜] K)) ∘ₗ (traceForm 𝕜 K).flip
-
-variable [FiniteDimensional 𝕜 K]
 
 /-- **The defining duality** of the trace dual: `tr(Φ(A) ∘ B) = tr(A ∘ Φ*(B))`. -/
 theorem trace_comp_traceDual (Φ : F) (A : H →L[𝕜] H) (B : K →L[𝕜] K) :
@@ -207,7 +206,7 @@ theorem inner_traceDual_apply (Φ : F) (B : K →L[𝕜] K) (x y : H) :
 
 /-- The trace dual is an involution, `Φ** = Φ`: by the defining duality applied twice,
 `tr(B ∘ Φ**(A)) = tr(Φ*(B) ∘ A) = tr(A ∘ Φ*(B)) = tr(Φ(A) ∘ B) = tr(B ∘ Φ(A))`. -/
-theorem traceDual_traceDual (Φ : F) (A : H →L[𝕜] H) : traceDual (traceDual Φ) A = Φ A := by
+theorem traceDual_traceDual [FiniteDimensional 𝕜 K] (Φ : F) (A : H →L[𝕜] H) : traceDual (traceDual Φ) A = Φ A := by
   refine ext_iff_trace_comp_left.2 fun B => ?_
   rw [← trace_comp_traceDual, trace_comp_comm', ← trace_comp_traceDual, trace_comp_comm']
 
@@ -220,7 +219,7 @@ theorem traceDual_one_iff {Φ : F} :
 
 /-- The trace dual of the Kraus map `A ↦ Σₐ Tₐ A Tₐ†` is `B ↦ Σₐ Tₐ† B Tₐ`, by cyclicity of the
 trace, `tr(Tₐ A Tₐ† B) = tr(A Tₐ† B Tₐ)`. -/
-theorem traceDual_eq_sum_of_kraus [CompleteSpace H] [CompleteSpace K] {Φ : F} {ι : Type*}
+theorem traceDual_eq_sum_of_kraus [FiniteDimensional 𝕜 K] [CompleteSpace H] [CompleteSpace K] {Φ : F} {ι : Type*}
     [Fintype ι] {T : ι → H →L[𝕜] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a))
     (B : K →L[𝕜] K) : traceDual Φ B = ∑ a, adjoint (T a) ∘L B ∘L T a := by
   rw [eq_comm, eq_traceDual_iff]
@@ -278,7 +277,7 @@ variable {F : Type*} [FunLike F (H →L[𝕜] H) (K →L[𝕜] K)]
 
 /-- **Pulling back a functional transforms its density by the trace dual**: if `f = g ∘ Φ`, then
 `ρ_f = Φ*(ρ_g)`, since `tr(Φ*(ρ_g) ∘ A) = tr(ρ_g ∘ Φ(A)) = g(Φ(A))`. -/
-theorem density_eq_traceDual {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
+theorem density_eq_traceDual [FiniteDimensional 𝕜 K] {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
     [LinearMapClass G' 𝕜 (K →L[𝕜] K) 𝕜] (Φ : F) {f : G} {g : G'} (h : ∀ A, f A = g (Φ A)) :
     density f = traceDual Φ (density g) := by
   rw [eq_comm, eq_density_iff]
@@ -286,8 +285,8 @@ theorem density_eq_traceDual {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
   rw [trace_comp_comm', ← trace_comp_traceDual, trace_comp_comm', trace_density_comp, h]
 
 /-- **The Schrödinger picture**: if `f = g ∘ Φ*` for the trace dual `Φ*` of `Φ : B(H) → B(K)`,
-then `ρ_f = Φ(ρ_g)`; for a quantum channel `Φ`, the state `g ∘ Φ*` has density `Φ(ρ_g)`. -/
-theorem density_eq_apply_density {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
+then `ρ_f = Φ(ρ_g)`; for a CPTP map `Φ`, the state `g ∘ Φ*` has density `Φ(ρ_g)`. -/
+theorem density_eq_apply_density [FiniteDimensional 𝕜 K] {G' : Type*} [FunLike G' (K →L[𝕜] K) 𝕜]
     [LinearMapClass G' 𝕜 (K →L[𝕜] K) 𝕜] (Φ : F) {f : G'} {g : G}
     (h : ∀ B, f B = g (traceDual Φ B)) : density f = Φ (density g) := by
   rw [density_eq_traceDual (traceDual Φ) h, traceDual_traceDual]

@@ -182,8 +182,7 @@ end Vector
 
 section Amplify
 
-variable (H₁ : Type*) [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] [CompleteSpace H₁]
-  [Nontrivial H₁]
+variable (H₁ : Type*) [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] [Nontrivial H₁]
 
 /-- The Schwarz map `1 ⊗ α : 𝟙[H₁] ⊗ N → 𝟙[H₁] ⊗ M`, `1 ⊗ y ↦ 1 ⊗ α(y)`, transported along
 the `⋆`-isomorphisms `VonNeumannAlgebra.amplifyEquiv`. -/

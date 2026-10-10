@@ -148,6 +148,7 @@ end CompletelyPositiveMap
 
 namespace ContinuousLinearMap
 
+omit [FiniteDimensional ℂ K] in
 /-- The trace dual of a positive map is sub-unital, `φ*(1) ≤ 1`, iff the map is **trace
 non-increasing** on positive operators, `Re tr φ(A) ≤ Re tr A`: `tr φ(A) = tr(A φ*(1))`
 (`ContinuousLinearMap.trace_comp_traceDual`), and the positive cone is self-dual, tested here on
