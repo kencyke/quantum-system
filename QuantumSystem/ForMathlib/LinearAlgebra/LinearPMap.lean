@@ -68,8 +68,9 @@ the composite of two conjugate-linear maps is linear (`RingHomCompTriple`).
   `LinearPMap.isClosableₛₗ_iff_exists_closed_extension` — closability passes to restrictions and
   means having a closed extension.
 * `LinearPMap.compPMap_closureₛₗ_le`, `LinearPMap.IsClosedₛₗ.compNat_toPMap`,
-  `LinearPMap.closureₛₗ_compNat_toPMap_le`, `LinearPMap.compPMap_closureₛₗ_le_closureₛₗ_compNat_toPMap`
-  — for continuous everywhere defined `B` and `C`: `B T̄ ⊆ (B T)‾`, `T B` is closed for closed `T`,
+  `LinearPMap.isClosedₛₗ_toPMap`, `LinearPMap.closureₛₗ_compNat_toPMap_le`,
+  `LinearPMap.compPMap_closureₛₗ_le_closureₛₗ_compNat_toPMap` — for continuous everywhere defined
+  `B` and `C`: `B T̄ ⊆ (B T)‾`, `T B` is closed for closed `T`, `B` itself is closed,
   `(T B)‾ ⊆ T̄ B`, and `B T ⊆ S C` passes to the closures.
 * `LinearPMap.isClosed_restrictScalars_iff`, `LinearPMap.isClosable_restrictScalars_iff`,
   `LinearPMap.closure_restrictScalars` — closedness, closability and the closure commute with
@@ -825,6 +826,14 @@ lemma IsClosedₛₗ.compNat_toPMap {T : F →ₛₗ.[σ₂₃] G} (hT : T.IsClo
     Set.ext fun ⟨_, _⟩ => mem_graphₛₗ_compNat_toPMap
   rw [IsClosedₛₗ, h]
   exact hT.preimage (by fun_prop)
+
+/-- A continuous everywhere-defined map is closed: its graph is `{(x, B x)}`. -/
+lemma isClosedₛₗ_toPMap [T2Space F] (B : E →SL[σ₁₂] F) :
+    ((B : E →ₛₗ[σ₁₂] F).toPMap ⊤).IsClosedₛₗ := by
+  have h : (((B : E →ₛₗ[σ₁₂] F).toPMap ⊤).graphₛₗ : Set (E × F)) = {p | B p.1 = p.2} :=
+    Set.ext fun p => by simp [mem_graphₛₗ_iff]
+  rw [IsClosedₛₗ, h]
+  exact isClosed_eq (by fun_prop) continuous_snd
 
 variable [IsTopologicalAddGroup E] [IsTopologicalAddGroup G] [ContinuousConstSMul R₁ E]
   [ContinuousConstSMul R₃ G]

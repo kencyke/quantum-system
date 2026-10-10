@@ -35,6 +35,14 @@ and uniqueness applied to
 `S = S⁻¹ = J⁻¹ (J Δ^{-1/2} J⁻¹)` gives `J² = 1` and `J Δ^{1/2} J = Δ^{-1/2}`; in spectral form
 `J E_Δ J = inv_* E_Δ`, so `J f(Δ) J = (σ ∘ f ∘ inv)(Δ)`, for instance `J Δ^{it} J = Δ^{it}`.
 
+For a bounded operator `x`, `T = x.toPMap ⊤` is closed and `T†T = (x⋆ x).toPMap ⊤`, and the
+construction here agrees with the bounded one of the continuous functional calculus: `|T|` is
+`CFC.abs x` and `U` is the partial isometry of `x = v |x|` with source projection the range
+projection `R(x⋆)` (`ContinuousLinearMap.sqrt_eq_toPMap_cfcAbs`,
+`ContinuousLinearMap.polarIsometry_eq_of_eq_mul_cfcAbs`, in
+`QuantumSystem.Analysis.SpectralTheory.BoundedPolarDecomposition`). For bounded operators the
+project uses `CFC.abs`.
+
 ## Notation
 
 * `U†` — for a bounded `σ`-semilinear `U : E →SL[σ] F`, its adjoint

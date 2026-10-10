@@ -37,6 +37,7 @@ public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
+public import QuantumSystem.Analysis.SpectralTheory.BoundedPolarDecomposition
 public import QuantumSystem.Analysis.SpectralTheory.FunctionalCalculus
 public import QuantumSystem.Analysis.SpectralTheory.Interpolation
 public import QuantumSystem.Analysis.SpectralTheory.Multiplication

@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
+public import Mathlib.Analysis.InnerProductSpace.Positive
 
 /-!
 # Symmetric and positive unbounded operators
@@ -27,6 +28,9 @@ self-adjointness; a *positive self-adjoint* operator is `IsSelfAdjoint T ∧ T.I
 * `LinearPMap.IsFormalAdjoint.inner_map_self_im_eq_zero` — for symmetric `T`, `⟪x, T x⟫` is real.
 * `LinearPMap.IsFormalAdjoint.inner_eq_of_mem_graph`, `LinearPMap.isFormalAdjoint_of_mem_graph` —
   symmetry in graph form.
+* `IsSelfAdjoint.toPMap`, `LinearMap.IsPositive.toPMap` — a bounded self-adjoint operator, and a
+  positive everywhere-defined one, stay self-adjoint, respectively positive, as partially defined
+  operators with domain `⊤`.
 -/
 
 @[expose] public section
@@ -100,3 +104,19 @@ lemma IsSelfAdjoint.eq_of_le {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup 
   refine le_antisymm ?_ hle
   calc A ≤ B† := hform.le_adjoint hB.dense_domain
     _ = B := hB
+
+/-- A bounded self-adjoint operator, as a partially defined operator with domain `⊤`, is
+self-adjoint: its adjoint is `y†.toPMap ⊤ = y.toPMap ⊤`
+(`ContinuousLinearMap.toPMap_adjoint_eq_adjoint_toPMap_of_dense`). -/
+lemma IsSelfAdjoint.toPMap {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [CompleteSpace E] {y : E →L[𝕜] E} (hy : IsSelfAdjoint y) :
+    IsSelfAdjoint ((y : E →ₗ[𝕜] E).toPMap ⊤) := by
+  rw [LinearPMap.isSelfAdjoint_def,
+    ContinuousLinearMap.toPMap_adjoint_eq_adjoint_toPMap_of_dense y (by simp),
+    ← ContinuousLinearMap.star_eq_adjoint, hy.star_eq]
+
+/-- A positive everywhere-defined operator, as a partially defined operator with domain `⊤`, is
+positive. -/
+lemma LinearMap.IsPositive.toPMap {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] {y : E →ₗ[𝕜] E} (hy : y.IsPositive) : (y.toPMap ⊤).IsPositive :=
+  ⟨fun a b => hy.isSymmetric a b, fun a => hy.re_inner_nonneg_left a⟩
