@@ -476,7 +476,7 @@ noncomputable def unitalRep : CStarRep trivialNet.quasiLocalCStarAlgebra where
 lemma unitalRep_splitProperty : trivialNet.SplitProperty unitalRep :=
   VonNeumannNet.splitProperty_of_complex (trivialNet.vonNeumannNet unitalRep)
 
-/-! ### Matsui's half-chain split property for a state
+/-! ### The half-chain split property for a state
 
 The evaluation of the trivial net's quasi-local algebra is a multiplicative state, so its GNS
 representation acts by scalars and every pair of regions splits
@@ -525,7 +525,7 @@ noncomputable def evalState : State trivialNet.quasiLocalCStarAlgebra :=
       exact star_mul_self_nonneg _)
     norm_evalCLM
 
-/-- **The evaluation state has Matsui's half-chain split property.** It is multiplicative, so this
+/-- **The evaluation state has the half-chain split property.** It is multiplicative, so this
     is an instance of `LocalNet.IsSplitPairAt.of_map_mul`; it shows `LocalNet.HasHalfChainSplit` is
     inhabited, and nothing about states whose GNS algebras are not scalar. -/
 theorem evalState_hasHalfChainSplit : trivialNet.HasHalfChainSplit evalState :=

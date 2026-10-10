@@ -29,8 +29,11 @@ regions. This module makes those regions available.
   `N : LocalNet (Finset α)` on infinite regions.
 * `LocalNet.IsSplitPairAt ω S₁ S₂` is the split property of a *state* `ω` on the quasi-local
   algebra for a pair of regions, in the GNS representation of `ω`, and
-  `LocalNet.HasHalfChainSplit ω` is **Matsui's half-chain split property**, the pair
-  `(-∞, 0]`, `[1, ∞)` of the integer chain.
+  `LocalNet.HasHalfChainSplit ω` is the **half-chain split property** in its split-inclusion
+  form, the pair `(-∞, 0]`, `[1, ∞)` of the integer chain. Matsui's own definition is the
+  quasi-equivalence of `ω` with the product `ω_L ⊗ ω_R` of its half-chain restrictions. The
+  split-inclusion form implies it for every state, and the two agree for pure (more generally
+  factor) states; their agreement for an arbitrary state is not claimed here.
 
 ## What is and is not expressible
 
@@ -41,14 +44,31 @@ on the integer chain with `ofCThickening ℤ 1`, `Set.Iic 0 ⋐ Set.Iic 2`, and
 `𝓡(Ici 1)′`, cannot come from `⋐`, since `⋐` is irreflexive; it is stated directly as a split pair
 (`VonNeumannNet.IsSplitPair`, `LocalNet.HasHalfChainSplit`).
 
-What is not proved is Matsui's characterisation for pure states — the half-chain split property
-holds iff `𝓡(Iic 0)` is a type I factor. The representation-theoretic input is available — the
-GNS representation of a pure state is irreducible (`GNS.Representation.isPure_iff_isIrreducible`)
-and so has commutant `ℂ1` (`CStarRep.isIrreducible_iff_centralizer`) — but the argument also needs
+Matsui's defining form — `ω` quasi-equivalent to `ω_L ⊗ ω_R` — is not expressible yet: it needs
+the identification of the chain's quasi-local algebra with `𝔄_L ⊗ 𝔄_R` and product states on it,
+neither of which is built. Its equivalence with the split-inclusion form is therefore not proved
+either.
+
+What is also not proved is Matsui's characterisation for pure states — the half-chain split
+property holds iff `𝓡(Iic 0)` is a type I factor. The representation-theoretic input is
+available — the GNS representation of a pure state is irreducible
+(`GNS.Representation.isPure_iff_isIrreducible`) and so has commutant `ℂ1`
+(`CStarRep.isIrreducible_iff_centralizer`) — but the argument also needs
 joins of von Neumann algebras, which the development does not have yet. Cones need a cone region
 type and are not built here. No spin net is built either, so no non-trivial positive model of the
 infinite-region split property exists yet;
 `QuantumSystem.Physics.LocalNet.Examples` has refuters and one-dimensional witnesses.
+
+## TODO
+
+* Matsui's quasi-equivalence form of the half-chain split property, once `𝔄 ≅ 𝔄_L ⊗ 𝔄_R` and
+  product states are available, with the implication from `LocalNet.HasHalfChainSplit` (valid for
+  every state) and the converse for pure, more generally factor, states.
+* Settle the converse for an arbitrary, possibly mixed, state: whether quasi-equivalence of `ω`
+  with `ω_L ⊗ ω_R` yields a type I factor `𝔑` with `𝓡_ω((-∞, 0]) ≤ 𝔑 ≤ 𝓡_ω([1, ∞))′` in the GNS
+  representation of `ω` itself. Quasi-equivalence gives such a factor only after amplification,
+  and it is not checked here whether it can be compressed back to the GNS space; until then the
+  two forms are not asserted to agree beyond factor states.
 
 ## Notation
 
@@ -223,16 +243,22 @@ section HalfChain
 variable (N : LocalNet (Finset ℤ)) [N.Faithful]
 variable [PartialOrder N.quasiLocalCStarAlgebra] [StarOrderedRing N.quasiLocalCStarAlgebra]
 
-/-- **Matsui's half-chain split property** of a state `ω` on the quasi-local algebra of a chain:
-    the left half-chain `(-∞, 0]` and the right half-chain `[1, ∞)` form a split pair in the GNS
-    representation of `ω`,
+/-- The **half-chain split property** of a state `ω` on the quasi-local algebra of a chain, in
+    split-inclusion form: the left half-chain `(-∞, 0]` and the right half-chain `[1, ∞)` form a
+    split pair in the GNS representation of `ω`,
 
       `𝓡_ω((-∞, 0]) ≤ 𝔑 ≤ 𝓡_ω([1, ∞))′`, with `𝔑` a type I factor.
 
     The half-chains are adjacent: there is no gap, so this is not a consequence of any nested split
-    property through `⋐`. Matsui (*Split property and symmetry*, Comm. Math. Phys. 2001, and
-    later work on gapped ground states) shows that for a pure state it is equivalent to
-    `𝓡_ω((-∞, 0])` being a type I factor; that characterisation is not proved here. -/
+    property through `⋐`.
+
+    Matsui (*The split property and the symmetry breaking of the quantum spin chain*, Comm. Math.
+    Phys. 218, 2001) *defines* the split property as the quasi-equivalence of `ω` with
+    `ω_L ⊗ ω_R`, the product of its restrictions to the two half-chains. The split inclusion above
+    implies that quasi-equivalence for every state, and conversely for pure (more generally
+    factor) states; for a pure state both are equivalent to `𝓡_ω((-∞, 0])` being a type I factor.
+    Neither the quasi-equivalence form nor these equivalences are formalised (see the module
+    docstring). -/
 def HasHalfChainSplit (ω : State N.quasiLocalCStarAlgebra) : Prop :=
   N.IsSplitPairAt ω (Set.Iic 0) (Set.Ici 1)
 

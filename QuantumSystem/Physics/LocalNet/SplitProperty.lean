@@ -77,8 +77,9 @@ theorems impose nondegeneracy or cyclicity where they need it.
   enlarging the pair), and `SplitProperty.isSplitPair` (the commutant form,
   Borchers/Buchholz, `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`, obtained from the nested form via locality).
   The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`,
-  a symmetric relation (`VonNeumannNet.IsSplitPair.symm`); Matsui's half-chain split property is
-  of that form.
+  a symmetric relation (`VonNeumannNet.IsSplitPair.symm`); the half-chain split property of a
+  chain state (`LocalNet.HasHalfChainSplit`) is of that form, in the split-inclusion form, which
+  implies Matsui's quasi-equivalence definition and agrees with it for pure states.
   Its degenerate side is `VonNeumannNet.splitProperty_of_complex`: on a one-dimensional Hilbert
   space *every* net has the property, so no one-dimensional model is evidence about anything else.
 * `LocalNet.SplitProperty` — the split property at the net `LocalNet.vonNeumannNet` of a
@@ -335,10 +336,12 @@ theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K 
 
       `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O₂)′`.
 
-    No proper containment and no gap between the regions is involved. This is the form in which
-    Matsui states the half-chain split property of a spin chain, for the adjacent half-chains
-    `(-∞, 0]` and `[1, ∞)`, and the disjoint-pair form of Buchholz's *Product states for local
-    algebras*. For causally orthogonal regions the inclusion `𝓡(O₁) ≤ 𝓡(O₂)′` itself holds by
+    No proper containment and no gap between the regions is involved. This is the split-inclusion
+    form of the half-chain split property of a spin chain, for the adjacent half-chains
+    `(-∞, 0]` and `[1, ∞)` (which implies Matsui's quasi-equivalence definition, and is
+    equivalent to it for pure states),
+    and the disjoint-pair form of Buchholz's *Product states for local algebras*. For causally
+    orthogonal regions the inclusion `𝓡(O₁) ≤ 𝓡(O₂)′` itself holds by
     locality (`algebra_le_commutant_of_orthogonal`), so the content is the interpolating factor.
 
     The relation is symmetric (`IsSplitPair.symm`): taking commutants turns the chain into
