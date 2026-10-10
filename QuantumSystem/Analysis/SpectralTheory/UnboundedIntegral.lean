@@ -7,7 +7,7 @@ module
 
 public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
-public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 
 /-!
 # Unbounded spectral integrals

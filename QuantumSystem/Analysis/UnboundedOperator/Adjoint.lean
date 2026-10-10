@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
-public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 
 /-!

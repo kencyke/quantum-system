@@ -8,7 +8,7 @@ module
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Resolvent
-public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!

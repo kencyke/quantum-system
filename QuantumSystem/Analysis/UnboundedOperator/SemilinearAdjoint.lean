@@ -8,7 +8,7 @@ module
 public import Mathlib.Analysis.InnerProductSpace.StandardSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear
-public import QuantumSystem.ForMathlib.LinearAlgebra.LinearPMap
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 
 /-!
 # Adjoints of semilinear unbounded operators
