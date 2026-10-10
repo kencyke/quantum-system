@@ -11,6 +11,7 @@ public import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 public import Mathlib.MeasureTheory.Integral.RieszMarkovKakutani.Real
 public import Mathlib.MeasureTheory.Measure.HasOuterApproxClosed
 public import Mathlib.MeasureTheory.Measure.Support
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
@@ -56,6 +57,12 @@ conjugate-linear in `x` and linear in `y`.
 * `IsStarNormal.inner_cfc_eq_integral_pvm`, `IsStarNormal.inner_apply_eq_integral_pvm` —
   `⟪x, cfc g T y⟫ = ∫ g dE_{x,y}`, and `T = ∫ ζ dE_T(ζ)` weakly.
 * `IsStarNormal.commute_pvm_cfc` — `E_T(s)` commutes with `cfc h T`.
+* `IsStarNormal.forall_commute_pvm_iff`, `IsStarNormal.commute_pvm_of_commute`,
+  `IsStarNormal.commute_of_forall_commute_pvm` — Rudin, Theorems 12.22–12.23: an operator `S`
+  commutes with `T` iff it commutes with every `E_T(s)` (through the Fuglede–Putnam–Rosenblum
+  theorem `ContinuousLinearMap.comp_cfc_eq_cfc_comp`). With
+  `MeasureTheory.ProjectionValuedMeasure.commute_integral` it then commutes with every spectral
+  integral `∫ f dE_T` of a bounded measurable `f`.
 * `IsStarNormal.integral_measure_pvm`, `IsStarNormal.inner_cfc_eq_integral_measure_pvm`,
   `IsStarNormal.integrable_measure_pvm` — `∫ g dE_x = ⟪x, cfc g T x⟫` for `g` continuous on the
   spectrum (real and complex forms), and such `g` are `E_x`-integrable.
@@ -73,10 +80,6 @@ conjugate-linear in `x` and linear in `y`.
 * `IsStarNormal.mem_spectrum_iff_forall_pvm_ball_ne_zero` — the spectrum is the support of `E_T`:
   `ζ₀ ∈ σ(T)` iff `E_T` vanishes on no ball around `ζ₀`.
 * `IsStarNormal.spectrum_eq_closure_iUnion_support` — `σ(T) = closure (⋃ᵤ supp E_u)`.
-
-## Not formalised
-
-* `E_T(s)` commutes with every operator commuting with `T` (Fuglede).
 -/
 
 @[expose] public section
@@ -741,22 +744,29 @@ private lemma isSelfAdjoint_spectralOp (s : Set ℂ) : IsSelfAdjoint (hT.spectra
   intro x y
   rw [inner_spectralOp_left, inner_spectralOp]
 
-/-- `E_T(s)` commutes with every continuous function of `T`. -/
-private lemma spectralOp_mul_cfc (s : Set ℂ) (h : ℂ → ℂ) :
-    hT.spectralOp s * cfc h T = cfc h T * hT.spectralOp s := by
-  set H := cfc h T
+/-- `E_T(s)` commutes with every operator `H` commuting with the real continuous functions of `T`:
+the complex measures `ν_{x, H y}` and `ν_{H† x, y}` integrate every such function to the same
+value, hence agree. -/
+private lemma spectralOp_mul_of_commute_cfc (s : Set ℂ) {H : E →L[ℂ] E}
+    (hH : ∀ g : ℂ →ᵇ ℝ, Commute H (cfc (fun ζ => (g ζ : ℂ)) T)) :
+    hT.spectralOp s * H = H * hT.spectralOp s := by
   have key : ∀ x y, hT.complexSpectralMeasure x (H y) =
       hT.complexSpectralMeasure (ContinuousLinearMap.adjoint H x) y := fun x y => by
     have hc : ∀ g : ℂ →ᵇ ℝ, ⟪ContinuousLinearMap.adjoint H x, cfc (fun ζ => (g ζ : ℂ)) T y⟫_ℂ =
         ⟪x, cfc (fun ζ => (g ζ : ℂ)) T (H y)⟫_ℂ := fun g => by
-      rw [ContinuousLinearMap.adjoint_inner_left, ← mul_apply_eq_comp,
-        (cfc_commute_cfc h (fun ζ => (g ζ : ℂ)) T).eq, mul_apply_eq_comp]
+      rw [ContinuousLinearMap.adjoint_inner_left, ← mul_apply_eq_comp, (hH g).eq,
+        mul_apply_eq_comp]
     refine (hT.eq_complexSpectralMeasure_of_integral _ (fun g => ?_) (fun g => ?_)).symm
     · rw [integral_re_complexSpectralMeasure, hc]
     · rw [integral_im_complexSpectralMeasure, hc]
   refine spectralOp_ext fun x y => ?_
   rw [mul_apply_eq_comp, mul_apply_eq_comp, inner_spectralOp, ← ContinuousLinearMap.adjoint_inner_left,
     inner_spectralOp, key]
+
+/-- `E_T(s)` commutes with every continuous function of `T`. -/
+private lemma spectralOp_mul_cfc (s : Set ℂ) (h : ℂ → ℂ) :
+    hT.spectralOp s * cfc h T = cfc h T * hT.spectralOp s :=
+  hT.spectralOp_mul_of_commute_cfc s fun g => cfc_commute_cfc h (fun ζ => (g ζ : ℂ)) T
 
 /-! ### Multiplicativity -/
 
@@ -986,6 +996,38 @@ theorem inner_apply_eq_integral_pvm :
 /-- The projections of `E_T` commute with every continuous function of `T`. -/
 lemma commute_pvm_cfc (s : Set ℂ) (h : ℂ → ℂ) : Commute (hT.pvm s) (cfc h T) :=
   hT.spectralOp_mul_cfc s h
+
+/-- **Operators commuting with `T` commute with `E_T`** (Rudin, *Functional Analysis*,
+Theorem 12.23): if `S T = T S`, then `S E_T(s) = E_T(s) S` for every `s`. By the
+Fuglede–Putnam–Rosenblum theorem `S` also commutes with `T⋆`, hence with every continuous function
+of `T` (`ContinuousLinearMap.comp_cfc_eq_cfc_comp`), and the complex measures `E_{S† x, y}` and
+`E_{x, S y}` then integrate every bounded continuous real function to the same value. -/
+theorem commute_pvm_of_commute {S : E →L[ℂ] E} (hS : Commute S T) (s : Set ℂ) :
+    Commute S (hT.pvm s) :=
+  (hT.spectralOp_mul_of_commute_cfc s fun g =>
+    ContinuousLinearMap.comp_cfc_eq_cfc_comp hT hT hS.eq
+      (by fun_prop : Continuous fun ζ => (g ζ : ℂ)).continuousOn
+      (by fun_prop : Continuous fun ζ => (g ζ : ℂ)).continuousOn).symm
+
+/-- Conversely, an operator commuting with every projection `E_T(s)` commutes with
+`T = ∫ ζ dE_T(ζ)`: the complex measures `E_{x, S y}` and `E_{S† x, y}` coincide. -/
+theorem commute_of_forall_commute_pvm {S : E →L[ℂ] E} (hS : ∀ s, Commute S (hT.pvm s)) :
+    Commute S T := by
+  have key : ∀ x y, hT.pvm.complexMeasure x (S y) =
+      hT.pvm.complexMeasure (ContinuousLinearMap.adjoint S x) y := fun x y => by
+    ext t -
+    rw [ProjectionValuedMeasure.complexMeasure_apply, ProjectionValuedMeasure.complexMeasure_apply,
+      ContinuousLinearMap.adjoint_inner_left, ← mul_apply_eq_comp, ← mul_apply_eq_comp,
+      (hS t).eq]
+  refine ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => ?_
+  rw [mul_apply_eq_comp, mul_apply_eq_comp, ← ContinuousLinearMap.adjoint_inner_left,
+    hT.inner_apply_eq_integral_pvm, hT.inner_apply_eq_integral_pvm, key]
+
+/-- **The commutant of a normal operator is the commutant of its spectral projections**
+(Rudin, *Functional Analysis*, Theorems 12.22–12.23): `S` commutes with `T` iff it commutes with
+every `E_T(s)`. -/
+theorem forall_commute_pvm_iff {S : E →L[ℂ] E} : (∀ s, Commute S (hT.pvm s)) ↔ Commute S T :=
+  ⟨hT.commute_of_forall_commute_pvm, fun h => hT.commute_pvm_of_commute h⟩
 
 /-- The diagonal measures of `E_T` are the scalar spectral measures `ν_x`. -/
 private lemma measure_pvm : hT.pvm.measure x = hT.spectralMeasure x := by
