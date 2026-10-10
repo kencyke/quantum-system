@@ -62,7 +62,7 @@ separating it gives that the standard subspace of the commutant is the symplecti
 open Set Filter Topology Complex ClosedSubmodule MeasureTheory
 open scoped InnerProductSpace ComplexConjugate VonNeumannAlgebra LinearPMap StandardSubspace
 open scoped InnerProduct
-open InnerProductSpace (cyclicSubspace IsCyclicVector IsSeparatingVector)
+open InnerProductSpace (cyclicSubspace)
 
 namespace VonNeumannAlgebra
 
@@ -480,20 +480,18 @@ lemma adjoint_relativeTomita_commutant_eq_closure :
 
 section Commutant
 
-variable (hc : IsCyclicVector M ξ) (hs : IsSeparatingVector M ξ)
+variable [IsCyclicSeparating M ξ]
 
-include hc hs in
 /-- **`H_{M′} = (H_M)'`**: for `ξ` cyclic and separating, the standard subspace of the commutant is
 the symplectic complement of `H_M`. The Tomita operators agree: `S_{(H_M)'} = S_{H_M}† = S̄† = F̄ =
 S_{H_{M′}}`. -/
 theorem standardSubspace_commutant_eq_symplComp :
     H[M′, ξ] = H[M, ξ].symplComp := by
   have h : S[H[M′, ξ]] = S[H[M, ξ].symplComp] := by
-    rw [StandardSubspace.tomita_symplComp, ← closure_relativeTomita_self_eq_tomita hc hs,
+    rw [StandardSubspace.tomita_symplComp, ← closure_relativeTomita_self_eq_tomita (M := M) (Ω := ξ),
       LinearPMap.adjointₛₗ_closureₛₗ (dense_domain_relativeTomita M ξ ξ),
       adjoint_relativeTomita_eq_closure_commutant,
-      closure_relativeTomita_self_eq_tomita hs.isCyclicVector_commutant
-        hc.isSeparatingVector_commutant]
+      closure_relativeTomita_self_eq_tomita (M := M′) (Ω := ξ)]
   refine SetLike.ext fun v => ?_
   rw [StandardSubspace.mem_iff_mem_graph_tomita, StandardSubspace.mem_iff_mem_graph_tomita, h]
 

@@ -39,10 +39,12 @@ apply to von Neumann algebras.
 
 ## Main definitions
 
+* `VonNeumannAlgebra.IsCyclicSeparating M Ω` — `Ω` is cyclic and separating for `M`, a class
+  with an instance for the commutant `M′` (`VonNeumannAlgebra.IsCyclicSeparating.commutant`).
 * `VonNeumannAlgebra.selfAdjointOrbit M Ω` — the real subspace `{x Ω | x ∈ M, x⋆ = x}`.
-* `VonNeumannAlgebra.standardSubspace M Ω hc hs`, written `H[M, Ω]` — the standard subspace `H_M`
-  of a cyclic and separating vector (Longo's `H_M`, with `Ω` made explicit). The hypotheses are
-  default arguments, found in the context by the tactic `cyclic_separating`, also for `M′`.
+* `VonNeumannAlgebra.standardSubspace M Ω`, written `H[M, Ω]` — the standard subspace `H_M` of a
+  cyclic and separating vector (Longo's `H_M`, with `Ω` made explicit), for an instance
+  `[IsCyclicSeparating M Ω]`.
 
 ## Main results
 
@@ -62,9 +64,10 @@ apply to von Neumann algebras.
 
 ## Notation
 
-`H[M, Ω]` is `VonNeumannAlgebra.standardSubspace M Ω hc hs`, the standard subspace
-`H_M = closure {x Ω | x ∈ M, x⋆ = x}`; the proofs `hc hs` are found in the context by
-`cyclic_separating`, also for `M′`. Activate it with `open scoped VonNeumannAlgebra`.
+`H[M, Ω]` is `VonNeumannAlgebra.standardSubspace M Ω`, the standard subspace
+`H_M = closure {x Ω | x ∈ M, x⋆ = x}`; the hypothesis that `Ω` is cyclic and separating is the
+instance argument `[IsCyclicSeparating M Ω]`, found by instance search also for `M′`, and is hidden
+in goals. Activate it with `open scoped VonNeumannAlgebra`.
 
 ## References
 
@@ -121,6 +124,26 @@ lemma _root_.InnerProductSpace.IsSeparatingVector.isCyclicVector_commutant (hs :
 lemma _root_.InnerProductSpace.IsCyclicVector.isSeparatingVector_commutant (hc : IsCyclicVector M Ω) :
     IsSeparatingVector M′ Ω :=
   isCyclicVector_iff_isSeparatingVector_commutant.mp hc
+
+variable (M Ω) in
+/-- The vector `Ω` is **cyclic and separating** for the von Neumann algebra `M`: `[M Ω] = H` and
+`x Ω = 0` forces `x = 0` for `x ∈ M`. It is the standing hypothesis of the standard subspace
+`H_M` (`VonNeumannAlgebra.standardSubspace`) and of the modular theory of `(M, Ω)`; it holds for
+some pairs and fails for others (for `M = B(H)` every nonzero vector is cyclic, but none is
+separating once `dim H ≥ 2`), so it is a hypothesis on `(M, Ω)`, passed as an instance so that
+`H[M, Ω]` carries no proof arguments. It passes to the commutant
+(`VonNeumannAlgebra.IsCyclicSeparating.commutant`). -/
+class IsCyclicSeparating : Prop where
+  /-- `Ω` is cyclic for `M`: `[M Ω] = H`. -/
+  cyclic : IsCyclicVector M Ω
+  /-- `Ω` is separating for `M`: `x Ω = 0` forces `x = 0` for `x ∈ M`. -/
+  separating : IsSeparatingVector M Ω
+
+/-- A cyclic and separating vector for `M` is cyclic and separating for the commutant `M′`
+(`InnerProductSpace.IsSeparatingVector.isCyclicVector_commutant`,
+`InnerProductSpace.IsCyclicVector.isSeparatingVector_commutant`). -/
+instance IsCyclicSeparating.commutant [h : IsCyclicSeparating M Ω] : IsCyclicSeparating M′ Ω :=
+  ⟨h.separating.isCyclicVector_commutant, h.cyclic.isSeparatingVector_commutant⟩
 
 /-! ### The real subspace of self-adjoint elements applied to `Ω` -/
 
@@ -240,36 +263,21 @@ private lemma sup_mulI_eq_top (hc : IsCyclicVector M Ω) :
       exact Submodule.mem_closure_iff.mpr (subset_closure hb)
   exact hsub (hc.mem v)
 
-/-- Proves `IsCyclicVector M Ω` or `IsSeparatingVector M Ω` from the hypotheses in context,
-also for the commutant: a separating vector for `M` is cyclic for `M′` and a cyclic vector for `M`
-is separating for `M′`. It is the default argument of `VonNeumannAlgebra.standardSubspace`. -/
-macro "cyclic_separating" : tactic => `(tactic| first
-  | assumption
-  | exact InnerProductSpace.IsSeparatingVector.isCyclicVector_commutant ‹_›
-  | exact InnerProductSpace.IsCyclicVector.isSeparatingVector_commutant ‹_›)
-
 variable (M Ω) in
 /-- The **standard subspace** `H_M = closure {x Ω | x ∈ M, x⋆ = x}` of a cyclic and separating
 vector `Ω` for `M`, written `H[M, Ω]`. Its Tomita operator is the closure of `x Ω ↦ x⋆ Ω`
-(`VonNeumannAlgebra.closure_relativeTomita_self_eq_tomita`). The hypotheses are found in the
-context by `cyclic_separating`. -/
-noncomputable def standardSubspace (hc : IsCyclicVector M Ω := by cyclic_separating)
-    (hs : IsSeparatingVector M Ω := by cyclic_separating) : StandardSubspace H where
+(`VonNeumannAlgebra.closure_relativeTomita_self_eq_tomita`). The hypothesis that `Ω` is cyclic and
+separating is the instance `VonNeumannAlgebra.IsCyclicSeparating M Ω`. -/
+noncomputable def standardSubspace [h : IsCyclicSeparating M Ω] : StandardSubspace H where
   toClosedSubmodule := (M.selfAdjointOrbit Ω).closure
-  IsSeparating := by exact inf_mulI_eq_bot hs
-  IsCyclic := by exact sup_mulI_eq_top hc
+  IsSeparating := by exact inf_mulI_eq_bot h.separating
+  IsCyclic := by exact sup_mulI_eq_top h.cyclic
 
 /-- `H[M, Ω]` is the standard subspace `H_M = closure {x Ω | x ∈ M, x⋆ = x}` of a cyclic and
 separating vector `Ω` for `M` (`VonNeumannAlgebra.standardSubspace`). -/
 scoped notation "H[" M ", " Ω "]" => VonNeumannAlgebra.standardSubspace M Ω
 
-/-- Displays `VonNeumannAlgebra.standardSubspace M Ω hc hs` as `H[M, Ω]`, hiding the proofs. -/
-@[scoped app_unexpander VonNeumannAlgebra.standardSubspace]
-meta def standardSubspaceUnexpander : Lean.PrettyPrinter.Unexpander
-  | `($_ $M $Ω $_ $_) => `(H[$M, $Ω])
-  | _ => throw ()
-
-variable (hc : IsCyclicVector M Ω) (hs : IsSeparatingVector M Ω)
+variable [IsCyclicSeparating M Ω]
 
 /-- `H_M` is the closure of `{x Ω | x ∈ M, x⋆ = x}`. -/
 lemma coe_standardSubspace :
@@ -283,16 +291,18 @@ lemma apply_mem_standardSubspace {x : H →L[ℂ] H} (hx : x ∈ M) (hxs : IsSel
 
 /-- `Ω ∈ H_M`. -/
 lemma self_mem_standardSubspace : Ω ∈ H[M, Ω] := by
-  simpa using apply_mem_standardSubspace hc hs (one_mem M) (.one _)
+  simpa using apply_mem_standardSubspace (one_mem M) (.one _)
 
 /-! ### The Tomita operator and the modular operator of `(M, Ω)` -/
 
-include hc hs in
+variable (M Ω) in
 /-- For a cyclic and separating `Ω`, the graph of `S_{η,Ω}` is `{(x Ω, x⋆ η) | x ∈ M}`: the
 orthogonal complement of `[M Ω] = H` is `0` and the support is `s(Ω) = 1`. -/
-lemma mem_graph_relativeTomita_iff_of_isCyclicVector_of_isSeparatingVector {η u v : H} :
+lemma mem_graph_relativeTomita_iff_of_isCyclicSeparating {η u v : H} :
     (u, v) ∈ (S[M]⟦η, Ω⟧).graphₛₗ ↔ ∃ x ∈ M, x Ω = u ∧ star x η = v := by
-  have hsupp : M.supportProj Ω = 1 := supportProj_eq_one_iff.mpr hs.isCyclicVector_commutant
+  have hc : IsCyclicVector M Ω := IsCyclicSeparating.cyclic
+  have hsupp : M.supportProj Ω = 1 :=
+    supportProj_eq_one_iff.mpr (IsCyclicSeparating.separating (M := M)).isCyclicVector_commutant
   rw [mem_graph_relativeTomita]
   refine ⟨fun ⟨x, hx, ζ, hζ, h⟩ => ⟨x, hx, ?_⟩, fun ⟨x, hx, hu, hv⟩ =>
     ⟨x, hx, 0, zero_mem _, by rw [add_zero, hsupp, one_apply_eq_self, hu, hv]⟩⟩
@@ -312,7 +322,7 @@ theorem closure_relativeTomita_self_eq_tomita :
   have hle : (S[M]⟦Ω, Ω⟧).graphₛₗ ≤ S[K].graphₛₗ := by
     rintro ⟨u, v⟩ h
     obtain ⟨x, hx, rfl, rfl⟩ :=
-      (mem_graph_relativeTomita_iff_of_isCyclicVector_of_isSeparatingVector hc hs).mp h
+      (mem_graph_relativeTomita_iff_of_isCyclicSeparating M Ω).mp h
     obtain ⟨a, ha, b, hb, h₁, h₂⟩ := exists_apply_eq_add (Ω := Ω) hx
     exact K.mem_graph_tomita.mpr ⟨a, Submodule.mem_closure_iff.mpr (subset_closure ha), b,
       Submodule.mem_closure_iff.mpr (subset_closure hb), h₁.symm, h₂.symm⟩
@@ -322,16 +332,16 @@ theorem closure_relativeTomita_self_eq_tomita :
   rintro ⟨u, v⟩ h
   obtain ⟨a, ha, b, hb, rfl, rfl⟩ := K.mem_graph_tomita.mp h
   have ha' : a ∈ closure (M.selfAdjointOrbit Ω : Set H) := by
-    rw [← coe_standardSubspace hc hs]
+    rw [← coe_standardSubspace]
     exact ha
   have hb' : b ∈ closure (M.selfAdjointOrbit Ω : Set H) := by
-    rw [← coe_standardSubspace hc hs]
+    rw [← coe_standardSubspace]
     exact hb
   refine map_mem_closure₂ (f := fun p q : H => (p + I • q, p - I • q)) (by fun_prop) ha' hb'
     fun p hp q hq => ?_
   obtain ⟨c, hcM, hcs, rfl⟩ := hp
   obtain ⟨d, hdM, hds, rfl⟩ := hq
-  refine (mem_graph_relativeTomita_iff_of_isCyclicVector_of_isSeparatingVector hc hs).mpr
+  refine (mem_graph_relativeTomita_iff_of_isCyclicSeparating M Ω).mpr
     ⟨c + I • d, add_mem hcM (SMulMemClass.smul_mem _ hdM), by rw [add_apply, smul_apply], ?_⟩
   rw [star_add, star_smul, hcs.star_eq, hds.star_eq, Complex.star_def, conj_I, add_apply,
     smul_apply, neg_smul, ← sub_eq_add_neg]
@@ -339,7 +349,7 @@ theorem closure_relativeTomita_self_eq_tomita :
 /-- **The modular operator of `(M, Ω)`**: `Δ_{Ω,Ω} = S̄_{Ω,Ω}† S̄_{Ω,Ω}` is the modular operator
 `Δ_{H_M}` of the standard subspace `H_M`. -/
 theorem relativeModular_self_eq_modular : Δ[M]⟦Ω, Ω⟧ = Δ[H[M, Ω]] := by
-  rw [relativeModular_def, StandardSubspace.modular_def, closure_relativeTomita_self_eq_tomita hc hs]
+  rw [relativeModular_def, StandardSubspace.modular_def, closure_relativeTomita_self_eq_tomita]
 
 /-- **The modular group of `(M, Ω)`**: `Δ_{Ω,Ω}^{it}` is the modular group `Δ_{H_M}^{it}` of the
 standard subspace `H_M`. -/
@@ -348,7 +358,7 @@ lemma relativeModularGroup_self (t : ℝ) : Δ[M]⟦Ω, Ω⟧^{i t} = Δ[H[M, Ω
       hA.imaginaryPower t = hB.imaginaryPower t := by
     rintro A B hA hB rfl
     rfl
-  rw [relativeModularGroup, key _ _ (relativeModular_self_eq_modular hc hs)]
+  rw [relativeModularGroup, key _ _ relativeModular_self_eq_modular]
   rfl
 
 /-! ### Transport between standard subspaces -/
@@ -364,9 +374,8 @@ variable {H₁ H₂ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H�
 self-adjoint `x ∈ M₁`, `V x Ω₁ = (V x V†) Ω₂` with `V x V†` self-adjoint in `M₂`. For a unitary
 `u` on one space the conditions read `u Ω = Ω` and `u x u⋆ ∈ M`. As `V` maps between two spaces,
 its adjoint is written `V†` (Mathlib's `ContinuousLinearMap.adjoint`), not `V⋆`. -/
-lemma apply_mem_standardSubspace_of_adjoint_apply (hc₁ : IsCyclicVector M₁ Ω₁)
-    (hs₁ : IsSeparatingVector M₁ Ω₁) (hc₂ : IsCyclicVector M₂ Ω₂) (hs₂ : IsSeparatingVector M₂ Ω₂)
-    (hVΩ : (V†) Ω₂ = Ω₁)
+lemma apply_mem_standardSubspace_of_adjoint_apply [IsCyclicSeparating M₁ Ω₁]
+    [IsCyclicSeparating M₂ Ω₂] (hVΩ : (V†) Ω₂ = Ω₁)
     (hVM : ∀ x ∈ M₁, V ∘L x ∘L V† ∈ M₂) {v : H₁}
     (hv : v ∈ H[M₁, Ω₁]) : V v ∈ H[M₂, Ω₂] := by
   rw [← SetLike.mem_coe, coe_standardSubspace] at hv ⊢

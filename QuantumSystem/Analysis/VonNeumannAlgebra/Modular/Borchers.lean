@@ -95,10 +95,12 @@ namespace VonNeumannAlgebra
 variable {H₁ H₂ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] [CompleteSpace H₁]
   [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂] [CompleteSpace H₂]
   {M₁ : VonNeumannAlgebra H₁} {M₂ : VonNeumannAlgebra H₂} {Ω₁ : H₁} {Ω₂ : H₂}
-  (hc₁ : IsCyclicVector M₁ Ω₁) (hs₁ : IsSeparatingVector M₁ Ω₁)
-  (hc₂ : IsCyclicVector M₂ Ω₂) (hs₂ : IsSeparatingVector M₂ Ω₂)
 
 /-! ### Theorem A -/
+
+section TheoremA
+
+variable [IsCyclicSeparating M₁ Ω₁] [IsCyclicSeparating M₂ Ω₂]
 
 /-- **Borchers' Theorem A** for von Neumann algebras (Borchers 1995, Theorem A): let `Ω₁`, `Ω₂` be
 cyclic and separating for `M₁`, `M₂`, with modular groups `Δ₁^{it}`, `Δ₂^{it}` and modular
@@ -118,11 +120,15 @@ theorem exists_modularGroup_continuation {V : H₁ →L[ℂ] H₂}
         J[H[M₂, Ω₂]] (F t (J[H[M₁, Ω₁]] x)) :=
   StandardSubspace.exists_modularGroup_continuation
     (K₁ := H[M₁, Ω₁]) (K₂ := H[M₂, Ω₂]) V
-    fun _ hξ => apply_mem_standardSubspace_of_adjoint_apply hc₁ hs₁ hc₂ hs₂ hVΩ hVM hξ
+    fun _ hξ => apply_mem_standardSubspace_of_adjoint_apply hVΩ hVM hξ
+
+end TheoremA
 
 /-! ### Theorem A for relative modular operators -/
 
 section Relative
+
+variable (hc₁ : IsCyclicVector M₁ Ω₁) (hs₂ : IsSeparatingVector M₂ Ω₂)
 
 variable {η₁ : H₁} {η₂ : H₂} {V : H₁ →L[ℂ] H₂}
 
@@ -283,7 +289,7 @@ end Relative
 
 section TheoremB
 
-variable {W : ℂ → H₁ →L[ℂ] H₂}
+variable [IsCyclicSeparating M₁ Ω₁] [IsCyclicSeparating M₂ Ω₂] {W : ℂ → H₁ →L[ℂ] H₂}
   (hW : ∀ x y, DiffContOnCl ℂ (fun z => ⟪y, W z x⟫_ℂ) (im ⁻¹' Ioo 0 (1 / 2)))
   (hB : BddAbove ((norm ∘ W) '' (im ⁻¹' Icc 0 (1 / 2))))
   (hΩ : ∀ t : ℝ, ((W t)†) Ω₂ = Ω₁)
@@ -318,35 +324,34 @@ private lemma adjoint_apply_add_half_I_eq (t : ℝ) :
     (show t + I / 2 ∈ im ⁻¹' Icc 0 (1 / 2) by simp)
   simpa using hzero
 
-include hc₁ hs₁ hc₂ hs₂ hW hB hΩ hM hM' in
+include hW hB hΩ hM hM' in
 /-- The hypotheses of the standard subspace Theorem B hold for `H_{M₁}` and `H_{M₂}`. -/
 private lemma mem_standardSubspace_of_hyp :
     (∀ t : ℝ, ∀ ξ ∈ H[M₁, Ω₁], W t ξ ∈ H[M₂, Ω₂]) ∧
     (∀ t : ℝ, ∀ ξ ∈ H[M₁, Ω₁].symplComp,
       W (t + I / 2) ξ ∈ H[M₂, Ω₂].symplComp) := by
-  refine ⟨fun t ξ hξ => apply_mem_standardSubspace_of_adjoint_apply hc₁ hs₁ hc₂ hs₂ (hΩ t)
-    (hM t) hξ, fun t ξ hξ => ?_⟩
-  rw [← standardSubspace_commutant_eq_symplComp hc₁ hs₁] at hξ
-  rw [← standardSubspace_commutant_eq_symplComp hc₂ hs₂]
-  exact apply_mem_standardSubspace_of_adjoint_apply _ _ _ _
-    (adjoint_apply_add_half_I_eq hW hB hΩ t) (hM' t) hξ
+  refine ⟨fun t ξ hξ => apply_mem_standardSubspace_of_adjoint_apply (hΩ t) (hM t) hξ,
+    fun t ξ hξ => ?_⟩
+  rw [← standardSubspace_commutant_eq_symplComp] at hξ
+  rw [← standardSubspace_commutant_eq_symplComp]
+  exact apply_mem_standardSubspace_of_adjoint_apply (adjoint_apply_add_half_I_eq hW hB hΩ t) (hM' t) hξ
 
-include hc₁ hs₁ hc₂ hs₂ hW hB hΩ hM hM' in
+include hW hB hΩ hM hM' in
 /-- **Borchers' Theorem B** for von Neumann algebras (Borchers 1995, Theorem B), modular group:
 `Δ₂^{it} W(s) Δ₁^{-it} = W(s - t)`. -/
 theorem modularGroup_apply_eq_of_upperStrip (s t : ℝ) (x : H₁) :
     Δ[H[M₂, Ω₂]]^{i t} (W s (Δ[H[M₁, Ω₁]]^{-i t} x)) =
       W (s - t) x :=
-  have h := mem_standardSubspace_of_hyp hc₁ hs₁ hc₂ hs₂ hW hB hΩ hM hM'
+  have h := mem_standardSubspace_of_hyp hW hB hΩ hM hM'
   StandardSubspace.modularGroup_apply_eq_of_upperStrip hW hB h.1 h.2 s t x
 
-include hc₁ hs₁ hc₂ hs₂ hW hB hΩ hM hM' in
+include hW hB hΩ hM hM' in
 /-- **Borchers' Theorem B** for von Neumann algebras, modular conjugation:
 `J₂ W(s) J₁ = W(s + i/2)`. -/
 theorem modularConj_apply_eq_of_upperStrip (s : ℝ) (x : H₁) :
     J[H[M₂, Ω₂]] (W s (J[H[M₁, Ω₁]] x)) =
       W (s + I / 2) x :=
-  have h := mem_standardSubspace_of_hyp hc₁ hs₁ hc₂ hs₂ hW hB hΩ hM hM'
+  have h := mem_standardSubspace_of_hyp hW hB hΩ hM hM'
   StandardSubspace.modularConj_apply_eq_of_upperStrip hW hB h.1 h.2 s x
 
 end TheoremB

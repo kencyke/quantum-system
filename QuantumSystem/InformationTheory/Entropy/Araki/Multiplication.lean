@@ -420,7 +420,7 @@ lemma measure_pvm_relativeModular_densityVec [P.HaveLebesgueDecomposition μ] (h
     μ[multiplicationAlgebra μ]⟦densityVec Q μ, densityVec P μ⟧ =
       P.map fun x => densityFun Q μ x / densityFun P μ x := by
   have hh := (measurable_densityFun Q μ).div (measurable_densityFun P μ)
-  unfold relativeModularMeasure
+  unfold relativeModularMeasure pvmRelativeModular
   rw [IsSelfAdjoint.pvm_congr _ (L2.isSelfAdjoint_mulPMap hh)
     relativeModular_densityVec_eq_mulPMap, L2.measure_pvm_mulPMap hh,
     withDensity_enorm_sq_densityVec P hP]

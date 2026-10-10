@@ -219,15 +219,13 @@ private lemma inner_eq_aux (s : ℝ) {ξ : H₁} (hξ : ξ ∈ K₁) {η : H₂}
     (by simp)
   have hF00 : F 0 = ⟪J[K₂] η, W s ξ⟫_ℂ := by
     have := hFt 0
-    simp only [ofReal_zero, neg_zero, AddChar.map_zero_eq_one, OneMemClass.coe_one,
-      one_apply_eq_self, add_zero] at this
+    simp only [ofReal_zero, neg_zero, modularGroupOp_zero, one_apply_eq_self, add_zero] at this
     exact this
   refine ⟨fun t => ?_, ?_, ?_⟩
   · rw [← hFt, ← hF00]
     exact hconst (by simp)
   · have h := hFt' 0
-    simp only [ofReal_zero, neg_zero, AddChar.map_zero_eq_one, OneMemClass.coe_one,
-      one_apply_eq_self, add_zero, zero_add] at h
+    simp only [ofReal_zero, neg_zero, modularGroupOp_zero, one_apply_eq_self, add_zero, zero_add] at h
     rw [← h, ← hF00]
     exact hconst (by simp)
   · rw [← hF00]

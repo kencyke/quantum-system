@@ -270,7 +270,7 @@ theorem modularGroup_mul_mul_eq_of_mem_spectralCone (haK : a ∈ hT.translationC
       K.modularGroup t * T (s • a) * K.modularGroup (-t) =
         T ((Real.exp (-2 * π * t) * s) • a) := fun s hs =>
     Subtype.ext <| ContinuousLinearMap.ext fun x => by
-      simpa [mul_apply_eq_comp] using (eq_of_pos hT haK haC hs).1 t x
+      simpa [mul_apply_eq_comp, StandardSubspace.modularGroupOp_def] using (eq_of_pos hT haK haC hs).1 t x
   rcases lt_trichotomy s 0 with hs | rfl | hs
   · have h := hpos (-s) (neg_pos.mpr hs)
     have e₁ : T (s • a) = (T ((-s) • a))⁻¹ := by

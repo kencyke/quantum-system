@@ -135,12 +135,6 @@ noncomputable def relativeModularConj : H →L⋆[ℂ] H :=
 (`VonNeumannAlgebra.relativeModularConj`). -/
 scoped notation "J[" M "]⟦" η ", " ξ "⟧" => VonNeumannAlgebra.relativeModularConj M η ξ
 
-/-- Displays `VonNeumannAlgebra.relativeModularConj M η ξ` as `J[M]⟦η, ξ⟧`. -/
-@[scoped app_unexpander VonNeumannAlgebra.relativeModularConj]
-meta def relativeModularConjUnexpander : Lean.PrettyPrinter.Unexpander
-  | `($_ $M $η $ξ) => `(J[$M]⟦$η, $ξ⟧)
-  | _ => throw ()
-
 variable (M η ξ) in
 /-- `J_{η,ξ}` is the partial isometry of the polar decomposition of `S̄_{η,ξ}`
 (`IsSelfAdjoint.polarIsometry`). -/
@@ -599,18 +593,18 @@ lemma pvm_Ioi_relativeModular :
 modular conjugation `J_{H_M}` of the standard subspace `H_M`. Both are the isometric part of the
 polar decomposition of `S̄_{Ω,Ω} = S_{H_M}` (`VonNeumannAlgebra.closure_relativeTomita_self_eq_tomita`),
 which is unique (`IsSelfAdjoint.eq_polarIsometry_of_eq_compPMap`). -/
-lemma relativeModularConj_self {Ω : H} (hc : IsCyclicVector M Ω) (hs : IsSeparatingVector M Ω) :
+lemma relativeModularConj_self {Ω : H} [IsCyclicSeparating M Ω] :
     J[M]⟦Ω, Ω⟧ = (J[H[M, Ω]] : H →L⋆[ℂ] H) := by
   refine ContinuousLinearMap.ext fun x => ?_
   set K := H[M, Ω]
   set Jr := K.isSelfAdjoint_modular.polarIsometry K.modular_def K.isClosed_tomita
   have hJr : ∀ y, J[K] y = Jr y := fun _ => rfl
   have hT : (S[M]⟦Ω, Ω⟧).closureₛₗ = (Jr : H →ₗ⋆[ℂ] H).compPMap Δ[K]^{1/2} := by
-    rw [closure_relativeTomita_self_eq_tomita hc hs]
+    rw [closure_relativeTomita_self_eq_tomita]
     exact K.tomita_eq_modularConj_compPMap
   have h := (isSelfAdjoint_relativeModular M Ω Ω).eq_polarIsometry_of_eq_compPMap
     (relativeModular_def M Ω Ω) (isClosed_closure_relativeTomita M Ω Ω)
-    K.isSelfAdjoint_modular.isSelfAdjoint_sqrt K.isSelfAdjoint_modular.isPositive_sqrt Jr
+    K.isSelfAdjoint_sqrtModular K.isSelfAdjoint_modular.isPositive_sqrt Jr
     (fun y _ => K.isSelfAdjoint_modular.norm_polarIsometry_of_ker_eq_bot K.modular_def
       K.isClosed_tomita K.ker_tomita_eq_bot y)
     (by rw [K.ker_sqrt_modular_eq_bot]; exact bot_le) hT

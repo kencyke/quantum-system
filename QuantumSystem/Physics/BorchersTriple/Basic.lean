@@ -62,8 +62,6 @@ Rindler wedge of Minkowski space is
 
 @[expose] public section
 
-open InnerProductSpace (IsCyclicVector IsSeparatingVector)
-
 open Set Complex
 open scoped InnerProductSpace VonNeumannAlgebra StandardSubspace Real
 
@@ -91,10 +89,10 @@ structure BorchersTriple (V : Type*) [NormedAddCommGroup V] [NormedSpace ℝ V]
   mul_mul_star_mem : ∀ x ∈ W, ∀ y ∈ M, (T x : H →L[ℂ] H) * y * star (T x : H →L[ℂ] H) ∈ M
   /-- The vacuum is invariant under translations. -/
   apply_vacuum : ∀ x, (T x : H →L[ℂ] H) Ω = Ω
-  /-- The vacuum is cyclic for `M`. -/
-  isCyclicVector : IsCyclicVector M Ω
-  /-- The vacuum is separating for `M`. -/
-  isSeparatingVector : IsSeparatingVector M Ω
+  /-- The vacuum is cyclic and separating for `M`. -/
+  isCyclicSeparating : VonNeumannAlgebra.IsCyclicSeparating M Ω
+
+attribute [instance] BorchersTriple.isCyclicSeparating
 
 /-! The norm on `V` is only used to equip the dual space `StrongDual ℝ V` with its Borel
 σ-algebra, which the spectrum condition needs; every finite-dimensional Hausdorff topological
@@ -109,7 +107,7 @@ variable {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V] [FiniteDimension
 /-- The standard subspace `H_M` of `(M, Ω)`; its modular group and modular conjugation are those
 of `(M, Ω)` (`VonNeumannAlgebra.relativeModular_self_eq_modular`). -/
 noncomputable abbrev standardSubspace : StandardSubspace H :=
-  B.M.standardSubspace B.Ω B.isCyclicVector B.isSeparatingVector
+  H[B.M, B.Ω]
 
 /-- The spectrum condition: every `a ∈ C` generates translations `s ↦ T(s a)` with positive
 generator. -/
@@ -126,9 +124,8 @@ theorem modularGroup_mul_mul_eq_boost (ha : a ∈ W) (haC : a ∈ C) (hb : b ∈
     B.standardSubspace.modularGroup t * B.T (r • a + s • b + z) *
       B.standardSubspace.modularGroup (-t) =
         B.T ((Real.exp (-2 * π * t) * r) • a + (Real.exp (2 * π * t) * s) • b + z) :=
-  VonNeumannAlgebra.modularGroup_mul_mul_eq_boost B.isCyclicVector B.isSeparatingVector
-    B.isStronglyContinuous (fun v _ => B.apply_vacuum v) B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb
-    (B.subset_spectralCone hbC) hz hz' r s t
+  VonNeumannAlgebra.modularGroup_mul_mul_eq_boost B.isStronglyContinuous (fun v _ => B.apply_vacuum v)
+    B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb (B.subset_spectralCone hbC) hz hz' r s t
 
 /-- **Borchers' theorem** for Borchers triples, modular conjugation: for `a ∈ W ∩ C`,
 `b ∈ W ∩ -C` and `z ∈ W ∩ -W`, `J T(r a + s b + z) J = T(-r a - s b + z)`. -/
@@ -136,9 +133,8 @@ theorem modularConj_apply_eq_reflection (ha : a ∈ W) (haC : a ∈ C) (hb : b �
     (hz : z ∈ W) (hz' : -z ∈ W) (r s : ℝ) (x : H) :
     J[B.standardSubspace] ((B.T (r • a + s • b + z) : H →L[ℂ] H) (J[B.standardSubspace] x)) =
       (B.T (-(r • a) - s • b + z) : H →L[ℂ] H) x :=
-  VonNeumannAlgebra.modularConj_apply_eq_reflection B.isCyclicVector B.isSeparatingVector
-    B.isStronglyContinuous (fun v _ => B.apply_vacuum v) B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb
-    (B.subset_spectralCone hbC) hz hz' r s x
+  VonNeumannAlgebra.modularConj_apply_eq_reflection B.isStronglyContinuous (fun v _ => B.apply_vacuum v)
+    B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb (B.subset_spectralCone hbC) hz hz' r s x
 
 end BorchersTriple
 
@@ -163,11 +159,12 @@ noncomputable def trivial (V : Type*) [NormedAddCommGroup V] [NormedSpace ℝ V]
     simp
   mul_mul_star_mem _ _ _ _ := VonNeumannAlgebra.mem_boundedLinearOperators _
   apply_vacuum _ := by simp
-  isCyclicVector := by
-    refine eq_top_iff.mpr fun v _ => ?_
-    simpa using InnerProductSpace.apply_mem_cyclicSubspace (S := ((𝓑(ℂ) :
-      VonNeumannAlgebra ℂ) : Set (ℂ →L[ℂ] ℂ))) (1 : ℂ) (a := v • (1 : ℂ →L[ℂ] ℂ))
-      (VonNeumannAlgebra.mem_boundedLinearOperators _)
-  isSeparatingVector x _ hx := ContinuousLinearMap.ext_ring (by simpa using hx)
+  isCyclicSeparating :=
+    { cyclic := by
+        refine eq_top_iff.mpr fun v _ => ?_
+        simpa using InnerProductSpace.apply_mem_cyclicSubspace (S := ((𝓑(ℂ) :
+          VonNeumannAlgebra ℂ) : Set (ℂ →L[ℂ] ℂ))) (1 : ℂ) (a := v • (1 : ℂ →L[ℂ] ℂ))
+          (VonNeumannAlgebra.mem_boundedLinearOperators _)
+      separating x _ hx := ContinuousLinearMap.ext_ring (by simpa using hx) }
 
 end BorchersTriple
