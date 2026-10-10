@@ -21,7 +21,8 @@ with the empty region as base point.
 
 * `LocalNet.localObservables` is the algebraic inductive limit `⋃_O 𝔄(O)` of the local algebras
   along the isotony embeddings, with cocone `ιLocal`, exhaustion (`exists_ιLocal`) and locality
-  (`ιLocal_commute_of_orthogonal`).
+  (`ιLocal_commute_of_orthogonal`); the cocone is injective for a `Faithful` net
+  (`ιLocal_injective`).
 * For a `Faithful` net the connecting maps are isometric, so the algebra of local observables
   carries a C⋆-norm whose completion `LocalNet.quasiLocalCStarAlgebra` is the AQFT quasi-local
   algebra `𝔄 = ‾⋃_O 𝔄(O)` (Naaijkens, *Anyons in Infinite Quantum Systems*, 2012, §1.3;
@@ -70,8 +71,10 @@ omit [Nonempty K] in
 @[simp] lemma star_mk {O : K} (X : N.algebra O) :
     star (⟦⟨O, X⟩⟧ : N.localObservables) = ⟦⟨O, star X⟩⟧ := rfl
 
-/-- The canonical embedding `𝔄(O) ↪ 𝔄_loc` of a local algebra into the algebra of local
-    observables, as a unital ring homomorphism (the cocone of the inductive limit). -/
+/-- The canonical map `𝔄(O) → 𝔄_loc` of a local algebra into the algebra of local observables, as
+    a unital ring homomorphism (the cocone of the inductive limit). It need not be injective: an
+    isotony map that kills `X` makes `X` vanish in the limit. For a `Faithful` net it is
+    (`ιLocal_injective`). -/
 noncomputable def ιLocal (O : K) :
     N.algebra O →+* N.localObservables :=
   DirectLimit.Ring.of N.algebra (fun _ _ h => N.incl h) O
@@ -123,6 +126,12 @@ a C⋆-norm whose completion is the quasi-local C⋆-algebra `𝔄 = ‾⋃_O �
 section CStar
 
 variable [N.Faithful]
+
+/-- For a faithful net the cocone `ιLocal O : 𝔄(O) → 𝔄_loc` is injective: two local observables
+    identified in the limit already agree in some larger region, where the isotony embedding is
+    injective. -/
+lemma ιLocal_injective (O : K) : Function.Injective (N.ιLocal O) :=
+  DirectLimit.mk_injective _ (fun _ _ h => Faithful.incl_injective h) O
 
 /-- The algebra of local observables is a normed ring under the C⋆-norm of the inductive limit
     (the inclusions are injective, hence isometric). -/
