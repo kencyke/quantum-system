@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
+public import QuantumSystem.Physics.LocalNet.DHRCriterion
 public import QuantumSystem.Physics.LocalNet.InfiniteRegion
 
 /-!
@@ -63,6 +64,13 @@ The witnesses are deliberately the smallest ones that are not degenerate in the 
   evaluation state of the trivial net, a multiplicative state whose GNS algebras are scalar, for
   every order on the quasi-local algebra compatible with its star structure; at the canonical
   spectral order it holds outright (`LocalNet.Examples.evalState_hasHalfChainSplit_spectralOrder`).
+* **Localisation in the regions of the net.** `LocalizationRegions.ofOrthogonal` needs a causal
+  index set with no self-orthogonal region, which the lattice index set `Finset α` is not (its
+  empty region is orthogonal to everything). `LocalNet.Examples.nonemptyFinsetOrthogonality` puts
+  disjointness on the *nonempty* finite sets of sites of an infinite `α`; it is a causal index set
+  (`LocalNet.Examples.nonemptyFinset_causalIndexSet`) with no self-orthogonal region
+  (`LocalNet.Examples.not_orthogonal_self_nonemptyFinset`), so
+  `LocalNet.Examples.nonemptyFinsetLocalizationRegions` applies `ofOrthogonal` to it.
 
 What is deliberately *not* built here is a spin-system net with genuine tensor-product local
 algebras — the physically interesting lattice model the module docs of
@@ -532,6 +540,46 @@ theorem evalState_hasHalfChainSplit : trivialNet.HasHalfChainSplit evalState :=
   LocalNet.IsSplitPairAt.of_map_mul _ (fun a b => map_mul evalQuasiLocal a b) _ _
 
 end HalfChainState
+
+section NonemptyFinset
+
+variable (α : Type*)
+
+/-- **Disjointness on the nonempty finite sets of sites.** Causal orthogonality on
+    `{s : Finset α // s.Nonempty}` is disjointness of the underlying sets, as on `Finset α`. A
+    `def` rather than an instance, activated by `attribute [local instance]` below, so that the
+    aggregate root does not fix a causal orthogonality on this subtype downstream. -/
+@[reducible] def nonemptyFinsetOrthogonality :
+    CausalOrthogonality {s : Finset α // s.Nonempty} where
+  Orthogonal s t := Disjoint (s : Finset α) t
+  orthogonal_symm _ _ h := h.symm
+  orthogonal_mono_left _ _ _ h₀ h := h.mono_left h₀
+
+attribute [local instance] nonemptyFinsetOrthogonality
+
+/-- The nonempty finite sets of sites of an infinite `α` form a causal index set: a nonempty finite
+    `s` is disjoint from `{p}` for a site `p ∉ s`. Unlike `Finset α`, the causal complement is not
+    supplied by an empty region. -/
+lemma nonemptyFinset_causalIndexSet [Infinite α] : CausalIndexSet {s : Finset α // s.Nonempty} :=
+  ⟨fun s =>
+    let ⟨p, hp⟩ := Infinite.exists_notMem_finset (s : Finset α)
+    ⟨⟨{p}, Finset.singleton_nonempty p⟩, Finset.disjoint_singleton_right.2 hp⟩⟩
+
+attribute [local instance] nonemptyFinset_causalIndexSet
+
+variable {α} in
+/-- No nonempty finite set of sites is causally orthogonal to itself. -/
+lemma not_orthogonal_self_nonemptyFinset (s : {s : Finset α // s.Nonempty}) : ¬ s ⟂ s :=
+  fun h => s.2.ne_empty (disjoint_self.1 h)
+
+/-- **Localisation in the regions of the net, inhabited.** The nonempty finite sets of sites of an
+    infinite `α` are their own localisation regions (`LocalizationRegions.ofOrthogonal`), with
+    `Outside` disjointness and `Inside` inclusion. -/
+@[reducible] def nonemptyFinsetLocalizationRegions [Infinite α] :
+    LocalizationRegions {s : Finset α // s.Nonempty} {s : Finset α // s.Nonempty} :=
+  LocalizationRegions.ofOrthogonal _ not_orthogonal_self_nonemptyFinset
+
+end NonemptyFinset
 
 section SpectralOrder
 
