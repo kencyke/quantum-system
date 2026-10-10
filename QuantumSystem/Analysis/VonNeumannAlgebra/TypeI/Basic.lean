@@ -194,8 +194,9 @@ lemma IsTypeIInfinite.isTypeIFactor {N : VonNeumannAlgebra H} (hN : IsTypeIInfin
 A type I factor is `⋆`-isomorphic to `B(K)` for some Hilbert space `K`. The spatial content — the
 implementing unitary and the multiplicity model `K = ℓ²(F)` — is
 `IsTypeIFactor.exists_spatial_tensor_decomposition` (the `IsTypeIFactor` form of
-`IsFactor.exists_spatial_tensor_decomposition` in `Algebra.VonNeumannAlgebra.TypeI.StructureTheorem`);
-here it is packaged as an abstract `⋆`-isomorphism. -/
+`IsFactor.exists_spatial_tensor_decomposition` in
+`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem`); here it is packaged as an
+abstract `⋆`-isomorphism. -/
 
 universe u
 

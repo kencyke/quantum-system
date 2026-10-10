@@ -320,11 +320,11 @@ end CStarMatrix
 
 namespace CompletelyPositiveMap
 
-/- The operator norm `‖φ‖ₒₚ` of `φ`, taken through `PositiveContinuousLinearMap.ofClass φ`
-(positive linear maps between C⋆-algebras are automatically bounded), the spelling of Mathlib's
-norm lemmas for positive maps. The notation only abbreviates that Mathlib term; it is the same
-abbreviation as the scoped `‖f‖ₒₚ` of `ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal`,
-repeated here (`local`) because `ForMathlib` files import Mathlib only. -/
+/- The operator norm `‖φ‖ₒₚ` of `φ`, taken through `PositiveContinuousLinearMap.ofClass φ` (positive
+linear maps between C⋆-algebras are automatically bounded), the spelling of Mathlib's norm lemmas
+for positive maps. The notation only abbreviates that Mathlib term; it is the same abbreviation as
+the scoped `‖f‖ₒₚ` of `QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal`, repeated
+here (`local`) because `ForMathlib` files import Mathlib only. -/
 local notation "‖" φ "‖ₒₚ" =>
   ‖PositiveContinuousLinearMap.toContinuousLinearMap (PositiveContinuousLinearMap.ofClass φ)‖
 

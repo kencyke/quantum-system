@@ -30,12 +30,13 @@ with the empty region as base point.
   `*`-homomorphisms `𝔄(O) →⋆ₐ[ℂ] 𝔄`, injective and with *closed* range, whose ranges are dense
   in `𝔄` only taken together (`denseRange_iUnion_ιLocalCStar`).
 
-A `LocalNet.Covariance` (defined in `LocalNet.Covariance`) acts on these algebras: its per-region
-`*`-isomorphisms assemble into a ring endomorphism `localObservableCovariance` of the algebra of local
-observables, which is functorial and is shown `ℂ`-linear and `*`-preserving — hence bundled as a
-`*`-automorphism `localObservableCovarianceEquiv`, assembled into a group homomorphism
-`localObservableCovarianceHom`. For a `Faithful` net it is isometric and extends to a `*`-automorphism
-`quasiLocalCStarCovarianceEquiv` of the quasi-local C⋆-algebra.
+A `LocalNet.Covariance` (defined in `QuantumSystem.Physics.LocalNet.Covariance`) acts on these
+algebras: its per-region `*`-isomorphisms assemble into a ring endomorphism
+`localObservableCovariance` of the algebra of local observables, which is functorial and is shown
+`ℂ`-linear and `*`-preserving — hence bundled as a `*`-automorphism
+`localObservableCovarianceEquiv`, assembled into a group homomorphism
+`localObservableCovarianceHom`. For a `Faithful` net it is isometric and extends to a
+`*`-automorphism `quasiLocalCStarCovarianceEquiv` of the quasi-local C⋆-algebra.
 
 ## Notation
 

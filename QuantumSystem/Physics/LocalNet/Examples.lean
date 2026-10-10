@@ -12,11 +12,12 @@ public import QuantumSystem.Physics.LocalNet.InfiniteRegion
 # Witnesses for the local-net interfaces
 
 Every class and structure the local-net development introduces is inhabited here, by explicit
-construction. Without such witnesses the theorems of `LocalNet.Net`, `LocalNet.QuasiLocalAlgebra`
-and `LocalNet.SplitProperty` would be unfalsifiable: nobody could apply them, and no construction
-could contradict them. In particular the split property is a `Prop`-valued hypothesis which the
-development proves for no net in general (it fails for `diagonalNet` below), so a model with it
-must be exhibited before the hypothesis can be believed consistent.
+construction. Without such witnesses the theorems of `QuantumSystem.Physics.LocalNet.Basic`,
+`QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra` and
+`QuantumSystem.Physics.LocalNet.SplitProperty` would be unfalsifiable: nobody could apply them, and
+no construction could contradict them. In particular the split property is a `Prop`-valued
+hypothesis which the development proves for no net in general (it fails for `diagonalNet` below), so
+a model with it must be exhibited before the hypothesis can be believed consistent.
 
 The witnesses are deliberately the smallest ones that are not degenerate in the way that matters.
 
@@ -64,9 +65,10 @@ The witnesses are deliberately the smallest ones that are not degenerate in the 
   spectral order it holds outright (`LocalNet.Examples.evalState_hasHalfChainSplit_spectralOrder`).
 
 What is deliberately *not* built here is a spin-system net with genuine tensor-product local
-algebras — the physically interesting lattice model the module docs of `LocalNet.Net` and
-`LocalNet.Covariance` describe. That is a construction in its own right, not a witness; these
-witnesses establish consistency and applicability of the interfaces, nothing more.
+algebras — the physically interesting lattice model the module docs of
+`QuantumSystem.Physics.LocalNet.Basic` and `QuantumSystem.Physics.LocalNet.Covariance` describe.
+That is a construction in its own right, not a witness; these witnesses establish consistency and
+applicability of the interfaces, nothing more.
 
 **The residual degeneracy, stated so it is not mistaken for evidence.** Every Hilbert space
 appearing below is `ℂ`, and on `ℂ` the split property is *automatic*: the only von Neumann algebra

@@ -26,11 +26,12 @@ atoms to atoms and the atoms are the singletons.
 
 This file isolates the abstract covariance *data* and its group structure. Its *action* on the
 quasi-local algebra — assembling the per-region `*`-isomorphisms into a `*`-automorphism
-`localObservableCovariance` and (for a `Faithful` net) its continuous extension to the quasi-local
-C⋆-algebra — is built in `LocalNet.QuasiLocalAlgebra`. A symmetry group `G` acts on the net by
-supplying a group homomorphism `G →* N.Covariance` (whose `σ`-component is the geometric action
-`G → K ≃o K`); composing it with `localObservableCovarianceHom` — or, for a `Faithful` net,
-`quasiLocalCStarCovarianceHom` — yields the automorphic action of `G` on the (quasi-local) algebra.
+`localObservableCovarianceEquiv` and (for a `Faithful` net) its continuous extension to the
+quasi-local C⋆-algebra — is built in `QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra`. A symmetry
+group `G` acts on the net by supplying a group homomorphism `G →* N.Covariance` (whose `σ`-component
+is the geometric action `G → K ≃o K`); composing it with `localObservableCovarianceHom` — or, for a
+`Faithful` net, `quasiLocalCStarCovarianceHom` — yields the automorphic action of `G` on the
+(quasi-local) algebra.
 
 ## Notation
 
