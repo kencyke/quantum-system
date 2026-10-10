@@ -31,8 +31,8 @@ are equivalent (`Matrix.traceDual_eq_iff_stinespring`), by the trace duality
 
 Completely positive trace-preserving maps, and the isometry `V† V = 1` of their Stinespring dilations, are treated only for
 bounded operators on finite-dimensional Hilbert spaces
-(`QuantumChannel.exists_coe_eq_iff_exists_stinespring`, and in the Heisenberg picture
-`QuantumChannel.exists_traceDual_eq_stinespring`, in
+(`CPTPMap.exists_coe_eq_iff_exists_stinespring`, and in the Heisenberg picture
+`CPTPMap.exists_traceDual_eq_stinespring`, in
 `QuantumSystem/Analysis/CStarAlgebra/CompletelyPositiveMap/Stinespring.lean`); matrices reach them through
 `Matrix.toEuclideanCLM : M_n(ℂ) ≃ B(ℂⁿ)`.
 

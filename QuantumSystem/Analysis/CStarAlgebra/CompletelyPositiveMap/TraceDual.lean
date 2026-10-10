@@ -25,10 +25,10 @@ pairing `Σᵢⱼ tr(Qⱼᵢ Mᵢⱼ)` of the nonnegative block matrices `Q = (�
 The trace dual of a `2`-positive map `φ` that is trace non-increasing on positive operators,
 equivalently `φ*(1) ≤ 1` (`ContinuousLinearMap.traceDual_one_le_one_iff`), is therefore a Schwarz
 map (`KPositiveMapClass.toSchwarzMap` applied to `KPositiveMap.traceDual 2 φ`), unital when `φ` is
-trace preserving (`isTracePreserving_iff_traceDual_one`). For a quantum channel it is the Heisenberg
+trace preserving (`isTracePreserving_iff_traceDual_one`). For a CPTP map it is the Heisenberg
 picture of `Φ`; the data-processing inequality for Umegaki's relative entropy that this yields is
 in `QuantumSystem.InformationTheory.Entropy.Umegaki.Monotonicity`
-(`QuantumChannel.umegakiEntropy_comp_traceDual_le`). No Kraus representation is chosen.
+(`CPTPMap.umegakiEntropy_comp_traceDual_le`). No Kraus representation is chosen.
 
 ## Main definitions
 

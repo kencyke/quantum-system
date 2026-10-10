@@ -15,14 +15,14 @@ The partial traces `tr₂ = ContinuousLinearMap.traceRight H K : B(H ⊗ K) → 
 `tr₁ = ContinuousLinearMap.traceLeft H K : B(H ⊗ K) → B(K)` are the trace duals of the unital
 ⋆-homomorphisms `A ↦ A ⊗ 1` and `B ↦ 1 ⊗ B`. The trace dual of a completely positive map is
 completely positive (`CompletelyPositiveMap.traceDual`), and the partial traces preserve the trace
-(`ContinuousLinearMap.trace_traceRight`, `ContinuousLinearMap.trace_traceLeft`), so both are quantum
-channels with no further proof.
+(`ContinuousLinearMap.trace_traceRight`, `ContinuousLinearMap.trace_traceLeft`), so both are CPTP
+maps with no further proof.
 
 ## Main definitions
 
-* `QuantumChannel.traceRight H K`: the partial trace `B(H ⊗ K) → B(H)` as a quantum channel.
-* `QuantumChannel.traceLeft H K`: the partial trace `B(H ⊗ K) → B(K)` over the left factor as a
-  quantum channel.
+* `CPTPMap.traceRight H K`: the partial trace `B(H ⊗ K) → B(H)` as a CPTP map.
+* `CPTPMap.traceLeft H K`: the partial trace `B(H ⊗ K) → B(K)` over the left factor as a
+  CPTP map.
 -/
 
 @[expose] public section
@@ -34,13 +34,13 @@ variable {H K : Type*}
   [NormedAddCommGroup H] [InnerProductSpace ℂ H] [FiniteDimensional ℂ H]
   [NormedAddCommGroup K] [InnerProductSpace ℂ K] [FiniteDimensional ℂ K]
 
-namespace QuantumChannel
+namespace CPTPMap
 
 variable (H K) in
-/-- The **partial trace** `tr₂ : B(H ⊗ K) → B(H)` as a quantum channel: as the trace dual of the
+/-- The **partial trace** `tr₂ : B(H ⊗ K) → B(H)` as a CPTP map: as the trace dual of the
 unital ⋆-homomorphism `A ↦ A ⊗ 1` it is completely positive (`CompletelyPositiveMap.traceDual`),
 and it preserves the trace (`ContinuousLinearMap.trace_traceRight`). -/
-noncomputable def traceRight : QuantumChannel (H ⊗[ℂ] K) H where
+noncomputable def traceRight : CPTPMap (H ⊗[ℂ] K) H where
   toCompletelyPositiveMap :=
     CompletelyPositiveMap.traceDual (ContinuousLinearMap.rTensorStarAlgHom ℂ H K)
   isTracePreserving' := ContinuousLinearMap.trace_traceRight
@@ -51,9 +51,9 @@ noncomputable def traceRight : QuantumChannel (H ⊗[ℂ] K) H where
   rfl
 
 variable (H K) in
-/-- The **partial trace** `tr₁ : B(H ⊗ K) → B(K)` over the left factor as a quantum channel: the
+/-- The **partial trace** `tr₁ : B(H ⊗ K) → B(K)` over the left factor as a CPTP map: the
 trace dual of the unital ⋆-homomorphism `B ↦ 1 ⊗ B`. -/
-noncomputable def traceLeft : QuantumChannel (H ⊗[ℂ] K) K where
+noncomputable def traceLeft : CPTPMap (H ⊗[ℂ] K) K where
   toCompletelyPositiveMap :=
     CompletelyPositiveMap.traceDual (ContinuousLinearMap.lTensorStarAlgHom ℂ K H)
   isTracePreserving' := ContinuousLinearMap.trace_traceLeft
@@ -63,4 +63,4 @@ noncomputable def traceLeft : QuantumChannel (H ⊗[ℂ] K) K where
     traceLeft H K X = ContinuousLinearMap.traceLeft H K X :=
   rfl
 
-end QuantumChannel
+end CPTPMap

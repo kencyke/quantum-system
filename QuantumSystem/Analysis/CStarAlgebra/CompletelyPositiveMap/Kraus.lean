@@ -18,7 +18,7 @@ A finite family of operators `Tₐ : H →L[ℂ] K` defines the **Kraus map**
 (`CStarMatrix.nonneg_iff_sum_inner_apply_nonneg`). A map with Kraus operators `Tₐ` is trace
 preserving iff the completeness relation `Σₐ Tₐ† Tₐ = 1` holds
 (`isTracePreserving_iff_sum_adjoint_comp_eq_one`), since its trace dual is `B ↦ Σₐ Tₐ† B Tₐ`; so
-a Kraus map with `Σₐ Tₐ† Tₐ = 1` is a quantum channel (`QuantumChannel.ofKraus`).
+a Kraus map with `Σₐ Tₐ† Tₐ = 1` is a CPTP map (`CPTPMap.ofKraus`).
 
 Conversely every completely positive map between the operator algebras of finite-dimensional
 Hilbert spaces is a Kraus map (`QuantumSystem/Analysis/CStarAlgebra/CompletelyPositiveMap/Choi.lean`), with
@@ -28,7 +28,7 @@ as few as `rank J(Φ)` operators
 ## Main definitions
 
 * `CompletelyPositiveMap.ofKraus T`: the Kraus map `A ↦ Σₐ Tₐ A Tₐ†` as a completely positive map.
-* `QuantumChannel.ofKraus T hT`: the Kraus map of a family with `Σₐ Tₐ† Tₐ = 1` as a quantum channel.
+* `CPTPMap.ofKraus T hT`: the Kraus map of a family with `Σₐ Tₐ† Tₐ = 1` as a CPTP map.
 
 ## Main statements
 
@@ -103,19 +103,19 @@ theorem isTracePreserving_iff_sum_adjoint_comp_eq_one {F : Type*}
   rw [isTracePreserving_iff_traceDual_one, traceDual_eq_sum_of_kraus hT]
   simp only [one_def, id_comp]
 
-namespace QuantumChannel
+namespace CPTPMap
 
-/-- The **quantum channel of a Kraus representation**: the Kraus map `A ↦ Σₐ Tₐ A Tₐ†` of a family
+/-- The **CPTP map of a Kraus representation**: the Kraus map `A ↦ Σₐ Tₐ A Tₐ†` of a family
 satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`. -/
 noncomputable def ofKraus {ι : Type*} [Fintype ι] (T : ι → H →L[ℂ] K)
-    (hT : ∑ a, adjoint (T a) ∘L T a = 1) : QuantumChannel H K where
+    (hT : ∑ a, adjoint (T a) ∘L T a = 1) : CPTPMap H K where
   toCompletelyPositiveMap := CompletelyPositiveMap.ofKraus T
   isTracePreserving' := (isTracePreserving_iff_sum_adjoint_comp_eq_one fun _ => rfl).2 hT
 
-/-- The quantum channel `QuantumChannel.ofKraus T hT` sends `A` to `Σₐ Tₐ A Tₐ†`. -/
+/-- The CPTP map `CPTPMap.ofKraus T hT` sends `A` to `Σₐ Tₐ A Tₐ†`. -/
 lemma ofKraus_apply {ι : Type*} [Fintype ι] (T : ι → H →L[ℂ] K)
     (hT : ∑ a, adjoint (T a) ∘L T a = 1) (A : H →L[ℂ] H) :
     ofKraus T hT A = ∑ a, T a ∘L A ∘L adjoint (T a) :=
   rfl
 
-end QuantumChannel
+end CPTPMap

@@ -18,7 +18,7 @@ ampliation `A ↦ A ⊗ 1` (`ContinuousLinearMap.rTensorStarAlgHom`):
 `tr(A ∘ tr₂(X)) = tr((A ⊗ 1) ∘ X)` (`ContinuousLinearMap.trace_comp_traceRight`). On operator
 tensors it is `tr₂(A ⊗ B) = tr(B) • A` (`ContinuousLinearMap.traceRight_mapL`). As the trace dual
 of a unital ⋆-homomorphism it is completely positive and trace preserving with no further proof:
-it is a quantum channel (`QuantumChannel.traceRight`, in
+it is a CPTP map (`CPTPMap.traceRight`, in
 `QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.PartialTrace`). For an orthonormal
 basis `(eₐ)` of `K` it is the Kraus map `X ↦ Σₐ ιₐ† X ιₐ` of the insertions `ιₐ : x ↦ x ⊗ eₐ`
 (`ContinuousLinearMap.traceRight_eq_sum`). The partial trace over the left factor

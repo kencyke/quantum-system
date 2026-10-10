@@ -9,7 +9,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 
 /-!
-# Tensor products of quantum channels
+# Tensor products of CPTP maps
 
 For completely positive maps `φ : B(H₁) → B(K₁)` and `ψ : B(H₂) → B(K₂)` between the operator
 algebras of finite-dimensional Hilbert spaces, the **tensor product**
@@ -17,10 +17,10 @@ algebras of finite-dimensional Hilbert spaces, the **tensor product**
 (`CompletelyPositiveMap.tensorProduct_mapL`): it is `TensorProduct.map φ ψ` transported along the
 linear equivalence `B(H₁) ⊗ B(H₂) ≃ B(H₁ ⊗ H₂)` (`TensorProduct.mapLEquiv`), with no choice of
 bases. Kraus operators `Tₐ` of `φ` and `S_b` of `ψ` give the Kraus operators `Tₐ ⊗ S_b` of
-`φ ⊗ ψ`, so it is completely positive; the tensor product of quantum channels is a quantum channel
-(`QuantumChannel.tensorProduct`), since `tr(A ⊗ B) = tr A · tr B`. Tracing out the second factor
+`φ ⊗ ψ`, so it is completely positive; the tensor product of CPTP maps is a CPTP map
+(`CPTPMap.tensorProduct`), since `tr(A ⊗ B) = tr A · tr B`. Tracing out the second factor
 intertwines `Φ ⊗ Ψ` with `Φ` when `Ψ` is trace preserving
-(`QuantumChannel.traceRight_tensorProduct`).
+(`CPTPMap.traceRight_tensorProduct`).
 
 The operator tensor product `A ⊗ B` is Mathlib's `TensorProduct.mapL A B`. No infix notation is
 introduced for `φ ⊗ ψ`, which would clash with `TensorProduct`.
@@ -28,7 +28,7 @@ introduced for `φ ⊗ ψ`, which would clash with `TensorProduct`.
 ## Main definitions
 
 * `CompletelyPositiveMap.tensorProduct φ ψ`: the tensor product of completely positive maps.
-* `QuantumChannel.tensorProduct Φ Ψ`: the tensor product of quantum channels.
+* `CPTPMap.tensorProduct Φ Ψ`: the tensor product of CPTP maps.
 
 ## Main statements
 
@@ -36,7 +36,7 @@ introduced for `φ ⊗ ψ`, which would clash with `TensorProduct`.
 * `CompletelyPositiveMap.tensorProductLinearMap_apply_eq_sum_kraus`: for Kraus operators `Tₐ` of
   `φ` and
   `S_b` of `ψ`, `φ ⊗ ψ` has the Kraus operators `Tₐ ⊗ S_b`.
-* `CompletelyPositiveMap.traceRight_tensorProduct`, `QuantumChannel.traceRight_tensorProduct`:
+* `CompletelyPositiveMap.traceRight_tensorProduct`, `CPTPMap.traceRight_tensorProduct`:
   `tr₂ ∘ (φ ⊗ Ψ) = φ ∘ tr₂` for a trace-preserving `Ψ`.
 
 ## TODO
@@ -151,13 +151,13 @@ theorem traceRight_tensorProduct (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[�
 
 end CompletelyPositiveMap
 
-namespace QuantumChannel
+namespace CPTPMap
 
-/-- The **tensor product** `Φ ⊗ Ψ : B(H₁ ⊗ H₂) → B(K₁ ⊗ K₂)` of quantum channels: completely
+/-- The **tensor product** `Φ ⊗ Ψ : B(H₁ ⊗ H₂) → B(K₁ ⊗ K₂)` of CPTP maps: completely
 positive (`CompletelyPositiveMap.tensorProduct`) and trace preserving, since
 `tr(Φ(A) ⊗ Ψ(B)) = tr Φ(A) · tr Ψ(B) = tr A · tr B = tr(A ⊗ B)`. -/
-noncomputable def tensorProduct (Φ : QuantumChannel H₁ K₁) (Ψ : QuantumChannel H₂ K₂) :
-    QuantumChannel (H₁ ⊗[ℂ] H₂) (K₁ ⊗[ℂ] K₂) where
+noncomputable def tensorProduct (Φ : CPTPMap H₁ K₁) (Ψ : CPTPMap H₂ K₂) :
+    CPTPMap (H₁ ⊗[ℂ] H₂) (K₁ ⊗[ℂ] K₂) where
   toCompletelyPositiveMap :=
     CompletelyPositiveMap.tensorProduct Φ.toCompletelyPositiveMap Ψ.toCompletelyPositiveMap
   isTracePreserving' X := by
@@ -170,19 +170,19 @@ noncomputable def tensorProduct (Φ : QuantumChannel H₁ K₁) (Ψ : QuantumCha
           LinearMap.trace_tensorProduct', coe_toCompletelyPositiveMap, trace_map]
     exact LinearMap.congr_fun h X
 
-/-- The tensor product of quantum channels acts on operator tensors as
+/-- The tensor product of CPTP maps acts on operator tensors as
 `(Φ ⊗ Ψ)(A ⊗ B) = Φ(A) ⊗ Ψ(B)`. -/
-@[simp] lemma tensorProduct_mapL (Φ : QuantumChannel H₁ K₁) (Ψ : QuantumChannel H₂ K₂)
+@[simp] lemma tensorProduct_mapL (Φ : CPTPMap H₁ K₁) (Ψ : CPTPMap H₂ K₂)
     (A : H₁ →L[ℂ] H₁) (B : H₂ →L[ℂ] H₂) :
     tensorProduct Φ Ψ (mapL A B) = mapL (Φ A) (Ψ B) :=
   CompletelyPositiveMap.tensorProduct_mapL _ _ A B
 
 /-- Tracing out the second factor intertwines `Φ ⊗ Ψ` with `Φ`: `tr₂((Φ ⊗ Ψ)(X)) = Φ(tr₂ X)`
 (`CompletelyPositiveMap.traceRight_tensorProduct`, which needs only `Ψ` trace preserving). -/
-theorem traceRight_tensorProduct (Φ : QuantumChannel H₁ K₁) (Ψ : QuantumChannel H₂ K₂)
+theorem traceRight_tensorProduct (Φ : CPTPMap H₁ K₁) (Ψ : CPTPMap H₂ K₂)
     (X : H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) :
     ContinuousLinearMap.traceRight K₁ K₂ (tensorProduct Φ Ψ X) =
       Φ (ContinuousLinearMap.traceRight H₁ H₂ X) :=
   CompletelyPositiveMap.traceRight_tensorProduct _ _ (isTracePreserving Ψ) X
 
-end QuantumChannel
+end CPTPMap

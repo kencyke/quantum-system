@@ -21,8 +21,8 @@ Neumann algebras `𝓑(K)` and `𝓑(H)`, where every map is normal in finite di
 By the Kadison–Schwarz inequality, unital `2`-positive maps, in particular unital completely
 positive maps and `⋆`-homomorphisms, are Schwarz maps. For a quantum channel `Φ : B(H) → B(K)` the
 Schrödinger-picture output of `ψ` is `ψ ∘ Φ*`, with `Φ*` the trace dual, and its density is
-`Φ(ρ_ψ)` (`QuantumChannel.density_comp_traceDual`); so monotonicity under channels is
-`D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` (`QuantumChannel.umegakiEntropy_comp_traceDual_le`), and more generally
+`Φ(ρ_ψ)` (`CPTPMap.density_comp_traceDual`); so monotonicity under channels is
+`D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` (`CPTPMap.umegakiEntropy_comp_traceDual_le`), and more generally
 under `2`-positive trace-preserving maps.
 
 ## Main definitions
@@ -37,7 +37,7 @@ under `2`-positive trace-preserving maps.
 * `umegakiEntropy_comp_le` — the data-processing inequality for unital Schwarz
   maps; `umegakiEntropy_comp_le_of_kPositiveMap` for unital `2`-positive maps.
 * `umegakiEntropy_comp_traceDual_le_of_kPositiveMap`,
-  `QuantumChannel.umegakiEntropy_comp_traceDual_le` — monotonicity under `2`-positive
+  `CPTPMap.umegakiEntropy_comp_traceDual_le` — monotonicity under `2`-positive
   trace-preserving maps and quantum channels, in the Schrödinger picture.
 * `umegakiEntropy_comp_starAlgEquiv` — invariance under `⋆`-isomorphisms
   (unitary conjugations) `B(K) ≃ B(H)`.
@@ -178,20 +178,20 @@ theorem umegakiEntropy_comp_eq_of_recoverable {F F' : Type*}
 
 end DPI
 
-namespace QuantumChannel
+namespace CPTPMap
 
 /-- The Schrödinger-picture output `ψ ∘ Φ*` of a functional `ψ` under a quantum channel `Φ` has
 density `Φ(ρ_ψ)`. -/
-theorem density_comp_traceDual (Φ : QuantumChannel H K) (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
+theorem density_comp_traceDual (Φ : CPTPMap H K) (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
     density (ψ.comp (.ofClass (CompletelyPositiveMap.traceDual Φ))) = Φ (density ψ) :=
   density_eq_apply_density Φ fun _ => rfl
 
 /-- **Monotonicity under quantum channels**: `D(ψ ∘ Φ* ‖ φ ∘ Φ*) ≤ D(ψ ‖ φ)`, i.e.
-`D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` for the densities (`QuantumChannel.density_comp_traceDual`). -/
-theorem umegakiEntropy_comp_traceDual_le (Φ : QuantumChannel H K) (ψ φ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
+`D(Φ(ρ) ‖ Φ(σ)) ≤ D(ρ ‖ σ)` for the densities (`CPTPMap.density_comp_traceDual`). -/
+theorem umegakiEntropy_comp_traceDual_le (Φ : CPTPMap H K) (ψ φ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) :
     D(ψ.comp (.ofClass (CompletelyPositiveMap.traceDual Φ)) ∥
         φ.comp (.ofClass (CompletelyPositiveMap.traceDual Φ))) ≤ D(ψ ∥ φ) :=
   umegakiEntropy_comp_le_of_kPositiveMap (CompletelyPositiveMap.traceDual Φ) Φ.traceDual_one
     (fun _ => rfl) (fun _ => rfl)
 
-end QuantumChannel
+end CPTPMap

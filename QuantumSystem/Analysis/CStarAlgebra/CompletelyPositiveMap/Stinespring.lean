@@ -15,9 +15,9 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductC
 
 Let `H` and `K` be finite-dimensional complex Hilbert spaces and `b` an orthonormal basis of `H`.
 A linear map `Φ : B(H) → B(K)` is completely positive iff `Φ(A) = tr₂(V A V†)` for some
-`V : H → K ⊗ ℂʳ`, and a quantum channel iff moreover `V` is an isometry, `V† V = 1`
+`V : H → K ⊗ ℂʳ`, and a CPTP map iff moreover `V` is an isometry, `V† V = 1`
 (`CompletelyPositiveMap.exists_coe_eq_iff_exists_stinespring`,
-`QuantumChannel.exists_coe_eq_iff_exists_stinespring`). The environment `ℂʳ` has the dimension
+`CPTPMap.exists_coe_eq_iff_exists_stinespring`). The environment `ℂʳ` has the dimension
 `r = rank J_b(Φ)` of the Choi operator, and this is minimal: every such `V : H → K ⊗ E` has
 `dim E ≥ rank J_b(Φ)` (`ContinuousLinearMap.finrank_range_choi_le_finrank_of_stinespring`). In
 particular a completely positive map has a Kraus representation with exactly `rank J_b(Φ)`
@@ -51,7 +51,7 @@ The environment is the **right** factor of `K ⊗ E` and is removed by the parti
 * `ContinuousLinearMap.krausBlock f V a`: the Kraus block `Tₐ = ιₐ† V : H → K` of
   `V : H → K ⊗ E` along an orthonormal basis `f` of `E`, with the insertions `ιₐ : k ↦ k ⊗ fₐ`.
 * `CompletelyPositiveMap.ofStinespring V`: `A ↦ tr₂(V A V†)` as a completely positive map.
-* `QuantumChannel.ofStinespring V hV`: `A ↦ tr₂(V A V†)` for an isometry `V` as a quantum channel.
+* `CPTPMap.ofStinespring V hV`: `A ↦ tr₂(V A V†)` for an isometry `V` as a CPTP map.
 
 ## Main statements
 
@@ -67,14 +67,14 @@ The environment is the **right** factor of `K ⊗ E` and is removed by the parti
 * `CompletelyPositiveMap.exists_kraus_finrank_range_choi`: a CP map has a Kraus representation with
   exactly `rank J_b(φ)` operators; this rank does not depend on `b`
   (`CompletelyPositiveMap.finrank_range_choi_congr`).
-* `QuantumChannel.exists_traceDual_eq_stinespring`, `QuantumChannel.exists_stinespring`,
-  `QuantumChannel.exists_kraus_finrank_range_choi`: the same for quantum channels, with `V† V = 1`
+* `CPTPMap.exists_traceDual_eq_stinespring`, `CPTPMap.exists_stinespring`,
+  `CPTPMap.exists_kraus_finrank_range_choi`: the same for CPTP maps, with `V† V = 1`
   and `Σₐ Tₐ† Tₐ = 1`.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_stinespring`,
   `CompletelyPositiveMap.exists_coe_eq_iff_exists_kraus_finrank_range_choi`,
-  `QuantumChannel.exists_coe_eq_iff_exists_stinespring`,
-  `QuantumChannel.exists_coe_eq_iff_exists_kraus_finrank_range_choi`: the characterisations of
-  completely positive maps and of quantum channels.
+  `CPTPMap.exists_coe_eq_iff_exists_stinespring`,
+  `CPTPMap.exists_coe_eq_iff_exists_kraus_finrank_range_choi`: the characterisations of
+  completely positive maps and of CPTP maps.
 
 ## References
 
@@ -351,27 +351,27 @@ end CompletelyPositiveMap
 
 /-! ### Completely positive trace-preserving maps -/
 
-namespace QuantumChannel
+namespace CPTPMap
 
-/-- **Stinespring's theorem** for quantum channels, converse: `A ↦ tr₂(V A V†)` for an isometry
-`V : H → K ⊗ E`, `V† V = 1`, is a quantum channel: `tr(tr₂(V A V†)) = tr(A V† V) = tr A`. -/
+/-- **Stinespring's theorem** for CPTP maps, converse: `A ↦ tr₂(V A V†)` for an isometry
+`V : H → K ⊗ E`, `V† V = 1`, is a CPTP map: `tr(tr₂(V A V†)) = tr(A V† V) = tr A`. -/
 noncomputable def ofStinespring (V : H →L[ℂ] K ⊗[ℂ] E) (hV : adjoint V ∘L V = 1) :
-    QuantumChannel H K where
+    CPTPMap H K where
   toCompletelyPositiveMap := CompletelyPositiveMap.ofStinespring V
   isTracePreserving' A := by
     rw [CompletelyPositiveMap.ofStinespring_apply, trace_traceRight, trace_comp_comm', comp_assoc,
       hV, ← mul_def, mul_one]
 
-/-- The quantum channel `QuantumChannel.ofStinespring V hV` sends `A` to `tr₂(V A V†)`. -/
+/-- The CPTP map `CPTPMap.ofStinespring V hV` sends `A` to `tr₂(V A V†)`. -/
 @[simp] lemma ofStinespring_apply (V : H →L[ℂ] K ⊗[ℂ] E) (hV : adjoint V ∘L V = 1)
     (A : H →L[ℂ] H) : ofStinespring V hV A = ContinuousLinearMap.traceRight K E (V ∘L A ∘L adjoint V) :=
   CompletelyPositiveMap.ofStinespring_apply V A
 
-/-- **Stinespring's theorem, Heisenberg picture**, for quantum channels: the trace dual of a
-quantum channel `Φ : B(H) → B(K)` is the unital map `Φ*(B) = V† (B ⊗ 1) V` for an isometry
+/-- **Stinespring's theorem, Heisenberg picture**, for CPTP maps: the trace dual of a
+CPTP map `Φ : B(H) → B(K)` is the unital map `Φ*(B) = V† (B ⊗ 1) V` for an isometry
 `V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J_b(Φ)`. The isometry is
-`V† V = V† (1 ⊗ 1) V = Φ*(1) = 1` (`QuantumChannel.traceDual_one`). -/
-theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
+`V† V = V† (1 ⊗ 1) V = Φ*(1) = 1` (`CPTPMap.traceDual_one`). -/
+theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
         (Fin (Module.finrank ℂ ((choi b Φ).range))),
       adjoint V ∘L V = 1 ∧
@@ -385,11 +385,11 @@ theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : Qu
   simp only [one_def, id_comp] at h1
   exact h1.symm
 
-/-- **Stinespring's theorem** for quantum channels: a quantum channel `Φ : B(H) → B(K)` is
+/-- **Stinespring's theorem** for CPTP maps: a CPTP map `Φ : B(H) → B(K)` is
 `Φ(A) = tr₂(V A V†)` for an isometry `V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J_b(Φ)`: the
-Heisenberg form `QuantumChannel.exists_traceDual_eq_stinespring` read through
+Heisenberg form `CPTPMap.exists_traceDual_eq_stinespring` read through
 `ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
-theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
+theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
         (Fin (Module.finrank ℂ ((choi b Φ).range))),
       adjoint V ∘L V = 1 ∧ ∀ A, Φ A = ContinuousLinearMap.traceRight K (EuclideanSpace ℂ (Fin _))
@@ -398,10 +398,10 @@ theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel 
   obtain ⟨V, hVV, hV⟩ := h
   exact ⟨V, hVV, (traceDual_eq_iff_traceRight V).1 hV⟩
 
-/-- A quantum channel `Φ : B(H) → B(K)` has a Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` with
+/-- A CPTP map `Φ : B(H) → B(K)` has a Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` with
 exactly `rank J_b(Φ)` operators, satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`
 (`isTracePreserving_iff_sum_adjoint_comp_eq_one`). -/
-theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H) (Φ : QuantumChannel H K) :
+theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
     ∃ T : Fin (Module.finrank ℂ ((choi b Φ).range)) →
         H →L[ℂ] K,
       (∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) ∧ ∑ a, adjoint (T a) ∘L T a = 1 := by
@@ -409,12 +409,12 @@ theorem exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H) (Φ : Qu
   obtain ⟨T, hT⟩ := h
   exact ⟨T, hT, (isTracePreserving_iff_sum_adjoint_comp_eq_one hT).1 (isTracePreserving Φ)⟩
 
-/-- **Stinespring's theorem** for quantum channels: a linear map `Φ : B(H) → B(K)` is a quantum channel iff
+/-- **Stinespring's theorem** for CPTP maps: a linear map `Φ : B(H) → B(K)` is a CPTP map iff
 `Φ(A) = tr₂(V A V†)` for an isometry `V : H → K ⊗ ℂʳ`, `V† V = 1`, with
 `r = rank J_b(Φ)`. -/
 theorem exists_coe_eq_iff_exists_stinespring (b : OrthonormalBasis ι ℂ H)
     (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
-    (∃ Ψ : QuantumChannel H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
+    (∃ Ψ : CPTPMap H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
       ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
           (Fin (Module.finrank ℂ ((choi b Φ).range))),
         adjoint V ∘L V = 1 ∧ ∀ A, Φ A = ContinuousLinearMap.traceRight K (EuclideanSpace ℂ (Fin _))
@@ -424,13 +424,13 @@ theorem exists_coe_eq_iff_exists_stinespring (b : OrthonormalBasis ι ℂ H)
       obtain ⟨V, hVV, hV⟩ := h
       exact ⟨ofStinespring V hVV, LinearMap.ext fun A => by simp [hV]⟩⟩
 
-/-- **Kraus representation of quantum channels** (Nielsen–Chuang, Theorem 8.1, for the
+/-- **Kraus representation of CPTP maps** (Nielsen–Chuang, Theorem 8.1, for the
 trace-preserving case `Σₐ Tₐ† Tₐ = 1`): a linear map
-`Φ : B(H) → B(K)` is a quantum channel iff `Φ(A) = Σₐ Tₐ A Tₐ†` with `Σₐ Tₐ† Tₐ = 1`, and then
+`Φ : B(H) → B(K)` is a CPTP map iff `Φ(A) = Σₐ Tₐ A Tₐ†` with `Σₐ Tₐ† Tₐ = 1`, and then
 with `rank J_b(Φ)` operators. -/
 theorem exists_coe_eq_iff_exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)
     (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
-    (∃ Ψ : QuantumChannel H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
+    (∃ Ψ : CPTPMap H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
       ∃ T : Fin (Module.finrank ℂ ((choi b Φ).range)) →
           H →L[ℂ] K,
         (∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) ∧ ∑ a, adjoint (T a) ∘L T a = 1 :=
@@ -439,4 +439,4 @@ theorem exists_coe_eq_iff_exists_kraus_finrank_range_choi (b : OrthonormalBasis 
       obtain ⟨T, hT, hTT⟩ := h
       exact ⟨ofKraus T hTT, LinearMap.ext fun A => (hT A).symm⟩⟩
 
-end QuantumChannel
+end CPTPMap
