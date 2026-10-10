@@ -38,7 +38,7 @@ C⋆-algebra transfers the Hilbert space case along a faithful representation (G
 `ConvexOn.cfc_of_injective`); it needs the Gelfand–Naimark theorem, which Mathlib does not provide
 and which the project builds from direct sums of Mathlib's GNS representations
 (`GNS.DirectSum.repStarAlgHom`), and is proved outside `ForMathlib` in
-`QuantumSystem/Analysis/CStarAlgebra/OperatorConvex.lean`
+`QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean`
 (`IsMatrixConvexOn.isOperatorConvexOn`), together with the resulting independence of
 `IsOperatorConvexOn` from the universe of the C⋆-algebras it quantifies over
 (`isOperatorConvexOn_congr_universe`). The set `s` of a matrix convex function is an interval
@@ -632,7 +632,7 @@ per universe; `IsOperatorConvexOn.isMatrixConvexOn` reads the matrix algebras of
 predicates agree across universes, since each is equivalent to continuity and matrix convexity
 (Hansen–Pedersen). The direction from matrix convexity to operator convexity needs
 Gelfand–Naimark and is proved outside `ForMathlib`, in
-`QuantumSystem/Analysis/CStarAlgebra/OperatorConvex.lean` (`isOperatorConvexOn_congr_universe`);
+`QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean` (`isOperatorConvexOn_congr_universe`);
 the examples below are proved uniformly in every C⋆-algebra and hold in every universe.
 
 The field `continuousOn` follows the definition of Hansen–Pedersen; Bhatia's operator convexity,
@@ -673,7 +673,7 @@ the matrices indexed by `ULift.{u} (Fin n)`, and reindexing along `Equiv.ulift` 
 The universe `u` does not occur in the conclusion, so a universe-polymorphic hypothesis must fix it
 at the call site, e.g. `isOperatorConvexOn_inv.{0}.isMatrixConvexOn`. The lemma is stated for every
 `u` because the independence of the universe (`isOperatorConvexOn_congr_universe` in
-`QuantumSystem/Analysis/CStarAlgebra/OperatorConvex.lean`) is proved from it, together with the
+`QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean`) is proved from it, together with the
 direction from matrix convexity to operator convexity. -/
 lemma IsOperatorConvexOn.isMatrixConvexOn (hf : IsOperatorConvexOn.{u} s f) :
     IsMatrixConvexOn s f := fun n => by

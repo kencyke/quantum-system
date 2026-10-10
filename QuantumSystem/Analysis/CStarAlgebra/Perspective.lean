@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvex
+public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvexIffMatrixConvex
 public import QuantumSystem.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Commute
 
 /-!
