@@ -14,7 +14,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopo
 
 Any two projections `p, q` of a factor `N` are comparable in the Murray–von Neumann order:
 `p ≼[N] q` or `q ≼[N] p` (`IsFactor.mvNSub_or_mvNSub`). The minimal-projection case
-(`IsMinimalProjection.mvNSub_of_isFactor`, in `QuantumSystem.Analysis.VonNeumannAlgebra.Basic`)
+(`IsMinimalProjection.mvNSub_of_isFactor`, in `QuantumSystem.Analysis.VonNeumannAlgebra.MurrayVonNeumann`)
 needs only a scaling argument; the general case rests on two further ingredients.
 
 1. **Orthogonal sums of partial isometries**, in any von Neumann algebra. A family of partial

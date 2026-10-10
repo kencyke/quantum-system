@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Multiplication
-public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Basic
+public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Classification
 
 /-!
 # Split inclusions of von Neumann algebras

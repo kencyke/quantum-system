@@ -8,7 +8,7 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.InnerProductSpace.l2Space
-public import QuantumSystem.Analysis.VonNeumannAlgebra.Basic
+public import QuantumSystem.Analysis.VonNeumannAlgebra.MurrayVonNeumann
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 

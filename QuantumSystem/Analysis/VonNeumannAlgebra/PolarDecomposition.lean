@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.VonNeumannAlgebra.MinimalProjection
+public import QuantumSystem.Analysis.VonNeumannAlgebra.MurrayVonNeumann
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Abs
 
 /-!

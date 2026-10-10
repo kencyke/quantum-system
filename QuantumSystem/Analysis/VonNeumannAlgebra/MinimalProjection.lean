@@ -10,15 +10,22 @@ public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Basic
 public import Mathlib.LinearAlgebra.Complex.Module
-public import QuantumSystem.Analysis.VonNeumannAlgebra.Basic
+public import QuantumSystem.Analysis.VonNeumannAlgebra.Factor
+public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Abs
 
 /-!
 # Minimal projections of a von Neumann algebra
 
-Criteria for a projection of a von Neumann algebra `N` to be **minimal** (`IsMinimalProjection`:
-a nonzero star projection with trivial corner `p N p = ℂ p`).
+The **minimal projections** of a von Neumann algebra `N` (`IsMinimalProjection`: a nonzero star
+projection with trivial corner `p N p = ℂ p`), the **abelian projections** (`IsAbelianProjection`:
+a star projection with commutative corner `p N p`), and criteria for minimality.
+
+* **Definitions and invariance.** A minimal projection is order-minimal
+  (`IsMinimalProjection.no_proper_subprojection`) and abelian; both notions are invariant under
+  spatial isomorphisms `N ↦ U N U⋆` and, being intrinsic to the `⋆`-algebra, under abstract
+  `⋆`-isomorphisms `N ≃⋆ₐ M`.
 
 * **Order-minimality forces the trivial corner.** A nonzero projection `p ∈ N` with no proper
   nonzero subprojection in `N` is minimal. The positive/negative parts of a self-adjoint corner
@@ -32,15 +39,25 @@ a nonzero star projection with trivial corner `p N p = ℂ p`).
   equivalently, the star projections with one-dimensional range.
 
 These are the ingredients of the minimal-projection characterisation of type I factors
-(`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Basic`).
+(`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Defs`).
 
 ## Main definitions
 
+* `VonNeumannAlgebra.IsMinimalProjection N e` — `e` is a nonzero star projection in `N` with
+  trivial corner `e N e = ℂ e`. This implies the order-theoretic minimality (no proper nonzero
+  subprojection in `N`: any projection `f ∈ N` with `f ≤ e` is `0` or `e`), recorded as
+  `IsMinimalProjection.no_proper_subprojection`.
+* `VonNeumannAlgebra.IsAbelianProjection N p` — `p` is a star projection in `N` with commutative
+  corner `p N p`.
 * `VonNeumannAlgebra.cornerNonUnitalStarSubalgebra N hp` — the norm-closed corner `{y ∈ N | p y
   = y = y p}`.
 
 ## Main results
 
+* `VonNeumannAlgebra.isMinimalProjection_conj_iff`,
+  `VonNeumannAlgebra.isMinimalProjection_starAlgEquiv_iff` — minimal projections are invariant
+  under spatial isomorphisms `N ↦ U N U⋆` and under abstract `⋆`-isomorphisms `N ≃⋆ₐ M`
+  (`VonNeumannAlgebra.isMinimalProjection_coe_iff`).
 * `VonNeumannAlgebra.IsFactor.subprojection_eq_of_isAbelianProjection` — in a factor, an abelian
   projection has no proper nonzero subprojection.
 * `VonNeumannAlgebra.rangeProj_mem` — the range projection `R(x)` of `x ∈ N` lies in `N`.
@@ -62,6 +79,149 @@ These are the ingredients of the minimal-projection characterisation of type I f
 namespace VonNeumannAlgebra
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+
+/-! ### Minimal and abelian projections -/
+
+/-- A **minimal projection** of `N`: a nonzero star projection `e ∈ N` whose corner is trivial,
+`e N e = ℂ e`. This is the conventional operator-algebraic definition (Takesaki, Kadison–Ringrose);
+it implies minimality in the order sense (no proper nonzero subprojection), recorded as
+`IsMinimalProjection.no_proper_subprojection`. The corner formulation is the one that
+supports comparison theory without invoking Borel functional calculus. -/
+def IsMinimalProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
+  IsStarProjection e ∧ e ∈ N ∧ e ≠ 0 ∧ ∀ a ∈ N, ∃ c : ℂ, e * a * e = c • e
+
+/-- A von Neumann algebra with a minimal projection acts on a nonzero space: the minimal
+projection is nonzero, so it sends some vector to a nonzero vector, witnessing `Nontrivial H`. -/
+lemma IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) : Nontrivial H :=
+  nontrivial_of_ne_zero he.2.2.1
+
+/-- A minimal projection has no proper nonzero subprojection in `N`: if a projection `f ∈ N`
+satisfies `f ≤ e` (the operator order, equivalently the range inclusion `ran f ⊆ ran e`), then
+`f = 0` or `f = e`. This recovers the order-theoretic form of minimality from the corner definition
+`e N e = ℂ e`. -/
+lemma IsMinimalProjection.no_proper_subprojection {N : VonNeumannAlgebra H}
+    {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
+    {f : H →L[ℂ] H} (hf : IsStarProjection f) (hfN : f ∈ N) (hle : f ≤ e) :
+    f = 0 ∨ f = e := by
+  have hsub : e * f = f := (hf.le_iff_mul_eq_right he.1).mp hle
+  have hfe : f * e = f := by
+    have := congrArg star hsub
+    rwa [star_mul, he.1.isSelfAdjoint.star_eq, hf.isSelfAdjoint.star_eq] at this
+  have hefe : e * f * e = f := by rw [hsub, hfe]
+  obtain ⟨c, hc⟩ := he.2.2.2 f hfN
+  rw [hefe] at hc
+  have hidem : f * f = f := hf.isIdempotentElem
+  rw [hc] at hidem
+  have h2 : (c • e) * (c • e) = (c * c) • (e : H →L[ℂ] H) := by
+    rw [smul_mul_smul_comm, he.1.isIdempotentElem]
+  have hcc : (c * c) • (e : H →L[ℂ] H) = c • e := by rw [← h2, hidem]
+  have hc2 : c * c = c := smul_left_injective ℂ he.2.2.1 hcc
+  have h0 : c * (c - 1) = 0 := by rw [mul_sub, mul_one, hc2, sub_self]
+  rcases mul_eq_zero.mp h0 with h | h
+  · exact Or.inl (by rw [hc, h, zero_smul])
+  · exact Or.inr (by rw [hc, sub_eq_zero.mp h, one_smul])
+
+/-- An **abelian projection** of `N`: a star projection `p ∈ N` whose corner `p N p` is
+commutative. Minimal projections are abelian (`IsMinimalProjection.isAbelianProjection`); the
+general type I property (`IsTypeI`) is phrased through abelian projections. -/
+def IsAbelianProjection (N : VonNeumannAlgebra H) (p : H →L[ℂ] H) : Prop :=
+  IsStarProjection p ∧ p ∈ N ∧
+    ∀ a ∈ N, ∀ b ∈ N, (p * a * p) * (p * b * p) = (p * b * p) * (p * a * p)
+
+/-- A minimal projection is abelian: its corner `e N e = ℂ e` is one-dimensional, hence
+commutative. -/
+lemma IsMinimalProjection.isAbelianProjection {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) : IsAbelianProjection N e := by
+  refine ⟨he.1, he.2.1, fun a haN b hbN => ?_⟩
+  obtain ⟨c, hc⟩ := he.2.2.2 a haN
+  obtain ⟨d, hd⟩ := he.2.2.2 b hbN
+  rw [hc, hd, smul_mul_smul_comm, smul_mul_smul_comm, mul_comm c d]
+
+section Conj
+
+variable {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H'] [CompleteSpace H']
+
+/-- **Minimal projections are spatially invariant**: if `e` is a minimal projection of `N`, then
+`U e U⋆` is a minimal projection of `U N U⋆`. -/
+lemma IsMinimalProjection.conj {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (he : IsMinimalProjection N e) (U : H ≃ₗᵢ[ℂ] H') :
+    IsMinimalProjection (conj U N) (U.conjStarAlgEquiv e) := by
+  obtain ⟨hp, hmem, hne, hcorner⟩ := he
+  refine ⟨hp.map U.conjStarAlgEquiv, (conjStarAlgEquiv_mem_conj_iff U N).mpr hmem,
+    fun h => hne (U.conjStarAlgEquiv.injective (h.trans (map_zero _).symm)), fun a ha => ?_⟩
+  rw [mem_conj_iff] at ha
+  obtain ⟨c, hc⟩ := hcorner _ ha
+  refine ⟨c, ?_⟩
+  have := congrArg U.conjStarAlgEquiv hc
+  rwa [map_mul, map_mul, StarAlgEquiv.apply_symm_apply, map_smul] at this
+
+/-- `U e U⋆` is a minimal projection of `U N U⋆` iff `e` is a minimal projection of `N`. -/
+lemma isMinimalProjection_conj_iff {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (U : H ≃ₗᵢ[ℂ] H') :
+    IsMinimalProjection (conj U N) (U.conjStarAlgEquiv e) ↔ IsMinimalProjection N e := by
+  refine ⟨fun h => ?_, fun h => h.conj U⟩
+  obtain ⟨hp, hmem, hne, hcorner⟩ := h
+  refine ⟨?_, (conjStarAlgEquiv_mem_conj_iff U N).mp hmem, ?_, fun a ha => ?_⟩
+  · have := hp.map U.conjStarAlgEquiv.symm
+    rwa [StarAlgEquiv.symm_apply_apply] at this
+  · rintro rfl; exact hne (map_zero _)
+  · obtain ⟨c, hc⟩ := hcorner _ ((conjStarAlgEquiv_mem_conj_iff U N).mpr ha)
+    refine ⟨c, ?_⟩
+    have := congrArg U.conjStarAlgEquiv.symm hc
+    rwa [map_mul, map_mul, StarAlgEquiv.symm_apply_apply, StarAlgEquiv.symm_apply_apply,
+      map_smul, StarAlgEquiv.symm_apply_apply] at this
+
+end Conj
+
+/-! ### Invariance under abstract `⋆`-isomorphisms
+
+Being a minimal projection is a property of the abstract `⋆`-algebra `N`: the corner condition
+`e N e = ℂ e` only involves products inside `N`, so it is carried along any `⋆`-algebra
+isomorphism `N ≃⋆ₐ M` between von Neumann algebras on possibly different Hilbert spaces. -/
+
+section StarAlgEquiv
+
+variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
+  {N : VonNeumannAlgebra H} {M : VonNeumannAlgebra K}
+
+/-- **Minimality is intrinsic to the `⋆`-algebra.** For `x ∈ N`, being a minimal projection of `N`
+is the algebraic condition that `x` is a nonzero star projection of the `⋆`-algebra `N` with trivial
+corner `x N x = ℂ x`, computed inside `N`. -/
+lemma isMinimalProjection_coe_iff {x : N} :
+    IsMinimalProjection N (x : H →L[ℂ] H) ↔
+      IsStarProjection x ∧ x ≠ 0 ∧ ∀ a : N, ∃ c : ℂ, x * a * x = c • x := by
+  have hproj : IsStarProjection (x : H →L[ℂ] H) ↔ IsStarProjection x := by
+    simp only [isStarProjection_iff, IsIdempotentElem, isSelfAdjoint_iff, Subtype.ext_iff]
+    rfl
+  simp only [IsMinimalProjection, hproj, x.2, true_and, ne_eq, Subtype.ext_iff]
+  refine and_congr_right fun _ => and_congr_right fun _ => ⟨fun h a => ?_, fun h a ha => ?_⟩
+  · exact h a a.2
+  · exact h ⟨a, ha⟩
+
+/-- **Minimal projections are carried along `⋆`-isomorphisms**: if `x` is a minimal projection of
+`N` and `φ : N ≃⋆ₐ M`, then `φ x` is a minimal projection of `M`. The corner condition at `φ x`
+against `a ∈ M` is the image under `φ` of the corner condition at `x` against `φ⁻¹ a`. -/
+lemma IsMinimalProjection.map_starAlgEquiv {x : N} (hx : IsMinimalProjection N (x : H →L[ℂ] H))
+    (φ : N ≃⋆ₐ[ℂ] M) : IsMinimalProjection M (φ x : K →L[ℂ] K) := by
+  rw [isMinimalProjection_coe_iff] at hx ⊢
+  obtain ⟨hp, hne, hcorner⟩ := hx
+  refine ⟨hp.map φ, (map_ne_zero_iff φ (EquivLike.injective φ)).mpr hne, fun a => ?_⟩
+  obtain ⟨c, hc⟩ := hcorner (φ.symm a)
+  refine ⟨c, ?_⟩
+  have := congrArg φ hc
+  rwa [map_mul, map_mul, StarAlgEquiv.apply_symm_apply, map_smul] at this
+
+/-- **Minimal projections are invariant under `⋆`-isomorphisms**: for `φ : N ≃⋆ₐ M`, `φ x` is a
+minimal projection of `M` iff `x` is a minimal projection of `N`. -/
+lemma isMinimalProjection_starAlgEquiv_iff (φ : N ≃⋆ₐ[ℂ] M) {x : N} :
+    IsMinimalProjection M (φ x : K →L[ℂ] K) ↔ IsMinimalProjection N (x : H →L[ℂ] H) := by
+  refine ⟨fun h => ?_, fun h => h.map_starAlgEquiv φ⟩
+  have := h.map_starAlgEquiv φ.symm
+  rwa [StarAlgEquiv.symm_apply_apply] at this
+
+end StarAlgEquiv
 
 /-- **In a factor, an abelian projection is order-minimal**: a projection `q ∈ N` with `q ≤ p`
 is `0` or `p`.

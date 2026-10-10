@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.InnerProductSpace.Positive
-public import QuantumSystem.Analysis.VonNeumannAlgebra.Basic
+public import QuantumSystem.Analysis.VonNeumannAlgebra.MurrayVonNeumann
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 

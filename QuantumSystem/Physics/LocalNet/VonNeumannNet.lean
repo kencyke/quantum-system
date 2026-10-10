@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Basic
-public import QuantumSystem.Analysis.VonNeumannAlgebra.Basic
+public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 
 /-!
