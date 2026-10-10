@@ -8,6 +8,7 @@ module
 public import Mathlib.Algebra.Star.StarProjection
 public import Mathlib.Analysis.CStarAlgebra.Basic
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import Mathlib.Analysis.Normed.Operator.Extend
 public import Mathlib.LinearAlgebra.Projection
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Idempotent
 
@@ -39,6 +40,13 @@ for von Neumann algebras.
   `isPartialIsometry_iff_isStarProjection_mul_star_self` — the resulting equivalences.
 * `IsPartialIsometry.sourceRangeEquiv` — on a Hilbert space, the isometric equivalence
   `range (v⋆v) ≃ₗᵢ range (vv⋆)`, with inverse `v⋆` (`IsPartialIsometry.coe_sourceRangeEquiv_symm`).
+* `exists_isPartialIsometry_mem_centralizer_of_norm_eq` — two linear maps `f, g` into a Hilbert
+  space with `‖f e‖ = ‖g e‖` are related by a partial isometry, `v ∘ f = g`, with source
+  projection onto `closure (range f)` and range projection onto `closure (range g)`; for every
+  star-closed set `S` of operators intertwining `f` and `g` it can be taken in the centralizer of
+  `S` (and is in fact the same operator for every `S`). This is the partial isometry
+  of the polar decomposition `x = v |x|` (`f = |x|`, `g = x`), and the one carrying `a ξ ↦ a η` for
+  two vectors with the same vector functional on an operator algebra (`f = (· ξ)`, `g = (· η)`).
 -/
 
 @[expose] public section
@@ -256,3 +264,152 @@ lemma IsPartialIsometry.coe_sourceRangeEquiv_symm {v : H →L[ℂ] H} (hv : IsPa
   rw [hsymm]
 
 end Hilbert
+
+section Extension
+
+/-! ### Partial isometries extending an isometric correspondence
+
+Two linear maps `f g : E →ₗ[ℂ] H` with `‖f e‖ = ‖g e‖` for every `e` define an isometry
+`f e ↦ g e` from `range f` onto `range g`. It extends by continuity to `closure (range f)`
+(`LinearMap.extendOfIsometry`) and by `0` to its orthogonal complement; the result is a partial
+isometry `v` with `v ∘ f = g`. An operator `s` such that both `s` and `s⋆` intertwine the
+correspondence, `s (f e) = f e'` and `s (g e) = g e'`, commutes with `v`: on `closure (range f)`
+by density, and on its orthogonal complement, which `s` preserves, both `s v` and `v s` vanish. -/
+
+open scoped InnerProductSpace
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+  {E : Type*} [AddCommGroup E] [Module ℂ E]
+
+/-- **Partial isometry extending an isometric correspondence.** Let `f g : E →ₗ[ℂ] H` satisfy
+`‖f e‖ = ‖g e‖` for every `e`, and let `S` be a star-closed set of operators intertwining the
+correspondence: for `s ∈ S` and every `e`, some `e'` has `s (f e) = f e'` and `s (g e) = g e'`
+(with `S = ∅` this is no constraint). Then there is a partial isometry `v` in the centralizer of
+`S` with `v (f e) = g e`, source projection `v⋆ v` onto `closure (range f)` and range projection
+`v v⋆` onto `closure (range g)`.
+
+The statement is `∀ S, ∃ v`, but `v` does not depend on `S`: an operator with `v (f e) = g e` and
+source projection onto `closure (range f)` is determined on `closure (range f)` by continuity and
+vanishes on its orthogonal complement. For the polar decomposition (`f = |x|`, `g = x`) this
+uniqueness is `ContinuousLinearMap.eq_of_eq_mul_cfcAbs`. -/
+lemma exists_isPartialIsometry_mem_centralizer_of_norm_eq (f g : E →ₗ[ℂ] H)
+    (h : ∀ e, ‖f e‖ = ‖g e‖) {S : Set (H →L[ℂ] H)} (hS : ∀ s ∈ S, star s ∈ S)
+    (hfg : ∀ s ∈ S, ∀ e, ∃ e', s (f e) = f e' ∧ s (g e) = g e') :
+    ∃ v ∈ S.centralizer, IsPartialIsometry v ∧ (∀ e, v (f e) = g e) ∧
+      star v * v = (LinearMap.range f).topologicalClosure.starProjection ∧
+      v * star v = (LinearMap.range g).topologicalClosure.starProjection := by
+  set K := (LinearMap.range f).topologicalClosure
+  set L := (LinearMap.range g).topologicalClosure
+  -- `f` as a map into `K`, with dense range.
+  let f' : E →ₗ[ℂ] K :=
+    f.codRestrict K fun e => Submodule.le_topologicalClosure _ (LinearMap.mem_range_self f e)
+  have hf' : DenseRange f' := by
+    rw [DenseRange, Subtype.dense_iff]
+    intro w hw
+    rw [Submodule.topologicalClosure_coe] at hw
+    refine closure_mono ?_ hw
+    rintro _ ⟨e, rfl⟩
+    exact ⟨_, ⟨e, rfl⟩, rfl⟩
+  -- The isometry `K → H` extending `f e ↦ g e`, extended by `0` on `Kᗮ`.
+  let U : K →ₗᵢ[ℂ] H := g.extendOfIsometry hf' fun e => (h e).symm
+  set V : H →L[ℂ] H := U.toContinuousLinearMap ∘L K.orthogonalProjectionOnto
+  have hVapp : ∀ w, V w = U (K.orthogonalProjectionOnto w) := fun _ => rfl
+  -- `V` factors through `P_K`.
+  have hVP : ∀ w, V w = V (K.starProjection w) := fun w => by
+    rw [hVapp, hVapp, Submodule.starProjection_apply,
+      Submodule.orthogonalProjectionOnto_mem_subspace_eq_self]
+  have hVf : ∀ e, V (f e) = g e := fun e => by
+    rw [hVapp, show K.orthogonalProjectionOnto (f e) = f' e from
+      Submodule.orthogonalProjectionOnto_mem_subspace_eq_self (f' e)]
+    exact LinearMap.extendOfIsometry_eq _ _ _ _
+  have hnorm : ∀ w, ‖V w‖ = ‖K.starProjection w‖ := fun w => by
+    rw [hVapp, LinearIsometry.norm_map]
+    rfl
+  -- Source projection: `V⋆ V = P_K`.
+  have hstar : star V * V = K.starProjection := by
+    refine ContinuousLinearMap.coe_inj.mp ((ext_inner_map _ _).mp fun w => ?_)
+    change ⟪star V (V w), w⟫_ℂ = ⟪K.starProjection w, w⟫_ℂ
+    have hw : ⟪K.starProjection w, w - K.starProjection w⟫_ℂ = 0 :=
+      Submodule.inner_right_of_mem_orthogonal (K.starProjection_apply_mem w)
+        (K.sub_starProjection_mem_orthogonal w)
+    rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_left,
+      inner_self_eq_norm_sq_to_K, hnorm, ← inner_self_eq_norm_sq_to_K, inner_sub_right,
+      sub_eq_zero] at *
+    exact hw.symm
+  have hVV : V * (star V * V) = V := by
+    rw [hstar]
+    ext w
+    exact (hVP w).symm
+  -- `V` maps into `L`.
+  have hrange : ∀ w, V w ∈ L := fun w => by
+    rw [hVP]
+    have hle : K ≤ L.comap (V : H →ₗ[ℂ] H) := by
+      refine Submodule.topologicalClosure_minimal _ ?_ (by
+        rw [Submodule.comap_coe]
+        exact (LinearMap.range g).isClosed_topologicalClosure.preimage V.continuous)
+      rintro _ ⟨e, rfl⟩
+      simp only [Submodule.mem_comap, ContinuousLinearMap.coe_coe]
+      rw [hVf]
+      exact Submodule.le_topologicalClosure _ (LinearMap.mem_range_self g e)
+    exact hle (K.starProjection_apply_mem w)
+  -- Range projection: `V V⋆ = P_L`.
+  have hfin : V * star V = L.starProjection := by
+    have h₁ : ∀ u ∈ L, (V * star V) u = u := fun u hu => by
+      have hle : L ≤ LinearMap.ker ((V * star V - 1 : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
+        refine Submodule.topologicalClosure_minimal _ ?_ (V * star V - 1).isClosed_ker
+        rintro _ ⟨e, rfl⟩
+        simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe,
+          sub_apply, one_apply_eq_self, sub_eq_zero]
+        rw [← hVf, ← mul_apply_eq_comp, mul_assoc, hVV]
+      simpa [sub_eq_zero] using hle hu
+    have h₂ : ∀ u ∈ Lᗮ, star V u = 0 := fun u hu => by
+      refine ext_inner_right ℂ fun w => ?_
+      rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_left,
+        inner_zero_left]
+      exact Submodule.inner_left_of_mem_orthogonal (hrange w) hu
+    ext w
+    conv_lhs => rw [← add_sub_cancel (L.starProjection w) w]
+    rw [map_add, h₁ _ (L.starProjection_apply_mem w), mul_apply_eq_comp,
+      h₂ _ (L.sub_starProjection_mem_orthogonal w), map_zero, add_zero]
+  -- `V` commutes with every `s ∈ S`.
+  have hcomm : V ∈ S.centralizer := by
+    rw [Set.mem_centralizer_iff]
+    intro s hs
+    -- On `K`, by density.
+    have hK : K ≤ LinearMap.ker ((s * V - V * s : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
+      refine Submodule.topologicalClosure_minimal _ ?_ (s * V - V * s).isClosed_ker
+      rintro _ ⟨e, rfl⟩
+      obtain ⟨e', hfe, hge⟩ := hfg s hs e
+      simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, sub_apply,
+        mul_apply_eq_comp, sub_eq_zero]
+      rw [hVf, hge, hfe, hVf]
+    -- `s` preserves `Kᗮ`, because `s⋆` preserves `K`.
+    have hsK : K ≤ K.comap ((star s : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
+      refine Submodule.topologicalClosure_minimal _ ?_ (by
+        rw [Submodule.comap_coe]
+        exact (LinearMap.range f).isClosed_topologicalClosure.preimage (star s).continuous)
+      rintro _ ⟨e, rfl⟩
+      obtain ⟨e', hfe, -⟩ := hfg (star s) (hS s hs) e
+      simp only [Submodule.mem_comap, ContinuousLinearMap.coe_coe]
+      rw [hfe]
+      exact Submodule.le_topologicalClosure _ (LinearMap.mem_range_self f e')
+    have hsperp : ∀ u ∈ Kᗮ, s u ∈ Kᗮ := fun u hu => by
+      refine (Submodule.mem_orthogonal _ _).mpr fun k hk => ?_
+      have hk' : star s k ∈ K := hsK hk
+      rw [← ContinuousLinearMap.adjoint_inner_left, ← ContinuousLinearMap.star_eq_adjoint]
+      exact Submodule.inner_right_of_mem_orthogonal hk' hu
+    have hV0 : ∀ u ∈ Kᗮ, V u = 0 := fun u hu => by
+      rw [hVP, K.starProjection_apply_eq_zero_iff.mpr hu, map_zero]
+    ext w
+    have h₁ := hK (K.starProjection_apply_mem w)
+    simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, sub_apply,
+      mul_apply_eq_comp, sub_eq_zero] at h₁
+    have h₂ := hsperp _ (K.sub_starProjection_mem_orthogonal w)
+    change s (V w) = V (s w)
+    calc s (V w) = V (s (K.starProjection w)) + V (s (w - K.starProjection w)) := by
+          rw [hVP w, h₁, hV0 _ h₂, add_zero]
+      _ = V (s w) := by rw [← map_add, ← map_add, add_sub_cancel]
+  refine ⟨V, hcomm, ?_, hVf, hstar, hfin⟩
+  rw [IsPartialIsometry, mul_assoc, hVV]
+
+end Extension

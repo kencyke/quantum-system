@@ -581,7 +581,7 @@ lemma measure_pvm_relativeModular_apply_right (hw : w ∈ M′) (hwξ : star w (
 lemma relativeModular_eq_of_inner_eq_left {η' : H}
     (h : ∀ x ∈ M, ⟪η, x η⟫_ℂ = ⟪η', x η'⟫_ℂ) :
     Δ⟦η', ξ⟧ = Δ⟦η, ξ⟧ := by
-  obtain ⟨v, hv, -, rfl, hvv, -⟩ := exists_partialIsometry_mem_commutant_of_inner_eq h
+  obtain ⟨v, hv, -, rfl, hvv, -⟩ := exists_isPartialIsometry_mem_commutant_of_inner_eq h
   have hvη : star v (v η) = ((1 : ℝ) : ℂ) • η := by
     rw [ofReal_one, one_smul, ← mul_apply_eq_comp, hvv, supportProj_apply_self]
   rw [relativeModular_apply_left hv one_pos hvη, ofReal_one, one_smul]
@@ -591,7 +591,7 @@ lemma relativeModular_eq_of_inner_eq_left {η' : H}
 lemma measure_pvm_relativeModular_eq_of_inner_eq_right {ξ' : H}
     (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪ξ', x ξ'⟫_ℂ) :
     μ⟦η, ξ'⟧ = μ⟦η, ξ⟧ := by
-  obtain ⟨v, hv, -, rfl, hvv, -⟩ := exists_partialIsometry_mem_commutant_of_inner_eq h
+  obtain ⟨v, hv, -, rfl, hvv, -⟩ := exists_isPartialIsometry_mem_commutant_of_inner_eq h
   refine measure_pvm_relativeModular_apply_right hv ?_
   rw [← mul_apply_eq_comp, hvv, supportProj_apply_self]
 

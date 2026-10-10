@@ -6,7 +6,6 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.InnerProductSpace.Positive
-public import Mathlib.Analysis.Normed.Operator.Extend
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
@@ -24,9 +23,11 @@ only on `ω_ξ`.
 
 Conversely, if two vectors `ξ, η` induce the same vector functional on `M`,
 `⟪ξ, x ξ⟫ = ⟪η, x η⟫` for all `x ∈ M`, then `x ξ ↦ x η` extends to a partial isometry `v′` of the
-commutant `M′` with initial projection `P_{[M ξ]}` and final projection `P_{[M η]}`, and
+commutant `M′` with source projection `P_{[M ξ]}` and range projection `P_{[M η]}`, and
 `η = v′ ξ`. This is the statement that a vector representative of a functional on `M` is unique up
-to a partial isometry of `M′`.
+to a partial isometry of `M′`. The partial isometry is the extension of the isometric
+correspondence `x ξ ↦ x η` given by `exists_isPartialIsometry_mem_centralizer_of_norm_eq`, the
+lemma that also produces the partial isometry of the polar decomposition.
 
 ## Main definitions
 
@@ -34,8 +35,6 @@ to a partial isometry of `M′`.
 
 ## Main results
 
-* `VonNeumannAlgebra.applyCyclicₗ`, `VonNeumannAlgebra.denseRange_applyCyclicₗ` — `x ↦ x ξ` as a
-  linear map `M → [M ξ]` with dense range.
 * `VonNeumannAlgebra.coe_cyclicSubspace` — for a von Neumann algebra, `[M ξ]` is the closure of
   the orbit `{x ξ | x ∈ M}`.
 * `VonNeumannAlgebra.supportProj_mem` — `s(ξ) ∈ M`; `VonNeumannAlgebra.supportProj_apply_self` —
@@ -54,7 +53,7 @@ to a partial isometry of `M′`.
   `s′(η)` in `M′` of any vector.
 * `VonNeumannAlgebra.inner_apply_eq_of_inner_eq`, `VonNeumannAlgebra.norm_apply_eq_of_inner_eq` —
   equal vector functionals give `⟪x η, y η⟫ = ⟪x ξ, y ξ⟫` and `‖x η‖ = ‖x ξ‖` on `M`.
-* `VonNeumannAlgebra.exists_partialIsometry_mem_commutant_of_inner_eq` — the partial isometry
+* `VonNeumannAlgebra.exists_isPartialIsometry_mem_commutant_of_inner_eq` — the partial isometry
   `v′ ∈ M′` with `v′ ξ = η`, `v′⋆ v′ = s′(ξ)` and `v′ v′⋆ = s′(η)`, where `s′` is the support in
   `M′`, i.e. the projection onto `[M ξ]` (`VonNeumannAlgebra.supportProj_commutant`).
 * `VonNeumannAlgebra.supportProj_commutant_mvNEquiv_of_inner_eq` — hence `s′(ξ) ∼ s′(η)` in `M′`.
@@ -115,29 +114,6 @@ def applyₗ (ζ : H) : M →ₗ[ℂ] H where
 
 /-- `applyₗ M ζ x = x ζ`. -/
 @[simp] lemma applyₗ_apply (ζ : H) (x : M) : M.applyₗ ζ x = (x : H →L[ℂ] H) ζ := rfl
-
-variable (M ξ) in
-/-- `x ↦ x ξ` on `M`, as a linear map into `[M ξ]`. -/
-def applyCyclicₗ : M →ₗ[ℂ] (cyclicSubspace M ξ).toSubmodule where
-  toFun x := ⟨(x : H →L[ℂ] H) ξ, InnerProductSpace.apply_mem_cyclicSubspace ξ x.2⟩
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
-
-/-- `applyCyclicₗ M ξ x = x ξ`. -/
-@[simp] lemma coe_applyCyclicₗ_apply (x : M) :
-    ((M.applyCyclicₗ ξ x : (cyclicSubspace M ξ).toSubmodule) : H) =
-      (x : H →L[ℂ] H) ξ :=
-  rfl
-
-/-- The orbit `{x ξ | x ∈ M}` is dense in `[M ξ]`. -/
-lemma denseRange_applyCyclicₗ : DenseRange (M.applyCyclicₗ ξ) := by
-  rw [DenseRange, Subtype.dense_iff]
-  intro v hv
-  have hv' : v ∈ (cyclicSubspace M ξ : Set H) := hv
-  rw [coe_cyclicSubspace] at hv'
-  refine closure_mono ?_ hv'
-  rintro _ ⟨x, rfl⟩
-  exact ⟨_, ⟨x, rfl⟩, rfl⟩
 
 variable (M ξ)
 
@@ -238,7 +214,7 @@ lemma inner_apply_eq_of_mem_commutant {w : H →L[ℂ] H} (hw : w ∈ M′)
     ← mem_commutant_iff.mp (star_mem hw) x hx, mul_assoc, mul_apply_eq_comp, mul_apply_eq_comp,
     hwξ]
 
-/-- For `v′ ∈ M′` with `v′⋆ v′ ξ = ξ` (for instance `ξ` in the initial space of a partial
+/-- For `v′ ∈ M′` with `v′⋆ v′ ξ = ξ` (for instance `ξ` in the source space of a partial
 isometry `v′`), `s(v′ ξ) = s(ξ)`. -/
 lemma supportProj_apply_of_mem_commutant {w : H →L[ℂ] H} (hw : w ∈ M′)
     (hwξ : star w (w ξ) = ξ) : M.supportProj (w ξ) = M.supportProj ξ :=
@@ -296,108 +272,36 @@ lemma norm_apply_eq_of_inner_eq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x 
   rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K] at this
   exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp (by exact_mod_cast this)
 
-/-- The isometry `[M ξ] → H` extending `x ξ ↦ x η`. -/
-private noncomputable def isometryOfInnerEq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
-    (cyclicSubspace M ξ).toSubmodule →ₗᵢ[ℂ] H :=
-  (applyₗ M η).extendOfIsometry denseRange_applyCyclicₗ fun x =>
-    norm_apply_eq_of_inner_eq h x.2
-
-/-- The operator `v′ = U P_{[M ξ]}` extending `x ξ ↦ x η` by `0` on `[M ξ]ᗮ`. -/
-private noncomputable def partialIsometryOfInnerEq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
-    H →L[ℂ] H :=
-  (isometryOfInnerEq h).toContinuousLinearMap ∘L
-    (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule.orthogonalProjectionOnto
+/-- `[M ζ]` is the closure of the range of `x ↦ x ζ` on `M`: `coe_cyclicSubspace` restated as an
+equality of submodules, the form in which the partial isometry lemma reports its projections. -/
+private lemma topologicalClosure_range_applyₗ (ζ : H) :
+    (LinearMap.range (M.applyₗ ζ)).topologicalClosure = (cyclicSubspace M ζ).toSubmodule :=
+  SetLike.coe_injective <| by
+    rw [Submodule.topologicalClosure_coe, LinearMap.coe_range]
+    exact (coe_cyclicSubspace M ζ).symm
 
 /-- **Uniqueness of vector representatives.** If `⟪ξ, x ξ⟫ = ⟪η, x η⟫` for all `x ∈ M`, there is a
-partial isometry `v′ ∈ M′` with `v′ ξ = η`, initial projection `v′⋆ v′ = s′(ξ) = P_{[M ξ]}` and
-final projection `v′ v′⋆ = s′(η) = P_{[M η]}`. -/
-theorem exists_partialIsometry_mem_commutant_of_inner_eq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
+partial isometry `v′ ∈ M′` with `v′ ξ = η`, source projection `v′⋆ v′ = s′(ξ) = P_{[M ξ]}` and
+range projection `v′ v′⋆ = s′(η) = P_{[M η]}`. It extends the isometric correspondence
+`x ξ ↦ x η` on `M` (`exists_isPartialIsometry_mem_centralizer_of_norm_eq`), which every `a ∈ M`
+intertwines: `a (x ξ) = (a x) ξ`. -/
+theorem exists_isPartialIsometry_mem_commutant_of_inner_eq
+    (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
     ∃ v ∈ M′, IsPartialIsometry v ∧ v ξ = η ∧ star v * v = M′.supportProj ξ ∧
       v * star v = M′.supportProj η := by
-  set K := (cyclicSubspace (M : Set (H →L[ℂ] H)) ξ).toSubmodule
-  set Kη := (cyclicSubspace (M : Set (H →L[ℂ] H)) η).toSubmodule
-  set V := partialIsometryOfInnerEq h
-  have hVapp : ∀ w, V w = isometryOfInnerEq h (K.orthogonalProjectionOnto w) := fun _ => rfl
-  -- `V` factors through `P = P_{[M ξ]}`.
-  have hVP : ∀ w, V w = V (K.starProjection w) := fun w => by
-    rw [hVapp, hVapp, Submodule.starProjection_apply,
-      Submodule.orthogonalProjectionOnto_mem_subspace_eq_self]
-  have hV : ∀ x ∈ M, V (x ξ) = x η := fun x hx => by
-    rw [hVapp, show K.orthogonalProjectionOnto (x ξ) = applyCyclicₗ M ξ ⟨x, hx⟩ from
-      Submodule.orthogonalProjectionOnto_mem_subspace_eq_self (applyCyclicₗ M ξ ⟨x, hx⟩)]
-    exact LinearMap.extendOfIsometry_eq _ _ _ _
-  have hnorm : ∀ w, ‖V w‖ = ‖K.starProjection w‖ := fun w => by
-    rw [hVapp, LinearIsometry.norm_map]
-    rfl
-  -- Initial projection: `V⋆ V = P`.
-  have hstar : star V * V = K.starProjection := by
-    refine ContinuousLinearMap.coe_inj.mp ((ext_inner_map _ _).mp fun w => ?_)
-    change ⟪star V (V w), w⟫_ℂ = ⟪K.starProjection w, w⟫_ℂ
-    have hw : ⟪K.starProjection w, w - K.starProjection w⟫_ℂ = 0 :=
-      Submodule.inner_right_of_mem_orthogonal (K.starProjection_apply_mem w)
-        (K.sub_starProjection_mem_orthogonal w)
-    rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_left,
-      inner_self_eq_norm_sq_to_K, hnorm, ← inner_self_eq_norm_sq_to_K, inner_sub_right,
-      sub_eq_zero] at *
-    exact hw.symm
-  have hVV : V * (star V * V) = V := by
-    rw [hstar]
-    ext w
-    exact (hVP w).symm
-  -- `V` maps into `[M η]`.
-  have hrange : ∀ w, V w ∈ Kη := fun w => by
-    rw [hVP]
-    refine cyclicSubspace_subset (s := V ⁻¹' Kη)
-      ((cyclicSubspace (M : Set (H →L[ℂ] H)) η).isClosed.preimage V.continuous) (fun x hx => ?_)
-      (K.starProjection_apply_mem w)
-    change V (x ξ) ∈ Kη
-    rw [hV x hx]
-    exact InnerProductSpace.apply_mem_cyclicSubspace η hx
-  -- `V` commutes with `M`.
-  have hcomm : V ∈ M′ := by
-    rw [mem_commutant_iff]
-    intro a ha
-    have hPa : a * K.starProjection = K.starProjection * a := by
-      have := M′.supportProj_mem ξ
-      rw [supportProj_commutant] at this
-      exact mem_commutant_iff.mp this a ha
-    have hK : ∀ u ∈ K, a (V u) = V (a u) := fun u hu =>
-      cyclicSubspace_subset (s := {u | a (V u) = V (a u)})
-        (isClosed_eq (a.continuous.comp V.continuous) (V.continuous.comp a.continuous))
-        (fun x hx => by
-          change a (V (x ξ)) = V (a (x ξ))
-          rw [hV x hx, ← mul_apply_eq_comp a x, ← mul_apply_eq_comp a x, hV _ (mul_mem ha hx)]) hu
-    ext w
-    change a (V w) = V (a w)
-    rw [hVP w, hK _ (K.starProjection_apply_mem w), hVP (a w), ← mul_apply_eq_comp a, hPa,
-      mul_apply_eq_comp, ← hVP]
-  have hVξ : V ξ = η := by simpa using hV 1 (one_mem M)
-  -- Final projection: `V V⋆ = P_{[M η]}`.
-  have hfin : V * star V = Kη.starProjection := by
-    have h₁ : ∀ u ∈ Kη, (V * star V) u = u := fun u hu =>
-      cyclicSubspace_subset (s := {u | (V * star V) u = u})
-        (isClosed_eq (V * star V).continuous continuous_id) (fun x hx => by
-          change (V * star V) (x η) = x η
-          rw [← hV x hx, ← mul_apply_eq_comp, mul_assoc, hVV]) hu
-    have h₂ : ∀ u ∈ Kηᗮ, star V u = 0 := fun u hu => by
-      refine ext_inner_right ℂ fun v => ?_
-      rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_inner_left,
-        inner_zero_left]
-      exact Submodule.inner_left_of_mem_orthogonal (hrange v) hu
-    ext w
-    conv_lhs => rw [← add_sub_cancel (Kη.starProjection w) w]
-    rw [map_add, h₁ _ (Kη.starProjection_apply_mem w), mul_apply_eq_comp,
-      h₂ _ (Kη.sub_starProjection_mem_orthogonal w), map_zero, add_zero]
-  refine ⟨V, hcomm, ?_, hVξ, ?_, ?_⟩
-  · rw [IsPartialIsometry, mul_assoc, hVV]
-  · rw [supportProj_commutant, hstar]
-  · rw [supportProj_commutant, hfin]
+  obtain ⟨v, hvM, hv, hvx, hsrc, hrng⟩ := exists_isPartialIsometry_mem_centralizer_of_norm_eq
+    (M.applyₗ ξ) (M.applyₗ η) (fun x => (norm_apply_eq_of_inner_eq h x.2).symm)
+    (S := (M : Set (H →L[ℂ] H))) (fun _ ha => star_mem (s := M) ha)
+    fun a ha x => ⟨⟨a * x, mul_mem ha x.2⟩, rfl, rfl⟩
+  refine ⟨v, mem_commutant_iff.mpr hvM, hv, by simpa using hvx 1, ?_, ?_⟩
+  · simp only [supportProj_commutant, hsrc, topologicalClosure_range_applyₗ]
+  · simp only [supportProj_commutant, hrng, topologicalClosure_range_applyₗ]
 
 /-- Vectors with the same vector functional on `M` have Murray–von Neumann equivalent supports in
 the commutant: `s′(ξ) ∼ s′(η)` in `M′`. -/
 lemma supportProj_commutant_mvNEquiv_of_inner_eq (h : ∀ x ∈ M, ⟪ξ, x ξ⟫_ℂ = ⟪η, x η⟫_ℂ) :
     M′.supportProj ξ ∼[M′] M′.supportProj η :=
-  let ⟨v, hv, hpi, _, h₁, h₂⟩ := exists_partialIsometry_mem_commutant_of_inner_eq h
+  let ⟨v, hv, hpi, _, h₁, h₂⟩ := exists_isPartialIsometry_mem_commutant_of_inner_eq h
   ⟨v, hv, hpi, h₁, h₂⟩
 
 end SameVectorFunctional

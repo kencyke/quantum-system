@@ -12,6 +12,7 @@ public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Pos
 public import Mathlib.LinearAlgebra.Complex.Module
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Abs
 
 /-!
 # Minimal projections of a von Neumann algebra
@@ -42,7 +43,7 @@ These are the ingredients of the minimal-projection characterisation of type I f
 
 * `VonNeumannAlgebra.IsFactor.subprojection_eq_of_isAbelianProjection` — in a factor, an abelian
   projection has no proper nonzero subprojection.
-* `VonNeumannAlgebra.starProjection_range_mem` — the range projection of `x ∈ N` lies in `N`.
+* `VonNeumannAlgebra.rangeProj_mem` — the range projection `R(x)` of `x ∈ N` lies in `N`.
 * `VonNeumannAlgebra.isMinimalProjection_of_forall_subprojection` — order-minimality implies the
   trivial corner.
 * `VonNeumannAlgebra.IsFactor.isMinimalProjection_of_isAbelianProjection` — in a factor, a
@@ -63,7 +64,7 @@ namespace VonNeumannAlgebra
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- **In a factor, an abelian projection is order-minimal**: a projection `q ∈ N` with `q ≤ p`
-(written `p * q = q`) is `0` or `p`.
+is `0` or `p`.
 
 The proof avoids corner-commutant theory and polar decomposition: if `0 ≠ q ≠ p`, then
 `r := p - q` is a nonzero projection under `p` orthogonal to `q`, and the central-support lemma
@@ -72,8 +73,9 @@ elements of `p`, so they commute by abelianness; but `q z = 0` and `q z⋆ = z�
 `z⋆ z = q (z z⋆) = (q z) z⋆ = 0`, and the C⋆-identity gives `z = 0` — a contradiction. -/
 lemma IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {p : H →L[ℂ] H} (hp : IsAbelianProjection N p)
-    {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hsub : p * q = q) :
+    {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hle : q ≤ p) :
     q = 0 ∨ q = p := by
+  have hsub : p * q = q := (hq.le_iff_mul_eq_right hp.1).mp hle
   by_cases hq0 : q = 0
   · exact Or.inl hq0
   have : Nontrivial H := nontrivial_of_ne_zero hq0
@@ -195,91 +197,24 @@ lemma negPart_mem_cornerNonUnitalStarSubalgebra {N : VonNeumannAlgebra H} {p : H
   rw [CFC.negPart_def]
   exact cfcₙ_mem _ hd
 
-/-! ### Range projections
+/-! ### Range projections -/
 
-For `x ∈ N`, the orthogonal projection onto the closure of `range x` lies in `N`; it is nonzero
-when `x` is, it is dominated by any projection acting as the identity on the left of `x`, and the
-range projections of two operators with `x₁ x₂ = 0`, `x₁` self-adjoint, are orthogonal. -/
-
-/-- The orthogonal projection onto the closure of the range of `x ∈ N` lies in `N`, because that
-subspace is invariant under the commutant. -/
-lemma starProjection_range_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (hx : x ∈ N) :
-    (x.range).topologicalClosure.starProjection ∈ N := by
-  set M : Submodule ℂ H := (x.range).topologicalClosure with hM
-  have hpproj : IsStarProjection M.starProjection := isStarProjection_starProjection
-  rw [IsStarProjection.mem_iff hpproj N]
+/-- The range projection `R(x)` of `x ∈ N` lies in `N`, because the closure of the range of `x` is
+invariant under the commutant. -/
+lemma rangeProj_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (hx : x ∈ N) :
+    x.rangeProj ∈ N := by
+  rw [IsStarProjection.mem_iff (x.isStarProjection_rangeProj) N]
   intro y hyN'
-  rw [Submodule.range_starProjection]
-  have hcl : IsClosed ((M.comap (y : H →ₗ[ℂ] H)) : Set H) := by
+  rw [ContinuousLinearMap.range_rangeProj]
+  have hcl : IsClosed ((x.range.topologicalClosure.comap (y : H →ₗ[ℂ] H)) : Set H) := by
     rw [Submodule.comap_coe]
-    exact ((x.range).isClosed_topologicalClosure).preimage y.continuous
-  have hle : M ≤ M.comap (y : H →ₗ[ℂ] H) := by
-    refine Submodule.topologicalClosure_minimal _ ?_ hcl
-    rintro z ⟨v, rfl⟩
-    simp only [Submodule.mem_comap, ContinuousLinearMap.coe_coe]
-    have hxy : x * y = y * x := mem_commutant_iff.mp hyN' x hx
-    rw [show y (x v) = (y * x) v from rfl, ← hxy]
-    exact Submodule.le_topologicalClosure _ ⟨y v, rfl⟩
-  exact hle
-
-/-- The range projection of a nonzero operator is nonzero. -/
-lemma starProjection_range_ne_zero {x : H →L[ℂ] H} (hx0 : x ≠ 0) :
-    (x.range).topologicalClosure.starProjection ≠ 0 := by
-  intro h0
-  apply hx0
-  ext v
-  have hmem : x v ∈ (x.range).topologicalClosure :=
-    Submodule.le_topologicalClosure _ ⟨v, rfl⟩
-  have hfix := Submodule.starProjection_eq_self_iff.mpr hmem
-  rw [h0] at hfix
-  simpa using hfix.symm
-
-/-- If `p * x = x`, then the range projection of `x` is a subprojection of `p`. -/
-lemma starProjection_range_subproj {p x : H →L[ℂ] H} (hpx : p * x = x) :
-    p * (x.range).topologicalClosure.starProjection
-      = (x.range).topologicalClosure.starProjection := by
-  set M : Submodule ℂ H := (x.range).topologicalClosure with hM
-  have hle : M ≤ LinearMap.ker ((p - 1 : H →L[ℂ] H) : H →ₗ[ℂ] H) := by
-    refine Submodule.topologicalClosure_minimal _ ?_ (p - 1).isClosed_ker
-    rintro z ⟨v, rfl⟩
-    simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, sub_apply,
-      one_apply_eq_self]
-    rw [show p (x v) = (p * x) v from rfl, hpx]
-    exact sub_self _
-  ext w
-  have hker := hle (M.starProjection_apply_mem w)
-  simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, sub_apply,
-    one_apply_eq_self, sub_eq_zero] at hker
-  exact hker
-
-/-- The range projections of `x₁` and `x₂` with `x₁` self-adjoint and `x₁ * x₂ = 0` are
-orthogonal. -/
-lemma starProjection_range_mul_eq_zero {x₁ x₂ : H →L[ℂ] H} (hsa : star x₁ = x₁)
-    (h12 : x₁ * x₂ = 0) :
-    (x₁.range).topologicalClosure.starProjection
-      * (x₂.range).topologicalClosure.starProjection = 0 := by
-  set M₁ : Submodule ℂ H := (x₁.range).topologicalClosure with hM₁
-  set M₂ : Submodule ℂ H := (x₂.range).topologicalClosure with hM₂
-  have hadj : ContinuousLinearMap.adjoint x₁ = x₁ := by
-    rw [← ContinuousLinearMap.star_eq_adjoint, hsa]
-  have hortho : M₂ ⟂ M₁ := by
-    rw [Submodule.isOrtho_iff_le]
-    refine Submodule.topologicalClosure_minimal _ ?_ M₁.isClosed_orthogonal
-    rintro z ⟨u, rfl⟩
-    rw [Submodule.mem_orthogonal]
-    intro m hm
-    have hker : M₁ ≤ LinearMap.ker ((innerSL ℂ (x₂ u)) : H →ₗ[ℂ] ℂ) := by
-      refine Submodule.topologicalClosure_minimal _ ?_ (innerSL ℂ _).isClosed_ker
-      rintro w ⟨v, rfl⟩
-      simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, innerSL_apply_apply]
-      rw [← ContinuousLinearMap.adjoint_inner_left x₁, hadj,
-        show x₁ (x₂ u) = (x₁ * x₂) u from rfl, h12]
-      simp
-    have h0 := hker hm
-    simp only [LinearMap.mem_ker, ContinuousLinearMap.coe_coe, innerSL_apply_apply] at h0
-    exact inner_eq_zero_symm.mp h0
-  rw [ContinuousLinearMap.mul_def]
-  exact Submodule.starProjection_comp_starProjection_eq_zero_iff.mpr hortho.symm
+    exact (x.range.isClosed_topologicalClosure).preimage y.continuous
+  refine Submodule.topologicalClosure_minimal _ ?_ hcl
+  rintro z ⟨v, rfl⟩
+  simp only [Submodule.mem_comap, ContinuousLinearMap.coe_coe]
+  have hxy : x * y = y * x := mem_commutant_iff.mp hyN' x hx
+  rw [show y (x v) = (y * x) v from rfl, ← hxy]
+  exact Submodule.le_topologicalClosure _ ⟨y v, rfl⟩
 
 /-! ### Order-minimality implies corner triviality
 
@@ -292,7 +227,7 @@ orthogonal nonzero subprojections of `p`. A Dedekind-cut argument on
 element `d` satisfies `0 ≤ d` or `d ≤ 0`. -/
 lemma nonneg_or_nonpos_of_forall_subprojection {N : VonNeumannAlgebra H}
     {p : H →L[ℂ] H} (hp : IsStarProjection p) (hp0 : p ≠ 0)
-    (hmin : ∀ q, IsStarProjection q → q ∈ N → p * q = q → q = 0 ∨ q = p)
+    (hmin : ∀ q, IsStarProjection q → q ∈ N → q ≤ p → q = 0 ∨ q = p)
     {d : H →L[ℂ] H} (hdsa : IsSelfAdjoint d)
     (hd : d ∈ cornerNonUnitalStarSubalgebra N hp) :
     0 ≤ d ∨ d ≤ 0 := by
@@ -308,16 +243,17 @@ lemma nonneg_or_nonpos_of_forall_subprojection {N : VonNeumannAlgebra H}
     rw [← hsub, hminus0, sub_zero]
     exact CFC.posPart_nonneg d
   exfalso
-  have hPplus := hmin _ isStarProjection_starProjection (starProjection_range_mem hdplus.1)
-    (starProjection_range_subproj hdplus.2.1)
-  have hPminus := hmin _ isStarProjection_starProjection (starProjection_range_mem hdminus.1)
-    (starProjection_range_subproj hdminus.2.1)
+  have hPplus := hmin _ (d⁺).isStarProjection_rangeProj (rangeProj_mem hdplus.1)
+    (((d⁺).rangeProj_le_iff hp).mpr hdplus.2.1)
+  have hPminus := hmin _ (d⁻).isStarProjection_rangeProj (rangeProj_mem hdminus.1)
+    (((d⁻).rangeProj_le_iff hp).mpr hdminus.2.1)
   rcases hPplus with h | hPp
-  · exact starProjection_range_ne_zero hplus0 h
+  · exact ContinuousLinearMap.rangeProj_ne_zero hplus0 h
   rcases hPminus with h | hPm
-  · exact starProjection_range_ne_zero hminus0 h
-  have horth := starProjection_range_mul_eq_zero
-    (CFC.posPart_nonneg d).isSelfAdjoint.star_eq (CFC.posPart_mul_negPart d)
+  · exact ContinuousLinearMap.rangeProj_ne_zero hminus0 h
+  have horth := ContinuousLinearMap.rangeProj_mul_rangeProj_eq_zero (x₁ := d⁺) (x₂ := d⁻) (by
+    rw [← ContinuousLinearMap.star_eq_adjoint, (CFC.posPart_nonneg d).isSelfAdjoint.star_eq]
+    exact CFC.posPart_mul_negPart d)
   rw [hPp, hPm, hp.isIdempotentElem] at horth
   exact hp0 horth
 
@@ -327,7 +263,7 @@ bounded, closed) satisfies `x = c₀ • p`, since by the dichotomy `x - c • p
 `c > c₀`. -/
 lemma exists_real_smul_eq_of_forall_subprojection {N : VonNeumannAlgebra H}
     {p : H →L[ℂ] H} (hp : IsStarProjection p) (hpN : p ∈ N) (hp0 : p ≠ 0)
-    (hmin : ∀ q, IsStarProjection q → q ∈ N → p * q = q → q = 0 ∨ q = p)
+    (hmin : ∀ q, IsStarProjection q → q ∈ N → q ≤ p → q = 0 ∨ q = p)
     {x : H →L[ℂ] H} (hxsa : IsSelfAdjoint x)
     (hx : x ∈ cornerNonUnitalStarSubalgebra N hp) :
     ∃ c : ℝ, x = (c : ℂ) • p := by
@@ -487,7 +423,7 @@ corner elements are real multiples of `p` by the cut lemma
 and imaginary self-adjoint parts. -/
 lemma isMinimalProjection_of_forall_subprojection {N : VonNeumannAlgebra H}
     {p : H →L[ℂ] H} (hp : IsStarProjection p) (hpN : p ∈ N) (hp0 : p ≠ 0)
-    (hmin : ∀ q, IsStarProjection q → q ∈ N → p * q = q → q = 0 ∨ q = p) :
+    (hmin : ∀ q, IsStarProjection q → q ∈ N → q ≤ p → q = 0 ∨ q = p) :
     IsMinimalProjection N p := by
   refine ⟨hp, hpN, hp0, fun a haN => ?_⟩
   have hymem : p * a * p ∈ cornerNonUnitalStarSubalgebra N hp := by

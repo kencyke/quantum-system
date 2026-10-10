@@ -109,11 +109,10 @@ open scoped lp
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- **Type I von Neumann algebra**: every nonzero central projection dominates a nonzero abelian
-projection. The subprojection relation `p ≤ z` is written algebraically as `z * p = p`, as
-everywhere in this development. -/
+projection, `p ≤ z` in the operator order. -/
 def IsTypeI (N : VonNeumannAlgebra H) : Prop :=
   ∀ z : H →L[ℂ] H, IsCentralProjection N z → z ≠ 0 →
-    ∃ p : H →L[ℂ] H, IsAbelianProjection N p ∧ p ≠ 0 ∧ z * p = p
+    ∃ p : H →L[ℂ] H, IsAbelianProjection N p ∧ p ≠ 0 ∧ p ≤ z
 
 /-- A **type I factor**: a factor possessing a minimal projection. This is the mathematically
 conventional, intrinsic definition; the spatial decomposition `N ≅ B(H₁) ⊗̄ 1` is then a theorem,
@@ -132,7 +131,7 @@ lemma IsFactor.isTypeI_of_exists_isMinimalProjection {N : VonNeumannAlgebra H}
   intro z hz hz0
   rcases hN.central_projection_eq hz with h0 | h1
   · exact absurd h0 hz0
-  · exact ⟨e, he.isAbelianProjection, he.2.2.1, by rw [h1, one_mul]⟩
+  · exact ⟨e, he.isAbelianProjection, he.2.2.1, h1 ▸ he.1.le_one⟩
 
 /-- **The abelian-projection characterisation of type I coincides with the minimal-projection one
 on factors**: a factor is type I iff it has a minimal projection. Nontriviality of `H` is

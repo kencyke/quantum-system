@@ -27,15 +27,16 @@ The ingredients — the covering orthogonal family `F` (`OrthEquivFam`), the mat
 > `VonNeumannAlgebra.generated S = N`,   where `S = { e_{pq} | p q : F }`.
 
 This is the von-Neumann-algebraic (double-commutant) reformulation of the strong-operator
-reconstruction `a = Σ_{pq} c_{pq}(a) e_{pq}`. The reformulation avoids any strong/weak-operator
-infinite-sum API (which Mathlib lacks) by working through the commutant: the inclusion `S'' ⊆ N`
-is monotonicity, and the content `N ⊆ S''` is the statement that every operator commuting with all
-matrix units commutes with all of `N`. The proof of that content
-(`commutes_of_mem_centralizer`) is genuinely analytic: it inserts the resolution of the identity
-`Σ_r p_r = 1` (here `p_r = e_{rr} = v_r v_r⋆`) as a `HasSum`, and uses that each `↑p · a · ↑r` is
-a *scalar* multiple of the matrix unit `e_{pr}` (multiplicity one, `exists_matrixEntry`), hence
-commutes with `b`. The sum over the possibly-infinite index set `F` is handled throughout by
-`HasSum`/`HasSum.mapL`/`HasSum.unique`; no operator-level infinite series is formed.
+reconstruction `a = Σ_{pq} c_{pq}(a) e_{pq}`. The reformulation avoids the double series in `p, q`
+by working through the commutant: the inclusion `S'' ⊆ N` is monotonicity, and the content
+`N ⊆ S''` is the statement that every operator commuting with all matrix units commutes with all
+of `N`. The proof of that content (`commutes_of_mem_centralizer`) is genuinely analytic: it inserts
+the resolution of the identity `Σ_r p_r = 1` (here `p_r = e_{rr} = v_r v_r⋆`), a `HasSum` in the
+strong operator topology `H →Lₚₜ[ℂ] H`, and uses that each `↑p · a · ↑r` is a *scalar*
+multiple of the matrix unit `e_{pr}` (multiplicity one, `exists_matrixEntry`), hence commutes with
+`b`. Inside that proof the series is evaluated at vectors
+(`PointwiseConvergenceCLM.hasSum_toSOT_iff`) and handled by
+`HasSum.mapL`/`HasSum.unique`.
 
 **Identification half.** The identification glues the generation theorem `N = ⟨matrix units⟩''`
 to the tensor commutation theorem (`QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`) through
@@ -46,7 +47,7 @@ carries the matrix unit `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨
 ## Main results
 
 * `VonNeumannAlgebra.OrthEquivFam.hasSum_resolutionOfIdentity` — the resolution of the identity
-  `HasSum (fun i : F => (↑i) y) y`, the analytic core.
+  `∑_{i ∈ F} ↑i = 1` in the strong operator topology, the analytic core.
 * `VonNeumannAlgebra.OrthEquivFam.commutes_of_mem_centralizer` — an operator commuting with every
   matrix unit commutes with every element of `N`.
 * `VonNeumannAlgebra.OrthEquivFam.generated_matrixUnits_eq` — **the matrix units generate `N`**:
@@ -105,13 +106,17 @@ lemma OrthEquivFam.matrixUnit_subset (hF : OrthEquivFam N e F) :
   exact hF.matrixUnit_mem pq.1 pq.2
 
 /-- **Resolution of the identity.** For a covering orthogonal family, the projections `↑i` sum to
-the identity in the strong operator sense: `HasSum (fun i : F => (↑i) y) y` for every `y`. This is
-the analytic heart of the generation theorem; it is the Hilbert-sum reconstruction of `y` from its
-coordinates, with the `i`-th coordinate recognised as the orthogonal projection `(↑i) y` by
+the identity in the strong operator topology: `∑_{i ∈ F} ↑i = 1` in `H →Lₚₜ[ℂ] H`, written
+`HasSum (fun i => ↑ₚₜ ↑i) (↑ₚₜ 1)`, that is, `∑ᵢ (↑i) y = y` for every `y`
+(`PointwiseConvergenceCLM.hasSum_toSOT_iff`). This is the analytic heart of
+the generation theorem; it is the Hilbert-sum reconstruction of `y` from its coordinates, with the
+`i`-th coordinate recognised as the orthogonal projection `(↑i) y` by
 `coe_hilbertSumEquiv_apply`. -/
 lemma OrthEquivFam.hasSum_resolutionOfIdentity (hF : OrthEquivFam N e F)
-    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) (y : H) :
-    HasSum (fun i : F => (i : H →L[ℂ] H) y) y := by
+    (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
+    HasSum (fun i : F => ↑ₚₜ (i : H →L[ℂ] H)) (↑ₚₜ 1) := by
+  refine PointwiseConvergenceCLM.hasSum_toSOT_iff.mpr fun y => ?_
+  rw [one_apply_eq_self]
   have hdecomp : HasSum
       (fun i : F => ((hF.hilbertSumEquiv htop y i :
           (i : H →L[ℂ] H).range) : H)) y := by
@@ -137,6 +142,11 @@ lemma OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
     a * b = b * a := by
   have hbcomm : ∀ p q : F, hF.matrixUnit p q * b = b * hF.matrixUnit p q :=
     fun p q => (Set.mem_centralizer_iff.mp hb) _ ⟨(p, q), rfl⟩
+  -- The resolution of the identity, evaluated at a vector: `∑_r (↑r) y = y`.
+  have hres : ∀ y, HasSum (fun r : F => (r : H →L[ℂ] H) y) y := fun y => by
+    simpa only [one_apply_eq_self] using
+      PointwiseConvergenceCLM.hasSum_toSOT_iff.mp
+        (hF.hasSum_resolutionOfIdentity htop) y
   -- `↑p · a · ↑r` is a scalar multiple of `e_{pr}`, hence commutes with `b`.
   have hcomm_T : ∀ p r : F, ((p : H →L[ℂ] H) * a * (r : H →L[ℂ] H)) * b
       = b * ((p : H →L[ℂ] H) * a * (r : H →L[ℂ] H)) := by
@@ -164,12 +174,12 @@ lemma OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
     have hLp : HasSum
         (fun p : F => inner ℂ x (((p : H →L[ℂ] H) * a * (r : H →L[ℂ] H) * b) y))
         (inner ℂ x ((a * (r : H →L[ℂ] H) * b) y)) := by
-      have h := (hF.hasSum_resolutionOfIdentity htop ((a * (r : H →L[ℂ] H) * b) y)).mapL (innerSL ℂ x)
+      have h := (hres ((a * (r : H →L[ℂ] H) * b) y)).mapL (innerSL ℂ x)
       simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
     have hRp : HasSum
         (fun p : F => inner ℂ x ((b * (p : H →L[ℂ] H) * a * (r : H →L[ℂ] H)) y))
         (inner ℂ x ((b * a * (r : H →L[ℂ] H)) y)) := by
-      have h := (((hF.hasSum_resolutionOfIdentity htop ((a * (r : H →L[ℂ] H)) y)).mapL b).mapL (innerSL ℂ x))
+      have h := (((hres ((a * (r : H →L[ℂ] H)) y)).mapL b).mapL (innerSL ℂ x))
       simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
     have hfun : (fun p : F => inner ℂ x (((p : H →L[ℂ] H) * a * (r : H →L[ℂ] H) * b) y))
         = (fun p : F => inner ℂ x ((b * (p : H →L[ℂ] H) * a * (r : H →L[ℂ] H)) y)) := by
@@ -182,11 +192,11 @@ lemma OrthEquivFam.commutes_of_mem_centralizer (hF : OrthEquivFam N e F)
     exact hLp.unique hRp
   have hL : HasSum (fun r : F => inner ℂ x ((a * (r : H →L[ℂ] H) * b) y))
       (inner ℂ x ((a * b) y)) := by
-    have h := ((hF.hasSum_resolutionOfIdentity htop (b y)).mapL a).mapL (innerSL ℂ x)
+    have h := ((hres (b y)).mapL a).mapL (innerSL ℂ x)
     simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
   have hR : HasSum (fun r : F => inner ℂ x ((b * a * (r : H →L[ℂ] H)) y))
       (inner ℂ x ((b * a) y)) := by
-    have h := ((hF.hasSum_resolutionOfIdentity htop y).mapL (b * a)).mapL (innerSL ℂ x)
+    have h := ((hres y).mapL (b * a)).mapL (innerSL ℂ x)
     simpa only [innerSL_apply_apply, mul_apply_eq_comp] using h
   rw [funext step] at hL
   exact hL.unique hR

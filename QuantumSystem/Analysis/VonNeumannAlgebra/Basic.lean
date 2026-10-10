@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.Projection
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
@@ -28,7 +29,9 @@ The file is organised in three parts:
    the seed of the central-support lemma `IsFactor.exists_mul_ne`.
 3. **Comparison of projections** — the calculus of partial isometries, the subordination relation
    `p ≼[N] q`, and the comparison theorem for minimal projections
-   (`IsMinimalProjection.mvNSub_of_isFactor`).
+   (`IsMinimalProjection.mvNSub_of_isFactor`). The comparison theorem for arbitrary projections of
+   a factor, `IsFactor.mvNSub_or_mvNSub`, is proved in
+   `QuantumSystem.Analysis.VonNeumannAlgebra.Comparison`.
 
 ## Main definitions
 
@@ -41,8 +44,7 @@ The file is organised in three parts:
 * `VonNeumannAlgebra.IsFactor N` — `N` has trivial centre: every element of `N ∩ N'` is a scalar.
 * `VonNeumannAlgebra.IsMinimalProjection N e` — `e` is a nonzero star projection in `N` with
   trivial corner `e N e = ℂ e`. This implies the order-theoretic minimality (no proper nonzero
-  subprojection in `N`, expressed algebraically as: any projection `f ∈ N` with `e * f = f`, i.e.
-  the Loewner relation `f ≤ e`, is `0` or `e`), recorded as
+  subprojection in `N`: any projection `f ∈ N` with `f ≤ e` is `0` or `e`), recorded as
   `IsMinimalProjection.no_proper_subprojection`.
 * `VonNeumannAlgebra.IsAbelianProjection N p` — `p` is a star projection in `N` with commutative
   corner `p N p`.
@@ -84,9 +86,12 @@ The file is organised in three parts:
   (`VonNeumannAlgebra.apply_eq_mul_apply_one`, `VonNeumannAlgebra.mul_comm_complex`). This is what
   makes one-dimensional models of downstream properties both easy and uninformative.
 
-The full comparison theorem (any two projections in a factor are comparable) requires central
-supports and polar decomposition for general projections and is not developed here; the
-minimal-projection case above is the form the type I structure theorem needs.
+The full comparison theorem — any two projections of a factor are comparable,
+`IsFactor.mvNSub_or_mvNSub` — combines the central-support lemma above with the polar decomposition
+(`QuantumSystem.Analysis.VonNeumannAlgebra.PolarDecomposition`) and the additivity of
+Murray–von Neumann equivalence over orthogonal families, and is proved in
+`QuantumSystem.Analysis.VonNeumannAlgebra.Comparison`. The minimal-projection case above needs
+neither, and is the form the type I structure theorem uses.
 
 ## Notation
 
@@ -250,13 +255,14 @@ lemma IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] 
   nontrivial_of_ne_zero he.2.2.1
 
 /-- A minimal projection has no proper nonzero subprojection in `N`: if a projection `f ∈ N`
-satisfies `f ≤ e` (the Loewner order on projections, equivalently the range inclusion
-`ran f ⊆ ran e`, written algebraically as `e * f = f`), then `f = 0` or `f = e`. This recovers the
-order-theoretic form of minimality from the corner definition `e N e = ℂ e`. -/
+satisfies `f ≤ e` (the operator order, equivalently the range inclusion `ran f ⊆ ran e`), then
+`f = 0` or `f = e`. This recovers the order-theoretic form of minimality from the corner definition
+`e N e = ℂ e`. -/
 lemma IsMinimalProjection.no_proper_subprojection {N : VonNeumannAlgebra H}
     {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
-    {f : H →L[ℂ] H} (hf : IsStarProjection f) (hfN : f ∈ N) (hsub : e * f = f) :
+    {f : H →L[ℂ] H} (hf : IsStarProjection f) (hfN : f ∈ N) (hle : f ≤ e) :
     f = 0 ∨ f = e := by
+  have hsub : e * f = f := (hf.le_iff_mul_eq_right he.1).mp hle
   have hfe : f * e = f := by
     have := congrArg star hsub
     rwa [star_mul, he.1.isSelfAdjoint.star_eq, hf.isSelfAdjoint.star_eq] at this
@@ -504,9 +510,10 @@ lemma IsMinimalProjection.of_mvNEquiv {N : VonNeumannAlgebra H} {e p : H →L[�
     _ = c • (v * e * star v) := by simp only [mul_smul_comm, smul_mul_assoc]
     _ = c • p := by rw [hve, hvq]
 
-/-- `p ≼ q` in `N`: `p` is Murray–von Neumann equivalent to a subprojection of `q`. -/
+/-- `p ≼ q` in `N`: `p` is Murray–von Neumann equivalent to a subprojection `q' ≤ q` of `q` in
+`N`, the order being the operator order of `H →L[ℂ] H`. -/
 def MvNSub (N : VonNeumannAlgebra H) (p q : H →L[ℂ] H) : Prop :=
-  ∃ q' : H →L[ℂ] H, q' ∈ N ∧ q * q' = q' ∧ p ∼[N] q'
+  ∃ q' ∈ N, q' ≤ q ∧ p ∼[N] q'
 
 /-- `p ≼[N] q` denotes the subordination relation `MvNSub N p q`: `p` is Murray–von Neumann
 equivalent to a subprojection of `q` inside `N`. -/
@@ -515,21 +522,26 @@ scoped notation:50 p:51 " ≼[" N "] " q:51 => MvNSub N p q
 /-- Subordination is reflexive on projections of `N`. -/
 lemma MvNSub.refl {N : VonNeumannAlgebra H} {p : H →L[ℂ] H}
     (hp : IsStarProjection p) (hpN : p ∈ N) : p ≼[N] p :=
-  ⟨p, hpN, hp.isIdempotentElem, MvNEquiv.refl hp hpN⟩
+  ⟨p, hpN, le_rfl, MvNEquiv.refl hp hpN⟩
 
-/-- An equivalence `q ∼[N] r'` transports a subprojection `q' ≤ q` to a subprojection of `r'` that
-is Murray–von Neumann equivalent to `q'`. -/
-lemma MvNEquiv.exists_subproj_equiv {N : VonNeumannAlgebra H} {q r' q' : H →L[ℂ] H}
-    (hqr : q ∼[N] r') (hq' : IsStarProjection q') (hq'N : q' ∈ N) (hsub : q * q' = q') :
-    ∃ r'' : H →L[ℂ] H, IsStarProjection r'' ∧ r'' ∈ N ∧ r' * r'' = r'' ∧ q' ∼[N] r'' := by
+/-- An equivalence `q ∼[N] r'` transports a subprojection `q' ≤ q` to a subprojection `r'' ≤ r'`
+that is Murray–von Neumann equivalent to `q'`. -/
+lemma MvNEquiv.exists_le_mvNEquiv {N : VonNeumannAlgebra H} {q r' q' : H →L[ℂ] H}
+    (hqr : q ∼[N] r') (hq' : IsStarProjection q') (hq'N : q' ∈ N) (hle : q' ≤ q) :
+    ∃ r'' : H →L[ℂ] H, IsStarProjection r'' ∧ r'' ∈ N ∧ r'' ≤ r' ∧ q' ∼[N] r'' := by
+  have hsub : q * q' = q' := (hq'.le_iff_mul_eq_right hqr.isStarProjection_left).mp hle
+  have hr' : IsStarProjection r' := hqr.isStarProjection_right
   obtain ⟨w, hwN, hwpi, hwq, hwr⟩ := hqr
-  refine ⟨w * q' * star w, ⟨?_, ?_⟩, mul_mem (mul_mem hwN hq'N) (star_mem hwN), ?_, ?_⟩
-  · change (w * q' * star w) * (w * q' * star w) = w * q' * star w
-    simp only [mul_assoc]
-    rw [← mul_assoc (star w) w (q' * star w), hwq, ← mul_assoc q q' (star w), hsub,
-      ← mul_assoc q' q' (star w), hq'.isIdempotentElem]
-  · change star (w * q' * star w) = w * q' * star w
-    rw [star_mul, star_mul, star_star, hq'.isSelfAdjoint.star_eq, mul_assoc]
+  have hproj : IsStarProjection (w * q' * star w) := by
+    refine ⟨?_, ?_⟩
+    · change (w * q' * star w) * (w * q' * star w) = w * q' * star w
+      simp only [mul_assoc]
+      rw [← mul_assoc (star w) w (q' * star w), hwq, ← mul_assoc q q' (star w), hsub,
+        ← mul_assoc q' q' (star w), hq'.isIdempotentElem]
+    · change star (w * q' * star w) = w * q' * star w
+      rw [star_mul, star_mul, star_star, hq'.isSelfAdjoint.star_eq, mul_assoc]
+  refine ⟨w * q' * star w, hproj, mul_mem (mul_mem hwN hq'N) (star_mem hwN),
+    (hproj.le_iff_mul_eq_right hr').mpr ?_, ?_⟩
   · rw [← hwr]
     simp only [mul_assoc]
     rw [← mul_assoc (star w) w (q' * star w), hwq, ← mul_assoc q q' (star w), hsub]
@@ -550,12 +562,8 @@ lemma MvNSub.trans {N : VonNeumannAlgebra H} {p q r : H →L[ℂ] H}
   obtain ⟨q', hq'N, hqsub, hpq'⟩ := hpq
   obtain ⟨r', hr'N, hrsub, hqr'⟩ := hqr
   obtain ⟨r'', _, hr''N, hr'sub, hq'r''⟩ :=
-    hqr'.exists_subproj_equiv hpq'.isStarProjection_right hq'N hqsub
-  refine ⟨r'', hr''N, ?_, hpq'.trans hq'r''⟩
-  calc r * r'' = r * (r' * r'') := by rw [hr'sub]
-    _ = (r * r') * r'' := by rw [mul_assoc]
-    _ = r' * r'' := by rw [hrsub]
-    _ = r'' := hr'sub
+    hqr'.exists_le_mvNEquiv hpq'.isStarProjection_right hq'N hqsub
+  exact ⟨r'', hr''N, hr'sub.trans hrsub, hpq'.trans hq'r''⟩
 
 /-- **Scaling step of the comparison theorem.** If the positive corner element
 `(q a e)⋆ (q a e)` equals a positive scalar multiple `c • e` of `e` (with `c > 0`), then `e` is
@@ -581,7 +589,8 @@ lemma mvNSub_of_posCorner {N : VonNeumannAlgebra H} {e q a : H →L[ℂ] H}
   have hvpi : IsPartialIsometry v := by
     unfold IsPartialIsometry
     rw [mul_assoc, hsrc, hve]
-  refine ⟨v * star v, mul_mem hvN (star_mem hvN), ?_, ⟨v, hvN, hvpi, hsrc, rfl⟩⟩
+  refine ⟨v * star v, mul_mem hvN (star_mem hvN),
+    (hvpi.isStarProjection_mul_star_self.le_iff_mul_eq_right hq).mpr ?_, ⟨v, hvN, hvpi, hsrc, rfl⟩⟩
   have hqv : q * v = v := by
     rw [hv, mul_smul_comm, ← mul_assoc, ← mul_assoc, hq.isIdempotentElem]
   rw [← mul_assoc, hqv]
@@ -648,7 +657,8 @@ Murray–von Neumann subordinate to *every* nonzero projection `q`: `e ≼ q`. T
 scaling lemma (via `mvNSub_of_ne`) with the central-support input
 (`IsFactor.exists_mul_ne`, which supplies an `a ∈ N` with `q a e ≠ 0`). It is the form of
 comparison needed to show a maximal orthogonal family of minimal projections exhausts the
-identity. -/
+identity. The comparison of two arbitrary projections of a factor is `IsFactor.mvNSub_or_mvNSub`
+(`QuantumSystem.Analysis.VonNeumannAlgebra.Comparison`). -/
 theorem IsMinimalProjection.mvNSub_of_isFactor {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hq0 : q ≠ 0) :

@@ -61,8 +61,8 @@ for `ξ`, `η` cyclic and separating `J_{η,ξ}` is antiunitary.
   `J_{ξ,η} = J_{η,ξ}†` for arbitrary `η, ξ`, so `J_{ξ,η} J_{η,ξ} = E_Δ((0, ∞))`, the support
   projection of `Δ_{η,ξ}`.
 * `VonNeumannAlgebra.pvm_Ioi_relativeModular`, `VonNeumannAlgebra.range_relativeModularConj` —
-  `J_{η,ξ}` is a partial isometry with initial projection `E_Δ((0, ∞)) = s(η) s′(ξ)` and final
-  space `s(ξ) s′(η) H`.
+  `J_{η,ξ}` is a partial isometry with source projection `E_Δ((0, ∞)) = s(η) s′(ξ)` and range
+  projection `s(ξ) s′(η)`, the projection onto its range `s(ξ) s′(η) H`.
 * `VonNeumannAlgebra.relativeModularConj_relativeModularConj` — `J_{ξ,η} J_{η,ξ} = 1` for `ξ`
   cyclic and `η` separating.
 * `VonNeumannAlgebra.norm_relativeModularConj_apply`, `VonNeumannAlgebra.surjective_relativeModularConj`
@@ -361,10 +361,10 @@ lemma supportProj_apply_supportProj_relativeModularConj (x : H) :
     ((isSelfAdjoint_relativeModular M η ξ).polarIsometry_apply_mem_closure_range
       (relativeModular_def M η ξ) (isClosed_closure_relativeTomita M η ξ) x)
 
-/-- **`ran J_{η,ξ} = s(ξ) s′(η) H`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2): the final space
-of the partial isometry `J_{η,ξ}`. The range of `J_{η,ξ}` is closed and contains `ran S̄_{η,ξ}`,
-which is dense in `s(ξ) s′(η) H` (`VonNeumannAlgebra.supportProj_apply_supportProj_mem_closure_range`).
--/
+/-- **`ran J_{η,ξ} = s(ξ) s′(η) H`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2): the range of
+the partial isometry `J_{η,ξ}`, onto which its range projection projects. The range of `J_{η,ξ}` is
+closed and contains `ran S̄_{η,ξ}`, which is dense in `s(ξ) s′(η) H`
+(`VonNeumannAlgebra.supportProj_apply_supportProj_mem_closure_range`). -/
 lemma range_relativeModularConj :
     Set.range J[M]⟦η, ξ⟧ = Set.range (M.supportProj ξ * M′.supportProj η) := by
   ext z
@@ -396,7 +396,8 @@ private lemma adjointₛₗ_polarIsometry_relativeModular :
   set J := hA.polarIsometry hAT hT
   set W := J.adjointₛₗ
   set P := hA.pvm (Ioi 0)
-  -- the supports `e = s(ξ) s′(η)` (final space of `J`) and `f = s(η) s′(ξ)` (initial space)
+  -- the supports `e = s(ξ) s′(η)` (range projection of `J`) and `f = s(η) s′(ξ)` (its source
+  -- projection)
   set e := M.supportProj ξ * M′.supportProj η
   set f := M.supportProj η * M′.supportProj ξ
   have he : IsStarProjection e := (M.isStarProjection_supportProj ξ).mul
@@ -560,8 +561,8 @@ lemma adjointₛₗ_relativeModularConj : J[M]⟦η, ξ⟧.adjointₛₗ = J[M]�
   adjointₛₗ_polarIsometry_relativeModular
 
 /-- **`J_{ξ,η} J_{η,ξ} = E_Δ((0, ∞))`**, the support projection of `Δ_{η,ξ}`, for arbitrary `η, ξ`
-(Araki–Masuda 1982, §2, where `J_{η,ξ}† = J_{ξ,η}`): `J_{η,ξ}` is a partial isometry with initial
-space `E_Δ((0, ∞)) H`, so `J_{ξ,η} J_{η,ξ} Δ_{η,ξ}^{1/2} = Δ_{η,ξ}^{1/2}`
+(Araki–Masuda 1982, §2, where `J_{η,ξ}† = J_{ξ,η}`): `J_{η,ξ}` is a partial isometry with source
+projection `E_Δ((0, ∞))`, so `J_{ξ,η} J_{η,ξ} Δ_{η,ξ}^{1/2} = Δ_{η,ξ}^{1/2}`
 (`IsSelfAdjoint.pvm_Ioi_compPMap_sqrt`). -/
 lemma relativeModularConj_comp_relativeModularConj :
     (J[M]⟦ξ, η⟧.comp J[M]⟦η, ξ⟧ : H →L[ℂ] H) = E_Δ[M]⟦η, ξ⟧ (Ioi 0) := by
@@ -570,7 +571,7 @@ lemma relativeModularConj_comp_relativeModularConj :
   rw [relativeModularConj_apply, relativeModularConj_apply, ← adjointₛₗ_polarIsometry_relativeModular,
     IsSelfAdjoint.adjointₛₗ_polarIsometry_apply_polarIsometry]
 
-/-- **The initial projection of `J_{η,ξ}`**: the support projection `E_Δ((0, ∞))` of `Δ_{η,ξ}` is
+/-- **The source projection of `J_{η,ξ}`**: the support projection `E_Δ((0, ∞))` of `Δ_{η,ξ}` is
 `s(η) s′(ξ)` for arbitrary `η, ξ` (Araki–Masuda 1982, §2), since `E_Δ((0, ∞))` projects onto
 `(ker Δ_{η,ξ})ᗮ` (`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`) and
 `ker Δ_{η,ξ} = ker S̄_{η,ξ} = ker s(η) s′(ξ)` (`VonNeumannAlgebra.ker_relativeModular`,

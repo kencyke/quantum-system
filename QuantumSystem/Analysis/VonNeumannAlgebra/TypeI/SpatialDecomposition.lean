@@ -19,9 +19,9 @@ This file assembles the proof ingredients of the type I factor structure theorem
 `N ≅ B(ℓ²(F)) ⊗̄ 1` up to the spatial decomposition `H ≅ ℓ²(F) ⊗̂ (eH)`:
 
 1. **Covering family.** For a factor `N` with minimal projection `e`, Zorn's lemma and the
-   comparison theorem `IsMinimalProjection.mvNSub_of_isFactor` produce a family of mutually
-   orthogonal projections, each Murray–von Neumann equivalent to `e`, whose ranges span densely —
-   the projection-theoretic backbone `Σ eᵢ = 1` of the structure theorem.
+   comparison theorem for minimal projections `IsMinimalProjection.mvNSub_of_isFactor` produce a
+   family of mutually orthogonal projections, each Murray–von Neumann equivalent to `e`, whose
+   ranges span densely — the projection-theoretic backbone `Σ eᵢ = 1` of the structure theorem.
 2. **Matrix units.** From the equivalence partial isometries `v_p : e ≅ p` the system of **matrix
    units** `e_{pq} = v_p v_q⋆` is built, with the defining matrix-unit relations, and the
    **multiplicity-one** property: for every `a ∈ N` the matrix entry `v_p⋆ a v_q` is a *scalar*
@@ -159,8 +159,9 @@ whose ranges span densely: the closed linear span of the union of their ranges i
 
 The proof takes a *maximal* such family `F` (Zorn) and lets `p` be the orthogonal projection onto
 the closed span `M` of the ranges; `p ∈ N`. If `M ≠ ⊤` then `r = 1 - p` is a nonzero projection in
-`N`, so by the comparison theorem some nonzero `q' ≼ r` is equivalent to `e`; `q'` is orthogonal to
-every `f ∈ F`, contradicting maximality. -/
+`N`, so by the comparison theorem for minimal projections (`IsMinimalProjection.mvNSub_of_isFactor`)
+`e` is equivalent to some nonzero `q' ≤ r`; `q'` is orthogonal to every `f ∈ F`, contradicting
+maximality. -/
 theorem IsFactor.exists_orthEquivFam_top {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
@@ -203,7 +204,7 @@ theorem IsFactor.exists_orthEquivFam_top {N : VonNeumannAlgebra H}
   have hq'proj : IsStarProjection q' := heq'.isStarProjection_right
   have hq'0 : q' ≠ 0 := heq'.ne_zero he.2.2.1
   have hpq' : p * q' = 0 := by
-    have h := hrq'
+    have h := (hq'proj.le_iff_mul_eq_right hrproj).mp hrq'
     rw [hr, sub_mul, one_mul, sub_eq_self] at h
     exact h
   have horth : ∀ f ∈ F, q' * f = 0 ∧ f * q' = 0 := by
