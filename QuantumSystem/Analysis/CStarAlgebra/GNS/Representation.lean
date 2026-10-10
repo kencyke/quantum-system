@@ -6,8 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.Normed.Operator.Extend
-public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Irreducible
+public import QuantumSystem.Analysis.CStarAlgebra.State.Faithful
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
 /-!
@@ -33,9 +33,16 @@ vector (`norm_ξ_eq_one`) and that `π ≠ 0`, since a state is nonzero
 * `GNS.Representation.unique_up_to_unitary_equivalence`: any two GNS triplets for the same
   functional are unitarily equivalent.  The unitary `π₁ a ξ₁ ↦ π₂ a ξ₂` is Mathlib's
   `LinearEquiv.extendOfIsometry` applied to the two dense orbit maps.
-* `GNS.Representation.canonical`: the triplet produced by the GNS construction, from Mathlib's
-  `PositiveLinearMap.GNS` and `PositiveLinearMap.gnsNonUnitalStarAlgHom` and the cyclic vector
-  `PositiveLinearMap.gnsVector`.
+* `GNS.Representation.ξ_eq_zero_iff`: `ξ = 0` iff `f = 0`; for a state, `H` is nonzero
+  (`GNS.Representation.nontrivial_H`).
+* `GNS.Representation.π_eq_smul_one_of_map_mul`: a multiplicative state acts by scalars,
+  `π a = ω a • 1`.
+* `GNS.Representation.isFaithful_iff_injective_orbit`: a state is faithful iff the orbit map
+  `a ↦ π a ξ` is injective; then `π` is injective (`injective_π_of_isFaithful`).
+* `GNS.Representation.π_one`: on a unital algebra, `π 1 = 1`.
+
+The triplet produced by the GNS construction, `GNS.Representation.canonical`, is defined in
+`QuantumSystem.Analysis.CStarAlgebra.GNS.Construction`.
 -/
 
 @[expose] public section
@@ -195,16 +202,29 @@ lemma norm_ξ_eq_one {ω : State A} (T : Representation (PositiveLinearMap.ofCla
 
 end ApproximateUnit
 
+/-- The cyclic vector vanishes exactly for the zero functional, since `‖ξ‖ = √‖f‖ₒₚ`. -/
+lemma ξ_eq_zero_iff (T : Representation f) : T.ξ = 0 ↔ f = 0 := by
+  rw [← norm_eq_zero, T.norm_ξ, Real.sqrt_eq_zero (norm_nonneg _), opNorm_eq_zero_iff]
+
+/-- The cyclic vector of a GNS triplet of a nonzero functional is nonzero (`ξ_eq_zero_iff`). -/
+lemma ξ_ne_zero (T : Representation f) (hf : f ≠ 0) : T.ξ ≠ 0 :=
+  T.ξ_eq_zero_iff.not.mpr hf
+
+/-- The Hilbert space of a GNS triplet of a state is nonzero: it contains the nonzero vector `ξ`,
+since a state is a nonzero functional (`State.ofClass_ne_zero`). -/
+instance nontrivial_H {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω)) :
+    Nontrivial T.H :=
+  nontrivial_of_ne T.ξ 0 (T.ξ_ne_zero ω.ofClass_ne_zero)
+
 /-- A GNS representation is null exactly for the zero functional.  If `π = 0` then
-`f a = ⟪ξ, π a ξ⟫ = 0` for every `a`; conversely, `f = 0` forces `‖ξ‖² = ‖f‖ₒₚ = 0`
-(`norm_ξ_sq`), and the orbit of `ξ = 0` is dense only in the zero space. -/
+`f a = ⟪ξ, π a ξ⟫ = 0` for every `a`; conversely, `f = 0` forces `ξ = 0` (`ξ_eq_zero_iff`),
+and the orbit of `ξ = 0` is dense only in the zero space. -/
 lemma π_eq_zero_iff (T : Representation f) : T.π = 0 ↔ f = 0 := by
   constructor
   · intro h
     exact PositiveLinearMap.ext fun a => by simp [T.gns_condition, h]
   · rintro rfl
-    have hξ : T.ξ = 0 := by
-      rw [← norm_eq_zero, T.norm_ξ, (opNorm_eq_zero_iff 0).mpr rfl, Real.sqrt_zero]
+    have hξ : T.ξ = 0 := T.ξ_eq_zero_iff.mpr rfl
     have hH : ∀ x : T.H, x = 0 := fun x => congrFun (Continuous.ext_on T.denseRange_orbit continuous_id
       continuous_const (by rintro _ ⟨a, rfl⟩; simp [hξ])) x
     ext a x
@@ -228,8 +248,8 @@ structure UnitaryEquiv (T₁ T₂ : Representation f) extends
 
 /-- `T₁ ≃ᵁ T₂` is a unitary equivalence of GNS triplets preserving the cyclic vector
 (`GNS.Representation.UnitaryEquiv`). Scoped to `GNS` (activate with `open scoped GNS`), alongside
-`𝓗[ω]`, `π[ω]`, `ξ[ω]`, since it names the GNS-specific notion, not the generic
-`CStarRep.UnitaryEquiv`. -/
+`GNS[ω]` (declared in `QuantumSystem.Analysis.CStarAlgebra.GNS.Construction`), since it names the
+GNS-specific notion, not the generic `CStarRep.UnitaryEquiv`. -/
 scoped[GNS] notation:50 T₁ " ≃ᵁ " T₂ => GNS.Representation.UnitaryEquiv (f := _) T₁ T₂
 
 /-- For a GNS triplet, the length of the orbit vector `T.π x T.ξ` is read off from the functional:
@@ -292,34 +312,51 @@ theorem unique_up_to_unitary_equivalence :
      intertwines := cyclicIsometry_intertwines T₁ T₂
      map_cyclic_vector := cyclicIsometry_ξ T₁ T₂ }⟩
 
-variable (f) in
-/-- The canonical GNS triplet `(f.GNS, π_f, ξ_f)` produced by the GNS construction: Mathlib's
-`PositiveLinearMap.GNS` and `PositiveLinearMap.gnsNonUnitalStarAlgHom`, with the cyclic vector
-`PositiveLinearMap.gnsVector`.  For a state `ω` it is `(𝓗[ω], π[ω], ξ[ω])`. -/
-noncomputable def canonical : Representation f where
-  toCStarRep := f.gnsCStarRep
-  ξ := f.gnsVector
-  cyclic := (f.gnsCStarRep.isCyclicVector_iff_denseRange_orbit _).mpr
-    f.denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
-  gns_condition := f.apply_eq_inner_gnsNonUnitalStarAlgHom_gnsVector
+/-! ### GNS triplets of a state -/
 
-section Canonical
+section State
 
-variable (f)
+variable {ω : State A} (T : Representation (PositiveLinearMap.ofClass ω))
 
-/-- The representation underlying the canonical triplet is `PositiveLinearMap.gnsCStarRep`. -/
-lemma canonical_toCStarRep : (canonical f).toCStarRep = f.gnsCStarRep := rfl
+/-- **A multiplicative state acts by scalars in its GNS representations**: if
+`ω (a * b) = ω a * ω b`, then `π a = ω a • 1`.  On the dense orbit,
+`π a (π b ξ) - ω a • π b ξ = π d ξ` for `d = a b - ω a • b`, whose norm is `√‖ω (d* d)‖`
+(`norm_apply_cyclic`), and `ω (d* d) = |ω d|² = 0`. -/
+lemma π_eq_smul_one_of_map_mul (hω : ∀ a b, ω (a * b) = ω a * ω b) (a : A) :
+    T.π a = ω a • 1 := by
+  refine DFunLike.coe_injective <|
+    Continuous.ext_on T.denseRange_orbit (map_continuous _) (map_continuous _) ?_
+  rintro _ ⟨b, rfl⟩
+  have hd : ω (a * b - ω a • b) = 0 := by
+    rw [map_sub, map_smul, hω, smul_eq_mul, sub_self]
+  have h : T.π (a * b - ω a • b) T.ξ = 0 := by
+    rw [← norm_eq_zero, norm_apply_cyclic]
+    change √‖ω (star (a * b - ω a • b) * (a * b - ω a • b))‖ = 0
+    rw [hω, map_star, hd, mul_zero, norm_zero, Real.sqrt_zero]
+  rw [map_sub, map_mul, map_smul, sub_apply, mul_apply_eq_comp, smul_apply, sub_eq_zero] at h
+  rw [CStarRep.orbit_apply, smul_apply, one_apply_eq_self]
+  exact h
 
-/-- The Hilbert space of the canonical triplet is Mathlib's `PositiveLinearMap.GNS`. -/
-lemma canonical_H : (canonical f).H = f.GNS := rfl
+/-- A state is faithful iff the orbit map `a ↦ π a ξ` of the cyclic vector is injective, since
+`‖π a ξ‖ = √‖ω (a* a)‖` (`norm_apply_cyclic`). -/
+lemma isFaithful_iff_injective_orbit : ω.IsFaithful ↔ Function.Injective (T.orbit T.ξ) := by
+  rw [injective_iff_map_eq_zero]
+  refine forall_congr' fun a => imp_congr_left ?_
+  rw [CStarRep.orbit_apply, ← norm_eq_zero (a := T.π a T.ξ), T.norm_apply_cyclic,
+    Real.sqrt_eq_zero (norm_nonneg _), norm_eq_zero]
+  rfl
 
-/-- The representation of the canonical triplet is `PositiveLinearMap.gnsNonUnitalStarAlgHom`. -/
-lemma canonical_π : (canonical f).π = f.gnsNonUnitalStarAlgHom := rfl
+/-- The GNS representation of a faithful state is injective. -/
+lemma injective_π_of_isFaithful (hω : ω.IsFaithful) : Function.Injective T.π :=
+  fun _ _ hab => T.isFaithful_iff_injective_orbit.mp hω (congrArg (· T.ξ) hab)
 
-/-- The cyclic vector of the canonical triplet is `PositiveLinearMap.gnsVector`. -/
-lemma canonical_ξ : (canonical f).ξ = f.gnsVector := rfl
+end State
 
-end Canonical
+/-- On a unital algebra every GNS representation is unital: `π 1 = 1`, since it acts
+non-degenerately (`actsNondegenerately`, `CStarRep.π_one_of_actsNondegenerately`). -/
+@[simp] lemma π_one {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+    {f : A →ₚ[ℂ] ℂ} (T : Representation f) : T.π 1 = 1 :=
+  T.π_one_of_actsNondegenerately T.actsNondegenerately
 
 end Representation
 

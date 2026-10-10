@@ -47,8 +47,8 @@ the C\*-algebra / Hilbert-space setting.  The GNS construction in
 `Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal` exposes the Hilbert
 space (`f.GNS`) and the homomorphism (`f.gnsNonUnitalStarAlgHom`, or
 `f.gnsStarAlgHom` in the unital case) as separate artifacts; there is no
-bundled `(H, π)` structure in Mathlib.  `PositiveLinearMap.gnsCStarRep` bundles exactly these
-two Mathlib objects, and the canonical GNS triplet `GNS.Representation.canonical` extends it.
+bundled `(H, π)` structure in Mathlib.  The canonical GNS triplet
+`GNS.Representation.canonical` bundles exactly these two Mathlib objects as its `CStarRep`.
 
 ## Relation to `GNS.Representation`
 
@@ -71,6 +71,8 @@ applies to GNS triplets directly.
 * `CStarRep.adjoint_π` — `(π a)† = π (a*)`.
 * `CStarRep.orbit R v` — the orbit map `a ↦ π a v` of a vector, as a
   continuous linear map `A →L[ℂ] H`.
+* `CStarRep.π_one_of_actsNondegenerately` — for unital `A`, a non-degenerate representation is
+  unital.
 -/
 
 @[expose] public section
@@ -149,5 +151,16 @@ lemma isCyclicVector_iff_denseRange_orbit (R : CStarRep A) (v : R.H) :
     Submodule.span_eq, ← SetLike.coe_set_eq, ClosedSubmodule.coe_top, DenseRange,
     dense_iff_closure_eq]
   rfl
+
+/-- For a unital `A`, a representation acting non-degenerately is unital: `π a (x - π 1 x) = 0`
+for every `a`, so `π 1 x = x`. -/
+lemma π_one_of_actsNondegenerately {A : Type u} [CStarAlgebra A] (R : CStarRep A)
+    (h : InnerProductSpace.ActsNondegenerately (Set.range (R.π : A → R.H →L[ℂ] R.H))) :
+    R.π 1 = 1 := by
+  ext x
+  have hx := h (x - R.π 1 x) (by
+    rintro _ ⟨a, rfl⟩
+    rw [map_sub, ← mul_apply_eq_comp, ← map_mul, mul_one, sub_self])
+  rw [one_apply_eq_self, ← sub_eq_zero.1 hx]
 
 end CStarRep

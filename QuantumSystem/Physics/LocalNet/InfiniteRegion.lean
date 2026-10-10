@@ -58,7 +58,7 @@ convention stated in `QuantumSystem.Physics.LocalNet.Basic`.
 
 @[expose] public section
 
-open scoped ProperContainment VonNeumannAlgebra ComplexOrder
+open scoped ProperContainment VonNeumannAlgebra ComplexOrder GNS
 
 namespace ProperContainment
 
@@ -177,13 +177,13 @@ variable [PartialOrder N.quasiLocalCStarAlgebra] [StarOrderedRing N.quasiLocalCS
     state `ω` on the quasi-local algebra, the regions `S₁` and `S₂` form a split pair
     (`VonNeumannNet.IsSplitPair`), `𝓡_ω(S₁) ≤ 𝔑 ≤ 𝓡_ω(S₂)′` with `𝔑` a type I factor. The regions
     may be infinite; `𝓡_ω` is `N.vonNeumannNetSet` at the GNS representation
-    `PositiveLinearMap.gnsCStarRep`.
+    `GNS[ω].toCStarRep`.
 
     The order on the quasi-local algebra is a parameter rather than a fixed choice, because
     `State` needs one and the quasi-local algebra carries none; the spectral order
     `CStarAlgebra.spectralOrder` is the canonical instance. -/
 def IsSplitPairAt (ω : State N.quasiLocalCStarAlgebra) (S₁ S₂ : Set α) : Prop :=
-  (N.vonNeumannNetSet (PositiveLinearMap.ofClass ω).gnsCStarRep).IsSplitPair S₁ S₂
+  (N.vonNeumannNetSet GNS[ω].toCStarRep).IsSplitPair S₁ S₂
 
 /-- **The nested split property yields split pairs with a gap**: if the GNS net of `ω` has the
     split property and `S₁ ⋐ S₂` with `S₃` disjoint from `S₂`, then `(S₁, S₃)` is a split pair
@@ -191,12 +191,12 @@ def IsSplitPairAt (ω : State N.quasiLocalCStarAlgebra) (S₁ S₂ : Set α) : P
     `(Iic 0, Ici 3)` from `Iic 0 ⋐ Iic 2`; the gap-free pair `(Iic 0, Ici 1)` is not reachable. -/
 theorem IsSplitPairAt.of_splitProperty [ProperContainment (Set α)]
     {ω : State N.quasiLocalCStarAlgebra}
-    (hs : (N.vonNeumannNetSet (PositiveLinearMap.ofClass ω).gnsCStarRep).SplitProperty)
+    (hs : (N.vonNeumannNetSet GNS[ω].toCStarRep).SplitProperty)
     {S₁ S₂ S₃ : Set α} (h : S₁ ⋐ S₂) (hd : Disjoint S₂ S₃) : N.IsSplitPairAt ω S₁ S₃ :=
   VonNeumannNet.SplitProperty.isSplitPair hs h hd
 
 /-- **Every multiplicative state splits every pair of regions**, trivially: its GNS
-    representation acts by scalars (`State.gnsCStarRep_π_eq_smul_one_of_map_mul`), so every local
+    representation acts by scalars (`GNS.Representation.π_eq_smul_one_of_map_mul`), so every local
     algebra lies in the scalar algebra `ℂ1 = 𝓑(H)′`, which is a type I factor
     (`VonNeumannAlgebra.isTypeIFactor_commutant_boundedLinearOperators`) commuting with everything.
     This is the degenerate end of the split property, as the one-dimensional case is for nets. -/
@@ -206,10 +206,10 @@ theorem IsSplitPairAt.of_map_mul {ω : State N.quasiLocalCStarAlgebra}
   · refine VonNeumannAlgebra.generated_le fun x hx => ?_
     obtain ⟨Λ, -, hx⟩ := VonNeumannNet.mem_finiteLocalOperators.1 hx
     refine VonNeumannAlgebra.generated_le
-      (M := (𝓑((PositiveLinearMap.ofClass ω).gnsCStarRep.H))′) ?_ hx
+      (M := (𝓑(GNS[ω].H))′) ?_ hx
     rintro _ ⟨a, rfl⟩
     simp only
-    rw [State.gnsCStarRep_π_eq_smul_one_of_map_mul ω hω]
+    rw [GNS[ω].π_eq_smul_one_of_map_mul hω]
     exact SetLike.mem_coe.2 (SMulMemClass.smul_mem _ (one_mem _))
   · intro x hx
     obtain ⟨c, rfl⟩ := VonNeumannAlgebra.exists_eq_smul_one_of_mem_commutant_boundedLinearOperators hx

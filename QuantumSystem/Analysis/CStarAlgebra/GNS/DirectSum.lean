@@ -50,7 +50,7 @@ variable (A) in
 `{ω : State A // ω.IsPure}`. -/
 noncomputable def pureStateFamily : SectorFamily.{u, u, u} A where
   Index := {ω : State A // ω.IsPure}
-  rep ω := (GNS.Representation.canonical (PositiveLinearMap.ofClass ω.1)).toCStarRep
+  rep ω := GNS[ω.1].toCStarRep
 
 variable (A) in
 /-- **The pure states separate points.**  If `a ≠ 0`, some pure state `ω` has
@@ -59,10 +59,10 @@ theorem pureStateFamily_separatesPoints : (pureStateFamily A).SeparatesPoints :=
   intro a ha
   by_contra hne
   obtain ⟨ω, hω_pure, hω_pos⟩ := State.exists_isPure_pos_of_ne_zero a hne
-  have hπ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).π a = 0 := ha ⟨ω, hω_pure⟩
+  have hπ : GNS[ω].π a = 0 := ha ⟨ω, hω_pure⟩
   have hzero : ω (star a * a) = 0 := by
     rw [← PositiveLinearMap.coe_ofClass,
-      (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).gns_condition]
+      GNS[ω].gns_condition]
     simp [hπ]
   exact hω_pos.ne' hzero
 
@@ -100,7 +100,7 @@ non-degeneracy is the only input to `rep_π_one`, hence to
 lemma rep_actsNondegenerately :
     InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → ((rep A).H →L[ℂ] (rep A).H))) :=
   (pureStateFamily A).directSumRep_actsNondegenerately_of fun ω =>
-    (GNS.Representation.canonical (PositiveLinearMap.ofClass ω.1)).actsNondegenerately
+    GNS[ω.1].actsNondegenerately
 
 variable (A) in
 /-- The direct sum representation, corestricted to its image, is a `*`-isomorphism
@@ -117,18 +117,12 @@ lemma norm_repRangeEquiv (a : A) :
 
 section Unital
 
-open ContinuousLinearMap
-
 variable {A : Type u} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 /-- For a unital `A`, the direct sum representation is unital, since it acts non-degenerately
-(`rep_actsNondegenerately`): `π a (x - π 1 x) = 0` for every `a`, so `π 1 x = x`. -/
-lemma rep_π_one : (rep A).π 1 = 1 := by
-  ext x
-  have h := rep_actsNondegenerately (A := A) (x - (rep A).π 1 x) (by
-    rintro _ ⟨a, rfl⟩
-    rw [map_sub, ← mul_apply_eq_comp, ← map_mul, mul_one, sub_self])
-  rw [one_apply_eq_self, ← sub_eq_zero.1 h]
+(`rep_actsNondegenerately`, `CStarRep.π_one_of_actsNondegenerately`). -/
+lemma rep_π_one : (rep A).π 1 = 1 :=
+  (rep A).π_one_of_actsNondegenerately rep_actsNondegenerately
 
 variable (A) in
 /-- For a unital `A`, the direct sum representation as a unital `*`-homomorphism

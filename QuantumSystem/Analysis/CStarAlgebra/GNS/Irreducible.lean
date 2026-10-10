@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.GNS.Representation
+public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.RadonNikodym
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
@@ -45,7 +45,7 @@ namespace GNS
 namespace Representation
 
 open scoped ComplexOrder ComplexConjugate CStarAlgebra InnerProduct NNReal ComplexInnerProductSpace
-open PositiveLinearMap
+  PositiveLinearMap
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
@@ -93,15 +93,15 @@ cyclic vector of a pure state `ω` splits as `ξ = v₁ + v₂` along a closed i
 (`v₁ ∈ W`, `v₂ ∈ Wᗮ`), then `‖v₁‖² ∈ {0, 1}`: otherwise `ω` would be a proper convex combination
 of the two normalised vector functionals, contradicting its extremality. -/
 lemma trichotomy_from_purity {ω : State A} (hω : ω.IsPure)
-    (W : ClosedSubmodule ℂ (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).H)
-    (hW : W ∈ (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).closedInvtSubmodule)
-    (v₁ v₂ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).H)
+    (W : ClosedSubmodule ℂ GNS[ω].H)
+    (hW : W ∈ GNS[ω].closedInvtSubmodule)
+    (v₁ v₂ : GNS[ω].H)
     (hv₁ : v₁ ∈ W.toSubmodule)
     (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
-    (hξ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).ξ = v₁ + v₂)
+    (hξ : GNS[ω].ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
-  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ω)
+  let T := GNS[ω]
   by_contra h_contra
   push Not at h_contra
   have hω₁ : ‖PositiveLinearMap.ofClass ω‖ₒₚ = 1 := ω.opNorm_ofClass_eq_one
@@ -370,8 +370,8 @@ lemma eq_bot_of_norm_sq_eq_zero (T : Representation f)
 /-- The GNS representation of a pure state is irreducible: the forward direction of
 `GNS.Representation.isPure_iff_isIrreducible`, for the canonical triplet. -/
 lemma isIrreducible_canonical_of_isPure {ω : State A} (hω : ω.IsPure) :
-    (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).IsIrreducible := by
-  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ω)
+    GNS[ω].IsIrreducible := by
+  let T := GNS[ω]
   refine CStarRep.isIrreducible_iff.mpr ⟨T.π_ne_zero ω.ofClass_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
   rcases trichotomy_from_purity hω W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
@@ -393,10 +393,10 @@ domination gives `φ(a) = ⟪T ξ, π(a) ξ⟫` with `T` in the commutant
 (`CStarAlgebra.exists_commute_of_apply_star_mul_self_le`), which is `ℂ1` by Schur's lemma
 (`CStarRep.isIrreducible_iff_centralizer`). -/
 private lemma exists_eq_smul_of_add_eq {ω : State A}
-    (h : (canonical (PositiveLinearMap.ofClass ω)).IsIrreducible) {φ ψ : WeakDual ℂ A}
+    (h : GNS[ω].IsIrreducible) {φ ψ : WeakDual ℂ A}
     (hφ : ∀ a : A, 0 ≤ a → 0 ≤ φ a) (hψ : ∀ a : A, 0 ≤ a → 0 ≤ ψ a) (hsum : φ + ψ = ω.val) :
     ∃ c : ℂ, φ = c • ω.val := by
-  set T := canonical (PositiveLinearMap.ofClass ω)
+  set T := GNS[ω]
   let fφ : A →ₚ[ℂ] ℂ := PositiveLinearMap.mk₀ (WeakDual.toStrongDual φ : A →L[ℂ] ℂ).toLinearMap hφ
   have hdom : ∀ a, ‖fφ (star a * a)‖ ≤ ‖T.π a T.ξ‖ ^ 2 := fun a => by
     rw [T.norm_apply_cyclic, Real.sq_sqrt (norm_nonneg _)]
@@ -435,7 +435,7 @@ private lemma norm_le_of_smul_eq {ω : State A} {φ : WeakDual ℂ A} (hφ : φ 
 quasi-states `φ`, `χ` and `0 < t < 1`, then `t φ = c ω` and `(1 - t) χ = d ω` by Radon–Nikodym and
 Schur, with `c + d = 1`, `‖c‖ ≤ t` and `‖d‖ ≤ 1 - t`; so `c = t`, `d = 1 - t` and `φ = χ = ω`. -/
 lemma isPure_of_isIrreducible {ω : State A}
-    (h : (canonical (PositiveLinearMap.ofClass ω)).IsIrreducible) : ω.IsPure := by
+    (h : GNS[ω].IsIrreducible) : ω.IsPure := by
   have hω0 : ω.val ≠ 0 := fun h0 => by simpa [h0] using ω.norm_eq_one
   refine mem_extremePoints.mpr ⟨StateSpace.subset_quasiStateSpace ω.2, fun φ hφ χ hχ hseg => ?_⟩
   obtain ⟨a, b, ha, hb, hab, hsum⟩ := hseg

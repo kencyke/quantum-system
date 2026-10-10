@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.GNS.Representation
+public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
@@ -113,7 +113,7 @@ variable (A) in
 dense sequence of `A`, at a pure state norming that member. -/
 noncomputable def normingFamily [SeparableSpace A] : SectorFamily.{u, u, 0} A where
   Index := NormingIndex A
-  rep i := (GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i))).toCStarRep
+  rep i := GNS[normingState i].toCStarRep
 
 /-- Each summand of the norming family is separable. -/
 instance [SeparableSpace A] (i : NormingIndex A) :
@@ -156,7 +156,7 @@ lemma normingFamily_separatesPoints [SeparableSpace A] :
     linarith
   set i : NormingIndex A := ⟨n, hb_ne⟩ with hi
   have helem : i.elem = denseSeq A n := rfl
-  set T := GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i)) with hT
+  set T := GNS[normingState i] with hT
   -- The representation at `i` norms `i.elem`.
   have hnorm : ‖T.π i.elem T.ξ‖ = ‖i.elem‖ :=
     T.norm_apply_cyclic_of_norming (normingState_spec i)

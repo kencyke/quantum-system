@@ -24,7 +24,8 @@ Notable results formalized in this repository include:
 - **Gelfand–Naimark theorem.** Every (possibly non-unital) C\*-algebra A is isometrically \*-isomorphic onto a norm-closed \*-subalgebra of B(H), realized on the direct sum of the GNS spaces of all pure states; when A is unital, the representation can be taken unital; when A is separable, a countable norming family of pure states gives a separable H.
   - [`Analysis/CStarAlgebra/GelfandNaimark.lean`](QuantumSystem/Analysis/CStarAlgebra/GelfandNaimark.lean) · `CStarRep.exists_starAlgEquiv_range` · `CStarRep.exists_isometric_unital` · `CStarRep.exists_isometric_separable`
 - **GNS construction.** For a state ω, the cyclic representation (π_ω, H_ω, Ω_ω) satisfies ω(a) = ⟨Ω_ω, π_ω(a) Ω_ω⟩ with Ω_ω a cyclic unit vector.
-  - [`Analysis/CStarAlgebra/GNS/Construction.lean`](QuantumSystem/Analysis/CStarAlgebra/GNS/Construction.lean) · `State.gns_condition` · `State.gnsVector_cyclic` · `State.norm_gnsVector`
+  - [`Analysis/CStarAlgebra/GNS/Construction.lean`](QuantumSystem/Analysis/CStarAlgebra/GNS/Construction.lean) · `GNS.Representation.canonical` (`GNS[ω]`)
+  - [`Analysis/CStarAlgebra/GNS/Representation.lean`](QuantumSystem/Analysis/CStarAlgebra/GNS/Representation.lean) · `GNS.Representation.gns_condition` · `GNS.Representation.cyclic` · `GNS.Representation.norm_ξ_eq_one`
 
 ### Von Neumann algebras
 
