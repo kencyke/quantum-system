@@ -16,12 +16,12 @@ The GNS representations `π_ψ` of the pure states `ψ` of a C\*-algebra `A` for
 Gelfand–Naimark theorem (`CStarRep.exists_isometric`).  Everything is an instance of the generic
 direct sum of `CStarAlgebra/Representation/DirectSum.lean`; the only input specific to pure
 states is that the family separates points (`pureStateFamily_separatesPoints`), which is the
-existence of enough pure states (`IsPureState.exists_pos_of_ne_zero`).
+existence of enough pure states (`State.exists_isPure_pos_of_ne_zero`).
 
 Summing over *pure* states — rather than over all states — makes this a (non-reduced form of
 the) **atomic representation**; it is not the universal representation.  The index type is the
-full type `PureState A`, not a set of unitary equivalence classes, so the same class is
-repeated once per pure state realising it.
+subtype `{ω : State A // ω.IsPure}` of all pure states, not a set of unitary equivalence classes,
+so the same class is repeated once per pure state realising it.
 
 ## Main results
 
@@ -46,26 +46,25 @@ namespace DirectSum
 variable {A : Type u} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 variable (A) in
-/-- The sector family of GNS representations of all pure states, indexed by `PureState A`. -/
+/-- The sector family of GNS representations of all pure states, indexed by the pure states
+`{ω : State A // ω.IsPure}`. -/
 noncomputable def pureStateFamily : SectorFamily.{u, u, u} A where
-  Index := PureState A
-  rep ψ := (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).toCStarRep
+  Index := {ω : State A // ω.IsPure}
+  rep ω := (GNS.Representation.canonical (PositiveLinearMap.ofClass ω.1)).toCStarRep
 
 variable (A) in
-/-- **The pure states separate points.**  If `a ≠ 0`, some pure state `ψ` has
-`0 < ψ (a* a) = ⟪ξ_ψ, π_ψ(a*) π_ψ(a) ξ_ψ⟫`, so `π_ψ(a) ≠ 0`. -/
+/-- **The pure states separate points.**  If `a ≠ 0`, some pure state `ω` has
+`0 < ω (a* a) = ⟪ξ_ω, π_ω(a*) π_ω(a) ξ_ω⟫`, so `π_ω(a) ≠ 0`. -/
 theorem pureStateFamily_separatesPoints : (pureStateFamily A).SeparatesPoints := by
   intro a ha
   by_contra hne
-  obtain ⟨φ, hφ_pure, hφ_pos⟩ := IsPureState.exists_pos_of_ne_zero a hne
-  let ψ : PureState A := ⟨φ, hφ_pure⟩
-  have hπ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).π a = 0 := ha ψ
-  have hzero : φ (star a * a) = 0 := by
-    change ψ.toState (star a * a) = 0
+  obtain ⟨ω, hω_pure, hω_pos⟩ := State.exists_isPure_pos_of_ne_zero a hne
+  have hπ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).π a = 0 := ha ⟨ω, hω_pure⟩
+  have hzero : ω (star a * a) = 0 := by
     rw [← PositiveLinearMap.coe_ofClass,
-      (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).gns_condition]
+      (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).gns_condition]
     simp [hπ]
-  exact hφ_pos.ne' hzero
+  exact hω_pos.ne' hzero
 
 variable (A) in
 /-- The direct sum of the GNS representations of all pure states, bundled as a `CStarRep A`.
@@ -100,8 +99,8 @@ non-degeneracy is the only input to `rep_π_one`, hence to
 `CStarRep.exists_isometric_unital`. -/
 theorem rep_actsNondegenerately :
     InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → ((rep A).H →L[ℂ] (rep A).H))) :=
-  (pureStateFamily A).directSumRep_actsNondegenerately_of fun ψ =>
-    (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).actsNondegenerately
+  (pureStateFamily A).directSumRep_actsNondegenerately_of fun ω =>
+    (GNS.Representation.canonical (PositiveLinearMap.ofClass ω.1)).actsNondegenerately
 
 variable (A) in
 /-- The direct sum representation, corestricted to its image, is a `*`-isomorphism

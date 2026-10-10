@@ -14,13 +14,13 @@ public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
 # Pure states and irreducible GNS representations
 
 A state is pure iff its GNS representation is irreducible
-(`GNS.Representation.isPureState_iff_isIrreducible`, for every GNS triplet of the state; Murphy,
+(`GNS.Representation.isPure_iff_isIrreducible`, for every GNS triplet of the state; Murphy,
 Thm. 5.1.6; Bratteli–Robinson, Thm. 2.3.19).
 
-* Pure ⇒ irreducible (`GNS.Representation.pureState_gns_isIrreducible`): a closed invariant
-  subspace splits the cyclic vector, the two pieces define quasi-states summing to `ψ`, and purity
+* Pure ⇒ irreducible (`GNS.Representation.isIrreducible_canonical_of_isPure`): a closed invariant
+  subspace splits the cyclic vector, the two pieces define quasi-states summing to `ω`, and purity
   forces one of them to vanish.
-* Irreducible ⇒ pure (`GNS.Representation.isPureState_of_isIrreducible`): a quasi-state dominated by
+* Irreducible ⇒ pure (`GNS.Representation.isPure_of_isIrreducible`): a quasi-state dominated by
   `ω` is `⟪T ξ, π(·) ξ⟫` for some `T` in the commutant (Radon–Nikodym,
   `CStarAlgebra.exists_commute_of_apply_star_mul_self_le`), and `T` is a scalar by Schur's lemma
   (`CStarRep.isIrreducible_iff_centralizer`), so the dominated functional is a multiple of `ω`.
@@ -34,7 +34,7 @@ vector functionals of `v₁` and `v₂` (`CStarRep.vectorFunctional`), `‖v₁�
 
 ## Main results
 
-* `GNS.Representation.isPureState_iff_isIrreducible` — **a state is pure iff its GNS
+* `GNS.Representation.isPure_iff_isIrreducible` — **a state is pure iff its GNS
   representation is irreducible**, for every GNS triplet of the state.
 -/
 
@@ -89,23 +89,23 @@ lemma norm_sq_in_Icc (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁
   exact ⟨sq_nonneg _, by linarith [sq_nonneg ‖v₂‖]⟩
 
 /-- **Purity forces a component of the cyclic vector to have norm `0` or `1`.** If the GNS
-cyclic vector of a pure state `ψ` splits as `ξ = v₁ + v₂` along a closed invariant submodule `W`
-(`v₁ ∈ W`, `v₂ ∈ Wᗮ`), then `‖v₁‖² ∈ {0, 1}`: otherwise `ψ` would be a proper convex combination
+cyclic vector of a pure state `ω` splits as `ξ = v₁ + v₂` along a closed invariant submodule `W`
+(`v₁ ∈ W`, `v₂ ∈ Wᗮ`), then `‖v₁‖² ∈ {0, 1}`: otherwise `ω` would be a proper convex combination
 of the two normalised vector functionals, contradicting its extremality. -/
-lemma trichotomy_from_purity {ψ : PureState A}
-    (W : ClosedSubmodule ℂ (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).H)
-    (hW : W ∈ (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).closedInvtSubmodule)
-    (v₁ v₂ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).H)
+lemma trichotomy_from_purity {ω : State A} (hω : ω.IsPure)
+    (W : ClosedSubmodule ℂ (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).H)
+    (hW : W ∈ (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).closedInvtSubmodule)
+    (v₁ v₂ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).H)
     (hv₁ : v₁ ∈ W.toSubmodule)
     (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
-    (hξ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).ξ = v₁ + v₂)
+    (hξ : (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
-  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)
+  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ω)
   by_contra h_contra
   push Not at h_contra
-  have hψ : ‖PositiveLinearMap.ofClass ψ.toState‖ₒₚ = 1 := ψ.toState.opNorm_ofClass_eq_one
-  have h_in_Icc := hψ ▸ norm_sq_in_Icc T v₁ v₂ hξ horth
+  have hω₁ : ‖PositiveLinearMap.ofClass ω‖ₒₚ = 1 := ω.opNorm_ofClass_eq_one
+  have h_in_Icc := hω₁ ▸ norm_sq_in_Icc T v₁ v₂ hξ horth
   have h_pos : 0 < ‖v₁‖ ^ 2 := lt_of_le_of_ne h_in_Icc.1 h_contra.1.symm
   have h_lt_one : ‖v₁‖ ^ 2 < 1 := lt_of_le_of_ne h_in_Icc.2 h_contra.2
   have h_v₁_nz : v₁ ≠ 0 := by
@@ -116,7 +116,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
     exact_mod_cast ht
   set t := ‖v₁‖ ^ 2
   have h_norm_v₂ : ‖v₂‖ ^ 2 = 1 - t := by
-    have h_sum := hψ ▸ norm_sq_decomposition T v₁ v₂ hξ horth
+    have h_sum := hω₁ ▸ norm_sq_decomposition T v₁ v₂ hξ horth
     linarith
   have hv₂_ne : v₂ ≠ 0 := by
     intro h
@@ -134,7 +134,7 @@ lemma trichotomy_from_purity {ψ : PureState A}
     rw [← Complex.ofReal_one, ← Complex.ofReal_sub, ← h_norm_v₂]
     convert T.normalized_vectorFunctional_mem_quasiStateSpace v₂ hv₂_ne
     simp
-  have h_sum : ψ.val = (t : ℝ) • φ + (1 - t) • χ := by
+  have h_sum : ω.val = (t : ℝ) • φ + (1 - t) • χ := by
     have ht_ne : t ≠ 0 := h_pos.ne'
     have ht_ne_c : (t : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr ht_ne
     have h1_sub_t_ne : 1 - t ≠ 0 := (sub_pos.mpr h_lt_one).ne'
@@ -149,11 +149,11 @@ lemma trichotomy_from_purity {ψ : PureState A}
         apply ContinuousLinearMap.ext; intro a; rfl
       -- Then rewrite ↑(1 - t) as (1 - ↑t)
       rw [step1, Complex.ofReal_sub, Complex.ofReal_one]
-    have h_sum_c : ψ.val = (t : ℂ) • φ + (1 - (t : ℂ)) • χ := by
+    have h_sum_c : ω.val = (t : ℂ) • φ + (1 - (t : ℂ)) • χ := by
       apply ContinuousLinearMap.ext
       intro a
       have h_state := apply_eq_vectorFunctional_add T W hW v₁ v₂ hv₁ hv₂ hξ a
-      change PositiveLinearMap.ofClass ψ.toState a = _
+      change PositiveLinearMap.ofClass ω a = _
       rw [h_state]
       -- Now everything is ℂ-linear, so `smul_apply` works and the normalizations cancel.
       have hrhs :
@@ -172,19 +172,19 @@ lemma trichotomy_from_purity {ψ : PureState A}
     have rhs_eq : (t : ℂ) • φ + (1 - (t : ℂ)) • χ = (t : ℝ) • φ + (1 - t) • χ := by
       rw [← ht_smul, ← h1_smul]
     exact h_sum_c.trans rhs_eq
-  -- ψ is an extreme point
+  -- ω is an extreme point
   exfalso
-  have h_ext : ψ.val ∈ Set.extremePoints ℝ (QuasiStateSpace A) := ψ.property.1
+  have h_ext : ω.val ∈ Set.extremePoints ℝ (QuasiStateSpace A) := hω
   have h_t_in_Ioo : t ∈ Set.Ioo (0 : ℝ) 1 := ⟨h_pos, h_lt_one⟩
-  -- ψ.val ∈ openSegment ℝ χ φ
-  have h_in_seg : ψ.val ∈ openSegment ℝ χ φ :=
+  -- ω.val ∈ openSegment ℝ χ φ
+  have h_in_seg : ω.val ∈ openSegment ℝ χ φ :=
     ⟨1 - t, t, sub_pos.mpr h_lt_one, h_pos, by ring, by rw [h_sum, add_comm]⟩
   have h_ext_iff := mem_extremePoints.mp h_ext
   obtain ⟨h_eq1, h_eq2⟩ := h_ext_iff.2 χ hχ_mem φ hφ_mem h_in_seg
   -- φ = χ implies contradiction
   have h_eq : φ = χ := by rw [h_eq2, ← h_eq1]
   -- Contradiction via density
-  have h_dense : Dense (Set.range (T.orbit T.ξ)) := T.cyclic
+  have h_dense : Dense (Set.range (T.orbit T.ξ)) := T.denseRange_orbit
   have hv₁_mem_closure : v₁ ∈ closure (Set.range (T.orbit T.ξ)) := by
     rw [h_dense.closure_eq]
     exact Set.mem_univ v₁
@@ -346,7 +346,7 @@ lemma eq_top_of_norm_sq_eq_opNorm (T : Representation f)
   have h_orbit_le : Set.range (T.orbit T.ξ) ⊆ W := by
     rintro _ ⟨a, rfl⟩
     exact CStarRep.apply_mem_of_mem_invtSubmodule hW a hξ_in_W
-  exact eq_top_iff.mpr fun x _ => closure_minimal h_orbit_le W.isClosed (T.cyclic x)
+  exact eq_top_iff.mpr fun x _ => closure_minimal h_orbit_le W.isClosed (T.denseRange_orbit x)
 
 /-- If the component of `ξ` in a closed invariant submodule `W` vanishes, then `W = ⊥`:
 `ξ ∈ Wᗮ`, so the closed invariant submodule `Wᗮ` contains the dense orbit of `ξ`. -/
@@ -363,21 +363,21 @@ lemma eq_bot_of_norm_sq_eq_zero (T : Representation f)
     rintro _ ⟨a, rfl⟩
     exact CStarRep.apply_mem_of_mem_invtSubmodule hWperp_inv a hξ_in_Wperp
   have : W.toSubmoduleᗮ = ⊤ := eq_top_iff.mpr fun x _ =>
-    closure_minimal h_orbit_le (Submodule.isClosed_orthogonal _) (T.cyclic x)
+    closure_minimal h_orbit_le (Submodule.isClosed_orthogonal _) (T.denseRange_orbit x)
   rw [Submodule.orthogonal_eq_top_iff] at this
   exact ClosedSubmodule.toSubmodule_injective this
 
 /-- The GNS representation of a pure state is irreducible: the forward direction of
-`GNS.Representation.isPureState_iff_isIrreducible`, for the canonical triplet. -/
-lemma pureState_gns_isIrreducible {ψ : PureState A} :
-    (GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)).IsIrreducible := by
-  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ψ.toState)
-  refine ⟨T.π_ne_zero ψ.toState.ofClass_ne_zero, fun W hW => ?_⟩
+`GNS.Representation.isPure_iff_isIrreducible`, for the canonical triplet. -/
+lemma isIrreducible_canonical_of_isPure {ω : State A} (hω : ω.IsPure) :
+    (GNS.Representation.canonical (PositiveLinearMap.ofClass ω)).IsIrreducible := by
+  let T := GNS.Representation.canonical (PositiveLinearMap.ofClass ω)
+  refine CStarRep.isIrreducible_iff.mpr ⟨T.π_ne_zero ω.ofClass_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
-  rcases trichotomy_from_purity W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
+  rcases trichotomy_from_purity hω W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
   · exact Or.inr (eq_top_of_norm_sq_eq_opNorm T W hW v₁ v₂ hv₁ hξ horth
-      (h_one.trans ψ.toState.opNorm_ofClass_eq_one.symm))
+      (h_one.trans ω.opNorm_ofClass_eq_one.symm))
 
 /-- Irreducibility is a property of the GNS representation, not of the chosen triplet: any two
 GNS triplets of `f` are unitarily equivalent (`unique_up_to_unitary_equivalence`), and
@@ -431,14 +431,13 @@ private lemma norm_le_of_smul_eq {ω : State A} {φ : WeakDual ℂ A} (hφ : φ 
   exact mul_le_of_le_one_right ht (mem_closedBall_zero_iff.mp hφ.2)
 
 /-- A state whose GNS representation is irreducible is pure: the converse direction of
-`GNS.Representation.isPureState_iff_isIrreducible`, for the canonical triplet. If `ω = t φ + (1 - t) χ` with
+`GNS.Representation.isPure_iff_isIrreducible`, for the canonical triplet. If `ω = t φ + (1 - t) χ` with
 quasi-states `φ`, `χ` and `0 < t < 1`, then `t φ = c ω` and `(1 - t) χ = d ω` by Radon–Nikodym and
 Schur, with `c + d = 1`, `‖c‖ ≤ t` and `‖d‖ ≤ 1 - t`; so `c = t`, `d = 1 - t` and `φ = χ = ω`. -/
-lemma isPureState_of_isIrreducible {ω : State A}
-    (h : (canonical (PositiveLinearMap.ofClass ω)).IsIrreducible) : IsPureState ω.val := by
+lemma isPure_of_isIrreducible {ω : State A}
+    (h : (canonical (PositiveLinearMap.ofClass ω)).IsIrreducible) : ω.IsPure := by
   have hω0 : ω.val ≠ 0 := fun h0 => by simpa [h0] using ω.norm_eq_one
-  refine ⟨mem_extremePoints.mpr ⟨StateSpace.subset_quasiStateSpace ω.2, fun φ hφ χ hχ hseg => ?_⟩,
-    hω0⟩
+  refine mem_extremePoints.mpr ⟨StateSpace.subset_quasiStateSpace ω.2, fun φ hφ χ hχ hseg => ?_⟩
   obtain ⟨a, b, ha, hb, hab, hsum⟩ := hseg
   have hpos : ∀ (t : ℝ), 0 ≤ t → ∀ θ ∈ QuasiStateSpace A, ∀ x : A, 0 ≤ x → 0 ≤ (t • θ) x :=
     fun t ht θ hθ x hx => by
@@ -476,12 +475,11 @@ lemma isPureState_of_isIrreducible {ω : State A}
 /-- **Pure states are exactly the states with irreducible GNS representation** (Murphy,
 *C\*-algebras and Operator Theory*, Thm. 5.1.6; Bratteli–Robinson, Thm. 2.3.19), for every GNS
 triplet `T` of the state. -/
-theorem isPureState_iff_isIrreducible (ω : State A)
+theorem isPure_iff_isIrreducible (ω : State A)
     (T : Representation (PositiveLinearMap.ofClass ω)) :
-    IsPureState ω.val ↔ T.IsIrreducible := by
+    ω.IsPure ↔ T.IsIrreducible := by
   rw [isIrreducible_iff_canonical]
-  refine ⟨fun hω => ?_, isPureState_of_isIrreducible⟩
-  exact pureState_gns_isIrreducible (ψ := ⟨ω.val, hω⟩)
+  exact ⟨isIrreducible_canonical_of_isPure, isPure_of_isIrreducible⟩
 
 end Representation
 

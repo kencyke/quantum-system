@@ -12,9 +12,10 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubsp
 # Irreducibility for `CStarRep`
 
 A `*`-representation `R : CStarRep A` is *(topologically) irreducible*
-when it is non-null and the only members of its lattice of closed invariant subspaces
-(`CStarRep.closedInvtSubmodule`, a sublattice of Mathlib's `ClosedSubmodule ℂ R.H`) are `⊥`
-and `⊤`.  The predicate
+when it is non-null and the set of operators `π(A)` is topologically irreducible
+(`InnerProductSpace.IsTopologicallyIrreducible`): the only members of its lattice of closed
+invariant subspaces (`CStarRep.closedInvtSubmodule`, a sublattice of Mathlib's
+`ClosedSubmodule ℂ R.H`) are `⊥` and `⊤` (`CStarRep.isIrreducible_iff`).  The predicate
 is defined here for a general `CStarRep A` (no cyclic vector, no state); since
 `GNS.Representation` extends `CStarRep`, a GNS triplet `T` uses it directly as
 `T.IsIrreducible` (and `T.invtSubmodule`).  The file also proves that
@@ -29,8 +30,7 @@ descend to the quotient).
   C\*-analogue of Mathlib's `Representation.invtSubmodule`.
 * `CStarRep.closedInvtSubmodule R` — the sublattice of closed submodules stable under every
   `R.π a`.
-* `CStarRep.IsIrreducible R` — `R` is non-null and the only closed
-  `R`-invariant submodules are `⊥` and `⊤`.
+* `CStarRep.IsIrreducible R` — `R` is non-null and `π(A)` is topologically irreducible.
 
 ## Main results
 
@@ -126,8 +126,10 @@ lemma mem_closedInvtSubmodule {W : ClosedSubmodule ℂ R.H} :
     (⊥ : ClosedSubmodule ℂ R.H) ∈ R.closedInvtSubmodule := by
   simp [mem_closedInvtSubmodule]
 
-/-- A representation is (topologically) irreducible if it is non-null and its only closed
-invariant submodules are `⊥` and `⊤` (Murphy, *C\*-algebras and Operator Theory*, §5.1).
+/-- A representation is (topologically) irreducible if it is non-null and the operators `π(A)`
+are topologically irreducible: their only closed invariant subspaces are `⊥` and `⊤`
+(`InnerProductSpace.IsTopologicallyIrreducible`; Murphy, *C\*-algebras and Operator Theory*,
+§5.1). In terms of the closed invariant submodules of `R` this is `CStarRep.isIrreducible_iff`.
 
 Non-nullness is part of the definition: without it the zero representation on a
 one-dimensional space would be irreducible, and no family of non-null representations could
@@ -135,8 +137,29 @@ be a complete system of irreducible representatives (`SectorFamily.IsComplete`).
 structure IsIrreducible (R : CStarRep A) : Prop where
   /-- The representation is non-null: `π ≠ 0`. -/
   ne_zero : R.π ≠ 0
-  /-- The only closed invariant submodules are `⊥` and `⊤`. -/
-  eq_bot_or_eq_top : ∀ W ∈ R.closedInvtSubmodule, W = ⊥ ∨ W = ⊤
+  /-- The operators `π(A)` are topologically irreducible. -/
+  isTopologicallyIrreducible :
+    InnerProductSpace.IsTopologicallyIrreducible (Set.range (R.π : A → R.H →L[ℂ] R.H))
+
+/-- A closed submodule is a closed invariant submodule of `R` iff it is invariant under every
+operator of `π(A)`, the invariance in `InnerProductSpace.IsTopologicallyIrreducible`. -/
+lemma mem_closedInvtSubmodule_iff_forall_mem_range {W : ClosedSubmodule ℂ R.H} :
+    W ∈ R.closedInvtSubmodule ↔ ∀ T ∈ Set.range (R.π : A → R.H →L[ℂ] R.H),
+      W.toSubmodule ∈ Module.End.invtSubmodule (T : Module.End ℂ R.H) := by
+  rw [mem_closedInvtSubmodule, mem_invtSubmodule]
+  exact ⟨by rintro h _ ⟨a, rfl⟩; exact h a, fun h a => h _ ⟨a, rfl⟩⟩
+
+/-- `R` is irreducible iff it is non-null and its only closed invariant submodules are `⊥` and
+`⊤`. -/
+lemma isIrreducible_iff :
+    R.IsIrreducible ↔ R.π ≠ 0 ∧ ∀ W ∈ R.closedInvtSubmodule, W = ⊥ ∨ W = ⊤ := by
+  simp only [mem_closedInvtSubmodule_iff_forall_mem_range]
+  exact ⟨fun h => ⟨h.ne_zero, h.isTopologicallyIrreducible⟩, fun ⟨hne, h⟩ => ⟨hne, h⟩⟩
+
+/-- The only closed invariant submodules of an irreducible representation are `⊥` and `⊤`. -/
+lemma IsIrreducible.eq_bot_or_eq_top (h : R.IsIrreducible) :
+    ∀ W ∈ R.closedInvtSubmodule, W = ⊥ ∨ W = ⊤ :=
+  (isIrreducible_iff.mp h).2
 
 namespace UnitaryEquiv
 
@@ -144,7 +167,7 @@ namespace UnitaryEquiv
 transports irreducibility. -/
 private lemma isIrreducible_of {R₁ R₂ : CStarRep A}
     (U : UnitaryEquiv R₁ R₂) (h₁ : R₁.IsIrreducible) : R₂.IsIrreducible := by
-  refine ⟨fun h₂ => h₁.ne_zero ?_, fun W hW => ?_⟩
+  refine CStarRep.isIrreducible_iff.mpr ⟨fun h₂ => h₁.ne_zero ?_, fun W hW => ?_⟩
   · -- If `π₂ = 0`, then `U (π₁ a x) = π₂ a (U x) = 0`, so `π₁ a x = 0` by injectivity of `U`.
     ext a x
     apply U.toLinearIsometryEquiv.injective
@@ -185,10 +208,6 @@ theorem isIrreducible_iff_centralizer (R : CStarRep A) :
       R.π ≠ 0 ∧ ∀ x ∈ Set.centralizer (Set.range R.π), ∃ c : ℂ, x = c • (1 : R.H →L[ℂ] R.H) := by
   rw [InnerProductSpace.centralizer_eq_scalars_iff (S := Set.range R.π)
     (by rintro _ ⟨a, rfl⟩; exact ⟨star a, map_star _ _⟩)]
-  refine ⟨fun h => ⟨h.ne_zero, fun W hW => h.eq_bot_or_eq_top W
-      (mem_invtSubmodule.mpr fun a => hW _ ⟨a, rfl⟩)⟩,
-    fun ⟨hne, h⟩ => ⟨hne, fun W hW => h W ?_⟩⟩
-  rintro _ ⟨a, rfl⟩
-  exact mem_invtSubmodule.mp hW a
+  exact ⟨fun h => ⟨h.ne_zero, h.isTopologicallyIrreducible⟩, fun ⟨hne, h⟩ => ⟨hne, h⟩⟩
 
 end CStarRep

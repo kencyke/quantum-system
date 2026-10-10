@@ -43,7 +43,7 @@ on the integer chain with `ofCThickening ℤ 1`, `Set.Iic 0 ⋐ Set.Iic 2`, and
 
 What is not proved is Matsui's characterisation for pure states — the half-chain split property
 holds iff `𝓡(Iic 0)` is a type I factor. The representation-theoretic input is available — the
-GNS representation of a pure state is irreducible (`GNS.Representation.isPureState_iff_isIrreducible`)
+GNS representation of a pure state is irreducible (`GNS.Representation.isPure_iff_isIrreducible`)
 and so has commutant `ℂ1` (`CStarRep.isIrreducible_iff_centralizer`) — but the argument also needs
 joins of von Neumann algebras, which the development does not have yet. Cones need a cone region
 type and are not built here. No spin net is built either, so no non-trivial positive model of the

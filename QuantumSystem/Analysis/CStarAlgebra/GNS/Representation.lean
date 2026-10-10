@@ -62,16 +62,17 @@ Inherited fields (from `CStarRep A`):
 GNS-specific fields:
 * `ξ : H` : a cyclic vector; its norm is automatically `√‖f‖ₒₚ` (`norm_ξ`), so it is a unit
   vector exactly when `f` is a state.
-* `cyclic` : density of the orbit `{ π a ξ | a : A }` in `H`, i.e. of the range of the orbit map
-  `CStarRep.orbit ξ`.  The orbit is already a linear subspace, so no linear span is needed.
+* `cyclic` : `ξ` is a cyclic vector for the operators `π(A)` (`InnerProductSpace.IsCyclicVector`),
+  i.e. the orbit `{ π a ξ | a : A }` is dense in `H` (`denseRange_orbit`; the orbit is already a
+  linear subspace, `CStarRep.isCyclicVector_iff_denseRange_orbit`).
 * `gns_condition` : the GNS identity `f a = ⟪ξ, π a ξ⟫` for every `a : A`.
 -/
 structure Representation {A} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     (f : A →ₚ[ℂ] ℂ) extends CStarRep A where
   /-- The cyclic vector ξ ∈ H -/
   ξ : H
-  /-- The cyclic property: the orbit {π(a)ξ : a ∈ A} is dense in H -/
-  cyclic : DenseRange (toCStarRep.orbit ξ)
+  /-- `ξ` is a cyclic vector for the operators `π(A)`. -/
+  cyclic : InnerProductSpace.IsCyclicVector (Set.range (π : A → H →L[ℂ] H)) ξ
   /-- The GNS condition: f(a) = ⟪ξ, π(a)ξ⟫ for all a ∈ A -/
   gns_condition : ∀ a : A, f a = ⟪ξ, π a ξ⟫_ℂ
 
@@ -81,6 +82,10 @@ open ComplexConjugate PositiveLinearMap
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable {f : A →ₚ[ℂ] ℂ}
+
+/-- The orbit `{π a ξ | a : A}` of the cyclic vector is dense. -/
+lemma denseRange_orbit (T : Representation f) : DenseRange (T.orbit T.ξ) :=
+  (T.isCyclicVector_iff_denseRange_orbit T.ξ).mp T.cyclic
 
 /-- A GNS representation acts non-degenerately: the only vector annihilated by every
 operator in the image of `π` is `0`.
@@ -97,7 +102,7 @@ theorem actsNondegenerately (T : Representation f) :
     rw [← T.adjoint_π] at h
     simp only [CStarRep.orbit_apply]
     rw [← ContinuousLinearMap.adjoint_inner_left, h, inner_zero_left]
-  have h_zero := Continuous.ext_on T.cyclic (by fun_prop) continuous_const h_orbit
+  have h_zero := Continuous.ext_on T.denseRange_orbit (by fun_prop) continuous_const h_orbit
   exact inner_self_eq_zero.mp (congrFun h_zero x)
 
 /-! ### Approximate units act as the identity
@@ -141,7 +146,7 @@ theorem tendsto_π_approximateUnit (x : T.H) :
   rw [Metric.tendsto_nhds]
   intro ε hε
   -- Approximate `x` within `ε / 4` by an orbit vector `y = π b ξ`.
-  obtain ⟨b, hy_dist⟩ := T.cyclic.exists_dist_lt x (by positivity : 0 < ε / 4)
+  obtain ⟨b, hy_dist⟩ := T.denseRange_orbit.exists_dist_lt x (by positivity : 0 < ε / 4)
   set y := T.π b T.ξ
   have hy_norm : ‖x - y‖ < ε / 4 := by rwa [dist_eq_norm] at hy_dist
   have hy := (Metric.tendsto_nhds.mp (T.tendsto_π_approximateUnit_orbit b)) (ε / 2) (by positivity)
@@ -200,7 +205,7 @@ theorem π_eq_zero_iff (T : Representation f) : T.π = 0 ↔ f = 0 := by
   · rintro rfl
     have hξ : T.ξ = 0 := by
       rw [← norm_eq_zero, T.norm_ξ, (opNorm_eq_zero_iff 0).mpr rfl, Real.sqrt_zero]
-    have hH : ∀ x : T.H, x = 0 := fun x => congrFun (Continuous.ext_on T.cyclic continuous_id
+    have hH : ∀ x : T.H, x = 0 := fun x => congrFun (Continuous.ext_on T.denseRange_orbit continuous_id
       continuous_const (by rintro _ ⟨a, rfl⟩; simp [hξ])) x
     ext a x
     simp [hH (T.π a x)]
@@ -244,7 +249,7 @@ identity of `A` through the two dense orbit maps (`LinearEquiv.extendOfIsometry`
 vectors have matching norms since both equal `√‖f (a* a)‖` (`norm_apply_cyclic`). -/
 private noncomputable def cyclicIsometry (T₁ T₂ : Representation f) : T₁.H ≃ₗᵢ[ℂ] T₂.H :=
   (LinearEquiv.refl ℂ A).extendOfIsometry (T₁.orbit T₁.ξ).toLinearMap
-    (T₂.orbit T₂.ξ).toLinearMap T₁.cyclic T₂.cyclic fun a => by
+    (T₂.orbit T₂.ξ).toLinearMap T₁.denseRange_orbit T₂.denseRange_orbit fun a => by
       simp [norm_apply_cyclic]
 
 private lemma cyclicIsometry_apply_orbit (T₁ T₂ : Representation f) (a : A) :
@@ -257,7 +262,7 @@ private lemma cyclicIsometry_intertwines (T₁ T₂ : Representation f) (a : A) 
     (cyclicIsometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) ∘L T₁.π a =
       T₂.π a ∘L (cyclicIsometry T₁ T₂ : T₁.H →L[ℂ] T₂.H) := by
   refine DFunLike.coe_injective <|
-    Continuous.ext_on T₁.cyclic (map_continuous _) (map_continuous _) ?_
+    Continuous.ext_on T₁.denseRange_orbit (map_continuous _) (map_continuous _) ?_
   rintro _ ⟨b, rfl⟩
   have h₁ : T₁.π a (T₁.π b T₁.ξ) = T₁.π (a * b) T₁.ξ := by rw [map_mul]; rfl
   have h₂ : T₂.π a (T₂.π b T₂.ξ) = T₂.π (a * b) T₂.ξ := by rw [map_mul]; rfl
@@ -294,7 +299,8 @@ variable (f) in
 noncomputable def canonical : Representation f where
   toCStarRep := f.gnsCStarRep
   ξ := f.gnsVector
-  cyclic := f.denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
+  cyclic := (f.gnsCStarRep.isCyclicVector_iff_denseRange_orbit _).mpr
+    f.denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
   gns_condition := f.apply_eq_inner_gnsNonUnitalStarAlgHom_gnsVector
 
 section Canonical

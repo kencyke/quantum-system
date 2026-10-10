@@ -16,15 +16,20 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 /-!
 # Pure states on a C*-algebra
 
-A pure state on a (possibly non-unital) C*-algebra `A` is a nonzero extreme point of the
-quasi-state space of `A`, viewed inside `WeakDual ℂ A`.
+A state on a (possibly non-unital) C*-algebra `A` is pure if it is an extreme point of the
+quasi-state space `QuasiStateSpace A` of `A`, viewed inside `WeakDual ℂ A`. Purity is a predicate
+on `State A`, not a separate type, as the module doc of `QuantumSystem.Analysis.CStarAlgebra.State.Basic`
+prescribes for classes of states.
 
 ## Main definitions
 
-* `IsPureState φ`: `φ` is a nonzero extreme point of `QuasiStateSpace A`.
-* `IsPureState.toState`: the state underlying a pure state; pure states lie in the state space
-  (`IsPureState.mem_stateSpace`), so this is the inclusion.
-* `PureState A`: the subtype of pure states, with `PureState.toState`.
+* `State.IsPure ω`: the state `ω` is an extreme point of `QuasiStateSpace A`.
+
+## Main results
+
+* `State.exists_isPure_norm_sq_of_ne_zero` — for `a ≠ 0` some pure state norms `a`:
+  `ω (a* a) = ‖a‖²`.
+* `State.exists_isPure_pos_of_ne_zero` — for `a ≠ 0` some pure state has `0 < ω (a* a)`.
 -/
 
 @[expose] public section
@@ -34,9 +39,11 @@ open scoped ComplexOrder
 variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 variable {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B]
 
-/-- A pure state is an extreme point of the quasi-state space, excluding zero. -/
-def IsPureState (φ : WeakDual ℂ A) : Prop :=
-  φ ∈ Set.extremePoints ℝ (QuasiStateSpace A) ∧ φ ≠ 0
+omit [StarOrderedRing A] in
+/-- A state `ω` is **pure** if it is an extreme point of the quasi-state space
+`QuasiStateSpace A`, the positive functionals of norm at most one. -/
+def State.IsPure (ω : State A) : Prop :=
+  ω.val ∈ Set.extremePoints ℝ (QuasiStateSpace A)
 
 
 /-- A linear functional with norm 1 that maps 1 to 1 is necessarily positive: by Mathlib's
@@ -146,14 +153,12 @@ private lemma exists_quasiState_norm (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
   · exact hψb_eq
 
 
-namespace IsPureState
-
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
 omit [StarOrderedRing A] in
-/-- Every pure state has operator norm equal to 1. -/
-lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStrongDual φ‖ = 1 := by
-  obtain ⟨h_ext, h_ne_zero⟩ := h
+/-- A nonzero extreme point of the quasi-state space has operator norm `1`: a quasi-state `φ` of
+norm `r ∈ (0, 1)` lies on the open segment from `0` to `r⁻¹ φ`. -/
+private lemma norm_eq_one_of_mem_extremePoints {φ : WeakDual ℂ A}
+    (h_ext : φ ∈ Set.extremePoints ℝ (QuasiStateSpace A)) (h_ne_zero : φ ≠ 0) :
+    ‖WeakDual.toStrongDual φ‖ = 1 := by
   have h_mem : φ ∈ QuasiStateSpace A := h_ext.1
   have h_norm_le : ‖WeakDual.toStrongDual φ‖ ≤ 1 := by
     simpa [QuasiStateSpace] using h_mem.2
@@ -213,30 +218,12 @@ lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStr
     exact h_ne_zero rfl
   exact h_not_ext h_ext
 
-omit [StarOrderedRing A] in
-/-- A pure state is a state: it is positive and has norm one (`IsPureState.norm_eq_one`). -/
-lemma mem_stateSpace {φ : WeakDual ℂ A} (h : IsPureState φ) : φ ∈ StateSpace A :=
-  mem_stateSpace_iff.mpr ⟨h.1.1.1, norm_eq_one h⟩
-
-omit [StarOrderedRing A] in
-/-- The state underlying a pure state: the functional itself, as an element of the state space
-(`IsPureState.mem_stateSpace`). -/
-def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State A :=
-  ⟨φ, h.mem_stateSpace⟩
-
-/-- For any non-zero element `a`, there exists a pure state `φ` **norming** `a`:
-`φ (star a * a) = ‖a‖ ^ 2`, viewed in `ℂ`.
-
-This is the quantitative form of the existence of pure states.  It says that the pure
-states do not merely detect `a` but recover its norm, which is what lets a *countable*
-family of pure states — one for each member of a dense sequence — separate the points of a
-separable C\*-algebra.  For the weaker detection statement see
-`exists_pos_of_ne_zero`, which is a corollary.
-
-The value is stated as an equality with the real number `‖a‖ ^ 2` coerced into `ℂ`, which
-records both that it is real and what it is. -/
-lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
-  ∃ φ : WeakDual ℂ A, IsPureState φ ∧ φ (star a * a) = ((‖a‖ ^ 2 : ℝ) : ℂ) := by
+/-- For `a ≠ 0`, a nonzero extreme point `φ` of the quasi-state space with
+`φ (star a * a) = ‖a‖ ^ 2`: maximise `re φ (a* a)` over the compact convex quasi-state space and
+take an extreme point of the exposed face of maximisers (Krein–Milman). -/
+private lemma exists_mem_extremePoints_norm_sq (a : A) (ha : a ≠ 0) :
+    ∃ φ : WeakDual ℂ A, (φ ∈ Set.extremePoints ℝ (QuasiStateSpace A) ∧ φ ≠ 0) ∧
+      φ (star a * a) = ((‖a‖ ^ 2 : ℝ) : ℂ) := by
   let b := star a * a
   have hb_ne_zero : b ≠ 0 := by
     rw [ne_eq, CStarRing.star_mul_self_eq_zero_iff]
@@ -322,7 +309,7 @@ lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
   have hF_nonempty : F.Nonempty := ⟨φ, hφ_mem, fun z hz => hφ_max hz⟩
   have hF_compact : IsCompact F := h_exposed.isCompact (QuasiStateSpace.compact A)
   obtain ⟨ψ, hψ_mem_F, hψ_ext⟩ := hF_compact.extremePoints_nonempty hF_nonempty
-  have hψ_ext_S : IsPureState ψ := by
+  have hψ_ext_S : ψ ∈ Set.extremePoints ℝ (QuasiStateSpace A) ∧ ψ ≠ 0 := by
     constructor
     · exact h_exposed.isExtreme.extremePoints_subset_extremePoints ⟨hψ_mem_F, hψ_ext⟩
     · intro h
@@ -368,41 +355,36 @@ lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
     rw [← hb_norm, ← hψ_re_eq]
     exact Complex.ext (by simp) (by simpa using (Complex.nonneg_iff.mp hψb).2.symm)
 
+namespace State
+
+/-- For any non-zero element `a`, some pure state `ω` **norms** `a`:
+`ω (star a * a) = ‖a‖ ^ 2`, viewed in `ℂ`.
+
+This is the quantitative form of the existence of pure states.  It says that the pure
+states do not merely detect `a` but recover its norm, which is what lets a *countable*
+family of pure states — one for each member of a dense sequence — separate the points of a
+separable C\*-algebra.  For the weaker detection statement see
+`State.exists_isPure_pos_of_ne_zero`, which is a corollary.
+
+The value is stated as an equality with the real number `‖a‖ ^ 2` coerced into `ℂ`, which
+records both that it is real and what it is. -/
+lemma exists_isPure_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
+    ∃ ω : State A, ω.IsPure ∧ ω (star a * a) = ((‖a‖ ^ 2 : ℝ) : ℂ) := by
+  obtain ⟨φ, ⟨h_ext, h_ne⟩, hφ⟩ := exists_mem_extremePoints_norm_sq a ha
+  exact ⟨⟨φ, mem_stateSpace_iff.mpr ⟨h_ext.1.1, norm_eq_one_of_mem_extremePoints h_ext h_ne⟩⟩,
+    h_ext, hφ⟩
+
 /-- For any non-zero element `a`, some pure state is strictly positive on `a* a`:
-`0 < φ (star a * a)` in the order of `ℂ` (`ComplexOrder`), i.e. the value is a strictly
+`0 < ω (star a * a)` in the order of `ℂ` (`ComplexOrder`), i.e. the value is a strictly
 positive real number.
 
-This is the detection form of `exists_norm_sq_of_ne_zero`; the witness it discards is the
-norm itself. -/
-lemma exists_pos_of_ne_zero (a : A) (ha : a ≠ 0) :
-    ∃ φ : WeakDual ℂ A, IsPureState φ ∧ 0 < φ (star a * a) := by
-  obtain ⟨φ, hφ_pure, hφ_eq⟩ := exists_norm_sq_of_ne_zero a ha
-  refine ⟨φ, hφ_pure, ?_⟩
-  rw [hφ_eq]
+This is the detection form of `State.exists_isPure_norm_sq_of_ne_zero`; the witness it discards
+is the norm itself. -/
+lemma exists_isPure_pos_of_ne_zero (a : A) (ha : a ≠ 0) :
+    ∃ ω : State A, ω.IsPure ∧ 0 < ω (star a * a) := by
+  obtain ⟨ω, hω_pure, hω_eq⟩ := exists_isPure_norm_sq_of_ne_zero a ha
+  refine ⟨ω, hω_pure, ?_⟩
+  rw [hω_eq]
   exact Complex.zero_lt_real.mpr (pow_pos (norm_pos_iff.mpr ha) 2)
 
-end IsPureState
-
-
-/-- The type of pure states on a non-unital C*-algebra `A`, packaged as a subtype
-of `WeakDual ℂ A`. -/
-def PureState (A : Type*) [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] :=
-  { φ : WeakDual ℂ A // IsPureState φ }
-
-namespace PureState
-
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-
-/-- The state underlying a pure state.
-
-This is the *only* spelling of the map `PureState A → State A`; there is deliberately no
-coercion instance alongside it, so that every downstream result is stated in the same form. -/
-def toState (ψ : PureState A) : State A :=
-  IsPureState.toState ψ.property
-
-/-- The state underlying a pure state evaluates as the pure state itself: `ψ.toState a = ψ.val a`. -/
-@[simp]
-lemma toState_apply (ψ : PureState A) (a : A) :
-    ψ.toState a = ψ.val a := rfl
-
-end PureState
+end State

@@ -114,9 +114,11 @@ lemma norm_gnsRep_le (a : A) : ‖π[ω] a‖ ≤ ‖a‖ :=
 lemma gnsRep_apply_gnsVector (a : A) : π[ω] a ξ[ω] = (PositiveLinearMap.ofClass ω).gnsMk a :=
   (PositiveLinearMap.ofClass ω).gnsNonUnitalStarAlgHom_apply_gnsVector a
 
-/-- Cyclicity of `ξ[ω]`: the orbit `{π[ω] a ξ[ω] | a : A}` is dense in `𝓗[ω]`. -/
-lemma gnsVector_cyclic : DenseRange ((PositiveLinearMap.ofClass ω).gnsCStarRep.orbit ξ[ω]) :=
-  (PositiveLinearMap.ofClass ω).denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
+/-- Cyclicity of `ξ[ω]`: `ξ[ω]` is a cyclic vector for `π[ω](A)`, i.e. the orbit
+`{π[ω] a ξ[ω] | a : A}` is dense in `𝓗[ω]` (`CStarRep.isCyclicVector_iff_denseRange_orbit`). -/
+lemma gnsVector_cyclic : InnerProductSpace.IsCyclicVector (Set.range (π[ω] : A → 𝓗[ω] →L[ℂ] 𝓗[ω])) ξ[ω] :=
+  ((PositiveLinearMap.ofClass ω).gnsCStarRep.isCyclicVector_iff_denseRange_orbit _).mpr
+    (PositiveLinearMap.ofClass ω).denseRange_gnsNonUnitalStarAlgHom_apply_gnsVector
 
 /-- The GNS identity `ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫`. -/
 lemma gns_condition (a : A) : ω a = ⟪ξ[ω], π[ω] a ξ[ω]⟫_ℂ :=

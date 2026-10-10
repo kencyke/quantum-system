@@ -38,7 +38,7 @@ Gelfand-Naimark theorem — Gelfand duality — which Mathlib carries as
 
 The witness for the first three is `GNS.DirectSum.rep`, the ℓ²-direct sum of the GNS
 representations of all pure states of `A`; faithfulness comes from there being enough pure
-states (`IsPureState.exists_pos_of_ne_zero`), and isometry from faithfulness by
+states (`State.exists_isPure_pos_of_ne_zero`), and isometry from faithfulness by
 `NonUnitalStarAlgHom.norm_map`. The separable refinement uses a different witness,
 `GNS.normingRep`, indexed by a dense sequence of the algebra instead of by the whole pure
 state space.

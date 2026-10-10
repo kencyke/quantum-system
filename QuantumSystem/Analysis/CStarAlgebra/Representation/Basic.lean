@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
 /-!
 # Bundled `*`-representations of a C\*-algebra on a complex Hilbert space
@@ -133,5 +134,20 @@ noncomputable def orbit (R : CStarRep A) (v : R.H) : A →L[ℂ] R.H :=
 /-- The orbit map of `v` has operator norm at most `‖v‖`. -/
 lemma norm_orbit_le (R : CStarRep A) (v : R.H) : ‖R.orbit v‖ ≤ ‖v‖ :=
   LinearMap.mkContinuous_norm_le _ (norm_nonneg v) _
+
+/-- `v` is a cyclic vector for the operators `π(A)` (`InnerProductSpace.IsCyclicVector`) iff its
+orbit `{π a v | a ∈ A}` is dense: the orbit is the range of the linear map `R.orbit v`, hence
+already a linear subspace, so the closure of its span is its closure. -/
+lemma isCyclicVector_iff_denseRange_orbit (R : CStarRep A) (v : R.H) :
+    InnerProductSpace.IsCyclicVector (Set.range (R.π : A → R.H →L[ℂ] R.H)) v ↔
+      DenseRange (R.orbit v) := by
+  have hrange : (Set.range fun T : Set.range (R.π : A → R.H →L[ℂ] R.H) =>
+      (T : R.H →L[ℂ] R.H) v) = (LinearMap.range (R.orbit v : A →ₗ[ℂ] R.H) : Set R.H) := by
+    ext y
+    simp [eq_comm]
+  rw [InnerProductSpace.isCyclicVector_iff, InnerProductSpace.cyclicSubspace, hrange,
+    Submodule.span_eq, ← SetLike.coe_set_eq, ClosedSubmodule.coe_top, DenseRange,
+    dense_iff_closure_eq]
+  rfl
 
 end CStarRep

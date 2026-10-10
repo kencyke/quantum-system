@@ -17,9 +17,9 @@ A *state* on a (possibly non-unital) C\*-algebra `A` is a positive linear functi
 
 As in Bratteli–Robinson, a state is an element of the dual: `State A` is the subtype of the state
 space `StateSpace A ⊆ WeakDual ℂ A` (`QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace`),
-the convex set of positive functionals of norm one. Convexity statements about states (such as the concavity
-of the von Neumann entropy) are stated on `StateSpace A` with Mathlib's `Convex`/`ConcaveOn`, and
-pure states (`PureState A`) are elements of the same dual.
+the convex set of positive functionals of norm one. Convexity statements about states (such as the
+concavity of the von Neumann entropy) are stated on `StateSpace A` with Mathlib's
+`Convex`/`ConcaveOn`, and purity (`State.IsPure`) is extremality in the same dual.
 
 A state is a `ContinuousLinearMapClass` and an `OrderHomClass`, so results about positive linear
 functionals apply to `PositiveLinearMap.ofClass ω`, and `*`-preservation comes for free

@@ -19,7 +19,7 @@ is separable. This file builds the countable replacement.
 
 The idea is to index not by states but by a dense sequence of the algebra: for each nonzero
 member `aₙ` of a countable dense sequence, pick a pure state that **norms** `aₙ`
-(`IsPureState.exists_norm_sq_of_ne_zero`), and take the ℓ²-direct sum of the corresponding
+(`State.exists_isPure_norm_sq_of_ne_zero`), and take the ℓ²-direct sum of the corresponding
 GNS representations. Norming — rather than merely detecting — is what makes a countable
 family enough: for `a ≠ 0` and `aₙ` within `‖a‖ / 2` of `a`, the `n`-th representation
 cannot annihilate `a`, because it does not shrink `aₙ`.
@@ -66,7 +66,7 @@ The orbit map `a ↦ T.π a T.ξ` is continuous (`CStarRep.orbit` is a continuou
 dense range (cyclicity). -/
 theorem separableSpace_H [SeparableSpace A] {f : A →ₚ[ℂ] ℂ} (T : Representation f) :
     SeparableSpace T.H :=
-  T.cyclic.separableSpace (T.orbit T.ξ).continuous
+  T.denseRange_orbit.separableSpace (T.orbit T.ξ).continuous
 
 end Representation
 
@@ -93,23 +93,27 @@ omit [PartialOrder A] [StarOrderedRing A] in
 /-- The element at a norming index is nonzero, by the definition of `NormingIndex`. -/
 lemma NormingIndex.elem_ne_zero [SeparableSpace A] (i : NormingIndex A) : i.elem ≠ 0 := i.2
 
-/-- A pure state norming the element at a norming index. -/
-noncomputable def normingState [SeparableSpace A] (i : NormingIndex A) : PureState A :=
-  ⟨(IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose,
-    (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.1⟩
+/-- A pure state norming the element at a norming index (`normingState_isPure`,
+`normingState_spec`). -/
+noncomputable def normingState [SeparableSpace A] (i : NormingIndex A) : State A :=
+  (State.exists_isPure_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose
+
+/-- The norming state at a norming index is pure. -/
+lemma normingState_isPure [SeparableSpace A] (i : NormingIndex A) : (normingState i).IsPure :=
+  (State.exists_isPure_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.1
 
 /-- The defining property of `normingState i`: it norms the element at `i`,
-`ψ (aᵢ* aᵢ) = ‖aᵢ‖ ^ 2`. -/
+`ω (aᵢ* aᵢ) = ‖aᵢ‖ ^ 2`. -/
 lemma normingState_spec [SeparableSpace A] (i : NormingIndex A) :
-    (normingState i).toState (star i.elem * i.elem) = ((‖i.elem‖ ^ 2 : ℝ) : ℂ) :=
-  (IsPureState.exists_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.2
+    normingState i (star i.elem * i.elem) = ((‖i.elem‖ ^ 2 : ℝ) : ℂ) :=
+  (State.exists_isPure_norm_sq_of_ne_zero i.elem i.elem_ne_zero).choose_spec.2
 
 variable (A) in
 /-- The **countable norming family**: one GNS representation for each nonzero member of a
 dense sequence of `A`, at a pure state norming that member. -/
 noncomputable def normingFamily [SeparableSpace A] : SectorFamily.{u, u, 0} A where
   Index := NormingIndex A
-  rep i := (GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i).toState)).toCStarRep
+  rep i := (GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i))).toCStarRep
 
 /-- Each summand of the norming family is separable. -/
 instance [SeparableSpace A] (i : NormingIndex A) :
@@ -152,7 +156,7 @@ theorem normingFamily_separatesPoints [SeparableSpace A] :
     linarith
   set i : NormingIndex A := ⟨n, hb_ne⟩ with hi
   have helem : i.elem = denseSeq A n := rfl
-  set T := GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i).toState) with hT
+  set T := GNS.Representation.canonical (PositiveLinearMap.ofClass (normingState i)) with hT
   -- The representation at `i` norms `i.elem`.
   have hnorm : ‖T.π i.elem T.ξ‖ = ‖i.elem‖ :=
     T.norm_apply_cyclic_of_norming (normingState_spec i)
