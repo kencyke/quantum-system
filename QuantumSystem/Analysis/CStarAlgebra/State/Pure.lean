@@ -1,0 +1,408 @@
+/-
+Copyright (c) 2025 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
+module
+
+public import Mathlib.Analysis.Convex.KreinMilman
+public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import Mathlib.Analysis.Normed.Module.HahnBanach
+public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
+
+/-!
+# Pure states on a C*-algebra
+
+A pure state on a (possibly non-unital) C*-algebra `A` is a nonzero extreme point of the
+quasi-state space of `A`, viewed inside `WeakDual ℂ A`.
+
+## Main definitions
+
+* `IsPureState φ`: `φ` is a nonzero extreme point of `QuasiStateSpace A`.
+* `IsPureState.toState`: the state underlying a pure state; pure states lie in the state space
+  (`IsPureState.mem_stateSpace`), so this is the inclusion.
+* `PureState A`: the subtype of pure states, with `PureState.toState`.
+-/
+
+@[expose] public section
+
+open scoped ComplexOrder
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+variable {B : Type*} [CStarAlgebra B] [PartialOrder B] [StarOrderedRing B]
+
+/-- A pure state is an extreme point of the quasi-state space, excluding zero. -/
+def IsPureState (φ : WeakDual ℂ A) : Prop :=
+  φ ∈ Set.extremePoints ℝ (QuasiStateSpace A) ∧ φ ≠ 0
+
+
+/-- A linear functional with norm 1 that maps 1 to 1 is necessarily positive: by Mathlib's
+`ContinuousLinearMap.monotone_iff_opNorm_eq_map_one`, `‖φ‖ = φ 1` is equivalent to monotonicity. -/
+lemma nonneg_of_norm_eq_one_map_one
+    (φ : WeakDual ℂ B) (h_norm : ‖WeakDual.toStrongDual φ‖ = 1) (h_one : φ 1 = 1) :
+    ∀ a : B, 0 ≤ a → 0 ≤ φ a := by
+  have hmono : Monotone (WeakDual.toStrongDual φ) :=
+    ContinuousLinearMap.monotone_iff_opNorm_eq_map_one.mpr (by simpa [h_norm] using h_one.symm)
+  intro a ha
+  simpa using hmono ha
+
+
+/-- For any nonzero positive element `b`, there exists a state on the unitization
+whose value on `b` is exactly `‖b‖`, viewed in `ℂ`.
+
+The value is the norm rather than merely a positive real: the character supplied by Gelfand
+duality is evaluated at the spectral radius, and `‖b‖` lies in the spectrum because `b` is
+positive.  Norming — not just detecting — is what the separable refinement of the
+Gelfand-Naimark theorem needs, so the value is carried in the statement instead of being
+existentially discarded.  Positivity of the value follows from `hb_ne`, since `0 < ‖b‖`. -/
+private lemma exists_unitization_state_norm (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
+    ∃ ψ : Unitization ℂ A →L[ℂ] ℂ, ‖ψ‖ = 1 ∧ ψ 1 = 1 ∧
+      ψ (Unitization.inr b) = (‖b‖ : ℂ) := by
+  let b' : Unitization ℂ A := Unitization.inr b
+  have hb' : 0 ≤ b' := Unitization.inr_nonneg_iff.mpr hb
+  have hb'_ne : b' ≠ 0 := Unitization.inr_injective.ne hb_ne
+  -- ‖b'‖ is in the spectrum of b'
+  have h_spec : (‖b'‖ : ℂ) ∈ spectrum ℂ b' := by
+    obtain ⟨z, hz_mem, hz_abs⟩ := spectrum.exists_nnnorm_eq_spectralRadius (a := b')
+    have hz_real : z = z.re := (IsSelfAdjoint.of_nonneg hb').mem_spectrum_eq_re hz_mem
+    have hz_nonneg : 0 ≤ z.re := by
+      have h_mem_real : z.re ∈ spectrum ℝ b' := by
+        rw [← spectrum.algebraMap_mem_iff ℂ]
+        convert hz_mem
+        exact hz_real.symm
+      exact spectrum_nonneg_of_nonneg hb' h_mem_real
+    rw [IsSelfAdjoint.spectralRadius_eq_nnnorm (IsSelfAdjoint.of_nonneg hb'),
+        hz_real, Complex.nnnorm_real, Real.nnnorm_of_nonneg hz_nonneg] at hz_abs
+    have h_eq : z.re = ‖b'‖ := by
+      rw [ENNReal.coe_inj] at hz_abs
+      exact congr_arg Subtype.val hz_abs
+    rw [← h_eq, ← hz_real]
+    exact hz_mem
+  -- By Gelfand duality, there exists a character φ on C*(b') such that φ(b') = ‖b'‖
+  have : IsStarNormal b' := IsSelfAdjoint.isStarNormal (IsSelfAdjoint.of_nonneg hb')
+  have : IsClosed (StarAlgebra.elemental ℂ b' : Set (Unitization ℂ A)) :=
+    StarAlgebra.elemental.isClosed ℂ b'
+  have h_spec_S : (‖b'‖ : ℂ) ∈
+      spectrum ℂ (⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩ : StarAlgebra.elemental ℂ b') := by
+    rwa [StarSubalgebra.spectrum_eq]
+  obtain ⟨φ, hφ⟩ := WeakDual.CharacterSpace.mem_spectrum_iff_exists.mp h_spec_S
+  -- Extend φ to a state ψ on Unitization ℂ A
+  let φ_clm := WeakDual.toStrongDual φ.val
+  obtain ⟨ψ, hψ_ext, hψ_norm⟩ := exists_extension_norm_eq (StarAlgebra.elemental ℂ b').toSubmodule φ_clm
+  refine ⟨ψ, ?_, ?_, ?_⟩
+  · rw [hψ_norm]
+    exact UnitalCStarAlgebra.norm_character_eq_one φ
+  · rw [hψ_ext ⟨1, (StarAlgebra.elemental ℂ b').one_mem⟩]
+    change (WeakDual.toStrongDual φ.val) ⟨1, _⟩ = 1
+    rw [WeakDual.toStrongDual_apply]
+    change φ 1 = 1
+    rw [map_one φ]
+  · have hψb' : ψ b' = (‖b'‖ : ℂ) := by
+      rw [hψ_ext ⟨b', StarAlgebra.elemental.self_mem ℂ b'⟩]
+      change (WeakDual.toStrongDual φ.val) ⟨b', _⟩ = (‖b'‖ : ℂ)
+      rw [WeakDual.toStrongDual_apply]
+      simpa using hφ
+    have hnorm : ‖b'‖ = ‖b‖ := Unitization.norm_inr b
+    rw [← hnorm]
+    simpa [b'] using hψb'
+
+
+/-- For any nonzero positive element `b`, some quasi-state takes the value `‖b‖` at `b`.
+
+This is `exists_unitization_state_norm` pulled back along the isometric embedding of `A`
+into its unitization. -/
+private lemma exists_quasiState_norm (b : A) (hb : 0 ≤ b) (hb_ne : b ≠ 0) :
+  ∃ φ ∈ QuasiStateSpace A, φ b = (‖b‖ : ℂ) := by
+  have : Nontrivial A := nontrivial_of_ne b 0 hb_ne
+  obtain ⟨ψ, hψ_norm_eq, hψ_one, hψb_eq⟩ :=
+    exists_unitization_state_norm b hb hb_ne
+  have hψ_pos : ∀ x : Unitization ℂ A, 0 ≤ x → 0 ≤ ψ x :=
+    nonneg_of_norm_eq_one_map_one ψ hψ_norm_eq hψ_one
+  let inrLM : A →ₗ[ℂ] Unitization ℂ A :=
+    { toFun := Unitization.inr
+      map_add' := map_add (Unitization.inrNonUnitalStarAlgHom ℂ A)
+      map_smul' := map_smul (Unitization.inrNonUnitalStarAlgHom ℂ A) }
+  let inrIso : A →ₗᵢ[ℂ] Unitization ℂ A :=
+    { toLinearMap := inrLM
+      norm_map' := Unitization.norm_inr }
+  let inrCLM := inrIso.toContinuousLinearMap
+  let φ := ψ.comp inrCLM
+  have hφ_pos : ∀ a : A, 0 ≤ a → 0 ≤ φ a := fun a ha =>
+    hψ_pos (Unitization.inr a) (Unitization.inr_nonneg_iff.mpr ha)
+  have hφ_norm : ‖φ‖ ≤ 1 := by
+    calc ‖φ‖ ≤ ‖ψ‖ * ‖inrCLM‖ :=
+          ContinuousLinearMap.opNorm_comp_le _ _
+      _ = 1 * 1 := by
+        rw [hψ_norm_eq]
+        congr
+        exact inrIso.norm_toContinuousLinearMap
+      _ = 1 := mul_one _
+  refine ⟨φ, ?_, ?_⟩
+  · refine ⟨hφ_pos, ?_⟩
+    exact mem_closedBall_zero_iff.mpr hφ_norm
+  · exact hψb_eq
+
+
+namespace IsPureState
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+omit [StarOrderedRing A] in
+/-- Every pure state has operator norm equal to 1. -/
+lemma norm_eq_one {φ : WeakDual ℂ A} (h : IsPureState φ) : ‖WeakDual.toStrongDual φ‖ = 1 := by
+  obtain ⟨h_ext, h_ne_zero⟩ := h
+  have h_mem : φ ∈ QuasiStateSpace A := h_ext.1
+  have h_norm_le : ‖WeakDual.toStrongDual φ‖ ≤ 1 := by
+    simpa [QuasiStateSpace] using h_mem.2
+  have h_pos : ∀ a : A, 0 ≤ a → 0 ≤ φ a := h_mem.1
+  by_contra h_contra
+  have h_norm_lt : ‖WeakDual.toStrongDual φ‖ < 1 := lt_of_le_of_ne h_norm_le h_contra
+  have h_norm_pos : 0 < ‖WeakDual.toStrongDual φ‖ := norm_pos_iff.mpr (by
+    intro h0
+    apply h_ne_zero
+    apply WeakDual.toStrongDual.injective
+    simp [h0])
+  let r := ‖WeakDual.toStrongDual φ‖
+  let ψ := (r⁻¹ : ℂ) • φ
+  have hψ_norm : ‖WeakDual.toStrongDual ψ‖ = 1 := by
+    rw [map_smul, norm_smul, norm_inv, Complex.norm_real, Real.norm_of_nonneg (le_of_lt h_norm_pos)]
+    field_simp [r, h_norm_pos.ne']
+  have hψ_pos : ∀ a : A, 0 ≤ a → 0 ≤ ψ a := fun a ha => by
+    change 0 ≤ (r⁻¹ : ℂ) * φ a
+    refine mul_nonneg ?_ (h_pos a ha)
+    rw [← Complex.ofReal_inv]
+    exact Complex.zero_le_real.mpr (inv_nonneg.mpr h_norm_pos.le)
+  have hψ_mem : ψ ∈ QuasiStateSpace A := by
+    refine ⟨hψ_pos, ?_⟩
+    simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
+    rw [hψ_norm]
+  have h_eq : φ = (1 - r) • (0 : WeakDual ℂ A) + (r : ℂ) • ψ := by
+    simp only [smul_zero, zero_add, ψ]
+    rw [← smul_assoc]
+    have hr_ne : (r : ℂ) ≠ 0 := by
+      simp only [ne_eq, Complex.ofReal_eq_zero]
+      exact h_norm_pos.ne'
+    have : (r : ℂ) * (r⁻¹ : ℂ) = 1 := mul_inv_cancel₀ hr_ne
+    rw [smul_eq_mul]
+    rw [this, one_smul]
+  have h_not_ext : φ ∉ Set.extremePoints ℝ (QuasiStateSpace A) := by
+    intro h_ext'
+    have h_open_segment : φ ∈ openSegment ℝ (0 : WeakDual ℂ A) ψ := by
+      use 1 - r, r
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · linarith
+      · linarith
+      · linarith
+      · rw [h_eq]
+        rfl
+    have h_zero_mem : 0 ∈ QuasiStateSpace A := by
+      refine ⟨fun _ _ => le_rfl, ?_⟩
+      simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
+      rw [map_zero, norm_zero]
+      exact zero_le_one
+    have h_endpoints : 0 ∈ QuasiStateSpace A ∧ ψ ∈ QuasiStateSpace A := ⟨h_zero_mem, hψ_mem⟩
+    have h_distinct : 0 ≠ ψ := by
+      intro h0
+      have : ‖WeakDual.toStrongDual ψ‖ = 0 := by rw [← h0]; simp
+      linarith
+    have h_seg := h_ext'.2 h_endpoints.1 h_endpoints.2 h_open_segment
+    rcases h_seg with rfl | rfl
+    exact h_ne_zero rfl
+  exact h_not_ext h_ext
+
+omit [StarOrderedRing A] in
+/-- A pure state is a state: it is positive and has norm one (`IsPureState.norm_eq_one`). -/
+lemma mem_stateSpace {φ : WeakDual ℂ A} (h : IsPureState φ) : φ ∈ StateSpace A :=
+  mem_stateSpace_iff.mpr ⟨h.1.1.1, norm_eq_one h⟩
+
+omit [StarOrderedRing A] in
+/-- The state underlying a pure state: the functional itself, as an element of the state space
+(`IsPureState.mem_stateSpace`). -/
+def toState {φ : WeakDual ℂ A} (h : IsPureState φ) : State A :=
+  ⟨φ, h.mem_stateSpace⟩
+
+/-- For any non-zero element `a`, there exists a pure state `φ` **norming** `a`:
+`φ (star a * a) = ‖a‖ ^ 2`, viewed in `ℂ`.
+
+This is the quantitative form of the existence of pure states.  It says that the pure
+states do not merely detect `a` but recover its norm, which is what lets a *countable*
+family of pure states — one for each member of a dense sequence — separate the points of a
+separable C\*-algebra.  For the weaker detection statement see
+`exists_pos_of_ne_zero`, which is a corollary.
+
+The value is stated as an equality with the real number `‖a‖ ^ 2` coerced into `ℂ`, which
+records both that it is real and what it is. -/
+lemma exists_norm_sq_of_ne_zero (a : A) (ha : a ≠ 0) :
+  ∃ φ : WeakDual ℂ A, IsPureState φ ∧ φ (star a * a) = ((‖a‖ ^ 2 : ℝ) : ℂ) := by
+  let b := star a * a
+  have hb_ne_zero : b ≠ 0 := by
+    rw [ne_eq, CStarRing.star_mul_self_eq_zero_iff]
+    exact ha
+  have hb_pos : 0 ≤ b := by
+    apply StarOrderedRing.nonneg_iff.mpr
+    apply AddSubmonoid.subset_closure
+    use a
+  have hb_norm : ‖b‖ = ‖a‖ ^ 2 := by
+    simpa [b, sq] using CStarRing.norm_star_mul_self (x := a)
+  have hb_norm_pos : (0 : ℝ) < ‖b‖ := norm_pos_iff.mpr hb_ne_zero
+  obtain ⟨ω, hω_mem, hω_eq⟩ := exists_quasiState_norm b hb_pos hb_ne_zero
+  let l : WeakDual ℂ A →L[ℝ] ℝ := {
+    toFun := fun φ => (φ b).re
+    map_add' := fun φ ψ => by
+      change (φ b + ψ b).re = (φ b).re + (ψ b).re
+      exact Complex.add_re _ _
+    map_smul' := fun c φ => by
+      change ((c • φ : WeakDual ℂ A) b).re = c • (φ b).re
+      have hcsmul : (c • φ : WeakDual ℂ A) b = (c : ℂ) * φ b := by
+        change (c : ℝ) • φ b = (c : ℂ) * φ b
+        rw [Complex.real_smul]
+      rw [hcsmul]
+      change ((c : ℂ) * φ b).re = c * (φ b).re
+      rw [Complex.mul_re]
+      simp
+    cont := Complex.continuous_re.comp (WeakDual.eval_continuous b)
+  }
+  let f : WeakDual ℂ A → ℝ := l
+  let M := sSup (f '' QuasiStateSpace A)
+  have hf : ContinuousOn f (QuasiStateSpace A) := Continuous.continuousOn l.continuous |>.mono (Set.subset_univ _)
+  have hω_re : (ω b).re = ‖b‖ := by
+    have := congrArg Complex.re hω_eq
+    simpa using this
+  -- `M` is bounded below by `‖b‖`, because `ω` attains it.
+  have h_M_ge : ‖b‖ ≤ M := by
+    rw [← hω_re]
+    apply le_csSup
+    · exact ((QuasiStateSpace.compact A).image_of_continuousOn hf).bddAbove
+    · exact Set.mem_image_of_mem f hω_mem
+  -- and above by `‖b‖`, because every quasi-state has norm at most one.
+  have h_M_le : M ≤ ‖b‖ := by
+    apply csSup_le
+    · exact ⟨f ω, Set.mem_image_of_mem f hω_mem⟩
+    rintro x ⟨φ, hφ_mem, rfl⟩
+    have hφ_norm : ‖WeakDual.toStrongDual φ‖ ≤ 1 := by
+      simpa [QuasiStateSpace] using hφ_mem.2
+    calc f φ ≤ ‖φ b‖ := Complex.re_le_norm _
+      _ ≤ ‖WeakDual.toStrongDual φ‖ * ‖b‖ := (WeakDual.toStrongDual φ).le_opNorm b
+      _ ≤ 1 * ‖b‖ := by gcongr
+      _ = ‖b‖ := one_mul _
+  have h_M_eq : M = ‖b‖ := le_antisymm h_M_le h_M_ge
+  have h_M_pos : M > 0 := by rw [h_M_eq]; exact hb_norm_pos
+  -- Find a maximizer of f on the QuasiStateSpace
+  obtain ⟨φ, hφ_mem, hφ_max⟩ := IsCompact.exists_isMaxOn (QuasiStateSpace.compact A) ⟨ω, hω_mem⟩ hf
+  have hφ_val : f φ = M := by
+    apply le_antisymm
+    · apply le_csSup
+      · exact ((QuasiStateSpace.compact A).image_of_continuousOn hf).bddAbove
+      · exact Set.mem_image_of_mem f hφ_mem
+    · apply csSup_le
+      · use f ω
+        use ω, hω_mem
+      · intro r ⟨ψ, hψ_mem, hr⟩
+        rw [← hr]
+        exact hφ_max hψ_mem
+  -- φ achieves the maximum M > 0
+  have hφ_pos : (φ b).re > 0 := by
+    calc (φ b).re = f φ := rfl
+      _ = M := hφ_val
+      _ > 0 := h_M_pos
+  have hφ_ne_zero : φ ≠ 0 := by
+    intro h
+    have : (φ b).re = 0 := by
+      rw [h]
+      rfl
+    linarith [hφ_pos]
+  -- To show φ is a pure state (extreme point), we use convexity argument
+  let S := QuasiStateSpace A
+  let l' := l -- alias to avoid confusion if needed, but we use l
+  have h_exposed : IsExposed ℝ S {x ∈ S | ∀ z ∈ S, l z ≤ l x} := fun _ => ⟨l, rfl⟩
+  let F := {x ∈ S | ∀ z ∈ S, l z ≤ l x}
+  have hF_nonempty : F.Nonempty := ⟨φ, hφ_mem, fun z hz => hφ_max hz⟩
+  have hF_compact : IsCompact F := h_exposed.isCompact (QuasiStateSpace.compact A)
+  obtain ⟨ψ, hψ_mem_F, hψ_ext⟩ := hF_compact.extremePoints_nonempty hF_nonempty
+  have hψ_ext_S : IsPureState ψ := by
+    constructor
+    · exact h_exposed.isExtreme.extremePoints_subset_extremePoints ⟨hψ_mem_F, hψ_ext⟩
+    · intro h
+      have h_psi_zero : (ψ b).re = 0 := by rw [h]; rfl
+      have h_psi_M : l ψ = M := by
+        apply le_antisymm
+        · apply le_csSup
+          · exact ((QuasiStateSpace.compact A).image l.continuous).bddAbove
+          · exact Set.mem_image_of_mem l hψ_mem_F.1
+        · apply csSup_le
+          · use l φ
+            use φ, hφ_mem
+          · intro r ⟨z, hz, hr⟩
+            rw [← hr]
+            exact hψ_mem_F.2 z hz
+      change l ψ = 0 at h_psi_zero
+      rw [h_psi_M] at h_psi_zero
+      linarith [h_M_pos, h_psi_zero]
+  use ψ
+  constructor
+  · exact hψ_ext_S
+  · -- First get the strict positivity of the real part.
+    have hψ_l_eq_M : l ψ = M := by
+      apply le_antisymm
+      · apply le_csSup
+        · exact ((QuasiStateSpace.compact A).image l.continuous).bddAbove
+        · exact Set.mem_image_of_mem l hψ_mem_F.1
+      · apply csSup_le
+        · use l φ
+          use φ, hφ_mem
+        · intro r ⟨z, hz, hr⟩
+          rw [← hr]
+          exact hψ_mem_F.2 z hz
+    -- `l ψ` is definitionally `(ψ b).re`, and the maximum is `‖b‖`.
+    have hψ_re_eq : (ψ b).re = ‖b‖ := by
+      have h' : l ψ = ‖b‖ := by rw [hψ_l_eq_M, h_M_eq]
+      dsimp [l, ContinuousLinearMap.comp_apply, Complex.reCLM] at h'
+      exact h'
+    -- Membership in `QuasiStateSpace` makes the value real, so its real part determines it.
+    have hψ_mem_S : ψ ∈ QuasiStateSpace A := hψ_mem_F.1
+    have hψb : 0 ≤ ψ b := hψ_mem_S.1 b (star_mul_self_nonneg a)
+    change ψ b = ((‖a‖ ^ 2 : ℝ) : ℂ)
+    rw [← hb_norm, ← hψ_re_eq]
+    exact Complex.ext (by simp) (by simpa using (Complex.nonneg_iff.mp hψb).2.symm)
+
+/-- For any non-zero element `a`, some pure state is strictly positive on `a* a`:
+`0 < φ (star a * a)` in the order of `ℂ` (`ComplexOrder`), i.e. the value is a strictly
+positive real number.
+
+This is the detection form of `exists_norm_sq_of_ne_zero`; the witness it discards is the
+norm itself. -/
+lemma exists_pos_of_ne_zero (a : A) (ha : a ≠ 0) :
+    ∃ φ : WeakDual ℂ A, IsPureState φ ∧ 0 < φ (star a * a) := by
+  obtain ⟨φ, hφ_pure, hφ_eq⟩ := exists_norm_sq_of_ne_zero a ha
+  refine ⟨φ, hφ_pure, ?_⟩
+  rw [hφ_eq]
+  exact Complex.zero_lt_real.mpr (pow_pos (norm_pos_iff.mpr ha) 2)
+
+end IsPureState
+
+
+/-- The type of pure states on a non-unital C*-algebra `A`, packaged as a subtype
+of `WeakDual ℂ A`. -/
+def PureState (A : Type*) [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] :=
+  { φ : WeakDual ℂ A // IsPureState φ }
+
+namespace PureState
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+/-- The state underlying a pure state.
+
+This is the *only* spelling of the map `PureState A → State A`; there is deliberately no
+coercion instance alongside it, so that every downstream result is stated in the same form. -/
+def toState (ψ : PureState A) : State A :=
+  IsPureState.toState ψ.property
+
+/-- The state underlying a pure state evaluates as the pure state itself: `ψ.toState a = ψ.val a`. -/
+@[simp]
+lemma toState_apply (ψ : PureState A) (a : A) :
+    ψ.toState a = ψ.val a := rfl
+
+end PureState

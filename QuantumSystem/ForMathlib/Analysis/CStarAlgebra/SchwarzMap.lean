@@ -32,7 +32,7 @@ The main examples are the non-unital ⋆-homomorphisms (with equality), the Krau
 `φ 1 ≤ 1`, in particular the completely positive ones. The `k`-positive maps and that inequality
 are in `ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`
 (`KPositiveMapClass.le_map_star_mul`); a `2`-positive map with `φ 1 ≤ 1` is packaged as a Schwarz
-map by `KPositiveMapClass.toSchwarzMap` in `Analysis/CStarAlgebra/KadisonSchwarz.lean`.
+map by `KPositiveMapClass.toSchwarzMap` in `Analysis/CStarAlgebra/KPositiveMapSchwarz.lean`.
 
 ## Main definitions
 

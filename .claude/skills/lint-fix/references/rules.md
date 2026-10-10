@@ -29,7 +29,7 @@ The following tokens are strictly prohibited in Lean sources, grouped by reason.
 - *Global configuration and unsafe code:* `set_option`, `unsafe`.
   **Why:** these mutate kernel or elaborator behavior project-wide, or bypass soundness.
   **Exception (approved 2026-10-03):** `set_option maxSynthPendingDepth 2 in`, scoped to single
-  declarations of `QuantumSystem/Analysis/Entropy/VonNeumann/StrongSubadditivity.lean`. Operators on
+  declarations of `QuantumSystem/InformationTheory/Entropy/VonNeumann/StrongSubadditivity.lean`. Operators on
   a three-fold tensor product `(A ⊗ B) ⊗ C` need a depth-2 nested instance search while unifying
   the inner factor's algebraic and normed instances, which Mathlib's default depth `1` refuses; the
   option only raises a type-class search limit and does not affect soundness. See the section

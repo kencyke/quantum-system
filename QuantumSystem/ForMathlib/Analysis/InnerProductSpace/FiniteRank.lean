@@ -34,7 +34,7 @@ a finite-dimensional subspace.
 
 The results combining `F(H)` with the rest of the bicommutant development — that it acts
 non-degenerately, and that `F(H)' = ℂ1` and hence `F(H)'' = B(H)` — live in
-`QuantumSystem.Algebra.Star.DoubleCommutant.TFAE`: they consume declarations from other
+`QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE`: they consume declarations from other
 `ForMathlib` files, and `ForMathlib` files import Mathlib only.
 -/
 
@@ -140,7 +140,7 @@ lemma rankOne_mem_finiteRankOperators (x y : H) :
 /-- **`F(H)` is not unital** when `H` is infinite-dimensional: `1` has range `H`.
 
 Together with `InnerProductSpace.actsNondegenerately_finiteRankOperators` (proved in
-`QuantumSystem.Algebra.Star.DoubleCommutant.TFAE`) this exhibits a `*`-subalgebra to which the
+`QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE`) this exhibits a `*`-subalgebra to which the
 non-unital bicommutant theorem applies and the unital one does not. -/
 theorem one_notMem_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (1 : H →L[ℂ] H) ∉ finiteRankOperators (H := H) := by

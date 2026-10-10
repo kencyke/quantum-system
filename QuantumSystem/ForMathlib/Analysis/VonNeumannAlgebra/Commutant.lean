@@ -49,7 +49,7 @@ scope; activate it with `open scoped VonNeumannAlgebra`.
 | `s″` | `VonNeumannAlgebra.generated s`, i.e. `(s ∪ s⋆)''` | `open scoped VonNeumannAlgebra` |
 
 `⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; that
-convention is stated in full in `QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor`, downstream
+convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`, downstream
 of this file, where the algebras it names are defined.
 -/
 

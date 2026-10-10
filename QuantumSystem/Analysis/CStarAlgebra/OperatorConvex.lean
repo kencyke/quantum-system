@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Algebra.CStarAlgebra.GNS.DirectSum
+public import QuantumSystem.Analysis.CStarAlgebra.GNS.DirectSum
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
 
 /-!

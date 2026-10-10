@@ -40,7 +40,7 @@ bundled as continuous linear maps, so this file uses them directly.
 
 The comparison with the weak operator topology — SOT is finer than WOT, so every WOT-closed set
 is SOT-closed (`continuous_sotToWOT`, `isSOTClosed_of_isWOTClosed`) — lives in
-`QuantumSystem.Algebra.Star.DoubleCommutant.SOTClosedSubAlgebra`, the first file that may import
+`QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra`, the first file that may import
 both type copies: this file, like every `ForMathlib` file, imports Mathlib only.
 -/
 

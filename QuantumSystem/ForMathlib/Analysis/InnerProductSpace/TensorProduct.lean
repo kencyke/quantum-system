@@ -78,7 +78,7 @@ search is needed; their values are Mathlib's instances. They make types such as
 composites of generic constructions at nested types (a completely positive map
 `B(F ⊗ G) → B((E ⊗ F) ⊗ G)` built by `CompletelyPositiveMap.tensorProduct`, composed with a state),
 which still time out at depth `1`; the declarations doing so
-(`QuantumSystem.Analysis.Entropy.VonNeumann.StrongSubadditivity`) carry that option, as the one
+(`QuantumSystem.InformationTheory.Entropy.VonNeumann.StrongSubadditivity`) carry that option, as the one
 exception to the project's ban on `set_option`.
 
 TODO: fix the instance statements upstream so that nested tensor products of inner product spaces

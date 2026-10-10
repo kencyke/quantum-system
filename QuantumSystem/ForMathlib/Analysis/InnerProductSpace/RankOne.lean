@@ -24,7 +24,7 @@ at most one-) dimensional range is recorded as
 ## Notation
 
 `⊗̄` in the prose above is documentation shorthand for the von Neumann (spatial) tensor product of
-algebras; that convention is stated in full in `QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor`,
+algebras; that convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`,
 downstream of this file, where the algebras it names are defined.
 
 ## Expansions in rank-one operators
