@@ -54,13 +54,16 @@ conjugate-linear in `x` and linear in `y`.
 
 ## Main results
 
-* `IsStarNormal.inner_cfc_eq_integral_pvm`, `IsStarNormal.inner_apply_eq_integral_pvm` —
-  `⟪x, cfc g T y⟫ = ∫ g dE_{x,y}`, and `T = ∫ ζ dE_T(ζ)` weakly.
+* `IsStarNormal.inner_cfc_eq_integral_pvm` — `⟪x, cfc g T y⟫ = ∫ g dE_{x,y}`;
+  `IsStarNormal.inner_apply_eq_integral_pvm` — **the spectral theorem**, `T = ∫ ζ dE_T(ζ)`
+  weakly.
 * `IsStarNormal.commute_pvm_cfc` — `E_T(s)` commutes with `cfc h T`.
-* `IsStarNormal.forall_commute_pvm_iff`, `IsStarNormal.commute_pvm_of_commute`,
-  `IsStarNormal.commute_of_forall_commute_pvm` — Rudin, Theorems 12.22–12.23: an operator `S`
-  commutes with `T` iff it commutes with every `E_T(s)` (through the Fuglede–Putnam–Rosenblum
-  theorem `ContinuousLinearMap.comp_cfc_eq_cfc_comp`). With
+* `IsStarNormal.commute_pvm_of_commute` — **operators commuting with `T` commute with `E_T`**
+  (Rudin, Theorem 12.23, through the Fuglede–Putnam–Rosenblum theorem
+  `ContinuousLinearMap.comp_cfc_eq_cfc_comp`); with its converse
+  `IsStarNormal.commute_of_forall_commute_pvm` it gives `IsStarNormal.forall_commute_pvm_iff`: an
+  operator `S` commutes with `T` iff it commutes with every `E_T(s)` (Rudin, Theorems
+  12.22–12.23). With
   `MeasureTheory.ProjectionValuedMeasure.commute_integral` it then commutes with every spectral
   integral `∫ f dE_T` of a bounded measurable `f`.
 * `IsStarNormal.integral_measure_pvm`, `IsStarNormal.inner_cfc_eq_integral_measure_pvm`,
@@ -77,8 +80,8 @@ conjugate-linear in `x` and linear in `y`.
 * `IsStarNormal.eq_pvm_of_integral`, `IsStarNormal.eq_pvm_of_inner_self_eq_integral` —
   **uniqueness**: a projection-valued measure `F` on `ℂ` concentrated on a compact set with
   `T = ∫ ζ dF(ζ)` weakly is `E_T`.
-* `IsStarNormal.mem_spectrum_iff_forall_pvm_ball_ne_zero` — the spectrum is the support of `E_T`:
-  `ζ₀ ∈ σ(T)` iff `E_T` vanishes on no ball around `ζ₀`.
+* `IsStarNormal.mem_spectrum_iff_forall_pvm_ball_ne_zero` — **the spectrum is the support of
+  `E_T`**: `ζ₀ ∈ σ(T)` iff `E_T` vanishes on no ball around `ζ₀`.
 * `IsStarNormal.spectrum_eq_closure_iUnion_support` — `σ(T) = closure (⋃ᵤ supp E_u)`.
 -/
 
@@ -1011,7 +1014,7 @@ theorem commute_pvm_of_commute {S : E →L[ℂ] E} (hS : Commute S T) (s : Set �
 
 /-- Conversely, an operator commuting with every projection `E_T(s)` commutes with
 `T = ∫ ζ dE_T(ζ)`: the complex measures `E_{x, S y}` and `E_{S† x, y}` coincide. -/
-theorem commute_of_forall_commute_pvm {S : E →L[ℂ] E} (hS : ∀ s, Commute S (hT.pvm s)) :
+lemma commute_of_forall_commute_pvm {S : E →L[ℂ] E} (hS : ∀ s, Commute S (hT.pvm s)) :
     Commute S T := by
   have key : ∀ x y, hT.pvm.complexMeasure x (S y) =
       hT.pvm.complexMeasure (ContinuousLinearMap.adjoint S x) y := fun x y => by
@@ -1026,7 +1029,7 @@ theorem commute_of_forall_commute_pvm {S : E →L[ℂ] E} (hS : ∀ s, Commute S
 /-- **The commutant of a normal operator is the commutant of its spectral projections**
 (Rudin, *Functional Analysis*, Theorems 12.22–12.23): `S` commutes with `T` iff it commutes with
 every `E_T(s)`. -/
-theorem forall_commute_pvm_iff {S : E →L[ℂ] E} : (∀ s, Commute S (hT.pvm s)) ↔ Commute S T :=
+lemma forall_commute_pvm_iff {S : E →L[ℂ] E} : (∀ s, Commute S (hT.pvm s)) ↔ Commute S T :=
   ⟨hT.commute_of_forall_commute_pvm, fun h => hT.commute_pvm_of_commute h⟩
 
 /-- The diagonal measures of `E_T` are the scalar spectral measures `ν_x`. -/
