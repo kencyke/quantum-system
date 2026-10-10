@@ -29,12 +29,12 @@ the trace dual is `Ψ*(B') = (Vᴴ (B ⊗ 1) V)'`
 are equivalent (`Matrix.traceDual_eq_iff_stinespring`), by the trace duality
 `tr(Ψ(A') ∘ B') = tr(A' ∘ Ψ*(B'))` and `tr(A' ∘ B') = Tr (A B)` (`Matrix.trace_toEuclideanCLM`).
 
-Completely positive trace-preserving maps, and the isometry `V† V = 1` of their Stinespring dilations, are treated only for
-bounded operators on finite-dimensional Hilbert spaces
+Completely positive trace-preserving maps, and the isometry `V† V = 1` of their Stinespring
+dilations, are treated only for bounded operators on finite-dimensional Hilbert spaces
 (`CPTPMap.exists_coe_eq_iff_exists_stinespring`, and in the Heisenberg picture
 `CPTPMap.exists_traceDual_eq_stinespring`, in
-`QuantumSystem/Analysis/CStarAlgebra/CompletelyPositiveMap/Stinespring.lean`); matrices reach them through
-`Matrix.toEuclideanCLM : M_n(ℂ) ≃ B(ℂⁿ)`.
+`QuantumSystem/Analysis/CStarAlgebra/CompletelyPositiveMap/Stinespring.lean`); matrices reach them
+through `Matrix.toEuclideanCLM : M_n(ℂ) ≃ B(ℂⁿ)`.
 
 ## Kraus blocks
 

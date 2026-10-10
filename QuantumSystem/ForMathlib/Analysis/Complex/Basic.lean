@@ -70,9 +70,12 @@ lemma Complex.exp_neg_I_arg_mul_self (z : ℂ) : Complex.exp (-Complex.I * Compl
   · have hz2 : z = ↑‖z‖ * Complex.exp (↑(Complex.arg z) * Complex.I) :=
       (Complex.norm_mul_exp_arg_mul_I z).symm
     calc Complex.exp (-Complex.I * Complex.arg z) * z
-        = Complex.exp (-Complex.I * Complex.arg z) * (↑‖z‖ * Complex.exp (↑(Complex.arg z) * Complex.I)) := by rw [← hz2]
-      _ = ↑‖z‖ * (Complex.exp (-Complex.I * Complex.arg z) * Complex.exp (↑(Complex.arg z) * Complex.I)) := by ring
-      _ = ↑‖z‖ * Complex.exp (-Complex.I * ↑(Complex.arg z) + ↑(Complex.arg z) * Complex.I) := by rw [← Complex.exp_add]
+        = Complex.exp (-Complex.I * Complex.arg z) *
+            (↑‖z‖ * Complex.exp (↑(Complex.arg z) * Complex.I)) := by rw [← hz2]
+      _ = ↑‖z‖ * (Complex.exp (-Complex.I * Complex.arg z) *
+            Complex.exp (↑(Complex.arg z) * Complex.I)) := by ring
+      _ = ↑‖z‖ * Complex.exp (-Complex.I * ↑(Complex.arg z) + ↑(Complex.arg z) * Complex.I) := by
+            rw [← Complex.exp_add]
       _ = ↑‖z‖ * Complex.exp 0 := by ring_nf
       _ = ↑‖z‖ := by simp
 

@@ -191,7 +191,7 @@ lemma adjoint_sandwich (B : K →L[ℂ] K) (A : H →L[ℂ] H) :
   rw [sandwich_ofCLM, sandwich_ofCLM, inner_ofCLM_ofCLM, inner_ofCLM_ofCLM]
   have key (M N : H →L[ℂ] H) :
       LinearMap.trace ℂ H (M ∘L N) = LinearMap.trace ℂ H (N ∘L M) := by
-      -- `ContinuousLinearMap.trace_comp_comm'` is in `ForMathlib/.../TraceDual.lean`, which a
+    -- `ContinuousLinearMap.trace_comp_comm'` is in `ForMathlib/.../TraceDual.lean`, which a
     -- `ForMathlib` file cannot import
     rw [toLinearMap_comp, LinearMap.trace_comp_comm', ← toLinearMap_comp]
   simp only [adjoint_comp, adjoint_adjoint, comp_assoc]
