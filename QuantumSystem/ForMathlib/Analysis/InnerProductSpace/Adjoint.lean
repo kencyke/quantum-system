@@ -17,6 +17,13 @@ in goals: `ContinuousLinearMap.adjoint` is a bundled conjugate-linear isometric 
 the `postfix` declaration does not match. The delaborator here displays that application as `A†`
 in the same scope, so goals read `(V†) x` and `V ∘L A ∘L V†`.
 
+The delaborator is an **approved exception (2026-10-10)** to the project rule that display is
+achieved by shaping definitions rather than by metaprogramming (see the *Prohibited Tokens* section
+of `.claude/skills/lint-fix/references/rules.md`). It compensates for Mathlib's own `†` notation
+not being displayed: `ContinuousLinearMap.adjoint` is a bundled equivalence owned by Mathlib, so no
+proof-free definition in this repository can make the `postfix` unexpander fire without bridging
+two spellings of the adjoint.
+
 The notation coexists with the `T†` of `LinearPMap.adjoint` (`open scoped LinearPMap`): with both
 scopes open the overloaded `†` elaborates by the type of `T`. The bounded `†` has precedence `1000`,
 below that of a function argument, so with both scopes open an adjoint applied to an argument is
@@ -37,7 +44,9 @@ namespace InnerProduct
 
 open Lean PrettyPrinter Delaborator SubExpr in
 /-- Delaborator displaying `ContinuousLinearMap.adjoint A` (the coercion of the bundled adjoint
-applied to `A`) as `A†`. -/
+applied to `A`) as `A†`. It is an approved exception (2026-10-10) to the ban on metaprogramming:
+Mathlib's `†` notation for the bundled equivalence `ContinuousLinearMap.adjoint` is otherwise never
+displayed. -/
 @[scoped delab app.DFunLike.coe]
 meta def delabAdjoint : Delab := do
   let e ← getExpr

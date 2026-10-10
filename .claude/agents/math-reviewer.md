@@ -252,17 +252,28 @@ Would the notation or the docs slow a reader down, or mislead them?
   `(X := X)` (an implicit `H` that occurs only in the body of an `abbrev`):
   propose making it explicit;
   (d) a proof argument repeated at every use (`M.standardSubspace Ω hc hs`):
-  propose an auto-param or a notation that finds it in the context.
+  propose a `Prop`-valued class found by instance search (`[IsCyclicSeparating M Ω]`)
+  when the hypothesis is genuinely model-dependent, or an implicit argument when
+  it is determined by the others — not an auto-param tactic or a `macro` (see
+  the next bullet).
   Check (b) and (c) with `lean_run_code` before reporting. An ascription inside a
   proof term with no expected type may be load-bearing for elaboration time;
   report those only when the statement-level form is verbose too. Severity
   `nit` or `should-fix`.
 - **A notation must also be displayed.** When a notation expands to a term with
-  proof arguments, elided implicit arguments or a coercion of a bundled map
+  proof arguments, `_` placeholders or a coercion of a bundled map
   (`ContinuousLinearMap.adjoint`, a `def` with proof arguments), the
   auto-generated unexpander often does not fire and goals show the raw spelling.
-  Check one goal with `lean_goal`; if the notation does not appear, the
-  declaration needs an `app_unexpander` or a `delab`. Severity `should-fix`.
+  Check one goal with `lean_goal`; if the notation does not appear, propose
+  reshaping the definitions so that the ordinary `notation` displays: a proof-free
+  `def` for the expanded term (`sqrtModular K` rather than
+  `IsSelfAdjoint.sqrt (isSelfAdjoint_modular K)`), a `Prop`-valued class for
+  hypotheses (`[IsCyclicSeparating M Ω]`), an implicit argument for one the
+  notation leaves as `_`. Do not propose an `app_unexpander`, a `delab`, a
+  `macro` or a `meta def`: the project bans metaprogramming outside approved
+  exceptions (the *Prohibited Tokens* section of
+  `.claude/skills/lint-fix/references/rules.md`; currently only `delabAdjoint`).
+  Severity `should-fix`.
 - **A notation must be documented where it is declared.** Every exported
   notation introduced by the target is named in its module doc together with
   how to activate it (`open scoped …`); the project keeps no central notation
