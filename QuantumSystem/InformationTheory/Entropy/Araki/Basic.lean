@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.VonNeumannAlgebra.Normal
+public import QuantumSystem.Analysis.VonNeumannAlgebra.NormalFunctional
 public import QuantumSystem.InformationTheory.Entropy.Araki.VectorFunctional
 
 /-!

@@ -13,7 +13,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductC
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 
 /-!
-# Spatial decomposition of a type I factor
+# Matrix units and the multiplicity space of a factor
 
 This file assembles the proof ingredients of the type I factor structure theorem
 `N ≅ B(ℓ²(F)) ⊗̄ 1` up to the spatial decomposition `H ≅ ℓ²(F) ⊗̂ (eH)`:

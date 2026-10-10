@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.TomitaAdjoint
+public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.RelativeTomitaAdjoint
 
 /-!
 # The relative modular conjugation

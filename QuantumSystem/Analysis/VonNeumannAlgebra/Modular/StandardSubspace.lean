@@ -22,7 +22,7 @@ is then a standard subspace (`VonNeumannAlgebra.standardSubspace`): `H_M + i H_M
 and `H_M ∩ i H_M = 0` because `H_M` is symplectically orthogonal to `H_{M′}`, which is cyclic in
 turn. (In fact `H_{M′} = (H_M)'`; this needs the adjoint of the Tomita operator and is
 `VonNeumannAlgebra.standardSubspace_commutant_eq_symplComp`, in
-`QuantumSystem.Analysis.VonNeumannAlgebra.Modular.TomitaAdjoint`.)
+`QuantumSystem.Analysis.VonNeumannAlgebra.Modular.RelativeTomitaAdjoint`.)
 
 The Tomita–Takesaki objects of `(M, Ω)` are those of `H_M`. The Tomita operator
 `S_{Ω,Ω} : x Ω ↦ x⋆ Ω` (`VonNeumannAlgebra.relativeTomita M Ω Ω`, with `s(Ω) = 1`) has the Tomita

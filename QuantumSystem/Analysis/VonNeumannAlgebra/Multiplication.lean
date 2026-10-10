@@ -9,7 +9,7 @@ public import Mathlib.MeasureTheory.Function.AEEqOfIntegral
 public import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 public import Mathlib.MeasureTheory.Measure.Decomposition.IntegralRNDeriv
 public import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
-public import QuantumSystem.Analysis.VonNeumannAlgebra.Normal
+public import QuantumSystem.Analysis.VonNeumannAlgebra.NormalFunctional
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty
 

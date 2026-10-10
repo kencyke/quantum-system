@@ -26,7 +26,7 @@ operator `Δ_{η,ξ} = S̄†S̄` (downstream), and Araki's relative entropy of 
 
 The equality `S_{η,ξ}† = F̄_{η,ξ}` holds for arbitrary `η, ξ`
 (`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`, in
-`QuantumSystem.Analysis.VonNeumannAlgebra.Modular.TomitaAdjoint`).
+`QuantumSystem.Analysis.VonNeumannAlgebra.Modular.RelativeTomitaAdjoint`).
 Transformation rules along bounded intertwiners between different Hilbert spaces (spatial
 isomorphisms, amplifications) are in `QuantumSystem.Analysis.VonNeumannAlgebra.Modular.Intertwiner`
 (`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_intertwiner` and companions).

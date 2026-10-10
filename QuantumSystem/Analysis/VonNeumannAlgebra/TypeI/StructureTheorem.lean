@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Star.Subalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Defs
-public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SpatialDecomposition
+public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 
@@ -21,7 +21,7 @@ projection `e`: there is a linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F
 becomes exactly the tensor factor `B(ℓ²(F)) ⊗̄ 1` and `N'` becomes the right factor `1 ⊗̄ B(eH)`.
 The ingredients — the covering orthogonal family `F` (`OrthEquivFam`), the matrix units
 `e_{pq} = v_p v_q⋆`, and the spatial isomorphism `multiplicityEquiv` — are built in
-`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SpatialDecomposition`. The proof here has two halves.
+`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits`. The proof here has two halves.
 
 **Generation half.** The system of matrix units generates `N` as a von Neumann algebra:
 
