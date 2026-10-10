@@ -15,7 +15,7 @@ public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunct
 Let `V` be a finite-dimensional real vector space and `U` a **strongly continuous** unitary
 representation of `V` on a complex Hilbert space `H`: an `AddChar V (unitary (H →L[ℂ] H))` with
 `v ↦ U v` continuous into the strong operator topology (`AddChar.IsStronglyContinuous`, defined in
-`QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral`). Let `L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ` be a
+`QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation`). Let `L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ` be a
 continuous perfect pairing (`LinearMap.IsContPerfPair`), which realises `W` as the dual of `V`, and
 equip `W` with its Borel σ-algebra. The **SNAG theorem** (Stone–Naimark–Ambrose–Godement) states
 that there is a unique projection-valued measure `E_U` on `W` with
