@@ -84,7 +84,7 @@ the trace-dual map.
 The construction uses only the scalar spectral measures `μ_ξ = ⟪E(·) ξ, ξ⟫` of the relative
 modular operator, the diagonal measures of its projection-valued measure `E`
 (`IsSelfAdjoint.pvm`). The Borel functional calculus `f(Δ) = ∫ f dE`
-(`QuantumSystem.Analysis.SpectralTheory.FunctionalCalculus`), the operators `log Δ`, `Δ^{it}`,
+(`QuantumSystem.Analysis.SpectralTheory.SpectralTheorem`), the operators `log Δ`, `Δ^{it}`,
 `Δ^{1/2}` (`QuantumSystem.Analysis.SpectralTheory.Power`) and the polar decomposition
 (`QuantumSystem.Analysis.SpectralTheory.PolarDecomposition`) are available but not used here.
 The following are not formalised:

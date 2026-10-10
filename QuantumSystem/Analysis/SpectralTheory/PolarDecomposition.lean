@@ -40,7 +40,7 @@ construction here agrees with the bounded one of the continuous functional calcu
 `CFC.abs x` and `U` is the partial isometry of `x = v |x|` with source projection the range
 projection `R(x⋆)` (`ContinuousLinearMap.sqrt_eq_toPMap_cfcAbs`,
 `ContinuousLinearMap.polarIsometry_eq_of_eq_mul_cfcAbs`, in
-`QuantumSystem.Analysis.SpectralTheory.BoundedPolarDecomposition`). For bounded operators the
+`QuantumSystem.Analysis.SpectralTheory.PolarDecomposition.CFCAbs`). For bounded operators the
 project uses `CFC.abs`.
 
 ## Notation

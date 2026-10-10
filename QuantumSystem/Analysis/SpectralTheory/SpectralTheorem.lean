@@ -6,16 +6,16 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.SpectralTheory.ScalarSpectralMeasure
-public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure
-public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
+public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.SelfAdjoint
+public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral.Unbounded
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear
 
 /-!
-# The functional calculus of a self-adjoint operator
+# The spectral theorem for self-adjoint operators
 
 Let `A` be a self-adjoint operator on a complex Hilbert space `E`, with projection-valued measure
 `E_A` on `ℝ` (`IsSelfAdjoint.pvm`, constructed from the resolvent in
-`QuantumSystem.Analysis.SpectralTheory.SpectralMeasure`). This file proves the spectral theorem
+`QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.SelfAdjoint`). This file proves the spectral theorem
 in its proper form, `A = ∫ λ dE_A(λ)` as an identity of unbounded operators, the uniqueness of
 `E_A`, and the basic rules of the Borel functional calculus `f(A) = ∫ f dE_A`
 (`ProjectionValuedMeasure.integralPMap`, bounded case `ProjectionValuedMeasure.integral`).

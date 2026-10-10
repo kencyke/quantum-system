@@ -31,7 +31,7 @@ functional calculus of `E` on `L^∞(E)` (Rudin, *Functional Analysis*, Theorem 
 measurable representatives: a unital `*`-homomorphism, contractive for the supremum norm,
 continuous for bounded pointwise convergence and the strong operator topology, with
 `∫ 1_s dE = E s`. The unbounded spectral integral, defined on `integralDomain f`, is built on the
-same construction in `QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral`.
+same construction in `QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral.Unbounded`.
 
 *Junk values.* `integral E f` is `0` when `f` is not measurable or not `E`-essentially bounded,
 and `integralApply E f y` is `0` when `f` is not measurable. The algebraic rules are stated for

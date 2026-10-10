@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure
+public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.SelfAdjoint
 public import QuantumSystem.Analysis.UnboundedOperator.AdjointCompSelf
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty

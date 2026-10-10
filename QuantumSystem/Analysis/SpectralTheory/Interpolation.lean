@@ -9,7 +9,7 @@ public import Mathlib.Analysis.Calculus.Deriv.Star
 public import Mathlib.Analysis.Complex.LocallyUniformLimit
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
 public import QuantumSystem.Analysis.SpectralTheory.Power
-public import QuantumSystem.Analysis.SpectralTheory.UnboundedIntegral
+public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral.Unbounded
 public import QuantumSystem.Analysis.SpectralTheory.PolarDecomposition
 public import QuantumSystem.ForMathlib.Analysis.Complex.Strip
 public import QuantumSystem.ForMathlib.Analysis.Complex.WeakHolomorphic

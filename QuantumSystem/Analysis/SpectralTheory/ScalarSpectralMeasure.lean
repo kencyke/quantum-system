@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure
+public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.SelfAdjoint
 public import QuantumSystem.Analysis.UnboundedOperator.AdjointCompSelf
 public import QuantumSystem.Analysis.UnboundedOperator.SemilinearAdjoint
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
@@ -21,7 +21,7 @@ self-adjoint operator `A`, and of the scalar spectral measures
 `ν_u^w = (hA.isStarNormal_resolvent w).pvm.measure u` of its resolvents `R = (w - A)⁻¹`, the
 diagonal measures of their projection-valued measures (`IsStarNormal.pvm`). Results about `ν_u^w`
 that hold for every normal operator, such as the transformation rule `ν_{h(R) u}^w = |h|² ν_u^w`
-and scaling, are stated for normal operators in `QuantumSystem.Analysis.SpectralTheory.Normal`
+and scaling, are stated for normal operators in `QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.Normal`
 and `QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued`; for `A` itself the
 transformation rule is `μ_{f(A) u} = |f|² μ_u`
 (`ProjectionValuedMeasure.measure_integral_apply`), with `f(A) = ∫ f dE_A`.

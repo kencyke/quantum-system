@@ -5,8 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.SpectralTheory.Normal
-public import QuantumSystem.Analysis.SpectralTheory.ResolventCFC
+public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.Normal
+public import QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.ResolventCFC
 
 /-!
 # Spectral measures of self-adjoint operators
@@ -31,7 +31,7 @@ The continuous functional calculus `cfc g R_w` of the bounded normal resolvent i
 constructing `E_A`; functions of `A` are the spectral integrals `f(A) = ∫ f dE_A`. The spectral
 lemma in its operator form `A = ∫ λ dE_A(λ)`, the domain characterisation
 `dom A = {y | ∫ λ² dμ_y < ∞}`, the uniqueness of `E_A` and this Borel functional calculus are in
-`QuantumSystem.Analysis.SpectralTheory.FunctionalCalculus`.
+`QuantumSystem.Analysis.SpectralTheory.SpectralTheorem`.
 
 ## Main definitions
 

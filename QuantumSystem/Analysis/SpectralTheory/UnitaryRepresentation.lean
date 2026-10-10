@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
+public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral.Bounded
 
 /-!
 # Strongly continuous unitary representations and Fourier transforms of projection-valued measures

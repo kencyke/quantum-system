@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
+public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral.Bounded
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 
@@ -16,7 +16,7 @@ Let `E` be a projection-valued measure on a measurable space `X`, acting on a co
 `H`. For a measurable `f : X → ℂ`, the **spectral integral** `∫ f dE`
 (`ProjectionValuedMeasure.integralPMap`) is the partially defined operator with domain
 `{y | f ∈ L²(E_y)}` on which `(∫ f dE) y` is the limit of the integrals of simple functions
-approximating `f` (`QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral`); its norm is
+approximating `f` (`QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral.Bounded`); its norm is
 `‖(∫ f dE) y‖² = ∫ |f|² dE_y`. For bounded `f` it is the bounded spectral integral
 (`ProjectionValuedMeasure.integralPMap_eq_toPMap`).
 

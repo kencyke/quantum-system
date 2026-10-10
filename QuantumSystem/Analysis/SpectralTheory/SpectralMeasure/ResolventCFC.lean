@@ -17,9 +17,9 @@ For a self-adjoint operator `A` on a complex Hilbert space and `w` in its resolv
 functional calculus applies to it. Every other resolvent is a continuous function of `R`:
 `(z - A)⁻¹ = cfc (ζ ↦ ζ / (1 - (w - z) ζ)) R`. This is the entry point of the spectral theory of
 unbounded self-adjoint operators used here: the projection-valued measure `E_A` is built from the
-calculus of `R` (`QuantumSystem.Analysis.SpectralTheory.SpectralMeasure`), and functions of `A`
+calculus of `R` (`QuantumSystem.Analysis.SpectralTheory.SpectralMeasure.SelfAdjoint`), and functions of `A`
 are then the spectral integrals `f(A) = ∫ f dE_A`
-(`QuantumSystem.Analysis.SpectralTheory.FunctionalCalculus`).
+(`QuantumSystem.Analysis.SpectralTheory.SpectralTheorem`).
 
 ## Main results
 

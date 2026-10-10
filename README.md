@@ -57,7 +57,7 @@ Notable results formalized in this repository include:
 - **Lieb concavity.** For finite-dimensional H, K, T : H → K and p, q ≥ 0 with p + q ≤ 1, (A, B) ↦ Tr(Aᵖ T† B^q T) is jointly concave on pairs of positive operators A on H and B on K (Effros' perspective proof for p + q = 1, extended to p + q ≤ 1).
   - [`Analysis/CStarAlgebra/LiebConcavity.lean`](QuantumSystem/Analysis/CStarAlgebra/LiebConcavity.lean) · `ContinuousLinearMap.lieb_concaveOn`
 - **Spectral measures.** For self-adjoint unbounded A, the projection-valued measure E_A on ℝ, transported from that of the resolvent (i − A)⁻¹ (itself built via Riesz–Markov–Kakutani and polarization), and its diagonal measures μ_u = ⟨E_A(·) u, u⟩, with ⟨u, (z − A)⁻¹ u⟩ = ∫ (z − λ)⁻¹ dμ_u(λ) for z in the resolvent set.
-  - [`Analysis/SpectralTheory/SpectralMeasure.lean`](QuantumSystem/Analysis/SpectralTheory/SpectralMeasure.lean) · `IsSelfAdjoint.pvm` · `IsSelfAdjoint.inner_resolvent_eq_integral`
+  - [`Analysis/SpectralTheory/SpectralMeasure/SelfAdjoint.lean`](QuantumSystem/Analysis/SpectralTheory/SpectralMeasure/SelfAdjoint.lean) · `IsSelfAdjoint.pvm` · `IsSelfAdjoint.inner_resolvent_eq_integral`
 
 ### Entropy
 

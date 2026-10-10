@@ -36,7 +36,7 @@ does not record membership in a von Neumann algebra. The statement here is exist
 witness is the elementary bounded construction above; it is nevertheless determined by `x`, since
 an operator `v` with `x = v |x|` and source projection `R(x⋆)` is unique
 (`ContinuousLinearMap.eq_of_eq_mul_cfcAbs`). The two constructions agree on a bounded `x`
-(`QuantumSystem.Analysis.SpectralTheory.BoundedPolarDecomposition`): the square root of
+(`QuantumSystem.Analysis.SpectralTheory.PolarDecomposition.CFCAbs`): the square root of
 `T†T` for `T = x.toPMap ⊤` is `|x|` (`ContinuousLinearMap.sqrt_eq_toPMap_cfcAbs`), and the partial
 isometry of `T = U |T|` is the `v` given here
 (`ContinuousLinearMap.polarIsometry_eq_of_eq_mul_cfcAbs`).

@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.SpectralTheory.FunctionalCalculus
+public import QuantumSystem.Analysis.SpectralTheory.SpectralTheorem
 public import QuantumSystem.Analysis.SpectralTheory.ScalarSpectralMeasure
 public import QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.MemLpMulSelf

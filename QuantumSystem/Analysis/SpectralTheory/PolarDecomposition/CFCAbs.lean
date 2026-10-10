@@ -10,7 +10,7 @@ public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Abs
 
 /-!
-# The polar decomposition of a bounded operator
+# Compatibility of the spectral and functional-calculus polar decompositions
 
 The polar decomposition of a closed, densely defined operator `T`
 (`QuantumSystem.Analysis.SpectralTheory.PolarDecomposition`) is built from the spectral measure of
