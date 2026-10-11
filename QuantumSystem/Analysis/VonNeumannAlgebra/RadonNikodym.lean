@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.RadonNikodym
+public import QuantumSystem.Analysis.CStarAlgebra.RadonNikodym
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 
 /-!
@@ -18,7 +18,7 @@ functional (Sakai, *C\*-algebras and W\*-algebras*, 1.24.4; Bratteli–Robinson,
 Algebras and Quantum Statistical Mechanics 1*, Thm. 2.3.19).
 
 This is the representation form `CStarAlgebra.exists_commute_of_apply_star_mul_self_le`
-(`QuantumSystem.Analysis.CStarAlgebra.Representation.RadonNikodym`) applied to the inclusion
+(`QuantumSystem.Analysis.CStarAlgebra.RadonNikodym`) applied to the inclusion
 `N → B(K)`.
 
 ## Main results

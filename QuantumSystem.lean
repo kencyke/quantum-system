@@ -18,12 +18,12 @@ public import QuantumSystem.Analysis.CStarAlgebra.LiebConcavity
 public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvexIffMatrixConvex
 public import QuantumSystem.Analysis.CStarAlgebra.Perspective
 public import QuantumSystem.Analysis.CStarAlgebra.PositiveMap
+public import QuantumSystem.Analysis.CStarAlgebra.RadonNikodym
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Basic
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Conjugation
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Hom
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Irreducible
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.RadonNikodym
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.SectorFamily
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctional

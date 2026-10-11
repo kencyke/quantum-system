@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.RadonNikodym
+public import QuantumSystem.Analysis.CStarAlgebra.RadonNikodym
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
 
