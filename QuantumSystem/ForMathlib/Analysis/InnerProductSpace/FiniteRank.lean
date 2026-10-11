@@ -34,7 +34,7 @@ a finite-dimensional subspace.
 
 The results combining `F(H)` with the rest of the bicommutant development — that it acts
 non-degenerately, and that `F(H)' = ℂ1` and hence `F(H)'' = B(H)` — live in
-`QuantumSystem.Algebra.Star.DoubleCommutant.TFAE`: they consume declarations from other
+`QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE`: they consume declarations from other
 `ForMathlib` files, and `ForMathlib` files import Mathlib only.
 -/
 
@@ -50,11 +50,13 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 def IsFiniteRank (T : H →L[ℂ] H) : Prop :=
   FiniteDimensional ℂ (T.range)
 
+/-- The zero operator has finite rank. -/
 lemma isFiniteRank_zero : IsFiniteRank (0 : H →L[ℂ] H) := by
   have h : (0 : H →L[ℂ] H).range = ⊥ := by simp
   rw [IsFiniteRank, h]
   infer_instance
 
+/-- The sum of two finite-rank operators has finite rank: `ran (S + T) ⊆ ran S ⊔ ran T`. -/
 lemma IsFiniteRank.add {S T : H →L[ℂ] H} (hS : IsFiniteRank S) (hT : IsFiniteRank T) :
     IsFiniteRank (S + T) := by
   have : FiniteDimensional ℂ (S.range) := hS
@@ -83,6 +85,7 @@ lemma IsFiniteRank.mul_right {T : H →L[ℂ] H} (hT : IsFiniteRank T) (S : H �
   rintro _ ⟨x, rfl⟩
   exact ⟨S x, rfl⟩
 
+/-- A scalar multiple of a finite-rank operator has finite rank. -/
 lemma IsFiniteRank.smul {T : H →L[ℂ] H} (hT : IsFiniteRank T) (c : ℂ) :
     IsFiniteRank (c • T) := by
   have : FiniteDimensional ℂ (T.range) := hT
@@ -129,6 +132,7 @@ noncomputable def finiteRankOperators : NonUnitalStarSubalgebra ℂ (H →L[ℂ]
   smul_mem' := fun c _ hT => IsFiniteRank.smul hT c
   star_mem' := fun hT => IsFiniteRank.adjoint hT
 
+/-- An operator lies in `F(H)` exactly when it has finite rank. -/
 @[simp] lemma mem_finiteRankOperators_iff {T : H →L[ℂ] H} :
     T ∈ finiteRankOperators (H := H) ↔ IsFiniteRank T := Iff.rfl
 
@@ -140,9 +144,9 @@ lemma rankOne_mem_finiteRankOperators (x y : H) :
 /-- **`F(H)` is not unital** when `H` is infinite-dimensional: `1` has range `H`.
 
 Together with `InnerProductSpace.actsNondegenerately_finiteRankOperators` (proved in
-`QuantumSystem.Algebra.Star.DoubleCommutant.TFAE`) this exhibits a `*`-subalgebra to which the
+`QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE`) this exhibits a `*`-subalgebra to which the
 non-unital bicommutant theorem applies and the unital one does not. -/
-theorem one_notMem_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma one_notMem_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (1 : H →L[ℂ] H) ∉ finiteRankOperators (H := H) := by
   intro hmem
   refine h ?_

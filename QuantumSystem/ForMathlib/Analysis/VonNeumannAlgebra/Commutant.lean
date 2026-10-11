@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
 
 /-!
@@ -32,7 +33,8 @@ with the transport of a von Neumann algebra along a linear isometric equivalence
 The instances `VonNeumannAlgebra.isClosed_coe` and `VonNeumannAlgebra.instStarOrderedRing` make
 `↥N` a C⋆-algebra ordered by the Loewner order of `B(H)`; in particular `N` is spanned by its
 unitaries, so an operator commuting with the unitaries of `N` lies in `N′`
-(`VonNeumannAlgebra.mem_commutant_of_forall_unitary`).
+(`VonNeumannAlgebra.mem_commutant_of_forall_unitary`), and `N` contains the absolute value
+`|x| = (x⋆ x)^{1/2}` of each of its elements (`VonNeumannAlgebra.cfcAbs_mem`).
 
 These let one build `B(H₁) ⊗̄ 1` and `1 ⊗̄ B(H₂)` (and any concretely-generated von Neumann
 algebra) without unfolding the bicommutant by hand, and transport the generation theorem
@@ -48,9 +50,8 @@ scope; activate it with `open scoped VonNeumannAlgebra`.
 | `M′` | `VonNeumannAlgebra.commutant M` | `open scoped VonNeumannAlgebra` |
 | `s″` | `VonNeumannAlgebra.generated s`, i.e. `(s ∪ s⋆)''` | `open scoped VonNeumannAlgebra` |
 
-`⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; that
-convention is stated in full in `QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor`, downstream
-of this file, where the algebras it names are defined.
+`⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; it has
+no Lean declaration.
 -/
 
 @[expose] public section
@@ -79,7 +80,7 @@ applies to composites assembled on the spot — the generating sets `π(𝔄(O))
 Neumann algebras of a net are of exactly that shape — and it is what discharges the star-closedness
 hypothesis of `VonNeumannAlgebra.coe_commutantSet_of_star_eq` and
 `VonNeumannAlgebra.coe_generated_of_star_eq` below. -/
-theorem Set.star_range {A B : Type*} [InvolutiveStar A] [InvolutiveStar B] {f : A → B}
+lemma Set.star_range {A B : Type*} [InvolutiveStar A] [InvolutiveStar B] {f : A → B}
     (hf : ∀ a, f (star a) = star (f a)) : star (Set.range f) = Set.range f := by
   ext x
   simp only [Set.mem_star, Set.mem_range]
@@ -114,10 +115,12 @@ noncomputable def commutantSet (s : Set (H →L[ℂ] H)) : VonNeumannAlgebra H w
   toStarSubalgebra := StarSubalgebra.centralizer ℂ s
   centralizer_centralizer' := by simp
 
+/-- The carrier of `commutantSet s` is the centralizer of the symmetrized set `s ∪ s⋆`. -/
 @[simp] lemma coe_commutantSet (s : Set (H →L[ℂ] H)) :
     (commutantSet s : Set (H →L[ℂ] H)) = (s ∪ star s).centralizer :=
   StarSubalgebra.coe_centralizer ℂ s
 
+/-- `z ∈ commutantSet s` exactly when `z` commutes with every `g ∈ s` and with its adjoint `g⋆`. -/
 lemma mem_commutantSet_iff {s : Set (H →L[ℂ] H)} {z : H →L[ℂ] H} :
     z ∈ commutantSet s ↔ ∀ g ∈ s, g * z = z * g ∧ star g * z = z * star g :=
   StarSubalgebra.mem_centralizer_iff ℂ
@@ -156,6 +159,12 @@ Hilbert space so that it is found directly: on a concrete space such as a Hilber
 the generic search times out. -/
 instance instStarOrderedRing (N : VonNeumannAlgebra H) : StarOrderedRing N :=
   inferInstance
+
+/-- The absolute value `|x| = (x⋆ x)^{1/2}` of an element of `N` lies in `N`: the continuous
+functional calculus stays inside the norm-closed `⋆`-subalgebra `N`
+(`VonNeumannAlgebra.isClosed_coe`). -/
+lemma cfcAbs_mem {N : VonNeumannAlgebra H} {x : H →L[ℂ] H} (hx : x ∈ N) : CFC.abs x ∈ N :=
+  cfcₙ_nnreal_mem (𝕜 := ℂ) _ (mul_mem (star_mem hx) hx)
 
 /-- `M′` denotes the commutant `VonNeumannAlgebra.commutant M`, the prime of the operator-algebra
 literature. -/
@@ -251,6 +260,7 @@ noncomputable def conj (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) : Von
       StarSubalgebra.coe_map _ _
     rw [hcoe, ← Set.image_centralizer, ← Set.image_centralizer, N.centralizer_centralizer]
 
+/-- The carrier of the spatial conjugate `U N U⋆` is the image of `N` under `x ↦ U x U⋆`. -/
 @[simp] lemma coe_conj (U : H ≃ₗᵢ[ℂ] H') (N : VonNeumannAlgebra H) :
     (conj U N : Set (H' →L[ℂ] H')) = ⇑U.conjStarAlgEquiv '' (N : Set (H →L[ℂ] H)) :=
   StarSubalgebra.coe_map _ _

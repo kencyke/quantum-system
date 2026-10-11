@@ -5,9 +5,9 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
+public import QuantumSystem.Analysis.SpectralTheory.Power
 public import QuantumSystem.Analysis.SpectralTheory.SNAG
-public import QuantumSystem.Analysis.UnboundedOperator.AnalyticContinuation
-public import QuantumSystem.Analysis.UnboundedOperator.Power
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
 
 /-!

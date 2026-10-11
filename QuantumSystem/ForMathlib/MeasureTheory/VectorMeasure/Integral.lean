@@ -66,18 +66,18 @@ omit [NormedSpace ℝ G] in
 /-- A function is integrable against `μ.toSignedMeasure` iff it is integrable against the finite
 measure `μ`. -/
 @[simp]
-theorem integrable_toSignedMeasure_iff {μ : Measure X} [IsFiniteMeasure μ] {f : X → G} :
+lemma integrable_toSignedMeasure_iff {μ : Measure X} [IsFiniteMeasure μ] {f : X → G} :
     VectorMeasure.Integrable μ.toSignedMeasure f ↔ Integrable f μ := by
   rw [VectorMeasure.Integrable, Measure.variation_toSignedMeasure]
 
 /-- A bounded continuous function is integrable against every signed measure. -/
-theorem integrable_boundedContinuousFunction [TopologicalSpace X] [OpensMeasurableSpace X]
+lemma integrable_boundedContinuousFunction [TopologicalSpace X] [OpensMeasurableSpace X]
     (s : SignedMeasure X) (g : X →ᵇ ℝ) : VectorMeasure.Integrable s g :=
   g.integrable s.variation
 
 /-- Integration against a signed measure is integration against its positive Jordan part minus
 integration against its negative Jordan part. -/
-theorem integral_eq_posPart_sub_negPart (s : SignedMeasure X) {f : X → G}
+lemma integral_eq_posPart_sub_negPart (s : SignedMeasure X) {f : X → G}
     (h₁ : Integrable f s.toJordanDecomposition.posPart)
     (h₂ : Integrable f s.toJordanDecomposition.negPart) :
     ∫ᵛ x, f x ∂<•s =
@@ -110,7 +110,7 @@ theorem ext_of_forall_integral_eq [TopologicalSpace X] [HasOuterApproxClosed X] 
 /-- **Uniqueness**, with non-negative test functions: a signed measure on a space where finite
 measures are determined by their integrals against bounded continuous functions is determined by
 its integrals against bounded continuous non-negative functions. -/
-theorem ext_of_forall_integral_nnreal_eq [TopologicalSpace X] [HasOuterApproxClosed X]
+lemma ext_of_forall_integral_nnreal_eq [TopologicalSpace X] [HasOuterApproxClosed X]
     [BorelSpace X] {s t : SignedMeasure X}
     (h : ∀ g : X →ᵇ ℝ≥0, ∫ᵛ x, (g x : ℝ) ∂<•s = ∫ᵛ x, (g x : ℝ) ∂<•t) : s = t := by
   set js := s.toJordanDecomposition
@@ -142,7 +142,7 @@ end SignedMeasure
 namespace ComplexMeasure
 
 /-- A complex measure is determined by its real and imaginary parts. -/
-theorem ext_re_im {μ ν : ComplexMeasure X} (hre : μ.re = ν.re) (him : μ.im = ν.im) : μ = ν :=
+lemma ext_re_im {μ ν : ComplexMeasure X} (hre : μ.re = ν.re) (him : μ.im = ν.im) : μ = ν :=
   equivSignedMeasure.injective (Prod.ext hre him)
 
 /-- **Uniqueness.** A complex measure on a space where finite measures are determined by their
@@ -154,7 +154,7 @@ theorem ext_of_forall_integral_eq [TopologicalSpace X] [HasOuterApproxClosed X] 
   ext_re_im (SignedMeasure.ext_of_forall_integral_eq hre) (SignedMeasure.ext_of_forall_integral_eq him)
 
 /-- **Uniqueness**, with non-negative test functions, through the real and imaginary parts. -/
-theorem ext_of_forall_integral_nnreal_eq [TopologicalSpace X] [HasOuterApproxClosed X]
+lemma ext_of_forall_integral_nnreal_eq [TopologicalSpace X] [HasOuterApproxClosed X]
     [BorelSpace X] {μ ν : ComplexMeasure X}
     (hre : ∀ g : X →ᵇ ℝ≥0, ∫ᵛ x, (g x : ℝ) ∂<•μ.re = ∫ᵛ x, (g x : ℝ) ∂<•ν.re)
     (him : ∀ g : X →ᵇ ℝ≥0, ∫ᵛ x, (g x : ℝ) ∂<•μ.im = ∫ᵛ x, (g x : ℝ) ∂<•ν.im) : μ = ν :=
@@ -162,26 +162,26 @@ theorem ext_of_forall_integral_nnreal_eq [TopologicalSpace X] [HasOuterApproxClo
     (SignedMeasure.ext_of_forall_integral_nnreal_eq him)
 
 /-- The real part of a restriction is the restriction of the real part. -/
-theorem re_restrict (μ : ComplexMeasure X) {t : Set X} (ht : MeasurableSet t) :
+lemma re_restrict (μ : ComplexMeasure X) {t : Set X} (ht : MeasurableSet t) :
     re (μ.restrict t) = μ.re.restrict t := by
   ext s hs
   simp [re, VectorMeasure.mapRangeL, VectorMeasure.mapRange_apply,
     VectorMeasure.restrict_apply _ ht hs]
 
 /-- The imaginary part of a restriction is the restriction of the imaginary part. -/
-theorem im_restrict (μ : ComplexMeasure X) {t : Set X} (ht : MeasurableSet t) :
+lemma im_restrict (μ : ComplexMeasure X) {t : Set X} (ht : MeasurableSet t) :
     im (μ.restrict t) = μ.im.restrict t := by
   ext s hs
   simp [im, VectorMeasure.mapRangeL, VectorMeasure.mapRange_apply,
     VectorMeasure.restrict_apply _ ht hs]
 
 /-- The real part of `c • μ` for a complex scalar `c` is `re c • re μ - im c • im μ`. -/
-theorem re_smul (c : ℂ) (μ : ComplexMeasure X) : (c • μ).re = c.re • μ.re - c.im • μ.im := by
+lemma re_smul (c : ℂ) (μ : ComplexMeasure X) : (c • μ).re = c.re • μ.re - c.im • μ.im := by
   ext s hs
   simp [re, im, VectorMeasure.mapRangeL, VectorMeasure.mapRange_apply, Complex.mul_re]
 
 /-- The imaginary part of `c • μ` for a complex scalar `c` is `re c • im μ + im c • re μ`. -/
-theorem im_smul (c : ℂ) (μ : ComplexMeasure X) : (c • μ).im = c.re • μ.im + c.im • μ.re := by
+lemma im_smul (c : ℂ) (μ : ComplexMeasure X) : (c • μ).im = c.re • μ.im + c.im • μ.re := by
   ext s hs
   simp [re, im, VectorMeasure.mapRangeL, VectorMeasure.mapRange_apply, Complex.mul_im]
 

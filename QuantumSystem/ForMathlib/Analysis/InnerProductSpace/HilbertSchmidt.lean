@@ -42,6 +42,11 @@ commute (`HilbertSchmidt.commute_leftMul_rightMul`).
 * Generalise to infinite-dimensional `H` and `K`, where the Hilbert–Schmidt operators form a proper
   subspace of `H →L[ℂ] K`, and to `RCLike 𝕜`.
 * Turn the type synonym into a one-field structure, as Mathlib's `WithLp`, to rule out defeq abuse.
+
+## Notation
+
+`𝐋[H] B` is `HilbertSchmidt.leftMul H B` and `𝐑[K] A` is
+`MulOpposite.unop (HilbertSchmidt.rightMul K A)`; activate them with `open scoped HilbertSchmidt`.
 -/
 
 @[expose] public section
@@ -70,9 +75,11 @@ def ofCLM : (H →L[ℂ] K) ≃ₗ[ℂ] HilbertSchmidt H K := LinearEquiv.refl �
 
 variable {H K}
 
+/-- Passing from an operator to the Hilbert–Schmidt space and back is the identity. -/
 @[simp]
 lemma ofCLM_symm_ofCLM (X : H →L[ℂ] K) : (ofCLM H K).symm (ofCLM H K X) = X := rfl
 
+/-- Passing from the Hilbert–Schmidt space to the operators and back is the identity. -/
 @[simp]
 lemma ofCLM_ofCLM_symm (X : HilbertSchmidt H K) : ofCLM H K ((ofCLM H K).symm X) = X := rfl
 
@@ -85,6 +92,7 @@ lemma ofCLM_induction {P : HilbertSchmidt H K → Prop} (h : ∀ X, P (ofCLM H K
 
 variable [FiniteDimensional ℂ H] [FiniteDimensional ℂ K]
 
+/-- For finite-dimensional `H` and `K`, the Hilbert–Schmidt space is finite-dimensional. -/
 instance : FiniteDimensional ℂ (HilbertSchmidt H K) :=
   inferInstanceAs (FiniteDimensional ℂ (H →L[ℂ] K))
 
@@ -135,6 +143,7 @@ instance : NormedAddCommGroup (HilbertSchmidt H K) :=
 
 instance : InnerProductSpace ℂ (HilbertSchmidt H K) := InnerProductSpace.ofCore _
 
+/-- The Hilbert–Schmidt space is complete, being finite-dimensional, hence a Hilbert space. -/
 instance : CompleteSpace (HilbertSchmidt H K) := FiniteDimensional.complete ℂ _
 
 /-- The Hilbert–Schmidt inner product: `⟪X, Y⟫ = tr(X† Y)`. -/
@@ -186,7 +195,7 @@ lemma adjoint_sandwich (B : K →L[ℂ] K) (A : H →L[ℂ] H) :
   rw [sandwich_ofCLM, sandwich_ofCLM, inner_ofCLM_ofCLM, inner_ofCLM_ofCLM]
   have key (M N : H →L[ℂ] H) :
       LinearMap.trace ℂ H (M ∘L N) = LinearMap.trace ℂ H (N ∘L M) := by
-      -- `ContinuousLinearMap.trace_comp_comm'` is in `ForMathlib/.../TraceDual.lean`, which a
+    -- `ContinuousLinearMap.trace_comp_comm'` is in `ForMathlib/.../TraceDual.lean`, which a
     -- `ForMathlib` file cannot import
     rw [toLinearMap_comp, LinearMap.trace_comp_comm', ← toLinearMap_comp]
   simp only [adjoint_comp, adjoint_adjoint, comp_assoc]
@@ -250,11 +259,13 @@ def rightMul :
     rw [← MulOpposite.op_star, MulOpposite.op_inj, star_eq_adjoint, star_eq_adjoint,
       adjoint_sandwich, adjoint_one]
 
+/-- Left multiplication by `B` sends `X` to the composite `B X`. -/
 @[simp]
 lemma leftMul_ofCLM (B : K →L[ℂ] K) (X : H →L[ℂ] K) :
     leftMul H B (ofCLM H K X) = ofCLM H K (B ∘L X) :=
   rfl
 
+/-- Right multiplication by `A` sends `X` to the composite `X A`. -/
 @[simp]
 lemma unop_rightMul_ofCLM (A : H →L[ℂ] H) (X : H →L[ℂ] K) :
     MulOpposite.unop (rightMul K A) (ofCLM H K X) = ofCLM H K (X ∘L A) :=

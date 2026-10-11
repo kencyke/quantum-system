@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral
+public import QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunction.Bochner
 
@@ -15,7 +15,7 @@ public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunct
 Let `V` be a finite-dimensional real vector space and `U` a **strongly continuous** unitary
 representation of `V` on a complex Hilbert space `H`: an `AddChar V (unitary (H →L[ℂ] H))` with
 `v ↦ U v` continuous into the strong operator topology (`AddChar.IsStronglyContinuous`, defined in
-`QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral`). Let `L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ` be a
+`QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation`). Let `L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ` be a
 continuous perfect pairing (`LinearMap.IsContPerfPair`), which realises `W` as the dual of `V`, and
 equip `W` with its Borel σ-algebra. The **SNAG theorem** (Stone–Naimark–Ambrose–Godement) states
 that there is a unique projection-valued measure `E_U` on `W` with
@@ -813,7 +813,7 @@ variable {V W V' W' : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V
 adjoint for the pairings, `L'(ψ w, v') = L(w, φ v')`, then the projection-valued measure of the
 pullback `U ∘ φ` is the image `ψ_* E_U` of that of `U`. (The adjoint `ψ` of `φ` is unique, the
 transpose of `φ`.) -/
-theorem pvm_compAddMonoidHom (φ : V' →L[ℝ] V) (ψ : W →L[ℝ] W')
+lemma pvm_compAddMonoidHom (φ : V' →L[ℝ] V) (ψ : W →L[ℝ] W')
     (hφψ : ∀ w v', L' (ψ w) v' = L w (φ v')) :
     (hU.compAddMonoidHom (φ : V' →+ V) φ.continuous).pvm L' =
       (hU.pvm L).map ψ ψ.continuous.measurable := by

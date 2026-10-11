@@ -97,7 +97,7 @@ theorem comp_adjoint_eq_adjoint_comp (ha : IsStarNormal a) (hb : IsStarNormal b)
 
 /-- An operator `V` with `V a = b V`, for normal `a` and `b`, intertwines `cfc f a` with `cfc f b`
 for every `f` continuous on the spectra of `a` and `b`. -/
-theorem comp_cfc_eq_cfc_comp (ha : IsStarNormal a) (hb : IsStarNormal b) (h₁ : V ∘L a = b ∘L V)
+lemma comp_cfc_eq_cfc_comp (ha : IsStarNormal a) (hb : IsStarNormal b) (h₁ : V ∘L a = b ∘L V)
     {f : ℂ → ℂ} (hfa : ContinuousOn f (spectrum ℂ a)) (hfb : ContinuousOn f (spectrum ℂ b)) :
     V ∘L cfc f a = cfc f b ∘L V := by
   have h₂ := comp_adjoint_eq_adjoint_comp ha hb h₁
@@ -148,7 +148,7 @@ theorem comp_cfc_eq_cfc_comp (ha : IsStarNormal a) (hb : IsStarNormal b) (h₁ :
 /-- `V a = b V` for self-adjoint `a` and `b` implies `V (cfc f a) = (cfc f b) V` for the real
 functional calculus, `f : ℝ → ℝ` continuous on the real spectra
 (`ContinuousLinearMap.comp_cfc_eq_cfc_comp` through `cfc_real_eq_complex`). -/
-theorem comp_cfc_eq_cfc_comp_real (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b)
+lemma comp_cfc_eq_cfc_comp_real (ha : IsSelfAdjoint a) (hb : IsSelfAdjoint b)
     (h : V ∘L a = b ∘L V) {f : ℝ → ℝ} (hfa : ContinuousOn f (spectrum ℝ a))
     (hfb : ContinuousOn f (spectrum ℝ b)) : V ∘L cfc f a = cfc f b ∘L V := by
   have hc : ∀ {c : F →L[ℂ] F}, IsSelfAdjoint c → ContinuousOn f (spectrum ℝ c) →

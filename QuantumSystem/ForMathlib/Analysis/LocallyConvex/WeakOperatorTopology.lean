@@ -43,7 +43,7 @@ multiplication comes from Mathlib's `IsSemitopologicalRing` instance on it.
 
 This is the "easy" half of the von Neumann double commutant theorem (double commutants are
 WOT-closed). The converse implication (WOT-closed *-subalgebra equals its double commutant) is
-substantially harder and is proved in `DoubleCommutant/WOTClosedSubAlgebra.lean`.
+substantially harder and is proved in `DoubleCommutant/WOTClosedSubalgebra.lean`.
 -/
 
 @[expose] public section
@@ -93,7 +93,7 @@ lemma isWOTClosed_centralizer (S : Set B) : IsWOTClosed (H := H) (Set.centralize
   exact Set.isClosed_centralizer _
 
 /-- Any double commutant is WOT-closed. -/
-theorem isWOTClosed_centralizer_centralizer (S : Set B) :
+lemma isWOTClosed_centralizer_centralizer (S : Set B) :
     IsWOTClosed (H := H) (Set.centralizer (Set.centralizer S)) :=
   isWOTClosed_centralizer (H := H) (S := Set.centralizer S)
 

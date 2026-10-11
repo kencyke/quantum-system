@@ -80,6 +80,9 @@ fix destroys work.
   without the user saying so in this conversation.
 - `System` / `Lean.Elab` / `Lean.Meta` / `Lean.Compiler` uses: dropping the
   import or the reference requires replacing the functionality. Report it.
+- `macro`, `meta def`, delaborators and unexpanders (other than the approved
+  `delabAdjoint`): the fix reshapes definitions so that an ordinary `notation`
+  displays (see `references/rules.md`), a design change. Report it.
 
 ## Process
 
@@ -137,6 +140,8 @@ a real defect introduced by the fixer.
 - **Prohibited tokens** (`.lean` files only):
   - `grep -nwE 'sorry|admit|axiom|set_option|unsafe' <files>`
   - `grep -nE 'open System|Lean\.(Elab|Meta|Compiler)' <files>`
+  - `grep -nE 'meta def|macro |app_unexpander|delab|open Lean' <files>` — the only
+    approved hit is `delabAdjoint` in `ForMathlib/Analysis/InnerProductSpace/Adjoint.lean`.
   - `grep -nw 'System' <files>` — then judge each hit in context; `System` is a
     common English word in comments, and only the Lean namespace is prohibited.
 - **Forbidden namespace** (`.lean` files only):

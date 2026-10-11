@@ -214,7 +214,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 into a complex Hilbert space whose coefficients `fun z ↦ ⟪η, f z⟫` are complex differentiable on
 an open set `U` is complex differentiable on `U`. Local boundedness, which the proof needs, follows
 from the uniform boundedness principle (Dunford's theorem). -/
-theorem differentiableOn_of_inner [CompleteSpace H] {f : ℂ → H} {U : Set ℂ} (hU : IsOpen U)
+lemma differentiableOn_of_inner [CompleteSpace H] {f : ℂ → H} {U : Set ℂ} (hU : IsOpen U)
     (hf : ∀ η : H, DifferentiableOn ℂ (fun z ↦ ⟪η, f z⟫_ℂ) U) : DifferentiableOn ℂ f U := by
   have hbdd : ∀ z ∈ U, IsBoundedUnder (· ≤ ·) (𝓝 z) fun w ↦ ‖f w‖ := fun z hz ↦ by
     have h := isBoundedUnder_norm_of_continuousOn_apply (E := H) (g := fun w ↦ innerSL ℂ (f w))
@@ -233,7 +233,7 @@ space and `H` a complex Hilbert space. A function `f : ℂ → (E →L[ℂ] H)` 
 `fun z ↦ ⟪η, f z ξ⟫` are complex differentiable on an open set `U` is complex differentiable on `U`
 with respect to the operator norm; local boundedness follows from the uniform boundedness
 principle. -/
-theorem differentiableOn_continuousLinearMap_of_inner [CompleteSpace E] [CompleteSpace H]
+lemma differentiableOn_continuousLinearMap_of_inner [CompleteSpace E] [CompleteSpace H]
     {f : ℂ → (E →L[ℂ] H)} {U : Set ℂ} (hU : IsOpen U)
     (hf : ∀ (ξ : E) (η : H), DifferentiableOn ℂ (fun z ↦ ⟪η, f z ξ⟫_ℂ) U) :
     DifferentiableOn ℂ f U := by

@@ -78,7 +78,7 @@ search is needed; their values are Mathlib's instances. They make types such as
 composites of generic constructions at nested types (a completely positive map
 `B(F ⊗ G) → B((E ⊗ F) ⊗ G)` built by `CompletelyPositiveMap.tensorProduct`, composed with a state),
 which still time out at depth `1`; the declarations doing so
-(`QuantumSystem.Analysis.Entropy.VonNeumann.StrongSubadditivity`) carry that option, as the one
+(`QuantumSystem.InformationTheory.Entropy.VonNeumann.StrongSubadditivity`) carry that option, as the one
 exception to the project's ban on `set_option`.
 
 TODO: fix the instance statements upstream so that nested tensor products of inner product spaces
@@ -153,21 +153,21 @@ namespace TensorProduct
 open InnerProductSpace
 
 /-- The tensor product of rank-one operators is rank-one: `|x⟩⟨y| ⊗ |z⟩⟨w| = |x ⊗ z⟩⟨y ⊗ w|`. -/
-theorem mapL_rankOne_rankOne (x : E) (y : F) (z : G) (w : H) :
+lemma mapL_rankOne_rankOne (x : E) (y : F) (z : G) (w : H) :
     mapL (rankOne 𝕜 x y) (rankOne 𝕜 z w) = rankOne 𝕜 (x ⊗ₜ[𝕜] z) (y ⊗ₜ[𝕜] w) := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun u v => ?_
   simp [TensorProduct.smul_tmul', smul_smul, mul_comm]
 
 /-- The adjoint of the insertion `mkL 𝕜 E F x : y ↦ x ⊗ y` is the partial inner product
 `x' ⊗ y' ↦ ⟪x, x'⟫ • y'`. -/
-theorem adjoint_mkL_apply_tmul [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] (x x' : E) (y : F) :
+lemma adjoint_mkL_apply_tmul [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] (x x' : E) (y : F) :
     (mkL 𝕜 E F x).adjoint (x' ⊗ₜ y) = ⟪x, x'⟫_𝕜 • y :=
   ext_inner_left 𝕜 fun w => by
     rw [ContinuousLinearMap.adjoint_inner_right, mkL_apply_apply, inner_tmul, inner_smul_right]
 
 /-- The adjoint of the insertion `(mkL 𝕜 E F).flip y : x ↦ x ⊗ y` is the partial inner product
 `x' ⊗ y' ↦ ⟪y, y'⟫ • x'`. -/
-theorem adjoint_flip_mkL_apply_tmul [CompleteSpace E] [CompleteSpace (E ⊗[𝕜] F)] (y y' : F)
+lemma adjoint_flip_mkL_apply_tmul [CompleteSpace E] [CompleteSpace (E ⊗[𝕜] F)] (y y' : F)
     (x : E) : ((mkL 𝕜 E F).flip y).adjoint (x ⊗ₜ y') = ⟪y, y'⟫_𝕜 • x :=
   ext_inner_left 𝕜 fun w => by
     rw [ContinuousLinearMap.adjoint_inner_right, ContinuousLinearMap.flip_apply, mkL_apply_apply,
@@ -184,14 +184,14 @@ noncomputable def mapLEquiv [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G
       ((homTensorHomEquiv 𝕜 E G F H).trans LinearMap.toContinuousLinearMap)
 
 /-- `mapLEquiv` sends `f ⊗ g` to the operator tensor product `mapL f g`. -/
-@[simp] theorem mapLEquiv_tmul [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] (f : E →L[𝕜] F)
+@[simp] lemma mapLEquiv_tmul [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] (f : E →L[𝕜] F)
     (g : G →L[𝕜] H) : mapLEquiv 𝕜 E F G H (f ⊗ₜ g) = mapL f g := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun x y => ?_
   simp [mapLEquiv]
 
 /-- Two linear maps out of `E ⊗ G →L F ⊗ H` agree if they agree on the operator tensors
 `mapL f g`, which span it (`TensorProduct.mapLEquiv`). -/
-theorem ext_mapL [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] {M : Type*} [AddCommGroup M]
+lemma ext_mapL [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] {M : Type*} [AddCommGroup M]
     [Module 𝕜 M] {u v : (E ⊗[𝕜] G →L[𝕜] F ⊗[𝕜] H) →ₗ[𝕜] M}
     (h : ∀ (f : E →L[𝕜] F) (g : G →L[𝕜] H), u (mapL f g) = v (mapL f g)) : u = v := by
   refine LinearMap.ext fun X => ?_
@@ -202,27 +202,27 @@ theorem ext_mapL [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] {M : Type
 
 /-- The tensor product of a rank-one operator with an operator `B` factors through the insertions
 `ιₓ = mkL 𝕜 E H x : z ↦ x ⊗ z`: `|x⟩⟨y| ⊗ B = ιₓ B ι_y†`. -/
-theorem mapL_rankOne_left [CompleteSpace G] [CompleteSpace (F ⊗[𝕜] G)] (x : E) (y : F)
+lemma mapL_rankOne_left [CompleteSpace G] [CompleteSpace (F ⊗[𝕜] G)] (x : E) (y : F)
     (B : G →L[𝕜] H) :
     mapL (rankOne 𝕜 x y) B = mkL 𝕜 E H x ∘L B ∘L (mkL 𝕜 F G y).adjoint := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun u v => ?_
   simp [adjoint_mkL_apply_tmul, smul_tmul]
 
 /-- The insertion `ιₓ : z ↦ x ⊗ z` intertwines `A` with `1 ⊗ A`: `(1 ⊗ A) ιₓ = ιₓ A`. -/
-theorem lTensor_comp_mkL (x : E) (A : G →L[𝕜] H) :
+lemma lTensor_comp_mkL (x : E) (A : G →L[𝕜] H) :
     A.lTensor E ∘L mkL 𝕜 E G x = mkL 𝕜 E H x ∘L A := by
   ext z
   simp
 
 /-- The insertions are orthogonal: `ιₓ† ι_y = ⟪x, y⟫ • 1`. -/
-theorem adjoint_mkL_comp_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] (x y : E) :
+lemma adjoint_mkL_comp_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] (x y : E) :
     (mkL 𝕜 E F x).adjoint ∘L mkL 𝕜 E F y = ⟪x, y⟫_𝕜 • (1 : F →L[𝕜] F) := by
   ext v
   simp [adjoint_mkL_apply_tmul]
 
 /-- **Resolution of the identity** on `E ⊗ F` along an orthonormal basis `b` of `E`:
 `Σᵢ ι_{bᵢ} ι_{bᵢ}† = 1`, that is, `z = Σᵢ bᵢ ⊗ ι_{bᵢ}† z`. -/
-theorem sum_mkL_comp_adjoint_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] {ι : Type*}
+lemma sum_mkL_comp_adjoint_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] {ι : Type*}
     [Fintype ι] (b : OrthonormalBasis ι 𝕜 E) :
     ∑ i, mkL 𝕜 E F (b i) ∘L (mkL 𝕜 E F (b i)).adjoint = 1 := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun u v => ?_
@@ -232,7 +232,7 @@ theorem sum_mkL_comp_adjoint_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F
   simp_rw [← smul_tmul, ← sum_tmul, b.sum_repr']
 
 /-- `|x⟩⟨y| ⊗ 1 = Σⱼ |x ⊗ bⱼ⟩⟨y ⊗ bⱼ|` along an orthonormal basis `b` of the second factor. -/
-theorem rTensor_rankOne_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι 𝕜 G) (x y : E) :
+lemma rTensor_rankOne_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι 𝕜 G) (x y : E) :
     (rankOne 𝕜 x y).rTensor G = ∑ j, rankOne 𝕜 (x ⊗ₜ[𝕜] b j) (y ⊗ₜ[𝕜] b j) := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun u v => ?_
   simp only [ContinuousLinearMap.coe_coe, ContinuousLinearMap.rTensor_tmul, rankOne_apply,
@@ -243,7 +243,7 @@ theorem rTensor_rankOne_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis �
   rw [mul_comm]
 
 /-- `1 ⊗ |x⟩⟨y| = Σᵢ |bᵢ ⊗ x⟩⟨bᵢ ⊗ y|` along an orthonormal basis `b` of the first factor. -/
-theorem lTensor_rankOne_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι 𝕜 E) (x y : G) :
+lemma lTensor_rankOne_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι 𝕜 E) (x y : G) :
     (rankOne 𝕜 x y).lTensor E = ∑ i, rankOne 𝕜 (b i ⊗ₜ[𝕜] x) (b i ⊗ₜ[𝕜] y) := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun u v => ?_
   simp only [ContinuousLinearMap.coe_coe, ContinuousLinearMap.lTensor_tmul, rankOne_apply,
@@ -255,7 +255,7 @@ theorem lTensor_rankOne_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis �
 
 /-- The trace is multiplicative on operator tensor products: `tr(A ⊗ B) = tr A · tr B`
 (`LinearMap.trace_tensorProduct'`). -/
-theorem trace_mapL [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] (A : E →L[𝕜] E)
+lemma trace_mapL [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] (A : E →L[𝕜] E)
     (B : G →L[𝕜] G) :
     LinearMap.trace 𝕜 (E ⊗[𝕜] G) (mapL A B) = LinearMap.trace 𝕜 E A * LinearMap.trace 𝕜 G B := by
   rw [toLinearMap_mapL, LinearMap.trace_tensorProduct']

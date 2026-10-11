@@ -1,0 +1,38 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
+module
+
+public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
+
+/-!
+# Faithful states
+
+A state `ω` is *faithful* if `ω (a* a) = 0` forces `a = 0`.  Equivalently the GNS vector map
+`a ↦ [a]` is injective (`State.isFaithful_iff_injective_gnsMk`).
+-/
+
+@[expose] public section
+
+namespace State
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A]
+
+/-- A state `ω` on a C\*-algebra `A` is faithful if `ω (a* a) = 0` implies `a = 0`. -/
+def IsFaithful (ω : State A) : Prop :=
+  ∀ a : A, ω (star a * a) = 0 → a = 0
+
+/-- A state is faithful iff `ω (a* a) ≠ 0` for every `a ≠ 0`. -/
+lemma isFaithful_iff (ω : State A) :
+    ω.IsFaithful ↔ ∀ a : A, a ≠ 0 → ω (star a * a) ≠ 0 :=
+  forall_congr' fun _ => not_imp_not.symm
+
+/-- A faithful state is strictly positive on every `a* a` with `a ≠ 0`. -/
+lemma IsFaithful.pos_of_nonzero [StarOrderedRing A] {ω : State A} (hω : ω.IsFaithful) {a : A} (ha : a ≠ 0) :
+    0 < (ω (star a * a)).re := by
+  refine (ω.re_apply_star_mul_self_nonneg a).lt_of_ne fun h => ha (hω a ?_)
+  rw [← ω.ofReal_re_apply_star_mul_self, ← h, Complex.ofReal_zero]
+
+end State

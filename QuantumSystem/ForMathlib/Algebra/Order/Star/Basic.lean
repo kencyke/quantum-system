@@ -24,7 +24,7 @@ variable {F A E : Type*} [NonUnitalSemiring A] [PartialOrder A] [StarRing A] [St
   [AddMonoidHomClass F A E]
 
 /-- An additive map that is nonnegative on every `a* a` is nonnegative on every positive element. -/
-theorem map_nonneg_of_star_mul_self_nonneg (f : F) (hf : ∀ a, 0 ≤ f (star a * a)) {a : A}
+lemma map_nonneg_of_star_mul_self_nonneg (f : F) (hf : ∀ a, 0 ≤ f (star a * a)) {a : A}
     (ha : 0 ≤ a) : 0 ≤ f a := by
   rw [StarOrderedRing.nonneg_iff] at ha
   induction ha using AddSubmonoid.closure_induction with

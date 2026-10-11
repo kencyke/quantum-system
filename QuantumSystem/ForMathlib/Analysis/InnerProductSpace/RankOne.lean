@@ -24,7 +24,7 @@ at most one-) dimensional range is recorded as
 ## Notation
 
 `⊗̄` in the prose above is documentation shorthand for the von Neumann (spatial) tensor product of
-algebras; that convention is stated in full in `QuantumSystem.Algebra.VonNeumannAlgebra.TensorFactor`,
+algebras; that convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`,
 downstream of this file, where the algebras it names are defined.
 
 ## Expansions in rank-one operators
@@ -39,7 +39,7 @@ downstream of this file, where the algebras it names are defined.
 /-- A continuous linear operator commuting with every rank-one operator `|x⟩⟨y|` is a scalar
 multiple of the identity: testing the commutation relation on a fixed nonzero vector `y` yields
 `⟪y, y⟫ • S x = ⟪y, S y⟫ • x` for *every* `x`, so `S = (⟪y, S y⟫ / ⟪y, y⟫) • 1`. -/
-theorem ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm
+lemma ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm
     {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] {S : H →L[ℂ] H}
     (h : ∀ x y : H, S ∘L InnerProductSpace.rankOne ℂ x y
       = InnerProductSpace.rankOne ℂ x y ∘L S) :
@@ -62,7 +62,7 @@ theorem ContinuousLinearMap.exists_eq_smul_one_of_forall_rankOne_comm
 open InnerProductSpace in
 /-- An operator is expanded along an orthonormal basis `b` in the rank-one operators `|bᵢ⟩⟨bⱼ|`:
 `A = Σᵢⱼ ⟪bᵢ, A bⱼ⟫ |bᵢ⟩⟨bⱼ|`, from `1 = Σᵢ |bᵢ⟩⟨bᵢ|` on both sides of `A`. -/
-theorem ContinuousLinearMap.eq_sum_inner_smul_rankOne {𝕜 E ι : Type*} [RCLike 𝕜]
+lemma ContinuousLinearMap.eq_sum_inner_smul_rankOne {𝕜 E ι : Type*} [RCLike 𝕜]
     [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [Fintype ι] (b : OrthonormalBasis ι 𝕜 E)
     (A : E →L[𝕜] E) :
     A = ∑ i, ∑ j, inner 𝕜 (b i) (A (b j)) • rankOne 𝕜 (b i) (b j) := by
@@ -76,7 +76,7 @@ open InnerProductSpace in
 /-- The range of the positive operator `Σₐ |vₐ⟩⟨vₐ|` is the span of the `vₐ`: its kernel is the
 orthogonal complement of that span, since `⟪z, Σₐ |vₐ⟩⟨vₐ| z⟫ = Σₐ |⟪vₐ, z⟫|²`, and its range is the
 orthogonal complement of its kernel. -/
-theorem InnerProductSpace.range_sum_rankOne_self {𝕜 E ι : Type*} [RCLike 𝕜]
+lemma InnerProductSpace.range_sum_rankOne_self {𝕜 E ι : Type*} [RCLike 𝕜]
     [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [FiniteDimensional 𝕜 E] [Fintype ι]
     (v : ι → E) :
     LinearMap.range ((∑ a, rankOne 𝕜 (v a) (v a) : E →L[𝕜] E) : E →ₗ[𝕜] E) =

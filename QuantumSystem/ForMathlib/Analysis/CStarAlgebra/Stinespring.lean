@@ -80,8 +80,11 @@ C⋆-algebras are automatically bounded.
   `CompletelyPositiveMap.norm_stinespringOperator_sq_eq_norm_map_one` (`‖V‖² = ‖φ 1‖`) and
   `CompletelyPositiveMap.exists_unital_stinespring_dilation`. Together with
   `CompletelyPositiveMap.norm_stinespringOperator_sq`, the identity `‖V‖² = ‖φ 1‖` gives
-  `‖φ‖ = ‖φ 1‖`, which holds more generally for `2`-positive maps
-  (`KPositiveMapClass.opNorm_eq_norm_map_one` in `KPositiveMap.lean`) and is not restated here.
+  `‖φ‖ = ‖φ 1‖`, which holds more generally for every positive map on a unital C⋆-algebra
+  (Russo–Dye 1966; Paulsen, Corollary 2.9). That general statement is not restated here: it is
+  proved in the module `QuantumSystem.Analysis.CStarAlgebra.PositiveMap`, which lies outside
+  `ForMathlib/` because it combines several `ForMathlib` files, while a `ForMathlib` file imports
+  Mathlib only.
 
 ## References
 
@@ -92,7 +95,9 @@ C⋆-algebras are automatically bounded.
 * E. C. Lance, *Hilbert C⋆-Modules*, London Math. Soc. Lecture Note Ser. 210 (1995), Ch. 5
   (the KSGNS construction; its case of a Hilbert space `E = H` is the non-unital theorem above).
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
-  (2002), Ch. 4 (uniqueness of the minimal dilation).
+  (2002), Ch. 4 (uniqueness of the minimal dilation) and Corollary 2.9.
+* B. Russo, H. A. Dye, *A note on unitary operators in C⋆-algebras*, Duke Math. J. 33 (1966),
+  413–416.
 -/
 
 @[expose] public section
@@ -156,7 +161,7 @@ variable [PartialOrder A] [StarOrderedRing A]
 Gram matrix of `A` as a right Hilbert `A`-module, `⟪x, y⟫ = x⋆ y`; Mathlib's instance
 `CStarModule A A` of `A` as a C⋆-module over itself uses the convention `⟪x, y⟫ = y x⋆` instead,
 `WithCStarModule.inner_def`.) -/
-theorem gram_nonneg (b : n → A) :
+lemma gram_nonneg (b : n → A) :
     0 ≤ (ofMatrix (Matrix.of fun i j => star (b i) * b j) : CStarMatrix n n A) := by
   classical
   cases isEmpty_or_nonempty n with
@@ -168,7 +173,7 @@ theorem gram_nonneg (b : n → A) :
 /-- Left multiplication by `a` is bounded on Gram matrices: `[(a bᵢ)⋆ (a bⱼ)] ≤ ‖a‖² [bᵢ⋆ bⱼ]`.
 With `X = updateRow 0 i₀ b` and `D = diag(a, …, a)`, the left side is `X⋆ (D⋆ D) X ≤ ‖D‖² X⋆ X`,
 and `‖D‖ ≤ ‖a‖` since `diag` is a ⋆-homomorphism. -/
-theorem gram_mul_left_le (a : A) (b : n → A) :
+lemma gram_mul_left_le (a : A) (b : n → A) :
     (ofMatrix (Matrix.of fun i j => star (a * b i) * (a * b j)) : CStarMatrix n n A) ≤
       ‖a‖ ^ 2 • ofMatrix (Matrix.of fun i j => star (b i) * b j) := by
   classical
@@ -195,7 +200,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] in
 /-- A nonnegative operator matrix `N` on `Hⁿ` has a nonnegative quadratic form,
 `0 ≤ ∑ᵢⱼ ⟪ξᵢ, Nᵢⱼ ξⱼ⟫`. -/
-theorem sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} (hN : 0 ≤ N) (ξ : n → H) :
+lemma sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} (hN : 0 ≤ N) (ξ : n → H) :
     0 ≤ ∑ i, ∑ j, ⟪ξ i, N i j (ξ j)⟫_ℂ := by
   obtain ⟨P, hP, rfl⟩ := (StarOrderedRing.le_iff 0 N).mp hN
   clear hN
@@ -282,7 +287,7 @@ omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [DecidableEq
 `0 ≤ ∑ᵢⱼ ⟪ξᵢ, Nᵢⱼ ξⱼ⟫` for every `ξ ∈ Hⁿ`. The forward direction is
 `CStarMatrix.sum_inner_apply_nonneg`; conversely `N` is nonnegative as the operator
 `toPiLpStarAlgEquiv N` on the Hilbert sum `Hⁿ`, whose quadratic form this is. -/
-theorem nonneg_iff_sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} :
+lemma nonneg_iff_sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} :
     0 ≤ N ↔ ∀ ξ : n → H, 0 ≤ ∑ i, ∑ j, ⟪ξ i, N i j (ξ j)⟫_ℂ := by
   classical
   refine ⟨sum_inner_apply_nonneg, fun h => ?_⟩
@@ -301,7 +306,7 @@ theorem nonneg_iff_sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} 
 omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [DecidableEq n] in
 /-- The block matrix `(|ξᵢ⟩⟨ξⱼ|)ᵢⱼ` of rank-one operators is nonnegative: it is the rank-one
 operator `|ξ⟩⟨ξ|` on `Hⁿ`, with quadratic form `|Σⱼ ⟪ξⱼ, ηⱼ⟫|²`. -/
-theorem rankOne_nonneg (ξ : n → H) :
+lemma rankOne_nonneg (ξ : n → H) :
     0 ≤ (ofMatrix (Matrix.of fun i j => InnerProductSpace.rankOne ℂ (ξ i) (ξ j)) :
       CStarMatrix n n (H →L[ℂ] H)) := by
   classical
@@ -320,11 +325,12 @@ end CStarMatrix
 
 namespace CompletelyPositiveMap
 
-/- The operator norm `‖φ‖ₒₚ` of `φ`, taken through `PositiveContinuousLinearMap.ofClass φ`
-(positive linear maps between C⋆-algebras are automatically bounded), the spelling of Mathlib's
-norm lemmas for positive maps. The notation only abbreviates that Mathlib term. It is local rather
-than scoped so that it cannot clash with another `‖·‖ₒₚ` notation for positive maps when several
-namespaces are open. -/
+/- The operator norm `‖φ‖ₒₚ` of `φ`, taken through `PositiveContinuousLinearMap.ofClass φ` (positive
+linear maps between C⋆-algebras are automatically bounded), the spelling of Mathlib's norm lemmas
+for positive maps. The notation only abbreviates that Mathlib term, which is what the scoped `‖f‖ₒₚ`
+of `QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal` (the definition
+`PositiveLinearMap.opNorm`) unfolds to; it is spelled out here (`local`) because `ForMathlib` files
+import Mathlib only. -/
 local notation "‖" φ "‖ₒₚ" =>
   ‖PositiveContinuousLinearMap.toContinuousLinearMap (PositiveContinuousLinearMap.ofClass φ)‖
 
@@ -797,7 +803,7 @@ theorem apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp (a : A) :
 
 /-- Minimality of the Stinespring representation: the vectors `π(a) V ξ` span a dense subspace
 of `K`. -/
-theorem topologicalClosure_span_stinespringNonUnitalStarAlgHom_apply_stinespringOperator_eq_top :
+lemma topologicalClosure_span_stinespringNonUnitalStarAlgHom_apply_stinespringOperator_eq_top :
     (Submodule.span ℂ (Set.range fun p : A × H =>
       φ.stinespringNonUnitalStarAlgHom p.1 (φ.stinespringOperator p.2))).topologicalClosure = ⊤ := by
   have h : (Set.range fun p : A × H =>
@@ -811,7 +817,7 @@ theorem topologicalClosure_span_stinespringNonUnitalStarAlgHom_apply_stinespring
 
 /-- The Stinespring representation is non-degenerate: the vectors `π(a) x` span a dense subspace
 of `K`. -/
-theorem topologicalClosure_span_stinespringNonUnitalStarAlgHom_apply_eq_top :
+lemma topologicalClosure_span_stinespringNonUnitalStarAlgHom_apply_eq_top :
     (Submodule.span ℂ (Set.range fun p : A × φ.Stinespring =>
       φ.stinespringNonUnitalStarAlgHom p.1 p.2)).topologicalClosure = ⊤ :=
   top_unique <|
@@ -820,7 +826,7 @@ theorem topologicalClosure_span_stinespringNonUnitalStarAlgHom_apply_eq_top :
         Set.range_subset_iff.mpr fun p => ⟨(p.1, φ.stinespringOperator p.2), rfl⟩
 
 /-- `‖V‖² = ‖φ‖`. -/
-theorem norm_stinespringOperator_sq :
+lemma norm_stinespringOperator_sq :
     ‖φ.stinespringOperator‖ ^ 2 = ‖φ‖ₒₚ := by
   have hV := φ.norm_adjoint_stinespringOperator_le
   rw [LinearIsometryEquiv.norm_map] at hV
@@ -874,7 +880,7 @@ unitary `U : φ.Stinespring ≃ K` with `U V_φ = V` and `U π_φ(a) = π(a) U`.
 `U [a ⊗ ξ] = π(a) V ξ` preserves inner products, `⟪π(a) V ξ, π(b) V η⟫ = ⟪ξ, φ(a⋆ b) η⟫`, so it
 extends from the pre-Stinespring space to an isometry of the completion, whose range is closed
 and contains the dense span of the `π(a) V ξ`. -/
-theorem exists_linearIsometryEquiv_stinespring {K : Type*} [NormedAddCommGroup K]
+lemma exists_linearIsometryEquiv_stinespring {K : Type*} [NormedAddCommGroup K]
     [InnerProductSpace ℂ K] [CompleteSpace K] (π : A →⋆ₙₐ[ℂ] (K →L[ℂ] K)) (V : H →L[ℂ] K)
     (hφ : ∀ a, φ a = V† ∘L π a ∘L V)
     (hmin : (Submodule.span ℂ (Set.range fun p : A × H => π p.1 (V p.2))).topologicalClosure = ⊤) :
@@ -1032,17 +1038,17 @@ theorem apply_eq_adjoint_comp_stinespringStarAlgHom_comp (a : A) :
   φ.apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp a
 
 /-- `V† V = φ 1`. -/
-theorem adjoint_stinespringOperator_comp_self :
+lemma adjoint_stinespringOperator_comp_self :
     φ.stinespringOperator† ∘L φ.stinespringOperator = φ 1 := by
   rw [φ.apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp,
     stinespringNonUnitalStarAlgHom_one, ContinuousLinearMap.one_def, ContinuousLinearMap.id_comp]
 
 /-- `V` is an isometry iff `φ` is unital. -/
-theorem isometry_stinespringOperator_iff : Isometry φ.stinespringOperator ↔ φ 1 = 1 := by
+lemma isometry_stinespringOperator_iff : Isometry φ.stinespringOperator ↔ φ 1 = 1 := by
   rw [ContinuousLinearMap.isometry_iff_adjoint_comp_self, adjoint_stinespringOperator_comp_self]
 
 /-- `‖V‖² = ‖φ 1‖`. -/
-theorem norm_stinespringOperator_sq_eq_norm_map_one : ‖φ.stinespringOperator‖ ^ 2 = ‖φ 1‖ := by
+lemma norm_stinespringOperator_sq_eq_norm_map_one : ‖φ.stinespringOperator‖ ^ 2 = ‖φ 1‖ := by
   rw [← adjoint_stinespringOperator_comp_self, ContinuousLinearMap.norm_adjoint_comp_self, sq]
 
 /-- **Stinespring's theorem** for completely positive maps `φ : A → B(H)` on a unital C⋆-algebra

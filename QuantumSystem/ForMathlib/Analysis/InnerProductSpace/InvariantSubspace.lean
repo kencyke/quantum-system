@@ -5,8 +5,9 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.InnerProductSpace.Adjoint
-public import Mathlib.Topology.Algebra.Module.ClosedSubmodule
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 
 /-!
 # Reducing subspaces for sets of bounded operators
@@ -42,14 +43,21 @@ Mathlib's `K ∈ Module.End.invtSubmodule T`.
   `K.starProjection ∈ Set.centralizer S`.
 * `ActsNondegenerately S`: no nonzero vector is annihilated by every element of `S`; the
   hypothesis of the non-unital double commutant theorem.
+* `IsTopologicallyIrreducible S`: the only closed `S`-invariant subspaces are `⊥` and `⊤`.
+* `centralizer_eq_scalars_iff`: **Schur's lemma** for a `⋆`-closed set `S` of bounded operators —
+  the commutant `Set.centralizer S` is `ℂ1` iff `S` is topologically irreducible. This is the
+  topological form, for closed invariant subspaces of a possibly infinite-dimensional Hilbert
+  space; Mathlib's algebraic Schur lemmas
+  (`LinearMap.bijective_or_eq_zero` for simple modules, `FDRep.finrank_hom_simple_simple` in
+  finite dimension) do not apply to it, and the proof goes through the continuous functional
+  calculus instead.
 -/
 
 @[expose] public section
 
 namespace InnerProductSpace
 
-local notation "⟪" x ", " y "⟫" => inner ℂ x y
-open scoped InnerProduct
+open scoped InnerProduct ComplexInnerProductSpace
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
 
@@ -307,5 +315,142 @@ lemma IsCyclicVector.mem {S : Set (H →L[ℂ] H)} {x : H} (h : IsCyclicVector S
 def IsSeparatingVector (S : Set (H →L[ℂ] H)) (x : H) : Prop := ∀ a ∈ S, a x = 0 → a = 0
 
 end Cyclic
+
+section Schur
+
+/-! ### Schur's lemma -/
+
+variable [CompleteSpace H]
+
+open scoped ComplexStarModule
+
+omit [CompleteSpace H] in
+/-- A set of operators `S` is *topologically irreducible* if the only closed `S`-invariant
+subspaces are `⊥` and `⊤` (Murphy, *C\*-algebras and Operator Theory*, §5.1). This is the
+hypothesis of Schur's lemma (`centralizer_eq_scalars_iff`) and the irreducibility condition of a
+representation (`CStarRep.IsIrreducible`). -/
+def IsTopologicallyIrreducible (S : Set (H →L[ℂ] H)) : Prop :=
+  ∀ K : ClosedSubmodule ℂ H,
+    (∀ T ∈ S, K.toSubmodule ∈ Module.End.invtSubmodule (T : Module.End ℂ H)) → K = ⊥ ∨ K = ⊤
+
+omit [CompleteSpace H] in
+/-- The kernel of an operator commuting with `T` is invariant under `T`. -/
+lemma ker_mem_invtSubmodule_of_commute {G T : H →L[ℂ] H} (h : Commute G T) :
+    G.ker ∈ Module.End.invtSubmodule (T : Module.End ℂ H) := by
+  refine (Module.End.mem_invtSubmodule_iff_forall_mem_of_mem _).2 fun x hx => ?_
+  have hx' : G x = 0 := hx
+  change G (T x) = 0
+  rw [← mul_apply_eq_comp, h.eq, mul_apply_eq_comp, hx', map_zero]
+
+/-- If the only closed `S`-invariant subspaces are `⊥` and `⊤`, a self-adjoint operator commuting
+with every element of `S` is a real scalar. Two distinct points `r ≠ s` of its spectrum would give,
+through the continuous functional calculus, nonzero operators `F`, `G` commuting with `S` with
+`G F = 0`; the kernel of `G` would then be a closed invariant subspace that is neither `⊥` (it
+contains the range of `F`) nor `⊤` (as `G ≠ 0`). -/
+lemma exists_eq_algebraMap_of_isSelfAdjoint_of_commute {S : Set (H →L[ℂ] H)}
+    (hS : IsTopologicallyIrreducible S)
+    {y : H →L[ℂ] H} (hy : IsSelfAdjoint y) (hcomm : ∀ T ∈ S, Commute y T) :
+    ∃ r : ℝ, y = algebraMap ℝ (H →L[ℂ] H) r := by
+  rcases subsingleton_or_nontrivial H with hH | hH
+  · exact ⟨0, ContinuousLinearMap.ext fun x => Subsingleton.elim _ _⟩
+  obtain ⟨r, hr⟩ := ContinuousFunctionalCalculus.spectrum_nonempty (R := ℝ) y hy
+  refine ⟨r, CFC.eq_algebraMap_of_spectrum_subset_singleton y r fun s hs => ?_⟩
+  by_contra hsr
+  rw [Set.mem_singleton_iff] at hsr
+  set ε := |s - r| / 2 with hε_def
+  have hε : 0 < ε := half_pos (abs_pos.mpr (sub_ne_zero.mpr hsr))
+  -- Bumps of height `ε` at `r` and at `s` with disjoint supports.
+  set f : ℝ → ℝ := fun t => max 0 (ε - |t - r|) with hf_def
+  set g : ℝ → ℝ := fun t => max 0 (ε - |t - s|) with hg_def
+  have hgf : (fun t => g t * f t) = (0 : ℝ → ℝ) := by
+    funext t
+    have htri : |s - r| ≤ |t - r| + |t - s| := by
+      calc |s - r| = |(t - r) - (t - s)| := by ring_nf
+        _ ≤ |t - r| + |t - s| := abs_sub _ _
+    rcases le_total (ε - |t - r|) 0 with h1 | h1
+    · simp [f, max_eq_left h1]
+    · have h2 : ε - |t - s| ≤ 0 := by linarith
+      simp [g, max_eq_left h2]
+  have hF : cfc f y ≠ 0 := by
+    intro h0
+    have := ((cfc_eq_cfc_iff_eqOn (a := y) (f := f) (g := 0)).mp
+      (h0.trans (cfc_zero (R := ℝ) (a := y)).symm)) hr
+    simp only [f, sub_self, abs_zero, sub_zero, Pi.zero_apply] at this
+    linarith [le_of_max_le_right this.le]
+  have hG : cfc g y ≠ 0 := by
+    intro h0
+    have := ((cfc_eq_cfc_iff_eqOn (a := y) (f := g) (g := 0)).mp
+      (h0.trans (cfc_zero (R := ℝ) (a := y)).symm)) hs
+    simp only [g, sub_self, abs_zero, sub_zero, Pi.zero_apply] at this
+    linarith [le_of_max_le_right this.le]
+  have hGF : cfc g y * cfc f y = 0 := by rw [← cfc_mul g f y, hgf, cfc_zero]
+  rcases hS ⟨(cfc g y).ker, (cfc g y).isClosed_ker⟩
+      (fun T hT => ker_mem_invtSubmodule_of_commute ((hcomm T hT).cfc_real g)) with hb | ht
+  · refine hF (ContinuousLinearMap.ext fun x => ?_)
+    have hx : cfc f y x ∈ (⟨(cfc g y).ker, (cfc g y).isClosed_ker⟩ : ClosedSubmodule ℂ H) := by
+      change cfc g y (cfc f y x) = 0
+      rw [← mul_apply_eq_comp, hGF, zero_apply]
+    rw [hb] at hx
+    simpa using hx
+  · refine hG (ContinuousLinearMap.ext fun x => ?_)
+    have hx : x ∈ (⟨(cfc g y).ker, (cfc g y).isClosed_ker⟩ : ClosedSubmodule ℂ H) := by
+      rw [ht]; trivial
+    simpa using hx
+
+/-- **Schur's lemma** for a `⋆`-closed set `S` of bounded operators: the commutant
+`Set.centralizer S` consists of the scalars `ℂ1` iff the only closed `S`-invariant subspaces are
+`⊥` and `⊤` (Murphy, *C\*-algebras and Operator Theory*, Thm. 5.1.1 and its converse;
+Bratteli–Robinson, Prop. 2.3.8).
+
+Forward: the orthogonal projection onto a closed invariant subspace commutes with `S`, since its
+orthogonal complement is invariant too (`S` is `⋆`-closed), so it is an idempotent scalar, `0` or
+`1`. Backward: an operator in the commutant splits into self-adjoint real and imaginary parts that
+still commute with `S`, and each is a real scalar by
+`exists_eq_algebraMap_of_isSelfAdjoint_of_commute`. -/
+theorem centralizer_eq_scalars_iff {S : Set (H →L[ℂ] H)} (hS : ∀ T ∈ S, star T ∈ S) :
+    (∀ x ∈ Set.centralizer S, ∃ c : ℂ, x = c • (1 : H →L[ℂ] H)) ↔ IsTopologicallyIrreducible S := by
+  constructor
+  · intro hsc K hK
+    rcases subsingleton_or_nontrivial H with hH | hH
+    · exact Or.inl (ClosedSubmodule.toSubmodule_injective (Subsingleton.elim _ _))
+    have : CompleteSpace K.toSubmodule := K.isClosed.completeSpace_coe
+    have hP : K.toSubmodule.starProjection ∈ Set.centralizer S := fun T hT =>
+      commutes_starProjection_of_mem_invtSubmodule (hK T hT)
+        (orthogonal_mem_invtSubmodule_of_adjoint (by
+          rw [← ContinuousLinearMap.star_eq_adjoint]
+          exact hK _ (hS T hT)))
+    obtain ⟨c, hc⟩ := hsc _ hP
+    have hcc : c * c = c := by
+      have hidem := (Submodule.isIdempotentElem_starProjection (K := K.toSubmodule)).eq
+      rw [hc, smul_mul_smul_comm, one_mul] at hidem
+      exact smul_left_injective ℂ one_ne_zero hidem
+    have hc01 : c * (c - 1) = 0 := by rw [mul_sub, hcc, mul_one, sub_self]
+    rcases mul_eq_zero.mp hc01 with rfl | hc1
+    · refine Or.inl (ClosedSubmodule.toSubmodule_injective (Submodule.eq_bot_iff _ |>.mpr ?_))
+      intro x hx
+      rw [← Submodule.starProjection_eq_self_iff.mpr hx, hc, zero_smul, zero_apply]
+    · obtain rfl : c = 1 := sub_eq_zero.mp hc1
+      refine Or.inr (ClosedSubmodule.toSubmodule_injective (Submodule.eq_top_iff'.mpr ?_))
+      intro x
+      rw [← Submodule.starProjection_eq_self_iff, hc, one_smul, one_apply_eq_self]
+  · intro hirr x hx
+    have hx' : ∀ T ∈ S, Commute x T := fun T hT => (hx T hT).symm
+    have hxs : ∀ T ∈ S, Commute (star x) T := fun T hT => by
+      have := (hx' _ (hS T hT)).star_star
+      rwa [star_star] at this
+    obtain ⟨r₁, hr₁⟩ := exists_eq_algebraMap_of_isSelfAdjoint_of_commute hirr (ℜ x).2
+      fun T hT => by
+        rw [realPart_apply_coe]
+        exact ((hx' T hT).add_left (hxs T hT)).smul_left _
+    obtain ⟨r₂, hr₂⟩ := exists_eq_algebraMap_of_isSelfAdjoint_of_commute hirr (ℑ x).2
+      fun T hT => by
+        rw [imaginaryPart_apply_coe]
+        exact (((hx' T hT).sub_left (hxs T hT)).smul_left _).smul_left _
+    refine ⟨r₁ + Complex.I * r₂, ?_⟩
+    conv_lhs => rw [← realPart_add_I_smul_imaginaryPart x, hr₁, hr₂]
+    rw [Algebra.algebraMap_eq_smul_one, Algebra.algebraMap_eq_smul_one, ← Complex.coe_smul,
+      ← Complex.coe_smul, smul_smul, ← add_smul]
+
+end Schur
 
 end InnerProductSpace

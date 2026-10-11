@@ -38,27 +38,25 @@ All of this reduces to the graph statement `g.adjoint.adjoint = closure g` for a
 
 @[expose] public section
 
-open scoped LinearPMap
+open scoped LinearPMap InnerProductSpace
 
 variable {𝕜 E F : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
-
 namespace Submodule
 
 /-- The adjoint of a submodule of `E × F` is closed. -/
-theorem isClosed_adjoint (g : Submodule 𝕜 (E × F)) : IsClosed (g.adjoint : Set (F × E)) := by
+lemma isClosed_adjoint (g : Submodule 𝕜 (E × F)) : IsClosed (g.adjoint : Set (F × E)) := by
   have : (g.adjoint : Set (F × E)) =
-      ⋂ p ∈ g, {x : F × E | ⟪p.2, x.1⟫ - ⟪p.1, x.2⟫ = 0} := by
+      ⋂ p ∈ g, {x : F × E | ⟪p.2, x.1⟫_𝕜 - ⟪p.1, x.2⟫_𝕜 = 0} := by
     ext x
     simp only [SetLike.mem_coe, mem_adjoint_iff, Set.mem_iInter, Set.mem_ofPred_eq, Prod.forall]
   rw [this]
   exact isClosed_biInter fun p _ => isClosed_eq (by fun_prop) continuous_const
 
 /-- A submodule is contained in its double adjoint. -/
-theorem le_adjoint_adjoint (g : Submodule 𝕜 (E × F)) : g ≤ g.adjoint.adjoint := by
+lemma le_adjoint_adjoint (g : Submodule 𝕜 (E × F)) : g ≤ g.adjoint.adjoint := by
   intro p hp
   rw [mem_adjoint_iff]
   intro y x hyx
@@ -68,14 +66,14 @@ theorem le_adjoint_adjoint (g : Submodule 𝕜 (E × F)) : g ≤ g.adjoint.adjoi
   rw [← inner_conj_symm x, ← inner_conj_symm y, ← map_sub, ← neg_sub, this, neg_zero, map_zero]
 
 /-- Passing to the closure does not change the adjoint of a submodule. -/
-theorem adjoint_topologicalClosure (g : Submodule 𝕜 (E × F)) :
+lemma adjoint_topologicalClosure (g : Submodule 𝕜 (E × F)) :
     g.topologicalClosure.adjoint = g.adjoint := by
   refine le_antisymm (fun x hx => ?_) (fun x hx => ?_)
   · rw [mem_adjoint_iff] at hx ⊢
     exact fun a b hab => hx a b (g.le_topologicalClosure hab)
   · rw [mem_adjoint_iff] at hx ⊢
     intro a b hab
-    have hcl : IsClosed {p : E × F | ⟪p.2, x.1⟫ - ⟪p.1, x.2⟫ = 0} :=
+    have hcl : IsClosed {p : E × F | ⟪p.2, x.1⟫_𝕜 - ⟪p.1, x.2⟫_𝕜 = 0} :=
       isClosed_eq (by fun_prop) continuous_const
     exact closure_minimal (fun p hp => hx p.1 p.2 hp) hcl (show (a, b) ∈ closure (g : Set (E × F)) from hab)
 
@@ -112,7 +110,7 @@ variable [CompleteSpace E] {T : E →ₗ.[𝕜] F}
 
 /-- The graph of the adjoint of a densely defined operator: `(y, w) ∈ graph T†` iff
 `⟪v', y⟫ = ⟪v, w⟫` for every `(v, v')` in the graph of `T`. -/
-theorem mem_graph_adjoint_iff (hT : Dense (T.domain : Set E)) {y : F} {w : E} :
+lemma mem_graph_adjoint_iff (hT : Dense (T.domain : Set E)) {y : F} {w : E} :
     (y, w) ∈ T†.graph ↔ ∀ v v', (v, v') ∈ T.graph → inner 𝕜 v' y = inner 𝕜 v w := by
   rw [adjoint_graph_eq_graph_adjoint hT, Submodule.mem_adjoint_iff]
   exact forall₂_congr fun _ _ => imp_congr_right fun _ => sub_eq_zero
@@ -124,7 +122,7 @@ lemma adjoint_anti {S : E →ₗ.[𝕜] F} (hS : Dense (S.domain : Set E)) (h : 
 
 /-- A densely defined operator and its closure have the same adjoint. (If `T` is not closable,
 `T.closure = T` by convention and the statement is trivial.) -/
-theorem adjoint_closure (hT : Dense (T.domain : Set E)) : T.closure† = T† := by
+lemma adjoint_closure (hT : Dense (T.domain : Set E)) : T.closure† = T† := by
   by_cases hc : T.IsClosable
   · refine eq_of_eq_graph ?_
     rw [adjoint_graph_eq_graph_adjoint (hT.mono T.le_closure.1), adjoint_graph_eq_graph_adjoint hT,
@@ -158,7 +156,7 @@ theorem adjoint_adjoint [CompleteSpace F] (hT : Dense (T.domain : Set E)) (hc : 
     adjoint_graph_eq_graph_adjoint hT, Submodule.adjoint_adjoint, hc.graph_closure_eq_closure_graph]
 
 /-- A densely defined closed operator between Hilbert spaces is its own double adjoint. -/
-theorem IsClosed.adjoint_adjoint [CompleteSpace F] (hT : Dense (T.domain : Set E))
+lemma IsClosed.adjoint_adjoint [CompleteSpace F] (hT : Dense (T.domain : Set E))
     (hTc : T.IsClosed) : T†† = T := by
   refine eq_of_eq_graph ?_
   rw [adjoint_graph_eq_graph_adjoint ((isClosable_iff_dense_adjoint_domain hT).mp hTc.isClosable),

@@ -45,7 +45,7 @@ eigenvalues `r` computes traces and quadratic forms: `tr (A ∘ cfc f a) = Σᵢ
 open scoped ComplexConjugate InnerProductSpace
 
 /-- A normal element of a star algebra over `ℂ`, shifted by a scalar, is normal. -/
-theorem IsStarNormal.sub_algebraMap {A : Type*} [Ring A] [StarRing A] [Algebra ℂ A]
+lemma IsStarNormal.sub_algebraMap {A : Type*} [Ring A] [StarRing A] [Algebra ℂ A]
     [StarModule ℂ A] {a : A} (ha : IsStarNormal a) (ζ : ℂ) :
     IsStarNormal (a - algebraMap ℂ A ζ) := by
   refine ⟨?_⟩
@@ -58,7 +58,7 @@ namespace ContinuousLinearMap
 /-- An eigenvalue of a bounded operator lies in its spectrum. (On a Banach space this also
 follows from `ContinuousLinearMap.spectrum_eq` and `Module.End.HasEigenvalue.mem_spectrum`; the
 direct proof here needs no completeness.) -/
-theorem mem_spectrum_of_apply_eq_smul {𝕜 E : Type*} [NontriviallyNormedField 𝕜]
+lemma mem_spectrum_of_apply_eq_smul {𝕜 E : Type*} [NontriviallyNormedField 𝕜]
     [NormedAddCommGroup E] [NormedSpace 𝕜 E] {a : E →L[𝕜] E} {u : E} {ζ : 𝕜} (hu : a u = ζ • u)
     (hu0 : u ≠ 0) : ζ ∈ spectrum 𝕜 a := by
   rw [spectrum.mem_iff]
@@ -74,7 +74,7 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteS
   {a : E →L[ℂ] E} {u : E} {ζ : ℂ}
 
 /-- An eigenvector of a normal operator `a` for `ζ` is an eigenvector of `a†` for `ζ̄`. -/
-theorem IsStarNormal.adjoint_apply_eq_conj_smul (ha : IsStarNormal a) (hu : a u = ζ • u) :
+lemma IsStarNormal.adjoint_apply_eq_conj_smul (ha : IsStarNormal a) (hu : a u = ζ • u) :
     adjoint a u = conj ζ • u := by
   have hb := _root_.IsStarNormal.sub_algebraMap ha ζ
   have h0 : (a - algebraMap ℂ (E →L[ℂ] E) ζ) u = 0 := by
@@ -86,7 +86,7 @@ theorem IsStarNormal.adjoint_apply_eq_conj_smul (ha : IsStarNormal a) (hu : a u 
 
 /-- For a normal operator `a` and an eigenvector `u` with eigenvalue `ζ`,
 `cfcHom f u = f ζ • u` for every `f : C(σ(a), ℂ)`. -/
-theorem cfcHom_apply_of_apply_eq_smul (ha : IsStarNormal a) (hu : a u = ζ • u)
+lemma cfcHom_apply_of_apply_eq_smul (ha : IsStarNormal a) (hu : a u = ζ • u)
     (hζ : ζ ∈ spectrum ℂ a) (f : C(spectrum ℂ a, ℂ)) : cfcHom ha f u = f ⟨ζ, hζ⟩ • u := by
   induction f using ContinuousMap.induction_on_of_compact with
   | const r =>
@@ -108,7 +108,7 @@ theorem cfcHom_apply_of_apply_eq_smul (ha : IsStarNormal a) (hu : a u = ζ • u
 
 /-- For a normal operator `a` and an eigenvector `u` with eigenvalue `ζ`, `cfc f a u = f ζ • u`
 for every `f` continuous on the spectrum of `a`. -/
-theorem cfc_apply_of_apply_eq_smul (ha : IsStarNormal a) (hu : a u = ζ • u) {f : ℂ → ℂ}
+lemma cfc_apply_of_apply_eq_smul (ha : IsStarNormal a) (hu : a u = ζ • u) {f : ℂ → ℂ}
     (hf : ContinuousOn f (spectrum ℂ a)) : cfc f a u = f ζ • u := by
   rcases eq_or_ne u 0 with rfl | hu0
   · rw [map_zero, smul_zero]
@@ -118,7 +118,7 @@ theorem cfc_apply_of_apply_eq_smul (ha : IsStarNormal a) (hu : a u = ζ • u) {
 
 /-- For a self-adjoint operator `a` and an eigenvector `u` with real eigenvalue `r`,
 `cfc f a u = f r • u` for every real function `f` continuous on the spectrum of `a`. -/
-theorem cfc_apply_of_apply_eq_ofReal_smul (ha : IsSelfAdjoint a) {r : ℝ} (hu : a u = (r : ℂ) • u)
+lemma cfc_apply_of_apply_eq_ofReal_smul (ha : IsSelfAdjoint a) {r : ℝ} (hu : a u = (r : ℂ) • u)
     {f : ℝ → ℝ} (hf : ContinuousOn f (spectrum ℝ a)) : cfc f a u = (f r : ℂ) • u := by
   rw [cfc_real_eq_complex f ha]
   have hmaps : Set.MapsTo Complex.re (spectrum ℂ a) (spectrum ℝ a) := fun x hx =>
@@ -129,7 +129,7 @@ theorem cfc_apply_of_apply_eq_ofReal_smul (ha : IsSelfAdjoint a) {r : ℝ} (hu :
 
 /-- A self-adjoint operator on a finite-dimensional space has finite real spectrum; hence every
 real function, `Real.log` included, is continuous on it (`Set.Finite.continuousOn`). -/
-theorem finite_spectrum_real [FiniteDimensional ℂ E] (ha : IsSelfAdjoint a) :
+lemma finite_spectrum_real [FiniteDimensional ℂ E] (ha : IsSelfAdjoint a) :
     (spectrum ℝ a).Finite := by
   have h : (spectrum ℂ a).Finite := by
     rw [ContinuousLinearMap.spectrum_eq]
@@ -141,7 +141,7 @@ variable {ι : Type*} [Fintype ι]
 
 omit [CompleteSpace E] in
 /-- In an orthonormal eigenbasis `b` of `a` with eigenvalues `r`, `⟪bᵢ, a x⟫ = rᵢ ⟪bᵢ, x⟫`. -/
-theorem inner_apply_eq_mul (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
+lemma inner_apply_eq_mul (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
     (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (i : ι) (x : E) :
     ⟪b i, a x⟫_ℂ = (r i : ℂ) * ⟪b i, x⟫_ℂ := by
   conv_lhs => rw [← b.sum_repr' x]
@@ -150,7 +150,7 @@ theorem inner_apply_eq_mul (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
 
 omit [CompleteSpace E] in
 /-- The quadratic form in an orthonormal eigenbasis: `⟪x, a x⟫ = Σᵢ rᵢ ‖⟪bᵢ, x⟫‖²`. -/
-theorem inner_apply_self_eq_sum (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
+lemma inner_apply_self_eq_sum (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
     (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (x : E) :
     ⟪x, a x⟫_ℂ = ((∑ i, r i * ‖⟪b i, x⟫_ℂ‖ ^ 2 : ℝ) : ℂ) := by
   rw [← b.sum_inner_mul_inner x (a x)]
@@ -161,7 +161,7 @@ theorem inner_apply_self_eq_sum (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
 
 omit [CompleteSpace E] in
 /-- The trace in an orthonormal eigenbasis: `tr (A ∘ a) = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
-theorem trace_comp_eq_sum [FiniteDimensional ℂ E] (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
+lemma trace_comp_eq_sum (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ}
     (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (A : E →L[ℂ] E) :
     LinearMap.trace ℂ E (A ∘L a) = ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
   rw [LinearMap.trace_eq_sum_inner _ b]
@@ -172,7 +172,7 @@ theorem trace_comp_eq_sum [FiniteDimensional ℂ E] (b : OrthonormalBasis ι ℂ
 /-- The trace against the real functional calculus of a self-adjoint operator, in an orthonormal
 eigenbasis: `tr (A ∘ cfc f a) = Σᵢ f(rᵢ) ⟪bᵢ, A bᵢ⟫`. No continuity of `f` is needed, the spectrum
 being finite. -/
-theorem trace_comp_cfc_eq_sum [FiniteDimensional ℂ E] (ha : IsSelfAdjoint a)
+lemma trace_comp_cfc_eq_sum [FiniteDimensional ℂ E] (ha : IsSelfAdjoint a)
     (b : OrthonormalBasis ι ℂ E) {r : ι → ℝ} (hb : ∀ i, a (b i) = (r i : ℂ) • b i) (f : ℝ → ℝ)
     (A : E →L[ℂ] E) :
     LinearMap.trace ℂ E (A ∘L cfc f a) = ∑ i, (f (r i) : ℂ) * ⟪b i, A (b i)⟫_ℂ :=

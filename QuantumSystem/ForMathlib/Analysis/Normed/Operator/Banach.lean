@@ -79,7 +79,7 @@ lemma IsClosed.toPMap_toContinuousLinearMap (hT : T.IsClosed) (hdom : T.domain =
 
 omit [CompleteSpace E] [CompleteSpace F] in
 /-- The negative of a closed operator is closed. -/
-theorem IsClosed.neg (hT : T.IsClosed) : (-T).IsClosed := by
+lemma IsClosed.neg (hT : T.IsClosed) : (-T).IsClosed := by
   have : ((-T).graph : Set (E × F)) = Prod.map id (fun y => -y) ⁻¹' T.graph := by
     ext ⟨x, y⟩
     simp only [SetLike.mem_coe, mem_graph_iff, neg_domain, neg_apply, Set.mem_preimage,
@@ -89,7 +89,7 @@ theorem IsClosed.neg (hT : T.IsClosed) : (-T).IsClosed := by
 
 omit [CompleteSpace E] [CompleteSpace F] in
 /-- A bounded perturbation of a closed operator is closed. -/
-theorem IsClosed.vadd (hT : T.IsClosed) (A : E →L[𝕜] F) : ((A : E →ₗ[𝕜] F) +ᵥ T).IsClosed := by
+lemma IsClosed.vadd (hT : T.IsClosed) (A : E →L[𝕜] F) : ((A : E →ₗ[𝕜] F) +ᵥ T).IsClosed := by
   have : (((A : E →ₗ[𝕜] F) +ᵥ T).graph : Set (E × F)) =
       (fun p : E × F => (p.1, p.2 - A p.1)) ⁻¹' T.graph := by
     ext ⟨x, y⟩
@@ -102,7 +102,7 @@ theorem IsClosed.vadd (hT : T.IsClosed) (A : E →L[𝕜] F) : ((A : E →ₗ[�
 
 omit [CompleteSpace F] in
 /-- A closed operator on a Banach space that is bounded below has closed range. -/
-theorem IsClosed.isClosed_range (hT : T.IsClosed) {c : ℝ} (hc : 0 < c)
+lemma IsClosed.isClosed_range (hT : T.IsClosed) {c : ℝ} (hc : 0 < c)
     (hbdd : ∀ x y, (x, y) ∈ T.graph → c * ‖x‖ ≤ ‖y‖) :
     _root_.IsClosed (LinearMap.range T.toFun : Set F) := by
   refine isClosed_of_closure_subset fun w hw => ?_
@@ -129,7 +129,7 @@ theorem IsClosed.isClosed_range (hT : T.IsClosed) {c : ℝ} (hc : 0 < c)
 /-- A closed operator between Banach spaces that is bounded below and has dense range is
 invertible, with a bounded inverse `R`: `(R y, y)` lies in the graph for every `y`, and
 `R (T x) = x`. -/
-theorem IsClosed.exists_inverse (hT : T.IsClosed) {c : ℝ} (hc : 0 < c)
+lemma IsClosed.exists_inverse (hT : T.IsClosed) {c : ℝ} (hc : 0 < c)
     (hbdd : ∀ x y, (x, y) ∈ T.graph → c * ‖x‖ ≤ ‖y‖)
     (hdense : Dense (LinearMap.range T.toFun : Set F)) :
     ∃ R : F →L[𝕜] E, (∀ y, (R y, y) ∈ T.graph) ∧ ∀ x z, (x, z) ∈ T.graph → R z = x := by

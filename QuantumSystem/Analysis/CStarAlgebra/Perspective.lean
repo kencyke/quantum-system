@@ -5,8 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvex
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.RpowCommute
+public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvexIffMatrixConvex
+public import QuantumSystem.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Commute
 
 /-!
 # Joint convexity of the noncommutative perspective
@@ -185,7 +185,7 @@ theorem IsOperatorConvexOn.perspective_sum_le (hf : IsOperatorConvexOn.{v} s f) 
 /-- **Joint convexity of the perspective** for `f` operator convex on `[0, ∞)`: Jensen's
 inequality for the perspective over finite convex combinations of pairs `(lᵢ, rᵢ)` with `lᵢ`
 positive and `rᵢ` strictly positive. -/
-theorem IsOperatorConvexOn.perspective_sum_le_of_nonneg (hf : IsOperatorConvexOn.{v} (Ici 0) f)
+lemma IsOperatorConvexOn.perspective_sum_le_of_nonneg (hf : IsOperatorConvexOn.{v} (Ici 0) f)
     {ι : Type*} [Fintype ι] {w : ι → ℝ} (hw : ∀ i, 0 ≤ w i) (hw₁ : ∑ i, w i = 1) {l r : ι → A}
     (hl : ∀ i, 0 ≤ l i) (hr : ∀ i, IsStrictlyPositive (r i)) :
     perspective f (∑ i, w i • l i) (∑ i, w i • r i) ≤ ∑ i, w i • perspective f (l i) (r i) := by
@@ -198,7 +198,7 @@ theorem IsOperatorConvexOn.perspective_sum_le_of_nonneg (hf : IsOperatorConvexOn
 /-- **Joint convexity of the perspective** for `f` operator convex on `(0, ∞)`, such as `-log`
 and `t⁻¹`: Jensen's inequality for the perspective over finite convex combinations of pairs
 `(lᵢ, rᵢ)` of strictly positive elements. -/
-theorem IsOperatorConvexOn.perspective_sum_le_of_isStrictlyPositive
+lemma IsOperatorConvexOn.perspective_sum_le_of_isStrictlyPositive
     (hf : IsOperatorConvexOn.{v} (Ioi 0) f) {ι : Type*} [Fintype ι] {w : ι → ℝ}
     (hw : ∀ i, 0 ≤ w i) (hw₁ : ∑ i, w i = 1) {l r : ι → A}
     (hl : ∀ i, IsStrictlyPositive (l i)) (hr : ∀ i, IsStrictlyPositive (r i)) :
