@@ -140,12 +140,15 @@ def inv (a : N.Covariance) : N.Covariance where
     simp only [StarAlgEquiv.trans_apply]
     rw [N.incl_algebraCongr _ _ h (a.σ.monotone (a.σ.symm.monotone h)), a.β_symm_incl]
 
-/-- The identity covariance acts as the identity on every local algebra. -/
-@[simp] lemma id_β_apply (O : K) (x : N.algebra O) : (Covariance.id N).β O x = x :=
+/-- The identity covariance acts as the identity on every local algebra. Not a simp lemma: the
+    codomain type of `β O` depends on `σ O`, which `simp` rewrites first (`id_σ_apply`), after which
+    this left-hand side no longer matches; use it with `simp only` or `rw`. -/
+lemma id_β_apply (O : K) (x : N.algebra O) : (Covariance.id N).β O x = x :=
   rfl
 
-/-- The composite covariance acts by composing the local `*`-isomorphisms along the region maps. -/
-@[simp] lemma comp_β_apply (a b : N.Covariance) (O : K) (x : N.algebra O) :
+/-- The composite covariance acts by composing the local `*`-isomorphisms along the region maps.
+    Not a simp lemma, for the reason given at `id_β_apply`. -/
+lemma comp_β_apply (a b : N.Covariance) (O : K) (x : N.algebra O) :
     (a.comp b).β O x = a.β (b.σ O) (b.β O x) :=
   rfl
 

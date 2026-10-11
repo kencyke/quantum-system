@@ -47,7 +47,7 @@ variable {R E₁ E₂ : Type*} [Semiring R]
   [Module R E₁] [Module R E₂] [Module ℝ≥0 E₂] [SMulCommClass R ℝ≥0 E₂] [PosSMulMono ℝ≥0 E₂]
 
 /-- A nonnegative multiple of a positive linear map is positive. -/
-instance : SMul ℝ≥0 (E₁ →ₚ[R] E₂) where
+instance instSMulNNReal : SMul ℝ≥0 (E₁ →ₚ[R] E₂) where
   smul c f := .mk (c • f.toLinearMap) fun _ _ h ↦ smul_le_smul_of_nonneg_left (f.monotone' h) c.2
 
 /-- `(c • f) x = c • f x`. -/

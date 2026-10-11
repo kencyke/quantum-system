@@ -39,29 +39,29 @@ private lemma uniformContinuous_star : UniformContinuous (star : A → A) := by
   exact h.uniformContinuous
 
 /-- Involution on a completion, the continuous extension of the involution on the dense image. -/
-noncomputable instance : Star (Completion A) := ⟨Completion.map star⟩
+noncomputable instance instStar : Star (Completion A) := ⟨Completion.map star⟩
 
 /-- The involution on the completion extends that of `A`: `star ↑a = ↑(star a)`. -/
 @[simp] lemma star_coe (a : A) : star (↑a : Completion A) = (↑(star a) : Completion A) :=
   map_coe uniformContinuous_star a
 
 /-- The involution on a completion is continuous. -/
-instance : ContinuousStar (Completion A) := ⟨continuous_map⟩
+instance instContinuousStar : ContinuousStar (Completion A) := ⟨continuous_map⟩
 
-noncomputable instance : InvolutiveStar (Completion A) where
+noncomputable instance instInvolutiveStar : InvolutiveStar (Completion A) where
   star_involutive a := by
     refine induction_on a (isClosed_eq (continuous_id.star.star) continuous_id) ?_
     intro a
     rw [star_coe, star_coe, star_star]
 
-noncomputable instance : StarMul (Completion A) where
+noncomputable instance instStarMul : StarMul (Completion A) where
   star_mul a b := by
     refine induction_on₂ a b
       (isClosed_eq continuous_mul.star ((continuous_snd.star).mul (continuous_fst.star))) ?_
     intro a b
     rw [← coe_mul, star_coe, star_coe, star_coe, ← coe_mul, star_mul]
 
-noncomputable instance : StarRing (Completion A) where
+noncomputable instance instStarRing : StarRing (Completion A) where
   star_add a b := by
     refine induction_on₂ a b
       (isClosed_eq continuous_add.star ((continuous_fst.star).add (continuous_snd.star))) ?_
