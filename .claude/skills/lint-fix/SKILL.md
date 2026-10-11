@@ -1,32 +1,49 @@
 ---
 name: lint-fix
-description: Fix a change — or an explicitly named file, directory, or commit range — into conformance with the project lint rules: whitespace, 120-column layout, naming, docstrings, English comments, prohibited tokens, pinned files, and Conventional Commits. Applies the safe fixes, verifies with `lake build`, and reports what it deliberately left alone.
+description: Fix a change — or an explicitly named file, directory, or commit range — into conformance with the project lint rules: whitespace, 120-column layout, naming, docstrings, English comments, prohibited tokens, pinned files, and Conventional Commits. Leaves what `lake build` and `lake lint` already detect to them, applies the safe fixes, verifies with both, and reports what it deliberately left alone.
 argument-hint: "[path | dir | main...HEAD]"
 disable-model-invocation: true
 ---
 
-Bring the target files into conformance with the project lint rules: detect the
-violations, apply the fixes that are genuinely mechanical, and report the rest
-rather than forcing them. The rules are the ones `lake exe runLinter`,
-`cz check`, and Mathlib review would eventually catch — this skill closes them
-now, at the cost of touching the working tree, so the discipline about *which*
-fixes are safe matters more than the detection.
+Bring the target files into conformance with the project lint rules. `lake build`
+and `lake lint` detect part of the rules; this skill detects the rest, fixes what
+is genuinely mechanical in both, and reports everything else. It writes to the
+working tree, so the discipline about *which* fixes are safe matters more than
+the detection.
 
-The failure mode to avoid is a fix that makes the lint report clean while making
-the code worse: deleting a `sorry` does not prove a theorem, dropping a
-`set_option` does not make a proof fast, and inventing a docstring for a lemma
-you have not read is a false claim in the repository. Those are reported, not
-fixed.
+The failure mode to avoid is a fix that makes the report clean while making the
+code worse: deleting a `sorry` does not prove a theorem, dropping a `set_option`
+does not make a proof fast, a `nolint` does not make a lint finding wrong, and
+inventing a docstring for a lemma you have not read is a false claim in the
+repository. Those are reported, not fixed.
 
 ## Rules
 
 The rules live in `references/rules.md`, next to this file — never duplicate them
-here. That file is their authoritative home: `AGENTS.md` points readers at it for
-the rules alone, without dragging in this skill's fixing machinery, and keeping
-one copy is what stops a rule from being tightened in one place and left stale in
-the other.
+here. `AGENTS.md` points readers at that file too, and one copy is what stops a
+rule from being tightened in one place and left stale in the other. Read it in
+step 3; detection does not work without it.
 
-Read it in step 3; detection does not work without it.
+## What the tools already detect
+
+Do not re-detect these by hand: steps 2 and 5 run the tools, and a second
+detector only drifts out of step with the first. Both run in CI as well.
+
+- `lake build` — `warningAsError` makes every warning an error, so it rejects
+  `sorry`/`admit` and tabs in `.lean` files. The `linter.mathlibStandardSet`
+  linters flag `.` in place of `·` (`style.cdot`), commands not starting at
+  column 0 and binder spacing (`style.whitespace`), blank lines inside a
+  declaration (`style.emptyLine`), and debug options (`style.setOption`, which
+  sees only `pp`/`trace`/`profiler`/`debug`).
+- `lake lint` — the `lintDriver` in `lakefile.toml`, Batteries' `runLinter`:
+  missing docstrings on definitions, structures and classes (`docBlame`), a `_`
+  in a definition name (`defsWithUnderscore`), `simpNF`, `unusedArguments`, and
+  the rest of its default set.
+
+Both tools see only the modules that `QuantumSystem.lean` imports. A `.lean`
+file not yet registered there is invisible to them, so step 2 checks
+registration and step 3 greps such files for what the tools would otherwise
+catch.
 
 ## What may be fixed, and what may not
 
@@ -36,7 +53,7 @@ cautious one.
 
 **Tier A — apply directly.** Purely textual, no effect on the elaborated term.
 
-- Tabs → spaces at the surrounding indentation width (2-space steps).
+- Tabs in non-`.lean` files → spaces at the surrounding indentation width (2-space steps).
 - Trailing whitespace on a line you are already editing.
 - Layout nits: `by` placement, `calc` alignment on the relation, `case _ =>` →
   `·`, indentation that is not a multiple of two.
@@ -63,13 +80,20 @@ elaboration or break callers, so each one is verified in step 5.
 - `namespace`/`section QuantumSystem`: removing it re-qualifies every
   declaration inside, so treat it as a rename of all of them — sweep references
   the same way, and expect to touch importers.
+- Other `lake lint` findings (`simpNF`, `unusedArguments`, …): fix the code.
+  Treat the finding as right until an experiment shows otherwise. For `simpNF`,
+  run plain `simp` on the lemma's own statement; a lemma that `simp` cannot use
+  should lose `@[simp]`, not gain `nolint`. `@[nolint …]` is acceptable only
+  when the finding is shown wrong for this declaration, with the reason in a
+  comment next to it — e.g. an instance argument the body does not use but the
+  docstring's scope requires.
 
 **Tier C — never fix here; report it.** Either no mechanical fix exists, or the
 fix destroys work.
 
-- `sorry`, `admit`, `axiom`: the only real fix is a proof, which is mathematical
-  work, not linting. Deleting the token leaves an unproved goal or removes a
-  declaration others depend on. Report as a blocker and stop there.
+- `sorry`, `admit` (the build fails on them), `axiom`: the only real fix is a
+  proof, which is mathematical work, not linting. Deleting the token leaves an
+  unproved goal or removes a declaration others depend on. Report as a blocker.
 - `unsafe`: removing it means rewriting the definition to be safe — a design
   change, not a lint fix.
 - Edits to `lakefile.toml`, `lean-toolchain`, `lake-manifest.json`: the fix is
@@ -113,32 +137,40 @@ Before the first edit, capture what "no *new* errors" will be measured against:
 
 - `git status --short` — note pre-existing modifications, so your fixes stay
   distinguishable from the user's own work in the final diff.
-- `lake build` on the target modules. If the build is already broken, say so and
-  fix only Tier A violations: with a red baseline you cannot tell whether a
-  Tier B fix broke something. Detection still runs in full — every Tier B
-  violation you find gets reported as deferred, with the pre-existing error that
-  blocked it. Omitting them would read as "nothing else to fix", which is the
-  opposite of what a red baseline means.
+- `lake exe mk_all --check --lib QuantumSystem` — every target `.lean` file it
+  reports as missing from `QuantumSystem.lean` is *unregistered*: neither tool
+  below checks it. Note those files for step 3. Do not regenerate the aggregate
+  here; report the missing registration instead.
+- `lake build`, then `lake lint` (it reads the built `.olean`s). Their findings
+  in the target files are violations to fix; the rest is the baseline step 5
+  compares against.
+- If the build is already broken, say so and fix only Tier A violations: with a
+  red baseline you cannot tell whether a Tier B fix broke something. Detection
+  still runs in full — every Tier B violation you find gets reported as
+  deferred, with the pre-existing error that blocked it. Omitting them would read
+  as "nothing else to fix", which is the opposite of what a red baseline means.
 
 ### 3. Detect (Bash, restricted to the target files)
 
-Read `references/rules.md` first. The commands below encode the rules that happen
-to be greppable; the rules themselves — and the reasons behind them, which are
-what let you judge a case the grep does not literally cover — are in that file.
+Read `references/rules.md` first. The commands below cover the rules that no tool
+detects but a grep can; the reasons behind the rules, which let you judge a case
+the grep does not literally cover, are in that file.
 
 A grep hit is a *lead*, not a verdict: open the line and confirm it before
 fixing. A token inside a string literal, a docstring quoting the rule, or this
 skill file itself is not a violation — and a fix applied to a false positive is
 a real defect introduced by the fixer.
 
-- **Tabs** (all files): `grep -nP '\t' <files>`
+- **Tabs** (non-`.lean` files and unregistered `.lean` files): `grep -nP '\t' <files>`
 - **Line length** (`.lean` files only — the 120-column rule is Lean layout style;
   the repo's own markdown exceeds it):
   `awk 'length > 120 {print FILENAME ":" FNR ": " length($0) " cols"}' <files>`
 - **Pinned files**: check whether the target list contains `lakefile.toml`,
   `lean-toolchain`, or `lake-manifest.json`.
 - **Prohibited tokens** (`.lean` files only):
-  - `grep -nwE 'sorry|admit|axiom|set_option|unsafe' <files>`
+  - `grep -nwE 'axiom|set_option|unsafe' <files>`
+  - `grep -nwE 'sorry|admit' <unregistered files>` — registered files are left to
+    `lake build`.
   - `grep -nE 'open System|Lean\.(Elab|Meta|Compiler)' <files>`
   - `grep -nE 'meta def|macro |app_unexpander|delab|open Lean' <files>` — the only
     approved hit is `delabAdjoint` in `ForMathlib/Analysis/InnerProductSpace/Adjoint.lean`.
@@ -152,11 +184,16 @@ a real defect introduced by the fixer.
   (`feat|fix|chore|docs|refactor|test|perf`) — `cz check` alone accepts more
   types than the project convention does.
 
-Then read the changed declarations for what cannot be grepped, judging each
-against the corresponding section of `references/rules.md`: naming (its
-*Naming* bullets), docstring presence and whether the first sentence is a
-self-contained summary, module docs on new files (*Docstrings*), comment
-language (*Editing Hygiene*), and layout (*Layout*).
+Then read the changed declarations for what neither a tool nor a grep catches,
+judging each against `references/rules.md`:
+
+- *Naming* of theorems and lemmas (`defsWithUnderscore` sees definitions only),
+  and `theorem` versus `lemma`.
+- *Docstrings*: presence on theorems and lemmas (`docBlame` skips them), a
+  self-contained first sentence on every docstring, module docs on new files.
+- *Editing Hygiene*: comment language.
+- *Layout*: `by` placement, `calc` alignment, `case _ =>` instead of `·`,
+  indentation in steps of two, trailing whitespace.
 
 Confine this to the changed declarations (use the diff's line ranges); do not
 re-litigate untouched code in a diff-derived run. An explicit file or directory
@@ -181,7 +218,8 @@ A fix is not done because the file was written; it is done when the build agrees
 
 - `lake build` on the edited modules **and their downstream importers** — Tier B
   renames and namespace removals fail precisely there.
-- Compare against the step 2 baseline: no new errors and no new warnings.
+- `lake lint` afterwards. Against the step 2 baseline: no new error, warning or
+  lint finding.
 - Re-run the step 3 detection over the same targets to confirm the violations
   are actually gone and that no fix introduced a new one (a re-wrap that lands
   on a tab, a rename that collides).
@@ -200,7 +238,7 @@ only this pass knows about.
 
 **Scope**: <N> files (<M> .lean) / <commit range if any>
 **Result**: <K> fixed, <L> left unfixed, <D> deferred (see below)
-**Build**: <lake build outcome vs. baseline, naming the modules built>
+**Build**: <lake build and lake lint outcome vs. baseline, naming the modules built>
 
 ## ✅ Fixed
 - `file:line` — <rule>: <what it was> → <what it is now>. [Tier A|B]

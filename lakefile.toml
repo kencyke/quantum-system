@@ -1,6 +1,7 @@
 name = "QuantumSystem"
 version = "0.1.0"
 defaultTargets = ["QuantumSystem"]
+lintDriver = "batteries/runLinter"
 
 [[lean_lib]]
 name = "QuantumSystem"
