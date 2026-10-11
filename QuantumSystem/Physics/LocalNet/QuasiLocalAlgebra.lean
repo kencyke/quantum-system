@@ -5,7 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.ForMathlib.Algebra.Colimit.Star
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Completion
 public import QuantumSystem.Physics.LocalNet.Covariance
