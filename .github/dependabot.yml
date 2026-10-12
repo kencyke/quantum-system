@@ -1,0 +1,18 @@
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    # GitHub documents `/` for `github-actions`: it then scans `.github/workflows`.
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      # One pull request per kind of update, so a month's bumps land together.
+      actions-version-updates:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      actions-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
