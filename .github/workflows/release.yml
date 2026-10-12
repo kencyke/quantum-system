@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [lean-toolchain]
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: leanprover-community/lean-release-tag@ee8ee743e5a36ff0e75ff51035f6a95a9d1bdf59 # main at 2026-10-13
+        with:
+          do-release: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # `lean-release-tag` creates the release without `--prerelease`; this marks release candidates.
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="$(sed -n 's|^leanprover/lean4:||p' lean-toolchain)"
+          if [[ -z "$tag" ]] || gh release view "$tag" >/dev/null 2>&1; then exit 0; fi
+          if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then exit 0; fi
+          flags=()
+          if [[ "$tag" == *-rc* ]]; then flags=(--prerelease --latest=false); fi
+          gh release create "$tag" --verify-tag --title "$tag" --generate-notes "${flags[@]}"

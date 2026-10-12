@@ -6,6 +6,13 @@
 - `QuantumSystem.lean` — aggregate root that re-exports every module.
 - `lake exe mk_all --lib QuantumSystem` (Mathlib's script) — regenerates the aggregate.
 - `lakefile.toml`, `lean-toolchain`, `lake-manifest.json` — pinned toolchain and manifest.
+- `.github/workflows/lean_action_ci.yml` — CI: `lake build`, `lake lint`, the `mk_all` check, and
+  lean-action's `axiom-audit`, which fails on any declaration depending on an axiom other than
+  `propext`, `Classical.choice` and `Quot.sound`. CI catches mistakes, not a malicious contributor:
+  pull request review is the trust boundary.
+- `.github/workflows/release.yml` — tags the commit on `main` that switches to a Lean toolchain with
+  its version (`lean-release-tag`) and creates a GitHub Release for it (a pre-release for `-rc`
+  versions).
 
 ## Working Principles
 

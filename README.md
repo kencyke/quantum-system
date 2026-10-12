@@ -12,8 +12,23 @@ A Lean 4 formalization of quantum systems from an operator-algebraic perspective
 >
 > * Contributing guidelines (including an AI policy)
 > * Repository scope and roadmap, including what should and should not be included
-> * Release workflow
 > * Documentation (including Lean Blueprint)
+
+## Usage
+
+Releases follow Mathlib's convention: the commit on `main` that switches to a Lean toolchain is
+tagged with the toolchain's version, such as `v4.35.0-rc2`, and published as a GitHub Release,
+marked as a pre-release for release candidates. CI builds the library, runs the linters and checks
+that no declaration depends on an axiom other than `propext`, `Classical.choice` and `Quot.sound`.
+
+To depend on this library from a project on the same toolchain, add to its `lakefile.toml`:
+
+```toml
+[[require]]
+name = "QuantumSystem"
+git = "https://github.com/kencyke/quantum-system"
+rev = "v4.35.0-rc2"
+```
 
 ## Highlights
 
