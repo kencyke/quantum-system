@@ -16,7 +16,7 @@ A Lean 4 formalization of quantum systems from an operator-algebraic perspective
 
 ## Usage
 
-Releases follow Mathlib's convention: the commit on `main` that switches to a Lean toolchain is
+Releases follow Mathlib's convention: the commit on `main` that switches to a Lean release is
 tagged with the toolchain's version (`v4.x.y`, or `v4.x.y-rcN` for a release candidate) and
 published as a GitHub Release, marked as a pre-release for release candidates. CI builds the
 library, runs the linters and checks that no declaration depends on an axiom other than `propext`,

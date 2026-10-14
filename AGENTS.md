@@ -10,9 +10,9 @@
   lean-action's `axiom-audit`, which fails on any declaration depending on an axiom other than
   `propext`, `Classical.choice` and `Quot.sound`. CI catches mistakes, not a malicious contributor:
   pull request review is the trust boundary.
-- `.github/workflows/release.yml` — tags the commit on `main` that switches to a Lean toolchain with
-  its version (`lean-release-tag`) and creates a GitHub Release for it (a pre-release for `-rc`
-  versions).
+- `.github/workflows/release.yml` — Mathlib's convention: each commit pushed to `main` that switches
+  `lean-toolchain` to a Lean release is tagged with its version (`v4.x.y` or `v4.x.y-rcN`) and gets a
+  GitHub Release (a pre-release for `-rc` versions); any other toolchain is reported and skipped.
 - `.github/workflows/update_mathlib.yml` — weekly, opens a pull request bumping Mathlib to its newest
   stable `v4.x.y` tag (release candidates are skipped): rewrites the `rev` in `lakefile.toml` and
   derives `lean-toolchain` and `lake-manifest.json` from Mathlib's own files at that tag, so no
