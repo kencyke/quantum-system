@@ -13,6 +13,12 @@
 - `.github/workflows/release.yml` — tags the commit on `main` that switches to a Lean toolchain with
   its version (`lean-release-tag`) and creates a GitHub Release for it (a pre-release for `-rc`
   versions).
+- `.github/workflows/update_mathlib.yml` — weekly, opens a pull request bumping Mathlib to its newest
+  stable `v4.x.y` tag (release candidates are skipped): rewrites the `rev` in `lakefile.toml` and
+  derives `lean-toolchain` and `lake-manifest.json` from Mathlib's own files at that tag, so no
+  `lake update` (and no Mathlib code) runs in CI. It uses a GitHub App token
+  (`UPDATE_APP_CLIENT_ID` / `UPDATE_APP_PRIVATE_KEY`, `contents` and `pull-requests` write only)
+  so that CI runs on the pull request.
 
 ## Working Principles
 

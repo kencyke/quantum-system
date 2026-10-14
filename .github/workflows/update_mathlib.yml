@@ -1,0 +1,212 @@
+name: Update Mathlib
+
+on:
+  schedule:
+    - cron: '0 3 * * 1' # every Monday at 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    if: github.repository == 'kencyke/quantum-system'
+    timeout-minutes: 5
+    outputs:
+      current: ${{ steps.check.outputs.current }}
+      latest: ${{ steps.check.outputs.latest }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+
+      # Only stable `v4.x.y` tags are proposed; release candidates and tags such as `v4.15.0-patch1`
+      # are skipped. Walking the tags newest first (`versionsort.suffix=-rc` sorts `v4.x.y-rcN`
+      # before `v4.x.y`), reaching the current tag before any stable one means nothing is newer,
+      # which also holds while the current tag is a release candidate. Sets no outputs then.
+      # The current `rev` must itself be a Mathlib tag: otherwise the walk never stops at it and
+      # could propose a downgrade, so the step fails instead. Both outputs reach `GITHUB_OUTPUT`
+      # and a `sed` pattern, so their shape is checked as well.
+      - name: Find the newest stable Mathlib tag
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          current="$(jq -er '.packages[] | select(.name == "mathlib") | .inputRev' lake-manifest.json)"
+          if [[ ! "$current" =~ ^v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "::error::current Mathlib rev '$current' is not a version tag"
+            exit 1
+          fi
+          tags="$(git -c versionsort.suffix=-rc ls-remote --tags --refs --sort=-v:refname \
+            https://github.com/leanprover-community/mathlib4 'v4.*')"
+          if ! awk -v current="refs/tags/$current" '$2 == current { found = 1 } END { exit !found }' <<< "$tags"; then
+            echo "::error::current Mathlib rev '$current' is not a tag of mathlib4"
+            exit 1
+          fi
+          latest="$(awk -v current="refs/tags/$current" '
+            $2 == current { exit }
+            $2 ~ /^refs\/tags\/v4\.[0-9]+\.[0-9]+$/ { sub("refs/tags/", "", $2); print $2; exit }
+          ' <<< "$tags")"
+          if [[ -z "$latest" ]]; then
+            echo "No stable Mathlib tag newer than $current"
+            exit 0
+          fi
+          # An existing branch may carry fixes pushed on top of the bump; do not overwrite them.
+          # Only a 404 means the branch is absent: any other failure must not fall through to
+          # `create-pull-request`, which would update (and so overwrite) an existing branch.
+          if gh api "repos/$GH_REPO/git/ref/heads/update-mathlib/$latest" --silent 2>"$RUNNER_TEMP/gh.err"; then
+            echo "update-mathlib/$latest already exists"
+            exit 0
+          elif ! grep -q 'HTTP 404' "$RUNNER_TEMP/gh.err"; then
+            cat "$RUNNER_TEMP/gh.err" >&2
+            exit 1
+          fi
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+  # No `lake update` runs in this workflow: it would execute Mathlib's `lakefile.lean` (and its
+  # dependencies') on the runner, and what it would write is determined by Mathlib's own files at
+  # the tag, so this job derives the bump from them instead. The only untrusted code the bump ever
+  # runs is in the pull request's own CI, which writes only to its own ref's Actions cache.
+  # The App key is an `update-mathlib` environment secret whose deployment branches are limited to
+  # `main`, so a workflow run from any other branch cannot read it.
+  pull-request:
+    needs: check
+    if: needs.check.outputs.latest
+    runs-on: ubuntu-latest
+    environment: update-mathlib
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+
+      # What `lake update` would write: `lean-toolchain` is Mathlib's file, mathlib is pinned to the
+      # tag's commit, and every other package is Mathlib's manifest entry as `inherited`. The
+      # manifest is rendered in Lake's own format (Lean's `Json.pretty` on a manifest: one
+      # `"key": value` per line, keys in reverse code point order, a trailing newline), so that a
+      # later manual `lake update` produces no spurious diff; the renderer must reproduce both
+      # Lake-written inputs byte for byte first, and the job fails if Lake's format has changed.
+      # The manifest `version` is Mathlib's, which is what the matching Lake writes; Lake reads any
+      # `1.x`. The root's `name`, `lakeDir`, `packagesDir` and `fixedToolchain` stay as on `main`.
+      - name: Derive the bump
+        id: derive
+        env:
+          CURRENT: ${{ needs.check.outputs.current }}
+          LATEST: ${{ needs.check.outputs.latest }}
+          MATHLIB: ${{ runner.temp }}/mathlib
+        run: |
+          current="$(jq -er '.packages[] | select(.name == "mathlib") | .inputRev' lake-manifest.json)"
+          if [[ ! "$LATEST" =~ ^v4\.[0-9]+\.[0-9]+$ || ! "$CURRENT" =~ ^v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]] \
+            || [[ "$CURRENT" != "$current" ]]; then
+            echo "::error::unexpected tags from the check job: '$CURRENT' -> '$LATEST'"
+            exit 1
+          fi
+          # The commit the tag points to, peeled in case the tag is annotated.
+          sha="$(git ls-remote https://github.com/leanprover-community/mathlib4 \
+            "refs/tags/$LATEST" "refs/tags/$LATEST^{}" | awk '
+              $2 ~ /\^\{\}$/ { peeled = $1; next }
+              { tag = $1 }
+              END { print (peeled != "" ? peeled : tag) }')"
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::cannot resolve Mathlib tag $LATEST"
+            exit 1
+          fi
+          mkdir "$MATHLIB"
+          for file in lean-toolchain lake-manifest.json; do
+            curl -fsSL -o "$MATHLIB/$file" \
+              "https://raw.githubusercontent.com/leanprover-community/mathlib4/$sha/$file"
+          done
+          # `$(< …)` drops the trailing newline.
+          if [[ ! "$(< "$MATHLIB/lean-toolchain")" =~ ^leanprover/lean4:v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "::error::unexpected Mathlib $LATEST toolchain: $(head -c 200 "$MATHLIB/lean-toolchain")"
+            exit 1
+          fi
+          # Each file must hold a single JSON document, since only the first one is used. Every
+          # package is a git dependency; mathlib appears exactly once here and never in Mathlib's own
+          # manifest.
+          if ! jq -en --slurpfile main lake-manifest.json --slurpfile mathlib "$MATHLIB/lake-manifest.json" '
+              ($main | length) == 1 and ($mathlib | length) == 1
+              and ($main[0].packages | map(select(.name == "mathlib"))
+                | length == 1 and .[0].type == "git" and .[0].inherited == false
+                  and .[0].url == "https://github.com/leanprover-community/mathlib4")
+              and ($mathlib[0].packages | map(.name) | index("mathlib") == null and length == (unique | length))
+              and all($mathlib[0].packages[]; .type == "git")' >/dev/null; then
+            echo "::error::lake-manifest.json or Mathlib's at $LATEST ($sha) is not of the expected shape"
+            exit 1
+          fi
+          # Every value in a manifest is a scalar, so each `"key": value` pair fits on one line.
+          render='
+            def pairs: to_entries | sort_by(.key) | reverse;
+            def pair: "\(.key | tojson): \(.value | tojson)";
+            def entry: "{" + ([pairs[] | pair] | join(",\n   ")) + "}";
+            def render:
+              "{" + ([pairs[] | if .key == "packages"
+                  then "\"packages\":\n [" + ([.value[] | entry] | join(",\n  ")) + "]"
+                  else pair end] | join(",\n ")) + "}\n";
+          '
+          for file in lake-manifest.json "$MATHLIB/lake-manifest.json"; do
+            if ! jq -rj "$render render" "$file" | cmp -s - "$file"; then
+              echo "::error::Lake's manifest format changed ($file); update the renderer"
+              exit 1
+            fi
+          done
+          jq -rj --arg latest "$LATEST" --arg sha "$sha" --slurpfile mathlib "$MATHLIB/lake-manifest.json" "$render"'
+            $mathlib[0] as $ml
+            | .version = $ml.version
+            | .packages = [.packages[] | select(.name == "mathlib") | .rev = $sha | .inputRev = $latest]
+                + [$ml.packages[] | .inherited = true]
+            | render' lake-manifest.json > "$RUNNER_TEMP/lake-manifest.json"
+          mv "$RUNNER_TEMP/lake-manifest.json" lake-manifest.json
+          cp "$MATHLIB/lean-toolchain" .
+          sed -i "s|^rev = \"$CURRENT\"$|rev = \"$LATEST\"|" lakefile.toml
+          if git diff --quiet lakefile.toml; then
+            echo "::error::no 'rev = \"$CURRENT\"' in lakefile.toml"
+            exit 1
+          fi
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      # The App's installation needs only these two permissions (the pull request never touches
+      # `.github/`, so no `workflows`) and must not be allowed to bypass the rulesets on `main`.
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ vars.UPDATE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.UPDATE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # The App token, unlike `GITHUB_TOKEN`, lets the pull request trigger `lean_action_ci.yml`.
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          sign-commits: true
+          add-paths: |
+            lakefile.toml
+            lean-toolchain
+            lake-manifest.json
+          branch: update-mathlib/${{ steps.derive.outputs.latest }}
+          base: main
+          commit-message: 'chore: bump Mathlib to ${{ steps.derive.outputs.latest }}'
+          title: 'chore: bump Mathlib to ${{ steps.derive.outputs.latest }}'
+          body: |
+            Bumps Mathlib from `${{ steps.derive.outputs.current }}` to `${{ steps.derive.outputs.latest }}` and the Lean toolchain to match.
+
+            `lean-toolchain` and `lake-manifest.json` are derived from Mathlib's own files at `${{ steps.derive.outputs.sha }}`; no `lake update` was run.
+
+            - [Mathlib changes](https://github.com/leanprover-community/mathlib4/compare/${{ steps.derive.outputs.current }}...${{ steps.derive.outputs.latest }})
+            - [Workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            If CI fails, push the fixes to this branch.
