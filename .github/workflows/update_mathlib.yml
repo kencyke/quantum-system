@@ -99,6 +99,8 @@ jobs:
       # Lake-written inputs byte for byte first, and the job fails if Lake's format has changed.
       # The manifest `version` is Mathlib's, which is what the matching Lake writes; Lake reads any
       # `1.x`. The root's `name`, `lakeDir`, `packagesDir` and `fixedToolchain` stay as on `main`.
+      # `.packages` is replaced wholesale, so mathlib must be the only direct dependency: the shape
+      # check below fails on any other, rather than dropping it from the manifest.
       - name: Derive the bump
         id: derive
         env:
@@ -129,20 +131,21 @@ jobs:
           done
           # `$(< …)` drops the trailing newline.
           if [[ ! "$(< "$MATHLIB/lean-toolchain")" =~ ^leanprover/lean4:v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
-            echo "::error::unexpected Mathlib $LATEST toolchain: $(head -c 200 "$MATHLIB/lean-toolchain")"
+            echo "::error::unexpected Mathlib $LATEST toolchain: $(tr -cd '[:print:]' < "$MATHLIB/lean-toolchain" | head -c 200)"
             exit 1
           fi
           # Each file must hold a single JSON document, since only the first one is used. Every
-          # package is a git dependency; mathlib appears exactly once here and never in Mathlib's own
-          # manifest.
+          # package is a git dependency; mathlib appears exactly once here, as the only direct
+          # dependency, and never in Mathlib's own manifest.
           if ! jq -en --slurpfile main lake-manifest.json --slurpfile mathlib "$MATHLIB/lake-manifest.json" '
               ($main | length) == 1 and ($mathlib | length) == 1
               and ($main[0].packages | map(select(.name == "mathlib"))
                 | length == 1 and .[0].type == "git" and .[0].inherited == false
                   and .[0].url == "https://github.com/leanprover-community/mathlib4")
+              and all($main[0].packages[]; .name == "mathlib" or .inherited == true)
               and ($mathlib[0].packages | map(.name) | index("mathlib") == null and length == (unique | length))
               and all($mathlib[0].packages[]; .type == "git")' >/dev/null; then
-            echo "::error::lake-manifest.json or Mathlib's at $LATEST ($sha) is not of the expected shape"
+            echo "::error::lake-manifest.json or Mathlib's at $LATEST ($sha) is not of the expected shape (mathlib must be the only direct dependency)"
             exit 1
           fi
           # Every value in a manifest is a scalar, so each `"key": value` pair fits on one line.
