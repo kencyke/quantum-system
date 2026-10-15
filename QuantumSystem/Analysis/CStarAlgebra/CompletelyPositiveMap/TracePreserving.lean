@@ -73,8 +73,8 @@ variable {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
 /-- A map `Φ : B(H) → B(K)` between the operator algebras of finite-dimensional Hilbert spaces is
 **trace preserving** if `tr (Φ A) = tr A` for all `A`. It is stated for any `FunLike` type, so
 that it applies to linear maps and to completely positive maps alike. -/
--- The `FiniteDimensional` instances are not used by the body, since Mathlib's `LinearMap.trace` is
--- defined (as `0`) on every module; they restrict the notion to the spaces where `Tr` is the trace.
+-- The `FiniteDimensional` instances are unused by the body; they restrict the notion to where `Tr`
+-- is the trace.
 @[nolint unusedArguments]
 def IsTracePreserving [FiniteDimensional ℂ H] [FiniteDimensional ℂ K] (Φ : F) : Prop :=
   ∀ A : H →L[ℂ] H, Tr (Φ A) = Tr A
