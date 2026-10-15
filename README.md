@@ -16,14 +16,7 @@ A Lean 4 formalization of quantum systems from an operator-algebraic perspective
 
 ## Usage
 
-Releases follow Mathlib's convention: the commit on `main` that switches to a Lean release is
-tagged with the toolchain's version (`v4.x.y`, or `v4.x.y-rcN` for a release candidate) and
-published as a GitHub Release, marked as a pre-release for release candidates. CI builds the
-library, runs the linters and checks that no declaration depends on an axiom other than `propext`,
-`Classical.choice` and `Quot.sound`.
-
-To depend on this library, add to your project's `lakefile.toml`, with `rev` set to the
-[release](https://github.com/kencyke/quantum-system/releases) tag matching its `lean-toolchain`:
+To depend on this library, add to your project's `lakefile.toml`:
 
 ```toml
 [[require]]
