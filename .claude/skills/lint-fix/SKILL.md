@@ -30,11 +30,11 @@ Do not re-detect these by hand: steps 2 and 5 run the tools, and a second
 detector only drifts out of step with the first. Both run in CI as well.
 
 - `lake build` — `warningAsError` makes every warning an error, so it rejects
-  `sorry`/`admit` and tabs in `.lean` files. The `linter.mathlibStandardSet`
-  linters flag `.` in place of `·` (`style.cdot`), commands not starting at
-  column 0 and binder spacing (`style.whitespace`), blank lines inside a
-  declaration (`style.emptyLine`), and debug options (`style.setOption`, which
-  sees only `pp`/`trace`/`profiler`/`debug`).
+  `sorry`/`admit`; tabs in `.lean` files are a Lean lexer error regardless. The
+  `linter.mathlibStandardSet` linters flag `.` in place of `·` (`style.cdot`),
+  commands not starting at column 0 and binder spacing (`style.whitespace`),
+  blank lines inside a declaration (`style.emptyLine`), and debug options
+  (`style.setOption`, which sees only `pp`/`trace`/`profiler`/`debug`).
 - `lake lint` — the `lintDriver` in `lakefile.toml`, Batteries' `runLinter`:
   missing docstrings on definitions, structures and classes (`docBlame`), a `_`
   in a definition name (`defsWithUnderscore`), `simpNF`, `unusedArguments`, and
