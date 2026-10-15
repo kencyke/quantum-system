@@ -17,8 +17,9 @@
   commit of the same push has no CI run of its own and is not released.
 - `.github/workflows/update_mathlib.yml` — weekly, opens a pull request bumping Mathlib to its newest
   stable `v4.x.y` tag (release candidates are skipped): rewrites the `rev` in `lakefile.toml` and
-  derives `lean-toolchain` and `lake-manifest.json` from Mathlib's own files at that tag, so no
-  `lake update` (and no Mathlib code) runs in CI. It uses a GitHub App token
+  derives `lean-toolchain` and `lake-manifest.json` from Mathlib's own files at that tag, so the
+  workflow itself runs no `lake update` (and no Mathlib code): Mathlib's code first runs in the pull
+  request's own CI. It uses a GitHub App token
   (`UPDATE_APP_CLIENT_ID` / `UPDATE_APP_PRIVATE_KEY`, `contents` and `pull-requests` write only)
   so that CI runs on the pull request.
 
