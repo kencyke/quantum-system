@@ -2,12 +2,13 @@ version: 2
 
 updates:
   - package-ecosystem: "github-actions"
-    # GitHub documents `/` for `github-actions`: it then scans `.github/workflows`.
     directory: "/"
     schedule:
       interval: "monthly"
+    # A week's delay lets a hijacked release be pulled before it is proposed.
+    cooldown:
+      default-days: 7
     groups:
-      # One pull request per kind of update, so a month's bumps land together.
       actions-version-updates:
         applies-to: version-updates
         patterns:
