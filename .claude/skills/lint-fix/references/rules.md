@@ -14,7 +14,8 @@ does not literally cover, instead of guessing.
 
 - Spaces only, never tabs.
   **Why:** Mathlib style; the Lean lexer rejects tabs, and indentation in other files should match.
-- Never modify `lakefile.toml`, `lean-toolchain`, or `lake-manifest.json`.
+- As an agent, never modify `lakefile.toml`, `lean-toolchain`, or `lake-manifest.json`. Changes to them come
+  from the user or from the Mathlib bump workflow (`update_mathlib.yml`), and are not violations.
   **Why:** the toolchain and manifest are pinned intentionally; accidental edits cascade into reproducibility failures.
 - Regenerate the aggregate `QuantumSystem.lean` with Mathlib's script, `lake exe mk_all --lib QuantumSystem`.
 - Write comments in English.

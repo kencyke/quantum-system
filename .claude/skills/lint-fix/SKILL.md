@@ -96,9 +96,10 @@ fix destroys work.
   unproved goal or removes a declaration others depend on. Report as a blocker.
 - `unsafe`: removing it means rewriting the definition to be safe — a design
   change, not a lint fix.
-- Edits to `lakefile.toml`, `lean-toolchain`, `lake-manifest.json`: the fix is
-  `git checkout -- <file>`, which discards whatever the user did. Print the
-  command and let them decide.
+- Edits to `lakefile.toml`, `lean-toolchain`, `lake-manifest.json`: the rule
+  binds agents only, and a diff cannot tell an agent's edit from the user's or
+  the Mathlib bump workflow's, which are legitimate. Never edit or revert these
+  files; list the changed ones so the user can confirm they were intended.
 - Commit messages: correcting one means `git commit --amend` or a rebase, which
   rewrites history. Print the corrected message and the command; do not run it
   without the user saying so in this conversation.
