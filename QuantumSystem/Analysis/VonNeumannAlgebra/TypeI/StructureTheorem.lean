@@ -8,7 +8,6 @@ module
 public import Mathlib.Algebra.Star.Subalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor
-public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Defs
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant

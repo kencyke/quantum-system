@@ -9,7 +9,12 @@ public import Mathlib.Analysis.Normed.Operator.Basic
 public import Mathlib.Analysis.SpecificLimits.Normed
 public import Mathlib.Topology.Algebra.Module.LinearPMap
 
-import Mathlib.Analysis.Normed.Algebra.Spectrum
+import Mathlib.Analysis.Normed.Operator.NormedSpace
+import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
+import Mathlib.Data.Sym.Sym2
+import Mathlib.RingTheory.LocalRing.Basic
+import Mathlib.Tactic.NormNum.GCD
+import Mathlib.Tactic.Positivity
 
 /-!
 # Resolvents of unbounded operators

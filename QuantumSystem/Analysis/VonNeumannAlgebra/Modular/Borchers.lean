@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.RelativeModularConj
+public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.RelativeTomitaAdjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 
 /-!

@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TraceDual
+public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePreserving
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 
 /-!

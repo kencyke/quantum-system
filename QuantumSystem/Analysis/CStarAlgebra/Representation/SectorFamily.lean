@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.UnitaryEquiv
+public import QuantumSystem.Analysis.CStarAlgebra.Representation.Basic
 
 /-!
 # Sector families

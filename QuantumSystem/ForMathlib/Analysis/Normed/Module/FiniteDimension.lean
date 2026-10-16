@@ -8,7 +8,9 @@ module
 public import Mathlib.Analysis.Normed.Module.Basic
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 
-import Mathlib.Analysis.Normed.Module.FiniteDimension
+import Mathlib.Algebra.Order.BigOperators.Expect
+import Mathlib.Analysis.Normed.Operator.Basic
+import Mathlib.Topology.Algebra.Module.FiniteDimension
 
 /-!
 # Kernel domination on a finite-dimensional space

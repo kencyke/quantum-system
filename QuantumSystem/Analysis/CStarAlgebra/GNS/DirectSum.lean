@@ -5,8 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.GNS.Irreducible
+public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.DirectSum
+public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
 
 /-!
 # The direct sum of the GNS representations of all pure states

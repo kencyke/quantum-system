@@ -9,7 +9,6 @@ public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.Semilinear
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
-public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 
 /-!
 # Von Neumann's theorem on `T†T`
