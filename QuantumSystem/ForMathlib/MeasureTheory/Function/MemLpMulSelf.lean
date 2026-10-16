@@ -5,8 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.MeasureTheory.Function.LpSeminorm.Monotonicity
-public import Mathlib.MeasureTheory.Function.LpSeminorm.TriangleInequality
+public import Mathlib.MeasureTheory.Constructions.BorelSpace.Complex
+public import Mathlib.MeasureTheory.Function.LpSeminorm.Defs
+
+import Mathlib.MeasureTheory.Function.LpSeminorm.Monotonicity
+import Mathlib.MeasureTheory.Function.LpSeminorm.TriangleInequality
 
 /-!
 # Square-integrability of a function from that of its square

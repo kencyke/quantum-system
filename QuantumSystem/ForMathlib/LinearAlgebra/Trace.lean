@@ -6,7 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.LinearAlgebra.Trace
-public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Basic
+-- The notation `Tr` below expands to `ContinuousLinearMap.toLinearMap`, which shake does not see.
+public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Basic -- shake: keep
 
 /-!
 # Trace notation for bounded operators

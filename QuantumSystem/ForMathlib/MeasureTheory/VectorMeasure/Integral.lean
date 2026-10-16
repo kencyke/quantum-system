@@ -7,8 +7,10 @@ module
 
 public import Mathlib.MeasureTheory.Measure.Complex
 public import Mathlib.MeasureTheory.Measure.HasOuterApproxClosed
+public import Mathlib.MeasureTheory.VectorMeasure.Decomposition.Jordan
 public import Mathlib.MeasureTheory.VectorMeasure.Integral
-public import Mathlib.MeasureTheory.VectorMeasure.Variation.SignedMeasure
+
+import Mathlib.MeasureTheory.VectorMeasure.Variation.SignedMeasure
 
 /-!
 # Integrals against signed and complex measures

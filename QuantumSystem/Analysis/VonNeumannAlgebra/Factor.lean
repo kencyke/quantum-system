@@ -5,7 +5,6 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.Projection
 public import QuantumSystem.Analysis.VonNeumannAlgebra.BoundedOperators
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant

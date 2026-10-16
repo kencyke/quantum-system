@@ -14,6 +14,8 @@ public import QuantumSystem.Analysis.SpectralTheory.PolarDecomposition
 public import QuantumSystem.ForMathlib.Analysis.Complex.Strip
 public import QuantumSystem.ForMathlib.Analysis.Complex.WeakHolomorphic
 
+import Mathlib.Analysis.LocallyConvex.Barrelled
+
 /-!
 # Interpolation between the imaginary powers of two positive operators
 

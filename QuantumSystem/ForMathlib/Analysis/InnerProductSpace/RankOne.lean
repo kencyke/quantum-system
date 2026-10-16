@@ -5,8 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.InnerProductSpace.Positive
+public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.InnerProductSpace.Projection.Submodule
+
+import Mathlib.Analysis.InnerProductSpace.Positive
 
 /-!
 # Rank-one operators

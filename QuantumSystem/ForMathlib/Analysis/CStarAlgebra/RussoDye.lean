@@ -5,8 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
+public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
+
+import Mathlib.Analysis.CStarAlgebra.Unitary.Span
 
 /-!
 # The Russo–Dye theorem

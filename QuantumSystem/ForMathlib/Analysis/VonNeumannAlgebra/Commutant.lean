@@ -5,11 +5,13 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
-public import Mathlib.Analysis.CStarAlgebra.Unitary.Span
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
 public import Mathlib.Analysis.VonNeumannAlgebra.Basic
+
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
+import Mathlib.Analysis.CStarAlgebra.Unitary.Span
 
 /-!
 # The commutant of a set, the generated von Neumann algebra, and unitary conjugation

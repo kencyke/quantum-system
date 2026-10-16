@@ -329,7 +329,7 @@ lemma measure_integralApply (hg : Measurable g) (hy : MemLp g 2 (E.measure y)) :
     E.measure (E.integralApply g y) = (E.measure y).withDensity fun x => ‖g x‖ₑ ^ 2 := by
   ext s hs
   rw [measure_apply _ hs, withDensity_apply _ hs, E.apply_integralApply hg hs hy,
-    E.enorm_integralApply (hg.indicator hs) (hy.indicator hs),
+    E.enorm_integralApply (hg.indicator hs) (hy.indicator hs.nullMeasurableSet),
     eLpNorm_two_sq (hg.indicator hs).aestronglyMeasurable, ← lintegral_indicator hs]
   refine lintegral_congr fun x => ?_
   by_cases hx : x ∈ s <;> simp [hx]

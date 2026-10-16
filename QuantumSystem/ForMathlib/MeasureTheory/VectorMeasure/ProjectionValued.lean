@@ -5,9 +5,12 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.InnerProductSpace.Positive
 public import Mathlib.MeasureTheory.Measure.Complex
 public import Mathlib.Topology.Algebra.Module.Spaces.PointwiseConvergenceCLM
+
+import Mathlib.Analysis.InnerProductSpace.StarOrder
 
 /-!
 # Projection-valued measures
@@ -192,7 +195,7 @@ lemma mul_eq_zero_of_disjoint (hst : Disjoint s t) : E s * E t = 0 := by
   by_cases hs : MeasurableSet s
   · by_cases ht : MeasurableSet t
     · let : Module ℚ (H →L[ℂ] H) := Module.compHom _ (algebraMap ℚ ℂ)
-      have : IsAddTorsionFree (H →L[ℂ] H) := IsAddTorsionFree.of_module_rat _
+      have : HasUniqueDiv (H →L[ℂ] H) := HasUniqueDiv.of_module_rat _
       have h := (E.isStarProjection (s ∪ t)).isIdempotentElem
       rw [E.apply_union hst hs ht] at h
       have hs' := (E.isStarProjection s).isIdempotentElem

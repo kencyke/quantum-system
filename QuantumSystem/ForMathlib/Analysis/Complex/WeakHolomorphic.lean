@@ -5,9 +5,13 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Complex.Liouville
-public import Mathlib.Analysis.Complex.Schwarz
-public import Mathlib.Analysis.Normed.Operator.BanachSteinhaus
+public import Mathlib.Analysis.Calculus.DSlope
+public import Mathlib.Analysis.InnerProductSpace.Basic
+
+import Mathlib.Analysis.Complex.Liouville
+import Mathlib.Analysis.Complex.RemovableSingularity
+import Mathlib.Analysis.Complex.Schwarz
+import Mathlib.Analysis.Normed.Operator.BanachSteinhaus
 
 /-!
 # Weakly holomorphic locally bounded functions are holomorphic

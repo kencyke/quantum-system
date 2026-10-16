@@ -10,6 +10,8 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.HilbertSchmidt
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
+
 /-!
 # Lieb's concavity theorem
 

@@ -8,7 +8,8 @@ module
 public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 public import Mathlib.Analysis.InnerProductSpace.l2Space
-public import Mathlib.LinearAlgebra.TensorProduct.Finiteness
+
+import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 
 /-!
 # The completed Hilbert-space tensor product and operator amplification

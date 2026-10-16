@@ -7,13 +7,14 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
-public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.Normed.Operator.Extend
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
+
+import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 
 /-!
 # Radon–Nikodym theorem for functionals dominated by a vector functional

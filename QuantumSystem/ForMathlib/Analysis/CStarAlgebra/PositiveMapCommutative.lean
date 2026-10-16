@@ -6,8 +6,10 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
-public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
-public import Mathlib.Topology.PartitionOfUnity
+
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
+import Mathlib.Topology.PartitionOfUnity
 
 /-!
 # Positive maps on commutative unital C⋆-algebras are completely positive

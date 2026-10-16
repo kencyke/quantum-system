@@ -11,6 +11,8 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.Multiplication
 public import QuantumSystem.InformationTheory.Entropy.Araki.NormalFunctional
 public import QuantumSystem.InformationTheory.KullbackLeibler.EReal
 
+import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLogExp
+
 /-!
 # Araki's relative entropy on a multiplication algebra: Kullback–Leibler
 

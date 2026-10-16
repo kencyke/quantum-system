@@ -153,7 +153,8 @@ omit [IsTopologicalAddGroup V] [FiniteDimensional ℝ V] in
 lemma unitaryGroup_selfAdjointGeneratorAlong (a : V) (s : ℝ) :
     (hU.isSelfAdjoint_selfAdjointGeneratorAlong a).unitaryGroup s = U (s • a) := by
   rw [← show U.compAddMonoidHom (LinearMap.toSpanSingleton ℝ V a : ℝ →+ V) s = U (s • a) by
-    simp]
+    -- `map_smul` would time out searching for the nonexistent `SMul ℝ ↥(unitary (H →L[ℂ] H))`.
+    simp [-map_smul]]
   exact congrArg (· s) (hU.compAddMonoidHom_toSpanSingleton a).unitaryGroup_selfAdjointGenerator
 
 /-- The projection-valued measure of the self-adjoint generator `P_a` along `a` is the image of

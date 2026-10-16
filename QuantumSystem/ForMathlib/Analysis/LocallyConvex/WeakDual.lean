@@ -5,8 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.LocallyConvex.WeakDual
+public import Mathlib.Analysis.Normed.Module.Basic
+public import Mathlib.Topology.Algebra.Module.LocallyConvex
 public import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
+
+import Mathlib.Analysis.LocallyConvex.WeakDual
 
 /-!
 # Scalar towers and local convexity of the weak-* dual

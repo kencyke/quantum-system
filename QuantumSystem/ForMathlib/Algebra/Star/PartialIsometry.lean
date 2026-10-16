@@ -8,9 +8,10 @@ module
 public import Mathlib.Algebra.Star.StarProjection
 public import Mathlib.Analysis.CStarAlgebra.Basic
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
-public import Mathlib.Analysis.Normed.Operator.Extend
 public import Mathlib.LinearAlgebra.Projection
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Idempotent
+
+import Mathlib.Analysis.Normed.Operator.Extend
 
 /-!
 # Partial isometries in a star semigroup

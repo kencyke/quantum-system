@@ -7,7 +7,9 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
-public import Mathlib.Analysis.InnerProductSpace.Trace
+public import Mathlib.LinearAlgebra.Trace
+
+import Mathlib.Analysis.InnerProductSpace.Trace
 
 /-!
 # The continuous functional calculus on eigenvectors

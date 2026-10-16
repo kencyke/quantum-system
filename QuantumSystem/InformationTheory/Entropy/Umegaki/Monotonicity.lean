@@ -6,6 +6,8 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TraceDual
+public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePreserving
+public import QuantumSystem.Analysis.CStarAlgebra.KPositiveMapSchwarz
 public import QuantumSystem.InformationTheory.Entropy.Araki.Monotonicity
 public import QuantumSystem.InformationTheory.Entropy.Umegaki.Basic
 

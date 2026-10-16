@@ -5,8 +5,12 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Complex.Hadamard
-public import Mathlib.Analysis.Complex.OpenMapping
+public import Mathlib.Analysis.Calculus.DiffContOnCl
+public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+
+import Mathlib.Analysis.Complex.Hadamard
+import Mathlib.Analysis.Complex.OpenMapping
 
 /-!
 # Bounded holomorphic functions on horizontal strips

@@ -5,12 +5,17 @@ Authors: Michael R. Douglas, Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Fourier.Inversion
-public import Mathlib.MeasureTheory.Measure.LevyConvergence
-public import Mathlib.Probability.Distributions.Gaussian.Multivariate
-public import Mathlib.Topology.Algebra.Module.TopDualPairing
-public import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
-public import Mathlib.MeasureTheory.Measure.Prokhorov
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.LinearAlgebra.Matrix.PosDef
+public import Mathlib.MeasureTheory.Measure.CharacteristicFunction.Basic
+public import Mathlib.MeasureTheory.Measure.FiniteMeasure
+
+import Mathlib.Analysis.Fourier.Inversion
+import Mathlib.MeasureTheory.Measure.LevyConvergence
+import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
+import Mathlib.MeasureTheory.Measure.Prokhorov
+import Mathlib.Probability.Distributions.Gaussian.Multivariate
+import Mathlib.Topology.Algebra.Module.TopDualPairing
 
 /-!
 # Bochner's theorem

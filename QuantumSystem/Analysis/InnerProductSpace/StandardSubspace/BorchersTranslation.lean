@@ -113,7 +113,8 @@ noncomputable def translationCone : ProperCone ℝ V where
         ⋂ s ∈ Ici (0 : ℝ), ⋂ ξ ∈ (K : Set H),
           (fun a => (T (s • a) : H →L[ℂ] H) ξ) ⁻¹' (K : Set H) := by
       ext a
-      simp
+      -- `map_smul` would time out searching for the nonexistent `SMul ℝ ↥(unitary (H →L[ℂ] H))`.
+      simp [-map_smul]
     rw [this]
     refine isClosed_biInter fun s _ => isClosed_biInter fun ξ _ =>
       K.toClosedSubmodule.isClosed.preimage ?_
@@ -270,7 +271,8 @@ theorem modularGroup_mul_mul_eq_of_mem_spectralCone (haK : a ∈ hT.translationC
       K.modularGroup t * T (s • a) * K.modularGroup (-t) =
         T ((Real.exp (-2 * π * t) * s) • a) := fun s hs =>
     Subtype.ext <| ContinuousLinearMap.ext fun x => by
-      simpa [mul_apply_eq_comp, StandardSubspace.modularGroupOp_def] using (eq_of_pos hT haK haC hs).1 t x
+      -- `map_smul` would time out searching for the nonexistent `SMul ℝ ↥(unitary (H →L[ℂ] H))`.
+      simpa [mul_apply_eq_comp, StandardSubspace.modularGroupOp_def, -map_smul] using (eq_of_pos hT haK haC hs).1 t x
   rcases lt_trichotomy s 0 with hs | rfl | hs
   · have h := hpos (-s) (neg_pos.mpr hs)
     have e₁ : T (s • a) = (T ((-s) • a))⁻¹ := by

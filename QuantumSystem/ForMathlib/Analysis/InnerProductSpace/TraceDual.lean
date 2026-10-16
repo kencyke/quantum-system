@@ -5,10 +5,14 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.InnerProductSpace.StarOrder
-public import Mathlib.Analysis.InnerProductSpace.Trace
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.InnerProductSpace.Positive
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+
+import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+import Mathlib.Analysis.InnerProductSpace.StarOrder
+import Mathlib.Analysis.InnerProductSpace.Trace
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
 /-!
 # The trace dual of a linear map between operator algebras

@@ -9,6 +9,8 @@ public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
+
 /-!
 # States on a C\*-algebra
 

@@ -6,9 +6,11 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.Normed.Operator.Extend
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.Irreducible
+public import QuantumSystem.Analysis.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Analysis.CStarAlgebra.State.Faithful
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
+
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 
 /-!
 # GNS representations of a positive functional

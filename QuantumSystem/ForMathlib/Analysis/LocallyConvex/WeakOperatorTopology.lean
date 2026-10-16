@@ -9,6 +9,8 @@ public import Mathlib.Analysis.Complex.Basic
 public import Mathlib.Analysis.InnerProductSpace.Defs
 public import Mathlib.Analysis.LocallyConvex.WeakOperatorTopology
 
+import Mathlib.LinearAlgebra.Dual.Lemmas
+
 /-!
 # ForMathlib: weak-operator-topology closedness of commutants
 

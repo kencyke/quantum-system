@@ -13,6 +13,8 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
+
 /-!
 # Pure states on a C*-algebra
 
@@ -226,7 +228,7 @@ private lemma exists_mem_extremePoints_norm_sq (a : A) (ha : a ≠ 0) :
       φ (star a * a) = ((‖a‖ ^ 2 : ℝ) : ℂ) := by
   let b := star a * a
   have hb_ne_zero : b ≠ 0 := by
-    rw [ne_eq, CStarRing.star_mul_self_eq_zero_iff]
+    rw [ne_eq, star_mul_self_eq_zero]
     exact ha
   have hb_pos : 0 ≤ b := by
     apply StarOrderedRing.nonneg_iff.mpr

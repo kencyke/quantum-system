@@ -5,11 +5,15 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePreserving
-public import QuantumSystem.Analysis.CStarAlgebra.KPositiveMapSchwarz
+public import Mathlib.CategoryTheory.Category.Init
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
+
+import Mathlib.Analysis.InnerProductSpace.Trace
 
 /-!
 # The trace dual of a completely positive map

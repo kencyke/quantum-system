@@ -6,7 +6,6 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
-public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.AddComp
 public import QuantumSystem.Analysis.SpectralTheory.PolarDecomposition
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.StandardSubspace
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
