@@ -5,7 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Normed.Module.FiniteDimension
+public import Mathlib.Analysis.Normed.Module.Basic
+public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+
+import Mathlib.Analysis.Normed.Module.FiniteDimension
 
 /-!
 # Kernel domination on a finite-dimensional space

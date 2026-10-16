@@ -6,8 +6,10 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.InnerProductSpace.l2Space
-public import Mathlib.Data.Stream.Init
-public import Mathlib.LinearAlgebra.Dual.Lemmas
+public import Mathlib.Data.Stream.Defs
+
+import Mathlib.Data.Stream.Init
+import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
 # The σ-weak operator topology

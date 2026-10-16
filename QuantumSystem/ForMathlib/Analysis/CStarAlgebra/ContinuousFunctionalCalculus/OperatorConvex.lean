@@ -5,18 +5,19 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
-public import Mathlib.Analysis.CStarAlgebra.Hom
-public import Mathlib.Analysis.Convex.Continuous
-public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import Mathlib.Analysis.InnerProductSpace.Positive
 public import Mathlib.Analysis.Matrix.Order
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Order
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
-public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.RingInverseOrder
 
 import Mathlib.Algebra.Algebra.Spectrum.Pi
+import Mathlib.Analysis.Convex.Continuous
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
+import Mathlib.Analysis.CStarAlgebra.Hom
+import Mathlib.Analysis.InnerProductSpace.StarOrder
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Order
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
+import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.RingInverseOrder
 
 /-!
 # Operator convex and matrix convex functions, and Jensen's operator inequality

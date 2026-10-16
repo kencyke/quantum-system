@@ -11,6 +11,8 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
+import Mathlib.Analysis.InnerProductSpace.Trace
+
 /-!
 # The trace dual of a completely positive map
 

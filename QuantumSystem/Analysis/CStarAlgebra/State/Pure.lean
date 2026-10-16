@@ -13,6 +13,8 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
+
 /-!
 # Pure states on a C*-algebra
 

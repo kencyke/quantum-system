@@ -5,9 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+
+import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 
 /-!
 # Unital ⋆-representations of `B(H)`

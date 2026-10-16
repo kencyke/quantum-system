@@ -5,9 +5,12 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.InnerProductSpace.Positive
 public import Mathlib.MeasureTheory.Measure.Complex
 public import Mathlib.Topology.Algebra.Module.Spaces.PointwiseConvergenceCLM
+
+import Mathlib.Analysis.InnerProductSpace.StarOrder
 
 /-!
 # Projection-valued measures

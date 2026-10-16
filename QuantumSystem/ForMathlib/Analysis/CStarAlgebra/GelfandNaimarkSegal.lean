@@ -6,10 +6,12 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
-public import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.InnerProductSpace.Dual
 public import Mathlib.Analysis.Normed.Module.Normalize
+public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Positive
+
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 
 /-!
 # The cyclic vector of the GNS construction

@@ -5,11 +5,13 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLogExp
-public import Mathlib.MeasureTheory.Integral.IntegralEqImproper
+public import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLog
+public import Mathlib.MeasureTheory.Measure.Haar.OfBasis
 public import Mathlib.MeasureTheory.Measure.LogLikelihoodRatio
 
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
+import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLogExp
+import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 
 /-!
 # Extended-real-valued integrals and the integral of `-log`

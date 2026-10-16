@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Topology.Algebra.Module.TopDualPairing
 public import QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunction.Bochner

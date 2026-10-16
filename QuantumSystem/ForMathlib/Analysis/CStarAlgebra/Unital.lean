@@ -5,7 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.Spectrum
+public import Mathlib.Analysis.CStarAlgebra.Classes
+public import Mathlib.Analysis.Normed.Operator.Basic
+public import Mathlib.Topology.Algebra.Module.Spaces.CharacterSpace
+
+import Mathlib.Analysis.CStarAlgebra.Spectrum
 
 /-!
 # Norm computations in unital C*-algebras

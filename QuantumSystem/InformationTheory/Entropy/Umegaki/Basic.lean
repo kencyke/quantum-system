@@ -12,6 +12,8 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.InformationTheory.Entropy.Araki.BoundedOperators
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
+import Mathlib.Analysis.InnerProductSpace.Trace
+
 /-!
 # Umegaki's relative entropy
 

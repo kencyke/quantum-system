@@ -5,8 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.InnerProductSpace.Trace
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+public import Mathlib.LinearAlgebra.Trace
+
+import Mathlib.Analysis.InnerProductSpace.Trace
 
 /-!
 # The Hilbert–Schmidt inner product on operators between finite-dimensional spaces

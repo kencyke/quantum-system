@@ -5,8 +5,10 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Normed.Operator.Banach
+public import Mathlib.Analysis.Normed.Module.Basic
 public import Mathlib.Topology.Algebra.Module.LinearPMap
+
+import Mathlib.Analysis.Normed.Operator.Banach
 
 /-!
 # The closed graph theorem for partially defined linear maps

@@ -5,8 +5,9 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
+public import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 
+import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 import Mathlib.Analysis.Normed.Module.WeakDual
 
 /-!

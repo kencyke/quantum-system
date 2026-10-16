@@ -5,8 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Algebra.BigOperators.Group.Finset.Basic
-public import Mathlib.Data.EReal.Operations
+public import Mathlib.Algebra.BigOperators.Group.Finset.Defs
+public import Mathlib.Data.EReal.Basic
+
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Data.EReal.Operations
 
 /-!
 # Finite sums in `EReal`

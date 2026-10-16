@@ -5,8 +5,11 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Analysis.Normed.Algebra.Spectrum
+public import Mathlib.Analysis.Normed.Operator.Basic
+public import Mathlib.Analysis.SpecificLimits.Normed
 public import Mathlib.Topology.Algebra.Module.LinearPMap
+
+import Mathlib.Analysis.Normed.Algebra.Spectrum
 
 /-!
 # Resolvents of unbounded operators

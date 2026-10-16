@@ -5,10 +5,13 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import Mathlib.Algebra.Module.Torsion.Field
-public import Mathlib.LinearAlgebra.Dimension.Finite
+public import Mathlib.LinearAlgebra.Dimension.Finrank
+public import Mathlib.RingTheory.Finiteness.Defs
 public import Mathlib.RingTheory.Idempotents
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Basic
+
+import Mathlib.Algebra.Module.Torsion.Field
+import Mathlib.LinearAlgebra.Dimension.Finite
 
 /-!
 # Orthogonal idempotents on a finite-dimensional space

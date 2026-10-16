@@ -9,6 +9,10 @@ public import QuantumSystem.Analysis.SpectralTheory.ProjectionValuedIntegral.Bou
 public import QuantumSystem.ForMathlib.Analysis.Complex.Strip
 public import QuantumSystem.ForMathlib.Analysis.Complex.WeakHolomorphic
 
+import Mathlib.Analysis.Calculus.Deriv.Mul
+import Mathlib.Analysis.Complex.Liouville
+import Mathlib.Analysis.Complex.ReImTopology
+
 /-!
 # Analytic continuation of spectral integrals
 

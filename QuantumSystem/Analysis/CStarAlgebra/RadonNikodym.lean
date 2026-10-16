@@ -15,6 +15,8 @@ public import Mathlib.Analysis.Normed.Operator.Extend
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
+import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+
 /-!
 # Radon–Nikodym theorem for functionals dominated by a vector functional
 

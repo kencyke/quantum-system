@@ -7,7 +7,8 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Basic
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
-public import Mathlib.Analysis.InnerProductSpace.ProdL2
+
+import Mathlib.Analysis.InnerProductSpace.ProdL2
 
 /-!
 # Intertwiners and the continuous functional calculus
