@@ -79,7 +79,7 @@ noncomputable def conjBy (R : CStarRep A) {K : Type*} [NormedAddCommGroup K] [In
   π := U.conjStarAlgEquiv.toStarAlgHom.toNonUnitalStarAlgHom.comp R.π
 
 /-- The carrier of the conjugated representation `R.conjBy U` is the target `K` of `U`. -/
-@[simp] lemma conjBy_H (R : CStarRep A) {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
+lemma conjBy_H (R : CStarRep A) {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K) : (R.conjBy U).H = K := rfl
 
 /-- The action of the conjugated representation: `(R.conjBy U).π a` is

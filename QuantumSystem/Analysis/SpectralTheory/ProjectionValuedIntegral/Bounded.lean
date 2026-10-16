@@ -635,7 +635,6 @@ lemma integral_const (c : ℂ) : E.integral (fun _ => c) = c • 1 :=
     norm_cast
 
 /-- `∫ 1 dE = 1`. -/
-@[simp]
 lemma integral_one : E.integral (fun _ => (1 : ℂ)) = 1 := by
   rw [integral_const, one_smul]
 

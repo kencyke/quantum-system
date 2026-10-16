@@ -352,7 +352,6 @@ variable {R : Type*} [Ring R] {E F : Type*} [AddCommGroup E] [Module R E] [AddCo
   [Module R F]
 
 /-- For a linear map, the graph `LinearPMap.graphₛₗ` is Mathlib's `LinearPMap.graph`. -/
-@[simp]
 lemma mem_graphₛₗ_iff_mem_graph {f : E →ₗ.[R] F} {p : E × F} : p ∈ f.graphₛₗ ↔ p ∈ f.graph :=
   (mem_graph_iff f).symm
 
@@ -929,7 +928,6 @@ lemma restrictScalars_apply (x : (T.restrictScalars R₀ hσ).domain) :
   rfl
 
 /-- The graph of `T.restrictScalars R₀ hσ` is the graph of `T`. -/
-@[simp]
 lemma mem_graph_restrictScalars {p : E × F} :
     p ∈ (T.restrictScalars R₀ hσ).graph ↔ p ∈ T.graphₛₗ := by
   rw [mem_graph_iff, mem_graphₛₗ_iff]

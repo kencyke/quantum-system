@@ -1,0 +1,4 @@
+# Build context of the devcontainer (`.devcontainer/devcontainer.json` sets it to the repository
+# root): the Dockerfile reads `lean-toolchain` and nothing else.
+*
+!lean-toolchain

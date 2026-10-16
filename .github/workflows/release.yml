@@ -1,0 +1,65 @@
+name: Release
+
+# Only a commit CI has passed on is released.
+on:
+  workflow_run:
+    workflows: [Lean Action CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    # `branches` also matches a fork's pull request from a branch named `main`.
+    if: >-
+      github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'push'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      # Mathlib's convention: a commit whose first-parent diff switches `lean-toolchain` to a Lean
+      # release is tagged with its version. Only the head of a push has a CI run, so only a switch
+      # there is released. "Latest" goes to the highest stable release, in whatever order runs end.
+      - name: Tag and release a toolchain switch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if parent="$(git rev-parse -q --verify "$SHA^1")"; then
+            if [[ -z "$(git diff --name-only "$parent" "$SHA" -- lean-toolchain)" ]]; then
+              echo "$SHA does not change lean-toolchain"
+              exit 0
+            fi
+          fi
+          if ! toolchain="$(git show "$SHA:lean-toolchain" 2>/dev/null)" \
+            || [[ ! "$toolchain" =~ ^leanprover/lean4:(v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?)$ ]]; then
+            echo "::warning::$SHA: lean-toolchain is missing or not a Lean release; not tagged"
+            exit 0
+          fi
+          tag="${BASH_REMATCH[1]}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release $tag already exists"
+            exit 0
+          fi
+          flags=(--latest=false)
+          if [[ "$tag" == *-rc* ]]; then flags+=(--prerelease); fi
+          gh release create "$tag" --target "$SHA" --title "$tag" --generate-notes "${flags[@]}"
+          if [[ "$tag" != *-rc* ]]; then
+            releases="$(gh release list --exclude-pre-releases --exclude-drafts --limit 1000 \
+              --json tagName --jq '.[].tagName')"
+            newest="$({ awk '/^v4\.[0-9]+\.[0-9]+$/' <<< "$releases"; echo "$tag"; } | sort -V | tail -n 1)"
+            gh release edit "$newest" --latest
+          fi

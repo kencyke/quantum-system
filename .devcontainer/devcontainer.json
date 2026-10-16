@@ -3,8 +3,11 @@
 {
 	"name": "lean-project",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	// The context is the repository so that the Dockerfile can read `lean-toolchain`; the root
+	// `.dockerignore` keeps every other file out of it.
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "Dockerfile",
+		"context": ".."
 	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {

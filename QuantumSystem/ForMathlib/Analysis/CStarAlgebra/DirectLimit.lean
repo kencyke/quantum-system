@@ -19,7 +19,8 @@ algebraic direct limit carries a well-defined C⋆-norm `‖⟦⟨i, x⟩⟧‖ 
 
 This file provides the norm `cstarNorm`, the bundled `cstarRingNorm`, and the resulting
 `NormedRing` structure (`cstarNormedRing`) on `DirectLimit F f`, all parametrised by injectivity
-of the connecting maps. The `*`-algebra-over-`ℂ` structure is supplied by `QuantumSystem.ForMathlib.Algebra.Colimit.Star`.
+of the connecting maps. The `*`-algebra-over-`ℂ` structure is Mathlib's, from
+`Mathlib.Algebra.Colimit.DirectLimit`.
 
 These are general facts and are candidates for upstreaming to Mathlib.
 -/
@@ -27,6 +28,10 @@ These are general facts and are candidates for upstreaming to Mathlib.
 @[expose] public section
 
 namespace DirectLimit
+
+-- The involution on a direct limit acts componentwise, `star ⟦⟨i, x⟩⟧ = ⟦⟨i, star x⟩⟧`; Mathlib
+-- states this as `DirectLimit.star_def` without `@[simp]`.
+attribute [simp] star_def
 
 variable {ι : Type*} [Preorder ι] [IsDirectedOrder ι] [Nonempty ι] {F : ι → Type*}
   {T : ∀ ⦃i j : ι⦄, i ≤ j → Type*} {f : ∀ _ _ h, T h}

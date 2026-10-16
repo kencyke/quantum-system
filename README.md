@@ -12,8 +12,18 @@ A Lean 4 formalization of quantum systems from an operator-algebraic perspective
 >
 > * Contributing guidelines (including an AI policy)
 > * Repository scope and roadmap, including what should and should not be included
-> * Release workflow
 > * Documentation (including Lean Blueprint)
+
+## Usage
+
+To depend on this library, add to your project's `lakefile.toml`:
+
+```toml
+[[require]]
+name = "QuantumSystem"
+git = "https://github.com/kencyke/quantum-system"
+rev = "v4.x.y" # the release tag matching your lean-toolchain
+```
 
 ## Highlights
 
