@@ -5,9 +5,9 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Algebra.Module.FunLike
 public import Mathlib.Algebra.Order.Module.PositiveLinearMap
 public import Mathlib.Basic.NNReal.Defs
-public import Mathlib.Data.FunLike.Module
 
 /-!
 # Nonnegative scalar multiples of positive linear maps

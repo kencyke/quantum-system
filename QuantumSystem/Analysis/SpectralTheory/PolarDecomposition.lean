@@ -544,7 +544,7 @@ private lemma mem_graph_sqrt_apply {y u : E} (hu : (y, u) ∈ hA.sqrt.graph) {s 
   obtain ⟨hy, rfl⟩ := hu
   have hmem : MemLp ((fun t : ℝ => (Real.sqrt t : ℂ)) * s.indicator 1) 2 (hA.pvm.measure y) := by
     rw [hmul]
-    exact hy.indicator hs
+    exact hy.indicator hs.nullMeasurableSet
   rw [← hA.pvm.integral_indicator_one hs]
   refine ⟨(hA.pvm.memLp_measure_integral_apply_iff hsq h1 ⟨1, h1b⟩ y).mpr hmem, ?_⟩
   rw [hA.pvm.integralApply_integral_apply hsq h1 ⟨1, h1b⟩ hmem, hmul,

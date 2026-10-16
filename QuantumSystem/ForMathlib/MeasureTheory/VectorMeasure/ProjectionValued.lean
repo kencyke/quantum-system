@@ -192,7 +192,7 @@ lemma mul_eq_zero_of_disjoint (hst : Disjoint s t) : E s * E t = 0 := by
   by_cases hs : MeasurableSet s
   · by_cases ht : MeasurableSet t
     · let : Module ℚ (H →L[ℂ] H) := Module.compHom _ (algebraMap ℚ ℂ)
-      have : IsAddTorsionFree (H →L[ℂ] H) := IsAddTorsionFree.of_module_rat _
+      have : HasUniqueDiv (H →L[ℂ] H) := HasUniqueDiv.of_module_rat _
       have h := (E.isStarProjection (s ∪ t)).isIdempotentElem
       rw [E.apply_union hst hs ht] at h
       have hs' := (E.isStarProjection s).isIdempotentElem

@@ -9,6 +9,8 @@ public import Mathlib.Analysis.SpecialFunctions.Log.ENNRealLogExp
 public import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 public import Mathlib.MeasureTheory.Measure.LogLikelihoodRatio
 
+import Mathlib.Analysis.SpecialFunctions.Log.Deriv
+
 /-!
 # Extended-real-valued integrals and the integral of `-log`
 

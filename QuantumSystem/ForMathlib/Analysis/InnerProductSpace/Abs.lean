@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.InnerProductSpace.Positive
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Abs
@@ -193,7 +194,7 @@ private lemma mul_eq_self_of_star_mul_self_eq {v p : H →L[ℂ] H} (hp : IsStar
   have hqp : (1 - p) * p = 0 := by rw [sub_mul, one_mul, hp.isIdempotentElem.eq, sub_self]
   have h0 : star (v * (1 - p)) * (v * (1 - p)) = 0 := by
     rw [star_mul, hq, mul_assoc, ← mul_assoc (star v), hv, ← mul_assoc, hqp, zero_mul]
-  have h := (CStarRing.star_mul_self_eq_zero_iff _).mp h0
+  have h := star_mul_self_eq_zero.mp h0
   rw [mul_sub, mul_one, sub_eq_zero] at h
   exact h.symm
 

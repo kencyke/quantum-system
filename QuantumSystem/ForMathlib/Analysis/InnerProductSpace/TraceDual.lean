@@ -10,6 +10,8 @@ public import Mathlib.Analysis.InnerProductSpace.Trace
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 
+import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+
 /-!
 # The trace dual of a linear map between operator algebras
 

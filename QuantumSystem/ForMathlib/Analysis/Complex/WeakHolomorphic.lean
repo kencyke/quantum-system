@@ -9,6 +9,8 @@ public import Mathlib.Analysis.Complex.Liouville
 public import Mathlib.Analysis.Complex.Schwarz
 public import Mathlib.Analysis.Normed.Operator.BanachSteinhaus
 
+import Mathlib.Analysis.Complex.RemovableSingularity
+
 /-!
 # Weakly holomorphic locally bounded functions are holomorphic
 

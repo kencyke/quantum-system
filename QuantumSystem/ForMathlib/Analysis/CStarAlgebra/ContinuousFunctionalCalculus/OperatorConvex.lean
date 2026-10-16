@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Commute
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.Analysis.CStarAlgebra.Hom
 public import Mathlib.Analysis.Convex.Continuous
@@ -14,6 +15,8 @@ public import Mathlib.Analysis.Matrix.Order
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Order
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.RingInverseOrder
+
+import Mathlib.Algebra.Algebra.Spectrum.Pi
 
 /-!
 # Operator convex and matrix convex functions, and Jensen's operator inequality
@@ -441,7 +444,7 @@ private lemma cfc_mul_le_of_isIdempotentElem {s : Set ℝ} {f : ℝ → ℝ} (hs
       calc (star v - e * star v) * (v - v * e) = e - e * e - e * e + e * e * e := by
             simp only [he_def]; noncomm_ring
         _ = 0 := by rw [hee, hee]; abel
-    exact (sub_eq_zero.1 ((CStarRing.star_mul_self_eq_zero_iff _).1 h0)).symm
+    exact (sub_eq_zero.1 (star_mul_self_eq_zero.1 h0)).symm
   have hsve : e * star v = star v := by
     have := congrArg star hve
     rwa [star_mul, he_sa.star_eq] at this
@@ -990,7 +993,7 @@ private lemma mul_eq_zero_of_star_mul_mul_eq_zero {a q : A} (ha : 0 ≤ a)
     (h : star q * a * q = 0) : a * q = 0 := by
   obtain ⟨d, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp ha
   have hdq : d * q = 0 := by
-    rw [← CStarRing.star_mul_self_eq_zero_iff, star_mul, ← h]
+    rw [← star_mul_self_eq_zero, star_mul, ← h]
     noncomm_ring
   rw [mul_assoc, hdq, mul_zero]
 

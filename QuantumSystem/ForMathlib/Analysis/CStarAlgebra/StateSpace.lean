@@ -7,6 +7,8 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearFunctional
 
+import Mathlib.Analysis.Normed.Module.WeakDual
+
 /-!
 # The quasi-state space and the state space
 

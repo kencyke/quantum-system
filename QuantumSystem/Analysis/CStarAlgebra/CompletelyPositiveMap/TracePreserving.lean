@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.Normed.Operator.ContinuousAlgEquiv
 public import Mathlib.LinearAlgebra.Complex.FiniteDimensional

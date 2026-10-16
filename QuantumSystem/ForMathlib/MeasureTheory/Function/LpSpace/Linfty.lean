@@ -208,7 +208,7 @@ TODO (upstream): relax the hypothesis of `MeasureTheory.memLp_indicator_const` t
 `c = 0 ∨ μ s ≠ ∞ ∨ p = ∞`, generalise `MeasureTheory.indicatorConstLp` accordingly, and replace
 this definition by `indicatorConstLp ∞ hs _ c`. -/
 noncomputable def indicatorConst (hs : MeasurableSet s) (c : E) : Lp E ∞ μ :=
-  ((memLp_top_const c).indicator hs).toLp _
+  ((memLp_top_const c).indicator hs.nullMeasurableSet).toLp _
 
 /-- `indicatorConst hs c` is the indicator function of `s` with value `c`, almost everywhere. -/
 lemma coeFn_indicatorConst (hs : MeasurableSet s) (c : E) :

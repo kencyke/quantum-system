@@ -9,6 +9,8 @@ public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
+import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+
 /-!
 # Operators on tensor products of inner product spaces
 
