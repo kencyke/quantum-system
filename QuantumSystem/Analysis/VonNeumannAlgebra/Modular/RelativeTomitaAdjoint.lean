@@ -15,8 +15,12 @@ Let `M` be a von Neumann algebra on `H` and `η, ξ ∈ H` arbitrary vectors, wi
 operators `S_{η,ξ} : x ξ + ζ ↦ s(ξ) x⋆ η` (`x ∈ M`, `ζ ⊥ [M ξ]`) and
 `F_{η,ξ} : x′ ξ + ζ′ ↦ s′(ξ) x′⋆ η` (`x′ ∈ M′`, `ζ′ ⊥ [M′ ξ]`; `VonNeumannAlgebra.relativeTomita`),
 where `s(ξ) = P_{[M′ ξ]} ∈ M` and `s′(ξ) = P_{[M ξ]} ∈ M′` are the supports. Then
-`S_{η,ξ}† = F̄_{η,ξ}` (`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`; Araki 1976,
-Araki–Masuda 1982, §2; Bratteli–Robinson, Proposition 2.5.11, for `η = ξ` cyclic and separating).
+`S_{η,ξ}† = F̄_{η,ξ}` (`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`; Araki 1976;
+Bratteli–Robinson, Proposition 2.5.11, for `η = ξ` cyclic and separating). Araki–Masuda 1982,
+Appendix C, Theorem C.1 (α), prove closability for arbitrary vectors by a matrix-unit argument,
+without stating this identity.
+For `η, ξ` in a natural positive cone, Araki 1977, Lemma 2.2, proves only `F ⊆ S†`, and
+Theorem 2.4 gives `S̄ = J Δ^{1/2}` and `F̄ = Δ^{1/2} J` with the modular conjugation `J` of the cone.
 
 The inclusion `F ⊆ S†` is `VonNeumannAlgebra.relativeTomita_commutant_le_adjoint`. For the converse
 let `(φ, ψ)` be in the graph of `S†`, and put `e = s(ξ) ∈ M`, `p = s′(η) = P_{[M η]} ∈ M′` and
@@ -53,8 +57,10 @@ separating it gives that the standard subspace of the commutant is the symplecti
 * O. Bratteli, D. W. Robinson, *Operator Algebras and Quantum Statistical Mechanics 1*, Springer
   (1987), Proposition 2.5.11
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976), 809–833
+* H. Araki, *Relative entropy for states of von Neumann algebras II*, Publ. RIMS 13 (1977),
+  173–192, Lemma 2.2 and Theorem 2.4
 * H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
-  (1982), 339–411, §2
+  (1982), 339–411, Appendix C
 -/
 
 @[expose] public section

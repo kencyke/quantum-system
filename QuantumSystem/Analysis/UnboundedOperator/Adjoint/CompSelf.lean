@@ -23,7 +23,8 @@ The self-adjointness comes from a general criterion: a symmetric operator `A` fo
 The theorem extends to a closed, densely defined `σ`-semilinear `T : E →ₛₗ.[σ] F` between complex
 Hilbert spaces (`σ` the identity or the conjugation): with the semilinear adjoint
 `T.adjointₛₗ : F →ₛₗ.[σ] E`, the composite `T†T` is a complex-linear positive self-adjoint operator.
-For the Tomita operator `S` of a standard subspace it is the modular operator `Δ = S†S`.
+For the Tomita operator `S` of a standard subspace it is the modular operator `Δ = S†S`. The
+conjugate-linear case is Schmüdgen 2026, Proposition 1.
 
 ## Main results
 
@@ -59,6 +60,8 @@ proof device; every statement is about the semilinear operator itself.
 ## References
 
 * [J. Weidmann, *Linear Operators in Hilbert Spaces*][weidmann_linear]
+* K. Schmüdgen, *Antilinear normal operators on Hilbert space*, arXiv:2606.05943 (2026),
+  Proposition 1
 -/
 
 @[expose] public section

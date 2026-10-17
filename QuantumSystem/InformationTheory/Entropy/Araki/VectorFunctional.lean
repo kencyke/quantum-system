@@ -63,6 +63,15 @@ for any pair of vectors (`QuantumSystem.Analysis.VonNeumannAlgebra.Modular.Relat
 and the value depends only on the functionals `ω_ξ, ω_η`
 (`VonNeumannAlgebra.arakiVec_eq_of_inner_eq`), proved through the transformation rules of
 `Δ_{η,ξ}` under the commutant rather than through the uniqueness of representatives in `P♮`.
+Araki 1977, Definition 3.1, uses the unique representatives in a natural positive cone, and its
+Remark 3.3 shows only that the value does not depend on the choice of the cone (two cones differ
+by a unitary of `M′`). For arbitrary representatives in a standard representation the
+independence is Araki–Masuda 1982, Appendix C: `Δ_{η,ξ}` depends on `η` only through `ω_η`
+(Theorem C.1 (β)), two representatives of one functional differ by a partial isometry of `M′`
+(Theorem C.1 (δ2)), and `u′ Δ_{η,ξ}^{it} u′⋆ = Δ_{η,u′ξ}^{it}` ((C.15)). Their proof uses
+Tomita–Takesaki theory (through matrix units); the proof here neither does nor assumes a standard
+form. Reible 2025, Remark IV.2.2, regards the independence as open in an arbitrary representation
+and proves it for cyclic vectors (Corollary IV.3.12).
 Non-faithful functionals are handled by the support projection `s(ξ)` in `S_{η,ξ}`, so no
 reduction to the faithful case (which would also go through the standard form) is needed.
 
@@ -109,7 +118,13 @@ reduction to the faithful case (which would also go through the standard form) i
 ## References
 
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976), 809–833.
+* H. Araki, *Relative entropy for states of von Neumann algebras II*, Publ. RIMS 13 (1977),
+  173–192, Definition 3.1 and Remark 3.3.
+* H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
+  (1982), 339–411, Appendix C, Theorem C.1 (β), (δ2) and (C.15).
 * M. Ohya, D. Petz, *Quantum Entropy and Its Use*, Chapter 5.
+* B. M. Reible, *Monotonicity of the relative entropy and the two-sided Bogoliubov inequality in
+  von Neumann algebras*, arXiv:2501.04564 (2025), Remark IV.2.2 and Corollary IV.3.12.
 -/
 
 @[expose] public section

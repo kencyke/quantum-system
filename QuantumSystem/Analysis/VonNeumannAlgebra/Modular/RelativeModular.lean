@@ -118,8 +118,8 @@ isomorphisms, amplifications) are in `QuantumSystem.Analysis.VonNeumannAlgebra.M
 
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976).
 * H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
-  (1982), §2 — the relative modular operators and groups for vectors that are not cyclic and
-  separating.
+  (1982), 339–411, Appendix C — the relative modular operators and groups for vectors that are not
+  cyclic and separating.
 -/
 
 @[expose] public section

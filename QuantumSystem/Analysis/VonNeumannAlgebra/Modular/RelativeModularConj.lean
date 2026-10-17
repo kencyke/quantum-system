@@ -78,7 +78,7 @@ for `ξ`, `η` cyclic and separating `J_{η,ξ}` is antiunitary.
   (1987), Proposition 2.5.11
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976), 809–833
 * H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
-  (1982), 339–411, §2
+  (1982), 339–411, Appendix C
 -/
 @[expose] public section
 
@@ -118,7 +118,7 @@ lemma dense_range_closure_relativeTomita (hs : IsSeparatingVector M ξ)
 variable (M η ξ) in
 /-- The **relative modular conjugation** `J_{η,ξ}` of a pair of vectors: the partial isometry of the
 polar decomposition `S̄_{η,ξ} = J_{η,ξ} Δ_{η,ξ}^{1/2}`
-(`VonNeumannAlgebra.closure_relativeTomita_eq_compPMap`; Araki–Masuda 1982, §2), a conjugate-linear
+(`VonNeumannAlgebra.closure_relativeTomita_eq_compPMap`; Araki–Masuda 1982, (C.3)), a conjugate-linear
 bounded operator written `J[M]⟦η, ξ⟧`, isometric on `(ker S̄_{η,ξ})ᗮ`
 (`IsSelfAdjoint.norm_polarIsometry_apply`). Its adjoint is `J_{ξ,η}`
 (`VonNeumannAlgebra.inner_relativeModularConj_left`), so `J_{ξ,η} J_{η,ξ} = E_Δ((0, ∞))`
@@ -248,7 +248,7 @@ lemma closure_relativeTomita_compNat_le :
       LinearPMap.mem_graphₛₗ_snd_inj hbc (mem_graph_closure_relativeTomita_swap hab)
     exact ⟨⟨a, Submodule.mem_top⟩, rfl, mul_apply_eq_comp (M.supportProj η) (M′.supportProj ξ) a⟩
 
-/-- **`ker S̄_{η,ξ} = ker s(η) s′(ξ)`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2: the support of
+/-- **`ker S̄_{η,ξ} = ker s(η) s′(ξ)`** for arbitrary `η, ξ` (Araki–Masuda 1982, (C.4): the support of
 `Δ_{η,ξ}` is `s(η) s′(ξ)`): `S̄_{ξ,η} S̄_{η,ξ} ⊆ s(η) s′(ξ)`
 (`VonNeumannAlgebra.closure_relativeTomita_compNat_le`), and conversely `(1 - s(η) s′(ξ)) H` lies
 in the kernel, as `S_{η,ξ} ((1 - s(η)) x ξ) = 0` and `S_{η,ξ} [M ξ]ᗮ = 0`. -/
@@ -361,7 +361,7 @@ lemma supportProj_apply_supportProj_relativeModularConj (x : H) :
     ((isSelfAdjoint_relativeModular M η ξ).polarIsometry_apply_mem_closure_range
       (relativeModular_def M η ξ) (isClosed_closure_relativeTomita M η ξ) x)
 
-/-- **`ran J_{η,ξ} = s(ξ) s′(η) H`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2): the range of
+/-- **`ran J_{η,ξ} = s(ξ) s′(η) H`** for arbitrary `η, ξ` (Araki–Masuda 1982, (C.3)): the range of
 the partial isometry `J_{η,ξ}`, onto which its range projection projects. The range of `J_{η,ξ}` is
 closed and contains `ran S̄_{η,ξ}`, which is dense in `s(ξ) s′(η) H`
 (`VonNeumannAlgebra.supportProj_apply_supportProj_mem_closure_range`). -/
@@ -538,7 +538,7 @@ private lemma adjointₛₗ_polarIsometry_relativeModular :
       rw [ContinuousLinearMap.coe_coe, hWJ, hran y w hw]
       exact hw
 
-/-- **`J_{η,ξ}† = J_{ξ,η}`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2): the antilinear adjoint
+/-- **`J_{η,ξ}† = J_{ξ,η}`** for arbitrary `η, ξ` (Araki–Masuda 1982, (C.14)): the antilinear adjoint
 `J†` (`ContinuousLinearMap.adjointₛₗ`) of the polar isometry `J = J_{η,ξ}` of `S̄_{η,ξ}` is the polar
 isometry of `S̄_{ξ,η}`; in inner-product form, `⟪J_{ξ,η} x, y⟫ = ⟪J_{η,ξ} y, x⟫`
 (`VonNeumannAlgebra.inner_relativeModularConj_left`).
@@ -561,7 +561,7 @@ lemma adjointₛₗ_relativeModularConj : J[M]⟦η, ξ⟧.adjointₛₗ = J[M]�
   adjointₛₗ_polarIsometry_relativeModular
 
 /-- **`J_{ξ,η} J_{η,ξ} = E_Δ((0, ∞))`**, the support projection of `Δ_{η,ξ}`, for arbitrary `η, ξ`
-(Araki–Masuda 1982, §2, where `J_{η,ξ}† = J_{ξ,η}`): `J_{η,ξ}` is a partial isometry with source
+(Araki–Masuda 1982, (C.14), where `J_{η,ξ}† = J_{ξ,η}`): `J_{η,ξ}` is a partial isometry with source
 projection `E_Δ((0, ∞))`, so `J_{ξ,η} J_{η,ξ} Δ_{η,ξ}^{1/2} = Δ_{η,ξ}^{1/2}`
 (`IsSelfAdjoint.pvm_Ioi_compPMap_sqrt`). -/
 lemma relativeModularConj_comp_relativeModularConj :
@@ -572,7 +572,7 @@ lemma relativeModularConj_comp_relativeModularConj :
     IsSelfAdjoint.adjointₛₗ_polarIsometry_apply_polarIsometry]
 
 /-- **The source projection of `J_{η,ξ}`**: the support projection `E_Δ((0, ∞))` of `Δ_{η,ξ}` is
-`s(η) s′(ξ)` for arbitrary `η, ξ` (Araki–Masuda 1982, §2), since `E_Δ((0, ∞))` projects onto
+`s(η) s′(ξ)` for arbitrary `η, ξ` (Araki–Masuda 1982, (C.4)), since `E_Δ((0, ∞))` projects onto
 `(ker Δ_{η,ξ})ᗮ` (`IsSelfAdjoint.pvm_Ioi_eq_starProjection_orthogonal`) and
 `ker Δ_{η,ξ} = ker S̄_{η,ξ} = ker s(η) s′(ξ)` (`VonNeumannAlgebra.ker_relativeModular`,
 `VonNeumannAlgebra.ker_closure_relativeTomita`). -/
@@ -612,7 +612,7 @@ lemma relativeModularConj_self {Ω : H} [IsCyclicSeparating M Ω] :
   change J[M]⟦Ω, Ω⟧ x = J[K] x
   rw [relativeModularConj_apply, hJr, h]
 
-/-- **`J_{ξ,η} = J_{η,ξ}†`** for arbitrary `η, ξ` (Araki–Masuda 1982, §2):
+/-- **`J_{ξ,η} = J_{η,ξ}†`** for arbitrary `η, ξ` (Araki–Masuda 1982, (C.14)):
 `⟪J_{ξ,η} x, y⟫ = ⟪J_{η,ξ} y, x⟫`, the adjoint relation of conjugate-linear operators. -/
 lemma inner_relativeModularConj_left (x y : H) :
     ⟪J[M]⟦ξ, η⟧ x, y⟫_ℂ = ⟪J[M]⟦η, ξ⟧ y, x⟫_ℂ := by

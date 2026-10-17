@@ -24,7 +24,8 @@ the identity is `‖|T| x‖² = ⟪x, A x⟫ = ‖T x‖²`. The **polar decomp
 (`IsSelfAdjoint.eq_sqrt_of_eq_compPMap`, `IsSelfAdjoint.eq_polarIsometry_of_eq_compPMap`): `T = V B`
 with `B` positive self-adjoint and `V` isometric on the range of `B` forces `B B = A` and
 `B = A^{1/2}`, and if moreover `V` vanishes on `ker B`, then `V = U`. Letting `σ` vary treats
-complex-linear and conjugate-linear operators at once.
+complex-linear and conjugate-linear operators at once. The conjugate-linear case between two
+Hilbert spaces, with uniqueness, is Schmüdgen 2026, Theorem 3.
 
 If `T` is injective with dense range, then `A = T†T` is injective, `E_A((0, ∞)) = 1`, and `U` is a
 `σ`-semilinear isometric equivalence of `E` onto `F` (`IsSelfAdjoint.polarIsometryEquiv`): it is
@@ -101,6 +102,8 @@ project uses `CFC.abs`.
 * [K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*][schmudgen2012], §7.1
 * [O. Bratteli, D. W. Robinson, *Operator Algebras and Quantum Statistical Mechanics 1*][bratteli1987],
   Proposition 2.5.11
+* K. Schmüdgen, *Antilinear normal operators on Hilbert space*, arXiv:2606.05943 (2026),
+  Theorem 3
 -/
 
 @[expose] public section

@@ -29,7 +29,8 @@ alone gives *matrix convexity* (`IsMatrixConvexOn`; Bhatia, Chapter V; Effros), 
 continuity, since matrices have finite spectra. For `f` continuous on `s` the two agree, but they
 differ on discontinuous functions: on `[0, ∞)`, `f(0) = 1` and `f(t) = 0` for `t > 0` gives the
 projection `f(A)` onto `ker A`, and is matrix convex (`isMatrixConvexOn_indicator_zero`) but not
-operator convex (`not_isOperatorConvexOn_indicator_zero`). The separation is one of conventions at
+operator convex (`not_isOperatorConvexOn_indicator_zero`); the example is Brown 2018,
+Remarks 3.3(iii). The separation is one of conventions at
 the endpoints of `s`: a matrix convex function is convex (`IsMatrixConvexOn.convexOn_real`), hence
 continuous on the interior of `s` (`IsMatrixConvexOn.continuousOn_interior`), and the obstruction is
 the continuity at the endpoints that operator convexity requires (Hansen–Pedersen), while the
@@ -147,6 +148,8 @@ by `t` and `u`, cost `4 δ ‖ξ‖²`, and `δ` is arbitrary. No limit of opera
 * F. Hansen, G. K. Pedersen, *Jensen's operator inequality*, Bull. London Math. Soc. 35 (2003),
   553–564
 * R. Bhatia, *Matrix Analysis*, Chapter V (1997)
+* L. G. Brown, *A treatment of strongly operator convex functions that does not require any
+  knowledge of operator algebras*, Ann. Funct. Anal. 9 (2018), 41–55, Remarks 3.3(iii)
 * E. G. Effros, *A matrix convexity approach to some celebrated quantum inequalities*, Proc. Natl.
   Acad. Sci. USA 106 (2009), 1006–1008
 -/

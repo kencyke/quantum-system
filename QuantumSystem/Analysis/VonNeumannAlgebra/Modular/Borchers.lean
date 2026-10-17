@@ -49,7 +49,16 @@ For a unitary `V` the conditions read `V Ω₁ = Ω₂` and `V M₁ V⋆ ⊆ M�
   particular for cyclic `Ω₁`, separating `Ω₂` and arbitrary `ηᵢ`
   (`VonNeumannAlgebra.exists_relativeModularGroup_continuation`).
 
-Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω₁ = Ω₂`.
+Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω₁ = Ω₂`. The
+non-relative Theorem A for bounded `V` with `V† Ω₂ = Ω₁` and `V M₁ V† ⊆ M₂`, across two algebras,
+is Araki–Zsidó 2005, Lemma 2.11 and Theorem 2.12 (stated for faithful normal semifinite weights).
+For faithful `ηᵢ`, `Ωᵢ` the relative Theorem A is their analytic extension theorem
+(Araki–Zsidó 2005, Theorem 2.3) for invertible positive operators, once the intertwining
+`V S̄_{η₁,Ω₁} ⊆ S̄_{η₂,Ω₂} V` is established: their Lemma 2.11 does so for `ηᵢ = Ωᵢ`,
+`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_adjoint_apply` for arbitrary `ηᵢ`.
+Faulkner–Hollands (arXiv:2010.05513) treat contractions `V` induced by channels: their Lemma 3 bounds
+`Δ^{z} V Δ^{-z}` by `1` on the strip and their Lemma 4 continues it on vectors, for faithful states,
+to which non-faithful ones are reduced by compressing to the support projections (their §2.3).
 
 ## Main results
 
@@ -81,7 +90,12 @@ Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω
 * H.-J. Borchers, *On the use of modular groups in quantum field theory*,
   Ann. Inst. H. Poincaré Phys. Théor. 63 (1995), 331–382, Theorems A and B
 * H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
-  (1982), 339–411, §2
+  (1982), 339–411, Appendix C
+* H. Araki, L. Zsidó, *Extension of the structure theorem of Borchers and its application to
+  half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Lemma 2.11 and
+  Theorems 2.3, 2.12
+* T. Faulkner, S. Hollands, *Approximate recoverability and relative entropy II: 2-positive
+  channels of general von Neumann algebras*, arXiv:2010.05513, Lemmas 3 and 4
 -/
 
 @[expose] public section

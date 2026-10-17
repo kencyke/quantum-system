@@ -62,6 +62,11 @@ because the intertwining passes to the adjoints, `A^{1/2} V'† ⊇ V† B^{1/2}
 coefficients of both sides are bounded and holomorphic and agree on the real line
 (`Complex.eqOn_zero_of_eqOn_zero_im_eq_lower`).
 
+For invertible positive `A`, `B` the continuation is Araki–Zsidó 2005, Theorem 2.3, whose proof
+bounds it by `max ‖V‖ ‖V'‖` in place of the three lines bound. For positive `A`, `B` that need not
+be injective, Berta–Scholz–Tomamichel 2018, Lemma 16, prove holomorphy and the three lines bound for
+the vector-valued functions `z ↦ A^{h(z)} V B^{g(z)} φ`, assuming them bounded on the boundary lines.
+
 ## Main results
 
 * `IsSelfAdjoint.exists_stripContinuation` — the interpolation theorem.
@@ -79,6 +84,10 @@ coefficients of both sides are bounded and holomorphic and agree on the real lin
   Phys. Théor. 63 (1995), 331–382, Theorem A
 * H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*,
   Publ. RIMS 18 (1982) — the relative modular operators with supports.
+* H. Araki, L. Zsidó, *Extension of the structure theorem of Borchers and its application to
+  half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Theorem 2.3
+* M. Berta, V. B. Scholz, M. Tomamichel, *Rényi divergences as weighted non-commutative vector
+  valued Lp-spaces*, Ann. Henri Poincaré 19 (2018), 1843–1867, Lemma 16
 
 ## TODO
 
