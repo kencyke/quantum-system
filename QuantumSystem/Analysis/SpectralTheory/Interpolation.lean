@@ -63,7 +63,7 @@ coefficients of both sides are bounded and holomorphic and agree on the real lin
 (`Complex.eqOn_zero_of_eqOn_zero_im_eq_lower`).
 
 For invertible positive `A`, `B` the continuation is Araki–Zsidó 2005, Theorem 2.3, whose proof
-bounds it by `max ‖V‖ ‖V'‖` in place of the three lines bound. For positive `A`, `B` that need not
+bounds it by `max ‖V‖ ‖V'‖`. For positive `A`, `B` that need not
 be injective, Berta–Scholz–Tomamichel 2018, Lemma 16, prove holomorphy and the three lines bound for
 the vector-valued functions `z ↦ A^{h(z)} V B^{g(z)} φ`, assuming them bounded on the boundary lines.
 

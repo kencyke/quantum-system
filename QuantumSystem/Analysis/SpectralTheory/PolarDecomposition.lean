@@ -25,7 +25,7 @@ the identity is `‖|T| x‖² = ⟪x, A x⟫ = ‖T x‖²`. The **polar decomp
 with `B` positive self-adjoint and `V` isometric on the range of `B` forces `B B = A` and
 `B = A^{1/2}`, and if moreover `V` vanishes on `ker B`, then `V = U`. Letting `σ` vary treats
 complex-linear and conjugate-linear operators at once. The conjugate-linear case between two
-Hilbert spaces, with uniqueness, is Schmüdgen 2026, Theorem 3.
+Hilbert spaces is Schmüdgen 2026, Theorem 3.
 
 If `T` is injective with dense range, then `A = T†T` is injective, `E_A((0, ∞)) = 1`, and `U` is a
 `σ`-semilinear isometric equivalence of `E` onto `F` (`IsSelfAdjoint.polarIsometryEquiv`): it is

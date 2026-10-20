@@ -33,8 +33,7 @@ continues `Δ₂^{-it} V Δ₁^{it}` to the strip, with boundary value `Δ₂^{-
 here `J` commutes with `Δ^{it}`, and the modular operators are injective, so the imaginary powers
 are the modular groups. Borchers states
 the theorem for a unitary `V` on a single Hilbert space; here `V` is any bounded operator between
-two Hilbert spaces, as in Araki–Zsidó 2005, Theorem 2.12, and Longo 2008, Theorem 2.3.1, which
-also prove the converse.
+two Hilbert spaces, as in Araki–Zsidó 2005, Theorem 2.12, which also proves the converse.
 
 ## Theorem B
 
@@ -51,8 +50,6 @@ Borchers states the theorem for a single Hilbert space, with `W` unitary on both
 `‖W‖ ≤ 1`; neither unitarity nor the norm bound is needed, only boundedness. The hypotheses are
 also only weak ones (holomorphy and continuity of the matrix coefficients), which suffices by
 `Complex.differentiableOn_continuousLinearMap_of_inner` and `ContinuousOn.inner_apply_of_inner`.
-This generality is already in Longo 2008, Theorem 2.3.3 (bounded, weakly continuous `W` between
-two Hilbert spaces), and Araki–Zsidó 2005, Theorem 2.13, assumes still less.
 
 The **lower-strip version** (`modularGroup_apply_eq_of_lowerStrip`,
 `modularConj_apply_eq_of_lowerStrip`): if `W` lives on `-1/2 ≤ im z ≤ 0` with `W(t) K₁ ⊆ K₂` and
@@ -60,8 +57,7 @@ The **lower-strip version** (`modularGroup_apply_eq_of_lowerStrip`,
 Theorem B for `z ↦ W(z - i/2)` and the symplectic complements, using `Δ_{K'}^{it} = Δ_K^{-it}` and
 `J_{K'} = J_K`; it is the form used for translations with negative generator.
 
-The proof of Theorem B is not Borchers' original one but uses a single scalar function, as in
-Florig 1998 and Longo 2008, Theorem 2.3.3. For `ξ ∈ K₁` and
+The proof of Theorem B is not Borchers' original one but uses a single scalar function. For `ξ ∈ K₁` and
 `η ∈ K₂`, the modular orbits continue analytically to the strip
 (`StandardSubspace.exists_diffContOnCl_modularGroup`), with `Δ^{-i(t + i/2)} ξ = J Δ^{-it} ξ`, and
 `F(z) = ⟪J₂ Δ₂^{-iz} η, W(s + z) Δ₁^{-iz} ξ⟫` is holomorphic and bounded on the strip (it is the
@@ -95,10 +91,7 @@ translations is `QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borch
 * H.-J. Borchers, *On the use of modular groups in quantum field theory*, Ann. Inst. H. Poincaré
   Phys. Théor. 63 (1995), 331–382, Theorems A and B
 * H. Araki, L. Zsidó, *Extension of the structure theorem of Borchers and its application to
-  half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Theorems 2.12 and 2.13
-* R. Longo, *Real Hilbert subspaces, modular theory, SL(2, R) and CFT*, in *Von Neumann Algebras
-  in Sibiu*, Theta (2008), 33–91; *Lectures on Conformal Nets*, Part I, Theorems 2.3.1 and 2.3.3
-* M. Florig, *On Borchers' theorem*, Lett. Math. Phys. 46 (1998), 289–293
+  half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Theorem 2.12
 -/
 
 @[expose] public section
