@@ -152,7 +152,34 @@ Hunt where Lean and mathematics silently diverge:
   instance arguments,
 - implications or `iff`s pointing the wrong way relative to the name.
 
-Four checks deserve an explicit procedure rather than a glance:
+Five checks deserve an explicit procedure rather than a glance:
+
+- **Compare the blind readback with the claim.** When your prompt gives a
+  readback file — what each declaration literally asserts, written by an agent
+  that saw neither docstring nor source — set the docstring's claim (and the
+  cited passage, when you can open it) beside the readback, both in the same
+  form: objects, numbered hypotheses, conclusion, quantifier order. Label each
+  discrepancy with exactly one category:
+
+  | Category | The statement, against the claim |
+  |---|---|
+  | `elaboration` | an explicit binder, convention or degenerate behaviour the claim already implies — not a finding |
+  | `equivalent-reformulation` | says the same only by an argument, which the finding must give |
+  | `hypothesis-added` | assumes what the claim does not and the other hypotheses do not imply |
+  | `hypothesis-missing` | omits an assumption of the claim |
+  | `conclusion-weaker` / `conclusion-stronger` / `conclusion-different` | concludes less, more, or something else |
+  | `quantifier` / `strictness` | orders or bounds quantifiers differently; `<` against `≤` |
+  | `domain` | lives on another type, topology or parameter range |
+  | `object-substituted` | uses a stand-in for the claimed object, with no proven link to it |
+
+  The worst category decides: a declaration is cleared only when every
+  discrepancy is `elaboration`. "Roughly the same" is not a verdict, and a
+  one-way implication is not an equivalence. A missing hypothesis or a stronger
+  conclusion is still a finding — a docstring that undersells its theorem, or a
+  sign that an object is not the intended one; say which. The readback is
+  evidence about its writer too: confirm each discrepancy against the elaborated
+  type before filing it. A readback that reveals vacuity belongs to
+  perspective 5; put it under `## Out of perspective`.
 
 - **Audit the quantifier prefix, in order.** For each target declaration, write
   the binders out in sequence, then decide *for each constant what it is allowed
@@ -213,7 +240,10 @@ Three procedures make that judgement decidable rather than impressionistic:
   (the explicit hypotheses it actually needs), then state both halves: what the
   result rests on, **and** what it is claimed *not* to rest on. The second half
   is the one that catches surprises — an axiom arriving through an unrelated
-  module, or a hypothesis nobody realised was load-bearing.
+  module, or a hypothesis nobody realised was load-bearing. Add the target
+  lemmas of substance that no load-bearing theorem reaches (`lean_references`):
+  each is either API in its own right — say so — or scaffolding the main proof
+  went around, which is a sign it rests on something else.
 - **Check for circularity.** Two shapes to chase with `lean_references`: a
   hypothesis field that is equivalent to the conclusion it is used to prove, and
   a lemma cited in the proof that was itself derived from that conclusion.
@@ -346,6 +376,12 @@ does it wrongly say something in the worlds where it should fail?
     (`[CompleteSpace H]`, finite dimensionality, nonemptiness).
   - **A `private` helper usually carries hypotheses its callers set up**, so an
     excess hypothesis there is at most a `nit`.
+- **Read how the main goal closes.** A target theorem whose main goal — not one
+  case of a split — is closed by `False.elim`, `absurd`, `exfalso`, `nomatch` or
+  `Subsingleton.elim` gets its content from contradictory hypotheses or a
+  trivial type, not from the mathematics. Name the contradiction or the
+  subsingleton, then build a model satisfying the hypotheses; if you cannot,
+  report suspected vacuity together with the obstruction you hit.
 - Report a cleared declaration as cleared *with the models you tried*. "Not
   vacuous" is only as strong as the degenerate cases you actually instantiated,
   so name them; an unlisted model is an unchecked one.
@@ -359,7 +395,8 @@ first, report second (skip the file only when none was assigned).
   name**, the perspective it belongs to, the **evidence tier** (a) / (b) / (c), a
   severity (`blocker` / `should-fix` / `nit`), what is wrong, and the recommended
   fix. Say who relies on the declaration and what they get instead. Cite a
-  project rule only when you can name it and quote the offending line.
+  project rule only when you can name it and quote the offending line. A
+  perspective 1 finding from the readback comparison also carries its category.
 - **Split the confidence in two** for each finding: is *this declaration on its
   own* wrong, and is it wrong *once its unexamined dependencies are included*?
   These come apart sharply — a lemma can be locally airtight while everything

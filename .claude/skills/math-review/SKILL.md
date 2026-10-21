@@ -1,6 +1,6 @@
 ---
 name: math-review
-description: Review the current Lean change — or an explicitly named file, directory, or commit range — from a mathematician's/physicist's viewpoint via parallel per-perspective `math-reviewer` sub-agents: statement fidelity, deferred hypotheses, abstraction/literature conformance, notation/naming/docs, and counterexample models/vacuity.
+description: Review the current Lean change — or an explicitly named file, directory, or commit range — from a mathematician's/physicist's viewpoint via parallel per-perspective `math-reviewer` sub-agents: statement fidelity (checked against a blind `lean-readback` of the claims), deferred hypotheses, abstraction/literature conformance, notation/naming/docs, and counterexample models/vacuity.
 argument-hint: "[path | dir | main...HEAD]"
 disable-model-invocation: true
 ---
@@ -36,19 +36,42 @@ no elaborated type to inspect. If every option is empty, ask the user what to
 review.
 
 For diff-derived targets, also collect the changed line ranges per file with
-`git diff -U0 <base> -- <file>` — step 2 hands them to the reviewers. An
+`git diff -U0 <base> -- <file>` — step 3 hands them to the reviewers. An
 explicit file or directory target has no diff; its scope is the entire file.
 
 Announce the resolved target before dispatching, so a wrong default costs one
 word to correct.
 
-### 2. Spawn one sub-agent per perspective
+### 2. Read the claims back blind
+
+A reviewer who has read the docstring reads the code through it. Before any
+reviewer starts, have the target's claims read back by an agent that has seen
+neither the docstring nor the source:
+
+1. Select the public `theorem` / `lemma` / `def` / `structure` / `class`
+   declarations in the scope whose docstring states a mathematical claim, at
+   most 20, theorems first; list the rest under `## Not reviewed`.
+2. Build one packet per declaration, numbered `d1`, `d2`, … : its source, the
+   `variable` / `open` / `namespace` lines governing it, and the repository
+   definitions its statement mentions, with every docstring (`/-- … -/`), module
+   doc and comment removed.
+3. Write the prompt — the packets and nothing else — to
+   `<your scratchpad>/math-review/readback-input.md`, then launch **one**
+   `lean-readback` agent (`subagent_type: lean-readback`) with that text pasted
+   into the prompt: it has no tools, so the prompt is all it sees. Do not add
+   file paths, docstrings, citations or your reading of the intent.
+4. Save its reply verbatim to `<your scratchpad>/math-review/readback.md`,
+   followed by a table mapping each `d<N>` to its declaration name and file.
+
+If no declaration qualifies, skip this step and say so in the report.
+
+### 3. Spawn one sub-agent per perspective
 
 **Scale to the target first.** When the scope is small — roughly three target
 declarations or fewer, or a small diff in a single file — do not fan out:
 launch a **single** `math-reviewer` with no perspective assigned (its agent
 file then has it cover all five perspectives itself), and continue with
-step 3 unchanged. The fan-out below is for real diffs.
+step 4 unchanged. The fan-out below is for real diffs.
 
 Launch five `math-reviewer` agents (Agent tool,
 `subagent_type: math-reviewer`) — one per perspective defined in the agent
@@ -72,6 +95,8 @@ prompt must state:
   perspective's definition, the agent file owns it;
 - the target files, with the changed line ranges collected in step 1 — or
   *entire file* for an explicit target that has no diff;
+- for perspective 1, and for a single reviewer with no perspective assigned,
+  the absolute path of the readback file from step 2;
 - **the absolute path of the notes file** it must append confirmed findings to
   as it goes: `<your scratchpad>/math-review/perspective-<N>.md`. Pass *your*
   scratchpad path, not the agent's — a file written where you cannot read it is
@@ -90,7 +115,7 @@ notes file you assigned it, which it appends to as it works. Findings that
 reached disk are usable even when the agent died mid-sweep; mark that perspective
 as partial and record in `## Not reviewed` how far it got.
 
-### 3. Aggregate
+### 4. Aggregate
 
 Wait for every perspective to complete.
 
@@ -156,7 +181,8 @@ Template:
 
 ## Not reviewed
 <deleted files; files no agent could reach; perspectives that returned partial;
- and — always — the **unexamined dependencies the verdict rests on**: the
+ claims left without a readback beyond the cap of step 2; and — always — the
+ **unexamined dependencies the verdict rests on**: the
  declarations the reviewers relied upon without opening, taken from each
  reviewer's per-finding confidence split. The risk lives here, not in what was
  checked, so this section is never omitted.>
@@ -176,4 +202,4 @@ enter the review.
 Nor is a file the unit of judgement: deferred hypotheses are discharged — or
 silently left standing — across files, and abstraction drift shows up only
 when the definition and its uses are read together. One reviewer per
-perspective sees the whole change at once, and caps the fan-out at five agents.
+perspective sees the whole change at once, and caps the fan-out at five reviewers.
