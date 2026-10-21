@@ -41,8 +41,7 @@ The property is defined at the level of a **net of von Neumann algebras** (`VonN
 isotone, local assignment `O ↦ 𝓡(O)` over a bare causal index set, with no directedness, no
 quasi-local C⋆-algebra and no faithfulness. That is the level at which the index set of the split
 property's own literature becomes expressible: the proper intervals of `S¹` are *not* directed
-(two intervals covering the circle have no proper upper bound), as Köster's dissertation itself
-notes at its definition of a chiral net. Wedges and spacelike cones are further standard
+(two intervals covering the circle have no proper upper bound). Wedges and spacelike cones are further standard
 non-directed examples from the wider AQFT literature (Buchholz 1974, Doplicher–Longo 1984 treat
 the split property itself; the non-directed index sets come from the surrounding literature).
 
@@ -402,7 +401,7 @@ lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : vnNe
     the adopted definition of a split inclusion carries.
 
     The pair obtained this way always has the gap `O₂` between `O₁` and `O_B`. Since `⋐` is
-    irreflexive, adjacent pairs such as Matsui's half-chains are out of its reach; for them
+    irreflexive, adjacent pairs such as the half-chains `(-∞, 0]`, `[1, ∞)` are out of its reach; for them
     `IsSplitPair` is the property itself, not a consequence. -/
 theorem SplitProperty.isSplitPair (hs : vnNet.SplitProperty) {O₁ O₂ O_B : K}
     (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) : vnNet.IsSplitPair O₁ O_B :=

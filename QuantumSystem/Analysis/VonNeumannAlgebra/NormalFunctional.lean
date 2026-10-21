@@ -19,8 +19,7 @@ public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 # Normal positive functionals
 
 A positive functional `ω` on a von Neumann algebra `M ⊆ B(H)` is **normal** if it is σ-weakly
-continuous (`VonNeumannAlgebra.IsNormal`), the
-σ-weak topology being that of `H →σw[ℂ] H`
+continuous (`VonNeumannAlgebra.IsNormal`), the σ-weak topology being that of `H →σw[ℂ] H`
 (`QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology`) restricted to `M`.
 
 The representation theorem (Bratteli–Robinson, Thm. 2.4.21): `ω` is normal iff it is a countable
@@ -170,8 +169,7 @@ def toSigmaWeak (x : M) : M.sigmaWeak := ⟨ContinuousLinearMapSigmaWeak.ofCLM x
 @[simp] lemma ofSigmaWeak_toSigmaWeak (x : M) : M.ofSigmaWeak (M.toSigmaWeak x) = x := rfl
 
 variable (M) in
-/-- A positive functional `ω` on `M` is **normal** if it is σ-weakly continuous (Bratteli–Robinson,
-Thm. 2.4.21). By
+/-- A positive functional `ω` on `M` is **normal** if it is σ-weakly continuous. By
 `VonNeumannAlgebra.isNormal_iff_exists_lp` this is equivalent to `ω` being a countable sum of
 vector functionals. -/
 def IsNormal (ω : M →ₚ[ℂ] ℂ) : Prop :=

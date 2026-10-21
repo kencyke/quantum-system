@@ -27,7 +27,7 @@ and about **infinite** regions (`QuantumSystem.Physics.LocalNet.InfiniteRegion`)
 Both half-chain forms are expressible. The *gapped* form follows from the nested split property:
 on the integer chain with `ofCThickening ℤ 1`, `Set.Iic 0 ⋐ Set.Iic 2`, and
 `VonNeumannNet.SplitProperty.isSplitPair` against `Set.Ici 3` gives `𝓡(Iic 0) ≤ 𝔑 ≤ 𝓡(Ici 3)′`
-(`LocalNet.IsSplitPairAt.of_splitProperty`). Matsui's *gap-free* form, between `𝓡(Iic 0)` and
+(`LocalNet.IsSplitPairAt.of_splitProperty`). The *gap-free* form, between `𝓡(Iic 0)` and
 `𝓡(Ici 1)′`, cannot come from `⋐`, since `⋐` is irreflexive; it is stated directly as a split pair
 (`VonNeumannNet.IsSplitPair`, `LocalNet.HasHalfChainSplit`).
 
@@ -36,7 +36,7 @@ the identification of the chain's quasi-local algebra with `𝔄_L ⊗ 𝔄_R` a
 neither of which is built. Its equivalence with the split-inclusion form is therefore not proved
 either.
 
-What is also not proved is Matsui's characterisation for pure states — the half-chain split
+What is also not proved is the characterisation for pure states — the half-chain split
 property holds iff `𝓡(Iic 0)` is a type I factor. The representation-theoretic input is
 available — the GNS representation of a pure state is irreducible
 (`GNS.Representation.isPure_iff_isIrreducible`) and so has commutant `ℂ1`
