@@ -270,7 +270,7 @@ lemma isPositiveDefinite_charFunDual {E : Type*} [NormedAddCommGroup E] [NormedS
 
 /-! ### Integrable positive definite functions have a nonnegative Fourier transform
 
-We follow the classical Fejér-type argument (Rudin, *Fourier analysis on groups*, 1.4.3): for a
+We follow a Fejér-type argument: for a
 continuous integrable positive definite function `ψ`, the averaged double integrals
 `vol(B_R)⁻¹ ∫_{B_R} ∫_{B_R} ψ (x - y) dy dx` are nonnegative (they are limits of the finite sums
 in the definition of positive definiteness) and converge to `∫ ψ` as `R → ∞`. Applied to `ψ`

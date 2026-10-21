@@ -199,8 +199,8 @@ end UnitaryEquiv
 /-! ### Schur's lemma -/
 
 /-- **Schur's lemma** for a representation: `R` is irreducible iff it is non-null and its commutant
-`π(A)′ = Set.centralizer (Set.range R.π)` consists of the scalars `ℂ1` (Murphy, *C\*-algebras and
-Operator Theory*, Thm. 5.1.1 and its converse; Bratteli–Robinson, Prop. 2.3.8). This is the
+`π(A)′ = Set.centralizer (Set.range R.π)` consists of the scalars `ℂ1` (Bratteli–Robinson,
+Prop. 2.3.8). This is the
 operator-theoretic `InnerProductSpace.centralizer_eq_scalars_iff` for the `⋆`-closed set
 `Set.range R.π`, whose closed invariant subspaces are `R.closedInvtSubmodule`. -/
 theorem isIrreducible_iff_centralizer (R : CStarRep A) :

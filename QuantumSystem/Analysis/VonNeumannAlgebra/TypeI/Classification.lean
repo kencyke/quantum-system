@@ -129,8 +129,8 @@ lemma isTypeIFactor_vnTensorRight {H₁ H₂ : Type*} [NormedAddCommGroup H₁]
 end SpatialTensor
 
 open HilbertTensor in
-/-- **The commutant of a type I factor is a type I factor** (Takesaki V.1.31; Kadison–Ringrose
-9.1.4 for the spatial form). By the split tensor decomposition, `N` and `N′` are spatially
+/-- **The commutant of a type I factor is a type I factor**. By the split tensor decomposition,
+`N` and `N′` are spatially
 `B(ℓ²(F)) ⊗̄ 1` and `1 ⊗̄ B(eH)` for a minimal projection `e` of `N` and a nonempty `F`; the latter
 is a type I factor (`isTypeIFactor_vnTensorRight`), and type I factors are spatially invariant
 (`isTypeIFactor_conj_iff`). -/

@@ -1179,8 +1179,8 @@ interior and `*`-strongly continuous on the closed strip, with `‖F z‖ ≤ �
 This is `IsSelfAdjoint.exists_stripContinuation_of_le` with `U₁ = J₁` and `U₂ = J₂†`:
 `T₁ = J₁ Δ₁^{1/2}` and `Δ₂^{1/2} = J₂† T₂` hold for every polar decomposition
 (`IsSelfAdjoint.eq_polarIsometry_compPMap`, `IsSelfAdjoint.adjointₛₗ_polarIsometry_compPMap`). For
-the Tomita operators of standard subspaces, `J₂† = J₂` and it is Borchers' Theorem A
-(`StandardSubspace.exists_modularGroup_continuation`); for relative Tomita operators,
+the Tomita operators of standard subspaces, `J₂† = J₂` and it is
+`StandardSubspace.exists_modularGroup_continuation`; for relative Tomita operators,
 `J₂† = J_{Ω₂,η₂}` and it is the relative version
 (`VonNeumannAlgebra.exists_relativeModularGroup_continuation_of_le`). -/
 theorem exists_stripContinuation_polarIsometry (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B)

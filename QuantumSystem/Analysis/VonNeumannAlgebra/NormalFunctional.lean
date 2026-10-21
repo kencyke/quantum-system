@@ -19,8 +19,7 @@ public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 # Normal positive functionals
 
 A positive functional `ω` on a von Neumann algebra `M ⊆ B(H)` is **normal** if it is σ-weakly
-continuous (`VonNeumannAlgebra.IsNormal`; Takesaki, *Theory of Operator Algebras I*, §II.2;
-Bratteli–Robinson, *Operator Algebras and Quantum Statistical Mechanics 1*, Def. 2.4.1), the
+continuous (`VonNeumannAlgebra.IsNormal`), the
 σ-weak topology being that of `H →σw[ℂ] H`
 (`QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology`) restricted to `M`.
 
@@ -171,8 +170,8 @@ def toSigmaWeak (x : M) : M.sigmaWeak := ⟨ContinuousLinearMapSigmaWeak.ofCLM x
 @[simp] lemma ofSigmaWeak_toSigmaWeak (x : M) : M.ofSigmaWeak (M.toSigmaWeak x) = x := rfl
 
 variable (M) in
-/-- A positive functional `ω` on `M` is **normal** if it is σ-weakly continuous (Takesaki,
-*Theory of Operator Algebras I*, §II.2; Bratteli–Robinson, Def. 2.4.1 and Thm. 2.4.21). By
+/-- A positive functional `ω` on `M` is **normal** if it is σ-weakly continuous (Bratteli–Robinson,
+Thm. 2.4.21). By
 `VonNeumannAlgebra.isNormal_iff_exists_lp` this is equivalent to `ω` being a countable sum of
 vector functionals. -/
 def IsNormal (ω : M →ₚ[ℂ] ℂ) : Prop :=
@@ -366,8 +365,7 @@ section NormalMap
 variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
   {N : VonNeumannAlgebra K} {F : Type*}
 
-/-- A map `α : N → M` between von Neumann algebras is **normal** if it is σ-weakly continuous
-(Takesaki, *Theory of Operator Algebras I*, §II.2; Ohya–Petz, *Quantum Entropy and Its Use*, §1.C),
+/-- A map `α : N → M` between von Neumann algebras is **normal** if it is σ-weakly continuous,
 the same notion as `VonNeumannAlgebra.IsNormal` for functionals. For positive maps this is
 equivalent to preserving suprema of bounded increasing nets; that equivalence is not formalised
 here. -/

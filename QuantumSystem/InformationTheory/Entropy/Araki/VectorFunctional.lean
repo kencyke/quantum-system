@@ -25,10 +25,10 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
 
 * **Argument order.** `arakiVec M ξ η`, written `S[M]⟦ξ ∥ η⟧`, is `S(ω_ξ ‖ ω_η)`: the first
   argument `ω_ξ` is the state being measured, the second `ω_η` the reference. This is the order of
-  Longo (`S(φ‖ψ) = -(ξ, log Δ_{η,ξ} ξ)`), Witten (`S_{Ψ|Φ} = -⟨Ψ, log Δ_{Ψ|Φ} Ψ⟩`), Ohya–Petz and
+  Longo (`S(φ‖ψ) = -(ξ, log Δ_{η,ξ} ξ)`), Witten (`S_{Ψ|Φ} = -⟨Ψ, log Δ_{Ψ|Φ} Ψ⟩`) and
   Umegaki's `D(ψ ∥ φ)`; Araki's original `S(φ/ψ)` puts the reference on the left, so Araki's
   `S(ω_η/ω_ξ)` is `S[M]⟦ξ ∥ η⟧`. The relative modular operator takes the vectors in the opposite
-  order, `Δ_{η,ξ} = Δ[M]⟦η, ξ⟧` (Araki's and Longo's `Δ_{η,ξ}`, Ohya–Petz's `Δ(η, ξ)`; Witten's
+  order, `Δ_{η,ξ} = Δ[M]⟦η, ξ⟧` (Araki's and Longo's `Δ_{η,ξ}`; Witten's
   `Δ_{Ψ|Φ}` with `Ψ = ξ`, `Φ = η` has the subscripts the other way round).
 * **Finite dimensions.** For `M = B(H)`, `H` finite-dimensional, acting as `1 ⊗ B(H)` on
   `K ⊗̂ H` and `ξ`, `η` purifications of positive operators `ρ`, `σ`, this is the eigenvalue sum of

@@ -129,7 +129,7 @@ open CFC
 variable {A : Type u} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
   {s : Set ℝ} {f : ℝ → ℝ}
 
-/-- **Joint convexity of the perspective** (Effros–Hansen 2014): the perspective
+/-- **Joint convexity of the perspective**: the perspective
 `P_f(l, r) = r^{1/2} f(r^{-1/2} l r^{-1/2}) r^{1/2}` of an operator convex function `f` satisfies
 Jensen's inequality over finite convex combinations of pairs `(lᵢ, rᵢ)` with `rᵢ` strictly
 positive and `rᵢ^{-1/2} lᵢ rᵢ^{-1/2}` in the domain of `f`. -/
@@ -211,7 +211,7 @@ lemma IsOperatorConvexOn.perspective_sum_le_of_isStrictlyPositive
       (IsSelfAdjoint.of_nonneg rpow_nonneg) (hl i)
   exact ⟨hpos.isSelfAdjoint, fun x hx => hpos.spectrum_pos hx⟩
 
-/-- **Joint convexity of the perspective** (Effros–Hansen 2014): for `f` operator convex on
+/-- **Joint convexity of the perspective**: for `f` operator convex on
 `[0, ∞)`, `(l, r) ↦ r^{1/2} f(r^{-1/2} l r^{-1/2}) r^{1/2}` is jointly convex on pairs with `l`
 positive and `r` strictly positive. -/
 theorem IsOperatorConvexOn.convexOn_perspective (hf : IsOperatorConvexOn.{v} (Ici 0) f) :

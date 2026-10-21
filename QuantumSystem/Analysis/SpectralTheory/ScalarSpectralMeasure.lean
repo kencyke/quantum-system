@@ -77,7 +77,7 @@ the complex conjugation, and let `A` be a self-adjoint operator with `A = T†T`
   (`IsSelfAdjoint.lintegral_measure_pvm_eq_norm_sq`) and `dom T = dom A^{1/2}`
   (`IsSelfAdjoint.domain_sqrt_eq_domain`).
 * `IsSelfAdjoint.integral_inv_add_measure_pvm_le_of_forall_mem_graph` — **comparison of
-  resolvents** (Petz): if every point `(w, w')` of the graph of a closable `S` is dominated by a
+  resolvents**: if every point `(w, w')` of the graph of a closable `S` is dominated by a
   point `(v, v')` of the graph of `T` (`‖v‖ ≤ ‖w‖`, `‖v'‖ ≤ ‖w'‖`, `re ⟪u', w⟫ ≤ re ⟪u, v⟫`), then
   `⟪u', (t + S̄†S̄)⁻¹ u'⟫ ≤ ⟪u, (t + A)⁻¹ u⟫`.
 -/
@@ -664,7 +664,7 @@ lemma lintegral_measure_pvm_le_norm_sq {u : E} {u' : F} (hu : (u, u') ∈ T.grap
     fun n => hbound _ (by positivity)
 
 include hA in
-/-- **Comparison of resolvents** (Petz). Let `A = T†T` on `E` and `B = S̄†S̄` on `E'` be
+/-- **Comparison of resolvents**. Let `A = T†T` on `E` and `B = S̄†S̄` on `E'` be
 self-adjoint, with `S : E' → F'` closable and `σ`-semilinear, and let `u ∈ E`, `u' ∈ E'`. Suppose
 every point `(w, w')` of the graph of `S` is dominated by a point `(v, v')` of the graph of `T`:
 `‖v‖ ≤ ‖w‖`, `‖v'‖ ≤ ‖w'‖` and `re ⟪u', w⟫ ≤ re ⟪u, v⟫` (for instance `v = V w` for a contraction

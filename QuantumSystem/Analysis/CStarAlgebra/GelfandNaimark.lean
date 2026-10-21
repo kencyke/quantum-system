@@ -14,11 +14,10 @@ public import QuantumSystem.Analysis.CStarAlgebra.GNS.Separable
 Every C\*-algebra, not necessarily unital and not necessarily commutative, is isometrically
 `*`-isomorphic onto a norm closed `*`-subalgebra of the bounded operators on some complex
 Hilbert space.  This is the noncommutative Gelfand-Naimark theorem (Gelfand-Naimark 1943;
-Murphy, *C\*-algebras and Operator Theory*, Ch. 3 "Ideals and Positive Functionals"; Pedersen,
-*C\*-Algebras and Their Automorphism Groups*, Ch. 3 "Functionals and Representations";
+Murphy, *C\*-algebras and Operator Theory*, Ch. 3 "Ideals and Positive Functionals";
 Blackadar, *Operator Algebras*, Ch. II "C\*-Algebras"; Takesaki, *Theory of Operator Algebras
 I*, Ch. I "Fundamentals of Banach Algebras and C\*-Algebras" — chapter-level locators only,
-since none of these four books was independently opened for this file), and it is not to be
+since none of these three books was independently opened for this file), and it is not to be
 confused with the commutative
 Gelfand-Naimark theorem — Gelfand duality — which Mathlib carries as
 `gelfandTransform_isometry`.

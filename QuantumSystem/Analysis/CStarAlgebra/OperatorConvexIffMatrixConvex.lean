@@ -42,9 +42,6 @@ needs the GNS construction of the project, and it is the reason this file lives 
 
 ## References
 
-The equivalence is standard; cf. Hansen–Pedersen 1982, where operator convexity is defined on
-`H →L[ℂ] H`, and Bhatia, Chapter V, where it is defined on the matrices of every size.
-
 * F. Hansen, G. K. Pedersen, *Jensen's inequality for operators and Löwner's theorem*,
   Math. Ann. 258 (1982), 229–241
 * R. Bhatia, *Matrix Analysis*, Chapter V (1997)
@@ -84,8 +81,7 @@ lemma IsMatrixConvexOn.isOperatorConvexOn (hc : ContinuousOn f s) (hf : IsMatrix
     IsOperatorConvexOn.{u} s f :=
   ⟨hc, fun B _ _ _ => hf.convexOn_cstarAlgebra B hc⟩
 
-/-- A function is operator convex on `s` iff it is continuous and matrix convex on `s` (standard;
-cf. Hansen–Pedersen 1982, Bhatia, Chapter V). -/
+/-- A function is operator convex on `s` iff it is continuous and matrix convex on `s`. -/
 theorem isOperatorConvexOn_iff_continuousOn_and_isMatrixConvexOn :
     IsOperatorConvexOn.{u} s f ↔ ContinuousOn f s ∧ IsMatrixConvexOn s f :=
   ⟨fun h => ⟨h.continuousOn, h.isMatrixConvexOn⟩, fun h => h.2.isOperatorConvexOn h.1⟩

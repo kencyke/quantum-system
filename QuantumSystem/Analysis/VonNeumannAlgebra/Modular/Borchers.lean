@@ -74,7 +74,7 @@ Faulkner–Hollands (arXiv:2010.05513) treat contractions `V` induced by channel
 ## TODO
 
 * The boundary value of the relative Theorem A in conjugated form: with
-  `Δ_{ξ,η}^{it} = J_{η,ξ} Δ_{η,ξ}^{it} J_{η,ξ}†` (Araki–Masuda 1982), which is not formalised
+  `Δ_{ξ,η}^{it} = J_{η,ξ} Δ_{η,ξ}^{it} J_{η,ξ}†`, which is not formalised
   (see `VonNeumannAlgebra.adjointₛₗ_relativeModularConj`), it reads
   `V(t + i/2) = J_{Ω₂,η₂} Ṽ(t) J_{η₁,Ω₁}` with `Ṽ(t) = Δ_{Ω₂,η₂}^{-it} V Δ_{Ω₁,η₁}^{it}` the family
   for the swapped pairs. It is Borchers' form `V(t + i/2) = J V(t) J` only for `ηᵢ = Ωᵢ`.

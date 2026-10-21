@@ -67,8 +67,8 @@ is contained in the spectral cone. For the dual pairing `L = topDualPairing ℝ 
   be removed.
 * Holomorphy in the tube `V + i C`: the spectrum condition `E_U((C*)ᶜ) = 0` holds iff
   `v ↦ U v` extends to a bounded family on `V + i C`, holomorphic on `V + i C°` and strongly
-  continuous up to the boundary, `U (v + i w) = ∫ exp (i L(p, v)) exp (-L(p, w)) dE_U(p)`
-  (Streater–Wightman, §2.6; Borchers 1995, §2). This needs holomorphy in several complex variables;
+  continuous up to the boundary, `U (v + i w) = ∫ exp (i L(p, v)) exp (-L(p, w)) dE_U(p)`.
+  This needs holomorphy in several complex variables;
   only the one-variable case along a direction `a` of the spectral cone, `w ↦ e^{iwP_a}` on the
   upper half-plane (`ProjectionValuedMeasure.diffContOnCl_integralApply_cexp_of_nonneg`), is
   formalised.
@@ -77,8 +77,7 @@ is contained in the spectral cone. For the dual pairing `L = topDualPairing ℝ 
 
 * H.-J. Borchers, *On the use of modular groups in quantum field theory*,
   Ann. Inst. H. Poincaré Phys. Théor. 63 (1995), 331–382, §2
-* R. F. Streater, A. S. Wightman, *PCT, Spin and Statistics, and All That*, Benjamin (1964), §3.1
-  (the spectrum condition)
+* R. F. Streater, A. S. Wightman, *PCT, Spin and Statistics, and All That*, Benjamin (1964)
 * K.-H. Neeb, G. Ólafsson, *Nets of standard subspaces on Lie groups*, Adv. Math. 384 (2021)
   (the positive cone `C_U` of a unitary representation)
 -/

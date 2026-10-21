@@ -59,7 +59,7 @@ independent.
 
 The environment is the **right** factor of `ℂᵐ ⊗ ℂ^E`, indexed by `m × E`, and is removed by the
 partial trace `tr₂ = Matrix.traceRight`. This is Watrous's convention, `Φ(X) = Tr_Z (A X A*)` with
-`A : X → Y ⊗ Z`, and Stinespring's `π(B) = B ⊗ 1` on `ℂᵐ ⊗ ℂʳ`. The Choi matrix keeps Choi's
+`A : X → Y ⊗ Z`. The Choi matrix keeps Choi's
 ordering, input first (`QuantumSystem/Analysis/Matrix/CompletelyPositiveMap/Choi.lean`).
 
 This file treats the finite-dimensional matrix algebras `M_n(ℂ)`: complete positivity is

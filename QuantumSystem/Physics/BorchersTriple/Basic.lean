@@ -46,7 +46,7 @@ Rindler wedge of Minkowski space is
 
 ## TODO
 
-* **Wedge-local nets** (Buchholz–Lechner–Summers 2011, §4): a Borchers triple generates the net of
+* **Wedge-local nets**: a Borchers triple generates the net of
   wedge algebras `W + x ↦ T(x) M T(x)⋆`, and its relative commutants give the local algebras of
   double cones. That construction is a local net in the sense of
   `QuantumSystem.Physics.LocalNet.Basic` and belongs under `QuantumSystem.Physics.LocalNet`, importing
@@ -57,7 +57,7 @@ Rindler wedge of Minkowski space is
 * H.-J. Borchers, *On the use of modular groups in quantum field theory*,
   Ann. Inst. H. Poincaré Phys. Théor. 63 (1995), 331–382
 * D. Buchholz, G. Lechner, S. J. Summers, *Warped convolutions, Rieffel deformations and the
-  construction of quantum field theories*, Comm. Math. Phys. 304 (2011), 95–123, §4
+  construction of quantum field theories*, Comm. Math. Phys. 304 (2011), 95–123
 -/
 
 @[expose] public section

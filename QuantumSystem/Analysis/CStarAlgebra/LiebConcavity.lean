@@ -44,7 +44,6 @@ precedence, so the powers are parenthesised: `(A ^ p) ∘L T† ∘L (B ^ q) ∘
 
 ## Proof outline
 
-The proof follows Effros (2009).
 1. On the Hilbert–Schmidt space `HilbertSchmidt H K` the right multiplication
    `𝐑[K] A : X ↦ X A` and the left multiplication `𝐋[H] B : X ↦ B X` are commuting positive
    operators that commute with real powers, and `⟪T, 𝐑[K] (Aᵖ) 𝐋[H] (Bᑫ) T⟫ = Tr (Aᵖ T† Bᑫ T)`.

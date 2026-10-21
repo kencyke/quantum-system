@@ -15,9 +15,7 @@ import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 # Schwarz maps
 
 A linear map `f : A₁ →ₗ[ℂ] A₂` between C⋆-algebras is a **Schwarz map** if it satisfies the
-Kadison–Schwarz inequality `f(a)⋆ f(a) ≤ f(a⋆ a)` for every `a` (Choi, *A Schwarz inequality for
-positive linear maps on C⋆-algebras*, Illinois J. Math. 18 (1974); Ohya–Petz, *Quantum Entropy
-and Its Use*, §1.C; Petz, *Quasi-entropies for finite quantum systems* (1986)). The *unital normal*
+Kadison–Schwarz inequality `f(a)⋆ f(a) ≤ f(a⋆ a)` for every `a`. The *unital normal*
 Schwarz maps form a class of maps along which the data-processing inequality for Araki's relative
 entropy holds (Uhlmann; Petz); unitality cannot be dropped, as `½ • id` shows once the entropy is
 taken between general positive functionals, where it can be negative: for `σ = 2ρ`,
@@ -31,7 +29,7 @@ linear map is bounded (Mathlib's `ContinuousLinearMapClass` instance for positiv
 `‖f a‖² = ‖f(a)⋆ f(a)‖ ≤ ‖f(a⋆ a)‖ ≤ ‖f‖ ‖a‖²` forces `‖f‖ ≤ 1`.
 
 The main examples are the non-unital ⋆-homomorphisms (with equality), the Kraus maps
-(`SchwarzMap.ofKraus`) and, by the Kadison–Schwarz inequality of Choi, the `2`-positive maps with
+(`SchwarzMap.ofKraus`) and, by the Kadison–Schwarz inequality, the `2`-positive maps with
 `φ 1 ≤ 1`, in particular the completely positive ones. The `k`-positive maps and that inequality
 are in `ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`
 (`KPositiveMapClass.le_map_star_mul`); a `2`-positive map with `φ 1 ≤ 1` is packaged as a Schwarz

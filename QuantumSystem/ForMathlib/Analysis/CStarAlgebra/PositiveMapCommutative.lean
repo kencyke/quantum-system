@@ -14,7 +14,7 @@ import Mathlib.Topology.PartitionOfUnity
 /-!
 # Positive maps on commutative unital C⋆-algebras are completely positive
 
-**Stinespring's theorem** (Stinespring 1955, Theorem 4; Paulsen, Theorem 3.11): a positive linear
+**Stinespring's theorem** (Paulsen, Theorem 3.11): a positive linear
 map `φ` from a commutative unital C⋆-algebra into any C⋆-algebra is completely positive.
 
 By Gelfand duality (`gelfandStarTransform`) the domain may be taken to be `C(X, ℂ)` for a compact
@@ -42,7 +42,7 @@ otherwise form an instance cycle.
 ## References
 
 * W. F. Stinespring, *Positive functions on C⋆-algebras*, Proc. Amer. Math. Soc. 6 (1955),
-  211–216, Theorem 4.
+  211–216.
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
   (2002), Theorem 3.11.
 -/
@@ -172,7 +172,7 @@ private lemma map_cstarMatrix_nonneg_of_continuousMap (φ : F) {n : Type*} [Fint
 
 end ContinuousMap
 
-/-- **Stinespring's theorem** (Stinespring 1955, Theorem 4; Paulsen, Theorem 3.11): a positive
+/-- **Stinespring's theorem** (Paulsen, Theorem 3.11): a positive
 linear map from a commutative unital C⋆-algebra into any C⋆-algebra is completely positive.
 Gelfand duality identifies `A₁` with `C(X, ℂ)` for the compact Hausdorff character space `X`
 (`gelfandStarTransform`); ⋆-isomorphisms are completely positive, and a positive map on `C(X, ℂ)`

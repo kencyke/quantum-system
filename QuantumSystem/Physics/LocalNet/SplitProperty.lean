@@ -79,7 +79,7 @@ theorems impose nondegeneracy or cyclicity where they need it.
   The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`,
   a symmetric relation (`VonNeumannNet.IsSplitPair.symm`); the half-chain split property of a
   chain state (`LocalNet.HasHalfChainSplit`) is of that form, in the split-inclusion form, which
-  implies Matsui's quasi-equivalence definition and agrees with it for pure states.
+  implies the quasi-equivalence form and agrees with it for pure states.
   Its degenerate side is `VonNeumannNet.splitProperty_of_complex`: on a one-dimensional Hilbert
   space *every* net has the property, so no one-dimensional model is evidence about anything else.
 * `LocalNet.SplitProperty` — the split property at the net `LocalNet.vonNeumannNet` of a
@@ -111,8 +111,7 @@ open scoped CausalOrthogonality
     region, and a **causal collar** (`exists_orthogonal_of_properlyContained`): the outer region
     contains a *nondegenerate* region causally orthogonal to the inner one. Nondegeneracy is
     expressed as `¬ O₃ ≤ O₁`, the only sense a bare order affords — and it is what the
-    literature's separation condition actually delivers. Köster's chiral index set defines its own
-    `I ⋐ S¹` by "its causal complement `I' := S¹ ∖ Ī` is not the empty set", and `Ī₁ ⊂ I₂` with
+    literature's separation condition actually delivers. On a chiral index set, `Ī₁ ⊂ I₂` with
     `I₂` open forces a nonempty component of `I₂ ∖ Ī₁` that is a proper interval inside `I₂`,
     disjoint from `I₁` and not contained in it. On such an index set, where the difference of two
     regions need not be a region, the collar is a genuine constraint on `⋐`: with no causally
@@ -156,11 +155,7 @@ namespace ProperContainment
 /-- `O₁ ⋐ O₂` : the region `O₁` is properly contained in `O₂`.
 
     The glyph is topology's compact-containment symbol, used here for the *binary relation* the
-    QFT literature writes `Ī₁ ⊂ I₂`. Köster's dissertation uses the same glyph differently: there
-    `I ⋐ S¹` is a membership predicate ("`I` is a proper interval of `S¹`"), not a relation
-    between two regions of the index set — a reader coming from that source should not carry the
-    predicate reading into this notation (Köster, *Structure of Coset Models*, arXiv
-    math-ph/0308031, writes the separation itself as `Ī₁ ⊂ I₂`). -/
+    QFT literature writes `Ī₁ ⊂ I₂`. -/
 scoped infixl:50 " ⋐ " => ProperContainment.ProperlyContained
 
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [ProperContainment K]
@@ -338,7 +333,7 @@ theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K 
 
     No proper containment and no gap between the regions is involved. This is the split-inclusion
     form of the half-chain split property of a spin chain, for the adjacent half-chains
-    `(-∞, 0]` and `[1, ∞)` (which implies Matsui's quasi-equivalence definition, and is
+    `(-∞, 0]` and `[1, ∞)` (which implies the quasi-equivalence form, and is
     equivalent to it for pure states),
     and the disjoint-pair form of Buchholz's *Product states for local algebras*. For causally
     orthogonal regions the inclusion `𝓡(O₁) ≤ 𝓡(O₂)′` itself holds by

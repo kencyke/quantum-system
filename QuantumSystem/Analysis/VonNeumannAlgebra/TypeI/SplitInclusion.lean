@@ -13,7 +13,7 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Classification
 
 An inclusion `A ≤ B` of von Neumann algebras on a Hilbert space is **split** when some type I
 factor `M` interpolates: `A ≤ M ≤ B`. This is the definition of Doplicher–Longo, *Standard and
-split inclusions of von Neumann algebras* (Invent. Math. 75, 1984) §1; the notion originates in
+split inclusions of von Neumann algebras* (Invent. Math. 75, 1984); the notion originates in
 the analysis of local algebras by Buchholz, *Product states for local algebras* (Comm. Math.
 Phys. 36, 1974), where the interpolating type I factor is what produces normal product states
 across a commuting pair. The AQFT *split property* — this predicate applied to the inclusions

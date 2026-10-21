@@ -40,9 +40,8 @@ of the graph of `S_N`, a dominating point of the graph of `S_M`.
 
 ## Without Tomita–Takesaki theory
 
-Uhlmann's original proof runs through the interpolation theory of quadratic forms, and Araki's
-through the modular automorphism groups `σ_t` and the KMS condition, i.e. Tomita–Takesaki theory,
-which is not formalised. The route above (Petz) avoids it: the only inputs are the Kadison–Schwarz
+Uhlmann's original proof runs through the interpolation theory of quadratic forms. The route above
+(Petz) avoids Tomita–Takesaki theory, which is not formalised: the only inputs are the Kadison–Schwarz
 inequality for `α`, the graph inequality `‖S_M V u‖ ≤ ‖S_N u‖`, the variational characterisation
 of `⟪u, (t + Δ)⁻¹ u⟫` for a positive self-adjoint `Δ = S̄†S̄`, and the integral representation of
 `-log`. In particular neither `Δ^{it}` nor `Δ^{1/2}` nor `J` is needed, only the resolvents of
@@ -67,9 +66,7 @@ modular automorphism groups.
 
 * A. Uhlmann, *Relative entropy and the Wigner–Yanase–Dyson–Lieb concavity in an interpolation
   theory*, Comm. Math. Phys. 54 (1977), 21–32.
-* D. Petz, *Sufficient subalgebras and the relative entropy of states of a von Neumann algebra*,
-  Comm. Math. Phys. 105 (1986), 123–131.
-* M. Ohya, D. Petz, *Quantum Entropy and Its Use*, Theorem 5.3.
+* M. Ohya, D. Petz, *Quantum Entropy and Its Use*.
 -/
 
 @[expose] public section

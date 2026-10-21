@@ -37,8 +37,7 @@ as few as `rank J(Φ)` operators
 
 ## References
 
-* Nielsen, Chuang, *Quantum Computation and Quantum Information*, §8.2.3 and Theorem 8.1 (there for
-  trace non-increasing operations, `Σₐ Eₐ† Eₐ ≤ 1`)
+* Nielsen, Chuang, *Quantum Computation and Quantum Information*, §8.2.3
 * Watrous, *The Theory of Quantum Information*, Corollary 2.27
 -/
 

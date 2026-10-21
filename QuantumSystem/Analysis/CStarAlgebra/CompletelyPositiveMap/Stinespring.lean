@@ -44,7 +44,7 @@ Kraus blocks `Tₐ = ιₐ† V` of `V` linearly independent: if `Σₐ cₐ T�
 
 The environment is the **right** factor of `K ⊗ E` and is removed by the partial trace
 `tr₂ = ContinuousLinearMap.traceRight`: Watrous's convention `Φ(X) = Tr_Z (A X A*)` with
-`A : X → Y ⊗ Z`, and Stinespring's `π(B) = B ⊗ 1`.
+`A : X → Y ⊗ Z`.
 
 ## Main definitions
 
@@ -424,8 +424,7 @@ theorem exists_coe_eq_iff_exists_stinespring (b : OrthonormalBasis ι ℂ H)
       obtain ⟨V, hVV, hV⟩ := h
       exact ⟨ofStinespring V hVV, LinearMap.ext fun A => by simp [hV]⟩⟩
 
-/-- **Kraus representation of CPTP maps** (Nielsen–Chuang, Theorem 8.1, for the
-trace-preserving case `Σₐ Tₐ† Tₐ = 1`): a linear map
+/-- **Kraus representation of CPTP maps**: a linear map
 `Φ : B(H) → B(K)` is a CPTP map iff `Φ(A) = Σₐ Tₐ A Tₐ†` with `Σₐ Tₐ† Tₐ = 1`, and then
 with `rank J_b(Φ)` operators. -/
 theorem exists_coe_eq_iff_exists_kraus_finrank_range_choi (b : OrthonormalBasis ι ℂ H)

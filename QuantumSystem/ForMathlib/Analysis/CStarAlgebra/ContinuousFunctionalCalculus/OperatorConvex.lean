@@ -25,7 +25,7 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.RingI
 A continuous real function `f` on a set `s ⊆ ℝ` is *operator convex* (`IsOperatorConvexOn`)
 when, in every unital C⋆-algebra, `a ↦ f(a)` (the continuous functional calculus `cfc f`) is convex
 on the self-adjoint elements with spectrum in `s`. Quantifying over the matrix algebras `M_n(ℂ)`
-alone gives *matrix convexity* (`IsMatrixConvexOn`; Bhatia, Chapter V; Effros), which needs no
+alone gives *matrix convexity* (`IsMatrixConvexOn`), which needs no
 continuity, since matrices have finite spectra. For `f` continuous on `s` the two agree, but they
 differ on discontinuous functions: on `[0, ∞)`, `f(0) = 1` and `f(t) = 0` for `t > 0` gives the
 projection `f(A)` onto `ker A`, and is matrix convex (`isMatrixConvexOn_indicator_zero`) but not
@@ -33,8 +33,7 @@ operator convex (`not_isOperatorConvexOn_indicator_zero`). The separation is one
 the endpoints of `s`: a matrix convex function is convex (`IsMatrixConvexOn.convexOn_real`), hence
 continuous on the interior of `s` (`IsMatrixConvexOn.continuousOn_interior`), and the obstruction is
 the continuity at the endpoints that operator convexity requires (Hansen–Pedersen), while the
-argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is algebraic. Bhatia's operator
-convexity is matrix convexity in every size, without continuity. Both notions are kept. This file
+argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is algebraic. Both notions are kept. This file
 proves the specialisation `IsOperatorConvexOn.isMatrixConvexOn` (operator convex ⇒ matrix convex),
 and the converse direction (matrix convex ⇒ operator convex) for continuous `f` on bounded operators
 on a Hilbert space, `IsMatrixConvexOn.convexOn_continuousLinearMap`. The converse in every
@@ -76,7 +75,7 @@ presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) �
   Hansen–Pedersen 2003, Theorem 2.1): Jensen's operator inequality
   `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ` for `Σᵢ aᵢ⋆ aᵢ = 1`, from the convexity of `cfc f` on
   `CStarMatrix ι ι A`, presented through an injective unital ⋆-homomorphism.
-* `cfc_sum_le_of_le_one_of_forall` (after Hansen–Pedersen 1982): the
+* `cfc_sum_le_of_le_one_of_forall`: the
   unital inequality implies the sub-unital one for `Σᵢ aᵢ⋆ aᵢ ≤ 1`, on `s ∋ 0` with `f(0) ≤ 0`.
 * `IsOperatorConvexOn.cfc_sum_le`, `IsOperatorConvexOn.cfc_sum_le_of_le_one`: Jensen's operator
   inequality for an operator convex `f`, in the unital and the sub-unital form, in every unital
@@ -100,7 +99,7 @@ presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) �
 
 ## Implementation notes
 
-The proof of Jensen's inequality follows Hansen–Pedersen. For a partial isometry `v` with
+For a partial isometry `v` with
 `e = v⋆ v`, `P = v v⋆` and the symmetry `S = 2P - 1`, convexity gives
 `f((x + S x S) / 2) ≤ (f(x) + S f(x) S) / 2`, and `v⋆` intertwines `(x + S x S) / 2` with
 `v⋆ x v + t (1 - e)`, so compressing by `v` gives `f(v⋆ x v + t (1 - e)) e ≤ v⋆ f(x) v`. The
@@ -131,10 +130,10 @@ by `t` and `u`, cost `4 δ ‖ξ‖²`, and `δ` is arbitrary. No limit of opera
   operator antitone, and `log` is not operator monotone on `[0, ∞)` (Mathlib's `Real.log 0 = 0`).
   Concavity is currently stated only through negation (`isOperatorConvexOn_neg_rpow`,
   `isOperatorConvexOn_neg_log`).
-* `tᵖ` is operator convex on `(0, ∞)` for `-1 ≤ p ≤ 0` and on `[0, ∞)` for `1 ≤ p ≤ 2`
-  (Bhatia, Chapter V), stated as `IsOperatorConvexOn`; both are also TODOs in Mathlib's
+* `tᵖ` is operator convex on `(0, ∞)` for `-1 ≤ p ≤ 0` and on `[0, ∞)` for `1 ≤ p ≤ 2`,
+  stated as `IsOperatorConvexOn`; both are also TODOs in Mathlib's
   `Rpow/Order.lean`.
-* The converses of Jensen's operator inequality (Hansen–Pedersen 1982 and 2003, Theorem 2.1): a
+* The converses of Jensen's operator inequality (Hansen–Pedersen 2003, Theorem 2.1): a
   continuous `f` satisfying `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ` is operator convex.
 * Jensen's operator inequality for continuous fields of operators (Hansen–Pedersen 2003),
   `f(∫ aₜ⋆ xₜ aₜ dμ(t)) ≤ ∫ aₜ⋆ f(xₜ) aₜ dμ(t)` for `∫ aₜ⋆ aₜ dμ(t) = 1`; only finite families are
@@ -424,7 +423,7 @@ private lemma SemiconjBy.cfc_real {a b y : B} (h : SemiconjBy y a b) (ha : IsSel
   change y * cfc f a = cfc f b * y
   simpa [CStarMatrix.mul_apply, Fin.sum_univ_two, d, z, CStarMatrix.ofMatrix_apply] using h10.symm
 
-/-- Jensen's inequality for a partial isometry `v`, the core of Hansen–Pedersen's proof: with
+/-- Jensen's inequality for a partial isometry `v`: with
 `e = v⋆ v` a projection, `t ∈ s` and `n = v⋆ x v + t (1 - e)`, `f(n) e ≤ v⋆ f(x) v`. -/
 private lemma cfc_mul_le_of_isIdempotentElem {s : Set ℝ} {f : ℝ → ℝ} (hs : s.OrdConnected)
     (hcont : ∀ b : B, IsSelfAdjoint b → spectrum ℝ b ⊆ s → ContinuousOn f (spectrum ℝ b))
@@ -633,14 +632,13 @@ unital C⋆-algebra `a ↦ f(a)` is convex on the self-adjoint elements with spe
 
 The C⋆-algebras range over a universe `u`, so `IsOperatorConvexOn.{u} s f` is a priori one predicate
 per universe; `IsOperatorConvexOn.isMatrixConvexOn` reads the matrix algebras off any of them. The
-predicates agree across universes, since each is equivalent to continuity and matrix convexity
-(Hansen–Pedersen). The direction from matrix convexity to operator convexity needs
+predicates agree across universes, since each is equivalent to continuity and matrix convexity.
+The direction from matrix convexity to operator convexity needs
 Gelfand–Naimark and is proved outside `ForMathlib`, in
 `QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean` (`isOperatorConvexOn_congr_universe`);
 the examples below are proved uniformly in every C⋆-algebra and hold in every universe.
 
-The field `continuousOn` follows the definition of Hansen–Pedersen; Bhatia's operator convexity,
-which asks for no continuity, is `IsMatrixConvexOn`. The field is independent of `convexOn` only at
+The field `continuousOn` follows the definition of Hansen–Pedersen. The field is independent of `convexOn` only at
 the endpoints of `s`: convexity gives continuity on the interior
 (`IsMatrixConvexOn.continuousOn_interior`), but not at an endpoint, where the indicator of `{0}` on
 `[0, ∞)` is matrix convex and discontinuous (`isMatrixConvexOn_indicator_zero`,
@@ -660,7 +658,7 @@ universe u
 
 open scoped MatrixOrder
 
-/-- A real function `f` is **matrix convex** on `s ⊆ ℝ` (Bhatia, Chapter V; Effros 2009): in every
+/-- A real function `f` is **matrix convex** on `s ⊆ ℝ`: in every
 matrix size, `A ↦ f(A)` is convex in the Löwner order on the self-adjoint matrices with spectrum
 in `s`. -/
 def IsMatrixConvexOn (s : Set ℝ) (f : ℝ → ℝ) : Prop :=
@@ -828,7 +826,7 @@ lemma cfc_sum_le_of_convexOn_cstarMatrix {ι : Type*} [Fintype ι] [DecidableEq 
   rw [hmap dN hdN, hmap x hx, hvv, hconj, ← map_mul] at key
   simpa [φ, dN] using CStarMatrix.apply_self_le_apply_self key i₀
 
-/-- **The unital Jensen inequality implies the sub-unital one** (Hansen–Pedersen 1982): if
+/-- **The unital Jensen inequality implies the sub-unital one**: if
 `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ` holds for every family indexed by `Option ι` with
 `Σᵢ aᵢ⋆ aᵢ = 1`, then it holds for families indexed by `ι` with `Σᵢ aᵢ⋆ aᵢ ≤ 1`, provided `0 ∈ s`
 and `f(0) ≤ 0`: the defect `d = (1 - Σᵢ aᵢ⋆ aᵢ)^{1/2}` joins the family with `x = 0`, and
@@ -877,8 +875,7 @@ theorem IsOperatorConvexOn.cfc_sum_le {ι : Type*} [Fintype ι]
     (CStarMatrix.reindexₐ ℂ A (Fintype.equivFin ι)) (EquivLike.injective _)
     (hf.convexOn _) (fun _ _ hbs => hf.continuousOn.mono hbs) a x hx ha
 
-/-- **Jensen's operator inequality, sub-unital form** (Hansen–Pedersen 1982, Theorem 2.1, the
-implication from operator convexity): for `f` operator convex on `s ∋ 0` with `f(0) ≤ 0`, a
+/-- **Jensen's operator inequality, sub-unital form**: for `f` operator convex on `s ∋ 0` with `f(0) ≤ 0`, a
 finite family `aᵢ ∈ A` with `Σᵢ aᵢ⋆ aᵢ ≤ 1` and self-adjoint `xᵢ ∈ A` with spectrum in `s`,
 `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ`. -/
 theorem IsOperatorConvexOn.cfc_sum_le_of_le_one {ι : Type*} [Fintype ι]

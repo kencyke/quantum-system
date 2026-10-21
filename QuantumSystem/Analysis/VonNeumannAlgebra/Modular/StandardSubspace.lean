@@ -73,8 +73,7 @@ in goals. Activate it with `open scoped VonNeumannAlgebra`.
 
 * O. Bratteli, D. W. Robinson, *Operator Algebras and Quantum Statistical Mechanics 1*, Springer
   (1987), Proposition 2.5.3 and §2.5.2
-* [R. Longo, *Lectures on Conformal Nets, Part I*](https://www.mat.uniroma2.it/longo/Lecture-Notes_files/LN-Part1.pdf),
-  §2.1
+* [R. Longo, *Lectures on Conformal Nets, Part I*](https://www.mat.uniroma2.it/longo/Lecture-Notes_files/LN-Part1.pdf)
 -/
 
 @[expose] public section

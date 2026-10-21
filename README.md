@@ -144,8 +144,7 @@ and Phase III in particular will be set as the foundations take shape.
 Candidates, which no theorem of Phase II is stated in:
 
 - Inductive systems of operator systems along completely positive contractions, with limits in
-  ∏Aₙ/⊕Aₙ, the ambient algebra of inductive limits (Blackadar–Kirchberg; Courtney–Winter,
-  arXiv:2304.01332) (M1, M2).
+  ∏Aₙ/⊕Aₙ, the ambient algebra of inductive limits (M1, M2).
 - Approximate structures: ε-C⋆-algebras (an exact norm and involution; associativity,
   submultiplicativity, unit and C⋆-identity up to ε), δ-homomorphisms (⋆-preserving linear maps
   preserving the unit and the product up to δ) and δ-isomorphisms (Kitaev, arXiv:2405.02434)

@@ -49,11 +49,6 @@ introduced for `φ ⊗ ψ`, which would clash with `TensorProduct`.
   `B₁ = B(H₂)`, `A₂ = B(K₁)`, `B₂ = B(K₂)` of finite-dimensional Hilbert spaces, where
   `B(H₁) ⊗ B(H₂) = B(H₁ ⊗ H₂)` needs no completion. Mathlib gives `A ⊗[ℂ] B` only its
   star-algebra structure; the C⋆-norm of `A ⊗_min B` is not yet available.
-
-## References
-
-* Nielsen, Chuang, *Quantum Computation and Quantum Information*, §8.2.3
-* Watrous, *The Theory of Quantum Information*, §2.2.2
 -/
 
 @[expose] public section

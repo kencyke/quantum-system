@@ -12,7 +12,7 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempot
 /-!
 # Type I von Neumann algebras and factors
 
-The general **type I** property, phrased as in the literature (Takesaki V.1, Blackadar III.1.5):
+The general **type I** property, phrased as in the literature (Takesaki V.1):
 every nonzero central projection dominates a nonzero abelian projection. For a *factor* this is
 equivalent to the existence of a minimal projection, i.e. to `IsTypeIFactor`. The equivalence is
 proved in full: the easy direction is minimal ⇒ abelian ⇒ type I; the converse is that a nonzero

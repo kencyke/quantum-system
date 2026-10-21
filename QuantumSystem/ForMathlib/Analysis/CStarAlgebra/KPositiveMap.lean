@@ -14,29 +14,26 @@ public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Positive
 # `k`-positive maps
 
 A ℂ-linear map `φ` between C⋆-algebras is **`k`-positive** if applying it entrywise to a `k × k`
-matrix over its domain preserves nonnegativity (Paulsen, *Completely Bounded Maps and Operator
-Algebras*, Ch. 3). Mathlib's completely positive maps (`CompletelyPositiveMap`) are the maps that
-are `k`-positive for every `k`; this file adds the notion at a single matrix size `k`, mirroring
-Mathlib's structure and morphism class. A `k`-positive map is `j`-positive for every `j ≤ k`
-(`KPositiveMapClass.of_le`), and, when linear, positive for `k ≥ 1`
-(`KPositiveMapClass.orderHomClass`).
+matrix over its domain preserves nonnegativity. Mathlib's completely positive maps
+(`CompletelyPositiveMap`) are the maps that are `k`-positive for every `k`; this file adds the
+notion at a single matrix size `k`, mirroring Mathlib's structure and morphism class. A
+`k`-positive map is `j`-positive for every `j ≤ k` (`KPositiveMapClass.of_le`), and, when linear,
+positive for `k ≥ 1` (`KPositiveMapClass.orderHomClass`).
 
-The main result is the **Kadison–Schwarz inequality** of Choi (*A Schwarz inequality for positive
-linear maps on C⋆-algebras*, Illinois J. Math. 18 (1974)), for `2`-positive, in particular
+The main result is the **Kadison–Schwarz inequality** for `2`-positive, in particular
 completely positive, maps between possibly non-unital C⋆-algebras. Its source is the
 Cauchy–Schwarz inequality `φ(x⋆ y)⋆ φ(x⋆ y) ≤ ‖φ(x⋆ x)‖ • φ(y⋆ y)`, read off the positive matrix
 `(φ(xᵢ⋆ xⱼ))ᵢⱼ`. With `x = 1` it is `φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)` on a unital domain, normalised
 to `φ(a)⋆ φ(a) ≤ φ(a⋆ a)` under `φ 1 ≤ 1`; with `x` running through an approximate unit it is
-`φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` on a non-unital domain (Lance, *Hilbert C⋆-modules*, Lemma 5.3, for
-completely positive maps). Here `φ : F` is a `FunLike` map with `LinearMapClass F ℂ A₁ A₂`, and
-`‖φ‖` is the operator norm of the bounded positive map
+`φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` on a non-unital domain. Here `φ : F` is a `FunLike` map with
+`LinearMapClass F ℂ A₁ A₂`, and `‖φ‖` is the operator norm of the bounded positive map
 `PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂`, which exists since a `2`-positive linear map
 is positive (`KPositiveMapClass.instOrderHomClass`) and positive maps between C⋆-algebras are
 bounded.
 
-For merely positive maps the Kadison–Schwarz inequality still holds at normal elements (Kadison
-1952, Choi 1974), and a positive map on a unital domain attains its norm at the unit,
-`‖φ‖ = ‖φ 1‖` (Russo–Dye 1966; Paulsen, Corollary 2.9). Both follow from the `2`-positive case
+For merely positive maps the Kadison–Schwarz inequality still holds at normal elements, and a
+positive map on a unital domain attains its norm at the unit, `‖φ‖ = ‖φ 1‖` (Russo–Dye 1966;
+Paulsen, Corollary 2.9). Both follow from the `2`-positive case
 treated here, through Stinespring's theorem that a positive map on a commutative C⋆-algebra is
 completely positive and through the Russo–Dye theorem, and are proved not here but in the module
 `QuantumSystem.Analysis.CStarAlgebra.PositiveMap`, which lies outside `ForMathlib/` because it
@@ -85,9 +82,9 @@ while a `ForMathlib` file imports Mathlib only.
   18 (1974), 565–574.
 * R. V. Kadison, *A generalized Schwarz inequality and algebraic invariants for operator
   algebras*, Ann. of Math. 56 (1952), 494–503.
-* E. C. Lance, *Hilbert C⋆-Modules*, London Math. Soc. Lecture Note Ser. 210 (1995), Lemma 5.3.
+* E. C. Lance, *Hilbert C⋆-Modules*, London Math. Soc. Lecture Note Ser. 210 (1995).
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
-  (2002), Ch. 3 and Corollary 2.9.
+  (2002), Corollary 2.9.
 * B. Russo, H. A. Dye, *A note on unitary operators in C⋆-algebras*, Duke Math. J. 33 (1966),
   413–416.
 -/
@@ -224,9 +221,8 @@ lemma star_mul_le_norm_smul_of_nonneg {p b q : A} (hN : 0 ≤ ofMatrix !![p, b; 
 end CStarMatrix
 
 /-- A ℂ-linear map `φ : A₁ →ₗ[ℂ] A₂` between C⋆-algebras is **`k`-positive** if applying it
-entrywise to a `k × k` matrix over `A₁` preserves nonnegativity (Paulsen, *Completely Bounded Maps
-and Operator Algebras*, Ch. 3). The completely positive maps (`CompletelyPositiveMap`) are the
-maps that are `k`-positive for every `k`. -/
+entrywise to a `k × k` matrix over `A₁` preserves nonnegativity. The completely positive maps
+(`CompletelyPositiveMap`) are the maps that are `k`-positive for every `k`. -/
 structure KPositiveMap (k : ℕ) (A₁ : Type*) (A₂ : Type*) [NonUnitalCStarAlgebra A₁]
     [NonUnitalCStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁]
     [StarOrderedRing A₂] extends A₁ →ₗ[ℂ] A₂ where
@@ -485,10 +481,9 @@ lemma le_smul_map_star_mul_of_norm_le [LinearMapClass F ℂ A₁ A₂] (φ : F) 
     _ = C := mul_one C
 
 /-- The **Kadison–Schwarz inequality** for a `2`-positive map on a possibly non-unital
-C⋆-algebra, in terms of its operator norm: `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)` (Lance, Lemma 5.3, for
-completely positive maps). A `2`-positive map is positive (`KPositiveMapClass.instOrderHomClass`),
-positive linear maps between C⋆-algebras are bounded, and `‖φ‖` is the norm of
-`PositiveContinuousLinearMap.ofClass φ`. -/
+C⋆-algebra, in terms of its operator norm: `φ(a)⋆ φ(a) ≤ ‖φ‖ • φ(a⋆ a)`. A `2`-positive map is
+positive (`KPositiveMapClass.instOrderHomClass`), positive linear maps between C⋆-algebras are
+bounded, and `‖φ‖` is the norm of `PositiveContinuousLinearMap.ofClass φ`. -/
 lemma le_opNorm_smul_map_star_mul [LinearMapClass F ℂ A₁ A₂] (φ : F) (a : A₁) :
     star (φ a) * φ a ≤
       ‖(PositiveContinuousLinearMap.ofClass φ : A₁ →L[ℂ] A₂)‖ • φ (star a * a) :=
@@ -509,7 +504,7 @@ variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] 
 lemma map_one_nonneg (φ : F) : 0 ≤ φ 1 := by
   simpa using map_star_mul_self_nonneg φ (1 : A₁)
 
-/-- **Kadison–Schwarz inequality**, unnormalised form (Choi 1974): every `2`-positive map on a
+/-- **Kadison–Schwarz inequality**, unnormalised form: every `2`-positive map on a
 unital C⋆-algebra satisfies `φ(a)⋆ φ(a) ≤ ‖φ 1‖ • φ(a⋆ a)`. This is the Cauchy–Schwarz inequality
 (`KPositiveMapClass.star_map_mul_le_norm_smul`) for `x = 1`, `y = a`. -/
 theorem le_norm_smul_map_star_mul (φ : F) (a : A₁) :
@@ -533,7 +528,7 @@ section Unital₂
 variable {F A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂]
   [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂] [KPositiveMapClass F 2 A₁ A₂]
 
-/-- **Kadison–Schwarz inequality** (Choi 1974): a `2`-positive map with `φ 1 ≤ 1` satisfies
+/-- **Kadison–Schwarz inequality**: a `2`-positive map with `φ 1 ≤ 1` satisfies
 `φ(a)⋆ φ(a) ≤ φ(a⋆ a)`: `‖φ 1‖ ≤ 1` since `0 ≤ φ 1 ≤ 1`, in
 `KPositiveMapClass.le_norm_smul_map_star_mul`. -/
 theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :

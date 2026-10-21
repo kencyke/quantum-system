@@ -34,9 +34,7 @@ to Minkowski space `ℝ × E` (`QuantumSystem.Geometry.Minkowski`), with the clo
   the results here apply to them); besides the Minkowski form (`Minkowski.form`) this needs the
   Lorentz group and the wedges `λ W_R`, which are not formalised.
 * In two spacetime dimensions, Borchers (1992) shows that `(Δ^{it}, J, T)` generate a
-  representation of the proper Poincaré group `P₊` and that wedge locality `J M J = M′` holds
-  automatically. This relies on Tomita's theorem `J M J = M′` for von Neumann algebras, which is
-  not formalised; it is recorded here as a literature note only.
+  representation of the proper Poincaré group `P₊`; it is recorded here as a literature note only.
 
 ## References
 

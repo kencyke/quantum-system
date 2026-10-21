@@ -61,7 +61,7 @@ some `φ : Matrix n n ℂ →CP Matrix m m ℂ`:
 * `CompletelyPositiveMap.exists_coe_eq_iff_posSemidef_choiMatrix`: 1 ⟺ 3.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`: 1 ⟺ 2;
   `CompletelyPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`: the same with `id_k ⊗ Φ`
-  positive on flattened matrices, Choi's original form.
+  positive on flattened matrices.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_kraus`: 1 ⟺ 4.
 
 The two directions separately, for a completely positive map `φ` (1 ⇒ 2, 4) and for a linear map
@@ -362,7 +362,7 @@ theorem exists_coe_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] M
   simp
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- **Choi's theorem** in Choi's original form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely
+/-- **Choi's theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely
 positive iff `id_k ⊗ Φ` is positive for a single block size `k ≥ min(n, m)`, that is, it sends
 `k × k` block matrices with positive semidefinite `kn × kn` flattening to block matrices with
 positive semidefinite `km × km` flattening
