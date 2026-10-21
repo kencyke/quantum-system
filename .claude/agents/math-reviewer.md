@@ -10,7 +10,7 @@ description: >-
   mathematical review of Lean code — use proactively in the first two cases,
   without waiting to be asked. For a diff-wide sweep, use the
   `math-review` skill instead.
-tools: Read, Grep, Glob, Bash, Write, mcp__lean-lsp__lean_goal, mcp__lean-lsp__lean_term_goal, mcp__lean-lsp__lean_hover_info, mcp__lean-lsp__lean_diagnostic_messages, mcp__lean-lsp__lean_file_outline, mcp__lean-lsp__lean_local_search, mcp__lean-lsp__lean_leansearch, mcp__lean-lsp__lean_loogle, mcp__lean-lsp__lean_leanfinder, mcp__lean-lsp__lean_state_search, mcp__lean-lsp__lean_declaration_file, mcp__lean-lsp__lean_references, mcp__lean-lsp__lean_run_code, mcp__lean-lsp__lean_multi_attempt, mcp__lean-lsp__lean_verify, mcp__lean-lsp__lean_minimal_hypotheses
+tools: Read, Grep, Glob, Bash, Write, mcp__lean-lsp__lean_goal, mcp__lean-lsp__lean_term_goal, mcp__lean-lsp__lean_hover_info, mcp__lean-lsp__lean_diagnostic_messages, mcp__lean-lsp__lean_file_outline, mcp__lean-lsp__lean_local_search, mcp__lean-lsp__lean_leansearch, mcp__lean-lsp__lean_loogle, mcp__lean-lsp__lean_leanfinder, mcp__lean-lsp__lean_hammer_premise, mcp__lean-lsp__lean_declaration_file, mcp__lean-lsp__lean_references, mcp__lean-lsp__lean_run_code, mcp__lean-lsp__lean_multi_attempt, mcp__lean-lsp__lean_verify, mcp__lean-lsp__lean_minimal_hypotheses
 model: inherit
 ---
 
@@ -98,7 +98,7 @@ cover all five yourself.
   checked against your perspective. You are done only when you can list the
   declarations you cleared as well as the ones you flagged.
 - **Search tools are shared and rate-limited** across all parallel reviewers
-  (`lean_loogle` 3/30s, `lean_state_search` 6/30s). Prefer `lean_local_search`
+  (`lean_loogle` 3/30s, `lean_hammer_premise` 6/30s). Prefer `lean_local_search`
   first, and budget remote searches — a handful of `lean_loogle` calls per
   sweep, not per declaration. When a remote search is throttled, move on to
   the next declaration and retry later in the sweep; never block waiting, and

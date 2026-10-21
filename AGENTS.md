@@ -34,9 +34,8 @@
   `lean_local_search`, `lean_leansearch`, `lean_loogle`. If you do not know
   whether a lemma exists, say so and search; do not invent plausible-looking
   names.
-- When stuck on a goal, search closing lemmas with `lean_state_search` /
-  `lean_hammer_premise`, then verify with `lean_multi_attempt` before
-  editing.
+- When stuck on a goal, search closing lemmas with `lean_hammer_premise`,
+  then verify with `lean_multi_attempt` before editing.
 
 **Abstraction first.**
 - Build the general interface before the concrete model — even when the source
