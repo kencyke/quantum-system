@@ -89,6 +89,21 @@
   match a shortfall silently shrinks the goal and hides the gap instead of
   closing it.
 
+**Cite only what you have checked against the source.**
+- A citation (an author, a work, a theorem / section / equation number, or a
+  claim attached to it) goes into a docstring, module comment or the README
+  only after you have read the cited passage itself and confirmed that it
+  states what the text attributes to it, hypotheses included.
+- If the source cannot be accessed, or it matches only loosely (a special
+  case, a different setting, another edition's numbering), leave the citation
+  out rather than hedging it. Do not cite from memory, and do not cite a
+  secondary source's account as the primary one.
+- Do not add comparisons with the literature ("X proves only …", "Y leaves
+  this open", "already in Z") unless each side has been checked in this way.
+  **Why:** a wrong locator or attribution looks authoritative and is rarely
+  rechecked; an audit of this repository found dozens of them, nearly all in
+  citations written without the source at hand.
+
 **Goal-driven verification (Definition of Done).**
 - A change is done only when `lake build` completes with no new errors or
   warnings on the edited modules and their downstream importers.
