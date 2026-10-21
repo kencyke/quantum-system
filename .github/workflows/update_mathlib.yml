@@ -27,9 +27,12 @@ jobs:
           ref: main
           persist-credentials: false
 
-      # Proposes the newest stable `v4.x.y` tag above the current rev, which must itself be a tag:
-      # otherwise the walk never stops at it and could propose a downgrade.
-      - name: Find the newest stable Mathlib tag
+      # Proposes the newest stable `v4.x.y` tag above the current rev that every direct dependency
+      # carries. Each is pinned to Mathlib's tag, which must itself be a tag: otherwise the walk never
+      # stops at it and could propose a downgrade. A direct dependency that is one of Mathlib's own
+      # packages cannot be bumped this way (the derived manifest would pin it twice), so that is
+      # rejected here, before any tag is looked up.
+      - name: Find the newest stable tag
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -40,18 +43,50 @@ jobs:
             echo "::error::current Mathlib rev '$current' is not a version tag"
             exit 1
           fi
+          if ! jq -e --arg current "$current" \
+            'all(.packages[] | select(.inherited == false); .type == "git" and .inputRev == $current)' \
+            lake-manifest.json >/dev/null; then
+            echo "::error::every direct dependency must be a git package pinned to Mathlib's tag '$current'"
+            exit 1
+          fi
+          while IFS=$'\t' read -r name url; do
+            if [[ ! "$name" =~ ^[A-Za-z0-9_][A-Za-z0-9_-]*$ ]] \
+              || [[ ! "$url" =~ ^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+              echo "::error::unsupported direct dependency '$name' at '$url'"
+              exit 1
+            fi
+          done < <(jq -r '.packages[] | select(.inherited == false) | [.name, .url] | @tsv' lake-manifest.json)
           tags="$(git -c versionsort.suffix=-rc ls-remote --tags --refs --sort=-v:refname \
             https://github.com/leanprover-community/mathlib4 'v4.*')"
           if ! awk -v current="refs/tags/$current" '$2 == current { found = 1 } END { exit !found }' <<< "$tags"; then
             echo "::error::current Mathlib rev '$current' is not a tag of mathlib4"
             exit 1
           fi
-          latest="$(awk -v current="refs/tags/$current" '
+          if ! curl -fsSL -o "$RUNNER_TEMP/mathlib-manifest.json" \
+            "https://raw.githubusercontent.com/leanprover-community/mathlib4/$current/lake-manifest.json"; then
+            echo "::error::cannot download Mathlib's lake-manifest.json at $current"
+            exit 1
+          fi
+          if ! jq -e --slurpfile mathlib "$RUNNER_TEMP/mathlib-manifest.json" '
+              [.packages[] | select(.inherited == false) | .name] as $direct
+              | all($mathlib[0].packages[]; .name as $n | $direct | index($n) == null)' \
+            lake-manifest.json >/dev/null; then
+            echo "::error::no direct dependency other than mathlib may be one of Mathlib's packages"
+            exit 1
+          fi
+          candidates="$(awk -v current="refs/tags/$current" '
             $2 == current { exit }
-            $2 ~ /^refs\/tags\/v4\.[0-9]+\.[0-9]+$/ { sub("refs/tags/", "", $2); print $2; exit }
+            $2 ~ /^refs\/tags\/v4\.[0-9]+\.[0-9]+$/ { sub("refs/tags/", "", $2); print $2 }
           ' <<< "$tags")"
+          for url in $(jq -r '.packages[] | select(.inherited == false and .name != "mathlib") | .url' \
+            lake-manifest.json); do
+            refs="$(git ls-remote --tags --refs "$url" 'v4.*')"
+            carried="$(awk '{ sub("refs/tags/", "", $2); print $2 }' <<< "$refs")"
+            candidates="$(grep -Fx -f <(printf '%s\n' "$carried") <<< "$candidates" || true)"
+          done
+          latest="$(head -n 1 <<< "$candidates")"
           if [[ -z "$latest" ]]; then
-            echo "No stable Mathlib tag newer than $current"
+            echo "No stable tag newer than $current carried by every direct dependency"
             exit 0
           fi
           # An existing branch may carry fixes; only a 404 means it is absent.
@@ -65,7 +100,7 @@ jobs:
           echo "current=$current" >> "$GITHUB_OUTPUT"
           echo "latest=$latest" >> "$GITHUB_OUTPUT"
 
-  # No `lake update`: it would run Mathlib's code in `main`'s context, whose Actions cache every
+  # No `lake update`: it would run the dependencies' code in `main`'s context, whose Actions cache every
   # branch reads. That code runs only in the pull request's CI. The App key is an environment
   # secret limited to `main`.
   pull-request:
@@ -81,14 +116,18 @@ jobs:
           ref: main
           persist-credentials: false
 
-      # Writes what `lake update` would, in Lake's own manifest format; the job fails if that format
-      # changes or mathlib is not the only direct dependency.
+      # Writes what `lake update` would, in Lake's own manifest format: the direct dependencies in the
+      # current order (Lake's is the reverse of the `require`s), then Mathlib's packages. The job fails
+      # if that format changes, or if another direct dependency could change the result: a toolchain
+      # or Mathlib commit of its own, a dependency of its own besides mathlib, a package Mathlib
+      # pins differently or not at all, or being one of Mathlib's own packages at the new tag (the
+      # check job already rejects that at the current one).
       - name: Derive the bump
         id: derive
         env:
           CURRENT: ${{ needs.check.outputs.current }}
           LATEST: ${{ needs.check.outputs.latest }}
-          MATHLIB: ${{ runner.temp }}/mathlib
+          DEPS: ${{ runner.temp }}/deps
         run: |
           current="$(jq -er '.packages[] | select(.name == "mathlib") | .inputRev' lake-manifest.json)"
           if [[ ! "$LATEST" =~ ^v4\.[0-9]+\.[0-9]+$ || ! "$CURRENT" =~ ^v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]] \
@@ -96,53 +135,90 @@ jobs:
             echo "::error::unexpected tags from the check job: '$CURRENT' -> '$LATEST'"
             exit 1
           fi
-          # Exact names only: `ls-remote` patterns also match `refs/tags/x/refs/tags/$LATEST`.
-          sha="$(git ls-remote --tags https://github.com/leanprover-community/mathlib4 \
-            "refs/tags/$LATEST" "refs/tags/$LATEST^{}" | awk -v tag="refs/tags/$LATEST" '
-              $2 == tag "^{}" { peeled = $1 }
-              $2 == tag { direct = $1 }
-              END { print (peeled != "" ? peeled : direct) }')"
-          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::cannot resolve Mathlib tag $LATEST"
-            exit 1
-          fi
-          mkdir "$MATHLIB"
-          for file in lean-toolchain lake-manifest.json; do
-            curl -fsSL -o "$MATHLIB/$file" \
-              "https://raw.githubusercontent.com/leanprover-community/mathlib4/$sha/$file"
-          done
-          # `configFile` is Mathlib's lakefile at the tag, `lakefile.lean` first as in Lake.
-          config=""
-          for file in lakefile.lean lakefile.toml; do
-            status="$(curl -sS -o /dev/null -w '%{http_code}' \
-              "https://raw.githubusercontent.com/leanprover-community/mathlib4/$sha/$file")"
-            if [[ "$status" == 200 ]]; then
-              config="$file"
-              break
-            elif [[ "$status" != 404 ]]; then
-              echo "::error::cannot check Mathlib's $file at $sha (HTTP $status)"
+          mkdir "$DEPS"
+          echo '{}' > "$DEPS/pins.json"
+          : > "$DEPS/links.md"
+          for name in $(jq -r '.packages[] | select(.inherited == false) | .name' lake-manifest.json); do
+            url="$(jq -er --arg name "$name" '.packages[] | select(.name == $name) | .url' lake-manifest.json)"
+            if [[ ! "$name" =~ ^[A-Za-z0-9_][A-Za-z0-9_-]*$ ]] \
+              || [[ ! "$url" =~ ^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+              echo "::error::unsupported direct dependency '$name' at '$url'"
               exit 1
             fi
+            raw="https://raw.githubusercontent.com/${url#https://github.com/}"
+            # Exact names only: `ls-remote` patterns also match `refs/tags/x/refs/tags/$LATEST`.
+            refs="$(git ls-remote --tags "$url" "refs/tags/$LATEST" "refs/tags/$LATEST^{}")"
+            sha="$(awk -v tag="refs/tags/$LATEST" '
+              $2 == tag "^{}" { peeled = $1 }
+              $2 == tag { direct = $1 }
+              END { print (peeled != "" ? peeled : direct) }' <<< "$refs")"
+            if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::cannot resolve $name tag $LATEST"
+              exit 1
+            fi
+            mkdir "$DEPS/$name"
+            for file in lean-toolchain lake-manifest.json; do
+              if ! curl -fsSL -o "$DEPS/$name/$file" "$raw/$sha/$file"; then
+                echo "::error::cannot download $name's $file at $sha"
+                exit 1
+              fi
+            done
+            # `configFile` is the lakefile at the tag, `lakefile.lean` first as in Lake.
+            config=""
+            for file in lakefile.lean lakefile.toml; do
+              status="$(curl -sS -o /dev/null -w '%{http_code}' "$raw/$sha/$file")"
+              if [[ "$status" == 200 ]]; then
+                config="$file"
+                break
+              elif [[ "$status" != 404 ]]; then
+                echo "::error::cannot check $name's $file at $sha (HTTP $status)"
+                exit 1
+              fi
+            done
+            if [[ -z "$config" ]]; then
+              echo "::error::no lakefile in $name at $LATEST ($sha)"
+              exit 1
+            fi
+            jq --arg name "$name" --arg sha "$sha" --arg config "$config" \
+              '.[$name] = {rev: $sha, configFile: $config}' "$DEPS/pins.json" > "$DEPS/pins.json.new"
+            mv "$DEPS/pins.json.new" "$DEPS/pins.json"
+            echo "- [$name changes]($url/compare/$CURRENT...$LATEST) at \`$sha\`" >> "$DEPS/links.md"
           done
-          if [[ -z "$config" ]]; then
-            echo "::error::no lakefile in Mathlib at $LATEST ($sha)"
-            exit 1
-          fi
+          MATHLIB="$DEPS/mathlib"
           if [[ ! "$(< "$MATHLIB/lean-toolchain")" =~ ^leanprover/lean4:v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
             echo "::error::unexpected Mathlib $LATEST toolchain: $(tr -cd '[:print:]' < "$MATHLIB/lean-toolchain" | head -c 200)"
             exit 1
           fi
           if ! jq -en --slurpfile main lake-manifest.json --slurpfile mathlib "$MATHLIB/lake-manifest.json" '
-              ($main | length) == 1 and ($mathlib | length) == 1
+              ($main[0].packages | map(select(.inherited == false) | .name)) as $direct
+              | ($main | length) == 1 and ($mathlib | length) == 1
               and ($main[0].packages | map(select(.name == "mathlib"))
                 | length == 1 and .[0].type == "git" and .[0].inherited == false
                   and .[0].url == "https://github.com/leanprover-community/mathlib4")
-              and all($main[0].packages[]; .name == "mathlib" or .inherited == true)
-              and ($mathlib[0].packages | map(.name) | index("mathlib") == null and length == (unique | length))
-              and all($mathlib[0].packages[]; .type == "git")' >/dev/null; then
-            echo "::error::lake-manifest.json or Mathlib's at $LATEST ($sha) is not of the expected shape (mathlib must be the only direct dependency)"
+              and all($main[0].packages[]; .inherited | type == "boolean")
+              and ($main[0].packages | map(.name) | length == (unique | length))
+              and ($mathlib[0].packages | map(.name) | length == (unique | length))
+              and all($mathlib[0].packages[]; .type == "git" and (.name as $n | $direct | index($n) == null))' \
+            >/dev/null; then
+            echo "::error::lake-manifest.json or Mathlib's at $LATEST is not of the expected shape (mathlib must be a direct dependency, and no other direct dependency may be one of Mathlib's)"
             exit 1
           fi
+          for name in $(jq -r '.packages[] | select(.inherited == false and .name != "mathlib") | .name' \
+            lake-manifest.json); do
+            # By content, not bytes: a missing trailing newline or a CRLF is not a different toolchain.
+            if [[ "$(tr -d '[:space:]' < "$DEPS/$name/lean-toolchain")" != "$(< "$MATHLIB/lean-toolchain")" ]] \
+              || ! jq -en --slurpfile dep "$DEPS/$name/lake-manifest.json" \
+                --slurpfile mathlib "$MATHLIB/lake-manifest.json" --slurpfile pins "$DEPS/pins.json" '
+                ($mathlib[0].packages | map({key: .name, value: {url, rev}}) | from_entries) as $ml
+                | ($dep | length) == 1
+                and all($dep[0].packages[];
+                    if .name == "mathlib"
+                    then .url == "https://github.com/leanprover-community/mathlib4" and .rev == $pins[0].mathlib.rev
+                    else .inherited == true and $ml[.name] == {url, rev} end)' >/dev/null; then
+              echo "::error::$name at $LATEST does not build on Mathlib $LATEST alone (its toolchain, Mathlib commit or other dependencies differ)"
+              exit 1
+            fi
+          done
           render='
             def pairs: to_entries | sort_by(.key) | reverse;
             def pair: "\(.key | tojson): \(.value | tojson)";
@@ -158,24 +234,24 @@ jobs:
               exit 1
             fi
           done
-          jq -rj --arg latest "$LATEST" --arg sha "$sha" --arg config "$config" \
+          jq -rj --arg latest "$LATEST" --slurpfile pins "$DEPS/pins.json" \
             --slurpfile mathlib "$MATHLIB/lake-manifest.json" "$render"'
             $mathlib[0] as $ml
             | .version = $ml.version
-            | .packages = [.packages[] | select(.name == "mathlib")
-                  | .rev = $sha | .inputRev = $latest | .configFile = $config]
+            | .packages = [.packages[] | select(.inherited == false)
+                  | .rev = $pins[0][.name].rev | .inputRev = $latest | .configFile = $pins[0][.name].configFile]
                 + [$ml.packages[] | .inherited = true]
             | render' lake-manifest.json > "$RUNNER_TEMP/lake-manifest.json"
           mv "$RUNNER_TEMP/lake-manifest.json" lake-manifest.json
           cp "$MATHLIB/lean-toolchain" .
           sed -i "s|^rev = \"${CURRENT//./\\.}\"$|rev = \"$LATEST\"|" lakefile.toml
-          if git diff --quiet lakefile.toml; then
-            echo "::error::no 'rev = \"$CURRENT\"' in lakefile.toml"
+          if [[ "$(grep -cFx "rev = \"$LATEST\"" lakefile.toml)" != "$(jq 'length' "$DEPS/pins.json")" ]]; then
+            echo "::error::lakefile.toml needs one 'rev = \"$CURRENT\"' per direct dependency"
             exit 1
           fi
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
           echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          { echo 'links<<EOF'; cat "$DEPS/links.md"; echo 'EOF'; } >> "$GITHUB_OUTPUT"
 
       # The App must not be allowed to bypass the rulesets on `main`.
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -215,14 +291,14 @@ jobs:
             lake-manifest.json
           branch: update-mathlib/${{ steps.derive.outputs.latest }}
           base: main
-          commit-message: 'chore: bump Mathlib to ${{ steps.derive.outputs.latest }}'
-          title: 'chore: bump Mathlib to ${{ steps.derive.outputs.latest }}'
+          commit-message: 'chore: bump dependencies to ${{ steps.derive.outputs.latest }}'
+          title: 'chore: bump dependencies to ${{ steps.derive.outputs.latest }}'
           body: |
-            Bumps Mathlib from `${{ steps.derive.outputs.current }}` to `${{ steps.derive.outputs.latest }}` and the Lean toolchain to match.
+            Bumps Mathlib and the other direct dependencies from `${{ steps.derive.outputs.current }}` to `${{ steps.derive.outputs.latest }}`, and the Lean toolchain to match.
 
-            `lean-toolchain` and `lake-manifest.json` are derived from Mathlib's own files at `${{ steps.derive.outputs.sha }}`; no `lake update` was run.
+            `lean-toolchain` and `lake-manifest.json` are derived from the dependencies' own files at the commits below; no `lake update` was run.
 
-            - [Mathlib changes](https://github.com/leanprover-community/mathlib4/compare/${{ steps.derive.outputs.current }}...${{ steps.derive.outputs.latest }})
+            ${{ steps.derive.outputs.links }}
             - [Workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
             If CI fails, push the fixes to this branch.
