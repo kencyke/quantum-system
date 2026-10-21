@@ -63,8 +63,8 @@ file:
 all in a single message. Every agent receives the **same scope**: the full
 list of target files with their changed line ranges (the agent expands them to
 declarations itself). Write each prompt as a research memo, not a task ticket —
-it carries the target, your own guess, and explicit permission to prove that
-guess wrong. Each prompt must state:
+it carries the target and explicit permission to contradict the brief. Each
+prompt must state:
 
 - the assigned perspective by number and name, framed as a role: "You are one
   of five perspective-specific reviewers running in parallel over this change;
@@ -72,26 +72,14 @@ guess wrong. Each prompt must state:
   perspective's definition, the agent file owns it;
 - the target files, with the changed line ranges collected in step 1 — or
   *entire file* for an explicit target that has no diff;
-- a reminder to investigate related code beyond the diff, and to sweep the
-  whole target rather than stopping at the first finding;
 - **the absolute path of the notes file** it must append confirmed findings to
   as it goes: `<your scratchpad>/math-review/perspective-<N>.md`. Pass *your*
   scratchpad path, not the agent's — a file written where you cannot read it is
   no use when the agent dies;
-- **your forecast**: which declaration, and which part of it, you expect this
-  perspective to catch something in, and why. Require the reviewer to **write
-  its own prediction down before opening the LSP** and to report the divergence
-  afterwards. A hit saves a sweep; a miss is itself information, and the written
-  prediction is what exposes anchoring;
-- **a control case to run** — for perspectives 1, 2, 3, and 5 only: "name one
-  model in which this claim ought to be false, and measure it there".
-  Perspective 5 owns this by construction; for 1–3 it is a cheap sanity check
-  on their own reasoning. Perspective 4 gets none — there is no model in which
-  a docstring is false;
-- **explicit permission to contradict this brief**. "Every branch of the
-  forecast was wrong" and "the assigned lens is the wrong one for this change"
-  are findings to report, not failures to apologise for. Say so in the prompt —
-  a reviewer that believes it must confirm the brief will find a way to.
+- **explicit permission to contradict this brief**. "The assigned lens is the
+  wrong one for this change" is a finding to report, not a failure to apologise
+  for. Say so in the prompt — a reviewer that believes it must confirm the brief
+  will find a way to.
 
 Do not re-implement the review yourself. If the platform refuses to launch all
 five at once, start as many as it allows, wait for one to complete, and
@@ -119,8 +107,8 @@ rests on (c) alone. The tier is the reviewer's own confidence statement; do not
 launch further passes to vote on it.
 
 **Verify every blocker yourself before printing it.** Open the declaration and
-confirm the claim with `lean_goal` / `lean_term_goal` from your own seat — so
-that you are not merely relaying. A blocker you could not confirm drops to
+confirm the claim with `lean_goal` / `lean_term_goal` from your own seat —
+re-reading the reviewer's argument is relaying, not verifying. A blocker you could not confirm drops to
 should-fix and is marked `aggregator-unverified`; it is not deleted, because
 failing to confirm is not refuting. This is the one place the skill spends your
 own LSP calls rather than an agent's, and it is worth it: a false blocker costs
@@ -162,10 +150,9 @@ Template:
  short of, the cases left uncovered, the corollaries that do not follow>
 
 ## Per-perspective summary
-| Perspective | blocker | should-fix | nit | forecast | verdict |
-|---|---|---|---|---|---|
-<all five perspectives, every row present; ✅ for a clean perspective;
- forecast is hit / miss / n.a. — the divergence the reviewer reported>
+| Perspective | blocker | should-fix | nit | verdict |
+|---|---|---|---|---|
+<all five perspectives, every row present; ✅ for a clean perspective>
 
 ## Not reviewed
 <deleted files; files no agent could reach; perspectives that returned partial;
@@ -190,9 +177,3 @@ Nor is a file the unit of judgement: deferred hypotheses are discharged — or
 silently left standing — across files, and abstraction drift shows up only
 when the definition and its uses are read together. One reviewer per
 perspective sees the whole change at once, and caps the fan-out at five agents.
-Four of them lean on the shared search tools, so the `lean_loogle` rate limit
-(3 requests / 30s) is a genuinely scarce shared budget — each reviewer's agent
-file has it prefer `lean_local_search` and spend remote searches per sweep,
-not per declaration. Perspective 5 works almost entirely through
-`lean_run_code` and `lean_multi_attempt` against the local toolchain, so adding
-it costs concurrency but not remote quota.

@@ -33,21 +33,21 @@ perspectives is double-counted at aggregation. When a defect sits on a
 boundary, these tie-breaks decide the owner:
 
 - **1 vs 4** — whether the mathematics goes through is perspective 1; whether
-  the name or doc tells the truth about it is perspective 4.
+  the name or doc tells the truth about it is perspective 4. Likewise, whether a
+  statement is invariant under the permitted rescalings is perspective 1;
+  whether its normalisation is pinned in the docs is perspective 4.
 - **1 vs 5** — quantifiers, coercions, and direction are perspective 1;
-  vacuity and proving-too-much are perspective 5.
-- **2 vs 3** — a hypothesis standing in for a provable theorem is
-  perspective 2; hypotheses weakened or added to fit what Mathlib provides
-  are perspective 3.
+  vacuity and proving-too-much are perspective 5, and so is a hidden
+  finiteness or nonemptiness assumption that can be deleted.
+- **2 vs 3 vs 5** — a hypothesis standing in for a provable theorem is
+  perspective 2; one weakened or added to fit what Mathlib provides is
+  perspective 3; one that can be deleted outright is perspective 5.
 - **2 vs 5** — a hypothesis bundle with no witness anywhere in the repository
   is perspective 2 (found by the witness test); a theorem that instantiates to
   vacuity at a degenerate model is perspective 5 (found by running the model).
 - **3 vs 4** — the mathematical formulation (which object, which generality)
   is perspective 3; its surface presentation (name, notation, docstring) is
   perspective 4.
-- **4 vs 5** — a convention left unpinned in the docs is perspective 4; a
-  statement that changes truth value under a permitted rescaling is
-  perspective 5.
 
 A real defect that fits **no** perspective — a layout or namespace violation
 against the project's instruction file, a verbatim Mathlib duplicate under a new name — is still worth
@@ -82,7 +82,6 @@ cover all five yourself.
 - **Read beyond the diff.** The changed lines rarely contain everything your
   perspective needs. Actively pull in the related code: the definitions the
   target declarations use, their downstream users (`lean_references`),
-  the project's notation table (if it keeps one) together with the
   `scoped notation` declarations of the target modules, and — for
   deferred-hypothesis tracking — the files where a field is (or could be)
   discharged. Related code informs the
@@ -153,9 +152,7 @@ Hunt where Lean and mathematics silently diverge:
   instance arguments,
 - implications or `iff`s pointing the wrong way relative to the name.
 
-Vacuity and over-strength belong to perspective 5, not here; stay on
-quantifiers, coercions, and direction. Three checks deserve an explicit
-procedure rather than a glance:
+Four checks deserve an explicit procedure rather than a glance:
 
 - **Audit the quantifier prefix, in order.** For each target declaration, write
   the binders out in sequence, then decide *for each constant what it is allowed
@@ -178,9 +175,18 @@ procedure rather than a glance:
 - **Flag normalisation-dependent claims.** Ask whether the statement is invariant
   under the rescalings the mathematics permits. If it is not, the claim is only
   meaningful relative to a fixed normalisation, and that normalisation has to be
-  pinned somewhere (perspective 4 checks whether it actually is).
-
-Decide from the elaborated type, never from the surface syntax.
+  pinned somewhere.
+- **Match each definition to its intended object.** For a target `def` /
+  `abbrev` / `structure` / `class`, first state the object it is meant to define
+  in standard mathematical terms — from the docstring, then the name, the module
+  doc, and how the repository uses it — and only then read the body against it.
+  Report a mismatch only with a concrete input on which the two diverge and what
+  each gives there; degenerate inputs (the empty set, zero, the trivial
+  structure) are where they usually do. A junk value (`x / 0 = 0`,
+  `Real.log 0 = 0`) is not a mismatch unless the docstring or a downstream lemma
+  relies on another value. A technical device — a proof auxiliary or
+  implementation bundle with no mathematical counterpart — has no object to
+  match; list it as cleared for that reason.
 
 ### 2. Deferred hypotheses
 
@@ -224,14 +230,18 @@ concrete model.)
 - non-conventional formulations where a standard one exists; confirm with the
   search tools before claiming an alternative exists.
 
+A claim that an object is stated below its natural generality must name the
+broader setting and the properties the body actually uses there. Being specific
+is not a defect: an object that genuinely needs its special setting is stated
+at the right generality.
+
 ### 4. Notation, naming & documentation
 
 Would the notation or the docs slow a reader down, or mislead them?
 
 - Prefer the established notation over raw Mathlib spellings. Its sources are
-  the project's notation table, when it keeps one, **and** the notation
-  declarations living in the modules themselves and in Mathlib — enumerate the
-  former with
+  the notation declarations living in the modules themselves and in Mathlib —
+  enumerate the former with
   `grep -rnE "^\s*(@\[[^]]*\]\s*)?(scoped(\[[^]]*\])?\s+|local\s+)?(notation[0-9]?|prefix|postfix|infix[lr]?)\b" <source root> --include='*.lean'`
   (this also catches `scoped[NS] notation`, `local notation` and
   `@[inherit_doc] scoped notation`; postfix notations — `†`, `′`, `″` — and
@@ -294,8 +304,7 @@ Would the notation or the docs slow a reader down, or mislead them?
 - Flag declaration names that mislead about what is proved — in particular a
   name asserting more quantifier strength than the statement carries (a
   `not_isPure_of_…` that only rules out *some* state, a `_forall_` that is really
-  pointwise). Perspective 1 checks whether the mathematics goes through; you
-  check whether the name tells the truth about it.
+  pointwise).
 
 ### 5. Counterexample models & vacuity
 
@@ -321,7 +330,22 @@ does it wrongly say something in the worlds where it should fail?
   **breaks**. A proof that still closes without a hypothesis did not need it, and
   that hypothesis is excess baggage narrowing the theorem for nothing. Run
   `lean_minimal_hypotheses` first — it is the mechanised form of this test — and
-  use `lean_multi_attempt` for the cases it cannot settle.
+  use `lean_multi_attempt` for the cases it cannot settle. A deletion claim
+  reaches tier (a) only when the statement without the argument (binder
+  removed, or `omit … in`) closes in `lean_run_code`.
+  - **Every argument is a hypothesis.** `lean_minimal_hypotheses` sees only the
+    explicit ones; test implicit and instance arguments by hand, together with
+    those a `variable` block contributes (mentioned in the statement, named by
+    `include`, or an instance whose type's variables are all arguments —
+    `omit … in` deletes those). An argument the statement needs in order to
+    elaborate is not excess.
+  - **Where excess usually hides:** a hypothesis implied by the others
+    (`0 ≤ x` beside `0 < x`, `[Nonempty α]` beside `[Inhabited α]`, one instance
+    taken twice); one made redundant by a junk-value convention (`x / 0 = 0`,
+    truncated `ℕ` subtraction); one the result never needed in that generality
+    (`[CompleteSpace H]`, finite dimensionality, nonemptiness).
+  - **A `private` helper usually carries hypotheses its callers set up**, so an
+    excess hypothesis there is at most a `nit`.
 - Report a cleared declaration as cleared *with the models you tried*. "Not
   vacuous" is only as strong as the degenerate cases you actually instantiated,
   so name them; an unlisted model is an unchecked one.
@@ -346,9 +370,8 @@ first, report second (skip the file only when none was assigned).
   issue only**. This axis is orthogonal to `blocker`/`should-fix`/`nit`: a
   misleading name can be a `blocker` and still be unable to falsify anything. If
   only one item on your list can kill the result, say so in those words.
-- If your prompt gave you a forecast, report whether it held. A forecast that was
-  wrong in every branch — or a perspective that turned out to be the wrong lens
-  for this change — is a **result to report, not a failure to hide**.
+- A perspective that turned out to be the wrong lens for this change is a
+  **result to report, not a failure to hide**.
 - If your perspective has nothing to report, say so explicitly — after the
   full sweep, not before.
 - List the target declarations you reviewed and the related files you
