@@ -53,6 +53,12 @@ the identity on `ℂ²` only, and neither is multiplicative. The normalisation b
 inequality is needed too: `2 • id` and `2⁻¹ • id` are mutually inverse completely positive maps,
 and `2 • id` is not a Schwarz map.
 
+**Maps reversing products.** An injective Schwarz map `f` with `f(a b) = f(b) f(a)` has a
+commutative domain (`SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap`): the inequality at
+`x` and at `x⋆` gives `f(x x⋆) = f(x)⋆ f(x) ≤ f(x⋆ x) ≤ f(x x⋆)`, so every element is normal, and
+the normality of `a + b⋆` and of `a + I • b⋆` gives `a b = b a`. So a ⋆-anti-automorphism of a
+noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwarz map.
+
 ## Main definitions
 
 * `SchwarzMap A₁ A₂` — linear maps satisfying `f(a)⋆ f(a) ≤ f(a⋆ a)`.
@@ -87,6 +93,8 @@ and `2 • id` is not a Schwarz map.
   is multiplicative.
 * `SchwarzMapClass.multiplicativeDomain_eq_top_of_inverse` — a Schwarz map with a Schwarz inverse
   has the whole algebra as its multiplicative domain.
+* `SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap` — **an injective Schwarz map which
+  reverses products has a commutative domain**.
 -/
 
 @[expose] public section
@@ -553,5 +561,62 @@ def starAlgEquivOfInverse (f : F) (g : G) (h₁ : Function.LeftInverse g f)
   map_smul' := map_smul f
 
 end MultiplicativeDomain
+
+/-! ### Maps reversing products -/
+
+section MulSwap
+
+variable {F A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂]
+  [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂]
+  [FunLike F A₁ A₂] [LinearMapClass F ℂ A₁ A₂] [SchwarzMapClass F A₁ A₂]
+
+/-- An injective Schwarz map `f` which reverses products, `f(a b) = f(b) f(a)`, has every
+element of its domain normal: `f(x x⋆) = f(x)⋆ f(x) ≤ f(x⋆ x)` by the Kadison–Schwarz inequality,
+and at `x⋆` likewise `f(x⋆ x) ≤ f(x x⋆)`. -/
+lemma mul_star_self_eq_star_mul_self_of_injective_of_map_mul_swap (f : F)
+    (hf : Function.Injective f) (hf' : ∀ a b, f (a * b) = f b * f a) (x : A₁) :
+    x * star x = star x * x := by
+  refine hf (le_antisymm ?_ ?_)
+  · calc f (x * star x) = star (f x) * f x := by rw [hf', map_star]
+      _ ≤ f (star x * x) := le_map_star_mul f x
+  · calc f (star x * x) = star (f (star x)) * f (star x) := by rw [hf', map_star, star_star]
+      _ ≤ f (star (star x) * star x) := le_map_star_mul f (star x)
+      _ = f (x * star x) := by rw [star_star]
+
+/-- **An injective Schwarz map which reverses products has a commutative domain**: every element
+is normal (`SchwarzMapClass.mul_star_self_eq_star_mul_self_of_injective_of_map_mul_swap`), and
+with `P = a b - b a` and `Q = b⋆ a⋆ - a⋆ b⋆` the normality of `a + b⋆` gives `P + Q = 0` and that
+of `a + I • b⋆` gives `Q - P = 0`. Equivalently, a ⋆-anti-automorphism of a noncommutative
+C⋆-algebra, such as the transpose of matrices, is not a Schwarz map. -/
+theorem mul_comm_of_injective_of_map_mul_swap (f : F) (hf : Function.Injective f)
+    (hf' : ∀ a b, f (a * b) = f b * f a) (a b : A₁) : a * b = b * a := by
+  have hn := mul_star_self_eq_star_mul_self_of_injective_of_map_mul_swap f hf hf'
+  set P := a * b - b * a
+  set Q := star b * star a - star a * star b
+  have hb : star b * b = b * star b := by simpa using hn (star b)
+  have e₁ : P + Q = 0 := by
+    have h := sub_eq_zero.mpr (hn (a + star b))
+    have : (a + star b) * star (a + star b) - star (a + star b) * (a + star b) =
+        (a * star a - star a * a) + (star b * b - b * star b) + (P + Q) := by
+      simp only [P, Q, star_add, star_star, add_mul, mul_add]
+      abel
+    rwa [this, hn a, hb, sub_self, sub_self, zero_add, zero_add] at h
+  have e₂ : Complex.I • (Q - P) = 0 := by
+    have h := sub_eq_zero.mpr (hn (a + Complex.I • star b))
+    have : (a + Complex.I • star b) * star (a + Complex.I • star b) -
+        star (a + Complex.I • star b) * (a + Complex.I • star b) =
+        (a * star a - star a * a) + (star b * b - b * star b) + Complex.I • (Q - P) := by
+      simp only [P, Q, star_add, star_smul, star_star, Complex.star_def, Complex.conj_I, add_mul,
+        mul_add, smul_mul_assoc, mul_smul_comm, smul_smul, neg_smul, smul_neg, Complex.I_mul_I,
+        mul_neg, neg_mul, neg_neg, one_smul, smul_sub, smul_add]
+      abel
+    rwa [this, hn a, hb, sub_self, sub_self, zero_add, zero_add] at h
+  have e₃ : Q - P = 0 := (smul_eq_zero.mp e₂).resolve_left Complex.I_ne_zero
+  have h₄ : (2 : ℂ) • P = 0 :=
+    calc (2 : ℂ) • P = (P + Q) - (Q - P) := by rw [two_smul]; abel
+      _ = 0 := by rw [e₁, e₃, sub_zero]
+  exact sub_eq_zero.mp ((smul_eq_zero.mp h₄).resolve_left two_ne_zero)
+
+end MulSwap
 
 end SchwarzMapClass

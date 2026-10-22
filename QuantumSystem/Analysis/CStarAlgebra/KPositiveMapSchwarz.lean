@@ -17,9 +17,12 @@ Schwarz map. Between unital C⋆-algebras the condition reads `φ 1 ≤ 1`: the 
 Kadison–Schwarz inequality `KPositiveMapClass.le_map_star_mul` holds under it directly. This file
 packages both as Schwarz maps. Through the rigidity of Schwarz maps
 (`SchwarzMapClass.starAlgEquivOfInverse`), a unital `2`-positive map with a `2`-positive inverse,
-in particular a unital complete order isomorphism, is then a ⋆-isomorphism. The file lives
-outside `ForMathlib/` because it needs both `KPositiveMap.lean` and `SchwarzMap.lean`, and a
-`ForMathlib` file imports Mathlib only.
+in particular a unital complete order isomorphism, is then a ⋆-isomorphism, and an injective
+`2`-positive map with `φ 1 ≤ 1` which reverses products has a commutative domain
+(`KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap`), so a ⋆-anti-automorphism of a
+noncommutative unital C⋆-algebra is not `2`-positive. The file lives outside `ForMathlib/` because
+it needs both `KPositiveMap.lean` and `SchwarzMap.lean`, and a `ForMathlib` file imports Mathlib
+only.
 
 ## Main definitions
 
@@ -93,6 +96,15 @@ noncomputable def starAlgEquivOfInverse (φ : F) (ψ : G) (hφ : φ 1 = 1)
   map_add' := map_add φ
   map_star' := map_star φ
   map_smul' := map_smul φ
+
+omit [FunLike G A₂ A₁] [KPositiveMapClass G 2 A₂ A₁] in
+/-- An injective `2`-positive map `φ` with `φ 1 ≤ 1` which reverses products, `φ(a b) = φ(b) φ(a)`,
+has a commutative domain, being a Schwarz map
+(`SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap`). Equivalently, a ⋆-anti-automorphism of
+a noncommutative unital C⋆-algebra is not `2`-positive. -/
+lemma mul_comm_of_injective_of_map_mul_swap (φ : F) (hφ : φ 1 ≤ 1) (hinj : Function.Injective φ)
+    (hφ' : ∀ a b, φ (a * b) = φ b * φ a) (a b : A₁) : a * b = b * a :=
+  SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap (toSchwarzMap φ hφ) hinj hφ' a b
 
 end Unital
 
