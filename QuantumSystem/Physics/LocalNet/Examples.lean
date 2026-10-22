@@ -84,10 +84,8 @@ there is `𝓑(ℂ)` (`VonNeumannAlgebra.eq_boundedLinearOperators_complex`), so
 Neumann algebras on `ℂ` splits (`VonNeumannNet.splitProperty_of_complex`), and both
 representation-level witnesses below are instances of that one theorem. So the degeneracy is
 `dim H = 1` — *not* the zero representation, which is why exchanging it for a unital one changes
-nothing mathematically. This is the one reason the literature explicitly sets aside:
-Halvorson–Müger's type III₁ proposition carries the escape clause "either `𝓡 = ℂ1` or `𝓡` is a
-type III₁ factor", and a reflexive proper containment is rejected precisely because it would force
-every local algebra to be type I. These witnesses show the interfaces are inhabited and applicable;
+nothing mathematically. A reflexive proper containment is rejected precisely because it would
+force every local algebra to be type I. These witnesses show the interfaces are inhabited and applicable;
 they are **not** evidence about nets whose local algebras are type III₁, and no argument should
 treat them as such. The degeneracy is also forced rather than chosen at the C⋆ level: over
 `Finset ℤ` with `⟂ = Disjoint`, any two disjoint regions lie under their union, so locality makes

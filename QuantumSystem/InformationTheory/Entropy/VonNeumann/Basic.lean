@@ -183,7 +183,7 @@ noncomputable def maximallyMixed [Nontrivial H] : State (H →L[ℂ] H) :=
 
 variable [Nontrivial H]
 
-/-- `τ(A) = tr A / d`. -/
+/-- `τ(A) = Tr A / d`. -/
 lemma maximallyMixed_apply (A : H →L[ℂ] H) :
     maximallyMixed H A = (Module.finrank ℂ H : ℂ)⁻¹ * Tr A := by
   simp [maximallyMixed, NNReal.smul_def]

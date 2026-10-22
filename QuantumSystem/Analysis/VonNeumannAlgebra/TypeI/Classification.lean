@@ -32,7 +32,8 @@ theorem `N ≅ B(ℓ²(F)) ⊗̄ 1` is infinite (`OrthEquivFam.isTypeIInfinite_i
 * `VonNeumannAlgebra.IsTypeIFactor.exists_spatial_tensor_decomposition`,
   `VonNeumannAlgebra.IsTypeIFactor.exists_split_tensor_decomposition` — the spatial and split
   tensor decompositions of `QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem`, stated
-  for a type I factor with the minimal projection existentially quantified.
+  for a type I factor on a nonzero Hilbert space with the minimal projection existentially
+  quantified.
 * `VonNeumannAlgebra.IsTypeIFactor.commutant`, `VonNeumannAlgebra.isTypeIFactor_commutant_iff` —
   the commutant of a type I factor is a type I factor, via `isTypeIFactor_oneTensor_boundedLinearOperators`
   (`1 ⊗̄ B(H₂)` is a type I factor) and `isTypeIFactor_conj_iff` (spatial invariance).

@@ -29,6 +29,7 @@ theorem (`QuantumSystem/Analysis/CStarAlgebra/CompletelyPositiveMap/Stinespring.
 ## Main definitions
 
 * `ContinuousLinearMap.choi b Φ`: the Choi operator `J_b(Φ)`.
+* `ContinuousLinearMap.choiRank b Φ`: its rank `rank J_b(Φ)`.
 * `CompletelyPositiveMap.ofKPositiveMap φ hk`: a `k`-positive map with `k ≥ min(dim H, dim K)` as a
   completely positive map.
 

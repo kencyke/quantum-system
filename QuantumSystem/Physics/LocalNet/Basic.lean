@@ -81,9 +81,8 @@ out anyway. The symbols stay in the prose; the code writes the projections.
     and is carried separately, as the mixin `CausalIndexSet` below. Splitting it off keeps this
     class available where the third condition is absent or in doubt: the corpus secures it in
     three different ways — through a membership condition (Guido–Longo–Roberts–Verch's regular
-    diamonds and Köster's proper intervals demand a non-void causal complement to *be* a region),
-    by admitting the empty region (lattice regions, where `∅` is disjoint from everything), or not
-    at all (Halvorson–Müger's double cones state no such clause).
+    diamonds demand a non-void causal complement to *be* a region), by admitting the empty region
+    (lattice regions, where `∅` is disjoint from everything), or not at all.
 
     What the third condition buys — on a *directed* index set, through heredity — is that causal
     orthogonality refines the *other* derived relation of Guido–Longo–Roberts–Verch (`⊥̃`, a common

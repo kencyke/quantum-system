@@ -47,8 +47,8 @@ and the type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional 
 
 ## Main results
 
-* `VonNeumannAlgebra.IsFactor.isTypeI_iff_exists_isMinimalProjection` — a factor is type I iff
-  it has a minimal projection.
+* `VonNeumannAlgebra.IsFactor.isTypeI_iff_exists_isMinimalProjection` — on a nonzero Hilbert
+  space, a factor is type I iff it has a minimal projection.
 * `VonNeumannAlgebra.IsTypeIFactor.exists_isMinimalProjection`,
   `VonNeumannAlgebra.IsFactor.isTypeIFactor_of_isMinimalProjection` — on a nonzero Hilbert space, a
   type I factor is a factor with a minimal projection.

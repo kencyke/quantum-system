@@ -318,9 +318,7 @@ def SplitProperty [ProperContainment K] (vnNet : VonNeumannNet K H) : Prop :=
     one-dimensional model can be evidence *for*: it inhabits `SplitProperty` and distinguishes
     nothing — no net, no representation, no choice of `⋐`. The degeneracy is `dim H ≤ 1` and
     nothing else (on the zero space every von Neumann algebra is a type I factor,
-    `VonNeumannAlgebra.isTypeIFactor_of_subsingleton`); for `dim H = 1` it is the escape clause
-    Halvorson–Müger's type III₁ proposition carries explicitly ("either `𝓡 = ℂ1` or `𝓡` is a type
-    III₁ factor"). -/
+    `VonNeumannAlgebra.isTypeIFactor_of_subsingleton`). -/
 theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K ℂ) :
     vnNet.SplitProperty := by
   intro O₁ O₂ _

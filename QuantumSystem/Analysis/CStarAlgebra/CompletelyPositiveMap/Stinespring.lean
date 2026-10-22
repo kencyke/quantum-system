@@ -354,7 +354,7 @@ end CompletelyPositiveMap
 namespace CPTPMap
 
 /-- **Stinespring's theorem** for CPTP maps, converse: `A ↦ tr₂(V A V†)` for an isometry
-`V : H → K ⊗ E`, `V† V = 1`, is a CPTP map: `tr(tr₂(V A V†)) = tr(A V† V) = tr A`. -/
+`V : H → K ⊗ E`, `V† V = 1`, is a CPTP map: `Tr (tr₂(V A V†)) = Tr (A V† V) = Tr A`. -/
 noncomputable def ofStinespring (V : H →L[ℂ] K ⊗[ℂ] E) (hV : V† ∘L V = 1) :
     CPTPMap H K where
   toCompletelyPositiveMap := CompletelyPositiveMap.ofStinespring V

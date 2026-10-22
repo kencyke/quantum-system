@@ -12,7 +12,9 @@ public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 
 For a nonzero scalar `c`, the adjoint of `c • T` is `conj c • T†`: both have the domain of `T†`,
 since `x ↦ ⟪y, c T x⟫` is continuous iff `x ↦ ⟪y, T x⟫` is, and they agree there by the defining
-property of the adjoint. At `c = 0` the statement fails, since `0 • T` keeps the domain of `T`.
+property of the adjoint. At `c = 0` the statement fails as soon as `T†` is not everywhere
+defined: `0 • T` is zero on its domain, so `(0 • T)†` is defined on all of `F`, while `0 • T†`
+keeps the domain of `T†`.
 
 ## Main results
 

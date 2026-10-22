@@ -15,7 +15,8 @@ This file proves the SOT version of the double commutant theorem by reducing to 
 
 Throughout, `A` is a possibly non-unital `*`-subalgebra (`NonUnitalStarSubalgebra`) acting
 non-degenerately (`InnerProductSpace.ActsNondegenerately`); each result also carries a
-`_starSubalgebra` corollary for the unital special case, where non-degeneracy is automatic.
+`StarSubalgebra` corollary of the same name for the unital special case, where non-degeneracy is
+automatic.
 
 ## Main results
 

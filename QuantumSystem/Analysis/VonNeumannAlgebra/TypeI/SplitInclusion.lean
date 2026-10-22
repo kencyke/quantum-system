@@ -21,7 +21,8 @@ across a commuting pair. The AQFT *split property* — this predicate applied to
 level in `QuantumSystem.Physics.LocalNet.SplitProperty`.
 
 The structural content of a split inclusion is the tensor decomposition
-`IsSplitInclusion.exists_tensor_decomposition`: a spatial isomorphism `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)`
+`IsSplitInclusion.exists_tensor_decomposition`: on a nonzero Hilbert space, a spatial isomorphism
+`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)`
 carrying `A` into the tensor factor `𝓑(ℓ²(F)) ⊗̄ 1` and the commutant `B′` into `1 ⊗̄ 𝓑(eH)`. It
 is inherited from the type I structure theorem
 (`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem`).

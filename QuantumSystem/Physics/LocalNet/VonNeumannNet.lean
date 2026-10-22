@@ -15,9 +15,9 @@ public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 A **net of von Neumann algebras** (`VonNeumannNet`) is an isotone, local assignment `O ↦ 𝓡(O)` of
 von Neumann algebras on a fixed Hilbert space over a bare causal index set: no directedness, no
 quasi-local C⋆-algebra and no faithfulness. This is the level at which Buchholz's local rings
-`𝓡(O)`, Doplicher–Longo's `W*`-inclusions and Köster's chiral nets are stated; in particular the
-proper intervals of `S¹` (the index set of a chiral net) are not directed, since two intervals
-covering the circle have no proper upper bound.
+`𝓡(O)` and Doplicher–Longo's `W*`-inclusions are stated. Directedness matters: the proper
+intervals of `S¹` (the index set of a chiral net) are not directed, since two intervals covering
+the circle have no proper upper bound.
 
 A representation `R` of the quasi-local C⋆-algebra of a local net `N` gives one instance: the
 **local von Neumann algebras** `𝓡(O) = R.π(𝔄(O))″` (`LocalNet.localVonNeumannAlgebra`) form the
@@ -54,8 +54,7 @@ open scoped CausalOrthogonality VonNeumannAlgebra
     (`algebra_le_commutant_of_orthogonal`, Einstein causality `𝓡(O₁) ≤ 𝓡(O₂)′` for `O₁ ⟂ O₂`).
 
     This is the level at which the split property is stated in the literature — Buchholz's local
-    rings `𝓡(O)`, Doplicher–Longo's `W*`-inclusions, Köster's chiral nets assigning a von Neumann
-    algebra to each proper interval. The index set carries only a `Preorder` and `⟂`; in
+    rings `𝓡(O)` and Doplicher–Longo's `W*`-inclusions. The index set carries only a `Preorder` and `⟂`; in
     particular it is not assumed directed, so the index sets those sources use are expressible. -/
 structure VonNeumannNet (K : Type*) [Preorder K] [CausalOrthogonality K]
     (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H] where
