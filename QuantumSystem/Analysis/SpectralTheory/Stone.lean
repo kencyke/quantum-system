@@ -85,7 +85,7 @@ convergence gives the derivative, and Fatou's lemma, through the lower semiconti
 
 * M. H. Stone, *On one-parameter unitary groups in Hilbert space*, Ann. of Math. 33 (1932),
   643–648.
-* [K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*][schmudgen2012], §6.1
+* K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*, §6.1
 * K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*, Springer GTM
   194 (2000)
 -/

@@ -22,8 +22,7 @@ import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 Let `ρ : A → B(K)` be a representation of a (not necessarily unital) C⋆-algebra, `ζ ∈ K`, and `f`
 a positive functional on `A` dominated by the vector functional of `ζ`: `f(a⋆a) ≤ ‖ρ(a) ζ‖²` for
 all `a`.
-Then there is `T` commuting with `ρ(A)` with `0 ≤ T ≤ 1` and `f(a) = ⟪T ζ, ρ(a) ζ⟫`
-(Bratteli–Robinson, *Operator Algebras and Quantum Statistical Mechanics 1*, Thm. 2.3.19); with
+Then there is `T` commuting with `ρ(A)` with `0 ≤ T ≤ 1` and `f(a) = ⟪T ζ, ρ(a) ζ⟫`; with
 `R = √T`, `f = ω_{R ζ}` is itself a vector functional. The von Neumann algebra form (`T ∈ N′`) is
 `QuantumSystem.Analysis.VonNeumannAlgebra.RadonNikodym`.
 

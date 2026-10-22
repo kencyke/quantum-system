@@ -21,7 +21,7 @@ Let `H` and `K` be finite-dimensional complex Hilbert spaces. A **completely pos
 trace-preserving (CPTP) map** `Φ : B(H) → B(K)` on the C⋆-algebras `B(H) = H →L[ℂ] H` and `B(K)`
 is a map that is
 1. completely positive (CP): `id_k ⊗ Φ` is positive for every `k`;
-2. trace preserving (TP): `tr (Φ A) = tr A` for all `A`.
+2. trace preserving (TP): `Tr (Φ A) = Tr A` for all `A`.
 
 Complete positivity is Mathlib's `CompletelyPositiveMap` condition (`(H →L[ℂ] H) →CP (K →L[ℂ] K)`)
 for the C⋆-algebra structure and the Loewner order of `H →L[ℂ] H`, both global instances of
@@ -72,7 +72,7 @@ section IsTracePreserving
 variable {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
 
 /-- A map `Φ : B(H) → B(K)` between the operator algebras of finite-dimensional Hilbert spaces is
-**trace preserving** if `tr (Φ A) = tr A` for all `A`. It is stated for any `FunLike` type, so
+**trace preserving** if `Tr (Φ A) = Tr A` for all `A`. It is stated for any `FunLike` type, so
 that it applies to linear maps and to completely positive maps alike. -/
 -- The `FiniteDimensional` instances are unused by the body; they restrict the notion to where `Tr`
 -- is the trace.
@@ -142,7 +142,7 @@ instance : CompletelyPositiveMapClass (CPTPMap H K) (H →L[ℂ] H) (K →L[ℂ]
 lemma isTracePreserving (Φ : CPTPMap H K) : IsTracePreserving Φ :=
   Φ.isTracePreserving'
 
-/-- A CPTP map preserves the trace: `tr (Φ A) = tr A`. -/
+/-- A CPTP map preserves the trace: `Tr (Φ A) = Tr A`. -/
 @[simp] lemma trace_map (Φ : CPTPMap H K) (A : H →L[ℂ] H) :
     Tr (Φ A) = Tr A :=
   Φ.isTracePreserving' A

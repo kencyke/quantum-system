@@ -13,20 +13,16 @@ public import QuantumSystem.Analysis.CStarAlgebra.GNS.Separable
 
 Every C\*-algebra, not necessarily unital and not necessarily commutative, is isometrically
 `*`-isomorphic onto a norm closed `*`-subalgebra of the bounded operators on some complex
-Hilbert space.  This is the noncommutative Gelfand-Naimark theorem (Gelfand-Naimark 1943;
-Murphy, *C\*-algebras and Operator Theory*, Ch. 3 "Ideals and Positive Functionals";
-Blackadar, *Operator Algebras*, Ch. II "C\*-Algebras"; Takesaki, *Theory of Operator Algebras
-I*, Ch. I "Fundamentals of Banach Algebras and C\*-Algebras" — chapter-level locators only,
-since none of these three books was independently opened for this file), and it is not to be
-confused with the commutative
-Gelfand-Naimark theorem — Gelfand duality — which Mathlib carries as
+Hilbert space.  This is the noncommutative Gelfand-Naimark theorem, and it is not to be
+confused with the commutative Gelfand-Naimark theorem — Gelfand duality — which Mathlib carries as
 `gelfandTransform_isometry`.
 
 ## Main results
 
 * `CStarRep.exists_isometric` — there is a representation `R : CStarRep A` whose `R.π` is
-  isometric, injective, and has norm closed range.  The three conjuncts together say that
-  `R.π` identifies `A` with a C\*-subalgebra of `R.H →L[ℂ] R.H`.
+  isometric, injective, and has norm closed range; injectivity and closedness follow from
+  isometry, and are stated for use.  Together they say that `R.π` identifies `A` with a
+  C\*-subalgebra of `R.H →L[ℂ] R.H`.
 * `CStarRep.exists_starAlgEquiv_range` — the same statement in the form the classical
   formulation uses: an explicit `*`-isomorphism of `A` onto a norm closed `*`-subalgebra
   of `R.H →L[ℂ] R.H` that preserves the norm.
@@ -44,8 +40,7 @@ state space.
 
 ## Conventions and scope
 
-* The Hilbert space is produced in the *same* universe as `A`, which is stronger than the
-  usual textbook statement.
+* The Hilbert space is produced in the *same* universe as `A`.
 * Closedness of the range uses completeness of `A`; `NonUnitalStarAlgHom.range` supplies the
   `*`-subalgebra structure, so "closed `*`-subalgebra" is exactly "C\*-subalgebra" here.
 * Nondegeneracy is not part of the statement: `CStarRep` carries no nondegeneracy field.
@@ -54,8 +49,8 @@ state space.
   (`GNS.Representation.actsNondegenerately`) — so the theorem does in fact produce a
   nondegenerate representation even though it does not demand one.  That the two
   existentials, with and without nondegeneracy, are *equivalent* — corestrict an isometric
-  `*`-representation to the closure of the span of its image — is standard, but it is not
-  formalised here: this development defines no corestriction of a `CStarRep` to a closed
+  `*`-representation to the closure of the span of its image — is not formalised here: this
+  development defines no corestriction of a `CStarRep` to a closed
   invariant subspace.
 * The witness of `CStarRep.exists_isometric` is itself never separable beyond the trivial
   cases: it is indexed by the whole pure state space, and for `A = C₀(ℝ)` the point
@@ -80,10 +75,10 @@ universe u
 every C\*-algebra admits a faithful isometric `*`-representation whose image is norm closed,
 that is, `A` is carried onto a C\*-subalgebra of `H →L[ℂ] H` for some complex Hilbert space `H`.
 
-The three conjuncts are what make the conclusion an identification rather than a mere bound:
-`Isometry R.π` gives `‖R.π a‖ = ‖a‖`, `Function.Injective R.π` makes `R.π` a bijection onto
-its image, and `IsClosed` upgrades the `*`-subalgebra `NonUnitalStarAlgHom.range R.π` to a C\*-subalgebra.  For
-the same statement packaged as an explicit `*`-isomorphism, see
+`Isometry R.π` gives `‖R.π a‖ = ‖a‖`, and with it the other two conjuncts, which are stated for
+use: injectivity (`Isometry.injective`), and, `A` being complete, closedness of the range
+(`Isometry.isClosedEmbedding`), which upgrades the `*`-subalgebra `NonUnitalStarAlgHom.range R.π`
+to a C\*-subalgebra.  For the same statement packaged as an explicit `*`-isomorphism, see
 `CStarRep.exists_starAlgEquiv_range`.
 
 The Hilbert space is obtained in the same universe as `A`.  The witness is
@@ -135,7 +130,7 @@ witness here is `GNS.normingRep A`: the ℓ²-direct sum of the GNS representati
 `A`.  Norming rather than merely detecting is what makes a countable family separate the
 points of `A` — see `GNS.normingFamily_separatesPoints`.
 
-Separability of `A` is sufficient and never necessary: `ℓ² →L[ℂ] ℓ²` is not norm separable, yet
+Separability of `A` is sufficient but not necessary: `ℓ² →L[ℂ] ℓ²` is not norm separable, yet
 its identity representation on the separable space `ℓ²` is faithful. -/
 theorem CStarRep.exists_isometric_separable (A : Type u) [NonUnitalCStarAlgebra A]
     [TopologicalSpace.SeparableSpace A] :

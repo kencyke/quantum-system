@@ -17,11 +17,11 @@ the **(noncommutative) perspective** of `f` is
 `P_f(l, r) = r^{1/2} f(r^{-1/2} l r^{-1/2}) r^{1/2}`.
 For commuting `l` and `r` it reduces to the classical perspective `f(l r⁻¹) r` of `f`.
 
-The perspective of an operator convex function is jointly convex. Effros (2009) proved this for
-commuting `l` and `r`; Ebadian, Nikoufar and Eshaghi Gordji (2011) and Effros and Hansen (2014)
-proved it without commutativity. With `f(t) = -tᵖ` and the commuting left and right
-multiplication operators on the Hilbert–Schmidt operators, it yields Lieb's concavity theorem
-(Effros 2009).
+The perspective of an operator convex function is jointly convex. For positive matrices, Effros
+(2009) proved this for commuting `l` and `r`, and Ebadian, Nikoufar and Eshaghi Gordji (2011) and
+Effros and Hansen (2014, Theorem 1.1) proved it without commutativity. With `f(t) = -tᵖ` and the
+commuting left and right multiplication operators on the Hilbert–Schmidt operators, it yields
+Lieb's concavity theorem (Effros 2009).
 
 ## Main definitions
 
@@ -43,8 +43,9 @@ multiplication operators on the Hilbert–Schmidt operators, it yields Lieb's co
 
 ## Implementation notes
 
-The proof is the one of Effros, through Jensen's operator inequality of Hansen and Pedersen; it
-does not use commutativity and only uses the C⋆-algebra structure: with `r = ∑ wᵢ rᵢ` and
+The proof follows Effros, through Jensen's operator inequality of Hansen and Pedersen, without his
+commutativity assumption, which Ebadian, Nikoufar and Eshaghi Gordji (2011) observed the argument
+does not need; it only uses the C⋆-algebra structure: with `r = ∑ wᵢ rᵢ` and
 `aᵢ = √wᵢ rᵢ^{1/2} r^{-1/2}`, one has `∑ aᵢ⋆ aᵢ = 1` and
 `∑ aᵢ⋆ (rᵢ^{-1/2} lᵢ rᵢ^{-1/2}) aᵢ = r^{-1/2} l r^{-1/2}`, so `IsOperatorConvexOn.cfc_sum_le`
 applies, and conjugating by `r^{1/2}` gives the inequality.
@@ -132,7 +133,8 @@ variable {A : Type u} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 /-- **Joint convexity of the perspective**: the perspective
 `P_f(l, r) = r^{1/2} f(r^{-1/2} l r^{-1/2}) r^{1/2}` of an operator convex function `f` satisfies
 Jensen's inequality over finite convex combinations of pairs `(lᵢ, rᵢ)` with `rᵢ` strictly
-positive and `rᵢ^{-1/2} lᵢ rᵢ^{-1/2}` in the domain of `f`. -/
+positive and `rᵢ^{-1/2} lᵢ rᵢ^{-1/2}` self-adjoint with spectrum in `s`, the set on which `f` is
+operator convex. -/
 theorem IsOperatorConvexOn.perspective_sum_le (hf : IsOperatorConvexOn.{v} s f) {ι : Type*}
     [Fintype ι] {w : ι → ℝ} (hw : ∀ i, 0 ≤ w i) (hw₁ : ∑ i, w i = 1) {l r : ι → A}
     (hr : ∀ i, IsStrictlyPositive (r i))

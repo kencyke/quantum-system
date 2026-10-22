@@ -16,9 +16,10 @@ operators `S_{η,ξ} : x ξ + ζ ↦ s(ξ) x⋆ η` (`x ∈ M`, `ζ ⊥ [M ξ]`)
 `F_{η,ξ} : x′ ξ + ζ′ ↦ s′(ξ) x′⋆ η` (`x′ ∈ M′`, `ζ′ ⊥ [M′ ξ]`; `VonNeumannAlgebra.relativeTomita`),
 where `s(ξ) = P_{[M′ ξ]} ∈ M` and `s′(ξ) = P_{[M ξ]} ∈ M′` are the supports. Then
 `S_{η,ξ}† = F̄_{η,ξ}` (`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`). Araki–Masuda 1982,
-Appendix C, Theorem C.1 (α), prove closability for arbitrary vectors by a matrix-unit argument,
-without stating this identity.
-For `η, ξ` in a natural positive cone, Araki 1977, Lemma 2.2, proves only `F ⊆ S†`, and
+Appendix C, Theorem C.1 (α), prove closability for arbitrary vectors in a standard representation
+by a matrix-unit argument, without stating this identity.
+For `η, ξ` in a natural positive cone, Araki 1977, Lemma 2.2, proves closability through
+`F ⊆ S†`, and
 Theorem 2.4 gives `S̄ = J Δ^{1/2}` and `F̄ = Δ^{1/2} J` with the modular conjugation `J` of the cone.
 
 The inclusion `F ⊆ S†` is `VonNeumannAlgebra.relativeTomita_commutant_le_adjoint`. For the converse
@@ -53,7 +54,6 @@ separating it gives that the standard subspace of the commutant is the symplecti
 
 ## References
 
-* H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976), 809–833
 * H. Araki, *Relative entropy for states of von Neumann algebras II*, Publ. RIMS 13 (1977),
   173–192, Lemma 2.2 and Theorem 2.4
 * H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18

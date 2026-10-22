@@ -77,7 +77,7 @@ against the complex measures `E.complexMeasure x y`, and makes no regularity ass
 ## References
 
 * [W. Rudin, *Functional Analysis*][rudin1991], §12.17–12.21
-* [K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*][schmudgen2012], §4.2–4.3
+* K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*, §4.2–4.3
 -/
 
 @[expose] public section

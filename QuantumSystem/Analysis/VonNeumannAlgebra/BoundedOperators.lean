@@ -58,7 +58,11 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 literature writes `B(H)`. Its carrier is `Set.univ`; the double-commutant property is the
 bicommutant inclusion `s ⊆ s''` applied to `s = univ`, together with `univ` being the largest set.
 Mathlib's bundled `VonNeumannAlgebra H` provides no such distinguished element, so this file
-supplies it. -/
+supplies it.
+
+TODO: `Mathlib.Analysis.VonNeumannAlgebra.Basic` announces `⊤ : VonNeumannAlgebra H` for this
+object, but Mathlib does not yet provide `⊤` on `VonNeumannAlgebra H`; once it does, replace
+`boundedLinearOperators` by `⊤`. -/
 noncomputable def boundedLinearOperators (H : Type*) [NormedAddCommGroup H]
     [InnerProductSpace ℂ H] [CompleteSpace H] : VonNeumannAlgebra H where
   toStarSubalgebra := ⊤
