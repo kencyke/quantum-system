@@ -170,7 +170,7 @@ theorem NonUnitalStarSubalgebra.bicommutant_tfae (A : NonUnitalStarSubalgebra �
     rw [← h]
     exact isWOTClosed_centralizer_centralizer (H := H) (A : Set B)
   tfae_have 2 → 3 := isSOTClosed_of_isWOTClosed (H := H)
-  tfae_have 3 → 1 := NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed A hnd
+  tfae_have 3 → 1 := A.doubleCommutant_eq_of_isSOTClosed hnd
   tfae_finish
 
 /-- Unital special case of `NonUnitalStarSubalgebra.bicommutant_tfae`, and the form in which the theorem is
@@ -181,7 +181,7 @@ lemma StarSubalgebra.bicommutant_tfae (A : StarSubalgebra ℂ B) :
       (A : Set B)′′ = (A : Set B),
       IsWOTClosed (H := H) (A : Set B),
       IsSOTClosed (H := H) (A : Set B)] :=
-  NonUnitalStarSubalgebra.bicommutant_tfae A.toNonUnitalStarSubalgebra (actsNondegenerately_of_one_mem A.one_mem)
+  A.toNonUnitalStarSubalgebra.bicommutant_tfae (actsNondegenerately_of_one_mem A.one_mem)
 
 /-- **A non-degenerate `*`-subalgebra satisfying any one of the three conditions contains `1`.**
 Stated for the WOT in `NonUnitalStarSubalgebra.one_mem_of_isWOTClosed`; this is the SOT companion.
@@ -192,8 +192,8 @@ conditions. -/
 lemma NonUnitalStarSubalgebra.one_mem_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B)) (hA : IsSOTClosed (H := H) (A : Set B)) :
     (1 : B) ∈ A :=
-  NonUnitalStarSubalgebra.one_mem_of_isWOTClosed A hnd
-    (NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed A hnd hA)
+  A.one_mem_of_isWOTClosed hnd
+    (A.isWOTClosed_of_isSOTClosed hnd hA)
 
 /-- **The non-unital generality is inhabited.** On an infinite-dimensional Hilbert space the
 finite-rank operators `F(H)` act non-degenerately and do not contain `1`, so

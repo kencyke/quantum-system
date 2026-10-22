@@ -174,7 +174,7 @@ lemma NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : NonUnit
           diagonal '' (A : Set B) := by
         simp [Aamp, diagonalStarAlgHom]
       rw [hcoe]
-      exact InnerProductSpace.ActsNondegenerately.image_diagonal hnd n
+      exact ActsNondegenerately.image_diagonal hnd n
     -- Choose a uniform ε
     let ε := I_fin.attach.inf' hI_fin_ne.attach (fun x => (heps' x).choose)
     have hε_pos' : ε > 0 := by
@@ -194,13 +194,13 @@ lemma NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : NonUnit
       simp only [NonUnitalStarSubalgebra.coe_map, Aamp, diagonalStarAlgHom]
       simpa using hdiag
     -- T^(n) preserves reducing subspaces of A^(n)
-    have hPres : InnerProductSpace.PreservesReducingSubspaces (H := Hn H n)
+    have hPres : PreservesReducingSubspaces (H := Hn H n)
         (Aamp : Set _) (diagonal T) :=
-      InnerProductSpace.preservesReducingSubspaces_of_mem_centralizer_centralizer
+      preservesReducingSubspaces_of_mem_centralizer_centralizer
         (H := Hn H n) _ hTn
     -- T^(n) x ∈ cyclicSubspace A^(n) x
     have hxmem : diagonal T x_amp ∈
-        InnerProductSpace.cyclicSubspace Aamp x_amp :=
+        cyclicSubspace Aamp x_amp :=
       NonUnitalStarSubalgebra.mem_cyclicSubspace_of_preservesReducingSubspaces
         (H := Hn H n) Aamp hndAmp hPres x_amp
     -- The set {a x | a ∈ Aamp} equals {diagonal S x | S ∈ A}
@@ -222,7 +222,7 @@ lemma NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : NonUnit
         y = diagonal S x_amp} := by
       have h : diagonal T x_amp ∈
           closure (Set.range fun a : Aamp => (a : Hn H n →L[ℂ] Hn H n) x_amp) := by
-        have := InnerProductSpace.coe_cyclicSubspace_of_submodule
+        have := coe_cyclicSubspace_of_submodule
           Aamp.toNonUnitalSubalgebra.toSubmodule x_amp
         rw [← SetLike.mem_coe] at hxmem
         exact this ▸ hxmem
@@ -279,7 +279,7 @@ acts non-degenerately and the general lemma applies. -/
 lemma StarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : StarSubalgebra ℂ B) (T : B)
     (hT : T ∈ (A : Set B)′′) :
     (toUniformConvergenceCLM _ _ _ T : BSOT) ∈ closure (Set.toSOT (A : Set B)) :=
-  NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant A.toNonUnitalStarSubalgebra T
+  A.toNonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant T
     (actsNondegenerately_of_one_mem A.one_mem) hT
 
 /-- **The density form of the bicommutant theorem, SOT half.** For *every* non-degenerate
@@ -300,7 +300,7 @@ theorem NonUnitalStarSubalgebra.sotClosure_eq_doubleCommutant (A : NonUnitalStar
     refine closure_minimal (fun T hT => ?_) (isSOTClosed_centralizer_centralizer _)
     exact Set.subset_centralizer_centralizer (S := (A : Set B)) hT
   · intro T hT
-    exact NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant A _ hnd (Set.mem_toSOT_iff.mp hT)
+    exact A.mem_sotClosure_of_mem_doubleCommutant _ hnd (Set.mem_toSOT_iff.mp hT)
 
 /-- **The density form of the bicommutant theorem, WOT half.** For every non-degenerate
 `*`-subalgebra, with no closedness hypothesis, `A'' = closure_WOT A`.
@@ -318,7 +318,7 @@ theorem NonUnitalStarSubalgebra.wotClosure_eq_doubleCommutant (A : NonUnitalStar
     -- Go through the SOT-closure and push it forward along the continuous map `sotToWOT`.
     have hSOT : (toUniformConvergenceCLM _ _ _ (ContinuousLinearMapWOT.toCLM T) : BSOT) ∈
         closure (Set.toSOT (A : Set B)) :=
-      NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant A _ hnd (Set.mem_toWOT_iff.mp hT)
+      A.mem_sotClosure_of_mem_doubleCommutant _ hnd (Set.mem_toWOT_iff.mp hT)
     have hsub : closure (Set.toSOT (A : Set B)) ⊆
         sotToWOT ⁻¹' closure (Set.toWOT (A : Set B)) :=
       closure_minimal (fun S hS => subset_closure (Set.mem_toSOT_iff.mp hS))
@@ -336,7 +336,7 @@ lemma NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed (A : NonUnitalStarSubal
     apply Set.eq_of_subset_of_subset Set.subset_centralizer_centralizer
     intro T hT
     -- T ∈ A'' → T ∈ SOT-closure(A) → T ∈ A (since A is SOT-closed)
-    have hT_in_SOT := NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant A T hnd hT
+    have hT_in_SOT := A.mem_sotClosure_of_mem_doubleCommutant T hnd hT
     rw [IsClosed.closure_eq hSOT] at hT_in_SOT
     simpa [Set.mem_toSOT_iff] using hT_in_SOT
   rw [hA_eq_Acc]
@@ -347,7 +347,7 @@ WOT-closed. -/
 lemma StarSubalgebra.isWOTClosed_of_isSOTClosed (A : StarSubalgebra ℂ B)
     (hSOT : IsSOTClosed (A : Set B)) :
     IsWOTClosed (A : Set B) :=
-  NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed A.toNonUnitalStarSubalgebra
+  A.toNonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed
     (actsNondegenerately_of_one_mem A.one_mem) hSOT
 
 /-- The double commutant theorem (hard half) for SOT-closed *-subalgebras.
@@ -360,8 +360,8 @@ theorem NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed (A : NonUnital
     (hSOT : IsSOTClosed (A : Set B)) :
     (A : Set B)′′ = (A : Set B) := by
   -- Reduce to the WOT version.
-  have hWOT : IsWOTClosed (A : Set B) := NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed A hnd hSOT
-  exact NonUnitalStarSubalgebra.doubleCommutant_eq_of_isWOTClosed A hnd hWOT
+  have hWOT : IsWOTClosed (A : Set B) := A.isWOTClosed_of_isSOTClosed hnd hSOT
+  exact A.doubleCommutant_eq_of_isWOTClosed hnd hWOT
 
 /-- Unital special case of `NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed`: a SOT-closed unital
 *-subalgebra equals its double commutant. Since `1 ∈ A`, the algebra acts non-degenerately
@@ -369,7 +369,7 @@ and the general theorem applies. -/
 lemma StarSubalgebra.doubleCommutant_eq_of_isSOTClosed (A : StarSubalgebra ℂ B)
     (hSOT : IsSOTClosed (A : Set B)) :
     (A : Set B)′′ = (A : Set B) :=
-  NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed A.toNonUnitalStarSubalgebra
+  A.toNonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed
     (actsNondegenerately_of_one_mem A.one_mem) hSOT
 
 end SOTClosedSubalgebra

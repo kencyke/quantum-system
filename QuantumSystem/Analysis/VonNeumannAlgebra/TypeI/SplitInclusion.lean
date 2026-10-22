@@ -57,6 +57,7 @@ where the algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.
 namespace VonNeumannAlgebra
 
 open HilbertTensor
+open scoped lp
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -129,12 +130,12 @@ theorem IsSplitInclusion.exists_tensor_decomposition [Nontrivial H] {A B : VonNe
     (h : IsSplitInclusion A B) :
     ∃ (M : VonNeumannAlgebra H) (e : H →L[ℂ] H) (he : IsMinimalProjection M e),
       haveI := he.1.completeSpace_range
-      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
+      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
         IsTypeIFactor M ∧ Nonempty F ∧ A ≤ M ∧ M ≤ B ∧
-        VonNeumannAlgebra.conj U M = 𝓑(lp (fun _ : F => ℂ) 2) ⊗ 𝟙[e.range] ∧
-        VonNeumannAlgebra.conj U M′ = 𝟙[lp (fun _ : F => ℂ) 2] ⊗ 𝓑(e.range) ∧
-        VonNeumannAlgebra.conj U A ≤ 𝓑(lp (fun _ : F => ℂ) 2) ⊗ 𝟙[e.range] ∧
-        VonNeumannAlgebra.conj U B′ ≤ 𝟙[lp (fun _ : F => ℂ) 2] ⊗ 𝓑(e.range) := by
+        VonNeumannAlgebra.conj U M = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
+        VonNeumannAlgebra.conj U M′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) ∧
+        VonNeumannAlgebra.conj U A ≤ 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
+        VonNeumannAlgebra.conj U B′ ≤ 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
   obtain ⟨M, hMt, h₁, h₂⟩ := h
   obtain ⟨e, he, F, U, hF, hM, hM', hA, hB⟩ := hMt.exists_split_tensor_decomposition h₁ h₂
   exact ⟨M, e, he, F, U, hMt, hF, h₁, h₂, hM, hM', hA, hB⟩

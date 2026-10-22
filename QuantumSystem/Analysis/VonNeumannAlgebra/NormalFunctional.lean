@@ -24,7 +24,7 @@ continuous (`VonNeumannAlgebra.IsNormal`), the σ-weak topology being that of `H
 
 The representation theorem: `ω` is normal iff it is a countable
 sum of vector functionals, `ω(x) = ∑ₙ ⟪ξₙ, x ξₙ⟫` for a square-summable sequence `(ξₙ)` in `H`
-(`VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner`). Through `lpTensorEquiv : ℓ²(ℕ, H) ≃ ℓ²(ℕ) ⊗̂ H`, a
+(`VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner_self`). Through `lpTensorEquiv : ℓ²(ℕ, H) ≃ ℓ²(ℕ) ⊗̂ H`, a
 sequence `(ξₙ)` is a single vector `Ξ = ∑ₙ eₙ ⊗ ξₙ` with `∑ₙ ⟪ξₙ, x ξₙ⟫ = ⟪Ξ, (1 ⊗ x) Ξ⟫`, so normal
 functionals are exactly the restrictions to `1 ⊗ M` of vector functionals on `ℓ²(ℕ) ⊗̂ H`
 (`VonNeumannAlgebra.isNormal_iff_exists_inner_amplifyRight_eq`). The proof: σ-weak continuity gives
@@ -67,7 +67,7 @@ amplification `oneTensor ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 * `VonNeumannAlgebra.isNormal_of_hasSum_inner`, `VonNeumannAlgebra.IsNormal.exists_hasSum_inner` —
   `ω` is normal iff `ω(x) = ∑ₙ ⟪ξₙ, x ηₙ⟫` for square-summable `ξ`, `η`.
 * `VonNeumannAlgebra.isNormal_iff_exists_inner_amplifyRight_eq` — `ω` is normal iff `ω(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫` for some
-  `Ξ ∈ ℓ²(ℕ) ⊗̂ H`; `VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner` — iff `ω = ∑ₙ ω_{ξₙ}`.
+  `Ξ ∈ ℓ²(ℕ) ⊗̂ H`; `VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner_self` — iff `ω = ∑ₙ ω_{ξₙ}`.
 * `VonNeumannAlgebra.isNormal_vectorFunctional` — vector functionals are normal.
 * `VonNeumannAlgebra.isNormalMap_id`, `VonNeumannAlgebra.IsNormal.comp`,
   `VonNeumannAlgebra.IsNormalMap.comp` — the identity is normal, and normality is stable
@@ -170,7 +170,7 @@ def toSigmaWeak (x : M) : M.sigmaWeak := ⟨ContinuousLinearMapSigmaWeak.ofCLM x
 
 variable (M) in
 /-- A positive functional `ω` on `M` is **normal** if it is σ-weakly continuous. By
-`VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner` this is equivalent to `ω` being a countable sum of
+`VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner_self` this is equivalent to `ω` being a countable sum of
 vector functionals. -/
 def IsNormal (ω : M →ₚ[ℂ] ℂ) : Prop :=
   Continuous fun T : M.sigmaWeak => ω (M.ofSigmaWeak T)
@@ -251,7 +251,7 @@ lemma isNormal_iff_exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} :
 
 /-- **Normal functionals are countable sums of vector functionals**: `ω` is normal iff
 `ω(x) = ∑ₙ ⟪ξₙ, x ξₙ⟫` for a square-summable sequence `(ξₙ)` in `H`. -/
-theorem isNormal_iff_exists_hasSum_inner {ω : M →ₚ[ℂ] ℂ} :
+theorem isNormal_iff_exists_hasSum_inner_self {ω : M →ₚ[ℂ] ℂ} :
     M.IsNormal ω ↔ ∃ ξ : ℓ²(ℕ, H),
       ∀ x : M, HasSum (fun n => ⟪ξ n, (x : H →L[ℂ] H) (ξ n)⟫_ℂ) (ω x) := by
   refine ⟨fun h => ?_, fun ⟨ξ, hξ⟩ => isNormal_of_hasSum_inner ξ ξ hξ⟩

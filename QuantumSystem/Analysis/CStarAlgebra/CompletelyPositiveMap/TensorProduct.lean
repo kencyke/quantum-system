@@ -54,7 +54,7 @@ introduced for `φ ⊗ ψ`, which would clash with `TensorProduct`.
 @[expose] public section
 
 open TensorProduct InnerProductSpace ContinuousLinearMap
-open scoped TensorProduct InnerProductSpace CStarAlgebra
+open scoped TensorProduct InnerProductSpace InnerProduct CStarAlgebra
 
 variable {H₁ H₂ K₁ K₂ : Type*}
   [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] [FiniteDimensional ℂ H₁]
@@ -86,14 +86,14 @@ product: `(φ ⊗ ψ)(X) = Σₐ_b (Tₐ ⊗ S_b) X (Tₐ ⊗ S_b)†`, checked 
 lemma tensorProductLinearMap_apply_eq_sum_kraus {φ : (H₁ →L[ℂ] H₁) →ₗ[ℂ] (K₁ →L[ℂ] K₁)}
     {ψ : (H₂ →L[ℂ] H₂) →ₗ[ℂ] (K₂ →L[ℂ] K₂)} {κ₁ κ₂ : Type*} [Fintype κ₁] [Fintype κ₂]
     {T : κ₁ → H₁ →L[ℂ] K₁} {S : κ₂ → H₂ →L[ℂ] K₂}
-    (hT : ∀ A, φ A = ∑ a, T a ∘L A ∘L adjoint (T a))
-    (hS : ∀ B, ψ B = ∑ b, S b ∘L B ∘L adjoint (S b)) (X : H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) :
+    (hT : ∀ A, φ A = ∑ a, T a ∘L A ∘L (T a)†)
+    (hS : ∀ B, ψ B = ∑ b, S b ∘L B ∘L (S b)†) (X : H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) :
     tensorProductLinearMap φ ψ X =
-      ∑ p : κ₁ × κ₂, mapL (T p.1) (S p.2) ∘L X ∘L adjoint (mapL (T p.1) (S p.2)) := by
+      ∑ p : κ₁ × κ₂, mapL (T p.1) (S p.2) ∘L X ∘L (mapL (T p.1) (S p.2))† := by
   have h := TensorProduct.ext_mapL (u := tensorProductLinearMap φ ψ)
     (v := (ofKraus fun p : κ₁ × κ₂ => mapL (T p.1) (S p.2)).toLinearMap) fun A B => by
       rw [tensorProductLinearMap_mapL, hT, hS]
-      change _ = ∑ p : κ₁ × κ₂, mapL (T p.1) (S p.2) ∘L mapL A B ∘L adjoint (mapL (T p.1) (S p.2))
+      change _ = ∑ p : κ₁ × κ₂, mapL (T p.1) (S p.2) ∘L mapL A B ∘L (mapL (T p.1) (S p.2))†
       simp only [adjoint_mapL, ← mapL_comp, Fintype.sum_prod_type]
       rw [← mapLEquiv_tmul, sum_tmul, ← LinearEquiv.coe_coe, map_sum]
       refine Finset.sum_congr rfl fun a _ => ?_
