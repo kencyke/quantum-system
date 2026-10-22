@@ -39,12 +39,6 @@ hence reflects the order, which transfers the inequality from `H →L[ℂ] H` to
 (`ConvexOn.cfc_of_injective`). Only this transfer
 needs the GNS construction of the project, and it is the reason this file lives outside
 `ForMathlib/`.
-
-## References
-
-* F. Hansen, G. K. Pedersen, *Jensen's inequality for operators and Löwner's theorem*,
-  Math. Ann. 258 (1982), 229–241
-* R. Bhatia, *Matrix Analysis*, Chapter V (1997)
 -/
 
 @[expose] public section

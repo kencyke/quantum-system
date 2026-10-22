@@ -159,13 +159,8 @@ by `t` and `u`, cost `4 δ ‖ξ‖²`, and `δ` is arbitrary. No limit of opera
 
 ## References
 
-* F. Hansen, G. K. Pedersen, *Jensen's inequality for operators and Löwner's theorem*,
-  Math. Ann. 258 (1982), 229–241
 * F. Hansen, G. K. Pedersen, *Jensen's operator inequality*, Bull. London Math. Soc. 35 (2003),
   553–564
-* R. Bhatia, *Matrix Analysis*, Chapter V (1997)
-* E. G. Effros, *A matrix convexity approach to some celebrated quantum inequalities*, Proc. Natl.
-  Acad. Sci. USA 106 (2009), 1006–1008
 -/
 
 @[expose] public section
