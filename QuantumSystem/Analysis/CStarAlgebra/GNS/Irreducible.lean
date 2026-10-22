@@ -15,7 +15,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
 
 A state is pure iff its GNS representation is irreducible
 (`GNS.Representation.isPure_iff_isIrreducible`, for every GNS triplet of the state; Murphy,
-Thm. 5.1.6; Bratteli–Robinson, Thm. 2.3.19).
+Thm. 5.1.6).
 
 * Pure ⇒ irreducible (`GNS.Representation.isIrreducible_canonical_of_isPure`): a closed invariant
   subspace splits the cyclic vector, the two pieces define quasi-states summing to `ω`, and purity
@@ -30,7 +30,7 @@ The splitting of the cyclic vector holds for a GNS triplet of any positive funct
 a closed invariant submodule `W`, `ξ = v₁ + v₂` with `v₁ ∈ W`, `v₂ ∈ Wᗮ`, `f` is the sum of the
 vector functionals of `v₁` and `v₂` (`CStarRep.vectorFunctional`), `‖v₁‖² + ‖v₂‖² = ‖f‖ₒₚ`, and
 `W = ⊥` or `W = ⊤` when `‖v₁‖²` is `0` or `‖f‖ₒₚ`.  Purity is used only in
-`trichotomy_from_purity`.
+`norm_sq_eq_zero_or_eq_one_of_isPure`.
 
 ## Main results
 
@@ -82,7 +82,7 @@ lemma norm_sq_decomposition (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ
   simpa [sq] using (norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero v₁ v₂ horth).symm
 
 /-- The squared norm of a component of the cyclic vector lies in `[0, ‖f‖ₒₚ]`. -/
-lemma norm_sq_in_Icc (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
+lemma norm_sq_mem_Icc (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 ∈ Set.Icc (0 : ℝ) ‖f‖ₒₚ := by
   have h := norm_sq_decomposition T v₁ v₂ hξ horth
@@ -92,7 +92,7 @@ lemma norm_sq_in_Icc (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁
 cyclic vector of a pure state `ω` splits as `ξ = v₁ + v₂` along a closed invariant submodule `W`
 (`v₁ ∈ W`, `v₂ ∈ Wᗮ`), then `‖v₁‖² ∈ {0, 1}`: otherwise `ω` would be a proper convex combination
 of the two normalised vector functionals, contradicting its extremality. -/
-lemma trichotomy_from_purity {ω : State A} (hω : ω.IsPure)
+lemma norm_sq_eq_zero_or_eq_one_of_isPure {ω : State A} (hω : ω.IsPure)
     (W : ClosedSubmodule ℂ GNS[ω].H)
     (hW : W ∈ GNS[ω].closedInvtSubmodule)
     (v₁ v₂ : GNS[ω].H)
@@ -105,7 +105,7 @@ lemma trichotomy_from_purity {ω : State A} (hω : ω.IsPure)
   by_contra h_contra
   push Not at h_contra
   have hω₁ : ‖PositiveLinearMap.ofClass ω‖ₒₚ = 1 := ω.opNorm_ofClass_eq_one
-  have h_in_Icc := hω₁ ▸ norm_sq_in_Icc T v₁ v₂ hξ horth
+  have h_in_Icc := hω₁ ▸ norm_sq_mem_Icc T v₁ v₂ hξ horth
   have h_pos : 0 < ‖v₁‖ ^ 2 := lt_of_le_of_ne h_in_Icc.1 h_contra.1.symm
   have h_lt_one : ‖v₁‖ ^ 2 < 1 := lt_of_le_of_ne h_in_Icc.2 h_contra.2
   have h_v₁_nz : v₁ ≠ 0 := by
@@ -374,7 +374,7 @@ lemma isIrreducible_canonical_of_isPure {ω : State A} (hω : ω.IsPure) :
   let T := GNS[ω]
   refine CStarRep.isIrreducible_iff.mpr ⟨T.π_ne_zero ω.ofClass_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
-  rcases trichotomy_from_purity hω W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
+  rcases norm_sq_eq_zero_or_eq_one_of_isPure hω W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
   · exact Or.inr (eq_top_of_norm_sq_eq_opNorm T W hW v₁ v₂ hv₁ hξ horth
       (h_one.trans ω.opNorm_ofClass_eq_one.symm))
@@ -473,8 +473,7 @@ lemma isPure_of_isIrreducible {ω : State A}
   exact ⟨hcancel ha (hc' ▸ hc), hcancel hb (hd' ▸ hd)⟩
 
 /-- **Pure states are exactly the states with irreducible GNS representation** (Murphy,
-*C\*-algebras and Operator Theory*, Thm. 5.1.6; Bratteli–Robinson, Thm. 2.3.19), for every GNS
-triplet `T` of the state. -/
+*C\*-algebras and Operator Theory*, Thm. 5.1.6), for every GNS triplet `T` of the state. -/
 theorem isPure_iff_isIrreducible (ω : State A)
     (T : Representation (PositiveLinearMap.ofClass ω)) :
     ω.IsPure ↔ T.IsIrreducible := by

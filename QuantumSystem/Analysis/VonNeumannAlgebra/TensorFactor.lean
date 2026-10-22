@@ -504,7 +504,7 @@ lemma inner_apply_eq_of_mem_generated (A : StarSubalgebra ℂ (K →L[ℂ] K)) {
     exact hy
   have hmem : ContinuousLinearMapWOT.ofCLM y ∈
       closure (WeakOperatorTopology.Set.toWOT (H := K) (A.toNonUnitalStarSubalgebra : Set (K →L[ℂ] K))) := by
-    rw [SOTClosedSubalgebra.wotClosure_eq_doubleCommutant A.toNonUnitalStarSubalgebra
+    rw [NonUnitalStarSubalgebra.wotClosure_eq_doubleCommutant A.toNonUnitalStarSubalgebra
       (InnerProductSpace.actsNondegenerately_of_one_mem A.one_mem)]
     exact hy'
   have hclosed : IsClosed {T : K →WOT[ℂ] K | ⟪Ξ, T Ξ⟫_ℂ = ⟪Ξ', T Ξ'⟫_ℂ} :=

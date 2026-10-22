@@ -244,7 +244,7 @@ lemma OrthEquivFam.mem_sotClosure_adjoin (hF : OrthEquivFam N e F)
       (StarAlgebra.adjoin ℂ (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) :
         Set (H →L[ℂ] H))) := by
   set S := Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2) with hSdef
-  apply SOTClosedSubalgebra.mem_sotClosure_of_mem_doubleCommutant_starSubalgebra (StarAlgebra.adjoin ℂ S) a
+  apply StarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (StarAlgebra.adjoin ℂ S) a
   have hunion : S ∪ star S ⊆ (StarAlgebra.adjoin ℂ S : Set (H →L[ℂ] H)) := by
     refine Set.union_subset (StarAlgebra.subset_adjoin ℂ S) ?_
     intro y hy

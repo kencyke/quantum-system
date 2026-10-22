@@ -608,7 +608,7 @@ lemma relativeModularConj_self {Ω : H} [IsCyclicSeparating M Ω] :
     K.isSelfAdjoint_sqrtModular K.isSelfAdjoint_modular.isPositive_sqrt Jr
     (fun y _ => K.isSelfAdjoint_modular.norm_polarIsometry_of_ker_eq_bot K.modular_def
       K.isClosed_tomita K.ker_tomita_eq_bot y)
-    (by rw [K.ker_sqrt_modular_eq_bot]; exact bot_le) hT
+    (by rw [K.ker_sqrtModular_eq_bot]; exact bot_le) hT
   change J[M]⟦Ω, Ω⟧ x = J[K] x
   rw [relativeModularConj_apply, hJr, h]
 

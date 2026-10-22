@@ -252,7 +252,7 @@ structure UnitaryEquiv (T₁ T₂ : Representation f) extends
 (`GNS.Representation.UnitaryEquiv`). Scoped to `GNS` (activate with `open scoped GNS`), alongside
 `GNS[ω]` (declared in `QuantumSystem.Analysis.CStarAlgebra.GNS.Construction`), since it names the
 GNS-specific notion, not the generic `CStarRep.UnitaryEquiv`. -/
-scoped[GNS] notation:50 T₁ " ≃ᵁ " T₂ => GNS.Representation.UnitaryEquiv (f := _) T₁ T₂
+scoped[GNS] notation:50 T₁ " ≃ᵁ " T₂ => GNS.Representation.UnitaryEquiv T₁ T₂
 
 /-- For a GNS triplet, the length of the orbit vector `T.π x T.ξ` is read off from the functional:
 `‖π x ξ‖ = √‖f (x* x)‖`, the same form as `PositiveLinearMap.norm_gnsMk` for the canonical

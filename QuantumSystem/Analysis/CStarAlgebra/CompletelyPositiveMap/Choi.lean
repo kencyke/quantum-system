@@ -41,22 +41,22 @@ theorem (`QuantumSystem/Analysis/CStarAlgebra/CompletelyPositiveMap/Stinespring.
   representation.
 * `ContinuousLinearMap.choi_eq_sum_rankOne_of_kraus`: for Kraus operators `Tₐ`,
   `J_b(Φ) = Σₐ |vₐ⟩⟨vₐ|` with `vₐ = Σᵢ bᵢ ⊗ Tₐ bᵢ`.
-* `ContinuousLinearMap.finrank_range_choi_le_card`,
-  `ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent`: every Kraus
+* `ContinuousLinearMap.choiRank_le_card`,
+  `ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent`: every Kraus
   representation has at least `rank J_b(Φ)` operators, exactly that many iff they are linearly
   independent.
 * `ContinuousLinearMap.exists_kraus_of_kPositive`: a `k`-positive map with
   `k ≥ min(dim H, dim K)` has a Kraus representation; for `k ≥ dim K` through the trace dual.
-* `CompletelyPositiveMap.exists_coe_eq_iff_nonneg_choi`: **Choi's theorem**, `Φ` is completely
+* `CompletelyPositiveMap.exists_coe_eq_iff_choi_nonneg`: **Choi's theorem**, `Φ` is completely
   positive iff `J_b(Φ) ≥ 0`.
 
 ## Implementation notes
 
 The Choi operator puts the input space `H` on the left, `J_b(Φ) ∈ B(H ⊗ K)`, as Choi (1975) and
 the matrix Choi matrix `Matrix.choiMatrix` do. It depends on the orthonormal basis `b`. Its
-positivity does not (`CompletelyPositiveMap.exists_coe_eq_iff_nonneg_choi`), nor, for completely
+positivity does not (`CompletelyPositiveMap.exists_coe_eq_iff_choi_nonneg`), nor, for completely
 positive maps, its rank, the minimal number of Kraus operators
-(`CompletelyPositiveMap.finrank_range_choi_congr`). No basis of `K` is chosen.
+(`CompletelyPositiveMap.choiRank_congr`). No basis of `K` is chosen.
 
 ## References
 
@@ -69,7 +69,7 @@ positive maps, its rank, the minimal number of Kraus operators
 @[expose] public section
 
 open TensorProduct InnerProductSpace ContinuousLinearMap
-open scoped TensorProduct InnerProductSpace ComplexOrder CStarAlgebra
+open scoped TensorProduct InnerProductSpace InnerProduct ComplexOrder CStarAlgebra
 
 variable {H K : Type*}
   [NormedAddCommGroup H] [InnerProductSpace ℂ H] [FiniteDimensional ℂ H]
@@ -86,16 +86,20 @@ namespace ContinuousLinearMap
 noncomputable def choi (b : OrthonormalBasis ι ℂ H) (Φ : F) : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K :=
   ∑ i, ∑ j, mapL (rankOne ℂ (b i) (b j)) (Φ (rankOne ℂ (b i) (b j)))
 
+/-- The rank `rank J_b(Φ)` of the Choi operator of `Φ : B(H) → B(K)`: the dimension of its range. -/
+noncomputable def choiRank (b : OrthonormalBasis ι ℂ H) (Φ : F) : ℕ :=
+  Module.finrank ℂ (choi b Φ).range
+
 /-- The Choi operator through the insertions `ιᵢ = mkL ℂ H K (bᵢ) : y ↦ bᵢ ⊗ y`:
 `J_b(Φ) = Σᵢⱼ ιᵢ Φ(|bᵢ⟩⟨bⱼ|) ιⱼ†` (`TensorProduct.mapL_rankOne_left`). -/
 lemma choi_eq_sum_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) :
     choi b Φ = ∑ i, ∑ j,
-      mkL ℂ H K (b i) ∘L Φ (rankOne ℂ (b i) (b j)) ∘L adjoint (mkL ℂ H K (b j)) := by
+      mkL ℂ H K (b i) ∘L Φ (rankOne ℂ (b i) (b j)) ∘L (mkL ℂ H K (b j))† := by
   simp only [choi, mapL_rankOne_left]
 
 /-- The blocks of the Choi operator: `ιᵢ† J_b(Φ) ιⱼ = Φ(|bᵢ⟩⟨bⱼ|)`. -/
 lemma adjoint_mkL_comp_choi_comp_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) (i j : ι) :
-    adjoint (mkL ℂ H K (b i)) ∘L choi b Φ ∘L mkL ℂ H K (b j) = Φ (rankOne ℂ (b i) (b j)) := by
+    (mkL ℂ H K (b i))† ∘L choi b Φ ∘L mkL ℂ H K (b j) = Φ (rankOne ℂ (b i) (b j)) := by
   classical
   ext y
   simp [choi, b.inner_eq_ite, adjoint_mkL_apply_tmul, apply_ite, ite_smul]
@@ -104,7 +108,7 @@ lemma adjoint_mkL_comp_choi_comp_mkL (b : OrthonormalBasis ι ℂ H) (Φ : F) (i
 `(Φ(|bᵢ⟩⟨bⱼ|))ᵢⱼ` at the components `ιᵢ† z` of `z`: `⟪z, J_b(Φ) z⟫ = Σᵢⱼ ⟪ιᵢ† z, Φ(|bᵢ⟩⟨bⱼ|) ιⱼ† z⟫`. -/
 lemma inner_choi_apply (b : OrthonormalBasis ι ℂ H) (Φ : F) (z : H ⊗[ℂ] K) :
     ⟪z, choi b Φ z⟫_ℂ = ∑ i, ∑ j,
-      ⟪adjoint (mkL ℂ H K (b i)) z, Φ (rankOne ℂ (b i) (b j)) (adjoint (mkL ℂ H K (b j)) z)⟫_ℂ := by
+      ⟪((mkL ℂ H K (b i))†) z, Φ (rankOne ℂ (b i) (b j)) (((mkL ℂ H K (b j))†) z)⟫_ℂ := by
   simp only [choi_eq_sum_mkL, sum_apply, comp_apply, inner_sum, adjoint_inner_left]
 
 /-- The Choi operator of a `k`-positive map with `k ≥ dim H` is positive: its quadratic form is that
@@ -116,7 +120,7 @@ lemma choi_nonneg {k : ℕ} [KPositiveMapClass F k (H →L[ℂ] H) (K →L[ℂ] 
   have hQ := KPositiveMapClass.map_nonneg_of_card_le Φ hι (CStarMatrix.rankOne_nonneg b)
   refine nonneg_iff_inner_nonneg.2 fun z => ?_
   rw [inner_choi_apply]
-  exact CStarMatrix.sum_inner_apply_nonneg hQ fun i => adjoint (mkL ℂ H K (b i)) z
+  exact CStarMatrix.sum_inner_apply_nonneg hQ fun i => ((mkL ℂ H K (b i))†) z
 
 /-! ### Kraus representations -/
 
@@ -126,10 +130,10 @@ lemma choi_nonneg {k : ℕ} [KPositiveMapClass F k (H →L[ℂ] H) (K →L[ℂ] 
 linearity everywhere (`ContinuousLinearMap.eq_sum_inner_smul_rankOne`). -/
 lemma exists_kraus_of_choi_nonneg [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
     (b : OrthonormalBasis ι ℂ H) {Φ : F} (h : 0 ≤ choi b Φ) :
-    ∃ (m : ℕ) (T : Fin m → H →L[ℂ] K), ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a) := by
+    ∃ (m : ℕ) (T : Fin m → H →L[ℂ] K), ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)† := by
   classical
   obtain ⟨m, u, hu⟩ := isPositive_iff_eq_sum_rankOne.1 (nonneg_iff_isPositive.1 h)
-  set w : Fin m → ι → K := fun a i => adjoint (mkL ℂ H K (b i)) (u a) with hw
+  set w : Fin m → ι → K := fun a i => ((mkL ℂ H K (b i))†) (u a) with hw
   set T : Fin m → H →L[ℂ] K := fun a => ∑ i, rankOne ℂ (w a i) (b i) with hTdef
   refine ⟨m, T, fun A => ?_⟩
   have hE (i j : ι) : Φ (rankOne ℂ (b i) (b j)) = ∑ a, rankOne ℂ (w a i) (w a j) := by
@@ -138,7 +142,7 @@ lemma exists_kraus_of_choi_nonneg [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[
   have hT (a : Fin m) (i : ι) : T a (b i) = w a i := by
     simp [T, rankOne_apply, b.inner_eq_ite]
   have hTE (a : Fin m) (i j : ι) :
-      T a ∘L rankOne ℂ (b i) (b j) ∘L adjoint (T a) = rankOne ℂ (w a i) (w a j) := by
+      T a ∘L rankOne ℂ (b i) (b j) ∘L (T a)† = rankOne ℂ (w a i) (w a j) := by
     rw [rankOne_comp, adjoint_adjoint, comp_rankOne, hT, hT]
   conv_lhs => rw [eq_sum_inner_smul_rankOne b A]
   conv_rhs => rw [eq_sum_inner_smul_rankOne b A]
@@ -149,7 +153,7 @@ lemma exists_kraus_of_choi_nonneg [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[
 /-- The Choi operator of a Kraus map `Φ(A) = Σₐ Tₐ A Tₐ†` is `J_b(Φ) = Σₐ |vₐ⟩⟨vₐ|` with the
 vectorised Kraus operators `vₐ = Σᵢ bᵢ ⊗ Tₐ bᵢ`. -/
 lemma choi_eq_sum_rankOne_of_kraus (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
-    {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
+    {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) :
     choi b Φ = ∑ a, rankOne ℂ (∑ i, b i ⊗ₜ[ℂ] T a (b i)) (∑ i, b i ⊗ₜ[ℂ] T a (b i)) := by
   have hE (i j : ι) : Φ (rankOne ℂ (b i) (b j)) = ∑ a, rankOne ℂ (T a (b i)) (T a (b j)) := by
     rw [hT]
@@ -164,22 +168,22 @@ lemma choi_eq_sum_rankOne_of_kraus (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ 
 
 /-- Every Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` has at least `rank J_b(Φ)` operators: the range
 of `J_b(Φ) = Σₐ |vₐ⟩⟨vₐ|` is spanned by the `|κ|` vectors `vₐ`. -/
-lemma finrank_range_choi_le_card (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
-    {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
-    Module.finrank ℂ ((choi b Φ).range) ≤ Fintype.card κ := by
-  rw [choi_eq_sum_rankOne_of_kraus b hT, range_sum_rankOne_self]
+lemma choiRank_le_card (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ : Type*} [Fintype κ]
+    {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) :
+    choiRank b Φ ≤ Fintype.card κ := by
+  rw [choiRank, choi_eq_sum_rankOne_of_kraus b hT, range_sum_rankOne_self]
   exact finrank_range_le_card _
 
 /-- A Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` has exactly `rank J_b(Φ)` operators iff its Kraus
 operators are linearly independent: the range of `J_b(Φ)` is spanned by the vectorised Kraus
 operators `vₐ = Σᵢ bᵢ ⊗ Tₐ bᵢ`, and vectorisation `T ↦ Σᵢ bᵢ ⊗ T bᵢ` is injective. -/
-lemma finrank_range_choi_eq_card_iff_linearIndependent (b : OrthonormalBasis ι ℂ H) {Φ : F}
+lemma choiRank_eq_card_iff_linearIndependent (b : OrthonormalBasis ι ℂ H) {Φ : F}
     {κ : Type*} [Fintype κ] {T : κ → H →L[ℂ] K}
-    (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
-    Module.finrank ℂ ((choi b Φ).range) = Fintype.card κ ↔
+    (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) :
+    choiRank b Φ = Fintype.card κ ↔
       LinearIndependent ℂ T := by
   classical
-  rw [choi_eq_sum_rankOne_of_kraus b hT, range_sum_rankOne_self, eq_comm]
+  rw [choiRank, choi_eq_sum_rankOne_of_kraus b hT, range_sum_rankOne_self, eq_comm]
   refine (linearIndependent_iff_card_eq_finrank_span (R := ℂ)).symm.trans ?_
   let L : (H →L[ℂ] K) →ₗ[ℂ] H ⊗[ℂ] K := ∑ i, (mkL ℂ H K (b i) : K →ₗ[ℂ] H ⊗[ℂ] K) ∘ₗ
     (ContinuousLinearMap.apply ℂ K (b i) : (H →L[ℂ] K) →ₗ[ℂ] K)
@@ -187,7 +191,7 @@ lemma finrank_range_choi_eq_card_iff_linearIndependent (b : OrthonormalBasis ι 
   have hker : LinearMap.ker L = ⊥ := by
     refine LinearMap.ker_eq_bot'.2 fun S hS => ?_
     have h (j : ι) : S (b j) = 0 := by
-      have := congrArg (adjoint (mkL ℂ H K (b j))) (hL S ▸ hS)
+      have := congrArg ((mkL ℂ H K (b j))†) (hL S ▸ hS)
       simpa [map_sum, adjoint_mkL_apply_tmul, b.inner_eq_ite] using this
     exact ContinuousLinearMap.coe_injective (b.toBasis.ext fun j => by simp [h j])
   rw [← LinearMap.linearIndependent_iff L hker]
@@ -202,12 +206,12 @@ Choi operator is positive (`ContinuousLinearMap.choi_nonneg`). For `k ≥ dim K`
 theorem exists_kraus_of_kPositive [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {k : ℕ}
     [KPositiveMapClass F k (H →L[ℂ] H) (K →L[ℂ] K)]
     (hk : min (Module.finrank ℂ H) (Module.finrank ℂ K) ≤ k) (φ : F) :
-    ∃ (m : ℕ) (T : Fin m → H →L[ℂ] K), ∀ A, φ A = ∑ a, T a ∘L A ∘L adjoint (T a) := by
+    ∃ (m : ℕ) (T : Fin m → H →L[ℂ] K), ∀ A, φ A = ∑ a, T a ∘L A ∘L (T a)† := by
   rcases min_le_iff.1 hk with h | h
   · exact exists_kraus_of_choi_nonneg (stdOrthonormalBasis ℂ H) (choi_nonneg h _ φ)
   · obtain ⟨m, S, hS⟩ := exists_kraus_of_choi_nonneg (stdOrthonormalBasis ℂ K)
       (choi_nonneg h _ (KPositiveMap.traceDual k φ))
-    refine ⟨m, fun a => adjoint (S a), fun A => ?_⟩
+    refine ⟨m, fun a => (S a)†, fun A => ?_⟩
     rw [← traceDual_traceDual φ A,
       traceDual_congr (Φ := traceDual φ) (Ψ := KPositiveMap.traceDual k φ) fun _ => rfl,
       traceDual_eq_sum_of_kraus hS]
@@ -241,7 +245,7 @@ function. -/
 /-- **Choi's theorem**: a linear map `Φ : B(H) → B(K)` is completely positive, i.e. it is the
 linear map of some `φ : B(H) →CP B(K)`, iff its Choi operator `J_b(Φ)` is positive, for any
 orthonormal basis `b` of `H`. -/
-theorem exists_coe_eq_iff_nonneg_choi (b : OrthonormalBasis ι ℂ H)
+theorem exists_coe_eq_iff_choi_nonneg (b : OrthonormalBasis ι ℂ H)
     (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ φ : (H →L[ℂ] H) →CP (K →L[ℂ] K), (φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
       0 ≤ ContinuousLinearMap.choi b Φ := by
