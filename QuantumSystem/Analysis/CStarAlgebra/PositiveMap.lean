@@ -5,11 +5,14 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.Analysis.CStarAlgebra.KPositiveMapSchwarz
 public import QuantumSystem.ForMathlib.Algebra.Symmetrized
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.PositiveMapCommutative
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.RussoDye
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
+public import QuantumSystem.ForMathlib.Analysis.Matrix.Transpose
 
 /-!
 # Kadison's inequality, the norm of positive maps and order isomorphisms
@@ -37,14 +40,23 @@ unital C⋆-algebra is completely positive) for a positive linear map `φ` from 
   `a = x + I • y` into self-adjoint parts, `φ(ab + ba) = φ(a)φ(b) + φ(b)φ(a)` for all `a` and `b`.
   So `φ` is a ⋆-isomorphism `A₁ˢʸᵐ ≃⋆ₐ[ℂ] A₂ˢʸᵐ` of the symmetrized algebras, whose product is the
   Jordan product `a ∘ b = ½(ab + ba)`. It need not be a ⋆-isomorphism of `A₁` onto `A₂`: the
-  transpose map on `2 × 2` matrices is its own inverse and reverses products. A unital `2`-positive
-  map with a `2`-positive inverse is one (`KPositiveMapClass.starAlgEquivOfInverse`).
+  transpose of `n × n` matrices, for `n` with two distinct indices, is its own positive inverse
+  but reverses products, so it is not a ⋆-isomorphism (`Matrix.not_exists_starAlgEquiv_transpose`).
+  A unital `2`-positive map with a `2`-positive inverse is one
+  (`KPositiveMapClass.starAlgEquivOfInverse`).
 
 For a `2`-positive map the Kadison–Schwarz inequality holds at every `a`
 (`KPositiveMapClass.le_norm_smul_map_star_mul`); for a merely positive map normality cannot be
-dropped. The transpose map on `2 × 2` matrices is positive and unital; at the matrix unit
-`a = E₁₂` it has `φ(a)⋆ φ(a) = E₁₁` and `φ(a⋆ a) = E₂₂`, and `E₁₁ ≰ E₂₂`. In particular a positive
-map with `φ 1 ≤ 1` need not be a Schwarz map.
+dropped. The transpose of `n × n` matrices (`Matrix.transposePositiveLinearMap`) is positive and
+unital; at a matrix unit `a = Eᵢⱼ` with `i ≠ j` it has `φ(a)⋆ φ(a) = Eᵢᵢ` and `φ(a⋆ a) = Eⱼⱼ`, and
+`Eᵢᵢ ≰ Eⱼⱼ` (`Matrix.not_star_map_mul_le_map_star_mul_transpose`). In particular a positive map
+with `φ 1 ≤ 1` is neither a Schwarz map nor `2`-positive in general
+(`Matrix.not_exists_schwarzMap_transpose`, `Matrix.not_exists_kPositiveMap_transpose`). These are
+instances of a general fact: an injective Schwarz map, or injective `2`-positive map with
+`φ 1 ≤ 1`, which reverses products has a commutative domain
+(`SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap`,
+`KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap`), while the transpose is injective and
+reverses products, and `n × n` matrices do not commute (`Matrix.not_forall_mul_comm`).
 
 This file lives outside `ForMathlib/` because it needs `KPositiveMap.lean`,
 `PositiveMapCommutative.lean`, `RussoDye.lean` and, for the operator norm `‖φ‖ₒₚ`
@@ -71,6 +83,9 @@ and a `ForMathlib` file imports Mathlib only.
 * `OrderHomClass.map_mul_add_mul_of_inverse` — **unital order isomorphisms preserve the Jordan
   product**, `φ(ab + ba) = φ(a)φ(b) + φ(b)φ(a)` for unital positive `φ` with a positive inverse;
   `OrderHomClass.map_sq_of_inverse` — `φ(a²) = φ(a)²` for self-adjoint `a`.
+* `Matrix.not_exists_schwarzMap_transpose` — **the transpose is not a Schwarz map**: no Schwarz
+  map of `n × n` matrices, `n` with two distinct indices, is the transpose, although it is
+  positive and unital; `Matrix.not_exists_kPositiveMap_transpose` — nor is any `2`-positive map.
 
 ## References
 
@@ -275,8 +290,9 @@ theorem map_mul_add_mul_of_inverse (φ : F) (ψ : G) (hφ : φ 1 = 1)
 unital C⋆-algebras with a positive inverse `ψ` is a ⋆-isomorphism of the symmetrized algebras,
 whose product is the Jordan product `a ∘ b = ½(ab + ba)`
 (`OrderHomClass.map_mul_add_mul_of_inverse`). The map `φ` itself need not be a ⋆-isomorphism
-`A₁ ≃⋆ₐ[ℂ] A₂`: the transpose map on `2 × 2` matrices is its own positive inverse and reverses
-products. The instances `Invertible (2 : A)` can be supplied by
+`A₁ ≃⋆ₐ[ℂ] A₂`: the transpose of `n × n` matrices, for `n` with two distinct indices, is its own
+positive inverse but reverses products, so it is not a ⋆-isomorphism
+(`Matrix.not_exists_starAlgEquiv_transpose`). The instances `Invertible (2 : A)` can be supplied by
 `IsScalarTower.invertibleAlgebraCoeNat ℂ A 2`. Here `h₁` and `h₂` say `ψ ∘ φ = id` and
 `φ ∘ ψ = id`. -/
 @[simps apply symm_apply]
@@ -297,3 +313,41 @@ def symStarAlgEquivOfInverse [Invertible (2 : A₁)] [Invertible (2 : A₂)] (φ
 end Jordan
 
 end OrderHomClass
+
+/-! ### The transpose -/
+
+namespace Matrix
+
+open scoped Matrix.Norms.L2Operator MatrixOrder
+
+variable {n : Type*} [Fintype n] [DecidableEq n] [Nontrivial n]
+
+/-- **The transpose is not a Schwarz map**: no Schwarz map of `n × n` matrices, for `n` with two
+distinct indices, is the transpose, although the transpose is positive and unital
+(`Matrix.transposePositiveLinearMap`, `Matrix.transposePositiveLinearMap_one`). The transpose is
+injective and reverses products, so a Schwarz map equal to it would make `n × n` matrices commute
+(`SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap`, `Matrix.not_forall_mul_comm`).
+Concretely, the Kadison–Schwarz inequality fails at a matrix unit `Eᵢⱼ` with `i ≠ j`
+(`Matrix.not_star_map_mul_le_map_star_mul_transpose`). So the normality in
+`OrderHomClass.le_map_star_mul_of_isStarNormal` and the `2`-positivity in
+`KPositiveMapClass.toSchwarzMap` cannot be dropped. -/
+theorem not_exists_schwarzMap_transpose :
+    ¬ ∃ f : SchwarzMap (Matrix n n ℂ) (Matrix n n ℂ), ∀ X, f X = Xᵀ := by
+  rintro ⟨f, hf⟩
+  exact not_forall_mul_comm fun X Y =>
+    SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap f
+      (fun X Y h => transpose_injective (by rwa [hf, hf] at h)) (fun X Y => by simp [hf]) X Y
+
+/-- **The transpose is not `2`-positive**: no `2`-positive map of `n × n` matrices, for `n` with
+two distinct indices, is the transpose, although it is positive and unital. The transpose is
+unital, injective and reverses products, so a `2`-positive map equal to it would make `n × n`
+matrices commute (`KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap`,
+`Matrix.not_forall_mul_comm`). -/
+theorem not_exists_kPositiveMap_transpose :
+    ¬ ∃ φ : KPositiveMap 2 (Matrix n n ℂ) (Matrix n n ℂ), ∀ X, φ X = Xᵀ := by
+  rintro ⟨φ, hφ⟩
+  exact not_forall_mul_comm fun X Y =>
+    KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap φ (by simp [hφ])
+      (fun X Y h => transpose_injective (by rwa [hφ, hφ] at h)) (fun X Y => by simp [hφ]) X Y
+
+end Matrix

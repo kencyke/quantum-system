@@ -129,6 +129,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorT
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
+public import QuantumSystem.ForMathlib.Analysis.Matrix.Transpose
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
