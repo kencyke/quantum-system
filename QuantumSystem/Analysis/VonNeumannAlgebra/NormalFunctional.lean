@@ -22,12 +22,12 @@ A positive functional `ω` on a von Neumann algebra `M ⊆ B(H)` is **normal** i
 continuous (`VonNeumannAlgebra.IsNormal`), the σ-weak topology being that of `H →σw[ℂ] H`
 (`QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology`) restricted to `M`.
 
-The representation theorem (Bratteli–Robinson, Thm. 2.4.21): `ω` is normal iff it is a countable
+The representation theorem: `ω` is normal iff it is a countable
 sum of vector functionals, `ω(x) = ∑ₙ ⟪ξₙ, x ξₙ⟫` for a square-summable sequence `(ξₙ)` in `H`
-(`VonNeumannAlgebra.isNormal_iff_exists_lp`). Through `lpTensorEquiv : ℓ²(ℕ, H) ≃ ℓ²(ℕ) ⊗̂ H`, a
+(`VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner`). Through `lpTensorEquiv : ℓ²(ℕ, H) ≃ ℓ²(ℕ) ⊗̂ H`, a
 sequence `(ξₙ)` is a single vector `Ξ = ∑ₙ eₙ ⊗ ξₙ` with `∑ₙ ⟪ξₙ, x ξₙ⟫ = ⟪Ξ, (1 ⊗ x) Ξ⟫`, so normal
 functionals are exactly the restrictions to `1 ⊗ M` of vector functionals on `ℓ²(ℕ) ⊗̂ H`
-(`VonNeumannAlgebra.isNormal_iff_exists`). The proof: σ-weak continuity gives
+(`VonNeumannAlgebra.isNormal_iff_exists_inner_amplifyRight_eq`). The proof: σ-weak continuity gives
 `ω(x) = ⟪Ξ₀, (1 ⊗ x) Η₀⟫` (`ContinuousLinearMapSigmaWeak.exists_lp_pair_of_continuous`); positivity
 bounds `ω` by the vector functional of the interleaving of `Ξ₀`, `Η₀`; the Radon–Nikodym theorem
 (`CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le`) makes `ω` a vector
@@ -38,7 +38,7 @@ For a normal `ψ`, the **support projection** `s(ψ) ∈ M` is the smallest proj
 `{x ∈ M | ψ(x⋆x) = 0} = {x | x s(ψ) = 0}`
 (`VonNeumannAlgebra.NormalFunctional.apply_star_mul_self_eq_zero_iff`). It is built from a
 representing vector: if `ψ(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫` on `ℓ²(ℕ) ⊗̂ H`, the vector support `s(Ξ)` in the
-amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
+amplification `oneTensor ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 (`VonNeumannAlgebra.NormalFunctional.amplifyRight_supportProj_eq`), for every such `Ξ`.
 
 ## Main definitions
@@ -66,8 +66,8 @@ amplification `amplify ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
   `⟪Ξ, (1 ⊗ x) Η⟫ = ∑ₙ ⟪ξₙ, x ηₙ⟫` for `Ξ = lpTensorEquiv ξ`, `Η = lpTensorEquiv η`.
 * `VonNeumannAlgebra.isNormal_of_hasSum_inner`, `VonNeumannAlgebra.IsNormal.exists_hasSum_inner` —
   `ω` is normal iff `ω(x) = ∑ₙ ⟪ξₙ, x ηₙ⟫` for square-summable `ξ`, `η`.
-* `VonNeumannAlgebra.isNormal_iff_exists` — `ω` is normal iff `ω(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫` for some
-  `Ξ ∈ ℓ²(ℕ) ⊗̂ H`; `VonNeumannAlgebra.isNormal_iff_exists_lp` — iff `ω = ∑ₙ ω_{ξₙ}`.
+* `VonNeumannAlgebra.isNormal_iff_exists_inner_amplifyRight_eq` — `ω` is normal iff `ω(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫` for some
+  `Ξ ∈ ℓ²(ℕ) ⊗̂ H`; `VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner` — iff `ω = ∑ₙ ω_{ξₙ}`.
 * `VonNeumannAlgebra.isNormal_vectorFunctional` — vector functionals are normal.
 * `VonNeumannAlgebra.isNormalMap_id`, `VonNeumannAlgebra.IsNormal.comp`,
   `VonNeumannAlgebra.IsNormalMap.comp` — the identity is normal, and normality is stable
@@ -94,20 +94,20 @@ variable {ι : Type*} [DecidableEq ι] {H : Type*} [NormedAddCommGroup H] [Inner
   [CompleteSpace H]
 
 /-- For `Ξ = lpTensorEquiv ξ = ∑ᵢ eᵢ ⊗ ξᵢ`, `(1 ⊗ x) Ξ = ∑ᵢ eᵢ ⊗ x ξᵢ`. -/
-lemma amplifyRight_lpTensorEquiv (ξ : lp (fun _ : ι => H) 2) (x : H →L[ℂ] H)
+lemma amplifyRight_lpTensorEquiv (ξ : ℓ²(ι, H)) (x : H →L[ℂ] H)
     (hx : Memℓp (fun i => x (ξ i)) 2) :
     (𝟙 ⊗ x) (lpTensorEquiv ξ) = lpTensorEquiv ⟨fun i => x (ξ i), hx⟩ := by
   set L := (lpTensorEquiv (ι := ι) (K := H)).toContinuousLinearEquiv.toContinuousLinearMap
   have h₁ := (lp.hasSum_single ENNReal.ofNat_ne_top ξ).mapL ((𝟙 ⊗ x).comp L)
   have h₂ := (lp.hasSum_single ENNReal.ofNat_ne_top
-    (⟨fun i => x (ξ i), hx⟩ : lp (fun _ : ι => H) 2)).mapL L
+    (⟨fun i => x (ξ i), hx⟩ : ℓ²(ι, H))).mapL L
   refine h₁.unique (h₂.congr_fun fun i => ?_)
   change (𝟙 ⊗ x) (lpTensorEquiv (lp.single 2 i (ξ i))) =
     lpTensorEquiv (lp.single 2 i (x (ξ i)))
   rw [lpTensorEquiv_single, lpTensorEquiv_single, amplifyRight_tmul]
 
 /-- For `Ξ = lpTensorEquiv ξ` and `Η = lpTensorEquiv η`, `⟪Ξ, (1 ⊗ x) Η⟫ = ∑ᵢ ⟪ξᵢ, x ηᵢ⟫`. -/
-lemma hasSum_inner_amplifyRight_lpTensorEquiv (ξ η : lp (fun _ : ι => H) 2) (x : H →L[ℂ] H) :
+lemma hasSum_inner_amplifyRight_lpTensorEquiv (ξ η : ℓ²(ι, H)) (x : H →L[ℂ] H) :
     HasSum (fun i => ⟪ξ i, x (η i)⟫_ℂ) ⟪lpTensorEquiv ξ, (𝟙 ⊗ x) (lpTensorEquiv η)⟫_ℂ := by
   rw [amplifyRight_lpTensorEquiv η x (lp.memℓp_apply_clm η x), LinearIsometryEquiv.inner_map_map]
   exact lp.hasSum_inner ξ _
@@ -170,7 +170,7 @@ def toSigmaWeak (x : M) : M.sigmaWeak := ⟨ContinuousLinearMapSigmaWeak.ofCLM x
 
 variable (M) in
 /-- A positive functional `ω` on `M` is **normal** if it is σ-weakly continuous. By
-`VonNeumannAlgebra.isNormal_iff_exists_lp` this is equivalent to `ω` being a countable sum of
+`VonNeumannAlgebra.isNormal_iff_exists_hasSum_inner` this is equivalent to `ω` being a countable sum of
 vector functionals. -/
 def IsNormal (ω : M →ₚ[ℂ] ℂ) : Prop :=
   Continuous fun T : M.sigmaWeak => ω (M.ofSigmaWeak T)
@@ -180,7 +180,7 @@ variable (M) in
 abbrev NormalFunctional := {ω : M →ₚ[ℂ] ℂ // M.IsNormal ω}
 
 /-- `A ↦ ∑ₙ ⟪ξₙ, A ηₙ⟫` is normal. -/
-lemma isNormal_of_hasSum_inner {ω : M →ₚ[ℂ] ℂ} (ξ η : lp (fun _ : ℕ => H) 2)
+lemma isNormal_of_hasSum_inner {ω : M →ₚ[ℂ] ℂ} (ξ η : ℓ²(ℕ, H))
     (h : ∀ x : M, HasSum (fun n => ⟪ξ n, (x : H →L[ℂ] H) (η n)⟫_ℂ) (ω x)) : M.IsNormal ω := by
   have : (fun T : M.sigmaWeak => ω (M.ofSigmaWeak T)) =
       fun T : M.sigmaWeak => ∑' n, ⟪ξ n, (T : H →σw[ℂ] H) (η n)⟫_ℂ :=
@@ -190,7 +190,7 @@ lemma isNormal_of_hasSum_inner {ω : M →ₚ[ℂ] ℂ} (ξ η : lp (fun _ : ℕ
 
 /-- A normal functional is `x ↦ ∑ₙ ⟪ξₙ, x ηₙ⟫` for square-summable sequences `ξ`, `η`. -/
 lemma IsNormal.exists_hasSum_inner {ω : M →ₚ[ℂ] ℂ} (h : M.IsNormal ω) :
-    ∃ ξ η : lp (fun _ : ℕ => H) 2, ∀ x : M,
+    ∃ ξ η : ℓ²(ℕ, H), ∀ x : M,
       HasSum (fun n => ⟪ξ n, (x : H →L[ℂ] H) (η n)⟫_ℂ) (ω x) := by
   obtain ⟨ξ, η, hξη⟩ := ContinuousLinearMapSigmaWeak.exists_lp_pair_of_continuous
     (S := M.sigmaWeak) (φ := ω.toLinearMap ∘ₗ M.ofSigmaWeak) h
@@ -201,13 +201,13 @@ lemma IsNormal.exists_hasSum_inner {ω : M →ₚ[ℂ] ℂ} (h : M.IsNormal ω) 
 `ω ≤ ω_Ζ` for the interleaving `Ζ` of `Ξ₀` and `Η₀`, and the Radon–Nikodym theorem gives
 `ω = ω_{R Ζ}` with `R` in the commutant of `1 ⊗ M`. -/
 theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.IsNormal ω) :
-    ∃ Ξ : ℓ²(ℕ, ℂ) ⊗̂ H, ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x := by
+    ∃ Ξ : ℓ²(ℕ, ℂ) ⊗̂ H, ∀ x : M, ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ = ω x := by
   obtain ⟨ξ, η, hξη⟩ := h.exists_hasSum_inner
   set ζ := lp.interleave ξ η
   set ρ : M →⋆ₐ[ℂ] (ℓ²(ℕ, ℂ) ⊗̂ H →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ H) :=
     (𝟙 ⊗ₐ).comp (inclₐ M)
-  have hρ : ∀ x : M, ρ x = 𝟙 ⊗ (x : H →L[ℂ] H) := fun _ => rfl
-  have hω : ∀ x : M, ω x = ⟪lpTensorEquiv ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η)⟫_ℂ :=
+  have hρ : ∀ x : M, ρ x = 𝟙 ⊗ x := fun _ => rfl
+  have hω : ∀ x : M, ω x = ⟪lpTensorEquiv ξ, (𝟙 ⊗ x) (lpTensorEquiv η)⟫_ℂ :=
     fun x => (hξη x).unique (HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv ξ η x)
   have hζ : ∀ y : H →L[ℂ] H, ⟪lpTensorEquiv ζ, (𝟙 ⊗ y) (lpTensorEquiv ζ)⟫_ℂ =
       ⟪lpTensorEquiv ξ, (𝟙 ⊗ y) (lpTensorEquiv ξ)⟫_ℂ +
@@ -219,8 +219,8 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
       ((HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv ξ ξ y).interleave
         (HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv η η y))
   have hdom : ∀ x : M, ‖ω (star x * x)‖ ≤ ‖ρ x (lpTensorEquiv ζ)‖ ^ 2 := fun x => by
-    set a := ‖(𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv ξ)‖
-    set b := ‖(𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η)‖
+    set a := ‖(𝟙 ⊗ x) (lpTensorEquiv ξ)‖
+    set b := ‖(𝟙 ⊗ x) (lpTensorEquiv η)‖
     have hsq : ‖ρ x (lpTensorEquiv ζ)‖ ^ 2 = a ^ 2 + b ^ 2 := by
       have := hζ (star (x : H →L[ℂ] H) * x)
       rw [HilbertTensor.inner_amplifyRight_star_mul_self,
@@ -231,18 +231,18 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
       exact this
     rw [hsq, hω, MulMemClass.coe_mul, StarMemClass.coe_star,
       HilbertTensor.inner_amplifyRight_star_mul]
-    have hab := norm_inner_le_norm (𝕜 := ℂ) ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv ξ))
-      ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η))
-    nlinarith [sq_nonneg (a - b), norm_nonneg ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv ξ)),
-      norm_nonneg ((𝟙 ⊗ (x : H →L[ℂ] H)) (lpTensorEquiv η))]
+    have hab := norm_inner_le_norm (𝕜 := ℂ) ((𝟙 ⊗ x) (lpTensorEquiv ξ))
+      ((𝟙 ⊗ x) (lpTensorEquiv η))
+    nlinarith [sq_nonneg (a - b), norm_nonneg ((𝟙 ⊗ x) (lpTensorEquiv ξ)),
+      norm_nonneg ((𝟙 ⊗ x) (lpTensorEquiv η))]
   obtain ⟨R, -, -, hR⟩ :=
     CStarAlgebra.exists_commute_inner_eq_of_apply_star_mul_self_le (ρ := ρ.toNonUnitalStarAlgHom) (f := ω) hdom
   exact ⟨R (lpTensorEquiv ζ), fun x => (hR x).symm⟩
 
 /-- `ω` is normal iff it is the restriction to `1 ⊗ M` of a vector functional on `ℓ²(ℕ) ⊗̂ H`. -/
-lemma isNormal_iff_exists {ω : M →ₚ[ℂ] ℂ} :
-    M.IsNormal ω ↔ ∃ Ξ : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H,
-      ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x := by
+lemma isNormal_iff_exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} :
+    M.IsNormal ω ↔ ∃ Ξ : ℓ²(ℕ, ℂ) ⊗̂ H,
+      ∀ x : M, ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ = ω x := by
   refine ⟨IsNormal.exists_inner_amplifyRight_eq, fun ⟨Ξ, hΞ⟩ => ?_⟩
   refine isNormal_of_hasSum_inner (lpTensorEquiv.symm Ξ) (lpTensorEquiv.symm Ξ) fun x => ?_
   have := HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv (lpTensorEquiv.symm Ξ)
@@ -251,11 +251,11 @@ lemma isNormal_iff_exists {ω : M →ₚ[ℂ] ℂ} :
 
 /-- **Normal functionals are countable sums of vector functionals**: `ω` is normal iff
 `ω(x) = ∑ₙ ⟪ξₙ, x ξₙ⟫` for a square-summable sequence `(ξₙ)` in `H`. -/
-theorem isNormal_iff_exists_lp {ω : M →ₚ[ℂ] ℂ} :
-    M.IsNormal ω ↔ ∃ ξ : lp (fun _ : ℕ => H) 2,
+theorem isNormal_iff_exists_hasSum_inner {ω : M →ₚ[ℂ] ℂ} :
+    M.IsNormal ω ↔ ∃ ξ : ℓ²(ℕ, H),
       ∀ x : M, HasSum (fun n => ⟪ξ n, (x : H →L[ℂ] H) (ξ n)⟫_ℂ) (ω x) := by
   refine ⟨fun h => ?_, fun ⟨ξ, hξ⟩ => isNormal_of_hasSum_inner ξ ξ hξ⟩
-  obtain ⟨Ξ, hΞ⟩ := isNormal_iff_exists.mp h
+  obtain ⟨Ξ, hΞ⟩ := isNormal_iff_exists_inner_amplifyRight_eq.mp h
   refine ⟨lpTensorEquiv.symm Ξ, fun x => ?_⟩
   have := HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv (lpTensorEquiv.symm Ξ)
     (lpTensorEquiv.symm Ξ) (x : H →L[ℂ] H)
@@ -267,27 +267,27 @@ variable {ω : M →ₚ[ℂ] ℂ} (h : M.IsNormal ω)
 
 /-- A **representing vector** `Ξ ∈ ℓ²(ℕ) ⊗̂ H` of a normal functional:
 `ω(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫`. -/
-noncomputable def vec : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H :=
-  (isNormal_iff_exists.mp h).choose
+noncomputable def vec : ℓ²(ℕ, ℂ) ⊗̂ H :=
+  (isNormal_iff_exists_inner_amplifyRight_eq.mp h).choose
 
 /-- `ω(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫` for the representing vector `Ξ`. -/
 lemma inner_vec_amplifyRight (x : M) :
-    ⟪h.vec, (𝟙 ⊗ (x : H →L[ℂ] H)) h.vec⟫_ℂ = ω x :=
-  (isNormal_iff_exists.mp h).choose_spec x
+    ⟪h.vec, (𝟙 ⊗ x) h.vec⟫_ℂ = ω x :=
+  (isNormal_iff_exists_inner_amplifyRight_eq.mp h).choose_spec x
 
 end IsNormal
 
 /-- `ω(1) = ‖Ξ‖²` for any vector `Ξ` representing `ω`. -/
-lemma re_apply_one_eq_norm_sq {ω : M →ₚ[ℂ] ℂ} {Ξ : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H}
-    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x) : (ω 1).re = ‖Ξ‖ ^ 2 := by
+lemma re_apply_one_eq_norm_sq {ω : M →ₚ[ℂ] ℂ} {Ξ : ℓ²(ℕ, ℂ) ⊗̂ H}
+    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ = ω x) : (ω 1).re = ‖Ξ‖ ^ 2 := by
   rw [← hΞ 1, OneMemClass.coe_one, HilbertTensor.amplifyRight_one,
     one_apply_eq_self, inner_self_eq_norm_sq_to_K]
   norm_cast
 
 /-- `ω(x⋆ x) = ‖(1 ⊗ x) Ξ‖²` for any vector `Ξ` representing `ω`. -/
-lemma apply_star_mul_self_eq {ω : M →ₚ[ℂ] ℂ} {Ξ : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H}
-    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ω x) (x : M) :
-    ω (star x * x) = ((‖(𝟙 ⊗ (x : H →L[ℂ] H)) Ξ‖ ^ 2 : ℝ) : ℂ) := by
+lemma apply_star_mul_self_eq {ω : M →ₚ[ℂ] ℂ} {Ξ : ℓ²(ℕ, ℂ) ⊗̂ H}
+    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ = ω x) (x : M) :
+    ω (star x * x) = ((‖(𝟙 ⊗ x) Ξ‖ ^ 2 : ℝ) : ℂ) := by
   rw [← hΞ, MulMemClass.coe_mul, StarMemClass.coe_star,
     HilbertTensor.inner_amplifyRight_star_mul_self]
 
@@ -318,7 +318,7 @@ lemma vectorFunctional_apply (ξ : H) (x : M) :
 variable (M) in
 /-- Vector functionals are normal. -/
 lemma isNormal_vectorFunctional (ξ : H) : M.IsNormal (M.vectorFunctional ξ) :=
-  isNormal_iff_exists.mpr ⟨lp.single (E := fun _ : ℕ => ℂ) 2 0 (1 : ℂ) ⊗ₕ ξ, fun x => by
+  isNormal_iff_exists_inner_amplifyRight_eq.mpr ⟨lp.single (E := fun _ : ℕ => ℂ) 2 0 (1 : ℂ) ⊗ₕ ξ, fun x => by
     rw [HilbertTensor.inner_tmul_amplifyRight_tmul (lp.norm_single_one two_pos 0),
       vectorFunctional_apply]⟩
 
@@ -332,7 +332,7 @@ variable (M) in
 noncomputable def amplifiedVectorFunctional {H₁ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] (Ξ : H₁ ⊗̂ H) : M →ₚ[ℂ] ℂ :=
   PositiveLinearMap.mk₀
-    { toFun := fun x => ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ
+    { toFun := fun x => ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ
       map_add' := fun x y => by
         simp [HilbertTensor.amplifyRight_add, inner_add_right]
       map_smul' := fun c x => by
@@ -348,15 +348,15 @@ noncomputable def amplifiedVectorFunctional {H₁ : Type*} [NormedAddCommGroup H
 @[simp]
 lemma amplifiedVectorFunctional_apply {H₁ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] (Ξ : H₁ ⊗̂ H) (x : M) :
-    M.amplifiedVectorFunctional Ξ x = ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ :=
+    M.amplifiedVectorFunctional Ξ x = ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ :=
   rfl
 
 variable (M) in
 /-- The functional `x ↦ ⟪Ξ, (1 ⊗ x) Ξ⟫` induced by `Ξ ∈ ℓ²(ℕ) ⊗̂ H` as a normal functional; every
-normal functional is of this form (`VonNeumannAlgebra.isNormal_iff_exists`). -/
-noncomputable def NormalFunctional.ofAmplifiedVector (Ξ : lp (fun _ : ℕ => ℂ) 2 ⊗̂ H) :
+normal functional is of this form (`VonNeumannAlgebra.isNormal_iff_exists_inner_amplifyRight_eq`). -/
+noncomputable def NormalFunctional.ofAmplifiedVector (Ξ : ℓ²(ℕ, ℂ) ⊗̂ H) :
     M.NormalFunctional :=
-  ⟨M.amplifiedVectorFunctional Ξ, isNormal_iff_exists.mpr ⟨Ξ, fun _ => rfl⟩⟩
+  ⟨M.amplifiedVectorFunctional Ξ, isNormal_iff_exists_inner_amplifyRight_eq.mpr ⟨Ξ, fun _ => rfl⟩⟩
 
 section NormalMap
 
@@ -448,10 +448,10 @@ variable (ψ : M.NormalFunctional)
 /-- A representing vector's support lies in `1 ⊗ M`. -/
 lemma exists_amplifyRight_eq_supportProj :
     ∃ x ∈ M, 𝟙 ⊗ x = (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj ψ.2.vec :=
-  mem_amplify_iff.mp ((𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj_mem ψ.2.vec)
+  mem_oneTensor_iff.mp ((𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj_mem ψ.2.vec)
 
 /-- The **support projection** `s(ψ) ∈ M` of a normal functional: the element of `M` with
-`1 ⊗ s(ψ) = s(Ξ_ψ)`, the vector support of a representing vector in `amplify ℓ²(ℕ) M`. -/
+`1 ⊗ s(ψ) = s(Ξ_ψ)`, the vector support of a representing vector in `oneTensor ℓ²(ℕ) M`. -/
 noncomputable def supportProj : H →L[ℂ] H :=
   (exists_amplifyRight_eq_supportProj ψ).choose
 
@@ -467,10 +467,10 @@ lemma amplifyRight_supportProj :
 /-- **Independence of the representing vector.** `1 ⊗ s(ψ) = s(Ξ)` for *every* `Ξ` with
 `ψ(x) = ⟪Ξ, (1 ⊗ x) Ξ⟫`. -/
 lemma amplifyRight_supportProj_eq {Ξ : ℓ²(ℕ, ℂ) ⊗̂ H}
-    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξ⟫_ℂ = ψ.1 x) :
+    (hΞ : ∀ x : M, ⟪Ξ, (𝟙 ⊗ x) Ξ⟫_ℂ = ψ.1 x) :
     𝟙 ⊗ (supportProj ψ) = (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj Ξ := by
   rw [amplifyRight_supportProj]
-  refine supportProj_eq_of_inner_eq fun y hy => inner_apply_eq_of_mem_amplify (fun x hx => ?_) hy
+  refine supportProj_eq_of_inner_eq fun y hy => inner_apply_eq_of_mem_oneTensor (fun x hx => ?_) hy
   rw [ψ.2.inner_vec_amplifyRight ⟨x, hx⟩, hΞ ⟨x, hx⟩]
 
 /-- `s(ψ)` is a projection. -/
@@ -488,7 +488,7 @@ lemma supportProj_le_iff {p : H →L[ℂ] H} (hp : IsStarProjection p) (hpM : p 
     supportProj ψ ≤ p ↔ ψ.1 ⟨1 - p, sub_mem (one_mem M) hpM⟩ = 0 := by
   rw [← amplifyRight_le_amplifyRight_iff (isStarProjection_supportProj ψ) hp,
     amplifyRight_supportProj, supportProj_le_iff_inner_eq_zero (isStarProjection_amplifyRight hp)
-      (amplifyRight_mem_amplify hpM), ← ψ.2.inner_vec_amplifyRight ⟨1 - p, _⟩]
+      (amplifyRight_mem_oneTensor hpM), ← ψ.2.inner_vec_amplifyRight ⟨1 - p, _⟩]
   change _ ↔ ⟪_, (𝟙 ⊗ (1 - p)) _⟫_ℂ = 0
   rw [amplifyRight_one_sub]
 
@@ -502,7 +502,7 @@ lemma apply_star_mul_self_eq_zero_iff (x : M) :
     ψ.1 (star x * x) = 0 ↔ (x : H →L[ℂ] H) * supportProj ψ = 0 := by
   rw [apply_star_mul_self_eq ψ.2.inner_vec_amplifyRight, Complex.ofReal_eq_zero,
     pow_eq_zero_iff two_ne_zero, norm_eq_zero,
-    ← mul_supportProj_eq_zero_iff (amplifyRight_mem_amplify (H₁ := ℓ²(ℕ, ℂ)) x.2),
+    ← mul_supportProj_eq_zero_iff (amplifyRight_mem_oneTensor (H₁ := ℓ²(ℕ, ℂ)) x.2),
     ← amplifyRight_supportProj, ← HilbertTensor.amplifyRight_mul,
     ← HilbertTensor.amplifyRight_zero (H₁ := ℓ²(ℕ, ℂ)), HilbertTensor.amplifyRight_injective.eq_iff]
 

@@ -23,7 +23,7 @@ enter only there. The eigenbases are arbitrary, not Mathlib's chosen
 
 ## Setting
 
-`B(H)` acts on `K ⊗̂ H` as `1 ⊗ B(H) = VonNeumannAlgebra.amplify K 𝓑(H)`. For `K = ℓ²(ℕ)` it is the
+`B(H)` acts on `K ⊗̂ H` as `1 ⊗ B(H) = VonNeumannAlgebra.oneTensor K 𝓑(H)`. For `K = ℓ²(ℕ)` it is the
 amplification on which `VonNeumannAlgebra.arakiEntropy` represents normal functionals. Given an
 orthonormal family `g` in `K`, the **purification** `Ω_ρ = Σᵢ √rᵢ gᵢ ⊗ bᵢ`
 (`OrthonormalBasis.purification`) represents `A ↦ Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`
@@ -136,7 +136,7 @@ lemma supportProj_purification_tmul (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < 
   rw [supportProj, Submodule.starProjection_eq_self_iff]
   have h := Submodule.smul_mem _ (√ᶜ r i)⁻¹
     (InnerProductSpace.apply_mem_cyclicSubspace (b.purification r g)
-      (amplifyLeft_mem_commutant_amplify (M := 𝓑(H)) (rankOne ℂ y (g i))))
+      (amplifyLeft_mem_commutant_oneTensor (M := 𝓑(H)) (rankOne ℂ y (g i))))
   rwa [b.amplifyLeft_rankOne_purification r hg, smul_smul, inv_mul_cancel₀ (sqrt_ne_zero hi),
     one_smul] at h
 
@@ -147,7 +147,7 @@ lemma supportProj_commutant_purification_tmul {i : ι} (hi : 0 < r i) (x : H) :
   rw [supportProj_commutant, Submodule.starProjection_eq_self_iff]
   have h := Submodule.smul_mem _ (√ᶜ r i)⁻¹
     (InnerProductSpace.apply_mem_cyclicSubspace (b.purification r g)
-      (amplifyRight_mem_amplify (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ x (b i)))))
+      (amplifyRight_mem_oneTensor (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ x (b i)))))
   rwa [b.amplifyRight_rankOne_purification, smul_smul, inv_mul_cancel₀ (sqrt_ne_zero hi),
     one_smul] at h
 
@@ -158,7 +158,7 @@ private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i 
     ((√ᶜ r i) • (g i ⊗ₕ c j), (√ᶜ s j) • (g j ⊗ₕ b i)) ∈
       (S[𝓜]⟦c.purification s g, b.purification r g⟧).graphₛₗ := by
   have h := apply_mem_graph_relativeTomita (η := c.purification s g) (ξ := b.purification r g)
-    (amplifyRight_mem_amplify (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ (c j) (b i))))
+    (amplifyRight_mem_oneTensor (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ (c j) (b i))))
   rwa [b.amplifyRight_rankOne_purification, HilbertTensor.amplifyRight_star,
     ContinuousLinearMap.star_eq_adjoint, InnerProductSpace.adjoint_rankOne,
     c.amplifyRight_rankOne_purification, map_smul, supportProj_purification_tmul b r hg hi] at h
@@ -171,7 +171,7 @@ private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
       (S[(𝓜)′]⟦c.purification s g, b.purification r g⟧).graphₛₗ := by
   have h := apply_mem_graph_relativeTomita (M := (𝓜)′) (η := c.purification s g)
     (ξ := b.purification r g)
-    (amplifyLeft_mem_commutant_amplify (M := 𝓑(H)) (rankOne ℂ (g j) (g i)))
+    (amplifyLeft_mem_commutant_oneTensor (M := 𝓑(H)) (rankOne ℂ (g j) (g i)))
   rwa [b.amplifyLeft_rankOne_purification r hg, HilbertTensor.amplifyLeft_star,
     ContinuousLinearMap.star_eq_adjoint, InnerProductSpace.adjoint_rankOne,
     c.amplifyLeft_rankOne_purification s hg, map_smul,

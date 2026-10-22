@@ -89,7 +89,7 @@ omit [CompleteSpace H] in
 so exhibiting any `x ≠ 0` already gives `Nontrivial H`. This is why almost none of the results
 below need `[Nontrivial H]` as a hypothesis: they carry a nonzero projection, which supplies it.
 The exceptions are the statements that quantify over projections without asserting one exists
-(`IsFactor.isTypeI_iff_exists_isMinimalProjection`, `isTypeIFactor_iff_isFactor_and_isTypeI`) and
+(`IsFactor.isTypeI_iff_exists_isMinimalProjection`, `IsTypeIFactor.exists_isMinimalProjection`) and
 the ones producing a minimal projection of `𝓑(H)` out of nothing. -/
 lemma nontrivial_of_ne_zero {x : H →L[ℂ] H} (hx : x ≠ 0) : Nontrivial H :=
   let ⟨y, hy⟩ := ContinuousLinearMap.exists_ne_zero hx

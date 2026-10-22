@@ -49,7 +49,7 @@ is inherited from the type I structure theorem
 
 `⊗̄` in the prose above is documentation shorthand for the von Neumann (spatial) tensor product of
 algebras; that convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`,
-where the algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
+where the algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.oneTensor`) are defined.
 -/
 
 @[expose] public section
@@ -114,7 +114,8 @@ lemma isSplitInclusion_self_iff {M : VonNeumannAlgebra H} :
     IsSplitInclusion M M ↔ IsTypeIFactor M :=
   ⟨IsSplitInclusion.isTypeIFactor_of_self, IsTypeIFactor.isSplitInclusion_self⟩
 
-/-- **Split tensor decomposition.** A split inclusion `A ≤ M ≤ B` is spatially tensor-split:
+/-- **Split tensor decomposition.** A split inclusion `A ≤ M ≤ B` on a nonzero Hilbert space is
+spatially tensor-split:
 there is a linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` (with `e` a minimal projection
 of the interpolating type I factor `M`) under which `M` becomes exactly the tensor factor
 `𝓑(ℓ²(F)) ⊗̄ 1` and `M′` the factor `1 ⊗̄ 𝓑(eH)`, so that `A` lands in the left factor and the
@@ -124,18 +125,19 @@ split property (Doplicher–Longo; Buchholz), inherited from
 
 The interpolating factor is returned with its full type I factoriality and its minimal projection,
 and the index set `F` with its nonemptiness, so that a consumer needs no reconstruction. -/
-theorem IsSplitInclusion.exists_tensor_decomposition {A B : VonNeumannAlgebra H}
+theorem IsSplitInclusion.exists_tensor_decomposition [Nontrivial H] {A B : VonNeumannAlgebra H}
     (h : IsSplitInclusion A B) :
-    ∃ (M : VonNeumannAlgebra H) (e : H →L[ℂ] H) (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
-      IsTypeIFactor M ∧ IsMinimalProjection M e ∧ Nonempty F ∧ A ≤ M ∧ M ≤ B ∧
-      VonNeumannAlgebra.conj U M = vnTensorLeft ∧
-      VonNeumannAlgebra.conj U M′ = vnTensorRight ∧
-      VonNeumannAlgebra.conj U A ≤ vnTensorLeft ∧
-      VonNeumannAlgebra.conj U B′ ≤ vnTensorRight := by
+    ∃ (M : VonNeumannAlgebra H) (e : H →L[ℂ] H) (he : IsMinimalProjection M e),
+      haveI := he.1.completeSpace_range
+      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
+        IsTypeIFactor M ∧ Nonempty F ∧ A ≤ M ∧ M ≤ B ∧
+        VonNeumannAlgebra.conj U M = 𝓑(lp (fun _ : F => ℂ) 2) ⊗ 𝟙[e.range] ∧
+        VonNeumannAlgebra.conj U M′ = 𝟙[lp (fun _ : F => ℂ) 2] ⊗ 𝓑(e.range) ∧
+        VonNeumannAlgebra.conj U A ≤ 𝓑(lp (fun _ : F => ℂ) 2) ⊗ 𝟙[e.range] ∧
+        VonNeumannAlgebra.conj U B′ ≤ 𝟙[lp (fun _ : F => ℂ) 2] ⊗ 𝓑(e.range) := by
   obtain ⟨M, hMt, h₁, h₂⟩ := h
   obtain ⟨e, he, F, U, hF, hM, hM', hA, hB⟩ := hMt.exists_split_tensor_decomposition h₁ h₂
-  exact ⟨M, e, F, U, hMt, he, hF, h₁, h₂, hM, hM', hA, hB⟩
+  exact ⟨M, e, he, F, U, hMt, hF, h₁, h₂, hM, hM', hA, hB⟩
 
 /-! ### A non-split inclusion: the diagonal algebra on `ℂ²`
 

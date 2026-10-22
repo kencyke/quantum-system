@@ -51,9 +51,10 @@ The representation-theoretic net above is one instance of that (`LocalNet.vonNeu
 property: the quasi-local algebra's direct limit needs a directed index set with a base point, and
 its C⋆-norm needs injective isotony embeddings. The representation
 is not assumed nondegenerate: `𝓡(O)` contains `1` regardless, since a von Neumann algebra is
-unital, so a degenerate representation on a nonzero space can satisfy the property trivially
-(`𝓡(O) = ℂ1` is a type I factor). On the *zero* space it cannot: a type I factor needs a nonzero
-minimal projection, so `IsSplitInclusion` is then identically false. Substantive downstream
+unital, so a degenerate representation can satisfy the property trivially: on a nonzero space
+`𝓡(O) = ℂ1` is a type I factor, and on the *zero* space every von Neumann algebra is one
+(`VonNeumannAlgebra.isTypeIFactor_of_subsingleton`), so `IsSplitInclusion` is then identically
+true. Substantive downstream
 theorems impose nondegeneracy or cyclicity where they need it.
 
 ## Main definitions and results
@@ -95,7 +96,7 @@ and why neither is a Lean notation — is stated in full in `QuantumSystem.Physi
 
 `⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; that
 convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`, where the
-algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
+algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.oneTensor`) are defined.
 -/
 
 @[expose] public section
@@ -315,9 +316,11 @@ def SplitProperty [ProperContainment K] (vnNet : VonNeumannNet K H) : Prop :=
 
     Stated here, rather than left implicit inside a witness, because it fixes what a
     one-dimensional model can be evidence *for*: it inhabits `SplitProperty` and distinguishes
-    nothing — no net, no representation, no choice of `⋐`. The degeneracy is `dim H = 1` and
-    nothing else; it is the escape clause Halvorson–Müger's type III₁ proposition carries
-    explicitly ("either `𝓡 = ℂ1` or `𝓡` is a type III₁ factor"). -/
+    nothing — no net, no representation, no choice of `⋐`. The degeneracy is `dim H ≤ 1` and
+    nothing else (on the zero space every von Neumann algebra is a type I factor,
+    `VonNeumannAlgebra.isTypeIFactor_of_subsingleton`); for `dim H = 1` it is the escape clause
+    Halvorson–Müger's type III₁ proposition carries explicitly ("either `𝓡 = ℂ1` or `𝓡` is a type
+    III₁ factor"). -/
 theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K ℂ) :
     vnNet.SplitProperty := by
   intro O₁ O₂ _
@@ -374,7 +377,7 @@ variable [ProperContainment K] {vnNet : VonNeumannNet K H}
     yields the split inclusion `𝓡(O₁) ≤ 𝓡(O₂)`. Buchholz's tensor splitting — a unitary
     `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` carrying `𝓡(O₁)` into the tensor factor `𝓑(ℓ²(F)) ⊗̄ 1` and the
     commutant `𝓡(O₂)′` into `1 ⊗̄ 𝓑(eH)`, with the interpolating type I factor and its commutant
-    identified exactly — is obtained by applying
+    identified exactly — is obtained on a nonzero `H` by applying
     `VonNeumannAlgebra.IsSplitInclusion.exists_tensor_decomposition` to the conclusion. -/
 theorem SplitProperty.isSplitInclusion (hs : vnNet.SplitProperty) {O₁ O₂ : K} (h : O₁ ⋐ O₂) :
     VonNeumannAlgebra.IsSplitInclusion (vnNet.algebra O₁) (vnNet.algebra O₂) :=

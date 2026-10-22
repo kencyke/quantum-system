@@ -76,7 +76,7 @@ which is the linear span of the union (`VonNeumannAlgebra.iSup_range_eq_span`).
 
 `⊗̄` in the prose above is documentation shorthand for the von Neumann (spatial) tensor product of
 algebras; that convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`,
-where the algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
+where the algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.oneTensor`) are defined.
 -/
 
 @[expose] public section

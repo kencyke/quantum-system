@@ -13,9 +13,10 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempot
 # Type I von Neumann algebras and factors
 
 The general **type I** property, phrased as in the literature (Takesaki V.1):
-every nonzero central projection dominates a nonzero abelian projection. For a *factor* this is
-equivalent to the existence of a minimal projection, i.e. to `IsTypeIFactor`. The equivalence is
-proved in full: the easy direction is minimal ⇒ abelian ⇒ type I; the converse is that a nonzero
+every nonzero central projection dominates a nonzero abelian projection; a type I factor
+(`IsTypeIFactor`) is a factor with this property. For a factor on a nonzero Hilbert space it is
+equivalent to the existence of a minimal projection. The equivalence is proved in full: the easy
+direction is minimal ⇒ abelian ⇒ type I; the converse is that a nonzero
 abelian projection of a factor is minimal
 (`IsFactor.isMinimalProjection_of_isAbelianProjection`, in
 `QuantumSystem.Analysis.VonNeumannAlgebra.MinimalProjection`).
@@ -40,7 +41,7 @@ and the type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional 
 
 * `VonNeumannAlgebra.IsTypeI N` — every nonzero central projection of `N` dominates a nonzero
   abelian projection.
-* `VonNeumannAlgebra.IsTypeIFactor N` — a factor possessing a minimal projection.
+* `VonNeumannAlgebra.IsTypeIFactor N` — a factor that is type I.
 * `VonNeumannAlgebra.IsTypeIInfinite N` — a type I factor carrying an infinite orthogonal family
   of minimal projections (infinite multiplicity).
 
@@ -48,8 +49,9 @@ and the type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional 
 
 * `VonNeumannAlgebra.IsFactor.isTypeI_iff_exists_isMinimalProjection` — a factor is type I iff
   it has a minimal projection.
-* `VonNeumannAlgebra.isTypeIFactor_iff_isFactor_and_isTypeI` — `IsTypeIFactor N ↔ IsFactor N ∧
-  IsTypeI N`.
+* `VonNeumannAlgebra.IsTypeIFactor.exists_isMinimalProjection`,
+  `VonNeumannAlgebra.IsFactor.isTypeIFactor_of_isMinimalProjection` — on a nonzero Hilbert space, a
+  type I factor is a factor with a minimal projection.
 * `VonNeumannAlgebra.IsTypeIInfinite.exists_injective` — the witnessing minimal projections of a
   type I_∞ factor may be chosen injectively.
 * `VonNeumannAlgebra.isTypeIFactor_conj_iff` — type I factors are spatially invariant.
@@ -62,8 +64,7 @@ and the type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional 
   infinite-dimensional `H`, the same with `ι` infinite, hence `ℓ²(ι)` infinite-dimensional.
 * `VonNeumannAlgebra.isMinimalProjection_iff_of_starAlgEquiv` — through `φ : N ≃⋆ₐ B(K)` the
   minimal projections of `N` are the rank-one projections `φ⁻¹ |u⟩⟨u|`, `‖u‖ = 1`.
-* `VonNeumannAlgebra.isTypeIFactor_of_starAlgEquiv` — `N ≃⋆ₐ B(K)` with `K ≠ 0` makes `N` a type I
-  factor.
+* `VonNeumannAlgebra.isTypeIFactor_of_starAlgEquiv` — `N ≃⋆ₐ B(K)` makes `N` a type I factor.
 * `VonNeumannAlgebra.isTypeIInfinite_iff_of_starAlgEquiv` — if `N ≃⋆ₐ B(K)`, then `N` is type I_∞
   iff `K` is infinite-dimensional.
 
@@ -91,12 +92,13 @@ def IsTypeI (N : VonNeumannAlgebra H) : Prop :=
   ∀ z : H →L[ℂ] H, IsCentralProjection N z → z ≠ 0 →
     ∃ p : H →L[ℂ] H, IsAbelianProjection N p ∧ p ≠ 0 ∧ p ≤ z
 
-/-- A **type I factor**: a factor possessing a minimal projection. This is the mathematically
-conventional, intrinsic definition; the spatial decomposition `N ≅ B(H₁) ⊗̄ 1` is then a theorem,
-not part of the definition. The equivalence with the general abelian-projection definition
-`IsTypeI` is `isTypeIFactor_iff_isFactor_and_isTypeI`. -/
+/-- A **type I factor**: a factor that is type I. On a nonzero Hilbert space this is a factor
+possessing a minimal projection (`IsTypeIFactor.exists_isMinimalProjection`,
+`IsFactor.isTypeIFactor_of_isMinimalProjection`); on the zero space every von Neumann algebra is a
+type I factor (`isTypeIFactor_of_subsingleton`). The spatial decomposition `N ≅ B(H₁) ⊗̄ 1` is a
+theorem, not part of the definition. -/
 def IsTypeIFactor (N : VonNeumannAlgebra H) : Prop :=
-  IsFactor N ∧ ∃ e : H →L[ℂ] H, IsMinimalProjection N e
+  IsFactor N ∧ IsTypeI N
 
 /-- A factor with a minimal projection is type I: the only nonzero central projection of a factor
 is `1` (`central_projection_eq`), and it dominates the minimal projection, which is abelian and
@@ -130,17 +132,25 @@ theorem IsFactor.isTypeI_iff_exists_isMinimalProjection [Nontrivial H] {N : VonN
     exact ⟨q, hN.isMinimalProjection_of_isAbelianProjection hab hq0⟩
   · exact hN.isTypeI_of_exists_isMinimalProjection
 
-/-- The factor-specialised definition `IsTypeIFactor` agrees with the conjunction of the general
-abelian-projection type I property and factor-ness. `[Nontrivial H]` is load-bearing here, not
-decoration: on a subsingleton `H` *every* von Neumann algebra satisfies `IsFactor N ∧ IsTypeI N`
-while *none* satisfies `IsTypeIFactor N`, since a minimal projection must be nonzero. -/
-lemma isTypeIFactor_iff_isFactor_and_isTypeI [Nontrivial H] {N : VonNeumannAlgebra H} :
-    IsTypeIFactor N ↔ IsFactor N ∧ IsTypeI N := by
-  constructor
-  · rintro ⟨hf, he⟩
-    exact ⟨hf, hf.isTypeI_of_exists_isMinimalProjection he⟩
-  · rintro ⟨hf, ht⟩
-    exact ⟨hf, hf.isTypeI_iff_exists_isMinimalProjection.mp ht⟩
+/-- A factor with a minimal projection is a type I factor. -/
+lemma IsFactor.isTypeIFactor_of_isMinimalProjection {N : VonNeumannAlgebra H} (hN : IsFactor N)
+    {e : H →L[ℂ] H} (he : IsMinimalProjection N e) : IsTypeIFactor N :=
+  ⟨hN, hN.isTypeI_of_exists_isMinimalProjection ⟨e, he⟩⟩
+
+/-- A type I factor on a nonzero Hilbert space has a minimal projection. -/
+lemma IsTypeIFactor.exists_isMinimalProjection [Nontrivial H] {N : VonNeumannAlgebra H}
+    (hN : IsTypeIFactor N) : ∃ e : H →L[ℂ] H, IsMinimalProjection N e :=
+  hN.1.isTypeI_iff_exists_isMinimalProjection.mp hN.2
+
+/-- On the zero Hilbert space every von Neumann algebra is type I: it has no nonzero central
+projection. -/
+lemma isTypeI_of_subsingleton [Subsingleton H] (N : VonNeumannAlgebra H) : IsTypeI N :=
+  fun z _ hz => absurd (Subsingleton.elim z 0) hz
+
+/-- On the zero Hilbert space every von Neumann algebra is a type I factor. -/
+lemma isTypeIFactor_of_subsingleton [Subsingleton H] (N : VonNeumannAlgebra H) :
+    IsTypeIFactor N :=
+  ⟨fun _ _ _ => ⟨0, Subsingleton.elim _ _⟩, isTypeI_of_subsingleton N⟩
 
 /-! ### Type I_∞ factors
 
@@ -205,10 +215,18 @@ variable {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H'] [Comple
 /-- **Type I factors are spatially invariant**: `U N U⋆` is a type I factor iff `N` is. -/
 lemma isTypeIFactor_conj_iff {N : VonNeumannAlgebra H} (U : H ≃ₗᵢ[ℂ] H') :
     IsTypeIFactor (conj U N) ↔ IsTypeIFactor N := by
-  refine ⟨fun ⟨hf, e, he⟩ => ⟨(isFactor_conj_iff U).mp hf, U.conjStarAlgEquiv.symm e, ?_⟩,
-    fun ⟨hf, e, he⟩ => ⟨hf.conj U, _, he.conj U⟩⟩
-  rw [← isMinimalProjection_conj_iff U, StarAlgEquiv.apply_symm_apply]
-  exact he
+  rcases subsingleton_or_nontrivial H with _ | _
+  · have : Subsingleton H' := U.symm.toLinearEquiv.toEquiv.subsingleton
+    exact iff_of_true (isTypeIFactor_of_subsingleton _) (isTypeIFactor_of_subsingleton _)
+  have : Nontrivial H' := U.symm.toLinearEquiv.toEquiv.nontrivial
+  refine ⟨fun h => ?_, fun h => ?_⟩
+  · obtain ⟨e, he⟩ := h.exists_isMinimalProjection
+    refine ((isFactor_conj_iff U).mp h.1).isTypeIFactor_of_isMinimalProjection
+      (e := U.conjStarAlgEquiv.symm e) ?_
+    rw [← isMinimalProjection_conj_iff U, StarAlgEquiv.apply_symm_apply]
+    exact he
+  · obtain ⟨e, he⟩ := h.exists_isMinimalProjection
+    exact (h.1.conj U).isTypeIFactor_of_isMinimalProjection (he.conj U)
 
 /-- If `N` is a type I factor, so is `U N U⋆`. -/
 lemma IsTypeIFactor.conj {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) (U : H ≃ₗᵢ[ℂ] H') :
@@ -221,10 +239,12 @@ end Conj
 
 open InnerProductSpace
 
-/-- **`B(H)` is a type I factor** (for nonzero `H`). -/
-lemma isTypeIFactor_boundedLinearOperators [Nontrivial H] :
-    IsTypeIFactor 𝓑(H) :=
-  ⟨isFactor_boundedLinearOperators, exists_isMinimalProjection_boundedLinearOperators⟩
+/-- **`B(H)` is a type I factor**: for nonzero `H` a rank-one projection is minimal. -/
+lemma isTypeIFactor_boundedLinearOperators : IsTypeIFactor 𝓑(H) := by
+  rcases subsingleton_or_nontrivial H with _ | _
+  · exact isTypeIFactor_of_subsingleton _
+  obtain ⟨_, he⟩ := exists_isMinimalProjection_boundedLinearOperators (H := H)
+  exact isFactor_boundedLinearOperators.isTypeIFactor_of_isMinimalProjection he
 
 /-- The commutant of `B(H)` consists of scalars: it is the centre of the factor `B(H)`. -/
 lemma exists_eq_smul_one_of_mem_commutant_boundedLinearOperators {x : H →L[ℂ] H}
@@ -341,14 +361,22 @@ lemma isFactor_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : IsFacto
   (isFactor_iff_of_starAlgEquiv (M := 𝓑(K))
     (φ.trans boundedLinearOperators.starAlgEquiv.symm)).mp isFactor_boundedLinearOperators
 
-/-- **A von Neumann algebra `⋆`-isomorphic to `B(K)`, `K ≠ 0`, is a type I factor** — the converse
-of `IsTypeIFactor.exists_starAlgEquiv`. It is a factor (`isFactor_of_starAlgEquiv`), and the
-preimage of a rank-one projection of `B(K)` is a minimal projection
-(`isMinimalProjection_starAlgEquiv_iff`). -/
-lemma isTypeIFactor_of_starAlgEquiv [Nontrivial K] (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
-    IsTypeIFactor N :=
-  let ⟨_, he⟩ := exists_isMinimalProjection_boundedLinearOperators (H := K)
-  ⟨isFactor_of_starAlgEquiv φ, _, (isMinimalProjection_symm_apply_iff φ).mpr he⟩
+/-- **A von Neumann algebra `⋆`-isomorphic to `B(K)` is a type I factor** — the converse of
+`IsTypeIFactor.exists_starAlgEquiv`. For `K ≠ 0` it is a factor (`isFactor_of_starAlgEquiv`), and
+the preimage of a rank-one projection of `B(K)` is a minimal projection
+(`isMinimalProjection_starAlgEquiv_iff`); for `K = 0` the algebra `N` is zero, so `1 = 0` on `H`
+and `H` is the zero space (`isTypeIFactor_of_subsingleton`). -/
+lemma isTypeIFactor_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : IsTypeIFactor N := by
+  rcases subsingleton_or_nontrivial K with _ | _
+  · have : Subsingleton N := φ.toEquiv.subsingleton
+    have h : ((1 : N) : H →L[ℂ] H) = ((0 : N) : H →L[ℂ] H) :=
+      congrArg Subtype.val (Subsingleton.elim _ _)
+    have : Subsingleton H :=
+      ⟨fun x y => sub_eq_zero.mp (by simpa using congrArg (fun T : H →L[ℂ] H => T (x - y)) h)⟩
+    exact isTypeIFactor_of_subsingleton N
+  obtain ⟨_, he⟩ := exists_isMinimalProjection_boundedLinearOperators (H := K)
+  exact (isFactor_of_starAlgEquiv φ).isTypeIFactor_of_isMinimalProjection
+    ((isMinimalProjection_symm_apply_iff φ).mpr he)
 
 /-- **Type I_∞ is infinite dimension of the model.** If `N ≃⋆ₐ B(K)`, then `N` is a type I_∞ factor
 iff `K` is infinite-dimensional. Forward: an infinite orthogonal sequence of minimal projections of
