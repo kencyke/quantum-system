@@ -81,6 +81,12 @@ amplification `oneTensor ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
   projections `p ∈ M`; `VonNeumannAlgebra.NormalFunctional.apply_one_sub_supportProj` —
   `ψ(1 - s(ψ)) = 0`.
 * `VonNeumannAlgebra.NormalFunctional.apply_star_mul_self_eq_zero_iff` — `ψ(x⋆x) = 0 ↔ x s(ψ) = 0`.
+
+## TODO
+
+* Normality of a positive functional, and of a positive map between von Neumann algebras
+  (`VonNeumannAlgebra.IsNormalMap`), is also equivalent to preserving the suprema of bounded
+  increasing nets of self-adjoint elements. That equivalence is not formalised here.
 -/
 
 @[expose] public section
@@ -364,9 +370,7 @@ variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteS
   {N : VonNeumannAlgebra K} {F : Type*}
 
 /-- A map `α : N → M` between von Neumann algebras is **normal** if it is σ-weakly continuous,
-the same notion as `VonNeumannAlgebra.IsNormal` for functionals. For positive maps this is
-equivalent to preserving suprema of bounded increasing nets; that equivalence is not formalised
-here. -/
+the same notion as `VonNeumannAlgebra.IsNormal` for functionals. -/
 def IsNormalMap (α : N → M) : Prop :=
   Continuous fun T : N.sigmaWeak => M.toSigmaWeak (α (N.ofSigmaWeak T))
 
