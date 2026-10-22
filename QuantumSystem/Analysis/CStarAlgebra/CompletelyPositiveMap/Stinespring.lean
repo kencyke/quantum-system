@@ -122,7 +122,7 @@ variable {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
 /-- **Minimality of the environment**: if `Φ(A) = tr₂(V A V†)` for `V : H → K ⊗ E`, then
 `dim E ≥ rank J(Φ)`: the Kraus blocks of `V` along an orthonormal basis of `E` are `dim E` Kraus
 operators of `Φ` (`ContinuousLinearMap.choiRank_le_card`). -/
-lemma choiRank_le_finrank_of_stinespring [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {Φ : F}
+lemma choiRank_le_finrank_of_stinespring {Φ : F}
     (V : H →L[ℂ] K ⊗[ℂ] E) (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L V†)) :
     choiRank Φ ≤ Module.finrank ℂ E := by
   have h := choiRank_le_card (Φ := Φ) (κ := Fin (Module.finrank ℂ E))
@@ -133,7 +133,7 @@ lemma choiRank_le_finrank_of_stinespring [LinearMapClass F ℂ (H →L[ℂ] H) (
 /-- The environment of `Φ(A) = tr₂(V A V†)` has the minimal dimension `rank J(Φ)` iff the Kraus
 blocks of `V` are linearly independent
 (`ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent`). -/
-lemma choiRank_eq_card_iff_linearIndependent_krausBlock [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
+lemma choiRank_eq_card_iff_linearIndependent_krausBlock
     {Φ : F} (f : OrthonormalBasis κ ℂ E) (V : H →L[ℂ] K ⊗[ℂ] E)
     (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L V†)) :
     choiRank Φ = Fintype.card κ ↔ LinearIndependent ℂ (krausBlock f V) :=

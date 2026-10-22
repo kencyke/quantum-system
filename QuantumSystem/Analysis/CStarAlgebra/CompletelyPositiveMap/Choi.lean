@@ -95,7 +95,7 @@ noncomputable def choi (b : OrthonormalBasis ι ℂ H) (Φ : F) : H ⊗[ℂ] K �
 
 /-- The rank `rank J(Φ)` of the Choi operator of `Φ : B(H) → B(K)`: the dimension of its range,
 the same for every orthonormal basis of `H` (`ContinuousLinearMap.finrank_range_choi`). -/
-noncomputable def choiRank [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] (Φ : F) : ℕ :=
+noncomputable def choiRank (Φ : F) : ℕ :=
   Module.finrank ℂ (choi (stdOrthonormalBasis ℂ H) Φ).range
 
 /-- The Choi operator through the insertions `ιᵢ = mkL ℂ H K (bᵢ) : y ↦ bᵢ ⊗ y`:
@@ -176,7 +176,7 @@ lemma choi_eq_sum_rankOne_of_kraus (b : OrthonormalBasis ι ℂ H) {Φ : F} {κ 
 
 /-- Every Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` has at least `rank J(Φ)` operators: the range
 of `J_b(Φ) = Σₐ |vₐ⟩⟨vₐ|` is spanned by the `|κ|` vectors `vₐ`. -/
-lemma choiRank_le_card [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {Φ : F} {κ : Type*} [Fintype κ]
+lemma choiRank_le_card {Φ : F} {κ : Type*} [Fintype κ]
     {T : κ → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) :
     choiRank Φ ≤ Fintype.card κ := by
   rw [choiRank, choi_eq_sum_rankOne_of_kraus _ hT, range_sum_rankOne_self]
@@ -185,7 +185,7 @@ lemma choiRank_le_card [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {�
 /-- A Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` has exactly `rank J(Φ)` operators iff its Kraus
 operators are linearly independent: the range of `J_b(Φ)` is spanned by the vectorised Kraus
 operators `vₐ = Σᵢ bᵢ ⊗ Tₐ bᵢ`, and vectorisation `T ↦ Σᵢ bᵢ ⊗ T bᵢ` is injective. -/
-lemma choiRank_eq_card_iff_linearIndependent [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
+lemma choiRank_eq_card_iff_linearIndependent
     {Φ : F} {κ : Type*} [Fintype κ] {T : κ → H →L[ℂ] K}
     (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) :
     choiRank Φ = Fintype.card κ ↔
