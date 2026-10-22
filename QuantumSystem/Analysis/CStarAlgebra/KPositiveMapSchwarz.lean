@@ -15,8 +15,11 @@ By the Kadison–Schwarz inequality of Choi (`KPositiveMapClass.le_smul_map_star
 a `2`-positive contraction `φ` (`‖φ x‖ ≤ ‖x‖`) between possibly non-unital C⋆-algebras is a
 Schwarz map. Between unital C⋆-algebras the condition reads `φ 1 ≤ 1`: the normalised
 Kadison–Schwarz inequality `KPositiveMapClass.le_map_star_mul` holds under it directly. This file
-packages both as Schwarz maps. It lives outside `ForMathlib/` because it needs both
-`KPositiveMap.lean` and `SchwarzMap.lean`, and a `ForMathlib` file imports Mathlib only.
+packages both as Schwarz maps. Through the rigidity of Schwarz maps
+(`SchwarzMapClass.starAlgEquivOfInverse`), a unital `2`-positive map with a `2`-positive inverse,
+in particular a unital complete order isomorphism, is then a ⋆-isomorphism. The file lives
+outside `ForMathlib/` because it needs both `KPositiveMap.lean` and `SchwarzMap.lean`, and a
+`ForMathlib` file imports Mathlib only.
 
 ## Main definitions
 
@@ -24,6 +27,8 @@ packages both as Schwarz maps. It lives outside `ForMathlib/` because it needs b
   non-unital C⋆-algebras as a Schwarz map.
 * `KPositiveMapClass.toSchwarzMap` — a `2`-positive map with `φ 1 ≤ 1` between unital C⋆-algebras
   as a Schwarz map.
+* `KPositiveMapClass.starAlgEquivOfInverse` — a unital `2`-positive map with a `2`-positive
+  inverse, in particular a unital complete order isomorphism, as a ⋆-isomorphism.
 -/
 
 @[expose] public section
@@ -66,6 +71,28 @@ noncomputable def toSchwarzMap (φ : F) (hφ : φ 1 ≤ 1) : SchwarzMap A₁ A�
 /-- `toSchwarzMap φ hφ` evaluates as `φ`. -/
 @[simp] lemma toSchwarzMap_apply (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
     toSchwarzMap φ hφ a = φ a := rfl
+
+variable {G : Type*} [FunLike G A₂ A₁] [KPositiveMapClass G 2 A₂ A₁]
+
+/-- **Unital complete order isomorphisms are ⋆-isomorphisms.** A unital `2`-positive map `φ`
+between unital C⋆-algebras with a `2`-positive inverse `ψ` is a ⋆-isomorphism; in particular so
+is a unital completely positive map with a completely positive inverse. The inverse `ψ` is linear
+as the inverse of `φ` and unital as `ψ 1 = ψ (φ 1) = 1`, so both maps are Schwarz maps by the
+normalised Kadison–Schwarz inequality, and `φ` is multiplicative by
+`SchwarzMapClass.map_mul_of_inverse`. Here `h₁` and `h₂` say `ψ ∘ φ = id` and `φ ∘ ψ = id`. -/
+@[simps apply symm_apply]
+noncomputable def starAlgEquivOfInverse (φ : F) (ψ : G) (hφ : φ 1 = 1)
+    (h₁ : Function.LeftInverse ψ φ) (h₂ : Function.RightInverse ψ φ) : A₁ ≃⋆ₐ[ℂ] A₂ where
+  toFun := φ
+  invFun := ψ
+  left_inv := h₁
+  right_inv := h₂
+  map_mul' := SchwarzMapClass.map_mul_of_inverse (toSchwarzMap φ hφ.le)
+    (⟨(⟨(φ : A₁ →ₗ[ℂ] A₂), ψ, h₁, h₂⟩ : A₁ ≃ₗ[ℂ] A₂).symm.toLinearMap,
+      le_map_star_mul ψ (by rw [← hφ, h₁ 1])⟩ : SchwarzMap A₂ A₁) h₁ h₂
+  map_add' := map_add φ
+  map_star' := map_star φ
+  map_smul' := map_smul φ
 
 end Unital
 
