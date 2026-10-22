@@ -116,7 +116,8 @@ and Phase III in particular will be set as the foundations take shape.
 10. Operator system theory: Arveson's extension theorem, giving the injectivity of B(H); the
     Choi–Effros characterization of abstract operator systems as concrete ones (M1, M2).
 11. Multiplication from complete positivity: the Choi–Effros product X ∘ Y = Φ(XY) on the image
-    of an idempotent unital completely positive map Φ; Tomiyama's theorem on conditional
+    of an idempotent unital completely positive map Φ, already formalized for idempotent Schwarz
+    maps and hence for idempotent unital 2-positive maps; Tomiyama's theorem on conditional
     expectations; Hamana's injective envelope, built from a minimal idempotent unital completely
     positive map, and the C⋆-envelope as the C⋆-algebra generated in it (M1).
 12. ~~Rigidity: the Kadison–Schwarz inequality for 2-positive maps Φ, already formalized in
