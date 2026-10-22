@@ -395,10 +395,10 @@ private lemma spectralMeasure_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (
 /-- **Spectral mapping.** For `φ` continuous on the spectrum of `T` (and measurable on `ℂ`), the
 scalar spectral measure of the normal operator `cfc φ T` at `u` is the image of `ν_u` under `φ`. -/
 private lemma spectralMeasure_cfc_eq_map {φ : ℂ → ℂ} (hφ : ContinuousOn φ (spectrum ℂ T))
-    (hφm : Measurable φ) (hφT : IsStarNormal (cfc φ T)) :
-    hφT.spectralMeasure u = (hT.spectralMeasure u).map φ := by
+    (hφm : Measurable φ) :
+    (IsStarNormal.cfc_map φ T).spectralMeasure u = (hT.spectralMeasure u).map φ := by
   have := hT
-  refine (hφT.eq_spectralMeasure_of_integral _ fun g => ?_).symm
+  refine ((IsStarNormal.cfc_map φ T).eq_spectralMeasure_of_integral _ fun g => ?_).symm
   rw [integral_map hφm.aemeasurable g.continuous.aestronglyMeasurable,
     hT.integral_spectralMeasure u (g := fun ζ => g (φ ζ)) (g.continuous.comp_continuousOn hφ),
     ← cfc_comp' (fun ζ => (g ζ : ℂ)) _ _ (continuous_ofReal.comp g.continuous).continuousOn hφ]
@@ -960,8 +960,9 @@ private lemma hasSum_spectralOp (f : ℕ → Set ℂ) (hf : ∀ i, MeasurableSet
 /-! ### The projection-valued measure -/
 
 /-- The **projection-valued measure** `E_T` of a normal operator `T` on the Borel sets of `ℂ`, with
-`⟪x, E_T(s) y⟫ = ν_{x,y}(s)` (`IsStarNormal.inner_pvm_apply`); it is concentrated on the spectrum
-of `T` (`IsStarNormal.pvm_compl_spectrum`). The construction is that of the proof of Rudin,
+`⟪x, cfc g T y⟫ = ∫ g dE_{x,y}` for `g` continuous on the spectrum
+(`IsStarNormal.inner_cfc_eq_integral_pvm`); it is concentrated on the spectrum of `T`
+(`IsStarNormal.pvm_compl_spectrum`). The construction is that of the proof of Rudin,
 *Functional Analysis*, Theorem 12.22. -/
 @[no_expose] noncomputable def pvm : ProjectionValuedMeasure ℂ E :=
   ProjectionValuedMeasure.ofHasSum hT.spectralOp (fun _ hs => hT.spectralOp_of_not_measurableSet hs)
@@ -1106,11 +1107,11 @@ lemma measure_pvm_cfc_apply {h : ℂ → ℂ} (hh : ContinuousOn h (spectrum ℂ
 
 /-- **Spectral mapping**: for `φ` continuous on the spectrum of `T` and measurable on `ℂ`, the
 projection-valued measure of `φ(T)` is the image of `E_T` under `φ`. -/
-theorem pvm_cfc_eq_map {φ : ℂ → ℂ} (hφ : ContinuousOn φ (spectrum ℂ T)) (hφm : Measurable φ)
-    (hφT : IsStarNormal (cfc φ T)) : hφT.pvm = hT.pvm.map φ hφm :=
+theorem pvm_cfc_eq_map {φ : ℂ → ℂ} (hφ : ContinuousOn φ (spectrum ℂ T)) (hφm : Measurable φ) :
+    (IsStarNormal.cfc_map φ T).pvm = hT.pvm.map φ hφm :=
   ProjectionValuedMeasure.ext_of_measure _ fun u => by
     rw [ProjectionValuedMeasure.measure_map, measure_pvm, measure_pvm,
-      hT.spectralMeasure_cfc_eq_map u hφ hφm hφT]
+      hT.spectralMeasure_cfc_eq_map u hφ hφm]
 
 /-- `E_T` is concentrated on the spectrum of `T`. -/
 lemma pvm_compl_spectrum : hT.pvm (spectrum ℂ T)ᶜ = 0 := by

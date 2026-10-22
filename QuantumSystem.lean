@@ -115,6 +115,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubsp
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Smul
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.OrthogonalFamily
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear

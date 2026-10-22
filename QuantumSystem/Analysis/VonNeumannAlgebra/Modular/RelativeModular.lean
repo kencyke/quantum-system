@@ -534,10 +534,9 @@ lemma measure_pvm_relativeModular_apply_left (hw : w ∈ M′) {r : ℝ} (hr : 0
     μ⟦w η, ξ⟧ = (μ⟦η, ξ⟧).map fun t => r * t := by
   have h := relativeModular_apply_left (ξ := ξ) hw hr hwη
   unfold relativeModularMeasure pvmRelativeModular
-  have hrA : IsSelfAdjoint ((r : ℂ) • Δ⟦η, ξ⟧) :=
-    h ▸ isSelfAdjoint_relativeModular M (w η) ξ
+  have hrA := (isSelfAdjoint_relativeModular M η ξ).ofReal_smul hr.ne'
   rw [IsSelfAdjoint.pvm_congr _ hrA h]
-  exact (isSelfAdjoint_relativeModular M η ξ).measure_pvm_ofReal_smul ξ hr.ne' hrA
+  exact (isSelfAdjoint_relativeModular M η ξ).measure_pvm_ofReal_smul ξ hr.ne'
 
 /-- **Scaling `η`.** For `a ≠ 0`, the spectral measure of `Δ_{a η, ξ}` at `ξ` is the image of that
 of `Δ_{η,ξ}` under `λ ↦ |a|² λ`. -/
@@ -545,10 +544,10 @@ lemma measure_pvm_relativeModular_smul_left {a : ℂ} (ha : a ≠ 0) :
     μ⟦a • η, ξ⟧ = (μ⟦η, ξ⟧).map fun t => ‖a‖ ^ 2 * t := by
   have h := relativeModular_smul_left (η := η) (ξ := ξ) (M := M) ha
   unfold relativeModularMeasure pvmRelativeModular
-  have hrA : IsSelfAdjoint (((‖a‖ ^ 2 : ℝ) : ℂ) • Δ⟦η, ξ⟧) :=
-    h ▸ isSelfAdjoint_relativeModular M (a • η) ξ
+  have hr : ‖a‖ ^ 2 ≠ 0 := by positivity
+  have hrA := (isSelfAdjoint_relativeModular M η ξ).ofReal_smul hr
   rw [IsSelfAdjoint.pvm_congr _ hrA h]
-  exact (isSelfAdjoint_relativeModular M η ξ).measure_pvm_ofReal_smul ξ (by positivity) hrA
+  exact (isSelfAdjoint_relativeModular M η ξ).measure_pvm_ofReal_smul ξ hr
 
 /-- **Scaling `ξ`.** The spectral measure of `Δ_{η, c ξ}` at `c ξ` is `|c|²` times the image of
 that of `Δ_{η,ξ}` at `ξ` under `λ ↦ |c|⁻² λ` (both sides vanish for `c = 0`). -/
@@ -559,10 +558,10 @@ lemma measure_pvm_relativeModular_smul_right (c : ℂ) :
   · rw [ProjectionValuedMeasure.measure_smul]
     simp
   have h := relativeModular_smul_right (η := η) (ξ := ξ) (M := M) hc
-  have hrA : IsSelfAdjoint ((((‖c‖ ^ 2)⁻¹ : ℝ) : ℂ) • Δ⟦η, ξ⟧) :=
-    h ▸ isSelfAdjoint_relativeModular M η (c • ξ)
+  have hr : (‖c‖ ^ 2)⁻¹ ≠ 0 := by positivity
+  have hrA := (isSelfAdjoint_relativeModular M η ξ).ofReal_smul hr
   rw [IsSelfAdjoint.pvm_congr _ hrA h, hrA.pvm.measure_smul,
-    (isSelfAdjoint_relativeModular M η ξ).measure_pvm_ofReal_smul ξ (by positivity) hrA]
+    (isSelfAdjoint_relativeModular M η ξ).measure_pvm_ofReal_smul ξ hr]
 
 /-- **Changing `ξ` along the commutant.** For `w′ ∈ M′` with `w′⋆ w′ ξ = ξ`, the spectral measure of
 `Δ_{η, w′ ξ}` at `w′ ξ` equals that of `Δ_{η,ξ}` at `ξ`. -/

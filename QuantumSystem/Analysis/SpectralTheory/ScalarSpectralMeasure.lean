@@ -11,6 +11,7 @@ public import QuantumSystem.Analysis.UnboundedOperator.Adjoint.Semilinear
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Smul
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 
 /-!
@@ -457,10 +458,12 @@ lemma integrable_inv_add_measure_pvm (hpos : A.IsPositive) {t : ℝ} (ht : 0 < t
 /-! ### Scaling the operator -/
 
 variable (u) in
-/-- **Scaling the operator.** For real `r ≠ 0` and self-adjoint `A` and `r A`, the spectral measure
-of `r A` at `u` is the image of that of `A` under `λ ↦ r λ`. -/
-lemma measure_pvm_ofReal_smul {r : ℝ} (hr : r ≠ 0) (hrA : IsSelfAdjoint ((r : ℂ) • A)) :
-    hrA.pvm.measure u = (hA.pvm.measure u).map fun t => r * t := by
+/-- **Scaling the operator.** For real `r ≠ 0` and self-adjoint `A`, the spectral measure of the
+self-adjoint `r A` (`IsSelfAdjoint.ofReal_smul`) at `u` is the image of that of `A` under
+`λ ↦ r λ`. -/
+lemma measure_pvm_ofReal_smul {r : ℝ} (hr : r ≠ 0) :
+    (hA.ofReal_smul hr).pvm.measure u = (hA.pvm.measure u).map fun t => r * t := by
+  have hrA : IsSelfAdjoint ((r : ℂ) • A) := hA.ofReal_smul hr
   set w : ℂ := (r : ℂ)⁻¹ * I
   have hr0 : (r : ℂ) ≠ 0 := ofReal_ne_zero.mpr hr
   have hw : w ∈ A.resolventSet := hA.mem_resolventSet (by

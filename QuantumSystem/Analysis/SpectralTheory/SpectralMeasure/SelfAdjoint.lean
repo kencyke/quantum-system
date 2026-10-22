@@ -130,10 +130,8 @@ lemma measure_pvm_resolvent_eq_map {v : ℂ} (hv : v ∈ A.resolventSet)
   have hφ : ContinuousOn (fun ζ : ℂ => ζ / (1 - (v - w) * ζ)) (spectrum ℂ (A.resolvent v)) :=
     continuousOn_id.div (by fun_prop) fun ζ hζ =>
       LinearPMap.one_sub_mul_ne_zero_of_mem_spectrum hv hw hζ
-  have hφT : IsStarNormal (cfc (fun ζ : ℂ => ζ / (1 - (v - w) * ζ)) (A.resolvent v)) :=
-    hA.resolvent_eq_cfc hv hw ▸ hA.isStarNormal_resolvent w
-  rw [IsStarNormal.pvm_congr _ hφT (hA.resolvent_eq_cfc hv hw),
-    (hA.isStarNormal_resolvent v).pvm_cfc_eq_map hφ (by fun_prop) hφT,
+  rw [IsStarNormal.pvm_congr _ (IsStarNormal.cfc_map _ _) (hA.resolvent_eq_cfc hv hw),
+    (hA.isStarNormal_resolvent v).pvm_cfc_eq_map hφ (by fun_prop),
     ProjectionValuedMeasure.measure_map]
 
 variable {w} in
