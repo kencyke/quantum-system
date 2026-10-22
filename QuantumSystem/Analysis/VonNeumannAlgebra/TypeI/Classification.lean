@@ -107,8 +107,8 @@ lemma IsTypeIFactor.exists_split_tensor_decomposition [Nontrivial H] {N : VonNeu
 /-- **`1 ⊗̄ B(H₂)` is a type I factor**. If either leg is zero, so is `H₁ ⊗̂ H₂`
 (`isTypeIFactor_of_subsingleton`). Otherwise it is a factor
 (`VonNeumannAlgebra.isFactor_oneTensor_boundedLinearOperators`), and `1 ⊗̂ |u⟩⟨u|` is a minimal projection for a unit
-vector `u ∈ H₂`: every element of `1 ⊗̄ B(H₂) = (B(H₁) ⊗̄ 1)′` is a right amplification `1 ⊗̂ S`
-(`HilbertTensor.exists_amplifyRight_of_commutes`), so the corner reduces to the corner of the
+vector `u ∈ H₂`: every element of `1 ⊗̄ B(H₂)` is a right amplification `1 ⊗̂ S`
+(`VonNeumannAlgebra.mem_oneTensor_iff`), so the corner reduces to the corner of the
 rank-one projection in `B(H₂)`. -/
 lemma isTypeIFactor_oneTensor_boundedLinearOperators {H₁ H₂ : Type*} [NormedAddCommGroup H₁]
     [InnerProductSpace ℂ H₁] [CompleteSpace H₁] [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂]
@@ -128,15 +128,7 @@ lemma isTypeIFactor_oneTensor_boundedLinearOperators {H₁ H₂ : Type*} [Normed
     ⟨hp.1.map (amplifyRightₐ (H₁ := H₁)), amplifyRight_mem_oneTensor (mem_boundedLinearOperators p),
       fun h => hp.2.2.1 (amplifyRight_injective (H₁ := H₁) (h.trans amplifyRight_zero.symm)),
       fun T hT => ?_⟩
-  obtain ⟨S, rfl⟩ : ∃ S, T = 𝟙 ⊗ S := by
-    rw [← tensorOne_boundedLinearOperators_commutant] at hT
-    obtain ⟨v, hv⟩ := exists_ne (0 : H₁)
-    have hu : ‖(‖v‖⁻¹ : ℂ) • v‖ = 1 := by
-      rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
-        inv_mul_cancel₀ (norm_ne_zero_iff.mpr hv)]
-    refine exists_amplifyRight_of_commutes _ hu T fun A => ?_
-    rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def]
-    exact (mem_commutant_iff.mp hT _ (amplifyLeft_mem_tensorOne (mem_boundedLinearOperators A))).symm
+  obtain ⟨S, -, rfl⟩ := mem_oneTensor_iff.mp hT
   obtain ⟨c, hc⟩ := hp.2.2.2 S (mem_boundedLinearOperators S)
   exact ⟨c, by rw [← amplifyRight_mul, ← amplifyRight_mul, hc, amplifyRight_smul]⟩
 

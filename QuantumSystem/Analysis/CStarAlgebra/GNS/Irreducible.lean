@@ -98,10 +98,10 @@ lemma norm_sq_eq_zero_or_eq_one_of_isPure {ω : State A} (hω : ω.IsPure)
     (v₁ v₂ : GNS[ω].H)
     (hv₁ : v₁ ∈ W.toSubmodule)
     (hv₂ : v₂ ∈ W.toSubmoduleᗮ)
-    (hξ : GNS[ω].ξ = v₁ + v₂)
-    (horth : ⟪v₁, v₂⟫ = 0) :
+    (hξ : GNS[ω].ξ = v₁ + v₂) :
     ‖v₁‖ ^ 2 = 0 ∨ ‖v₁‖ ^ 2 = 1 := by
   let T := GNS[ω]
+  have horth : ⟪v₁, v₂⟫ = 0 := Submodule.inner_right_of_mem_orthogonal hv₁ hv₂
   by_contra h_contra
   push Not at h_contra
   have hω₁ : ‖PositiveLinearMap.ofClass ω‖ₒₚ = 1 := ω.opNorm_ofClass_eq_one
@@ -374,7 +374,7 @@ lemma isIrreducible_canonical_of_isPure {ω : State A} (hω : ω.IsPure) :
   let T := GNS[ω]
   refine CStarRep.isIrreducible_iff.mpr ⟨T.π_ne_zero ω.ofClass_ne_zero, fun W hW => ?_⟩
   obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
-  rcases norm_sq_eq_zero_or_eq_one_of_isPure hω W hW v₁ v₂ hv₁ hv₂ hξ horth with h_zero | h_one
+  rcases norm_sq_eq_zero_or_eq_one_of_isPure hω W hW v₁ v₂ hv₁ hv₂ hξ with h_zero | h_one
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
   · exact Or.inr (eq_top_of_norm_sq_eq_opNorm T W hW v₁ v₂ hv₁ hξ horth
       (h_one.trans ω.opNorm_ofClass_eq_one.symm))

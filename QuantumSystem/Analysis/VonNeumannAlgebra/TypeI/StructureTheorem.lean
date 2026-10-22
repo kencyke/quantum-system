@@ -294,7 +294,7 @@ the isomorphism implementing the type I structure theorem `N ≅ B(ℓ²(F)) ⊗
 noncomputable def OrthEquivFam.spatialEquiv (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     [CompleteSpace (e.range)] [DecidableEq F] :
-    H ≃ₗᵢ[ℂ] HilbertTensor (lp (fun _ : F => ℂ) 2) (e.range) :=
+    H ≃ₗᵢ[ℂ] HilbertTensor ℓ²(F, ℂ) (e.range) :=
   (hF.multiplicityEquiv htop).trans (lpTensorEquiv (ι := F) (K := e.range))
 
 /-- **Spatial expansion of `U`.** The spatial isomorphism `U = multiplicityEquiv ∘ lpTensorEquiv`
@@ -436,7 +436,7 @@ lemma generated_amplifyLeft_rankOne_eq [DecidableEq F]
       exact amplifyLeft_comp_amplifyRight
         (star (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) B
   exact (congrArg VonNeumannAlgebra.commutant hcomm).trans
-    (oneTensor_boundedLinearOperators_commutant (H₁ := lp (fun _ : F => ℂ) 2)
+    (oneTensor_boundedLinearOperators_commutant (H₁ := ℓ²(F, ℂ))
       (H₂ := e.range))
 
 /-- **Type I factor structure theorem (explicit identification).** Under the spatial isomorphism
@@ -447,8 +447,10 @@ spatial conjugation commutes with the generated-algebra construction. -/
 theorem OrthEquivFam.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
-    [DecidableEq F] [CompleteSpace (e.range)] :
+    [DecidableEq F] :
+    haveI := he.1.completeSpace_range
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] := by
+  have := he.1.completeSpace_range
   have himg : ⇑(hF.spatialEquiv htop).conjStarAlgEquiv ''
       (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2))
       = Set.range (fun pq : F × F =>
@@ -477,8 +479,10 @@ commutants and `(B(ℓ²(F)) ⊗̄ 1)' = 1 ⊗̄ B(eH)`. -/
 theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_oneTensor_boundedLinearOperators (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
-    [DecidableEq F] [CompleteSpace (e.range)] :
+    [DecidableEq F] :
+    haveI := he.1.completeSpace_range
     VonNeumannAlgebra.conj (hF.spatialEquiv htop) N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
+  have := he.1.completeSpace_range
   rw [← VonNeumannAlgebra.conj_commutant, hF.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators he htop,
     tensorOne_boundedLinearOperators_commutant]
 
@@ -488,10 +492,12 @@ is monotonicity of spatial conjugation composed with `U N U⋆ = 𝓑(ℓ²(F)) 
 lemma OrthEquivFam.conj_spatialEquiv_le_tensorOne_boundedLinearOperators (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
-    [DecidableEq F] [CompleteSpace (e.range)]
-    {A : VonNeumannAlgebra H} (h₁ : A ≤ N) :
-    VonNeumannAlgebra.conj (hF.spatialEquiv htop) A ≤ 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] :=
-  (VonNeumannAlgebra.conj_mono _ h₁).trans_eq (hF.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators he htop)
+    [DecidableEq F] {A : VonNeumannAlgebra H} (h₁ : A ≤ N) :
+    haveI := he.1.completeSpace_range
+    VonNeumannAlgebra.conj (hF.spatialEquiv htop) A ≤ 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] := by
+  have := he.1.completeSpace_range
+  exact (VonNeumannAlgebra.conj_mono _ h₁).trans_eq
+    (hF.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators he htop)
 
 /-- **Right factor absorption.** For any von Neumann algebra `B` containing `N`, the commutant
 `B′` is carried by the spatial isomorphism into the right tensor factor: `U B′ U⋆ ≤ 1 ⊗̄ B(eH)`.
@@ -500,10 +506,11 @@ Taking commutants in `N ≤ B` gives `B′ ≤ N′`, and monotonicity composed 
 lemma OrthEquivFam.conj_spatialEquiv_le_oneTensor_boundedLinearOperators (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
-    [DecidableEq F] [CompleteSpace (e.range)]
-    {B : VonNeumannAlgebra H} (h₂ : N ≤ B) :
-    VonNeumannAlgebra.conj (hF.spatialEquiv htop) B′ ≤ 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) :=
-  (VonNeumannAlgebra.conj_mono _ (VonNeumannAlgebra.commutant_le h₂)).trans_eq
+    [DecidableEq F] {B : VonNeumannAlgebra H} (h₂ : N ≤ B) :
+    haveI := he.1.completeSpace_range
+    VonNeumannAlgebra.conj (hF.spatialEquiv htop) B′ ≤ 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
+  have := he.1.completeSpace_range
+  exact (VonNeumannAlgebra.conj_mono _ (VonNeumannAlgebra.commutant_le h₂)).trans_eq
     (hF.conj_spatialEquiv_commutant_eq_oneTensor_boundedLinearOperators he htop)
 
 omit [CompleteSpace H] in
@@ -537,7 +544,7 @@ theorem IsFactor.exists_spatial_tensor_decomposition {N : VonNeumannAlgebra H}
     (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     haveI := he.1.completeSpace_range
     ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
+      (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
       VonNeumannAlgebra.conj U N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
       VonNeumannAlgebra.conj U N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
@@ -566,7 +573,7 @@ theorem IsFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
     {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     haveI := he.1.completeSpace_range
     ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] lp (fun _ : F => ℂ) 2 ⊗̂ e.range),
+      (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
       Nonempty F ∧
       VonNeumannAlgebra.conj U N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
       VonNeumannAlgebra.conj U N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) ∧

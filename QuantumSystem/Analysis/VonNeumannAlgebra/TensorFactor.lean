@@ -149,7 +149,7 @@ reduction to a pure-tensor computation uses the rank-one operators `|f⟩⟨e|` 
 
 /-- The bounded inclusion `H₂ → H₁ ⊗̂ H₂`, `z ↦ f ⊗ z`, for a fixed `f ∈ H₁`. Its operator norm
 is `‖f‖` (`‖tmulRightL f z‖ = ‖f‖ * ‖z‖`), so it is an isometry exactly when `‖f‖ = 1`. -/
-noncomputable def tmulRightL (f : H₁) : H₂ →L[ℂ] HilbertTensor H₁ H₂ :=
+noncomputable def tmulRightL (f : H₁) : H₂ →L[ℂ] H₁ ⊗̂ H₂ :=
   UniformSpace.Completion.toComplL.comp
     (LinearMap.mkContinuous (TensorProduct.mk ℂ H₁ H₂ f) ‖f‖ fun z => by
       rw [TensorProduct.mk_apply, TensorProduct.norm_tmul])
@@ -171,6 +171,12 @@ lemma amplifyLeft_comp_amplifyRight {H₃ : Type*} [NormedAddCommGroup H₃] [In
       change (A ⊗ 𝟙) ((𝟙 ⊗ B) (tmul f y)) = (𝟙 ⊗ B) ((A ⊗ 𝟙) (tmul f y))
       rw [amplifyRight_tmul, amplifyLeft_tmul, amplifyLeft_tmul, amplifyRight_tmul]
   | add p q hp hq => rw [UniformSpace.Completion.coe_add, map_add, map_add, hp, hq]
+
+/-- For `H₁ = 0` the operator algebra on `H₁ ⊗̂ H₂` is trivial: `1 = 1 ⊗̂ 1 = 0 ⊗̂ 1 = 0`. -/
+private lemma subsingleton_of_subsingleton_left [Subsingleton H₁] :
+    Subsingleton (H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂) :=
+  subsingleton_of_zero_eq_one <| by
+    rw [← amplifyLeft_zero (H₂ := H₂), ← amplifyLeft_one, Subsingleton.elim (0 : H₁ →L[ℂ] H₁) 1]
 
 section CompleteRight
 
@@ -209,7 +215,7 @@ fixed unit vector `e ∈ H₁`), then `T = 1 ⊗̂ S` for `S = ι_e* ∘ T ∘ �
 working at the level of the bounded inclusions `ι_y : f ↦ f ⊗̂ y`. -/
 lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : Set H₁)
     (hD : Dense (Submodule.span ℂ D : Set H₁))
-    (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
+    (T : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂)
     (hT : ∀ f ∈ D, T.comp ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙)
       = ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙).comp T) :
     ∃ S : H₂ →L[ℂ] H₂, T = 𝟙 ⊗ S := by
@@ -234,7 +240,7 @@ lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : S
       refine ContinuousLinearMap.ext_on hD (fun g hg => ?_)
       rw [ContinuousLinearMap.comp_apply, ContinuousLinearMap.comp_apply, tmulLeftL_apply,
         amplifyRight_tmul, key g hg y]
-    have h := congrArg (fun L : H₁ →L[ℂ] HilbertTensor H₁ H₂ => L f) hcl
+    have h := congrArg (fun L : H₁ →L[ℂ] H₁ ⊗̂ H₂ => L f) hcl
     simpa only [ContinuousLinearMap.comp_apply, tmulLeftL_apply, amplifyRight_tmul] using h
   have hTS : T = 𝟙 ⊗ S := by
     refine ContinuousLinearMap.ext fun w => ?_
@@ -248,27 +254,28 @@ lemma exists_amplifyRight_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) (D : S
   exact ⟨S, hTS⟩
 
 /-- **Slice lemma (explicit representation).** If `T` commutes with every left amplification
-`A ⊗̂ 1`, then `T = 1 ⊗̂ S` for `S = ι_e* ∘ T ∘ ι_e` (any unit vector `e ∈ H₁`). -/
-lemma exists_amplifyRight_of_commutes (e : H₁) (he : ‖e‖ = 1)
-    (T : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂)
+`A ⊗̂ 1`, then `T = 1 ⊗̂ S`: for `H₁ = 0` every operator is `0 = 1 ⊗̂ 0`, and otherwise
+`S = ι_e* ∘ T ∘ ι_e` for a unit vector `e ∈ H₁`. -/
+lemma exists_amplifyRight_of_commutes (T : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂)
     (hT : ∀ A : H₁ →L[ℂ] H₁, T.comp (A ⊗ 𝟙) = (A ⊗ 𝟙).comp T) :
-    ∃ S : H₂ →L[ℂ] H₂, T = 𝟙 ⊗ S :=
-  exists_amplifyRight_of_commutes_dense e he Set.univ
+    ∃ S : H₂ →L[ℂ] H₂, T = 𝟙 ⊗ S := by
+  rcases subsingleton_or_nontrivial H₁ with _ | _
+  · have := subsingleton_of_subsingleton_left (H₁ := H₁) (H₂ := H₂)
+    exact ⟨0, Subsingleton.elim _ _⟩
+  obtain ⟨u, hu⟩ := exists_ne (0 : H₁)
+  have he : ‖(‖u‖⁻¹ : ℂ) • u‖ = 1 := by
+    rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
+      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hu)]
+  exact exists_amplifyRight_of_commutes_dense _ he Set.univ
     (by rw [Submodule.span_univ, Submodule.top_coe]; exact dense_univ) T
-    (fun f _ => hT (InnerProductSpace.rankOne ℂ f e))
+    (fun f _ => hT (InnerProductSpace.rankOne ℂ f _))
 
 end CompleteRight
-
-/-- For `H₁ = 0` the operator algebra on `H₁ ⊗̂ H₂` is trivial: `1 = 1 ⊗̂ 1 = 0 ⊗̂ 1 = 0`. -/
-private lemma subsingleton_of_subsingleton_left [Subsingleton H₁] :
-    Subsingleton (HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂) :=
-  subsingleton_of_zero_eq_one <| by
-    rw [← amplifyLeft_zero (H₂ := H₂), ← amplifyLeft_one, Subsingleton.elim (0 : H₁ →L[ℂ] H₁) 1]
 
 /-- For `H₁ = 0` all von Neumann algebras on `H₁ ⊗̂ H₂` coincide: each contains `1`, which is
 every operator. -/
 lemma vonNeumannAlgebra_eq_of_subsingleton_left [Subsingleton H₁]
-    (M N : VonNeumannAlgebra (HilbertTensor H₁ H₂)) : M = N := by
+    (M N : VonNeumannAlgebra (H₁ ⊗̂ H₂)) : M = N := by
   have := subsingleton_of_subsingleton_left (H₁ := H₁) (H₂ := H₂)
   ext x
   rw [Subsingleton.elim x 1]
@@ -282,7 +289,7 @@ lemma amplifyRight_injective [Nontrivial H₁] :
   obtain ⟨f, hf⟩ := exists_ne (0 : H₁)
   ext y
   have h1 := congrArg
-    (fun L : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂ => L (tmul f y)) h
+    (fun L : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂ => L (tmul f y)) h
   simp only [amplifyRight_tmul] at h1
   have h2 : tmul f (B₁ y - B₂ y) = 0 := by
     rw [sub_eq_add_neg, tmul_add, ← neg_one_smul ℂ (B₂ y), smul_tmul_right, h1, neg_one_smul,
@@ -300,7 +307,7 @@ lemma amplifyLeft_injective [Nontrivial H₂] :
   obtain ⟨g, hg⟩ := exists_ne (0 : H₂)
   ext x
   have h1 := congrArg
-    (fun L : HilbertTensor H₁ H₂ →L[ℂ] HilbertTensor H₁ H₂ => L (tmul x g)) h
+    (fun L : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂ => L (tmul x g)) h
   simp only [amplifyLeft_tmul] at h1
   have h2 : tmul (A₁ x - A₂ x) g = 0 := by
     rw [sub_eq_add_neg, add_tmul, ← neg_one_smul ℂ (A₂ x), tmul_smul_left, h1, neg_one_smul,
@@ -354,13 +361,12 @@ lemma mem_oneTensor_boundedLinearOperators_of_commutes_dense (e : H₁) (he : �
   exact amplifyRight_mem_oneTensor (mem_boundedLinearOperators S)
 
 /-- **Slice lemma (hard inclusion of the commutation theorem).** If `T` commutes with every left
-amplification `A ⊗̂ 1`, then `T = 1 ⊗̂ S` for `S = ι_e* ∘ T ∘ ι_e` (any unit vector `e ∈ H₁`),
+amplification `A ⊗̂ 1`, then `T = 1 ⊗̂ S` (`HilbertTensor.exists_amplifyRight_of_commutes`),
 hence `T ∈ 1 ⊗̄ B(H₂)`. -/
-lemma mem_oneTensor_boundedLinearOperators_of_commutes (e : H₁) (he : ‖e‖ = 1)
-    (T : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂)
+lemma mem_oneTensor_boundedLinearOperators_of_commutes (T : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂)
     (hT : ∀ A : H₁ →L[ℂ] H₁, T.comp (A ⊗ 𝟙) = (A ⊗ 𝟙).comp T) :
     T ∈ 𝟙[H₁] ⊗ 𝓑(H₂) := by
-  obtain ⟨S, rfl⟩ := HilbertTensor.exists_amplifyRight_of_commutes e he T hT
+  obtain ⟨S, rfl⟩ := HilbertTensor.exists_amplifyRight_of_commutes T hT
   exact amplifyRight_mem_oneTensor (mem_boundedLinearOperators S)
 
 end CompleteRight
@@ -372,16 +378,10 @@ decomposition: combined with a unit vector in `H₁`, it identifies `A₁ ⊆ B(
 `A₂ ⊆ 1⊗̄B(H₂)` for commuting `A₁, A₂`. -/
 theorem tensorOne_boundedLinearOperators_commutant [CompleteSpace H₁] [CompleteSpace H₂] :
     (𝓑(H₁) ⊗ 𝟙[H₂])′ = 𝟙[H₁] ⊗ 𝓑(H₂) := by
-  rcases subsingleton_or_nontrivial H₁ with _ | _
-  · exact HilbertTensor.vonNeumannAlgebra_eq_of_subsingleton_left _ _
   refine le_antisymm ?_ ?_
   · -- hard inclusion: every `T` commuting with `B(H₁)⊗̄1` lies in `1⊗̄B(H₂)`
-    obtain ⟨x, hx⟩ := exists_ne (0 : H₁)
-    have he : ‖(‖x‖⁻¹ : ℂ) • x‖ = 1 := by
-      rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
-        inv_mul_cancel₀ (norm_ne_zero_iff.mpr hx)]
     intro T hT
-    refine mem_oneTensor_boundedLinearOperators_of_commutes _ he T fun A => ?_
+    refine mem_oneTensor_boundedLinearOperators_of_commutes T fun A => ?_
     rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def]
     exact (mem_commutant_iff.mp hT _
       (amplifyLeft_mem_tensorOne (mem_boundedLinearOperators A))).symm
@@ -412,12 +412,8 @@ lemma eq_smul_one_of_mem_tensorOne_of_mem_oneTensor [CompleteSpace H₁] [Comple
   rcases subsingleton_or_nontrivial H₁ with _ | _
   · have := HilbertTensor.subsingleton_of_subsingleton_left (H₁ := H₁) (H₂ := H₂)
     exact ⟨0, Subsingleton.elim _ _⟩
-  obtain ⟨u, hu⟩ := exists_ne (0 : H₁)
-  have he : ‖(‖u‖⁻¹ : ℂ) • u‖ = 1 := by
-    rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
-      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hu)]
   rw [← tensorOne_boundedLinearOperators_commutant] at hR
-  obtain ⟨S, rfl⟩ := HilbertTensor.exists_amplifyRight_of_commutes _ he x fun A => by
+  obtain ⟨S, rfl⟩ := HilbertTensor.exists_amplifyRight_of_commutes x fun A => by
     rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def]
     exact (mem_commutant_iff.mp hR _
       (amplifyLeft_mem_tensorOne (mem_boundedLinearOperators A))).symm
@@ -455,22 +451,18 @@ theorem isFactor_oneTensor_boundedLinearOperators [CompleteSpace H₁] [Complete
 transporting through the swap equivalence `HilbertTensor.commEquiv` turns this into commutation
 with every left amplification on the swapped space, where the slice lemma
 `HilbertTensor.exists_amplifyRight_of_commutes` produces the operator. -/
-lemma exists_amplifyLeft_of_mem_tensorOne [CompleteSpace H₁] [Nontrivial H₂]
+lemma exists_amplifyLeft_of_mem_tensorOne [CompleteSpace H₁]
     {M : VonNeumannAlgebra H₁} {T : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂} (hT : T ∈ M ⊗ 𝟙[H₂]) :
     ∃ A : H₁ →L[ℂ] H₁, T = A ⊗ 𝟙 := by
   have hcomm : ∀ B : H₂ →L[ℂ] H₂, T * 𝟙 ⊗ B = 𝟙 ⊗ B * T := fun B =>
     mem_commutant_iff.mp (amplifyRight_mem_commutant_tensorOne B) T hT
-  obtain ⟨u, hu⟩ := exists_ne (0 : H₂)
-  have he : ‖(‖u‖⁻¹ : ℂ) • u‖ = 1 := by
-    rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
-      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hu)]
   have hhyp : ∀ A : H₂ →L[ℂ] H₂,
       (HilbertTensor.commEquiv.conjStarAlgEquiv T).comp (A ⊗ 𝟙)
         = (A ⊗ 𝟙).comp (HilbertTensor.commEquiv.conjStarAlgEquiv T) := fun A => by
     rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def,
       ← HilbertTensor.conjStarAlgEquiv_commEquiv_amplifyRight A, ← map_mul, ← map_mul, hcomm A]
   obtain ⟨S, hS⟩ := HilbertTensor.exists_amplifyRight_of_commutes (H₁ := H₂) (H₂ := H₁)
-    ((‖u‖⁻¹ : ℂ) • u) he (HilbertTensor.commEquiv.conjStarAlgEquiv T) hhyp
+    (HilbertTensor.commEquiv.conjStarAlgEquiv T) hhyp
   refine ⟨S, ?_⟩
   have hsymm := congrArg (⇑HilbertTensor.commEquiv.conjStarAlgEquiv.symm) hS
   rw [StarAlgEquiv.symm_apply_apply, HilbertTensor.conjStarAlgEquiv_symm_commEquiv_amplifyRight]
@@ -599,11 +591,7 @@ theorem mem_oneTensor_iff {y : H₁ ⊗̂ H →L[ℂ] H₁ ⊗̂ H} :
   rcases subsingleton_or_nontrivial H₁ with _ | _
   · have := HilbertTensor.subsingleton_of_subsingleton_left (H₁ := H₁) (H₂ := H)
     exact ⟨0, M.zero_mem, Subsingleton.elim _ _⟩
-  obtain ⟨u, hu⟩ := exists_ne (0 : H₁)
-  have he : ‖(‖u‖⁻¹ : ℂ) • u‖ = 1 := by
-    rw [norm_smul, norm_inv, Complex.norm_real, norm_norm,
-      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hu)]
-  obtain ⟨x, rfl⟩ := HilbertTensor.exists_amplifyRight_of_commutes _ he y fun A => by
+  obtain ⟨x, rfl⟩ := HilbertTensor.exists_amplifyRight_of_commutes y fun A => by
     rw [← ContinuousLinearMap.mul_def, ← ContinuousLinearMap.mul_def]
     exact mem_commutant_iff.mp (amplifyLeft_mem_commutant_oneTensor A) y hy
   refine ⟨x, ?_, rfl⟩

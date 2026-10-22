@@ -26,8 +26,8 @@ constructs:
   bundled form.
 * `CStarRep.directSumRep_norm_le` — the operator-norm bound `‖directSumRep R a‖ ≤ ‖a‖`.
 
-Faithfulness of `directSumRep R` requires that the family separates points
-(`CStarRep.SeparatesPoints R`); see `CStarRep.directSumRep_injective_of`.
+`directSumRep R` is faithful exactly when the family separates points
+(`CStarRep.SeparatesPoints R`); see `CStarRep.directSumRep_injective_iff`.
 
 ## Instances
 
@@ -46,6 +46,8 @@ unitary-equivalence class once per pure state realising it.
 
 ## Main results
 
+* `CStarRep.directSumRep_injective_iff` — the direct sum is faithful iff the family separates
+  points.
 * `CStarRep.directSumRep_injective_of`, `directSumRep_isometry_of`,
   `directSumRep_isClosed_range_of` — faithfulness, isometry and closed range for a family that
   separates points.
@@ -127,6 +129,15 @@ lemma directSumRep_injective_of (h_sep : SeparatesPoints R) :
   have h0 := congrArg (fun y : directSumHilbert R => y.val i)
     (DFunLike.congr_fun h_diff_zero (lp.single 2 i v))
   simpa [directSumRep, lp.single_apply_self] using h0
+
+/-- **The direct-sum representation is faithful iff the family separates points.** The forward
+direction: an `a` that every member annihilates acts as `0` on every coordinate, so
+`directSumRep R a = 0 = directSumRep R 0`. -/
+lemma directSumRep_injective_iff : Function.Injective (directSumRep R) ↔ SeparatesPoints R := by
+  refine ⟨fun h a ha => h ?_, directSumRep_injective_of⟩
+  rw [map_zero]
+  ext x i
+  simp [directSumRep, ha]
 
 variable (R) in
 /-- The direct sum of a family of representations, bundled as a `CStarRep`: the Hilbert space
