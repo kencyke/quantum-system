@@ -154,12 +154,17 @@ lemma posSemidef_choiMatrix_iff_choi_nonneg {Φ : F} {Ψ : G}
   rw [choiMatrix_eq_toMatrix_choi h, LinearMap.posSemidef_toMatrix_iff,
     ContinuousLinearMap.isPositive_toLinearMap_iff, ContinuousLinearMap.nonneg_iff_isPositive]
 
-/-- The rank of the Choi matrix is the rank of the Choi operator `J_e(Ψ)` of the operator form `Ψ`
-(`Matrix.choiMatrix_eq_toMatrix_choi`). -/
+/-- The rank of the Choi matrix is the rank `rank J(Ψ)` of the Choi operator of the operator form
+`Ψ`: the Choi matrix is the matrix of `J_e(Ψ)` in the standard bases
+(`Matrix.choiMatrix_eq_toMatrix_choi`), and the rank of `J_e(Ψ)` does not depend on the basis `e`
+(`ContinuousLinearMap.finrank_range_choi`). -/
 lemma rank_choiMatrix_eq_choiRank {Φ : F} {Ψ : G}
+    [LinearMapClass G ℂ (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
+      (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)]
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
-    (choiMatrix Φ).rank = ContinuousLinearMap.choiRank (EuclideanSpace.basisFun n ℂ) Ψ := by
-  rw [ContinuousLinearMap.choiRank, choiMatrix_eq_toMatrix_choi h, rank_eq_finrank_range_toLin _
+    (choiMatrix Φ).rank = ContinuousLinearMap.choiRank Ψ := by
+  rw [← ContinuousLinearMap.finrank_range_choi (EuclideanSpace.basisFun n ℂ),
+    choiMatrix_eq_toMatrix_choi h, rank_eq_finrank_range_toLin _
     ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis
     ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis,
     toLin_toMatrix]
@@ -188,7 +193,7 @@ lemma rank_choiMatrix_le_card_of_kraus {Φ : F} {ι : Type*} [Fintype ι] (K : �
       toEuclideanCLM (𝕜 := ℂ) (Φ A) := by
     rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
   rw [rank_choiMatrix_eq_choiRank h]
-  exact ContinuousLinearMap.choiRank_le_card _ (CompletelyPositiveMap.ofKraus_apply T)
+  exact ContinuousLinearMap.choiRank_le_card (CompletelyPositiveMap.ofKraus_apply T)
 
 omit [DecidableEq m] in
 /-- A Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` has exactly the minimal number `rank J(Φ)` of
@@ -205,7 +210,7 @@ lemma rank_choiMatrix_eq_card_iff_linearIndependent {Φ : F} {ι : Type*} [Finty
       toEuclideanCLM (𝕜 := ℂ) (Φ A) := by
     rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
   rw [rank_choiMatrix_eq_choiRank h,
-    ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent _
+    ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent
       (CompletelyPositiveMap.ofKraus_apply T)]
   exact LinearMap.linearIndependent_iff
     ((LinearMap.toContinuousLinearMap : (EuclideanSpace ℂ n →ₗ[ℂ] EuclideanSpace ℂ m) ≃ₗ[ℂ] _).toLinearMap ∘ₗ
@@ -319,7 +324,7 @@ lemma exists_kraus_rank (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
       toEuclideanCLM (𝕜 := ℂ) (φ A) := by
     simp [ψ]
   rw [rank_choiMatrix_eq_choiRank hψ]
-  have hT := exists_kraus_choiRank (EuclideanSpace.basisFun n ℂ) ψ
+  have hT := exists_kraus_choiRank ψ
   obtain ⟨T, hT⟩ := hT
   refine ⟨fun a => toEuclideanLin.symm (LinearMap.toContinuousLinearMap.symm (T a)),
     fun A => EquivLike.injective (toEuclideanCLM (𝕜 := ℂ)) ?_⟩

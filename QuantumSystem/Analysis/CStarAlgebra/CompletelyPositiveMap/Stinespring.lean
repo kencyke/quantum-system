@@ -13,14 +13,14 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductC
 /-!
 # Stinespring's theorem for bounded operators
 
-Let `H` and `K` be finite-dimensional complex Hilbert spaces and `b` an orthonormal basis of `H`.
-A linear map `Φ : B(H) → B(K)` is completely positive iff `Φ(A) = tr₂(V A V†)` for some
-`V : H → K ⊗ ℂʳ`, and a CPTP map iff moreover `V` is an isometry, `V† V = 1`
+Let `H` and `K` be finite-dimensional complex Hilbert spaces. A linear map `Φ : B(H) → B(K)` is
+completely positive iff `Φ(A) = tr₂(V A V†)` for some `V : H → K ⊗ ℂʳ`, and a CPTP map iff
+moreover `V` is an isometry, `V† V = 1`
 (`CompletelyPositiveMap.exists_coe_eq_iff_exists_stinespring`,
 `CPTPMap.exists_coe_eq_iff_exists_stinespring`). The environment `ℂʳ` has the dimension
-`r = rank J_b(Φ)` of the Choi operator, and this is minimal: every such `V : H → K ⊗ E` has
-`dim E ≥ rank J_b(Φ)` (`ContinuousLinearMap.choiRank_le_finrank_of_stinespring`). In
-particular a completely positive map has a Kraus representation with exactly `rank J_b(Φ)`
+`r = rank J(Φ)` of the Choi operator, and this is minimal: every such `V : H → K ⊗ E` has
+`dim E ≥ rank J(Φ)` (`ContinuousLinearMap.choiRank_le_finrank_of_stinespring`). In
+particular a completely positive map has a Kraus representation with exactly `rank J(Φ)`
 operators (`CompletelyPositiveMap.exists_kraus_choiRank`).
 
 ## Derivation from the general theorem
@@ -38,7 +38,7 @@ representation `π : B(K) → B(L)` and the Stinespring operator `W : H → L`. 
 The minimality of the Stinespring representation, that the vectors `π(B) W ξ` span `L`, makes the
 Kraus blocks `Tₐ = ιₐ† V` of `V` linearly independent: if `Σₐ cₐ Tₐ = 0`, the vector
 `U (ξ₀ ⊗ Σₐ c̄ₐ eₐ)` is orthogonal to every `π(B) W ξ`. They are Kraus operators of `φ`, so
-`d = rank J_b(φ)` (`ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent`).
+`d = rank J(φ)` (`ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent`).
 
 ## Conventions
 
@@ -58,15 +58,15 @@ The environment is the **right** factor of `K ⊗ E` and is removed by the parti
 * `ContinuousLinearMap.traceRight_comp_comp_adjoint`: `tr₂(V A V†) = Σₐ Tₐ A Tₐ†`.
 * `ContinuousLinearMap.choiRank_le_finrank_of_stinespring`,
   `ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent_krausBlock`:
-  **minimality**: every `V : H → K ⊗ E` with `Φ(A) = tr₂(V A V†)` has `dim E ≥ rank J_b(Φ)`, with
+  **minimality**: every `V : H → K ⊗ E` with `Φ(A) = tr₂(V A V†)` has `dim E ≥ rank J(Φ)`, with
   equality iff its Kraus blocks are linearly independent.
 * `CompletelyPositiveMap.exists_stinespring`: **Stinespring's theorem**: a CP map is
-  `A ↦ tr₂(V A V†)` for some `V : H → K ⊗ ℂʳ`, `r = rank J_b(φ)`.
+  `A ↦ tr₂(V A V†)` for some `V : H → K ⊗ ℂʳ`, `r = rank J(φ)`.
 * `CompletelyPositiveMap.exists_traceDual_eq_stinespring`: **Stinespring's theorem, Heisenberg
   picture**: the trace dual of a CP map is `B ↦ V† (B ⊗ 1) V` for the same kind of `V`.
 * `CompletelyPositiveMap.exists_kraus_choiRank`: a CP map has a Kraus representation with
-  exactly `rank J_b(φ)` operators; this rank does not depend on `b`
-  (`CompletelyPositiveMap.choiRank_congr`).
+  exactly `rank J(φ)` operators; this rank does not depend on the basis
+  (`ContinuousLinearMap.finrank_range_choi`).
 * `CPTPMap.exists_traceDual_eq_stinespring`, `CPTPMap.exists_stinespring`,
   `CPTPMap.exists_kraus_choiRank`: the same for CPTP maps, with `V† V = 1`
   and `Σₐ Tₐ† Tₐ = 1`.
@@ -93,7 +93,6 @@ variable {H K E : Type*}
   [NormedAddCommGroup H] [InnerProductSpace ℂ H] [FiniteDimensional ℂ H]
   [NormedAddCommGroup K] [InnerProductSpace ℂ K] [FiniteDimensional ℂ K]
   [NormedAddCommGroup E] [InnerProductSpace ℂ E] [FiniteDimensional ℂ E]
-  {ι : Type*} [Fintype ι]
 
 /-! ### Kraus blocks and minimality -/
 
@@ -121,26 +120,24 @@ lemma traceRight_comp_comp_adjoint (f : OrthonormalBasis κ ℂ E) (V : H →L[�
 variable {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
 
 /-- **Minimality of the environment**: if `Φ(A) = tr₂(V A V†)` for `V : H → K ⊗ E`, then
-`dim E ≥ rank J_b(Φ)`: the Kraus blocks of `V` along an orthonormal basis of `E` are `dim E` Kraus
+`dim E ≥ rank J(Φ)`: the Kraus blocks of `V` along an orthonormal basis of `E` are `dim E` Kraus
 operators of `Φ` (`ContinuousLinearMap.choiRank_le_card`). -/
-lemma choiRank_le_finrank_of_stinespring (b : OrthonormalBasis ι ℂ H) {Φ : F}
+lemma choiRank_le_finrank_of_stinespring [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {Φ : F}
     (V : H →L[ℂ] K ⊗[ℂ] E) (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L V†)) :
-    choiRank b Φ ≤
-      Module.finrank ℂ E := by
-  have h := choiRank_le_card b (Φ := Φ) (κ := Fin (Module.finrank ℂ E))
+    choiRank Φ ≤ Module.finrank ℂ E := by
+  have h := choiRank_le_card (Φ := Φ) (κ := Fin (Module.finrank ℂ E))
     (T := krausBlock (stdOrthonormalBasis ℂ E) V) fun A => by
       rw [hV, traceRight_comp_comp_adjoint (stdOrthonormalBasis ℂ E)]
   rwa [Fintype.card_fin] at h
 
-/-- The environment of `Φ(A) = tr₂(V A V†)` has the minimal dimension `rank J_b(Φ)` iff the Kraus
+/-- The environment of `Φ(A) = tr₂(V A V†)` has the minimal dimension `rank J(Φ)` iff the Kraus
 blocks of `V` are linearly independent
 (`ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent`). -/
-lemma choiRank_eq_card_iff_linearIndependent_krausBlock (b : OrthonormalBasis ι ℂ H)
+lemma choiRank_eq_card_iff_linearIndependent_krausBlock [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)]
     {Φ : F} (f : OrthonormalBasis κ ℂ E) (V : H →L[ℂ] K ⊗[ℂ] E)
     (hV : ∀ A, Φ A = traceRight K E (V ∘L A ∘L V†)) :
-    choiRank b Φ = Fintype.card κ ↔
-      LinearIndependent ℂ (krausBlock f V) :=
-  choiRank_eq_card_iff_linearIndependent b fun A => by
+    choiRank Φ = Fintype.card κ ↔ LinearIndependent ℂ (krausBlock f V) :=
+  choiRank_eq_card_iff_linearIndependent fun A => by
     rw [hV, traceRight_comp_comp_adjoint f]
 
 omit [FiniteDimensional ℂ H] in
@@ -263,16 +260,15 @@ lemma exists_stinespring_linearIndependent_krausBlock (φ : (H →L[ℂ] H) →C
 
 /-- **Stinespring's theorem**: a completely positive map `φ : B(H) → B(K)` is
 `φ(A) = tr₂(V A V†)` for some `V : H → K ⊗ ℂʳ` with environment of the minimal dimension
-`r = rank J_b(φ)` (`ContinuousLinearMap.choiRank_le_finrank_of_stinespring`), for any
-orthonormal basis `b` of `H`. Conversely every such map is completely positive
-(`CompletelyPositiveMap.ofStinespring`). -/
-theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
+`r = rank J(φ)` (`ContinuousLinearMap.choiRank_le_finrank_of_stinespring`). Conversely every such
+map is completely positive (`CompletelyPositiveMap.ofStinespring`). -/
+theorem exists_stinespring (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (choiRank b φ)),
+        (Fin (choiRank φ)),
       ∀ A, φ A = traceRight K (EuclideanSpace ℂ (Fin _)) (V ∘L A ∘L V†) := by
   have h := exists_stinespring_linearIndependent_krausBlock φ
   obtain ⟨d, V, hV, hli⟩ := h
-  have hd := (choiRank_eq_card_iff_linearIndependent_krausBlock b
+  have hd := (choiRank_eq_card_iff_linearIndependent_krausBlock
     (EuclideanSpace.basisFun (Fin d) ℂ) V hV).2 hli
   rw [Fintype.card_fin] at hd
   subst hd
@@ -280,69 +276,50 @@ theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (φ : (H →L[ℂ] H)
 
 /-- **Stinespring's theorem, Heisenberg picture**: the trace dual of a completely positive map
 `φ : B(H) → B(K)` is `φ*(B) = V† (B ⊗ 1) V` for some `V : H → K ⊗ ℂʳ` with environment of the
-minimal dimension `r = rank J_b(φ)`
+minimal dimension `r = rank J(φ)`
 (`ContinuousLinearMap.choiRank_le_finrank_of_stinespring`): the Schrödinger form
 `CompletelyPositiveMap.exists_stinespring` read through `ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
-theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H)
-    (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
+theorem exists_traceDual_eq_stinespring (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (choiRank b φ)),
+        (Fin (choiRank φ)),
       ∀ B : K →L[ℂ] K, ContinuousLinearMap.traceDual φ B = V† ∘L B.rTensor _ ∘L V := by
-  have h := exists_stinespring b φ
+  have h := exists_stinespring φ
   obtain ⟨V, hV⟩ := h
   exact ⟨V, (traceDual_eq_iff_traceRight V).2 hV⟩
 
 /-- A completely positive map `φ : B(H) → B(K)` has a Kraus representation `φ(A) = Σₐ Tₐ A Tₐ†`
-with exactly `rank J_b(φ)` operators, the minimal number
+with exactly `rank J(φ)` operators, the minimal number
 (`ContinuousLinearMap.choiRank_le_card`): the Kraus blocks of the Stinespring operator
 (`CompletelyPositiveMap.exists_stinespring`). -/
-lemma exists_kraus_choiRank (b : OrthonormalBasis ι ℂ H)
-    (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
-    ∃ T : Fin (choiRank b φ) →
+lemma exists_kraus_choiRank (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
+    ∃ T : Fin (choiRank φ) →
         H →L[ℂ] K,
       ∀ A, φ A = ∑ a, T a ∘L A ∘L (T a)† := by
-  have h := exists_stinespring b φ
+  have h := exists_stinespring φ
   obtain ⟨V, hV⟩ := h
   exact ⟨krausBlock (EuclideanSpace.basisFun _ ℂ) V, fun A => by
     rw [hV, traceRight_comp_comp_adjoint (EuclideanSpace.basisFun _ ℂ)]⟩
 
-/-- The rank of the Choi operator of a completely positive map does not depend on the orthonormal
-basis: each is the minimal number of Kraus operators (`CompletelyPositiveMap.exists_kraus_choiRank`,
-`ContinuousLinearMap.choiRank_le_card`). -/
-lemma choiRank_congr {ι' : Type*} [Fintype ι'] (b : OrthonormalBasis ι ℂ H)
-    (b' : OrthonormalBasis ι' ℂ H) (φ : (H →L[ℂ] H) →CP (K →L[ℂ] K)) :
-    choiRank b φ =
-      choiRank b' φ := by
-  have h := exists_kraus_choiRank b φ
-  have h' := exists_kraus_choiRank b' φ
-  obtain ⟨T, hT⟩ := h
-  obtain ⟨T', hT'⟩ := h'
-  refine le_antisymm ?_ ?_
-  · simpa using choiRank_le_card b hT'
-  · simpa using choiRank_le_card b' hT
-
 /-- **Stinespring's theorem**: a linear map `Φ : B(H) → B(K)` is completely positive iff
-`Φ(A) = tr₂(V A V†)` for some `V : H → K ⊗ ℂʳ` with `r = rank J_b(Φ)`. -/
-theorem exists_coe_eq_iff_exists_stinespring (b : OrthonormalBasis ι ℂ H)
-    (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
+`Φ(A) = tr₂(V A V†)` for some `V : H → K ⊗ ℂʳ` with `r = rank J(Φ)`. -/
+theorem exists_coe_eq_iff_exists_stinespring (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ φ : (H →L[ℂ] H) →CP (K →L[ℂ] K), (φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
       ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-          (Fin (choiRank b Φ)),
+          (Fin (choiRank Φ)),
         ∀ A, Φ A = traceRight K (EuclideanSpace ℂ (Fin _)) (V ∘L A ∘L V†) :=
-  ⟨by rintro ⟨φ, rfl⟩; exact exists_stinespring b φ,
+  ⟨by rintro ⟨φ, rfl⟩; exact exists_stinespring φ,
     fun h => by
       obtain ⟨V, hV⟩ := h
       exact ⟨ofStinespring V, LinearMap.ext fun A => by simp [hV]⟩⟩
 
 /-- **Kraus representation of completely positive maps**: a linear map `Φ : B(H) → B(K)` is
-completely positive iff `Φ(A) = Σₐ Tₐ A Tₐ†` with `rank J_b(Φ)` operators. -/
-theorem exists_coe_eq_iff_exists_kraus_choiRank (b : OrthonormalBasis ι ℂ H)
-    (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
+completely positive iff `Φ(A) = Σₐ Tₐ A Tₐ†` with `rank J(Φ)` operators. -/
+theorem exists_coe_eq_iff_exists_kraus_choiRank (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ φ : (H →L[ℂ] H) →CP (K →L[ℂ] K), (φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
-      ∃ T : Fin (choiRank b Φ) →
+      ∃ T : Fin (choiRank Φ) →
           H →L[ℂ] K,
         ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)† :=
-  ⟨by rintro ⟨φ, rfl⟩; exact exists_kraus_choiRank b φ,
+  ⟨by rintro ⟨φ, rfl⟩; exact exists_kraus_choiRank φ,
     fun h => by
       obtain ⟨T, hT⟩ := h
       exact ⟨ofKraus T, LinearMap.ext fun A => (hT A).symm⟩⟩
@@ -369,14 +346,14 @@ noncomputable def ofStinespring (V : H →L[ℂ] K ⊗[ℂ] E) (hV : V† ∘L V
 
 /-- **Stinespring's theorem, Heisenberg picture**, for CPTP maps: the trace dual of a
 CPTP map `Φ : B(H) → B(K)` is the unital map `Φ*(B) = V† (B ⊗ 1) V` for an isometry
-`V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J_b(Φ)`. The isometry is
+`V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J(Φ)`. The isometry is
 `V† V = V† (1 ⊗ 1) V = Φ*(1) = 1` (`CPTPMap.traceDual_one`). -/
-theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
+theorem exists_traceDual_eq_stinespring (Φ : CPTPMap H K) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (choiRank b Φ)),
+        (Fin (choiRank Φ)),
       V† ∘L V = 1 ∧
         ∀ B : K →L[ℂ] K, ContinuousLinearMap.traceDual Φ B = V† ∘L B.rTensor _ ∘L V := by
-  have h := CompletelyPositiveMap.exists_traceDual_eq_stinespring b Φ.toCompletelyPositiveMap
+  have h := CompletelyPositiveMap.exists_traceDual_eq_stinespring Φ.toCompletelyPositiveMap
   obtain ⟨V, hV⟩ := h
   refine ⟨V, ?_, hV⟩
   have h1 : ContinuousLinearMap.traceDual Φ 1 = V† ∘L (1 : K →L[ℂ] K).rTensor _ ∘L V :=
@@ -386,54 +363,52 @@ theorem exists_traceDual_eq_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : CP
   exact h1.symm
 
 /-- **Stinespring's theorem** for CPTP maps: a CPTP map `Φ : B(H) → B(K)` is
-`Φ(A) = tr₂(V A V†)` for an isometry `V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J_b(Φ)`: the
+`Φ(A) = tr₂(V A V†)` for an isometry `V : H → K ⊗ ℂʳ`, `V† V = 1`, with `r = rank J(Φ)`: the
 Heisenberg form `CPTPMap.exists_traceDual_eq_stinespring` read through
 `ContinuousLinearMap.traceDual_eq_iff_traceRight`. -/
-theorem exists_stinespring (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
+theorem exists_stinespring (Φ : CPTPMap H K) :
     ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-        (Fin (choiRank b Φ)),
+        (Fin (choiRank Φ)),
       V† ∘L V = 1 ∧ ∀ A, Φ A = ContinuousLinearMap.traceRight K (EuclideanSpace ℂ (Fin _))
         (V ∘L A ∘L V†) := by
-  have h := exists_traceDual_eq_stinespring b Φ
+  have h := exists_traceDual_eq_stinespring Φ
   obtain ⟨V, hVV, hV⟩ := h
   exact ⟨V, hVV, (traceDual_eq_iff_traceRight V).1 hV⟩
 
 /-- A CPTP map `Φ : B(H) → B(K)` has a Kraus representation `Φ(A) = Σₐ Tₐ A Tₐ†` with
-exactly `rank J_b(Φ)` operators, satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`
+exactly `rank J(Φ)` operators, satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`
 (`isTracePreserving_iff_sum_adjoint_comp_eq_one`). -/
-lemma exists_kraus_choiRank (b : OrthonormalBasis ι ℂ H) (Φ : CPTPMap H K) :
-    ∃ T : Fin (choiRank b Φ) →
+lemma exists_kraus_choiRank (Φ : CPTPMap H K) :
+    ∃ T : Fin (choiRank Φ) →
         H →L[ℂ] K,
       (∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) ∧ ∑ a, (T a)† ∘L T a = 1 := by
-  have h := CompletelyPositiveMap.exists_kraus_choiRank b Φ.toCompletelyPositiveMap
+  have h := CompletelyPositiveMap.exists_kraus_choiRank Φ.toCompletelyPositiveMap
   obtain ⟨T, hT⟩ := h
   exact ⟨T, hT, (isTracePreserving_iff_sum_adjoint_comp_eq_one hT).1 (isTracePreserving Φ)⟩
 
 /-- **Stinespring's theorem** for CPTP maps: a linear map `Φ : B(H) → B(K)` is a CPTP map iff
 `Φ(A) = tr₂(V A V†)` for an isometry `V : H → K ⊗ ℂʳ`, `V† V = 1`, with
-`r = rank J_b(Φ)`. -/
-theorem exists_coe_eq_iff_exists_stinespring (b : OrthonormalBasis ι ℂ H)
-    (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
+`r = rank J(Φ)`. -/
+theorem exists_coe_eq_iff_exists_stinespring (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ Ψ : CPTPMap H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
       ∃ V : H →L[ℂ] K ⊗[ℂ] EuclideanSpace ℂ
-          (Fin (choiRank b Φ)),
+          (Fin (choiRank Φ)),
         V† ∘L V = 1 ∧ ∀ A, Φ A = ContinuousLinearMap.traceRight K (EuclideanSpace ℂ (Fin _))
         (V ∘L A ∘L V†) :=
-  ⟨by rintro ⟨Ψ, rfl⟩; exact exists_stinespring b Ψ,
+  ⟨by rintro ⟨Ψ, rfl⟩; exact exists_stinespring Ψ,
     fun h => by
       obtain ⟨V, hVV, hV⟩ := h
       exact ⟨ofStinespring V hVV, LinearMap.ext fun A => by simp [hV]⟩⟩
 
 /-- **Kraus representation of CPTP maps**: a linear map
 `Φ : B(H) → B(K)` is a CPTP map iff `Φ(A) = Σₐ Tₐ A Tₐ†` with `Σₐ Tₐ† Tₐ = 1`, and then
-with `rank J_b(Φ)` operators. -/
-theorem exists_coe_eq_iff_exists_kraus_choiRank (b : OrthonormalBasis ι ℂ H)
-    (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
+with `rank J(Φ)` operators. -/
+theorem exists_coe_eq_iff_exists_kraus_choiRank (Φ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) :
     (∃ Ψ : CPTPMap H K, (Ψ : (H →L[ℂ] H) →ₗ[ℂ] (K →L[ℂ] K)) = Φ) ↔
-      ∃ T : Fin (choiRank b Φ) →
+      ∃ T : Fin (choiRank Φ) →
           H →L[ℂ] K,
         (∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) ∧ ∑ a, (T a)† ∘L T a = 1 :=
-  ⟨by rintro ⟨Ψ, rfl⟩; exact exists_kraus_choiRank b Ψ,
+  ⟨by rintro ⟨Ψ, rfl⟩; exact exists_kraus_choiRank Ψ,
     fun h => by
       obtain ⟨T, hT, hTT⟩ := h
       exact ⟨ofKraus T hTT, LinearMap.ext fun A => (hT A).symm⟩⟩
