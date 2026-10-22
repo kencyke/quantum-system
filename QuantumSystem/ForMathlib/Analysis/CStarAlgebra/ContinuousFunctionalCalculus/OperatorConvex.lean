@@ -18,6 +18,7 @@ import Mathlib.Analysis.InnerProductSpace.StarOrder
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.ExpLog.Order
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Order
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.RingInverseOrder
+import Mathlib.Topology.Compactification.OnePoint.Basic
 
 /-!
 # Operator convex and matrix convex functions, and Jensen's operator inequality
@@ -29,12 +30,18 @@ alone gives *matrix convexity* (`IsMatrixConvexOn`), which needs no
 continuity, since matrices have finite spectra. For `f` continuous on `s` the two agree, but they
 differ on discontinuous functions: on `[0, ∞)`, `f(0) = 1` and `f(t) = 0` for `t > 0` gives the
 projection `f(A)` onto `ker A`, and is matrix convex (`isMatrixConvexOn_indicator_zero`) but not
-operator convex (`not_isOperatorConvexOn_indicator_zero`). The separation is one of conventions at
-the endpoints of `s`: a matrix convex function is convex (`IsMatrixConvexOn.convexOn_real`), hence
-continuous on the interior of `s` (`IsMatrixConvexOn.continuousOn_interior`), and the obstruction is
-the continuity at the endpoints that operator convexity requires (Hansen–Pedersen), while the
-argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is algebraic. Both notions are kept. This file
-proves the specialisation `IsOperatorConvexOn.isMatrixConvexOn` (operator convex ⇒ matrix convex),
+operator convex (`not_isOperatorConvexOn_indicator_zero`, through the continuity at the endpoint
+`0` that operator convexity requires). A matrix convex function is convex
+(`IsMatrixConvexOn.convexOn_real`), hence continuous on the interior of `s`
+(`IsMatrixConvexOn.continuousOn_interior`), so the two notions can differ only at the endpoints of
+`s`. The argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is given here for finite
+spectra. In an infinite-dimensional C⋆-algebra the convexity of `cfc f` forces continuity at the
+endpoints as well (`continuousOn_of_forall_convexOn_cfc`): Mathlib's `cfc f` takes the junk value
+`0` where `f` is discontinuous on the spectrum, and testing the convexity on functions on
+`OnePoint ℕ ⊕ Unit` rules out a discontinuity at an endpoint. Thus the continuity in
+`IsOperatorConvexOn` is a consequence of its convexity field (`IsOperatorConvexOn.of_convexOn`),
+and is kept as a field only to match the definition in the literature. Both notions are kept. This
+file proves the specialisation `IsOperatorConvexOn.isMatrixConvexOn` (operator convex ⇒ matrix convex),
 and the converse direction (matrix convex ⇒ operator convex) for continuous `f` on bounded operators
 on a Hilbert space, `IsMatrixConvexOn.convexOn_continuousLinearMap`. The converse in every
 C⋆-algebra transfers the Hilbert space case along a faithful representation (Gelfand–Naimark,
@@ -85,6 +92,9 @@ presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) �
   `IsMatrixConvexOn.ordConnected`: a matrix convex function is defined on an interval;
   `IsMatrixConvexOn.convexOn_real`, `IsMatrixConvexOn.continuousOn_interior`: it is convex, hence
   continuous on the interior of its domain (`ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset`).
+* `continuousOn_of_forall_convexOn_cfc`, `IsOperatorConvexOn.of_convexOn`: convexity of `cfc f` in
+  every C⋆-algebra forces continuity on `s`, endpoints included, so operator convexity needs no
+  continuity hypothesis.
 * `IsMatrixConvexOn.convexOn_continuousLinearMap`: a continuous matrix convex function is convex on
   the self-adjoint operators on every complex Hilbert space.
 * `isOperatorConvexOn_neg_rpow`: `-tᵖ` (`0 ≤ p ≤ 1`) is operator convex on `[0, ∞)`
@@ -638,10 +648,12 @@ Gelfand–Naimark and is proved outside `ForMathlib`, in
 `QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean` (`isOperatorConvexOn_congr_universe`);
 the examples below are proved uniformly in every C⋆-algebra and hold in every universe.
 
-The field `continuousOn` follows the definition of Hansen–Pedersen. The field is independent of `convexOn` only at
-the endpoints of `s`: convexity gives continuity on the interior
-(`IsMatrixConvexOn.continuousOn_interior`), but not at an endpoint, where the indicator of `{0}` on
-`[0, ∞)` is matrix convex and discontinuous (`isMatrixConvexOn_indicator_zero`,
+The field `continuousOn` is part of the definition of operator convexity, which is stated for
+continuous functions on an interval. It is redundant: the field `convexOn` already forces the
+continuity of `f` on `s`, on the interior of `s` through `IsMatrixConvexOn.continuousOn_interior`
+and at the endpoints through the junk value of `cfc` (`continuousOn_of_forall_convexOn_cfc`,
+`IsOperatorConvexOn.of_convexOn`). Matrix convexity does not: the indicator of `{0}` on `[0, ∞)`
+is matrix convex and discontinuous (`isMatrixConvexOn_indicator_zero`,
 `not_isOperatorConvexOn_indicator_zero`). When `s` has at most one point the domain is at most a
 scalar and both predicates hold for every `f` continuous on `s`. -/
 structure IsOperatorConvexOn (s : Set ℝ) (f : ℝ → ℝ) : Prop where
@@ -668,8 +680,8 @@ variable {s : Set ℝ} {f : ℝ → ℝ}
 
 open scoped Matrix.Norms.L2Operator
 
-/-- An operator convex function is matrix convex: in universe `u`, the operator convexity applies to
-the matrices indexed by `ULift.{u} (Fin n)`, and reindexing along `Equiv.ulift` pulls it back to
+/-- Convexity of `cfc f` in every C⋆-algebra of a universe `u` gives matrix convexity: it applies
+to the matrices indexed by `ULift.{u} (Fin n)`, and reindexing along `Equiv.ulift` pulls it back to
 `Fin n` (`ConvexOn.cfc_of_injective`).
 
 The universe `u` does not occur in the conclusion, so a universe-polymorphic hypothesis must fix it
@@ -677,12 +689,19 @@ at the call site, e.g. `isOperatorConvexOn_inv.{0}.isMatrixConvexOn`. The lemma 
 `u` because the independence of the universe (`isOperatorConvexOn_congr_universe` in
 `QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean`) is proved from it, together with the
 direction from matrix convexity to operator convexity. -/
-lemma IsOperatorConvexOn.isMatrixConvexOn (hf : IsOperatorConvexOn.{u} s f) :
+lemma isMatrixConvexOn_of_forall_convexOn_cfc
+    (hf : ∀ (A : Type u) [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A],
+      ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) :
     IsMatrixConvexOn s f := fun n => by
   let e : Matrix (Fin n) (Fin n) ℂ ≃⋆ₐ[ℂ] Matrix (ULift.{u} (Fin n)) (ULift.{u} (Fin n)) ℂ :=
     StarAlgEquiv.ofAlgEquiv (Matrix.reindexAlgEquiv ℂ ℂ Equiv.ulift.symm) fun M => by
       simp [Matrix.coe_reindexAlgEquiv, Matrix.star_eq_conjTranspose]
-  exact ConvexOn.cfc_of_injective e e.injective (hf.convexOn _)
+  exact ConvexOn.cfc_of_injective e e.injective (hf _)
+
+/-- An operator convex function is matrix convex (`isMatrixConvexOn_of_forall_convexOn_cfc`). -/
+lemma IsOperatorConvexOn.isMatrixConvexOn (hf : IsOperatorConvexOn.{u} s f) :
+    IsMatrixConvexOn s f :=
+  isMatrixConvexOn_of_forall_convexOn_cfc hf.convexOn
 
 /-- The set `s` of a matrix convex function is an interval: its domain in `M_1(ℂ)` is convex. -/
 lemma IsMatrixConvexOn.ordConnected (hf : IsMatrixConvexOn s f) : s.OrdConnected :=
@@ -700,6 +719,345 @@ lemma IsMatrixConvexOn.continuousOn_interior (hf : IsMatrixConvexOn s f) :
   hf.convexOn_real.continuousOn_interior
 
 end MatrixPredicates
+
+/-! ### Continuity at the endpoints from convexity in every C⋆-algebra -/
+
+section EndpointContinuity
+
+open Filter Topology
+open scoped ComplexOrder
+
+universe u
+
+variable {s : Set ℝ} {f : ℝ → ℝ}
+
+/-- `OnePoint ℕ ⊕ Unit`, lifted to the universe `u`: a convergent sequence with its limit, and an
+isolated point. The functions on it are the test elements for the continuity of `f` at an
+endpoint of `s`. -/
+private abbrev EndpointSpace : Type u := ULift.{u} (OnePoint ℕ ⊕ Unit)
+
+/- `C(EndpointSpace, ℂ)` carries the pointwise real algebra structure as well as the one
+restricted from `ℂ` (`Algebra.complexToReal`), which `IsOperatorConvexOn.convexOn` uses. The
+local instances select the latter. -/
+@[instance_reducible, local instance high] private noncomputable def instAlgebraRealEndpoint :
+    Algebra ℝ C(EndpointSpace.{u}, ℂ) :=
+  Algebra.complexToReal
+
+@[instance_reducible, local instance high] private noncomputable def instModuleRealEndpoint :
+    Module ℝ C(EndpointSpace.{u}, ℂ) :=
+  Module.complexToReal _
+
+/-- The real function on `EndpointSpace` with the values `v n` at `n`, `p` at `∞` and `q` at the
+isolated point. -/
+private def endpointFun (v : ℕ → ℝ) (p q : ℝ) (y : EndpointSpace.{u}) : ℝ :=
+  Sum.elim (fun o : OnePoint ℕ => Option.elim o p v) (fun _ => q) y.down
+
+@[simp] private lemma endpointFun_inl_some (v : ℕ → ℝ) (p q : ℝ) (n : ℕ) :
+    endpointFun.{u} v p q ⟨Sum.inl (some n)⟩ = v n := rfl
+
+@[simp] private lemma endpointFun_inl_none (v : ℕ → ℝ) (p q : ℝ) :
+    endpointFun.{u} v p q ⟨Sum.inl none⟩ = p := rfl
+
+@[simp] private lemma endpointFun_inr (v : ℕ → ℝ) (p q : ℝ) (u : Unit) :
+    endpointFun.{u} v p q ⟨Sum.inr u⟩ = q := rfl
+
+private lemma continuous_endpointFun {v : ℕ → ℝ} {p : ℝ} (hv : Tendsto v atTop (𝓝 p)) (q : ℝ) :
+    Continuous (endpointFun.{u} v p q) :=
+  (Continuous.sumElim ((OnePoint.continuous_iff_from_nat _).2 hv) continuous_const).comp
+    continuous_uliftDown
+
+private lemma range_endpointFun_subset {v : ℕ → ℝ} {p q : ℝ} (hv : ∀ n, v n ∈ s) (hp : p ∈ s)
+    (hq : q ∈ s) : range (endpointFun.{u} v p q) ⊆ s := by
+  rintro _ ⟨⟨o | u⟩, rfl⟩
+  · rcases o with _ | n
+    · exact hp
+    · exact hv n
+  · exact hq
+
+/-- `endpointFun v p q` as a self-adjoint element of `C(EndpointSpace, ℂ)`. -/
+private def endpointElem (v : ℕ → ℝ) (p q : ℝ) (hv : Tendsto v atTop (𝓝 p)) :
+    C(EndpointSpace.{u}, ℂ) :=
+  ⟨fun y => (endpointFun v p q y : ℂ), Complex.continuous_ofReal.comp (continuous_endpointFun hv q)⟩
+
+private lemma endpointElem_apply (v : ℕ → ℝ) (p q : ℝ) (hv : Tendsto v atTop (𝓝 p))
+    (y : EndpointSpace.{u}) : endpointElem v p q hv y = (endpointFun v p q y : ℂ) :=
+  rfl
+
+private lemma isSelfAdjoint_endpointElem (v : ℕ → ℝ) (p q : ℝ) (hv : Tendsto v atTop (𝓝 p)) :
+    IsSelfAdjoint (endpointElem.{u} v p q hv) := by
+  rw [isSelfAdjoint_iff]
+  ext y
+  simp [endpointElem_apply]
+
+/-- The real spectrum of `endpointElem v p q` is the range of `endpointFun v p q`. -/
+private lemma spectrum_endpointElem (v : ℕ → ℝ) (p q : ℝ) (hv : Tendsto v atTop (𝓝 p)) :
+    spectrum ℝ (endpointElem.{u} v p q hv) = range (endpointFun.{u} v p q) := by
+  rw [← spectrum.preimage_algebraMap ℂ, ContinuousMap.spectrum_eq_range]
+  ext x
+  simp only [mem_preimage, mem_range, endpointElem_apply, Complex.coe_algebraMap,
+    Complex.ofReal_inj]
+
+private lemma endpointElem_mem (v : ℕ → ℝ) (p q : ℝ) (hv : Tendsto v atTop (𝓝 p))
+    (h : range (endpointFun.{u} v p q) ⊆ s) :
+    endpointElem.{u} v p q hv ∈ {a : C(EndpointSpace.{u}, ℂ) | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} :=
+  ⟨isSelfAdjoint_endpointElem v p q hv, by rwa [spectrum_endpointElem]⟩
+
+/-- `cfc f` takes its junk value `0` at `endpointElem v p q` when `f` is discontinuous on the
+range of `endpointFun v p q`. -/
+private lemma cfc_endpointElem_eq_zero (v : ℕ → ℝ) (p q : ℝ) (hv : Tendsto v atTop (𝓝 p))
+    (hf : ¬ ContinuousOn f (range (endpointFun.{u} v p q))) :
+    cfc f (endpointElem.{u} v p q hv) = 0 :=
+  cfc_apply_of_not_continuousOn _ (by rwa [spectrum_endpointElem])
+
+/-- `cfc f` acts pointwise at `endpointElem v p q` when `f` is continuous on the range of
+`endpointFun v p q`: evaluation at a point is a continuous ⋆-homomorphism to `ℂ`
+(`StarAlgHom.map_cfc`). -/
+private lemma cfc_endpointElem_apply (v : ℕ → ℝ) (p q : ℝ) (hv : Tendsto v atTop (𝓝 p))
+    (hf : ContinuousOn f (range (endpointFun.{u} v p q))) (y : EndpointSpace.{u}) :
+    cfc f (endpointElem v p q hv) y = (f (endpointFun v p q y) : ℂ) := by
+  have h := (ContinuousMap.evalStarAlgHom ℂ ℂ y).map_cfc f (endpointElem v p q hv)
+    (by rwa [spectrum_endpointElem]) (continuous_eval_const y)
+    (isSelfAdjoint_endpointElem v p q hv) (isSelfAdjoint_iff.2 (by simp [endpointElem_apply]))
+  simp only [ContinuousMap.evalStarAlgHom_apply, endpointElem_apply] at h
+  rw [h, ← Complex.coe_algebraMap, cfc_algebraMap]
+
+/-- Midpoints of test elements are test elements. -/
+private lemma smul_add_smul_endpointElem {v w v' : ℕ → ℝ} {p p' p'' q q' q'' : ℝ}
+    (hv : Tendsto v atTop (𝓝 p)) (hw : Tendsto w atTop (𝓝 p')) (hv' : Tendsto v' atTop (𝓝 p''))
+    (h1 : ∀ n, v n + w n = 2 * v' n) (h2 : p + p' = 2 * p'') (h3 : q + q' = 2 * q'') :
+    (1 / 2 : ℝ) • endpointElem.{u} v p q hv + (1 / 2 : ℝ) • endpointElem.{u} w p' q' hw =
+      endpointElem v' p'' q'' hv' := by
+  ext y
+  simp only [RCLike.real_smul_eq_coe_smul (K := ℂ), ContinuousMap.add_apply,
+    ContinuousMap.smul_apply, endpointElem_apply, smul_eq_mul]
+  have h1' (n : ℕ) : (v n : ℂ) + w n = 2 * v' n := by exact_mod_cast h1 n
+  have h2' : (p : ℂ) + p' = 2 * p'' := by exact_mod_cast h2
+  have h3' : (q : ℂ) + q' = 2 * q'' := by exact_mod_cast h3
+  rcases y with ⟨o | u⟩
+  · rcases o with _ | n
+    · simp only [endpointFun_inl_none]
+      push_cast
+      linear_combination (1 / 2 : ℂ) * h2'
+    · simp only [endpointFun_inl_some]
+      push_cast
+      linear_combination (1 / 2 : ℂ) * h1' n
+  · simp only [endpointFun_inr]
+    push_cast
+    linear_combination (1 / 2 : ℂ) * h3'
+
+/-- If `f (v n)` does not converge to `f p` along `v n → p`, then `f` is not continuous on the
+range of `endpointFun v p q`. -/
+private lemma not_continuousOn_range_endpointFun {v : ℕ → ℝ} {p : ℝ} (hv : Tendsto v atTop (𝓝 p))
+    (hfv : ¬ Tendsto (fun n => f (v n)) atTop (𝓝 (f p))) (q : ℝ) :
+    ¬ ContinuousOn f (range (endpointFun.{u} v p q)) := fun hc => by
+  have hp : p ∈ range (endpointFun.{u} v p q) := ⟨⟨Sum.inl none⟩, rfl⟩
+  exact hfv ((hc p hp).tendsto.comp (tendsto_nhdsWithin_iff.2
+    ⟨hv, Eventually.of_forall fun n => ⟨⟨Sum.inl (some n)⟩, rfl⟩⟩))
+
+private lemma real_le_of_le_half_add_half {x a b : ℝ}
+    (h : (x : ℂ) ≤ ((1 / 2 : ℝ) : ℂ) * a + ((1 / 2 : ℝ) : ℂ) * b) : x ≤ a / 2 + b / 2 := by
+  have : (((1 / 2 : ℝ) : ℂ) * a + ((1 / 2 : ℝ) : ℂ) * b) = ((a / 2 + b / 2 : ℝ) : ℂ) := by
+    push_cast
+    ring
+  rwa [this, Complex.real_le_real] at h
+
+/-- **Convexity of `cfc f` in every C⋆-algebra forces continuity on `s`**, endpoints included.
+On the interior of `s` this is the continuity of the convex `f`
+(`IsMatrixConvexOn.continuousOn_interior`). At an endpoint `p` of `s` it is forced by the junk
+value: Mathlib's `cfc f a` is `0` when `f` is discontinuous on the spectrum of `a`. If `f` were
+discontinuous at `p` within `s`, take `v n → p` in `s` with `f (v n) ↛ f p`, a second point `r` of
+`s`, and in `C(OnePoint ℕ ⊕ Unit, ℂ)` the test elements with the values `(v n, p | p)`,
+`(r, r | p)`, `(2 v n - p, p | p)` and `(p, p | β)` at `(n, ∞ | isolated point)`, for `β ∈ s`.
+The first is a junk element, the midpoint of the first two is not, and comparing at the isolated
+point gives `f p ≤ ½ f p`; the midpoint of the last two is a junk element, and comparing at `∞`
+and at the isolated point gives `0 ≤ f p` and `f p ≤ f β`. So `f p = 0` is the minimum of `f` on
+`s`, and the convex `f` is squeezed between `f p` and its chord to `r`, hence continuous at `p`. -/
+theorem continuousOn_of_forall_convexOn_cfc
+    (hf : ∀ (A : Type u) [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A],
+      ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) :
+    ContinuousOn f s := by
+  have hmat := isMatrixConvexOn_of_forall_convexOn_cfc hf
+  have hord := hmat.ordConnected
+  have hcvx := hmat.convexOn_real
+  have hint := hmat.continuousOn_interior
+  have hconv := hf C(EndpointSpace.{u}, ℂ)
+  intro p hp
+  by_contra hdisc
+  have hnotint : p ∉ interior s := fun h =>
+    hdisc ((hint p h).continuousAt (isOpen_interior.mem_nhds h)).continuousWithinAt
+  have hcont_int : ∀ {x : ℝ}, x ∈ interior s → ∀ t : Set ℝ, ContinuousWithinAt f t x :=
+    fun hx t => ((hint _ hx).continuousAt (isOpen_interior.mem_nhds hx)).continuousWithinAt
+  have hmem_int : ∀ {a b x : ℝ}, a ∈ s → b ∈ s → a < x → x < b → x ∈ interior s :=
+    fun ha hb hax hxb => mem_interior_iff_mem_nhds.2
+      (mem_of_superset (Ioo_mem_nhds hax hxb) (Ioo_subset_Icc_self.trans (hord.out ha hb)))
+  -- A second point `r` of `s`; `s` lies on one side of `p`, as `p` is not interior.
+  obtain ⟨r, hr, hrp⟩ : ∃ r ∈ s, r ≠ p := by
+    by_contra h
+    push Not at h
+    exact hdisc (continuousWithinAt_singleton.mono fun t ht => h t ht)
+  have hside : ∀ t ∈ s, 0 ≤ (t - p) * (r - p) := by
+    intro t ht
+    by_contra hlt
+    push Not at hlt
+    apply hnotint
+    rcases lt_or_gt_of_ne hrp with h | h
+    · exact hmem_int hr ht h (by nlinarith)
+    · exact hmem_int ht hr (by nlinarith) h
+  set d := |r - p| with hd
+  have hd0 : 0 < d := abs_pos.2 (sub_ne_zero.2 hrp)
+  -- A sequence in `s` witnessing the discontinuity at `p`.
+  obtain ⟨v, hvs, hvd, hv, hfv⟩ : ∃ v : ℕ → ℝ, (∀ n, v n ∈ s) ∧ (∀ n, |v n - p| < d / 2) ∧
+      Tendsto v atTop (𝓝 p) ∧ ¬ Tendsto (fun n => f (v n)) atTop (𝓝 (f p)) := by
+    have h : ¬ ContinuousWithinAt f (s ∩ Metric.ball p (d / 2)) p := by
+      rwa [continuousWithinAt_inter'
+        (mem_nhdsWithin_of_mem_nhds (Metric.ball_mem_nhds p (by positivity)))]
+    rw [ContinuousWithinAt, Filter.tendsto_iff_seq_tendsto] at h
+    push Not at h
+    obtain ⟨u, hu, hfu⟩ := h
+    rw [tendsto_nhdsWithin_iff] at hu
+    obtain ⟨N, hN⟩ := eventually_atTop.1 hu.2
+    refine ⟨fun n => u (n + N), fun n => (hN _ (by omega)).1, fun n => ?_,
+      hu.1.comp (tendsto_add_atTop_nat N), fun h' => hfu ((tendsto_add_atTop_iff_nat N).1 h')⟩
+    have := (hN (n + N) (by omega)).2
+    rwa [Metric.mem_ball, Real.dist_eq] at this
+  let yInf : EndpointSpace.{u} := ⟨Sum.inl none⟩
+  let yq : EndpointSpace.{u} := ⟨Sum.inr ()⟩
+  have hvr (n : ℕ) : v n ≠ r := fun h => by
+    have := hvd n
+    rw [h, ← hd] at this
+    linarith
+  have hfin (a b q : ℝ) : ContinuousOn f (range (endpointFun.{u} (fun _ => a) b q)) :=
+    ((Set.toFinite {a, b, q}).subset
+      (range_endpointFun_subset (fun _ => by simp) (by simp) (by simp))).continuousOn f
+  -- Test 1: `f p ≤ 0`.
+  have hm₁c :
+      ContinuousOn f (range (endpointFun.{u} (fun n => (v n + r) / 2) ((p + r) / 2) p)) := by
+    rintro _ ⟨⟨o | u⟩, rfl⟩
+    · rcases o with _ | n
+      · simp only [endpointFun_inl_none]
+        rcases lt_or_gt_of_ne hrp with h | h
+        · exact hcont_int (hmem_int hr hp (by linarith) (by linarith)) _
+        · exact hcont_int (hmem_int hp hr (by linarith) (by linarith)) _
+      · simp only [endpointFun_inl_some]
+        rcases lt_or_gt_of_ne (hvr n) with h | h
+        · exact hcont_int (hmem_int (hvs n) hr (by linarith) (by linarith)) _
+        · exact hcont_int (hmem_int hr (hvs n) (by linarith) (by linarith)) _
+    · simp only [endpointFun_inr]
+      refine continuousWithinAt_singleton.mono_of_mem_nhdsWithin (mem_nhdsWithin.2
+        ⟨Metric.ball p (d / 4), Metric.isOpen_ball, Metric.mem_ball_self (by positivity), ?_⟩)
+      rintro x ⟨hx, ⟨⟨o | u⟩, rfl⟩⟩
+      · rw [Metric.mem_ball, Real.dist_eq] at hx
+        exfalso
+        rcases o with _ | n
+        · simp only [endpointFun_inl_none] at hx
+          have : |(p + r) / 2 - p| = d / 2 := by
+            rw [hd, show (p + r) / 2 - p = (r - p) / 2 by ring, abs_div, abs_two]
+          linarith
+        · simp only [endpointFun_inl_some] at hx
+          have h1 : |(v n + r) / 2 - p| = |(v n - p) + (r - p)| / 2 := by
+            rw [show (v n + r) / 2 - p = ((v n - p) + (r - p)) / 2 by ring, abs_div, abs_two]
+          have h2 := abs_sub ((v n - p) + (r - p)) (v n - p)
+          rw [show (v n - p) + (r - p) - (v n - p) = r - p by ring, ← hd] at h2
+          linarith [hvd n]
+      · simp only [endpointFun_inr]
+        exact mem_singleton p
+  have h₁ := hconv.2 (endpointElem_mem v p p hv (range_endpointFun_subset hvs hp hp))
+    (endpointElem_mem (fun _ => r) r p tendsto_const_nhds
+      (range_endpointFun_subset (fun _ => hr) hr hp))
+    (by norm_num : (0 : ℝ) ≤ 1 / 2) (by norm_num : (0 : ℝ) ≤ 1 / 2) (by norm_num)
+  rw [smul_add_smul_endpointElem hv tendsto_const_nhds ((hv.add_const r).div_const 2)
+    (fun n => by ring) (by ring) (by ring)] at h₁
+  have h₁q := ContinuousMap.le_def.1 h₁ yq
+  simp only [RCLike.real_smul_eq_coe_smul (K := ℂ), ContinuousMap.add_apply,
+    ContinuousMap.smul_apply, smul_eq_mul, cfc_endpointElem_apply _ _ _ _ hm₁c,
+    cfc_endpointElem_eq_zero _ _ _ _ (not_continuousOn_range_endpointFun hv hfv p),
+    cfc_endpointElem_apply _ _ _ _ (hfin r r p), ContinuousMap.zero_apply, yq,
+    endpointFun_inr] at h₁q
+  have hfp0 : f p ≤ 0 := by
+    have := real_le_of_le_half_add_half (x := f p) (a := 0) (b := f p) (by simpa using h₁q)
+    linarith
+  -- Test 2: `f p ≤ f β` for every `β ∈ s`.
+  have hmin : ∀ β ∈ s, f p ≤ f β := by
+    intro β hβ
+    have ha₂s : ∀ n, 2 * v n - p ∈ s := by
+      intro n
+      refine hord.uIcc_subset hp hr ?_
+      have h1 := hside _ (hvs n)
+      have h2 := abs_lt.1 (hvd n)
+      rw [Set.mem_uIcc]
+      rcases lt_or_gt_of_ne hrp with h | h
+      · have hd' : d = p - r := by rw [hd, abs_of_neg (by linarith)]; ring
+        right
+        constructor <;> nlinarith
+      · have hd' : d = r - p := by rw [hd, abs_of_pos (by linarith)]
+        left
+        constructor <;> nlinarith
+    have hv₂ : Tendsto (fun n => 2 * v n - p) atTop (𝓝 p) := by
+      have h := (hv.const_mul 2).sub_const p
+      rwa [show 2 * p - p = p by ring] at h
+    have h₂ := hconv.2 (endpointElem_mem _ p p hv₂ (range_endpointFun_subset ha₂s hp hp))
+      (endpointElem_mem (fun _ => p) p β tendsto_const_nhds
+        (range_endpointFun_subset (fun _ => hp) hp hβ))
+      (by norm_num : (0 : ℝ) ≤ 1 / 2) (by norm_num : (0 : ℝ) ≤ 1 / 2) (by norm_num)
+    rw [smul_add_smul_endpointElem hv₂ tendsto_const_nhds hv (fun n => by ring) (by ring)
+      (by ring : p + β = 2 * ((p + β) / 2))] at h₂
+    have h₂Inf := ContinuousMap.le_def.1 h₂ yInf
+    have h₂q := ContinuousMap.le_def.1 h₂ yq
+    simp only [RCLike.real_smul_eq_coe_smul (K := ℂ), ContinuousMap.add_apply,
+      ContinuousMap.smul_apply, smul_eq_mul,
+      cfc_endpointElem_eq_zero _ _ _ _ (not_continuousOn_range_endpointFun hv hfv _),
+      cfc_endpointElem_apply _ _ _ _ (hfin p p β), ContinuousMap.zero_apply, yInf, yq,
+      endpointFun_inl_none, endpointFun_inr] at h₂Inf h₂q
+    by_cases hj : ContinuousOn f (range (endpointFun.{u} (fun n => 2 * v n - p) p p))
+    · simp only [cfc_endpointElem_apply _ _ _ _ hj, endpointFun_inl_none, endpointFun_inr]
+        at h₂Inf h₂q
+      have e1 := real_le_of_le_half_add_half (x := 0) (a := f p) (b := f p) (by simpa using h₂Inf)
+      have e2 := real_le_of_le_half_add_half (x := 0) (a := f p) (b := f β) (by simpa using h₂q)
+      linarith
+    · simp only [cfc_endpointElem_eq_zero _ _ _ _ hj, ContinuousMap.zero_apply] at h₂Inf h₂q
+      have e1 := real_le_of_le_half_add_half (x := 0) (a := 0) (b := f p) (by simpa using h₂Inf)
+      have e2 := real_le_of_le_half_add_half (x := 0) (a := 0) (b := f β) (by simpa using h₂q)
+      linarith
+  -- `f` is continuous at `p` after all: squeezed between `f p` and the chord to `r`.
+  apply hdisc
+  have hg : Tendsto (fun t => f p + (t - p) / (r - p) * (f r - f p)) (𝓝[s] p) (𝓝 (f p)) := by
+    have h : Continuous fun t : ℝ => f p + (t - p) / (r - p) * (f r - f p) := by fun_prop
+    simpa using (h.continuousWithinAt (s := s) (x := p)).tendsto
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hg
+    (eventually_nhdsWithin_of_forall hmin) ?_
+  rw [eventually_nhdsWithin_iff]
+  filter_upwards [Metric.ball_mem_nhds p hd0] with t ht hts
+  rw [Metric.mem_ball, Real.dist_eq] at ht
+  have hst := hside t hts
+  have hl : 0 ≤ (t - p) / (r - p) ∧ (t - p) / (r - p) ≤ 1 := by
+    rcases lt_or_gt_of_ne hrp with h | h
+    · have hd' : d = p - r := by rw [hd, abs_of_neg (by linarith)]; ring
+      have h2 := abs_lt.1 ht
+      refine ⟨div_nonneg_iff.2 (Or.inr ⟨by nlinarith, by linarith⟩), ?_⟩
+      rw [div_le_one_of_neg (by linarith)]
+      linarith
+    · have hd' : d = r - p := by rw [hd, abs_of_pos (by linarith)]
+      have h2 := abs_lt.1 ht
+      refine ⟨div_nonneg (by nlinarith) (by linarith), ?_⟩
+      rw [div_le_one (by linarith)]
+      linarith
+  have hc := hcvx.2 hp hr (sub_nonneg.2 hl.2) hl.1 (by ring)
+  have e1 : (1 - (t - p) / (r - p)) • p + ((t - p) / (r - p)) • r = t := by
+    simp only [smul_eq_mul]
+    field_simp [sub_ne_zero.2 hrp.symm]
+    ring
+  rw [e1, smul_eq_mul, smul_eq_mul] at hc
+  linarith
+
+/-- Operator convexity from the convexity of `cfc f` in every C⋆-algebra alone: the field
+`IsOperatorConvexOn.continuousOn` is redundant (`continuousOn_of_forall_convexOn_cfc`). -/
+lemma IsOperatorConvexOn.of_convexOn
+    (hf : ∀ (A : Type u) [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A],
+      ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) :
+    IsOperatorConvexOn.{u} s f :=
+  ⟨continuousOn_of_forall_convexOn_cfc hf, hf⟩
+
+end EndpointContinuity
 
 /-! ### Jensen's operator inequality -/
 
@@ -932,9 +1290,13 @@ lemma isMatrixConvexOn_inv : IsMatrixConvexOn (Ioi 0) (fun t => t⁻¹) :=
 The indicator `f = 1_{\{0\}}` of `{0}` on `[0, ∞)` sends `A ⪰ 0` to the projection `f(A)` onto
 `ker A`. For `A, B ⪰ 0` and `a, b > 0`, `ker(a A + b B) = ker A ∩ ker B`, so the projection onto
 `ker(a A + b B)` lies below those onto `ker A` and `ker B`, and `f` is matrix convex. It is not
-continuous at the endpoint `0`, so it is not operator convex: the obstruction is the continuity in
-the definition of `IsOperatorConvexOn`, not the kernel argument. In the interior `(0, ∞)` matrix
-convexity does give continuity (`IsMatrixConvexOn.continuousOn_interior`), and `f` is `0` there.
+continuous at the endpoint `0`, so it fails the continuity required by `IsOperatorConvexOn`, which
+is how `not_isOperatorConvexOn_indicator_zero` refutes operator convexity. The kernel argument as
+formalised here assumes finite spectra and does not carry over to a general C⋆-algebra, where
+`cfc f` takes its junk value `0` whenever `0` is an accumulation point of the spectrum; indeed
+`f(A)` is not convex there (`continuousOn_of_forall_convexOn_cfc`). In the interior `(0, ∞)`
+matrix convexity does give continuity (`IsMatrixConvexOn.continuousOn_interior`), and `f` is `0`
+there.
 -/
 
 section IndicatorZero
