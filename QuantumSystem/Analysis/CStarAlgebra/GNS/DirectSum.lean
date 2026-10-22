@@ -13,7 +13,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
 /-!
 # The direct sum of the GNS representations of all pure states
 
-The GNS representations `π_ψ` of the pure states `ψ` of a C\*-algebra `A` form a sector family
+The GNS representations `π_ψ` of the pure states `ψ` of a C\*-algebra `A` form a family
 `pureStateFamily A`, and its `ℓ²`-direct sum `rep A` is the representation witnessing the
 Gelfand–Naimark theorem (`CStarRep.exists_isometric`).  Everything is an instance of the generic
 direct sum of `CStarAlgebra/Representation/DirectSum.lean`; the only input specific to pure
@@ -48,16 +48,15 @@ namespace DirectSum
 variable {A : Type u} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
 
 variable (A) in
-/-- The sector family of GNS representations of all pure states, indexed by the pure states
+/-- The family of GNS representations of all pure states, indexed by the pure states
 `{ω : State A // ω.IsPure}`. -/
-noncomputable def pureStateFamily : SectorFamily.{u, u, u} A where
-  Index := {ω : State A // ω.IsPure}
-  rep ω := GNS[ω.1].toCStarRep
+noncomputable def pureStateFamily : {ω : State A // ω.IsPure} → CStarRep.{u, u} A :=
+  fun ω => GNS[ω.1].toCStarRep
 
 variable (A) in
 /-- **The pure states separate points.**  If `a ≠ 0`, some pure state `ω` has
 `0 < ω (a* a) = ⟪ξ_ω, π_ω(a*) π_ω(a) ξ_ω⟫`, so `π_ω(a) ≠ 0`. -/
-theorem pureStateFamily_separatesPoints : (pureStateFamily A).SeparatesPoints := by
+theorem pureStateFamily_separatesPoints : CStarRep.SeparatesPoints (pureStateFamily A) := by
   intro a ha
   by_contra hne
   obtain ⟨ω, hω_pure, hω_pos⟩ := State.exists_isPure_pos_of_ne_zero a hne
@@ -72,25 +71,25 @@ variable (A) in
 /-- The direct sum of the GNS representations of all pure states, bundled as a `CStarRep A`.
 This is the representation that witnesses the Gelfand–Naimark theorem
 (`CStarRep.exists_isometric`). -/
-noncomputable def rep : CStarRep A := (pureStateFamily A).toCStarRep
+noncomputable def rep : CStarRep A := CStarRep.directSum (pureStateFamily A)
 
 /-- The action of `GNS.DirectSum.rep A` unfolds to the block-diagonal representation
-`(pureStateFamily A).directSumRep`. -/
-@[simp] lemma rep_π : (rep A).π = (pureStateFamily A).directSumRep := rfl
+`CStarRep.directSumRep (pureStateFamily A)`. -/
+@[simp] lemma rep_π : (rep A).π = CStarRep.directSumRep (pureStateFamily A) := rfl
 
 /-- The direct sum representation is faithful. -/
 lemma rep_injective : Function.Injective (rep A).π :=
-  (pureStateFamily A).directSumRep_injective_of (pureStateFamily_separatesPoints A)
+  CStarRep.directSumRep_injective_of (pureStateFamily_separatesPoints A)
 
 /-- The direct sum representation is isometric. -/
 lemma rep_isometry : Isometry (rep A).π :=
-  (pureStateFamily A).directSumRep_isometry_of (pureStateFamily_separatesPoints A)
+  CStarRep.directSumRep_isometry_of (pureStateFamily_separatesPoints A)
 
 /-- The image of `A` under the direct sum representation is norm closed in `H →L[ℂ] H`, so it is a
 C\*-subalgebra. -/
 lemma rep_isClosed_range :
     IsClosed (NonUnitalStarAlgHom.range (rep A).π : Set ((rep A).H →L[ℂ] (rep A).H)) :=
-  (pureStateFamily A).directSumRep_isClosed_range_of (pureStateFamily_separatesPoints A)
+  CStarRep.directSumRep_isClosed_range_of (pureStateFamily_separatesPoints A)
 
 /-- The direct sum representation acts non-degenerately, since each GNS representation is
 cyclic, hence non-degenerate (`GNS.Representation.actsNondegenerately`).
@@ -101,7 +100,7 @@ non-degeneracy is the only input to `rep_π_one`, hence to
 `CStarRep.exists_isometric_unital`. -/
 lemma rep_actsNondegenerately :
     InnerProductSpace.ActsNondegenerately (Set.range ((rep A).π : A → ((rep A).H →L[ℂ] (rep A).H))) :=
-  (pureStateFamily A).directSumRep_actsNondegenerately_of fun ω =>
+  CStarRep.directSumRep_actsNondegenerately_of fun ω =>
     GNS[ω.1].actsNondegenerately
 
 variable (A) in

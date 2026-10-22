@@ -111,23 +111,19 @@ lemma normingState_spec [SeparableSpace A] (i : NormingIndex A) :
 variable (A) in
 /-- The **countable norming family**: one GNS representation for each nonzero member of a
 dense sequence of `A`, at a pure state norming that member. -/
-noncomputable def normingFamily [SeparableSpace A] : SectorFamily.{u, u, 0} A where
-  Index := NormingIndex A
-  rep i := GNS[normingState i].toCStarRep
+noncomputable def normingFamily [SeparableSpace A] : NormingIndex A → CStarRep.{u, u} A :=
+  fun i => GNS[normingState i].toCStarRep
 
 /-- Each summand of the norming family is separable. -/
 instance [SeparableSpace A] (i : NormingIndex A) :
-    SeparableSpace ((normingFamily A).rep i).H :=
+    SeparableSpace (normingFamily A i).H :=
   Representation.separableSpace_H _
 
 /-- The direct-sum Hilbert space of the norming family is separable: it is an ℓ²-sum of
 countably many separable spaces. -/
 instance separableSpace_normingFamily_directSumHilbert [SeparableSpace A] :
-    SeparableSpace (normingFamily A).directSumHilbert := by
-  have : Countable (normingFamily A).Index := inferInstanceAs (Countable (NormingIndex A))
-  have : ∀ i : (normingFamily A).Index, SeparableSpace ((normingFamily A).rep i).H :=
-    fun _ => Representation.separableSpace_H _
-  exact lp.instSeparableSpaceOfCountable
+    SeparableSpace (CStarRep.directSumHilbert (normingFamily A)) :=
+  lp.instSeparableSpaceOfCountable
 
 variable (A) in
 /-- **The norming family separates points.**
@@ -137,7 +133,7 @@ If every member annihilates `a ≠ 0`, take `aₙ` from the dense sequence withi
 `‖π_i(aₙ) ξ_i‖ = ‖aₙ‖`. But `π_i(a) = 0` forces
 `‖aₙ‖ = ‖π_i(aₙ - a) ξ_i‖ ≤ ‖aₙ - a‖ < ‖a‖ / 2`, contradicting `‖aₙ‖ > ‖a‖ / 2`. -/
 lemma normingFamily_separatesPoints [SeparableSpace A] :
-    (normingFamily A).SeparatesPoints := by
+    CStarRep.SeparatesPoints (normingFamily A) := by
   intro a ha
   by_contra hne
   have hapos : (0 : ℝ) < ‖a‖ := norm_pos_iff.mpr hne
@@ -180,17 +176,17 @@ lemma normingFamily_separatesPoints [SeparableSpace A] :
 variable (A) in
 /-- The ℓ²-direct sum of the norming family, bundled as a `CStarRep`.
 
-This is the separable counterpart of `GNS.DirectSum.rep`: both are `SectorFamily.toCStarRep`
+This is the separable counterpart of `GNS.DirectSum.rep`: both are `CStarRep.directSum`
 of a family of GNS representations, this one indexed by a dense sequence of the algebra instead
 of by the whole pure state space. -/
 noncomputable def normingRep [SeparableSpace A] : CStarRep.{u, u} A :=
-  (normingFamily A).toCStarRep
+  CStarRep.directSum (normingFamily A)
 
 /-- The action of `normingRep A` unfolds to the block-diagonal representation
-`(normingFamily A).directSumRep`. -/
+`CStarRep.directSumRep (normingFamily A)`. -/
 @[simp]
 lemma normingRep_π [SeparableSpace A] :
-    (normingRep A).π = (normingFamily A).directSumRep := rfl
+    (normingRep A).π = CStarRep.directSumRep (normingFamily A) := rfl
 
 /-- The Hilbert space of the norming representation is separable. -/
 instance [SeparableSpace A] : SeparableSpace (normingRep A).H :=
@@ -200,19 +196,19 @@ variable (A) in
 /-- The norming representation is faithful. -/
 lemma normingRep_injective [SeparableSpace A] :
     Function.Injective (normingRep A).π :=
-  (normingFamily A).directSumRep_injective_of (normingFamily_separatesPoints A)
+  CStarRep.directSumRep_injective_of (normingFamily_separatesPoints A)
 
 variable (A) in
 /-- The norming representation is isometric, by faithfulness. -/
 lemma normingRep_isometry [SeparableSpace A] : Isometry (normingRep A).π :=
-  (normingFamily A).directSumRep_isometry_of (normingFamily_separatesPoints A)
+  CStarRep.directSumRep_isometry_of (normingFamily_separatesPoints A)
 
 variable (A) in
 /-- The image of the norming representation is norm closed, so it is a C\*-subalgebra of
 the bounded operators on a separable Hilbert space. -/
 lemma normingRep_isClosed_range [SeparableSpace A] :
     IsClosed (NonUnitalStarAlgHom.range (normingRep A).π : Set ((normingRep A).H →L[ℂ] (normingRep A).H)) :=
-  (normingFamily A).directSumRep_isClosed_range_of (normingFamily_separatesPoints A)
+  CStarRep.directSumRep_isClosed_range_of (normingFamily_separatesPoints A)
 
 end Norming
 

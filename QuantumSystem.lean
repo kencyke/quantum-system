@@ -24,7 +24,6 @@ public import QuantumSystem.Analysis.CStarAlgebra.Representation.Conjugation
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Hom
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Irreducible
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.SectorFamily
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Analysis.CStarAlgebra.State.Basic

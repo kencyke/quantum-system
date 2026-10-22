@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.Spectrum
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubspace
 
 /-!
@@ -33,11 +34,8 @@ representation-theoretic layer are built on top of it:
   predicate to the general `CStarRep` setting;
 * `CStarAlgebra/Representation/VectorFunctional.lean` defines the vector
   functionals `a ↦ ⟪v, π a v⟫` of a `CStarRep` and their quasi-state bounds;
-* `CStarAlgebra/Representation/SectorFamily.lean` packages indexed families of
-  representatives (`SectorFamily`), on which a superselection sector theory
-  imposes its selection criteria (DHR, KMS, ...) as separate predicates;
 * `CStarAlgebra/Representation/DirectSum.lean` forms the `ℓ²`-direct sum of
-  such a family.
+  an indexed family `ι → CStarRep A` of representations.
 
 ## Relation to Mathlib
 
