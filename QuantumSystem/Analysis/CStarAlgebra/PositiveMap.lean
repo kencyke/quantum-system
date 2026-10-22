@@ -5,15 +5,16 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.ForMathlib.Algebra.Symmetrized
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.PositiveMapCommutative
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.RussoDye
 
 /-!
-# Kadison's inequality and the norm of positive maps
+# Kadison's inequality, the norm of positive maps and order isomorphisms
 
-Two consequences of Stinespring's theorem
+Three consequences of Stinespring's theorem
 (`CompletelyPositiveMapClass.of_orderHomClass_of_commCStarAlgebra`: a positive map on a commutative
 unital C⋆-algebra is completely positive) for a positive linear map `φ` from a unital C⋆-algebra
 `A₁` into a C⋆-algebra `A₂`.
@@ -30,6 +31,14 @@ unital C⋆-algebra is completely positive) for a positive linear map `φ` from 
   `‖φ u‖² ≤ ‖φ 1‖ ‖φ(u⋆ u)‖ = ‖φ 1‖²`. The set `{x | ‖φ x‖ ≤ ‖φ 1‖}` is closed and convex, so it
   contains the closed convex hull of the unitaries, which is the closed unit ball by the
   Russo–Dye theorem (`CStarAlgebra.closedConvexHull_unitary`).
+* **Unital order isomorphisms are Jordan ⋆-isomorphisms.** Let `φ` be unital between unital
+  C⋆-algebras, with a positive inverse `ψ`. Kadison's inequality for `φ` at a self-adjoint `a` and
+  for `ψ` at `φ a` give `φ(a²) = φ(a)²`; with `ab + ba = (a + b)² - a² - b²` and the decomposition
+  `a = x + I • y` into self-adjoint parts, `φ(ab + ba) = φ(a)φ(b) + φ(b)φ(a)` for all `a` and `b`.
+  So `φ` is a ⋆-isomorphism `A₁ˢʸᵐ ≃⋆ₐ[ℂ] A₂ˢʸᵐ` of the symmetrized algebras, whose product is the
+  Jordan product `a ∘ b = ½(ab + ba)`. It need not be a ⋆-isomorphism of `A₁` onto `A₂`: the
+  transpose map on `2 × 2` matrices is its own inverse and reverses products. A unital `2`-positive
+  map with a `2`-positive inverse is one (`KPositiveMapClass.starAlgEquivOfInverse`).
 
 For a `2`-positive map the Kadison–Schwarz inequality holds at every `a`
 (`KPositiveMapClass.le_norm_smul_map_star_mul`); for a merely positive map normality cannot be
@@ -41,6 +50,11 @@ This file lives outside `ForMathlib/` because it needs `KPositiveMap.lean`,
 `PositiveMapCommutative.lean`, `RussoDye.lean` and, for the operator norm `‖φ‖ₒₚ`
 (`PositiveLinearMap.opNorm`), `GelfandNaimarkSegal.lean` of `ForMathlib/Analysis/CStarAlgebra/`,
 and a `ForMathlib` file imports Mathlib only.
+
+## Main definitions
+
+* `OrderHomClass.symStarAlgEquivOfInverse` — a unital positive map with a positive inverse as a
+  Jordan ⋆-isomorphism `A₁ˢʸᵐ ≃⋆ₐ[ℂ] A₂ˢʸᵐ`.
 
 ## Main results
 
@@ -54,6 +68,9 @@ and a `ForMathlib` file imports Mathlib only.
   form `‖φ a‖ ≤ ‖φ 1‖ ‖a‖`.
 * `OrderHomClass.norm_apply_le_of_map_one_le` — a positive map with `φ 1 ≤ 1` is a contraction,
   since `‖φ 1‖ ≤ 1` (`OrderHomClass.norm_map_one_le_one`, in `KPositiveMap.lean`).
+* `OrderHomClass.map_mul_add_mul_of_inverse` — **unital order isomorphisms preserve the Jordan
+  product**, `φ(ab + ba) = φ(a)φ(b) + φ(b)φ(a)` for unital positive `φ` with a positive inverse;
+  `OrderHomClass.map_sq_of_inverse` — `φ(a²) = φ(a)²` for self-adjoint `a`.
 
 ## References
 
@@ -70,12 +87,28 @@ and a `ForMathlib` file imports Mathlib only.
 @[expose] public section
 
 open Metric
-open scoped ComplexOrder PositiveLinearMap
+open scoped ComplexOrder ComplexStarModule PositiveLinearMap
 
 /-- The unit of a C⋆-algebra has norm at most `1`; it is `1` unless the algebra is trivial. -/
 private lemma norm_one_le_one {A : Type*} [CStarAlgebra A] : ‖(1 : A)‖ ≤ 1 := by
   nontriviality A
   simp
+
+/-- The anticommutator `a b + b a` expanded along `a = x + I • y` and `b = u + I • v`. -/
+private lemma add_I_smul_mul_add_I_smul {B : Type*} [Ring B] [Module ℂ B] [IsScalarTower ℂ B B]
+    [SMulCommClass ℂ B B] (x y u v : B) :
+    (x + Complex.I • y) * (u + Complex.I • v) + (u + Complex.I • v) * (x + Complex.I • y) =
+      (x * u + u * x) + Complex.I • (x * v + v * x) + Complex.I • (y * u + u * y) -
+        (y * v + v * y) := by
+  simp only [add_mul, mul_add, smul_mul_assoc, mul_smul_comm, smul_smul, Complex.I_mul_I,
+    neg_one_smul, smul_add]
+  abel
+
+/-- `⅟2 * x = 2⁻¹ • x` in a complex algebra, for whichever `Invertible (2 : B)` instance. -/
+private lemma invOf_two_mul {B : Type*} [Ring B] [Algebra ℂ B] [Invertible (2 : B)] (x : B) :
+    ⅟2 * x = (2⁻¹ : ℂ) • x := by
+  rw [Algebra.smul_def, invOf_eq_right_inv (a := (2 : B)) (b := algebraMap ℂ B 2⁻¹)
+    (by rw [← map_ofNat (algebraMap ℂ B) 2, ← map_mul, mul_inv_cancel₀ two_ne_zero, map_one])]
 
 namespace OrderHomClass
 
@@ -191,5 +224,76 @@ lemma norm_apply_le_of_map_one_le (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) : ‖φ
     _ = ‖a‖ := one_mul _
 
 end Unital₂
+
+section Jordan
+
+variable {F G A₁ A₂ : Type*} [CStarAlgebra A₁] [CStarAlgebra A₂] [PartialOrder A₁]
+  [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂]
+  [LinearMapClass F ℂ A₁ A₂] [OrderHomClass F A₁ A₂] [FunLike G A₂ A₁] [OrderHomClass G A₂ A₁]
+
+/-- A unital positive map `φ` with a positive inverse `ψ` preserves the squares of self-adjoint
+elements, `φ(a²) = φ(a)²`. Kadison's inequality gives `φ(a)² ≤ φ(a²)`; for `ψ`, which is linear as
+the inverse of `φ` and unital as `ψ 1 = ψ (φ 1) = 1`, it gives `a² ≤ ψ(φ(a)²)` at the self-adjoint
+`φ a`, and applying `φ` gives `φ(a²) ≤ φ(a)²`. Here `h₁` and `h₂` say `ψ ∘ φ = id` and
+`φ ∘ ψ = id`. -/
+lemma map_sq_of_inverse (φ : F) (ψ : G) (hφ : φ 1 = 1) (h₁ : Function.LeftInverse ψ φ)
+    (h₂ : Function.RightInverse ψ φ) {a : A₁} (ha : IsSelfAdjoint a) : φ (a ^ 2) = φ a ^ 2 := by
+  let ψ' : A₂ →ₚ[ℂ] A₁ :=
+    { (⟨(φ : A₁ →ₗ[ℂ] A₂), ψ, h₁, h₂⟩ : A₁ ≃ₗ[ℂ] A₂).symm.toLinearMap with
+      monotone' := OrderHomClass.mono ψ }
+  have h := OrderHomClass.mono φ
+    (sq_map_le_map_sq ψ' (show ψ 1 ≤ 1 by rw [← hφ, h₁ 1]) (ha.map φ))
+  change φ (ψ (φ a) ^ 2) ≤ φ (ψ (φ a ^ 2)) at h
+  rw [h₁ a, h₂] at h
+  exact le_antisymm h (sq_map_le_map_sq φ hφ.le ha)
+
+/-- **Unital order isomorphisms preserve the Jordan product**: a unital positive map `φ` with a
+positive inverse satisfies `φ(ab + ba) = φ(a)φ(b) + φ(b)φ(a)`. For self-adjoint `a` and `b` this is
+`OrderHomClass.map_sq_of_inverse` at `a`, `b` and `a + b`, as `ab + ba = (a + b)² - a² - b²`; the
+general case follows by writing `a` and `b` as `x + I • y` with `x` and `y` self-adjoint. Here `h₁`
+and `h₂` say `ψ ∘ φ = id` and `φ ∘ ψ = id`. -/
+theorem map_mul_add_mul_of_inverse (φ : F) (ψ : G) (hφ : φ 1 = 1)
+    (h₁ : Function.LeftInverse ψ φ) (h₂ : Function.RightInverse ψ φ) (a b : A₁) :
+    φ (a * b + b * a) = φ a * φ b + φ b * φ a := by
+  have hsa {x y : A₁} (hx : IsSelfAdjoint x) (hy : IsSelfAdjoint y) :
+      φ (x * y) + φ (y * x) = φ x * φ y + φ y * φ x := by
+    rw [← map_add, show x * y + y * x = (x + y) ^ 2 - x ^ 2 - y ^ 2 by noncomm_ring, map_sub,
+      map_sub, map_sq_of_inverse φ ψ hφ h₁ h₂ (hx.add hy), map_add,
+      map_sq_of_inverse φ ψ hφ h₁ h₂ hx, map_sq_of_inverse φ ψ hφ h₁ h₂ hy]
+    noncomm_ring
+  obtain ⟨x, hx, y, hy, rfl⟩ : ∃ x, IsSelfAdjoint x ∧ ∃ y, IsSelfAdjoint y ∧
+      x + Complex.I • y = a :=
+    ⟨ℜ a, (ℜ a).2, ℑ a, (ℑ a).2, realPart_add_I_smul_imaginaryPart a⟩
+  obtain ⟨u, hu, v, hv, rfl⟩ : ∃ u, IsSelfAdjoint u ∧ ∃ v, IsSelfAdjoint v ∧
+      u + Complex.I • v = b :=
+    ⟨ℜ b, (ℜ b).2, ℑ b, (ℑ b).2, realPart_add_I_smul_imaginaryPart b⟩
+  rw [add_I_smul_mul_add_I_smul, map_add, map_smul, map_add, map_smul,
+    add_I_smul_mul_add_I_smul]
+  simp only [map_sub, map_add, map_smul, hsa hx hu, hsa hx hv, hsa hy hu, hsa hy hv]
+
+/-- **Unital order isomorphisms are Jordan ⋆-isomorphisms.** A unital positive map `φ` between
+unital C⋆-algebras with a positive inverse `ψ` is a ⋆-isomorphism of the symmetrized algebras,
+whose product is the Jordan product `a ∘ b = ½(ab + ba)`
+(`OrderHomClass.map_mul_add_mul_of_inverse`). The map `φ` itself need not be a ⋆-isomorphism
+`A₁ ≃⋆ₐ[ℂ] A₂`: the transpose map on `2 × 2` matrices is its own positive inverse and reverses
+products. The instances `Invertible (2 : A)` can be supplied by
+`IsScalarTower.invertibleAlgebraCoeNat ℂ A 2`. Here `h₁` and `h₂` say `ψ ∘ φ = id` and
+`φ ∘ ψ = id`. -/
+@[simps apply symm_apply]
+def symStarAlgEquivOfInverse [Invertible (2 : A₁)] [Invertible (2 : A₂)] (φ : F)
+    (ψ : G) (hφ : φ 1 = 1) (h₁ : Function.LeftInverse ψ φ) (h₂ : Function.RightInverse ψ φ) :
+    A₁ˢʸᵐ ≃⋆ₐ[ℂ] A₂ˢʸᵐ where
+  toFun a := SymAlg.sym (φ (SymAlg.unsym a))
+  invFun a := SymAlg.sym (ψ (SymAlg.unsym a))
+  left_inv a := congrArg SymAlg.sym (h₁ (SymAlg.unsym a))
+  right_inv a := congrArg SymAlg.sym (h₂ (SymAlg.unsym a))
+  map_mul' a b := by
+    rw [SymAlg.unsym_mul, SymAlg.sym_mul_sym, invOf_two_mul, invOf_two_mul, map_smul,
+      map_mul_add_mul_of_inverse φ ψ hφ h₁ h₂]
+  map_add' a b := by simp
+  map_star' a := by simp [map_star]
+  map_smul' r a := by simp
+
+end Jordan
 
 end OrderHomClass

@@ -119,12 +119,12 @@ and Phase III in particular will be set as the foundations take shape.
     of an idempotent unital completely positive map Φ; Tomiyama's theorem on conditional
     expectations; Hamana's injective envelope, built from a minimal idempotent unital completely
     positive map, and the C⋆-envelope as the C⋆-algebra generated in it (M1).
-12. Rigidity: the Kadison–Schwarz inequality for 2-positive maps Φ, already formalized in
+12. ~~Rigidity: the Kadison–Schwarz inequality for 2-positive maps Φ, already formalized in
     `ForMathlib` with Φ(1) ≤ 1 and, without the normalization, as Φ(X)⋆Φ(X) ≤ ‖Φ(1)‖ Φ(X⋆X);
     Choi's multiplicative domain, from its equality case, and with it that unital complete order
     isomorphisms are ⋆-isomorphisms, both already formalized for Schwarz maps and hence for
     unital 2-positive maps, while unital order isomorphisms are Jordan ⋆-isomorphisms (Kadison)
-    (M2).
+    (M2).~~
 13. Reversibility: beyond the monotonicity of the relative entropy already formalized, its
     equality case — the Petz recovery of faithful normal states at finite divergence under a
     unital 2-positive normal map, built on the modular theory and standard form of items 8
