@@ -15,7 +15,7 @@ public import Mathlib.Analysis.Normed.Unbundled.RingSeminorm
 For a directed system of (complex) C⋆-algebras whose connecting maps are *injective* unital
 `*`-homomorphisms, the connecting maps are isometric (`NonUnitalStarAlgHom.norm_map`), so the
 algebraic direct limit carries a well-defined C⋆-norm `‖⟦⟨i, x⟩⟧‖ = ‖x‖`. Its completion is the
-**C⋆-inductive limit** (Bratteli–Robinson Vol.1 §2.6), a `CStarAlgebra`.
+**C⋆-inductive limit**, a `CStarAlgebra`.
 
 This file provides the norm `cstarNorm`, the bundled `cstarRingNorm`, and the resulting
 `NormedRing` structure (`cstarNormedRing`) on `DirectLimit F f`, all parametrised by injectivity

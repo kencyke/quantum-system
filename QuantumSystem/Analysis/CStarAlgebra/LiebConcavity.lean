@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.Perspective
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.HilbertSchmidt
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
@@ -30,7 +31,7 @@ real traces.
 ## Main results
 
 * `ContinuousLinearMap.lieb_concaveOn`: **Lieb's concavity theorem**.
-* `ContinuousLinearMap.lieb_concavity_weighted`: its form for finite convex combinations.
+* `ContinuousLinearMap.lieb_le_map_sum`: its form for finite convex combinations.
 * `ContinuousLinearMap.lieb_superadditive`: for `q = 1 - p`, the map is superadditive.
 * `ContinuousLinearMap.trace_rpow_comp_rpow_nonneg`,
   `ContinuousLinearMap.trace_rpow_comp_rpow_eq_re`: `Tr (Aᵖ T† Bᑫ T)` is nonnegative and real.
@@ -44,7 +45,6 @@ precedence, so the powers are parenthesised: `(A ^ p) ∘L T† ∘L (B ^ q) ∘
 
 ## Proof outline
 
-The proof follows Effros (2009).
 1. On the Hilbert–Schmidt space `HilbertSchmidt H K` the right multiplication
    `𝐑[K] A : X ↦ X A` and the left multiplication `𝐋[H] B : X ↦ B X` are commuting positive
    operators that commute with real powers, and `⟪T, 𝐑[K] (Aᵖ) 𝐋[H] (Bᑫ) T⟫ = Tr (Aᵖ T† Bᑫ T)`.
@@ -271,7 +271,7 @@ private lemma sum_le_one_sub (T : H →L[ℂ] K) {p : ℝ} (hp0 : 0 ≤ p) (hp1 
 /-- **Lieb's concavity theorem** for finite convex combinations: for `0 ≤ p`, `0 ≤ q`,
 `p + q ≤ 1` and positive `Aᵢ`, `Bᵢ`,
 `∑ᵢ wᵢ Tr (Aᵢᵖ T† Bᵢᑫ T) ≤ Tr ((∑ᵢ wᵢ Aᵢ)ᵖ T† (∑ᵢ wᵢ Bᵢ)ᑫ T)`. -/
-theorem lieb_concavity_weighted (T : H →L[ℂ] K) {p q : ℝ} (hp : 0 ≤ p) (hq : 0 ≤ q)
+theorem lieb_le_map_sum (T : H →L[ℂ] K) {p q : ℝ} (hp : 0 ≤ p) (hq : 0 ≤ q)
     (hpq : p + q ≤ 1) {ι : Type*} [Fintype ι] {w : ι → ℝ} (hw : ∀ i, 0 ≤ w i)
     (hw₁ : ∑ i, w i = 1) {A : ι → H →L[ℂ] H} {B : ι → K →L[ℂ] K} (hA : ∀ i, 0 ≤ A i)
     (hB : ∀ i, 0 ≤ B i) :
@@ -317,7 +317,7 @@ theorem lieb_concaveOn (T : H →L[ℂ] K) {p q : ℝ} (hp : 0 ≤ p) (hq : 0 �
     ConcaveOn ℝ (Ici 0 ×ˢ Ici 0) fun (A, B) ↦ Tr ((A ^ p) ∘L T† ∘L (B ^ q) ∘L T) := by
   refine ⟨(convex_Ici _).prod (convex_Ici _), ?_⟩
   rintro ⟨A₁, B₁⟩ ⟨hA₁, hB₁⟩ ⟨A₂, B₂⟩ ⟨hA₂, hB₂⟩ a b ha hb hab
-  have := lieb_concavity_weighted T hp hq hpq (w := ![a, b]) (A := ![A₁, A₂]) (B := ![B₁, B₂])
+  have := lieb_le_map_sum T hp hq hpq (w := ![a, b]) (A := ![A₁, A₂]) (B := ![B₁, B₂])
     (fun i => by fin_cases i <;> simpa) (by simpa using hab)
     (fun i => by fin_cases i <;> simpa) (fun i => by fin_cases i <;> simpa)
   simpa [Fin.sum_univ_two] using this
@@ -360,7 +360,7 @@ lemma lieb_superadditive (T : H →L[ℂ] K) {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p 
   set c : ℝ := (Fintype.card ι : ℝ)⁻¹
   have hc : 0 < c := inv_pos.2 hn
   have hw₁ : ∑ _i : ι, c = 1 := by simp [c, hn.ne']
-  have := lieb_concavity_weighted T hp0 (sub_nonneg.2 hp1) (by linarith) (fun _ => hc.le) hw₁ hA hB
+  have := lieb_le_map_sum T hp0 (sub_nonneg.2 hp1) (by linarith) (fun _ => hc.le) hw₁ hA hB
   rw [← Finset.smul_sum, ← Finset.smul_sum, ← Finset.smul_sum,
     trace_smul_rpow_comp_smul_rpow T (Finset.sum_nonneg fun i _ => hA i)
       (Finset.sum_nonneg fun i _ => hB i) hc.le hp0 (sub_nonneg.2 hp1),

@@ -33,7 +33,7 @@ spaces: if `B V = V A`, then `E_B = V E_A V⁻¹`
 
 ## Main definitions
 
-* `ProjectionValuedMeasure.transport E V` — the projection-valued measure `s ↦ V E(s) V⁻¹`.
+* `ProjectionValuedMeasure.transport P V` — the projection-valued measure `s ↦ V P(s) V⁻¹`.
 
 ## Main results
 
@@ -51,9 +51,9 @@ spaces: if `B V = V A`, then `E_B = V E_A V⁻¹`
 * `ProjectionValuedMeasure.pvm_integralPMap_ofReal`,
   `ProjectionValuedMeasure.integralPMap_pvm_integralPMap_ofReal` — for measurable real `g`,
   `E_{g(A)} = g_* E_A` and `f(g(A)) = (f ∘ g)(A)`, for any projection-valued measure on `ℝ`.
-* `ProjectionValuedMeasure.integralPMap_transport_compNat` — `(∫ f d(V E V⁻¹)) V = V ∫ σ⁻¹ ∘ f dE`.
+* `ProjectionValuedMeasure.integralPMap_transport_compNat` — `(∫ f d(V P V⁻¹)) V = V ∫ σ⁻¹ ∘ f dP`.
 * `ProjectionValuedMeasure.measure_transport`, `ProjectionValuedMeasure.integral_transport` —
-  `(V E V⁻¹)_y = E_{V⁻¹ y}` and `∫ f d(V E V⁻¹) = V (∫ σ⁻¹ ∘ f dE) V⁻¹`.
+  `(V P V⁻¹)_y = P_{V⁻¹ y}` and `∫ f d(V P V⁻¹) = V (∫ σ⁻¹ ∘ f dP) V⁻¹`.
 * `LinearPMap.resolvent_eq_comp_of_compNat_toPMap_eq` — `(z - S)⁻¹ = V (σ⁻¹ z - T)⁻¹ V⁻¹` when
   `S V = V T`.
 * `IsSelfAdjoint.pvm_eq_transport`, `IsSelfAdjoint.integral_pvm_eq_comp` — **covariance**:
@@ -62,7 +62,7 @@ spaces: if `B V = V A`, then `E_B = V E_A V⁻¹`
 ## References
 
 * [W. Rudin, *Functional Analysis*][rudin1991], Theorem 13.30
-* [K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*][schmudgen2012], §5.2
+* K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*, §5.2
 -/
 
 @[expose] public section
@@ -137,16 +137,16 @@ variable {X K : Type*} [MeasurableSpace X] [NormedAddCommGroup K] [InnerProductS
   [CompleteSpace K] {σ σ' : ℂ →+* ℂ} [RingHomInvPair σ σ'] [RingHomInvPair σ' σ]
   [RingHomIsometric σ]
 
-/-- The **transport** `s ↦ V E(s) V⁻¹` of a projection-valued measure along a semilinear isometric
+/-- The **transport** `s ↦ V P(s) V⁻¹` of a projection-valued measure along a semilinear isometric
 equivalence `V`, for the identity or the complex conjugation `σ`. -/
-noncomputable def transport (E' : ProjectionValuedMeasure X E) (V : E ≃ₛₗᵢ[σ] K) :
+noncomputable def transport (P : ProjectionValuedMeasure X E) (V : E ≃ₛₗᵢ[σ] K) :
     ProjectionValuedMeasure X K :=
   ofHasSum (fun s => V.toLinearIsometry.toContinuousLinearMap.comp
-      ((E' s).comp V.symm.toLinearIsometry.toContinuousLinearMap))
+      ((P s).comp V.symm.toLinearIsometry.toContinuousLinearMap))
     (fun s hs => by
-      rw [E'.apply_of_not_measurableSet hs, ContinuousLinearMap.zero_comp,
+      rw [P.apply_of_not_measurableSet hs, ContinuousLinearMap.zero_comp,
         ContinuousLinearMap.comp_zero])
-    (fun f hf hd x => (E'.hasSum_apply hf hd (V.symm x)).mapL V.toLinearIsometry.toContinuousLinearMap)
+    (fun f hf hd x => (P.hasSum_apply hf hd (V.symm x)).mapL V.toLinearIsometry.toContinuousLinearMap)
     (fun s => by
       refine ⟨?_, ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mpr fun x y => ?_⟩
       · change _ * _ = _
@@ -154,36 +154,36 @@ noncomputable def transport (E' : ProjectionValuedMeasure X E) (V : E ≃ₛₗ�
         rw [mul_apply_eq_comp]
         simp only [ContinuousLinearMap.comp_apply, LinearIsometry.coe_toContinuousLinearMap,
           LinearIsometryEquiv.coe_toLinearIsometry, LinearIsometryEquiv.symm_apply_apply]
-        rw [← mul_apply_eq_comp (E' s),
-          (E'.isStarProjection s).isIdempotentElem.eq]
+        rw [← mul_apply_eq_comp (P s),
+          (P.isStarProjection s).isIdempotentElem.eq]
       · simp only [ContinuousLinearMap.coe_coe, ContinuousLinearMap.comp_apply,
           LinearIsometry.coe_toContinuousLinearMap, LinearIsometryEquiv.coe_toLinearIsometry]
         conv_lhs => rw [← V.apply_symm_apply y]
         conv_rhs => rw [← V.apply_symm_apply x]
-        rw [V.inner_map_mapₛₗ, V.inner_map_mapₛₗ, E'.inner_apply_left])
+        rw [V.inner_map_mapₛₗ, V.inner_map_mapₛₗ, P.inner_apply_left])
     (by
       ext x
       simp)
 
-variable (E' : ProjectionValuedMeasure X E) (V : E ≃ₛₗᵢ[σ] K)
+variable (P : ProjectionValuedMeasure X E) (V : E ≃ₛₗᵢ[σ] K)
 
-/-- `(V E V⁻¹)(s) y = V (E(s) (V⁻¹ y))`. -/
+/-- `(V P V⁻¹)(s) y = V (P(s) (V⁻¹ y))`. -/
 @[simp]
-lemma transport_apply (s : Set X) (y : K) : E'.transport V s y = V (E' s (V.symm y)) := rfl
+lemma transport_apply (s : Set X) (y : K) : P.transport V s y = V (P s (V.symm y)) := rfl
 
-/-- The diagonal measures of the transported measure: `(V E V⁻¹)_y = E_{V⁻¹ y}`. -/
-lemma measure_transport (y : K) : (E'.transport V).measure y = E'.measure (V.symm y) := by
+/-- The diagonal measures of the transported measure: `(V P V⁻¹)_y = P_{V⁻¹ y}`. -/
+lemma measure_transport (y : K) : (P.transport V).measure y = P.measure (V.symm y) := by
   ext s hs
   rw [measure_apply _ hs, measure_apply _ hs, transport_apply, LinearIsometryEquiv.enorm_map]
 
-/-- **Bounded integrals against the transported measure**: `∫ f d(V E V⁻¹) = V (∫ σ⁻¹ ∘ f dE) V⁻¹`;
+/-- **Bounded integrals against the transported measure**: `∫ f d(V P V⁻¹) = V (∫ σ⁻¹ ∘ f dP) V⁻¹`;
 for an antiunitary `V` this conjugates `f`. -/
 lemma integral_transport {f : X → ℂ} (hf : Measurable f) (hfb : ∃ C, ∀ x, ‖f x‖ ≤ C) :
-    (E'.transport V).integral f = V.toLinearIsometry.toContinuousLinearMap.comp
-      ((E'.integral fun x => σ' (f x)).comp V.symm.toLinearIsometry.toContinuousLinearMap) := by
+    (P.transport V).integral f = V.toLinearIsometry.toContinuousLinearMap.comp
+      ((P.integral fun x => σ' (f x)).comp V.symm.toLinearIsometry.toContinuousLinearMap) := by
   obtain ⟨C, hC⟩ := hfb
   refine ContinuousLinearMap.ext_inner_self fun y => ?_
-  have h := V.inner_map_mapₛₗ (V.symm y) ((E'.integral fun x => σ' (f x)) (V.symm y))
+  have h := V.inner_map_mapₛₗ (V.symm y) ((P.integral fun x => σ' (f x)) (V.symm y))
   rw [V.apply_symm_apply] at h
   simp only [ContinuousLinearMap.comp_apply, LinearIsometry.coe_toContinuousLinearMap,
     LinearIsometryEquiv.coe_toLinearIsometry]
@@ -191,29 +191,29 @@ lemma integral_transport {f : X → ℂ} (hf : Measurable f) (hfb : ∃ C, ∀ x
   rcases RingHom.eq_id_or_conj_of_ringHomIsometric (σ := σ) (σ' := σ') with
     ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
   · simp only [RingHom.id_apply]
-    rw [E'.inner_integral_self hf ⟨C, hC⟩]
+    rw [P.inner_integral_self hf ⟨C, hC⟩]
   · have hcf : Measurable fun x => starRingEnd ℂ (f x) := Complex.continuous_conj.measurable.comp hf
     have hcfb : ∃ C, ∀ x, ‖starRingEnd ℂ (f x)‖ ≤ C :=
       ⟨C, fun x => by rw [Complex.norm_conj]; exact hC x⟩
-    rw [E'.inner_integral_self hcf hcfb, ← integral_conj]
+    rw [P.inner_integral_self hcf hcfb, ← integral_conj]
     simp
 
-/-- `f ∈ L²((V E V⁻¹)_y)` iff `σ⁻¹ ∘ f ∈ L²(E_{V⁻¹ y})`. -/
+/-- `f ∈ L²((V P V⁻¹)_y)` iff `σ⁻¹ ∘ f ∈ L²(P_{V⁻¹ y})`. -/
 lemma memLp_measure_transport_iff {f : X → ℂ} (hf : Measurable f) (y : K) :
-    MemLp f 2 ((E'.transport V).measure y) ↔
-      MemLp (fun x => σ' (f x)) 2 (E'.measure (V.symm y)) := by
+    MemLp f 2 ((P.transport V).measure y) ↔
+      MemLp (fun x => σ' (f x)) 2 (P.measure (V.symm y)) := by
   rw [measure_transport]
   exact memLp_congr_norm hf.aestronglyMeasurable
     ((RingHom.continuous_of_ringHomInvPair σ).measurable.comp hf).aestronglyMeasurable
     (Eventually.of_forall fun x => (RingHom.norm_apply_of_ringHomInvPair σ (f x)).symm)
 
 /-- **Unbounded integrals against the transported measure**:
-`(∫ f d(V E V⁻¹)) y = V (∫ σ⁻¹ ∘ f dE) V⁻¹ y` for `f ∈ L²((V E V⁻¹)_y)`. -/
+`(∫ f d(V P V⁻¹)) y = V (∫ σ⁻¹ ∘ f dP) V⁻¹ y` for `f ∈ L²((V P V⁻¹)_y)`. -/
 lemma integralApply_transport {f : X → ℂ} (hf : Measurable f) {y : K}
-    (hy : MemLp f 2 ((E'.transport V).measure y)) :
-    (E'.transport V).integralApply f y = V (E'.integralApply (fun x => σ' (f x)) (V.symm y)) := by
+    (hy : MemLp f 2 ((P.transport V).measure y)) :
+    (P.transport V).integralApply f y = V (P.integralApply (fun x => σ' (f x)) (V.symm y)) := by
   have hσ := (RingHom.continuous_of_ringHomInvPair (σ' := σ') σ).measurable
-  have hy' := (E'.memLp_measure_transport_iff V hf y).mp hy
+  have hy' := (P.memLp_measure_transport_iff V hf y).mp hy
   set a := fun n => SimpleFunc.approxOn f hf univ 0 (mem_univ 0) n
   have hσa : ∀ n, Measurable fun x => σ' (a n x) := fun n => hσ.comp (a n).measurable
   have hσf : Measurable fun x => σ' (f x) := hσ.comp hf
@@ -221,60 +221,60 @@ lemma integralApply_transport {f : X → ℂ} (hf : Measurable f) {y : K}
     ⟨(a n).exists_forall_norm_le.choose, fun x => by
       rw [RingHom.norm_apply_of_ringHomInvPair σ]
       exact (a n).exists_forall_norm_le.choose_spec x⟩
-  suffices key : Tendsto (fun n => (E'.transport V).simpleIntegral (a n) y) atTop
-      (𝓝 (V (E'.integralApply (fun x => σ' (f x)) (V.symm y)))) from
-    tendsto_nhds_unique ((E'.transport V).tendsto_simpleIntegral_approxOn hf hy) key
-  have h₁ : ∀ n, (E'.transport V).simpleIntegral (a n) y =
-      V (E'.integralApply (fun x => σ' (a n x)) (V.symm y)) := fun n => by
-    rw [← integral_simpleFunc, E'.integral_transport V (a n).measurable
-      (a n).exists_forall_norm_le, ← E'.integral_apply (hσa n) (hab n)]
+  suffices key : Tendsto (fun n => (P.transport V).simpleIntegral (a n) y) atTop
+      (𝓝 (V (P.integralApply (fun x => σ' (f x)) (V.symm y)))) from
+    tendsto_nhds_unique ((P.transport V).tendsto_simpleIntegral_approxOn hf hy) key
+  have h₁ : ∀ n, (P.transport V).simpleIntegral (a n) y =
+      V (P.integralApply (fun x => σ' (a n x)) (V.symm y)) := fun n => by
+    rw [← integral_simpleFunc, P.integral_transport V (a n).measurable
+      (a n).exists_forall_norm_le, ← P.integral_apply (hσa n) (hab n)]
     rfl
   simp_rw [h₁]
   refine (V.continuous.tendsto _).comp (tendsto_iff_edist_tendsto_0.mpr ?_)
-  have h₂ : ∀ n, edist (E'.integralApply (fun x => σ' (a n x)) (V.symm y))
-      (E'.integralApply (fun x => σ' (f x)) (V.symm y)) =
-        eLpNorm (⇑(a n) - f) 2 ((E'.transport V).measure y) := fun n => by
-    rw [E'.edist_integralApply (hσa n) hσf
-      (E'.memLp_measure_of_bound (hσa n) (hab n).choose_spec _) hy',
+  have h₂ : ∀ n, edist (P.integralApply (fun x => σ' (a n x)) (V.symm y))
+      (P.integralApply (fun x => σ' (f x)) (V.symm y)) =
+        eLpNorm (⇑(a n) - f) 2 ((P.transport V).measure y) := fun n => by
+    rw [P.edist_integralApply (hσa n) hσf
+      (P.memLp_measure_of_bound (hσa n) (hab n).choose_spec _) hy',
       measure_transport]
     refine eLpNorm_congr_norm_ae ((hσa n).sub hσf).aestronglyMeasurable
       ((a n).measurable.sub hf).aestronglyMeasurable (Eventually.of_forall fun x => ?_)
     simp only [Pi.sub_apply, ← map_sub, RingHom.norm_apply_of_ringHomInvPair σ]
   simp_rw [h₂]
-  exact (E'.transport V).tendsto_eLpNorm_approxOn hf hy
+  exact (P.transport V).tendsto_eLpNorm_approxOn hf hy
 
-/-- **Integrals against the transported measure**: `(∫ f d(V E V⁻¹)) V = V ∫ σ⁻¹ ∘ f dE`. -/
+/-- **Integrals against the transported measure**: `(∫ f d(V P V⁻¹)) V = V ∫ σ⁻¹ ∘ f dP`. -/
 lemma integralPMap_transport_compNat {f : X → ℂ} (hf : Measurable f) :
-    ((E'.transport V).integralPMap f).compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) =
-      (V : E →ₛₗ[σ] K).compPMap (E'.integralPMap fun x => σ' (f x)) := by
+    ((P.transport V).integralPMap f).compNat ((V : E →ₛₗ[σ] K).toPMap ⊤) =
+      (V : E →ₛₗ[σ] K).compPMap (P.integralPMap fun x => σ' (f x)) := by
   -- domain and values of the integrals are computed vector by vector
   refine (LinearPMap.compNat_toPMap_eq_compPMap_iff V.toLinearEquiv).mpr fun u v => ?_
-  have key : ∀ y z : K, (y, z) ∈ ((E'.transport V).integralPMap f).graph ↔
-      (V.symm y, V.symm z) ∈ (E'.integralPMap fun x => σ' (f x)).graph := fun y z => by
-    rw [mem_graph_integralPMap, mem_graph_integralPMap, E'.memLp_measure_transport_iff V hf y]
+  have key : ∀ y z : K, (y, z) ∈ ((P.transport V).integralPMap f).graph ↔
+      (V.symm y, V.symm z) ∈ (P.integralPMap fun x => σ' (f x)).graph := fun y z => by
+    rw [mem_graph_integralPMap, mem_graph_integralPMap, P.memLp_measure_transport_iff V hf y]
     constructor
     · rintro ⟨hy, rfl⟩
       refine ⟨hy, ?_⟩
-      rw [E'.integralApply_transport V hf ((E'.memLp_measure_transport_iff V hf y).mpr hy),
+      rw [P.integralApply_transport V hf ((P.memLp_measure_transport_iff V hf y).mpr hy),
         LinearIsometryEquiv.symm_apply_apply]
     · rintro ⟨hy, hz⟩
       refine ⟨hy, ?_⟩
-      rw [E'.integralApply_transport V hf ((E'.memLp_measure_transport_iff V hf y).mpr hy), hz,
+      rw [P.integralApply_transport V hf ((P.memLp_measure_transport_iff V hf y).mpr hy), hz,
         LinearIsometryEquiv.apply_symm_apply]
   rw [key]
   exact Iff.of_eq (by simp only [LinearIsometryEquiv.coe_toLinearEquiv,
     LinearIsometryEquiv.symm_apply_apply])
 
-/-- Transport commutes with images: `(V E V⁻¹)` under `g` is `V (g_* E) V⁻¹`. -/
+/-- Transport commutes with images: `(V P V⁻¹)` under `g` is `V (g_* P) V⁻¹`. -/
 lemma transport_map {Y : Type*} [MeasurableSpace Y] {g : X → Y} (hg : Measurable g) :
-    (E'.transport V).map g hg = (E'.map g hg).transport V :=
+    (P.transport V).map g hg = (P.map g hg).transport V :=
   ext _ fun s hs => by
     ext y
     rw [map_apply _ hg hs, transport_apply, transport_apply, map_apply _ hg hs]
 
-/-- Transporting twice along an involutive `V` gives back `E`. -/
+/-- Transporting twice along an involutive `V` gives back `P`. -/
 lemma transport_transport {V' : K ≃ₛₗᵢ[σ] E} (hV : ∀ x, V' (V x) = x) :
-    (E'.transport V).transport V' = E' :=
+    (P.transport V).transport V' = P :=
   ext _ fun s hs => by
     ext x
     have h₁ : V'.symm x = V x := by

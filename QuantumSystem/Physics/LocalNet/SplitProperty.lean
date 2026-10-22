@@ -41,8 +41,7 @@ The property is defined at the level of a **net of von Neumann algebras** (`VonN
 isotone, local assignment `O ↦ 𝓡(O)` over a bare causal index set, with no directedness, no
 quasi-local C⋆-algebra and no faithfulness. That is the level at which the index set of the split
 property's own literature becomes expressible: the proper intervals of `S¹` are *not* directed
-(two intervals covering the circle have no proper upper bound), as Köster's dissertation itself
-notes at its definition of a chiral net. Wedges and spacelike cones are further standard
+(two intervals covering the circle have no proper upper bound). Wedges and spacelike cones are further standard
 non-directed examples from the wider AQFT literature (Buchholz 1974, Doplicher–Longo 1984 treat
 the split property itself; the non-directed index sets come from the surrounding literature).
 
@@ -52,9 +51,10 @@ The representation-theoretic net above is one instance of that (`LocalNet.vonNeu
 property: the quasi-local algebra's direct limit needs a directed index set with a base point, and
 its C⋆-norm needs injective isotony embeddings. The representation
 is not assumed nondegenerate: `𝓡(O)` contains `1` regardless, since a von Neumann algebra is
-unital, so a degenerate representation on a nonzero space can satisfy the property trivially
-(`𝓡(O) = ℂ1` is a type I factor). On the *zero* space it cannot: a type I factor needs a nonzero
-minimal projection, so `IsSplitInclusion` is then identically false. Substantive downstream
+unital, so a degenerate representation can satisfy the property trivially: on a nonzero space
+`𝓡(O) = ℂ1` is a type I factor, and on the *zero* space every von Neumann algebra is one
+(`VonNeumannAlgebra.isTypeIFactor_of_subsingleton`), so `IsSplitInclusion` is then identically
+true. Substantive downstream
 theorems impose nondegeneracy or cyclicity where they need it.
 
 ## Main definitions and results
@@ -79,7 +79,7 @@ theorems impose nondegeneracy or cyclicity where they need it.
   The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`,
   a symmetric relation (`VonNeumannNet.IsSplitPair.symm`); the half-chain split property of a
   chain state (`LocalNet.HasHalfChainSplit`) is of that form, in the split-inclusion form, which
-  implies Matsui's quasi-equivalence definition and agrees with it for pure states.
+  implies the quasi-equivalence form and agrees with it for pure states.
   Its degenerate side is `VonNeumannNet.splitProperty_of_complex`: on a one-dimensional Hilbert
   space *every* net has the property, so no one-dimensional model is evidence about anything else.
 * `LocalNet.SplitProperty` — the split property at the net `LocalNet.vonNeumannNet` of a
@@ -96,7 +96,7 @@ and why neither is a Lean notation — is stated in full in `QuantumSystem.Physi
 
 `⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; that
 convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`, where the
-algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
+algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.oneTensor`) are defined.
 -/
 
 @[expose] public section
@@ -111,8 +111,7 @@ open scoped CausalOrthogonality
     region, and a **causal collar** (`exists_orthogonal_of_properlyContained`): the outer region
     contains a *nondegenerate* region causally orthogonal to the inner one. Nondegeneracy is
     expressed as `¬ O₃ ≤ O₁`, the only sense a bare order affords — and it is what the
-    literature's separation condition actually delivers. Köster's chiral index set defines its own
-    `I ⋐ S¹` by "its causal complement `I' := S¹ ∖ Ī` is not the empty set", and `Ī₁ ⊂ I₂` with
+    literature's separation condition actually delivers. On a chiral index set, `Ī₁ ⊂ I₂` with
     `I₂` open forces a nonempty component of `I₂ ∖ Ī₁` that is a proper interval inside `I₂`,
     disjoint from `I₁` and not contained in it. On such an index set, where the difference of two
     regions need not be a region, the collar is a genuine constraint on `⋐`: with no causally
@@ -156,11 +155,7 @@ namespace ProperContainment
 /-- `O₁ ⋐ O₂` : the region `O₁` is properly contained in `O₂`.
 
     The glyph is topology's compact-containment symbol, used here for the *binary relation* the
-    QFT literature writes `Ī₁ ⊂ I₂`. Köster's dissertation uses the same glyph differently: there
-    `I ⋐ S¹` is a membership predicate ("`I` is a proper interval of `S¹`"), not a relation
-    between two regions of the index set — a reader coming from that source should not carry the
-    predicate reading into this notation (Köster, *Structure of Coset Models*, arXiv
-    math-ph/0308031, writes the separation itself as `Ī₁ ⊂ I₂`). -/
+    QFT literature writes `Ī₁ ⊂ I₂`. -/
 scoped infixl:50 " ⋐ " => ProperContainment.ProperlyContained
 
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [ProperContainment K]
@@ -321,9 +316,9 @@ def SplitProperty [ProperContainment K] (vnNet : VonNeumannNet K H) : Prop :=
 
     Stated here, rather than left implicit inside a witness, because it fixes what a
     one-dimensional model can be evidence *for*: it inhabits `SplitProperty` and distinguishes
-    nothing — no net, no representation, no choice of `⋐`. The degeneracy is `dim H = 1` and
-    nothing else; it is the escape clause Halvorson–Müger's type III₁ proposition carries
-    explicitly ("either `𝓡 = ℂ1` or `𝓡` is a type III₁ factor"). -/
+    nothing — no net, no representation, no choice of `⋐`. The degeneracy is `dim H ≤ 1` and
+    nothing else (on the zero space every von Neumann algebra is a type I factor,
+    `VonNeumannAlgebra.isTypeIFactor_of_subsingleton`). -/
 theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K ℂ) :
     vnNet.SplitProperty := by
   intro O₁ O₂ _
@@ -338,7 +333,7 @@ theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K 
 
     No proper containment and no gap between the regions is involved. This is the split-inclusion
     form of the half-chain split property of a spin chain, for the adjacent half-chains
-    `(-∞, 0]` and `[1, ∞)` (which implies Matsui's quasi-equivalence definition, and is
+    `(-∞, 0]` and `[1, ∞)` (which implies the quasi-equivalence form, and is
     equivalent to it for pure states),
     and the disjoint-pair form of Buchholz's *Product states for local algebras*. For causally
     orthogonal regions the inclusion `𝓡(O₁) ≤ 𝓡(O₂)′` itself holds by
@@ -380,7 +375,7 @@ variable [ProperContainment K] {vnNet : VonNeumannNet K H}
     yields the split inclusion `𝓡(O₁) ≤ 𝓡(O₂)`. Buchholz's tensor splitting — a unitary
     `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` carrying `𝓡(O₁)` into the tensor factor `𝓑(ℓ²(F)) ⊗̄ 1` and the
     commutant `𝓡(O₂)′` into `1 ⊗̄ 𝓑(eH)`, with the interpolating type I factor and its commutant
-    identified exactly — is obtained by applying
+    identified exactly — is obtained on a nonzero `H` by applying
     `VonNeumannAlgebra.IsSplitInclusion.exists_tensor_decomposition` to the conclusion. -/
 theorem SplitProperty.isSplitInclusion (hs : vnNet.SplitProperty) {O₁ O₂ : K} (h : O₁ ⋐ O₂) :
     VonNeumannAlgebra.IsSplitInclusion (vnNet.algebra O₁) (vnNet.algebra O₂) :=
@@ -407,7 +402,7 @@ lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : vnNe
     the adopted definition of a split inclusion carries.
 
     The pair obtained this way always has the gap `O₂` between `O₁` and `O_B`. Since `⋐` is
-    irreflexive, adjacent pairs such as Matsui's half-chains are out of its reach; for them
+    irreflexive, adjacent pairs such as the half-chains `(-∞, 0]`, `[1, ∞)` are out of its reach; for them
     `IsSplitPair` is the property itself, not a consequence. -/
 theorem SplitProperty.isSplitPair (hs : vnNet.SplitProperty) {O₁ O₂ O_B : K}
     (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) : vnNet.IsSplitPair O₁ O_B :=

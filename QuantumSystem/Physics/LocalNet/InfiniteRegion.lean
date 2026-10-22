@@ -12,8 +12,8 @@ public import QuantumSystem.Physics.LocalNet.SplitProperty
 
 On the finite regions of a lattice the split property says nothing about a spin net: every local
 von Neumann algebra `𝓡(Λ)` of a finite region is a finite-dimensional factor, hence a type I factor,
-and every inclusion between two of them splits. The lattice literature's split property — Matsui's
-half-chain split property, Naaijkens' split property for cones — is a statement about **infinite**
+and every inclusion between two of them splits. The lattice literature's split property — the
+half-chain split property of a spin chain, the split property for cones — is a statement about **infinite**
 regions. This module makes those regions available.
 
 * The infinite regions are `Set α`, with causal orthogonality `Disjoint`
@@ -27,7 +27,7 @@ regions. This module makes those regions available.
   representation, so `(N.vonNeumannNetSet R).SplitProperty` is the split property of a lattice net
   `N : LocalNet (Finset α)` on infinite regions.
 
-The split property of a state on these regions, and Matsui's half-chain split property in
+The split property of a state on these regions, and the half-chain split property in
 particular, are in `QuantumSystem.Physics.LocalNet.HalfChainSplit`.
 
 ## Notation

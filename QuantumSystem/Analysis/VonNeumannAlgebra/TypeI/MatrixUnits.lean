@@ -76,12 +76,12 @@ which is the linear span of the union (`VonNeumannAlgebra.iSup_range_eq_span`).
 
 `⊗̄` in the prose above is documentation shorthand for the von Neumann (spatial) tensor product of
 algebras; that convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`,
-where the algebras it names (`HilbertTensor.vnTensorLeft` / `vnTensorRight`) are defined.
+where the algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.oneTensor`) are defined.
 -/
 
 @[expose] public section
 
-open scoped ENNReal
+open scoped ENNReal lp
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -409,7 +409,7 @@ isometries `range eᵢ ≅ range e`. -/
 noncomputable def OrthEquivFam.multiplicityEquiv {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     {F : Set (H →L[ℂ] H)} (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
-    H ≃ₗᵢ[ℂ] lp (fun _ : F => e.range) 2 :=
+    H ≃ₗᵢ[ℂ] ℓ²(F, e.range) :=
   (hF.hilbertSumEquiv htop).trans (lpCongr (fun i =>
     (IsPartialIsometry.sourceRangeEquiv
       (hF.1 i.1 i.2).2.2.2.choose_spec.2.1
@@ -473,7 +473,7 @@ lemma IsFactor.exists_lp_decomposition {N : VonNeumannAlgebra H}
     ∃ F : Set (H →L[ℂ] H), OrthEquivFam N e F ∧
       (⨆ f ∈ F, f.range).topologicalClosure = ⊤ ∧
       (∀ p ∈ F, IsMinimalProjection N p) ∧
-      Nonempty (H ≃ₗᵢ[ℂ] lp (fun _ : F => e.range) 2) := by
+      Nonempty (H ≃ₗᵢ[ℂ] ℓ²(F, e.range)) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
   exact ⟨F, hF, htop, fun p hp => hF.isMinimalProjection_of_mem he hp,
     ⟨hF.multiplicityEquiv htop⟩⟩
@@ -490,7 +490,7 @@ theorem IsFactor.exists_tmul_decomposition {N : VonNeumannAlgebra H}
       (⨆ f ∈ F, f.range).topologicalClosure = ⊤ ∧
       (∀ p ∈ F, IsMinimalProjection N p) ∧
       Nonempty (H ≃ₗᵢ[ℂ]
-        HilbertTensor (lp (fun _ : F => ℂ) 2) (e.range)) := by
+        HilbertTensor ℓ²(F, ℂ) (e.range)) := by
   obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
   have : CompleteSpace (e.range) := he.1.completeSpace_range
   have : DecidableEq (↥F) := Classical.decEq _

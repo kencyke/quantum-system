@@ -15,10 +15,10 @@ public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
 
 The **infinitesimal generator** of a one-parameter group `U : AddChar ℝ (E →L[R] E)` of bounded
 operators on a normed space is the operator `G y = d/dt U(t) y |_{t = 0}`, defined on the vectors
-`y` for which the derivative exists (`AddChar.generator`, Engel–Nagel, Definition II.1.2). For a
+`y` for which the derivative exists (`AddChar.generator`). For a
 one-parameter unitary group `U : AddChar ℝ (unitary _)` the generator is `G = i A`, and
-`A = -i G` is the **self-adjoint generator** (`AddChar.selfAdjointGenerator`), the generator in the
-convention of Stone and Schmüdgen: `i A y = d/dt U(t) y |_{t = 0}`. **Stone's theorem** states that
+`A = -i G` is the **self-adjoint generator** (`AddChar.selfAdjointGenerator`):
+`i A y = d/dt U(t) y |_{t = 0}`. **Stone's theorem** states that
 the self-adjoint generator of a strongly continuous one-parameter unitary group is self-adjoint and
 generates it, `U(t) = e^{itA}`
 (`AddChar.IsStronglyContinuous.unitaryGroup_selfAdjointGenerator`), and that conversely the
@@ -85,10 +85,9 @@ convergence gives the derivative, and Fatou's lemma, through the lower semiconti
 
 * M. H. Stone, *On one-parameter unitary groups in Hilbert space*, Ann. of Math. 33 (1932),
   643–648.
-* [K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*][schmudgen2012], §6.1
-  (Theorems 6.1 and 6.2)
+* K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*, §6.1
 * K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*, Springer GTM
-  194 (2000), §II.1
+  194 (2000)
 -/
 
 @[expose] public section
@@ -118,8 +117,8 @@ def generatorDomain : Submodule R E where
     exact hy.const_smul c
 
 /-- The **infinitesimal generator** `G` of a one-parameter group `U` of bounded operators:
-`G y = d/dt U(t) y |_{t = 0}`, on the vectors `y` for which the derivative exists (Engel–Nagel,
-Definition II.1.2). For a one-parameter unitary group, `G = i A` for the self-adjoint operator `A`
+`G y = d/dt U(t) y |_{t = 0}`, on the vectors `y` for which the derivative exists. For a
+one-parameter unitary group, `G = i A` for the self-adjoint operator `A`
 with `U(t) = e^{itA}` (`AddChar.selfAdjointGenerator`, Stone's theorem). -/
 noncomputable def generator : E →ₗ.[R] E where
   domain := U.generatorDomain
@@ -181,8 +180,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 /-- The **self-adjoint generator** `A = -i G` of a one-parameter unitary group `U`, for the
 infinitesimal generator `G` of `U` as a group of bounded operators: `i A y = d/dt U(t) y |_{t = 0}`.
-This is the infinitesimal generator in the convention of Stone and Schmüdgen (§6.1); for a
-strongly continuous `U` it is self-adjoint and `U(t) = e^{itA}`
+For a strongly continuous `U` it is self-adjoint and `U(t) = e^{itA}`
 (`AddChar.IsStronglyContinuous.unitaryGroup_selfAdjointGenerator`). -/
 noncomputable def selfAdjointGenerator (U : AddChar ℝ (unitary (H →L[ℂ] H))) : H →ₗ.[ℂ] H :=
   -I • ((unitary (H →L[ℂ] H)).subtype.compAddChar U).generator

@@ -49,8 +49,8 @@ case the literature treats, but the criterion uses nothing about it.
 Conjugating `R` by a unitary `U` witnessing the criterion at `Λ` gives a representation
 `R.conjBy U` on the Hilbert space of `π₀` itself, and it *coincides* with `π₀` on every observable
 localised outside `Λ` (`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). This is the step
-from which, in the presence of Haag duality, one reads off an endomorphism of `𝔄` localised in `Λ`
-(Naaijkens, §3.2); Haag duality and the localised endomorphisms are not formalised here.
+from which, in the presence of Haag duality, one reads off an endomorphism of `𝔄` localised in `Λ`;
+Haag duality and the localised endomorphisms are not formalised here.
 
 ## Main definitions
 
@@ -86,7 +86,7 @@ from which, in the presence of Haag duality, one reads off an endomorphism of `�
 * S. Doplicher, R. Haag, J. E. Roberts, *Local observables and particle statistics I*,
   Comm. Math. Phys. 23 (1971), 199–230
 * P. Naaijkens, *Anyons in Infinite Quantum Systems*, PhD thesis, Radboud University Nijmegen
-  (2012), §3.2
+  (2012)
 -/
 
 @[expose] public section

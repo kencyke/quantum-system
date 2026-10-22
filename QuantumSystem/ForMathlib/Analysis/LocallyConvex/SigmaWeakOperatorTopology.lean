@@ -17,8 +17,7 @@ import Mathlib.LinearAlgebra.Dual.Lemmas
 This file defines a type copy `E →σw[𝕜] F` of `E →L[𝕜] F`, for inner product spaces `E`, `F`,
 endowed with the **σ-weak** (ultraweak) operator topology: the coarsest topology making
 `A ↦ ∑ₙ ⟪ξₙ, A ηₙ⟫` continuous for all square-summable sequences `ξ ∈ ℓ²(ℕ, F)`, `η ∈ ℓ²(ℕ, E)`
-(Takesaki, *Theory of Operator Algebras I*, §II.2; Bratteli–Robinson, *Operator Algebras and
-Quantum Statistical Mechanics 1*, §2.4.1). It is finer than the weak operator topology (take `ξ`,
+(Takesaki, *Theory of Operator Algebras I*, §II.2). It is finer than the weak operator topology (take `ξ`,
 `η` supported at one index) and coarser than the norm topology.
 
 The construction mirrors Mathlib's `ContinuousLinearMapWOT`: the topology is induced by the linear

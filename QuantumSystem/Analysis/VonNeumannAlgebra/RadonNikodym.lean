@@ -14,8 +14,7 @@ public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 For a von Neumann algebra `N` on `K`, `ζ ∈ K`, and a positive functional `ω` on `N` dominated by
 the vector functional of `ζ`, `ω(x⋆x) ≤ ‖x ζ‖²` for all `x ∈ N`, there is `T ∈ N′` with
 `0 ≤ T ≤ 1` and `ω(x) = ⟪T ζ, x ζ⟫`; with `R = √T ∈ N′`, `ω = ω_{R ζ}` is itself a vector
-functional (Sakai, *C\*-algebras and W\*-algebras*, 1.24.4; Bratteli–Robinson, *Operator
-Algebras and Quantum Statistical Mechanics 1*, Thm. 2.3.19).
+functional.
 
 This is the representation form `CStarAlgebra.exists_commute_of_apply_star_mul_self_le`
 (`QuantumSystem.Analysis.CStarAlgebra.RadonNikodym`) applied to the inclusion

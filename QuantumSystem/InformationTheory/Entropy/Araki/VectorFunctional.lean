@@ -25,10 +25,10 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
 
 * **Argument order.** `arakiVec M ξ η`, written `S[M]⟦ξ ∥ η⟧`, is `S(ω_ξ ‖ ω_η)`: the first
   argument `ω_ξ` is the state being measured, the second `ω_η` the reference. This is the order of
-  Longo (`S(φ‖ψ) = -(ξ, log Δ_{η,ξ} ξ)`), Witten (`S_{Ψ|Φ} = -⟨Ψ, log Δ_{Ψ|Φ} Ψ⟩`), Ohya–Petz and
+  Longo (`S(φ‖ψ) = -(ξ, log Δ_{η,ξ} ξ)`), Witten (`S_{Ψ|Φ} = -⟨Ψ, log Δ_{Ψ|Φ} Ψ⟩`) and
   Umegaki's `D(ψ ∥ φ)`; Araki's original `S(φ/ψ)` puts the reference on the left, so Araki's
   `S(ω_η/ω_ξ)` is `S[M]⟦ξ ∥ η⟧`. The relative modular operator takes the vectors in the opposite
-  order, `Δ_{η,ξ} = Δ[M]⟦η, ξ⟧` (Araki's and Longo's `Δ_{η,ξ}`, Ohya–Petz's `Δ(η, ξ)`; Witten's
+  order, `Δ_{η,ξ} = Δ[M]⟦η, ξ⟧` (Araki's and Longo's `Δ_{η,ξ}`; Witten's
   `Δ_{Ψ|Φ}` with `Ψ = ξ`, `Φ = η` has the subscripts the other way round).
 * **Finite dimensions.** For `M = B(H)`, `H` finite-dimensional, acting as `1 ⊗ B(H)` on
   `K ⊗̂ H` and `ξ`, `η` purifications of positive operators `ρ`, `σ`, this is the eigenvalue sum of
@@ -63,6 +63,12 @@ for any pair of vectors (`QuantumSystem.Analysis.VonNeumannAlgebra.Modular.Relat
 and the value depends only on the functionals `ω_ξ, ω_η`
 (`VonNeumannAlgebra.arakiVec_eq_of_inner_eq`), proved through the transformation rules of
 `Δ_{η,ξ}` under the commutant rather than through the uniqueness of representatives in `P♮`.
+Araki 1977, Definition 3.1, uses the unique representatives in a natural positive cone, and its
+Remark 3.3 shows only that the value does not depend on the choice of the cone (two cones differ
+by a unitary of `M′`). For arbitrary representatives in a standard representation the
+independence is Araki–Masuda 1982, Appendix C: `Δ_{η,ξ}` depends on `η` only through `ω_η`
+(Theorem C.1 (β)). Their proof uses Tomita–Takesaki theory (through matrix units); the proof here
+neither does nor assumes a standard form.
 Non-faithful functionals are handled by the support projection `s(ξ)` in `S_{η,ξ}`, so no
 reduction to the faithful case (which would also go through the standard form) is needed.
 
@@ -109,6 +115,10 @@ reduction to the faithful case (which would also go through the standard form) i
 ## References
 
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976), 809–833.
+* H. Araki, *Relative entropy for states of von Neumann algebras II*, Publ. RIMS 13 (1977),
+  173–192, Definition 3.1 and Remark 3.3.
+* H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
+  (1982), 339–411, Appendix C, Theorem C.1 (β).
 * M. Ohya, D. Petz, *Quantum Entropy and Its Use*, Chapter 5.
 -/
 

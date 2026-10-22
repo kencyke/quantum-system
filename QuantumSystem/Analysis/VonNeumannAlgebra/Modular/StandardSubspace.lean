@@ -73,8 +73,7 @@ in goals. Activate it with `open scoped VonNeumannAlgebra`.
 
 * O. Bratteli, D. W. Robinson, *Operator Algebras and Quantum Statistical Mechanics 1*, Springer
   (1987), Proposition 2.5.3 and §2.5.2
-* [R. Longo, *Lectures on Conformal Nets, Part I*](https://www.mat.uniroma2.it/longo/Lecture-Notes_files/LN-Part1.pdf),
-  §2.1
+* [R. Longo, *Lectures on Conformal Nets, Part I*](https://www.mat.uniroma2.it/longo/Lecture-Notes_files/LN-Part1.pdf)
 -/
 
 @[expose] public section
@@ -144,6 +143,16 @@ class IsCyclicSeparating : Prop where
 `InnerProductSpace.IsCyclicVector.isSeparatingVector_commutant`). -/
 instance IsCyclicSeparating.commutant [h : IsCyclicSeparating M Ω] : IsCyclicSeparating M′ Ω :=
   ⟨h.separating.isCyclicVector_commutant, h.cyclic.isSeparatingVector_commutant⟩
+
+/-- A model of `IsCyclicSeparating`: `1 ∈ ℂ` is cyclic and separating for `B(ℂ)`, since
+`(v • 1) 1 = v` and an operator on `ℂ` is determined by its value at `1`. -/
+instance IsCyclicSeparating.boundedLinearOperators_complex : IsCyclicSeparating 𝓑(ℂ) (1 : ℂ) where
+  cyclic := by
+    rw [isCyclicVector_iff, eq_top_iff]
+    intro v _
+    simpa using InnerProductSpace.apply_mem_cyclicSubspace (S := (𝓑(ℂ) : Set (ℂ →L[ℂ] ℂ)))
+      (1 : ℂ) (mem_boundedLinearOperators (v • (1 : ℂ →L[ℂ] ℂ)))
+  separating := fun a _ ha => ContinuousLinearMap.ext_ring (by simpa using ha)
 
 /-! ### The real subspace of self-adjoint elements applied to `Ω` -/
 

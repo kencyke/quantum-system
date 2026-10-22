@@ -22,7 +22,11 @@ defined because its domain `M ξ + [M ξ]ᗮ` is dense, and it satisfies
 Hence `F_{η,ξ} ⊆ S_{η,ξ}†` and `S_{η,ξ}` is closable. Its closure defines the relative modular
 operator `Δ_{η,ξ} = S̄†S̄` (downstream), and Araki's relative entropy of the vector functionals
 `ω_ξ`, `ω_η` is `S(ω_ξ ‖ ω_η) = -⟪ξ, log Δ_{η,ξ} ξ⟫`. In Araki's notation `S_{Φ,Ψ}` this is
-`Φ = η`, `Ψ = ξ`; Ohya–Petz write `S_{η,ξ}` as here.
+`Φ = η`, `Ψ = ξ`. The definition and the closability argument
+are Araki 1977, Definition 2.1 and Lemma 2.2, stated there for `Φ, Ψ` in a natural positive cone;
+the argument does not use the cone. Araki–Masuda 1982, Appendix C, (C.1), define `S_{η₁,η₂}` for
+arbitrary vector representatives (in a standard representation), and Theorem C.1 (α) gives its
+closability and the support `s(η₁) s′(η₂)` of `S̄`.
 
 The equality `S_{η,ξ}† = F̄_{η,ξ}` holds for arbitrary `η, ξ`
 (`VonNeumannAlgebra.adjoint_relativeTomita_eq_closure_commutant`, in
@@ -68,9 +72,11 @@ antilinear adjoint `LinearPMap.adjointₛₗ`.
 ## References
 
 * H. Araki, *Relative entropy of states of von Neumann algebras*, Publ. RIMS 11 (1976).
+* H. Araki, *Relative entropy for states of von Neumann algebras II*, Publ. RIMS 13 (1977),
+  173–192, Definition 2.1 and Lemma 2.2.
 * H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
-  (1982), §2.
-* M. Ohya, D. Petz, *Quantum Entropy and Its Use*, Springer (1993), Ch. 2 and 5.
+  (1982), 339–411, Appendix C, (C.1) and Theorem C.1 (α).
+* M. Ohya, D. Petz, *Quantum Entropy and Its Use*, Springer (1993), Ch. 5.
 -/
 
 @[expose] public section

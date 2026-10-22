@@ -32,7 +32,7 @@ commute (`HilbertSchmidt.commute_leftMul_rightMul`).
 * `HilbertSchmidt.ofCLM`: the linear equivalence `(H →L[ℂ] K) ≃ₗ[ℂ] HilbertSchmidt H K`.
 * `HilbertSchmidt.leftMul`, `HilbertSchmidt.rightMul`: the left and right multiplication
   representations, with the scoped notations `𝐋[H] B` and `𝐑[K] A` for the operators `X ↦ B X`
-  and `X ↦ X A` (Effros's `L_B` and `R_A`).
+  and `X ↦ X A`.
 
 ## Main results
 

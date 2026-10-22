@@ -310,7 +310,7 @@ positive functional `ψ` on `L∞(μ)` is `M_f ↦ ∫ f dP` for a finite measur
 lemma exists_measure_of_normalFunctional (ψ : (multiplicationAlgebra μ).NormalFunctional) :
     ∃ (P : Measure α) (_ : IsFiniteMeasure P), P ≪ μ ∧
       ∀ f : Lp ℂ ∞ μ, ψ.1 ⟨mulL2 f, mulL2_mem_multiplicationAlgebra f⟩ = ∫ x, f x ∂P := by
-  obtain ⟨ξ, hξ⟩ := isNormal_iff_exists_lp.mp ψ.2
+  obtain ⟨ξ, hξ⟩ := isNormal_iff_exists_hasSum_inner_self.mp ψ.2
   set ν : ℕ → Measure α := fun n => μ.withDensity fun x => ‖ξ n x‖ₑ ^ 2
   have hone : mulL2 (indicatorConst (μ := μ) MeasurableSet.univ (1 : ℂ)) = 1 := by
     rw [← map_one mulL2]

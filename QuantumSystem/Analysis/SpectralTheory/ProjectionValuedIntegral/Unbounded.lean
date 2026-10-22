@@ -75,7 +75,7 @@ by monotone convergence. Closedness and self-adjointness for real `f` follow.
 ## References
 
 * [W. Rudin, *Functional Analysis*][rudin1991], §13.22–13.24
-* [K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*][schmudgen2012], §4.3
+* K. Schmüdgen, *Unbounded Self-adjoint Operators on Hilbert Space*, §4.3
 -/
 
 @[expose] public section

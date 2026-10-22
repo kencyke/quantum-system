@@ -15,11 +15,9 @@ import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 # Schwarz maps
 
 A linear map `f : A₁ →ₗ[ℂ] A₂` between C⋆-algebras is a **Schwarz map** if it satisfies the
-Kadison–Schwarz inequality `f(a)⋆ f(a) ≤ f(a⋆ a)` for every `a` (Choi, *A Schwarz inequality for
-positive linear maps on C⋆-algebras*, Illinois J. Math. 18 (1974); Ohya–Petz, *Quantum Entropy
-and Its Use*, §1.C; Petz, *Quasi-entropies for finite quantum systems* (1986)). The *unital normal*
+Kadison–Schwarz inequality `f(a)⋆ f(a) ≤ f(a⋆ a)` for every `a`. The *unital normal*
 Schwarz maps form a class of maps along which the data-processing inequality for Araki's relative
-entropy holds (Uhlmann; Petz); unitality cannot be dropped, as `½ • id` shows once the entropy is
+entropy holds; unitality cannot be dropped, as `½ • id` shows once the entropy is
 taken between general positive functionals, where it can be negative: for `σ = 2ρ`,
 `S(½ρ‖½σ) = ½ S(ρ‖σ) = -½ log 2 > S(ρ‖σ)`.
 
@@ -31,7 +29,7 @@ linear map is bounded (Mathlib's `ContinuousLinearMapClass` instance for positiv
 `‖f a‖² = ‖f(a)⋆ f(a)‖ ≤ ‖f(a⋆ a)‖ ≤ ‖f‖ ‖a‖²` forces `‖f‖ ≤ 1`.
 
 The main examples are the non-unital ⋆-homomorphisms (with equality), the Kraus maps
-(`SchwarzMap.ofKraus`) and, by the Kadison–Schwarz inequality of Choi, the `2`-positive maps with
+(`SchwarzMap.ofKraus`) and, by the Kadison–Schwarz inequality, the `2`-positive maps with
 `φ 1 ≤ 1`, in particular the completely positive ones. The `k`-positive maps and that inequality
 are in `ForMathlib/Analysis/CStarAlgebra/KPositiveMap.lean`
 (`KPositiveMapClass.le_map_star_mul`); a `2`-positive map with `φ 1 ≤ 1` is packaged as a Schwarz
@@ -60,7 +58,7 @@ map by `KPositiveMapClass.toSchwarzMap` in `Analysis/CStarAlgebra/KPositiveMapSc
 
 @[expose] public section
 
-open scoped CStarAlgebra
+open scoped CStarAlgebra InnerProduct
 
 /-- A **Schwarz map** is a ℂ-linear map `f` between C⋆-algebras satisfying the Kadison–Schwarz
 inequality `star (f a) * f a ≤ f (star a * a)`. Positivity, `map_star` and contractivity follow
@@ -256,27 +254,27 @@ variable {H K : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [Complet
 `T x = Σᵢ Cᵢ† x Cᵢ` from `B(K)` to `B(H)` satisfies `T(x)⋆ T(x) ≤ T(x⋆ x)`: with `S = T x`,
 `Dᵢ = x Cᵢ - Cᵢ S` and `P = Σᵢ Cᵢ† Cᵢ`, `T(x⋆ x) - S⋆ S = Σᵢ Dᵢ† Dᵢ + S⋆ (1 - P) S ≥ 0`. The map is
 unital exactly when `P = 1` (`SchwarzMap.ofKraus_one`). -/
-noncomputable def ofKraus (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) ∘L C i ≤ 1) :
+noncomputable def ofKraus (C : ι → H →L[ℂ] K) (hC : ∑ i, (C i)† ∘L C i ≤ 1) :
     SchwarzMap (K →L[ℂ] K) (H →L[ℂ] H) where
-  toFun x := ∑ i, adjoint (C i) ∘L x ∘L C i
+  toFun x := ∑ i, (C i)† ∘L x ∘L C i
   map_add' x y := by
     simp only [add_comp, comp_add, Finset.sum_add_distrib]
   map_smul' c x := by
     simp only [smul_comp, comp_smul, Finset.smul_sum, RingHom.id_apply]
   le_map_star_mul' x := by
-    set S := ∑ i, adjoint (C i) ∘L x ∘L C i with hSdef
-    set P := ∑ i, adjoint (C i) ∘L C i with hPdef
-    have hS : star S = ∑ i, adjoint (C i) ∘L adjoint x ∘L C i := by
+    set S := ∑ i, (C i)† ∘L x ∘L C i with hSdef
+    set P := ∑ i, (C i)† ∘L C i with hPdef
+    have hS : star S = ∑ i, (C i)† ∘L x† ∘L C i := by
       rw [hSdef, star_sum]
       refine Finset.sum_congr rfl fun i _ => ?_
       rw [star_eq_adjoint, adjoint_comp, adjoint_comp, adjoint_adjoint,
         ContinuousLinearMap.comp_assoc]
-    have key : (∑ i, adjoint (C i) ∘L (star x * x) ∘L C i) - star S * S =
-        ∑ i, adjoint (x ∘L C i - C i ∘L S) ∘L (x ∘L C i - C i ∘L S) + star S * (1 - P) * S := by
-      have e : ∀ i, adjoint (x ∘L C i - C i ∘L S) ∘L (x ∘L C i - C i ∘L S) =
-          adjoint (C i) ∘L (star x * x) ∘L C i - (adjoint (C i) ∘L adjoint x ∘L C i) ∘L S
-            - adjoint S ∘L (adjoint (C i) ∘L x ∘L C i)
-            + adjoint S ∘L (adjoint (C i) ∘L C i) ∘L S := fun i => by
+    have key : (∑ i, (C i)† ∘L (star x * x) ∘L C i) - star S * S =
+        ∑ i, (x ∘L C i - C i ∘L S)† ∘L (x ∘L C i - C i ∘L S) + star S * (1 - P) * S := by
+      have e : ∀ i, (x ∘L C i - C i ∘L S)† ∘L (x ∘L C i - C i ∘L S) =
+          (C i)† ∘L (star x * x) ∘L C i - ((C i)† ∘L x† ∘L C i) ∘L S
+            - S† ∘L ((C i)† ∘L x ∘L C i)
+            + S† ∘L ((C i)† ∘L C i) ∘L S := fun i => by
         rw [map_sub, adjoint_comp, adjoint_comp, sub_comp, comp_sub, comp_sub, star_eq_adjoint,
           mul_def]
         simp only [ContinuousLinearMap.comp_assoc]
@@ -291,12 +289,12 @@ noncomputable def ofKraus (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) 
       (star_left_conjugate_nonneg (sub_nonneg.mpr hC) S)
 
 /-- The Kraus Schwarz map is `x ↦ Σᵢ Cᵢ† x Cᵢ`. -/
-@[simp] lemma ofKraus_apply (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) ∘L C i ≤ 1)
-    (x : K →L[ℂ] K) : ofKraus C hC x = ∑ i, adjoint (C i) ∘L x ∘L C i := rfl
+@[simp] lemma ofKraus_apply (C : ι → H →L[ℂ] K) (hC : ∑ i, (C i)† ∘L C i ≤ 1)
+    (x : K →L[ℂ] K) : ofKraus C hC x = ∑ i, (C i)† ∘L x ∘L C i := rfl
 
 /-- `T 1 = Σᵢ Cᵢ† Cᵢ`: the Kraus map is unital iff `Σᵢ Cᵢ† Cᵢ = 1`. -/
-lemma ofKraus_one (C : ι → H →L[ℂ] K) (hC : ∑ i, adjoint (C i) ∘L C i ≤ 1) :
-    ofKraus C hC 1 = ∑ i, adjoint (C i) ∘L C i := by
+lemma ofKraus_one (C : ι → H →L[ℂ] K) (hC : ∑ i, (C i)† ∘L C i ≤ 1) :
+    ofKraus C hC 1 = ∑ i, (C i)† ∘L C i := by
   rw [ofKraus_apply]
   exact Finset.sum_congr rfl fun i _ => by rw [one_def, ContinuousLinearMap.id_comp]
 

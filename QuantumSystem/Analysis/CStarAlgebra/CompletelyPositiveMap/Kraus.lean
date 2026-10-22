@@ -37,15 +37,14 @@ as few as `rank J(Φ)` operators
 
 ## References
 
-* Nielsen, Chuang, *Quantum Computation and Quantum Information*, §8.2.3 and Theorem 8.1 (there for
-  trace non-increasing operations, `Σₐ Eₐ† Eₐ ≤ 1`)
+* Nielsen, Chuang, *Quantum Computation and Quantum Information*, §8.2.3
 * Watrous, *The Theory of Quantum Information*, Corollary 2.27
 -/
 
 @[expose] public section
 
 open ContinuousLinearMap
-open scoped CStarAlgebra InnerProductSpace ComplexOrder
+open scoped CStarAlgebra InnerProductSpace InnerProduct ComplexOrder
 
 /-! ### Kraus maps are completely positive -/
 
@@ -61,18 +60,18 @@ positive: applied entrywise to a block matrix `M`, its quadratic form is
 (`CStarMatrix.nonneg_iff_sum_inner_apply_nonneg`). The spaces need not be finite-dimensional. -/
 noncomputable def ofKraus {ι : Type*} [Fintype ι] (T : ι → H →L[ℂ] K) :
     (H →L[ℂ] H) →CP (K →L[ℂ] K) where
-  toFun A := ∑ a, T a ∘L A ∘L adjoint (T a)
+  toFun A := ∑ a, T a ∘L A ∘L (T a)†
   map_add' A B := by simp [add_comp, comp_add, Finset.sum_add_distrib]
   map_smul' c A := by simp [smul_comp, Finset.smul_sum]
   map_cstarMatrix_nonneg' k M hM := by
     classical
     rw [CStarMatrix.nonneg_iff_sum_inner_apply_nonneg] at hM ⊢
     intro ξ
-    change 0 ≤ ∑ i, ∑ j, ⟪ξ i, (∑ a, T a ∘L M i j ∘L adjoint (T a)) (ξ j)⟫_ℂ
-    have h (i j : Fin k) : ⟪ξ i, (∑ a, T a ∘L M i j ∘L adjoint (T a)) (ξ j)⟫_ℂ =
-        ∑ a, ⟪adjoint (T a) (ξ i), M i j (adjoint (T a) (ξ j))⟫_ℂ := by
+    change 0 ≤ ∑ i, ∑ j, ⟪ξ i, (∑ a, T a ∘L M i j ∘L (T a)†) (ξ j)⟫_ℂ
+    have h (i j : Fin k) : ⟪ξ i, (∑ a, T a ∘L M i j ∘L (T a)†) (ξ j)⟫_ℂ =
+        ∑ a, ⟪((T a)†) (ξ i), M i j (((T a)†) (ξ j))⟫_ℂ := by
       simp [adjoint_inner_left]
-    calc (0 : ℂ) ≤ ∑ a, ∑ i, ∑ j, ⟪adjoint (T a) (ξ i), M i j (adjoint (T a) (ξ j))⟫_ℂ :=
+    calc (0 : ℂ) ≤ ∑ a, ∑ i, ∑ j, ⟪((T a)†) (ξ i), M i j (((T a)†) (ξ j))⟫_ℂ :=
           Finset.sum_nonneg fun a _ => hM _
       _ = _ := by
           simp only [h]
@@ -81,7 +80,7 @@ noncomputable def ofKraus {ι : Type*} [Fintype ι] (T : ι → H →L[ℂ] K) :
 
 /-- The Kraus map `CompletelyPositiveMap.ofKraus T` sends `A` to `Σₐ Tₐ A Tₐ†`. -/
 lemma ofKraus_apply {ι : Type*} [Fintype ι] (T : ι → H →L[ℂ] K) (A : H →L[ℂ] H) :
-    ofKraus T A = ∑ a, T a ∘L A ∘L adjoint (T a) :=
+    ofKraus T A = ∑ a, T a ∘L A ∘L (T a)† :=
   rfl
 
 end CompletelyPositiveMap
@@ -98,8 +97,8 @@ operators satisfy the **completeness relation** `Σₐ Tₐ† Tₐ = 1`: its tr
 iff the trace dual is unital (`isTracePreserving_iff_traceDual_one`). -/
 lemma isTracePreserving_iff_sum_adjoint_comp_eq_one {F : Type*}
     [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)] [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {Φ : F}
-    {ι : Type*} [Fintype ι] {T : ι → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L adjoint (T a)) :
-    IsTracePreserving Φ ↔ ∑ a, adjoint (T a) ∘L T a = 1 := by
+    {ι : Type*} [Fintype ι] {T : ι → H →L[ℂ] K} (hT : ∀ A, Φ A = ∑ a, T a ∘L A ∘L (T a)†) :
+    IsTracePreserving Φ ↔ ∑ a, (T a)† ∘L T a = 1 := by
   rw [isTracePreserving_iff_traceDual_one, traceDual_eq_sum_of_kraus hT]
   simp only [one_def, id_comp]
 
@@ -108,14 +107,14 @@ namespace CPTPMap
 /-- The **CPTP map of a Kraus representation**: the Kraus map `A ↦ Σₐ Tₐ A Tₐ†` of a family
 satisfying the completeness relation `Σₐ Tₐ† Tₐ = 1`. -/
 noncomputable def ofKraus {ι : Type*} [Fintype ι] (T : ι → H →L[ℂ] K)
-    (hT : ∑ a, adjoint (T a) ∘L T a = 1) : CPTPMap H K where
+    (hT : ∑ a, (T a)† ∘L T a = 1) : CPTPMap H K where
   toCompletelyPositiveMap := CompletelyPositiveMap.ofKraus T
   isTracePreserving' := (isTracePreserving_iff_sum_adjoint_comp_eq_one fun _ => rfl).2 hT
 
 /-- The CPTP map `CPTPMap.ofKraus T hT` sends `A` to `Σₐ Tₐ A Tₐ†`. -/
 lemma ofKraus_apply {ι : Type*} [Fintype ι] (T : ι → H →L[ℂ] K)
-    (hT : ∑ a, adjoint (T a) ∘L T a = 1) (A : H →L[ℂ] H) :
-    ofKraus T hT A = ∑ a, T a ∘L A ∘L adjoint (T a) :=
+    (hT : ∑ a, (T a)† ∘L T a = 1) (A : H →L[ℂ] H) :
+    ofKraus T hT A = ∑ a, T a ∘L A ∘L (T a)† :=
   rfl
 
 end CPTPMap

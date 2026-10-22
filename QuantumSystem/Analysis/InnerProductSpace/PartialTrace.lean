@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
@@ -64,7 +65,7 @@ matrix partial trace `Matrix.traceRight`.
 
 @[expose] public section
 
-open scoped TensorProduct InnerProductSpace ContinuousLinearMap
+open scoped TensorProduct InnerProductSpace InnerProduct ContinuousLinearMap
 open TensorProduct
 
 variable {H K E : Type*}
@@ -117,7 +118,7 @@ lemma traceRight_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
 /-- For an orthonormal basis `(eₐ)` of `K`, the ampliation is `A ⊗ 1 = Σₐ ιₐ A ιₐ†` with the
 insertions `ιₐ : x ↦ x ⊗ eₐ`. -/
 lemma rTensor_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι ℂ K) (A : H →L[ℂ] H) :
-    A.rTensor K = ∑ a, (mkL ℂ H K).flip (b a) ∘L A ∘L adjoint ((mkL ℂ H K).flip (b a)) := by
+    A.rTensor K = ∑ a, (mkL ℂ H K).flip (b a) ∘L A ∘L ((mkL ℂ H K).flip (b a))† := by
   refine ContinuousLinearMap.coe_inj.mp <| TensorProduct.ext' fun x y => ?_
   simp only [coe_coe, rTensor_tmul, toLinearMap_sum, LinearMap.coe_sum, Finset.sum_apply,
     coe_comp, Function.comp_apply, adjoint_flip_mkL_apply_tmul, map_smul, flip_apply,
@@ -131,14 +132,14 @@ lemma rTensor_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι ℂ K) (
 lemma traceRight_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι ℂ K)
     (X : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
     traceRight H K X =
-      ∑ a, adjoint ((mkL ℂ H K).flip (b a)) ∘L X ∘L (mkL ℂ H K).flip (b a) := by
+      ∑ a, ((mkL ℂ H K).flip (b a))† ∘L X ∘L (mkL ℂ H K).flip (b a) := by
   rw [eq_comm, eq_traceRight_iff]
   intro A
   rw [rTensor_eq_sum b, finsetSum_comp, toLinearMap_sum, map_sum, comp_finsetSum, toLinearMap_sum,
     map_sum]
   refine Finset.sum_congr rfl fun a _ => ?_
-  rw [show A ∘L adjoint ((mkL ℂ H K).flip (b a)) ∘L X ∘L (mkL ℂ H K).flip (b a) =
-    (A ∘L adjoint ((mkL ℂ H K).flip (b a)) ∘L X) ∘L (mkL ℂ H K).flip (b a) by
+  rw [show A ∘L ((mkL ℂ H K).flip (b a))† ∘L X ∘L (mkL ℂ H K).flip (b a) =
+    (A ∘L ((mkL ℂ H K).flip (b a))† ∘L X) ∘L (mkL ℂ H K).flip (b a) by
       simp only [comp_assoc], trace_comp_comm']
   simp only [comp_assoc]
 
@@ -147,15 +148,15 @@ lemma traceRight_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι ℂ K
 say `tr(Φ(A) B) = tr(V A V† (B ⊗ 1))`, by cyclicity of the trace. -/
 lemma traceDual_eq_iff_traceRight {F : Type*} [FunLike F (H →L[ℂ] H) (K →L[ℂ] K)]
     [LinearMapClass F ℂ (H →L[ℂ] H) (K →L[ℂ] K)] {Φ : F} (V : H →L[ℂ] K ⊗[ℂ] E) :
-    (∀ B : K →L[ℂ] K, traceDual Φ B = adjoint V ∘L B.rTensor E ∘L V) ↔
-      ∀ A : H →L[ℂ] H, Φ A = traceRight K E (V ∘L A ∘L adjoint V) := by
+    (∀ B : K →L[ℂ] K, traceDual Φ B = V† ∘L B.rTensor E ∘L V) ↔
+      ∀ A : H →L[ℂ] H, Φ A = traceRight K E (V ∘L A ∘L V†) := by
   have key (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
-      Tr (A ∘L adjoint V ∘L B.rTensor E ∘L V) =
-        Tr (B ∘L traceRight K E (V ∘L A ∘L adjoint V)) := by
+      Tr (A ∘L V† ∘L B.rTensor E ∘L V) =
+        Tr (B ∘L traceRight K E (V ∘L A ∘L V†)) := by
     rw [trace_comp_traceRight,
-      show A ∘L adjoint V ∘L B.rTensor E ∘L V = (A ∘L adjoint V ∘L B.rTensor E) ∘L V by
+      show A ∘L V† ∘L B.rTensor E ∘L V = (A ∘L V† ∘L B.rTensor E) ∘L V by
         simp only [comp_assoc], trace_comp_comm',
-      show V ∘L A ∘L adjoint V ∘L B.rTensor E = (V ∘L A ∘L adjoint V) ∘L B.rTensor E by
+      show V ∘L A ∘L V† ∘L B.rTensor E = (V ∘L A ∘L V†) ∘L B.rTensor E by
         simp only [comp_assoc], trace_comp_comm']
   constructor
   · intro h A

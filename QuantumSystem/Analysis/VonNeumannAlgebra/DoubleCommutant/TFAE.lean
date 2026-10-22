@@ -27,36 +27,37 @@ are equivalent.
 
 ## Main results
 
-* `DoubleCommutant.bicommutant_tfae`: the equivalence for a possibly non-unital `*`-subalgebra
+* `NonUnitalStarSubalgebra.bicommutant_tfae`: the equivalence for a possibly non-unital `*`-subalgebra
   acting non-degenerately.
-* `DoubleCommutant.bicommutant_tfae_starSubalgebra`: the unital special case, where non-degeneracy
+* `StarSubalgebra.bicommutant_tfae`: the unital special case, where non-degeneracy
   is automatic. This is the form in which the theorem is usually quoted.
-* `DoubleCommutant.one_mem_of_isSOTClosed` (and `WOTClosedSubalgebra.one_mem_of_isWOTClosed`): a
+* `NonUnitalStarSubalgebra.one_mem_of_isSOTClosed` (and `NonUnitalStarSubalgebra.one_mem_of_isWOTClosed`): a
   non-degenerate `*`-subalgebra satisfying any of the three conditions contains `1`. This is what
   the non-unital form adds over the unital one, and it is also what makes the extra scope purely
   negative.
-* `DoubleCommutant.bicommutant_tfae_finiteRankOperators`: the witness that the non-unital
+* `InnerProductSpace.bicommutant_tfae_finiteRankOperators`: the witness that the non-unital
   generality is inhabited — on an infinite-dimensional `H` the theorem applies to `F(H)`, which
   does not contain `1`. That it is inhabited only *negatively* is
-  `DoubleCommutant.not_isWOTClosed_finiteRankOperators`,
-  `DoubleCommutant.not_isSOTClosed_finiteRankOperators` and
-  `DoubleCommutant.centralizer_centralizer_ne_finiteRankOperators`.
+  `InnerProductSpace.not_isWOTClosed_finiteRankOperators`,
+  `InnerProductSpace.not_isSOTClosed_finiteRankOperators` and
+  `InnerProductSpace.centralizer_centralizer_ne_finiteRankOperators`.
 * `VonNeumannAlgebra.ofIsWOTClosed`, `VonNeumannAlgebra.ofIsSOTClosed`: the payoff — a WOT-closed
   (resp. SOT-closed) unital `*`-subalgebra *is* a von Neumann algebra, which is what makes the
   topological definition of a von Neumann algebra usable against Mathlib's algebraic one.
 
-## Which form is standard
+## The unital and the non-degenerate form
 
-The literature overwhelmingly quotes the **unital** three-condition form
-(`bicommutant_tfae_starSubalgebra`); the non-degenerate form of `bicommutant_tfae` is the more
-general one, adopted here because it also covers algebras that do not contain `1` — the compact
+The **unital** three-condition form is `StarSubalgebra.bicommutant_tfae`; the non-degenerate form
+of `NonUnitalStarSubalgebra.bicommutant_tfae` is the more general one, adopted here because it also
+covers algebras that do not contain `1` — the compact
 operators `K(H)` and the finite-rank operators `F(H)` on an infinite-dimensional `H` are
-non-degenerate and non-unital, and the unital form says nothing about them. Norm-closedness, which
-some sources additionally assume, is deliberately *not* assumed: no step of the proof consumes it
+non-degenerate and non-unital, and the unital form says nothing about them. Norm-closedness is
+deliberately *not* assumed: no step of the proof consumes it
 and each of the three conditions implies it.
 
 The extra scope so gained is inhabited only by algebras for which all three conditions *fail*:
-by `one_mem_of_isSOTClosed`, a non-degenerate algebra satisfying any one of them contains `1` and
+by `NonUnitalStarSubalgebra.one_mem_of_isSOTClosed`, a non-degenerate algebra satisfying any one of
+them contains `1` and
 is therefore already covered by the unital form. That is not a defect — it is what the general
 form is for, since the unital form cannot so much as state that `F(H)` is not WOT-closed.
 
@@ -67,8 +68,9 @@ decomposition `H = H₁ ⊕ H₂` with `H₂ ≠ 0` the algebra `B(H₁) ⊕ 0` 
 smaller than its double commutant, which is `B(H₁) ⊕ ℂ1`. (For `H₂ = 0` there is nothing to
 separate and the algebra is all of `B(H)`.) Containing `1` is the standard sufficient condition,
 which is why the unital corollaries carry no extra hypothesis; conversely, non-degeneracy plus any
-one of the three conditions *implies* `1 ∈ A` (`WOTClosedSubalgebra.one_mem_of_isWOTClosed`,
-`one_mem_of_isSOTClosed`), so the two hypothesis packages differ exactly on the algebras where the
+one of the three conditions *implies* `1 ∈ A` (`NonUnitalStarSubalgebra.one_mem_of_isWOTClosed`,
+`NonUnitalStarSubalgebra.one_mem_of_isSOTClosed`), so the two hypothesis packages differ exactly on
+the algebras where the
 equivalence holds negatively.
 
 Non-degeneracy is consumed **only** by the implication 3 → 1. The other two implications are
@@ -144,7 +146,7 @@ lemma centralizer_centralizer_finiteRankOperators :
 
 end InnerProductSpace
 
-namespace DoubleCommutant
+section DoubleCommutant
 
 open InnerProductSpace StrongOperatorTopology WeakOperatorTopology
 
@@ -157,7 +159,8 @@ non-degenerately, equalling its own double commutant, being WOT-closed, and bein
 all equivalent.
 
 Only the implication 3 → 1 consumes the non-degeneracy hypothesis; see the module docstring. -/
-theorem bicommutant_tfae (A : NonUnitalStarSubalgebra ℂ B) (hnd : ActsNondegenerately (A : Set B)) :
+theorem NonUnitalStarSubalgebra.bicommutant_tfae (A : NonUnitalStarSubalgebra ℂ B)
+    (hnd : ActsNondegenerately (A : Set B)) :
     List.TFAE [
       (A : Set B)′′ = (A : Set B),
       IsWOTClosed (H := H) (A : Set B),
@@ -167,70 +170,70 @@ theorem bicommutant_tfae (A : NonUnitalStarSubalgebra ℂ B) (hnd : ActsNondegen
     rw [← h]
     exact isWOTClosed_centralizer_centralizer (H := H) (A : Set B)
   tfae_have 2 → 3 := isSOTClosed_of_isWOTClosed (H := H)
-  tfae_have 3 → 1 := SOTClosedSubalgebra.doubleCommutant_eq_of_isSOTClosed A hnd
+  tfae_have 3 → 1 := A.doubleCommutant_eq_of_isSOTClosed hnd
   tfae_finish
 
-/-- Unital special case of `DoubleCommutant.bicommutant_tfae`, and the form in which the theorem is
+/-- Unital special case of `NonUnitalStarSubalgebra.bicommutant_tfae`, and the form in which the theorem is
 usually quoted: since `1 ∈ A`, the algebra acts non-degenerately and no extra hypothesis is
 needed. -/
-lemma bicommutant_tfae_starSubalgebra (A : StarSubalgebra ℂ B) :
+lemma StarSubalgebra.bicommutant_tfae (A : StarSubalgebra ℂ B) :
     List.TFAE [
       (A : Set B)′′ = (A : Set B),
       IsWOTClosed (H := H) (A : Set B),
       IsSOTClosed (H := H) (A : Set B)] :=
-  bicommutant_tfae A.toNonUnitalStarSubalgebra (actsNondegenerately_of_one_mem A.one_mem)
+  A.toNonUnitalStarSubalgebra.bicommutant_tfae (actsNondegenerately_of_one_mem A.one_mem)
 
 /-- **A non-degenerate `*`-subalgebra satisfying any one of the three conditions contains `1`.**
-Stated for the WOT in `WOTClosedSubalgebra.one_mem_of_isWOTClosed`; this is the SOT companion.
+Stated for the WOT in `NonUnitalStarSubalgebra.one_mem_of_isWOTClosed`; this is the SOT companion.
 
 Together the two say that the extra scope of the non-unital form over the unital one contains only
 *negative* instances: a non-degenerate `*`-subalgebra that does not contain `1` fails all three
 conditions. -/
-lemma one_mem_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
+lemma NonUnitalStarSubalgebra.one_mem_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B)) (hA : IsSOTClosed (H := H) (A : Set B)) :
     (1 : B) ∈ A :=
-  WOTClosedSubalgebra.one_mem_of_isWOTClosed A hnd
-    (SOTClosedSubalgebra.isWOTClosed_of_isSOTClosed A hnd hA)
+  A.one_mem_of_isWOTClosed hnd
+    (A.isWOTClosed_of_isSOTClosed hnd hA)
 
 /-- **The non-unital generality is inhabited.** On an infinite-dimensional Hilbert space the
 finite-rank operators `F(H)` act non-degenerately and do not contain `1`, so
-`DoubleCommutant.bicommutant_tfae` applies to them while
-`DoubleCommutant.bicommutant_tfae_starSubalgebra` does not. This is the witness that the
+`NonUnitalStarSubalgebra.bicommutant_tfae` applies to them while
+`StarSubalgebra.bicommutant_tfae` does not. This is the witness that the
 non-degeneracy hypothesis really is weaker than unitality, and not merely formally so.
 
-It is inhabited only *negatively*, and necessarily so: by `DoubleCommutant.one_mem_of_isSOTClosed`
+It is inhabited only *negatively*, and necessarily so: by `NonUnitalStarSubalgebra.one_mem_of_isSOTClosed`
 a non-degenerate `*`-subalgebra satisfying any of the three conditions contains `1`. For `F(H)` all
 three therefore fail together, exactly as the equivalence demands — see
-`DoubleCommutant.not_isWOTClosed_finiteRankOperators`,
-`DoubleCommutant.not_isSOTClosed_finiteRankOperators` and
-`DoubleCommutant.centralizer_centralizer_ne_finiteRankOperators`, the last of which sharpens the
+`InnerProductSpace.not_isWOTClosed_finiteRankOperators`,
+`InnerProductSpace.not_isSOTClosed_finiteRankOperators` and
+`InnerProductSpace.centralizer_centralizer_ne_finiteRankOperators`, the last of which sharpens the
 failure to `F(H)'' = B(H) ≠ F(H)`. -/
-lemma bicommutant_tfae_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma InnerProductSpace.bicommutant_tfae_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (1 : B) ∉ finiteRankOperators (H := H) ∧
       List.TFAE [
         (finiteRankOperators (H := H) : Set B)′′ = (finiteRankOperators (H := H) : Set B),
         IsWOTClosed (H := H) (finiteRankOperators (H := H) : Set B),
         IsSOTClosed (H := H) (finiteRankOperators (H := H) : Set B)] :=
   ⟨one_notMem_finiteRankOperators h,
-    bicommutant_tfae _ actsNondegenerately_finiteRankOperators⟩
+    NonUnitalStarSubalgebra.bicommutant_tfae _ actsNondegenerately_finiteRankOperators⟩
 
 /-- On an infinite-dimensional `H` the finite-rank operators are **not** WOT-closed: they act
 non-degenerately, so WOT-closedness would force `1 ∈ F(H)`. -/
-lemma not_isWOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma InnerProductSpace.not_isWOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     ¬ IsWOTClosed (H := H) (finiteRankOperators (H := H) : Set B) := fun hA =>
   one_notMem_finiteRankOperators h
-    (WOTClosedSubalgebra.one_mem_of_isWOTClosed _ actsNondegenerately_finiteRankOperators hA)
+    (NonUnitalStarSubalgebra.one_mem_of_isWOTClosed _ actsNondegenerately_finiteRankOperators hA)
 
 /-- On an infinite-dimensional `H` the finite-rank operators are **not** SOT-closed. -/
-lemma not_isSOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma InnerProductSpace.not_isSOTClosed_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     ¬ IsSOTClosed (H := H) (finiteRankOperators (H := H) : Set B) := fun hA =>
   one_notMem_finiteRankOperators h
-    (one_mem_of_isSOTClosed _ actsNondegenerately_finiteRankOperators hA)
+    (NonUnitalStarSubalgebra.one_mem_of_isSOTClosed _ actsNondegenerately_finiteRankOperators hA)
 
 /-- On an infinite-dimensional `H` the finite-rank operators are **not** their own double
 commutant: `F(H)'' = B(H)` by `InnerProductSpace.centralizer_centralizer_finiteRankOperators`,
 while `1 ∉ F(H)`. -/
-lemma centralizer_centralizer_ne_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
+lemma InnerProductSpace.centralizer_centralizer_ne_finiteRankOperators (h : ¬ FiniteDimensional ℂ H) :
     (finiteRankOperators (H := H) : Set B)′′ ≠ (finiteRankOperators (H := H) : Set B) := by
   intro heq
   refine one_notMem_finiteRankOperators h ?_
@@ -254,7 +257,7 @@ noncomputable def ofIsWOTClosed (A : StarSubalgebra ℂ (H →L[ℂ] H))
     (hA : IsWOTClosed (H := H) (A : Set (H →L[ℂ] H))) : VonNeumannAlgebra H where
   toStarSubalgebra := A
   centralizer_centralizer' :=
-    WOTClosedSubalgebra.doubleCommutant_eq_of_isWOTClosed_starSubalgebra A hA
+    StarSubalgebra.doubleCommutant_eq_of_isWOTClosed A hA
 
 /-- The carrier of `VonNeumannAlgebra.ofIsWOTClosed A hA` is `A` itself: the constructor supplies
 only the `centralizer_centralizer'` field and leaves the underlying `*`-subalgebra untouched. -/
@@ -266,7 +269,7 @@ only the `centralizer_centralizer'` field and leaves the underlying `*`-subalgeb
 `VonNeumannAlgebra.ofIsWOTClosed`. -/
 noncomputable def ofIsSOTClosed (A : StarSubalgebra ℂ (H →L[ℂ] H))
     (hA : IsSOTClosed (H := H) (A : Set (H →L[ℂ] H))) : VonNeumannAlgebra H :=
-  ofIsWOTClosed A (SOTClosedSubalgebra.isWOTClosed_of_isSOTClosed_starSubalgebra A hA)
+  ofIsWOTClosed A (StarSubalgebra.isWOTClosed_of_isSOTClosed A hA)
 
 /-- The carrier of `VonNeumannAlgebra.ofIsSOTClosed A hA` is `A` itself; the SOT companion of
 `VonNeumannAlgebra.coe_ofIsWOTClosed`. -/
@@ -280,6 +283,6 @@ lemma generated_coe_of_isWOTClosed (A : StarSubalgebra ℂ (H →L[ℂ] H))
     (hA : IsWOTClosed (H := H) (A : Set (H →L[ℂ] H))) :
     (generated (A : Set (H →L[ℂ] H)) : Set (H →L[ℂ] H)) = (A : Set (H →L[ℂ] H)) := by
   rw [coe_generated_of_star_eq (StarMemClass.star_coe_eq A),
-    WOTClosedSubalgebra.doubleCommutant_eq_of_isWOTClosed_starSubalgebra A hA]
+    StarSubalgebra.doubleCommutant_eq_of_isWOTClosed A hA]
 
 end VonNeumannAlgebra

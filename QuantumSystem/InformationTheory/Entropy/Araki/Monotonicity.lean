@@ -32,17 +32,16 @@ for resolvents turns this into `⟪ζ, (t + Δ_N)⁻¹ ζ⟫ ≤ ⟪ξ, (t + Δ_
 `-log λ = ∫_{t > 0} ((t + λ)⁻¹ - (1 + t)⁻¹) dt` integrates it to
 `-⟪ζ, log Δ_N ζ⟫ ≤ -⟪ξ, log Δ_M ξ⟫` (`MeasureTheory.negLogIntegral_le_of_integral_inv_add_le`).
 Normal functionals reduce to this through the amplification by `ℓ²(ℕ)`, along which `α` lifts to
-the Schwarz map `1 ⊗ α` (`VonNeumannAlgebra.amplifySchwarzMap`, built from the `⋆`-isomorphisms
-`VonNeumannAlgebra.amplifyEquiv`).
+the Schwarz map `1 ⊗ α` (`VonNeumannAlgebra.oneTensorSchwarzMap`, built from the `⋆`-isomorphisms
+`VonNeumannAlgebra.oneTensorEquiv`).
 
 The map `V` is never built as an operator: the comparison of resolvents only needs, for each point
 of the graph of `S_N`, a dominating point of the graph of `S_M`.
 
 ## Without Tomita–Takesaki theory
 
-Uhlmann's original proof runs through the interpolation theory of quadratic forms, and Araki's
-through the modular automorphism groups `σ_t` and the KMS condition, i.e. Tomita–Takesaki theory,
-which is not formalised. The route above (Petz) avoids it: the only inputs are the Kadison–Schwarz
+Uhlmann's original proof runs through the interpolation theory of quadratic forms. The route above
+(Petz) avoids Tomita–Takesaki theory, which is not formalised: the only inputs are the Kadison–Schwarz
 inequality for `α`, the graph inequality `‖S_M V u‖ ≤ ‖S_N u‖`, the variational characterisation
 of `⟪u, (t + Δ)⁻¹ u⟫` for a positive self-adjoint `Δ = S̄†S̄`, and the integral representation of
 `-log`. In particular neither `Δ^{it}` nor `Δ^{1/2}` nor `J` is needed, only the resolvents of
@@ -56,7 +55,7 @@ of `⟪u, (t + Δ)⁻¹ u⟫` for a positive self-adjoint `Δ = S̄†S̄`, and 
   inequality `⟪ζ, (t + Δ_{ζ',ζ})⁻¹ ζ⟫ ≤ ⟪ξ, (t + Δ_{ξ',ξ})⁻¹ ξ⟫`.
 * `VonNeumannAlgebra.arakiVec_le_of_schwarzMap` — the data-processing inequality for vector
   functionals: `S_N(ω_ζ ‖ ω_ζ') ≤ S_M(ω_ξ ‖ ω_ξ')` when `ω_ξ ∘ α = ω_ζ`, `ω_ξ' ∘ α = ω_ζ'`.
-* `VonNeumannAlgebra.amplifySchwarzMap` — the Schwarz map `1 ⊗ α` between the amplifications.
+* `VonNeumannAlgebra.oneTensorSchwarzMap` — the Schwarz map `1 ⊗ α` between the amplifications.
 * `VonNeumannAlgebra.arakiEntropy_comp_le` — the **data-processing inequality**
   `S(ψ ∘ α ‖ φ ∘ α) ≤ S(ψ ‖ φ)` for unital normal Schwarz maps.
 
@@ -67,9 +66,7 @@ modular automorphism groups.
 
 * A. Uhlmann, *Relative entropy and the Wigner–Yanase–Dyson–Lieb concavity in an interpolation
   theory*, Comm. Math. Phys. 54 (1977), 21–32.
-* D. Petz, *Sufficient subalgebras and the relative entropy of states of a von Neumann algebra*,
-  Comm. Math. Phys. 105 (1986), 123–131.
-* M. Ohya, D. Petz, *Quantum Entropy and Its Use*, Theorem 5.3.
+* M. Ohya, D. Petz, *Quantum Entropy and Its Use*.
 -/
 
 @[expose] public section
@@ -185,24 +182,24 @@ section Amplify
 variable (H₁ : Type*) [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁] [Nontrivial H₁]
 
 /-- The Schwarz map `1 ⊗ α : 𝟙[H₁] ⊗ N → 𝟙[H₁] ⊗ M`, `1 ⊗ y ↦ 1 ⊗ α(y)`, transported along
-the `⋆`-isomorphisms `VonNeumannAlgebra.amplifyEquiv`. -/
-noncomputable def amplifySchwarzMap (α : SchwarzMap N M) :
+the `⋆`-isomorphisms `VonNeumannAlgebra.oneTensorEquiv`. -/
+noncomputable def oneTensorSchwarzMap (α : SchwarzMap N M) :
     SchwarzMap (𝟙[H₁] ⊗ N) (𝟙[H₁] ⊗ M) :=
-  (SchwarzMapClass.toSchwarzMap (amplifyEquiv H₁ M)).comp
-    (α.comp (SchwarzMapClass.toSchwarzMap (amplifyEquiv H₁ N).symm))
+  (SchwarzMapClass.toSchwarzMap (oneTensorEquiv H₁ M)).comp
+    (α.comp (SchwarzMapClass.toSchwarzMap (oneTensorEquiv H₁ N).symm))
 
 variable {H₁}
 
 /-- `(1 ⊗ α)(1 ⊗ y) = 1 ⊗ α(y)`. -/
-lemma amplifySchwarzMap_amplifyEquiv (α : SchwarzMap N M) (y : N) :
-    amplifySchwarzMap H₁ α (amplifyEquiv H₁ N y) = amplifyEquiv H₁ M (α y) := by
-  change amplifyEquiv H₁ M (α ((amplifyEquiv H₁ N).symm (amplifyEquiv H₁ N y))) = _
+lemma oneTensorSchwarzMap_oneTensorEquiv (α : SchwarzMap N M) (y : N) :
+    oneTensorSchwarzMap H₁ α (oneTensorEquiv H₁ N y) = oneTensorEquiv H₁ M (α y) := by
+  change oneTensorEquiv H₁ M (α ((oneTensorEquiv H₁ N).symm (oneTensorEquiv H₁ N y))) = _
   rw [StarAlgEquiv.symm_apply_apply]
 
 /-- `1 ⊗ α` is unital when `α` is. -/
-lemma amplifySchwarzMap_one {α : SchwarzMap N M} (hα : α 1 = 1) :
-    amplifySchwarzMap H₁ α 1 = 1 := by
-  rw [← amplifyEquiv_one, amplifySchwarzMap_amplifyEquiv, hα, amplifyEquiv_one]
+lemma oneTensorSchwarzMap_one {α : SchwarzMap N M} (hα : α 1 = 1) :
+    oneTensorSchwarzMap H₁ α 1 = 1 := by
+  rw [← oneTensorEquiv_one, oneTensorSchwarzMap_oneTensorEquiv, hα, oneTensorEquiv_one]
 
 end Amplify
 
@@ -215,14 +212,14 @@ theorem arakiEntropy_comp_le (α : SchwarzMap N M) (hα₁ : α 1 = 1) (hα : Is
       ⟪(ω.comp α hα).2.vec,
           (y : ℓ²(ℕ, ℂ) ⊗̂ K →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ K) (ω.comp α hα).2.vec⟫_ℂ =
         ⟪ω.2.vec,
-          (amplifySchwarzMap ℓ²(ℕ, ℂ) α y : ℓ²(ℕ, ℂ) ⊗̂ H →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ H)
+          (oneTensorSchwarzMap ℓ²(ℕ, ℂ) α y : ℓ²(ℕ, ℂ) ⊗̂ H →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ H)
             ω.2.vec⟫_ℂ :=
       fun ω y => by
-    obtain ⟨y, rfl⟩ : ∃ y', amplifyEquiv ℓ²(ℕ, ℂ) N y' = y :=
-      ⟨(amplifyEquiv ℓ²(ℕ, ℂ) N).symm y, (amplifyEquiv ℓ²(ℕ, ℂ) N).apply_symm_apply y⟩
-    rw [amplifySchwarzMap_amplifyEquiv, coe_amplifyEquiv_apply, coe_amplifyEquiv_apply,
+    obtain ⟨y, rfl⟩ : ∃ y', oneTensorEquiv ℓ²(ℕ, ℂ) N y' = y :=
+      ⟨(oneTensorEquiv ℓ²(ℕ, ℂ) N).symm y, (oneTensorEquiv ℓ²(ℕ, ℂ) N).apply_symm_apply y⟩
+    rw [oneTensorSchwarzMap_oneTensorEquiv, coe_oneTensorEquiv_apply, coe_oneTensorEquiv_apply,
       (ω.comp α hα).2.inner_vec_amplifyRight, ω.2.inner_vec_amplifyRight,
       NormalFunctional.comp_apply]
-  exact arakiVec_le_of_schwarzMap _ (amplifySchwarzMap_one hα₁) (key ψ) (key φ)
+  exact arakiVec_le_of_schwarzMap _ (oneTensorSchwarzMap_one hα₁) (key ψ) (key φ)
 
 end VonNeumannAlgebra

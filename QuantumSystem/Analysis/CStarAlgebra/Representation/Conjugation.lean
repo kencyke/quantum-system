@@ -51,12 +51,6 @@ with `π₀` on the observables localised outside `Λ`
   criterion: the conjugated representation acts as the vacuum
   representation on the observables localised outside the region
   (`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`).
-
-## References
-
-* Naaijkens, *Anyons in Infinite Quantum Systems*, 2012, §3.2.
-* Bratteli, Robinson, *Operator Algebras and Quantum Statistical
-  Mechanics II*, §5.3.
 -/
 
 @[expose] public section

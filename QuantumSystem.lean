@@ -24,7 +24,6 @@ public import QuantumSystem.Analysis.CStarAlgebra.Representation.Conjugation
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Hom
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Irreducible
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.SectorFamily
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
@@ -116,6 +115,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.InvariantSubsp
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearMap
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Closure
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Smul
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.OrthogonalFamily
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear

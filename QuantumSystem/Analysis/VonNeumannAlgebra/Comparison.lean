@@ -66,9 +66,8 @@ evaluate it at vectors, `∀ x, HasSum (fun i => v i x) (w x)`, through
 
 ## References
 
-* R. V. Kadison, J. R. Ringrose, *Fundamentals of the Theory of Operator Algebras II*, §6.1
-  (additivity of equivalence) and §6.2 (the comparison theorem, of which the factor case is the
-  statement here).
+* R. V. Kadison, J. R. Ringrose, *Fundamentals of the Theory of Operator Algebras II*, §6.2
+  (the comparison theorem, of which the factor case is the statement here).
 * M. Takesaki, *Theory of Operator Algebras I*, Theorem V.1.8 (the comparability theorem, of which
   the factor case is the statement here).
 -/

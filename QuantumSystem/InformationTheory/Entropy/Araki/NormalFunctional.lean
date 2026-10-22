@@ -13,14 +13,14 @@ public import QuantumSystem.InformationTheory.Entropy.Araki.VectorFunctional
 
 For normal positive functionals `ψ, φ` on a von Neumann algebra `M ⊆ B(H)`, **Araki's relative
 entropy** `S(ψ ‖ φ)` is defined by representing both as vector functionals on the amplification
-`M̃ = amplify ℓ²(ℕ) M` on `ℓ²(ℕ) ⊗̂ H`: if `ψ(x) = ⟪Ξ_ψ, (1 ⊗ x) Ξ_ψ⟫` and
+`M̃ = oneTensor ℓ²(ℕ) M` on `ℓ²(ℕ) ⊗̂ H`: if `ψ(x) = ⟪Ξ_ψ, (1 ⊗ x) Ξ_ψ⟫` and
 `φ(x) = ⟪Ξ_φ, (1 ⊗ x) Ξ_φ⟫`, then `S(ψ ‖ φ) = S_{M̃}(ω_{Ξ_ψ} ‖ ω_{Ξ_φ})`
 (`VonNeumannAlgebra.arakiVec`). The value does not depend on the representing vectors
 (`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`), and for vector functionals it is the relative
 entropy computed on `H` itself (`VonNeumannAlgebra.arakiEntropy_ofVector`).
 
 Normality is σ-weak continuity (`VonNeumannAlgebra.IsNormal`); the representing vectors on the
-amplification come from `VonNeumannAlgebra.isNormal_iff_exists`.
+amplification come from `VonNeumannAlgebra.isNormal_iff_exists_inner_amplifyRight_eq`.
 
 ## Without Tomita–Takesaki theory
 
@@ -28,10 +28,10 @@ Araki defines `S(ψ ‖ φ) = -⟪ξ_ψ, log Δ_{ξ_φ, ξ_ψ} ξ_ψ⟫` with `�
 `ψ, φ` in the natural cone `P♮` of a standard form of `M`. That every normal positive functional
 has such a representative is a theorem of Tomita–Takesaki theory (through `J M J = M′`), which is
 not formalised. The amplification replaces it: every normal positive functional on `M` is a vector
-functional on `amplify ℓ²(ℕ) M` by the definition of normality alone, the relative modular
+functional on `oneTensor ℓ²(ℕ) M` by the definition of normality alone, the relative modular
 operator exists for arbitrary vectors, and the value is independent of the representing vectors
 (`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`) and of the amplification
-(`VonNeumannAlgebra.arakiVec_amplify_tmul`). When `M` is in standard form and `ξ_ψ, ξ_φ ∈ P♮`,
+(`VonNeumannAlgebra.arakiVec_oneTensor_tmul`). When `M` is in standard form and `ξ_ψ, ξ_φ ∈ P♮`,
 `VonNeumannAlgebra.arakiEntropy_ofVector` shows the value is Araki's, but the identification of
 `P♮` itself is not formalised.
 
@@ -44,8 +44,8 @@ operator exists for arbitrary vectors, and the value is independent of the repre
 
 ## Main results
 
-* `VonNeumannAlgebra.arakiVec_amplify_tmul` — invariance of `arakiVec` under amplification:
-  `S_{amplify H₁ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)` for a unit vector `e`.
+* `VonNeumannAlgebra.arakiVec_oneTensor_tmul` — invariance of `arakiVec` under amplification:
+  `S_{oneTensor H₁ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)` for a unit vector `e`.
 * `VonNeumannAlgebra.arakiEntropy_eq_arakiVec` — independence of the representing vectors.
 * `VonNeumannAlgebra.arakiEntropy_ofVector` — `S(ω_ξ ‖ ω_η)` agrees with
   `VonNeumannAlgebra.arakiVec M ξ η`, i.e. `S[M]⟦ξ ∥ η⟧`.
@@ -117,7 +117,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 /-- **Invariance under amplification.** For a unit vector `e ∈ H₁`,
 `S_{𝟙[H₁] ⊗ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)`. -/
-lemma arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
+lemma arakiVec_oneTensor_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     {e : H₁} (he : ‖e‖ = 1) (ξ η : H) :
     S[𝟙[H₁] ⊗ M]⟦e ⊗ₕ ξ ∥ e ⊗ₕ η⟧ = S[M]⟦ξ ∥ η⟧ := by
   have h₁ : ∀ x : H →L[ℂ] H, 𝟙 ⊗ x ∘L tmulRightL e = tmulRightL e ∘L x := fun x =>
@@ -128,9 +128,9 @@ lemma arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProdu
   refine arakiVec_of_intertwiner M ξ η (V := tmulRightL e)
     (fun x hx => ?_) (fun x hx => ?_) ?_
   · obtain ⟨y, ⟨x', hx', rfl⟩, h⟩ := hπ M x hx
-    exact ⟨_, amplifyRight_mem_amplify hx', h⟩
+    exact ⟨_, amplifyRight_mem_oneTensor hx', h⟩
   · obtain ⟨y, ⟨x', hx', rfl⟩, h⟩ := hπ M′ x hx
-    exact ⟨_, amplifyRight_mem_commutant_amplify hx', h⟩
+    exact ⟨_, amplifyRight_mem_commutant_oneTensor hx', h⟩
   · rw [HilbertTensor.tmulRightL_apply, HilbertTensor.adjoint_tmulRightL_tmul,
       inner_self_eq_norm_sq_to_K, he]
     simp
@@ -139,7 +139,7 @@ lemma arakiVec_amplify_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProdu
 
 variable {M} in
 /-- **Araki's relative entropy** `S(ψ ‖ φ)` of normal positive functionals on `M`: the relative
-entropy of representing vector functionals on the amplification `amplify ℓ²(ℕ) M`. The
+entropy of representing vector functionals on the amplification `oneTensor ℓ²(ℕ) M`. The
 representing vectors `ψ.2.vec`, `φ.2.vec` stand in for Araki's natural-cone representatives
 `ξ_ψ, ξ_φ ∈ P♮`, whose existence would need Tomita–Takesaki theory; the value does not depend on
 the choice (`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`). The algebra `M` is implicit, being
@@ -154,15 +154,15 @@ variable {M}
 
 /-- **Independence of the representing vectors.** For any `Ξ_ψ, Ξ_φ ∈ ℓ²(ℕ) ⊗̂ H` with
 `ψ(x) = ⟪Ξ_ψ, (1 ⊗ x) Ξ_ψ⟫` and `φ(x) = ⟪Ξ_φ, (1 ⊗ x) Ξ_φ⟫`,
-`S(ψ ‖ φ) = S_{amplify M}(ω_{Ξ_ψ} ‖ ω_{Ξ_φ})`. -/
+`S(ψ ‖ φ) = S_{oneTensor M}(ω_{Ξ_ψ} ‖ ω_{Ξ_φ})`. -/
 theorem arakiEntropy_eq_arakiVec {ψ φ : M.NormalFunctional} {Ξψ Ξφ : ℓ²(ℕ, ℂ) ⊗̂ H}
     (hψ : ∀ x : M, ⟪Ξψ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξψ⟫_ℂ = ψ.1 x)
     (hφ : ∀ x : M, ⟪Ξφ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξφ⟫_ℂ = φ.1 x) :
     S⟦ψ ∥ φ⟧ = S[𝟙[ℓ²(ℕ, ℂ)] ⊗ M]⟦Ξψ ∥ Ξφ⟧ := by
   refine arakiVec_eq_of_inner_eq ?_ ?_
-  · exact fun y hy => inner_apply_eq_of_mem_amplify (fun x hx =>
+  · exact fun y hy => inner_apply_eq_of_mem_oneTensor (fun x hx =>
       (ψ.2.inner_vec_amplifyRight ⟨x, hx⟩).trans (hψ ⟨x, hx⟩).symm) hy |>.symm
-  · exact fun y hy => inner_apply_eq_of_mem_amplify (fun x hx =>
+  · exact fun y hy => inner_apply_eq_of_mem_oneTensor (fun x hx =>
       (φ.2.inner_vec_amplifyRight ⟨x, hx⟩).trans (hφ ⟨x, hx⟩).symm) hy |>.symm
 
 variable (M) in
@@ -175,7 +175,7 @@ lemma arakiEntropy_ofVector (ξ η : H) :
     (Ξφ := lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₕ η)
     (fun x => HilbertTensor.inner_tmul_amplifyRight_tmul (lp.norm_single_one two_pos 0) ξ x)
     (fun x => HilbertTensor.inner_tmul_amplifyRight_tmul (lp.norm_single_one two_pos 0) η x),
-    arakiVec_amplify_tmul M (lp.norm_single_one two_pos 0)]
+    arakiVec_oneTensor_tmul M (lp.norm_single_one two_pos 0)]
 
 variable (ψ φ : M.NormalFunctional)
 
@@ -209,12 +209,12 @@ lemma arakiEntropy_eq_top_of_apply_star_mul_self (x : M) (hφ : φ.1 (star x * x
 variable {ψ φ} in
 /-- **Support characterisation of `+∞`** for a finite-dimensional algebra, in particular for any
 `M` on a finite-dimensional `H`: `S(ψ ‖ φ) = +∞` exactly when `s(ψ) ≰ s(φ)`. The amplification
-`amplify ℓ²(ℕ) M ≅ M` is again finite-dimensional, so `VonNeumannAlgebra.arakiVec_eq_top_iff`
+`oneTensor ℓ²(ℕ) M ≅ M` is again finite-dimensional, so `VonNeumannAlgebra.arakiVec_eq_top_iff`
 applies to the representing vectors. -/
 theorem arakiEntropy_eq_top_iff [FiniteDimensional ℂ M] :
     S⟦ψ ∥ φ⟧ = ⊤ ↔ ¬ ψ.supportProj ≤ φ.supportProj := by
   have : FiniteDimensional ℂ (𝟙[ℓ²(ℕ, ℂ)] ⊗ M) :=
-    LinearEquiv.finiteDimensional (M.amplifyEquiv (H₁ := ℓ²(ℕ, ℂ))).toAlgEquiv.toLinearEquiv
+    LinearEquiv.finiteDimensional (M.oneTensorEquiv (H₁ := ℓ²(ℕ, ℂ))).toAlgEquiv.toLinearEquiv
   rw [arakiEntropy, arakiVec_eq_top_iff, ← NormalFunctional.amplifyRight_supportProj,
     ← NormalFunctional.amplifyRight_supportProj,
     amplifyRight_le_amplifyRight_iff (NormalFunctional.isStarProjection_supportProj ψ)

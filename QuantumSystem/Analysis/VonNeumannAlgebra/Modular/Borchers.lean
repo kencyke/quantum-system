@@ -20,7 +20,8 @@ for standard subspaces (`QuantumSystem.Analysis.InnerProductSpace.StandardSubspa
 algebra versions, since a bounded `V` with `V† Ω₂ = Ω₁` and `V M₁ V† ⊆ M₂` maps `H_{M₁}` into
 `H_{M₂}` (`VonNeumannAlgebra.apply_mem_standardSubspace_of_adjoint_apply`) and the symplectic
 complement of `H_M` is `H_{M′}` (`VonNeumannAlgebra.standardSubspace_commutant_eq_symplComp`).
-For a unitary `V` the conditions read `V Ω₁ = Ω₂` and `V M₁ V⋆ ⊆ M₂`, Borchers' hypotheses.
+For a unitary `V` the conditions read `V Ω₁ = Ω₂` and `V M₁ V⋆ ⊆ M₂`, Borchers' hypotheses when
+`H₁ = H₂` and `Ω₁ = Ω₂`.
 
 * **Theorem A** (`VonNeumannAlgebra.exists_modularGroup_continuation`): for such a `V`,
   `V(t) = Δ₂^{-it} V Δ₁^{it}` continues to the strip `0 ≤ im z ≤ 1/2`, holomorphic in the interior
@@ -41,15 +42,24 @@ For a unitary `V` the conditions read `V Ω₁ = Ω₂` and `V M₁ V⋆ ⊆ M�
   `V(t + i/2) = Δ_{η₂,Ω₂}^{-it} J_{Ω₂,η₂} V J_{η₁,Ω₁} Δ_{η₁,Ω₁}^{it}`; here `Δ^{it}` are the
   imaginary powers, partial isometries vanishing on `ker Δ`, and `J_{Ω₂,η₂} = J_{η₂,Ω₂}†`
   (`VonNeumannAlgebra.inner_relativeModularConj_left`) inverts `J_{η₂,Ω₂}` on the range of
-  `Δ_{η₂,Ω₂}^{1/2}`. It is Theorem A for semilinear operators in polar decomposition form
-  (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`) applied to the closed relative Tomita
-  operators. The intertwining holds for `V† Ω₂ = Ω₁`, `V† η₂ = η₁`, `V M₁ V† ⊆ M₂`, `V` mapping
+  `Δ_{η₂,Ω₂}^{1/2}`. It is the strip continuation for semilinear operators in polar
+  decomposition form (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`) applied to the
+  closed relative Tomita operators. The intertwining holds for `V† Ω₂ = Ω₁`, `V† η₂ = η₁`, `V M₁ V† ⊆ M₂`, `V` mapping
   `s(Ω₁) H₁` into `s(Ω₂) H₂` for the support projections `s(Ωᵢ) ∈ Mᵢ`, and `V` mapping `[M₁ Ω₁]ᗮ`
   into `[M₂ Ω₂]ᗮ` (`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_adjoint_apply`), in
   particular for cyclic `Ω₁`, separating `Ω₂` and arbitrary `ηᵢ`
   (`VonNeumannAlgebra.exists_relativeModularGroup_continuation`).
 
-Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω₁ = Ω₂`.
+Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω₁ = Ω₂`. The
+non-relative Theorem A for bounded `V` with `V† Ω₂ = Ω₁` and `V M₁ V† ⊆ M₂`, across two algebras,
+is Araki–Zsidó 2005, Definition 2.10, Lemma 2.11 (1) and Theorem 2.12 (stated for faithful normal
+semifinite weights).
+For faithful `ηᵢ`, `Ωᵢ` the relative Theorem A is their analytic extension theorem
+(Araki–Zsidó 2005, Theorem 2.3) for invertible positive operators, once the intertwining
+`V S̄_{η₁,Ω₁} ⊆ S̄_{η₂,Ω₂} V` is established
+(`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_adjoint_apply`, for arbitrary `ηᵢ`).
+Faulkner–Hollands (arXiv:2010.05513) treat contractions `V` induced by channels: their Lemma 3 bounds
+`Δ^{z} V Δ^{-z}` by `1` on the strip.
 
 ## Main results
 
@@ -66,7 +76,7 @@ Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω
 ## TODO
 
 * The boundary value of the relative Theorem A in conjugated form: with
-  `Δ_{ξ,η}^{it} = J_{η,ξ} Δ_{η,ξ}^{it} J_{η,ξ}†` (Araki–Masuda 1982), which is not formalised
+  `Δ_{ξ,η}^{it} = J_{η,ξ} Δ_{η,ξ}^{it} J_{η,ξ}†`, which is not formalised
   (see `VonNeumannAlgebra.adjointₛₗ_relativeModularConj`), it reads
   `V(t + i/2) = J_{Ω₂,η₂} Ṽ(t) J_{η₁,Ω₁}` with `Ṽ(t) = Δ_{Ω₂,η₂}^{-it} V Δ_{Ω₁,η₁}^{it}` the family
   for the swapped pairs. It is Borchers' form `V(t + i/2) = J V(t) J` only for `ηᵢ = Ωᵢ`.
@@ -80,8 +90,11 @@ Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω
 
 * H.-J. Borchers, *On the use of modular groups in quantum field theory*,
   Ann. Inst. H. Poincaré Phys. Théor. 63 (1995), 331–382, Theorems A and B
-* H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*, Publ. RIMS 18
-  (1982), 339–411, §2
+* H. Araki, L. Zsidó, *Extension of the structure theorem of Borchers and its application to
+  half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Definition 2.10,
+  Lemma 2.11 and Theorems 2.3, 2.12
+* T. Faulkner, S. Hollands, *Approximate recoverability and relative entropy II: 2-positive
+  channels of general von Neumann algebras*, arXiv:2010.05513, Lemma 3
 -/
 
 @[expose] public section
@@ -103,7 +116,7 @@ section TheoremA
 
 variable [IsCyclicSeparating M₁ Ω₁] [IsCyclicSeparating M₂ Ω₂]
 
-/-- **Borchers' Theorem A** for von Neumann algebras (Borchers 1995, Theorem A): let `Ω₁`, `Ω₂` be
+/-- **Borchers' Theorem A** for von Neumann algebras: let `Ω₁`, `Ω₂` be
 cyclic and separating for `M₁`, `M₂`, with modular groups `Δ₁^{it}`, `Δ₂^{it}` and modular
 conjugations `J₁`, `J₂`, and let `V` be bounded with `V† Ω₂ = Ω₁` and `V M₁ V† ⊆ M₂` (for a
 unitary `V`: `V Ω₁ = Ω₂` and `V M₁ V⋆ ⊆ M₂`). Then `V(t) = Δ₂^{-it} V Δ₁^{it}` extends to the strip
@@ -220,7 +233,7 @@ vanishing on `ker Δᵢ`) and relative modular conjugations `J_{ηᵢ,Ωᵢ}`, a
 `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in the interior and `*`-strongly continuous on
 the closed strip, with `‖V(z)‖ ≤ ‖V‖` and `V(t + i/2) = Δ₂^{-it} J_{Ω₂,η₂} V J_{η₁,Ω₁} Δ₁^{it}`.
 
-It is Theorem A for semilinear operators in polar decomposition form
+It is the strip continuation for semilinear operators in polar decomposition form
 (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`) applied to the closed relative Tomita
 operators `S̄_{ηᵢ,Ωᵢ} = J_{ηᵢ,Ωᵢ} Δᵢ^{1/2}`, where the antilinear adjoint of `J_{η₂,Ω₂}` is
 `J_{Ω₂,η₂}` (`VonNeumannAlgebra.adjointₛₗ_relativeModularConj`). The intertwining
@@ -338,7 +351,7 @@ private lemma mem_standardSubspace_of_hyp :
   exact apply_mem_standardSubspace_of_adjoint_apply (adjoint_apply_add_half_I_eq hW hB hΩ t) (hM' t) hξ
 
 include hW hB hΩ hM hM' in
-/-- **Borchers' Theorem B** for von Neumann algebras (Borchers 1995, Theorem B), modular group:
+/-- **Borchers' Theorem B** for von Neumann algebras, modular group:
 `Δ₂^{it} W(s) Δ₁^{-it} = W(s - t)`. -/
 theorem modularGroup_apply_eq_of_upperStrip (s t : ℝ) (x : H₁) :
     Δ[H[M₂, Ω₂]]^{i t} (W s (Δ[H[M₁, Ω₁]]^{-i t} x)) =

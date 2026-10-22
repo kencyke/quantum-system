@@ -15,11 +15,14 @@
   (`v4.x.y` or `v4.x.y-rcN`) and gets a GitHub Release (a pre-release for `-rc` versions; "Latest" goes
   to the highest stable version); any other toolchain is reported and skipped. A switch in an earlier
   commit of the same push has no CI run of its own and is not released.
-- `.github/workflows/update_mathlib.yml` — weekly, opens a pull request bumping Mathlib to its newest
-  stable `v4.x.y` tag (release candidates are skipped): rewrites the `rev` in `lakefile.toml` and
-  derives `lean-toolchain` and `lake-manifest.json` from Mathlib's own files at that tag, so the
-  workflow itself runs no `lake update` (and no Mathlib code): Mathlib's code first runs in the pull
-  request's own CI. It uses a GitHub App token
+- `.github/workflows/update_mathlib.yml` — weekly, opens a pull request bumping Mathlib and every
+  other direct dependency, each pinned to Mathlib's tag, to the newest stable `v4.x.y` tag they all
+  carry (release candidates are skipped): rewrites the `rev`s in `lakefile.toml` and derives
+  `lean-toolchain` and `lake-manifest.json` from the dependencies' own files at that tag, so the
+  workflow itself runs no `lake update` (and no dependency's code): their code first runs in the
+  pull request's own CI. It fails rather than guess when another direct dependency brings a
+  toolchain, a Mathlib commit or a dependency of its own, or is itself one of Mathlib's packages.
+  It uses a GitHub App token
   (`UPDATE_APP_CLIENT_ID` / `UPDATE_APP_PRIVATE_KEY`, `contents` and `pull-requests` write only)
   so that CI runs on the pull request.
 
@@ -34,9 +37,8 @@
   `lean_local_search`, `lean_leansearch`, `lean_loogle`. If you do not know
   whether a lemma exists, say so and search; do not invent plausible-looking
   names.
-- When stuck on a goal, search closing lemmas with `lean_state_search` /
-  `lean_hammer_premise`, then verify with `lean_multi_attempt` before
-  editing.
+- When stuck on a goal, search closing lemmas with `lean_hammer_premise`,
+  then verify with `lean_multi_attempt` before editing.
 
 **Abstraction first.**
 - Build the general interface before the concrete model — even when the source
@@ -88,6 +90,21 @@
   **Why:** the documentation records the *intended* theorem; trimming it to
   match a shortfall silently shrinks the goal and hides the gap instead of
   closing it.
+
+**Cite only what you have checked against the source.**
+- A citation (an author, a work, a theorem / section / equation number, or a
+  claim attached to it) goes into a docstring, module comment or the README
+  only after you have read the cited passage itself and confirmed that it
+  states what the text attributes to it, hypotheses included.
+- If the source cannot be accessed, or it matches only loosely (a special
+  case, a different setting, another edition's numbering), leave the citation
+  out rather than hedging it. Do not cite from memory, and do not cite a
+  secondary source's account as the primary one.
+- Do not add comparisons with the literature ("X proves only …", "Y leaves
+  this open", "already in Z") unless each side has been checked in this way.
+  **Why:** a wrong locator or attribution looks authoritative and is rarely
+  rechecked; an audit of this repository found dozens of them, nearly all in
+  citations written without the source at hand.
 
 **Goal-driven verification (Definition of Done).**
 - A change is done only when `lake build` completes with no new errors or

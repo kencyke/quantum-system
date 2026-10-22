@@ -85,8 +85,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-! ### Minimal and abelian projections -/
 
 /-- A **minimal projection** of `N`: a nonzero star projection `e ∈ N` whose corner is trivial,
-`e N e = ℂ e`. This is the conventional operator-algebraic definition (Takesaki, Kadison–Ringrose);
-it implies minimality in the order sense (no proper nonzero subprojection), recorded as
+`e N e = ℂ e`. It implies minimality in the order sense (no proper nonzero subprojection), recorded as
 `IsMinimalProjection.no_proper_subprojection`. The corner formulation is the one that
 supports comparison theory without invoking Borel functional calculus. -/
 def IsMinimalProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=

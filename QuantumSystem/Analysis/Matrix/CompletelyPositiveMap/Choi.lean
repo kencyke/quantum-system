@@ -47,8 +47,8 @@ Hilbert spaces (`QuantumSystem/Analysis/CStarAlgebra/CompletelyPositiveMap/Choi.
 
 * `Matrix.choiMatrix_eq_sum_kronecker`: `J(Φ) = Σᵢⱼ Eᵢⱼ ⊗ Φ(Eᵢⱼ)`.
 * `Matrix.choiMatrix_eq_toMatrix_choi`: the Choi matrix is the matrix of the Choi operator of the
-  operator form; hence `Matrix.posSemidef_choiMatrix_iff_nonneg_choi` and
-  `Matrix.rank_choiMatrix_eq_finrank_range_choi`.
+  operator form; hence `Matrix.posSemidef_choiMatrix_iff_choi_nonneg` and
+  `Matrix.rank_choiMatrix_eq_choiRank`.
 * `KPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`: `k`-positivity is positivity of
   `id_k ⊗ Φ` on flattened `kn × kn` matrices.
 * `Matrix.rank_choiMatrix_le_card_of_kraus`: every Kraus representation has at least `rank J(Φ)`
@@ -61,7 +61,7 @@ some `φ : Matrix n n ℂ →CP Matrix m m ℂ`:
 * `CompletelyPositiveMap.exists_coe_eq_iff_posSemidef_choiMatrix`: 1 ⟺ 3.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_kPositiveMap`: 1 ⟺ 2;
   `CompletelyPositiveMap.exists_coe_eq_iff_forall_posSemidef_comp_map`: the same with `id_k ⊗ Φ`
-  positive on flattened matrices, Choi's original form.
+  positive on flattened matrices.
 * `CompletelyPositiveMap.exists_coe_eq_iff_exists_kraus`: 1 ⟺ 4.
 
 The two directions separately, for a completely positive map `φ` (1 ⇒ 2, 4) and for a linear map
@@ -148,20 +148,23 @@ lemma choiMatrix_eq_toMatrix_choi {Φ : F} {Ψ : G}
 
 /-- The Choi matrix is positive semidefinite iff the Choi operator `J_e(Ψ)` of the operator form
 `Ψ` is positive (`Matrix.choiMatrix_eq_toMatrix_choi`). -/
-lemma posSemidef_choiMatrix_iff_nonneg_choi {Φ : F} {Ψ : G}
+lemma posSemidef_choiMatrix_iff_choi_nonneg {Φ : F} {Ψ : G}
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
     (choiMatrix Φ).PosSemidef ↔ 0 ≤ ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ := by
   rw [choiMatrix_eq_toMatrix_choi h, LinearMap.posSemidef_toMatrix_iff,
     ContinuousLinearMap.isPositive_toLinearMap_iff, ContinuousLinearMap.nonneg_iff_isPositive]
 
-/-- The rank of the Choi matrix is the rank of the Choi operator `J_e(Ψ)` of the operator form `Ψ`
-(`Matrix.choiMatrix_eq_toMatrix_choi`). -/
-lemma rank_choiMatrix_eq_finrank_range_choi {Φ : F} {Ψ : G}
+/-- The rank of the Choi matrix is the rank `rank J(Ψ)` of the Choi operator of the operator form
+`Ψ`: the Choi matrix is the matrix of `J_e(Ψ)` in the standard bases
+(`Matrix.choiMatrix_eq_toMatrix_choi`), and the rank of `J_e(Ψ)` does not depend on the basis `e`
+(`ContinuousLinearMap.finrank_range_choi`). -/
+lemma rank_choiMatrix_eq_choiRank {Φ : F} {Ψ : G}
+    [LinearMapClass G ℂ (EuclideanSpace ℂ n →L[ℂ] EuclideanSpace ℂ n)
+      (EuclideanSpace ℂ m →L[ℂ] EuclideanSpace ℂ m)]
     (h : ∀ A, Ψ (toEuclideanCLM (𝕜 := ℂ) A) = toEuclideanCLM (𝕜 := ℂ) (Φ A)) :
-    (choiMatrix Φ).rank = Module.finrank ℂ (LinearMap.range
-      (ContinuousLinearMap.choi (EuclideanSpace.basisFun n ℂ) Ψ :
-        EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m →ₗ[ℂ] EuclideanSpace ℂ n ⊗[ℂ] EuclideanSpace ℂ m)) := by
-  rw [choiMatrix_eq_toMatrix_choi h, rank_eq_finrank_range_toLin _
+    (choiMatrix Φ).rank = ContinuousLinearMap.choiRank Ψ := by
+  rw [← ContinuousLinearMap.finrank_range_choi (EuclideanSpace.basisFun n ℂ),
+    choiMatrix_eq_toMatrix_choi h, rank_eq_finrank_range_toLin _
     ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis
     ((EuclideanSpace.basisFun n ℂ).tensorProduct (EuclideanSpace.basisFun m ℂ)).toBasis,
     toLin_toMatrix]
@@ -179,7 +182,7 @@ private lemma toEuclideanCLM_sum_mul_mul_conjTranspose {ι : Type*} [Fintype ι]
 omit [DecidableEq m] in
 /-- Every Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` has at least `rank J(Φ)` operators: its
 operators `K'ₐ` are a Kraus representation of the operator form
-(`ContinuousLinearMap.finrank_range_choi_le_card`). -/
+(`ContinuousLinearMap.choiRank_le_card`). -/
 lemma rank_choiMatrix_le_card_of_kraus {Φ : F} {ι : Type*} [Fintype ι] (K : ι → Matrix m n ℂ)
     (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
     (choiMatrix Φ).rank ≤ Fintype.card ι := by
@@ -189,14 +192,14 @@ lemma rank_choiMatrix_le_card_of_kraus {Φ : F} {ι : Type*} [Fintype ι] (K : �
   have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (𝕜 := ℂ) A) =
       toEuclideanCLM (𝕜 := ℂ) (Φ A) := by
     rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
-  rw [rank_choiMatrix_eq_finrank_range_choi h]
-  exact ContinuousLinearMap.finrank_range_choi_le_card _ (CompletelyPositiveMap.ofKraus_apply T)
+  rw [rank_choiMatrix_eq_choiRank h]
+  exact ContinuousLinearMap.choiRank_le_card (CompletelyPositiveMap.ofKraus_apply T)
 
 omit [DecidableEq m] in
 /-- A Kraus representation `Φ(A) = Σₐ Kₐ A Kₐᴴ` has exactly the minimal number `rank J(Φ)` of
 operators iff its Kraus operators are linearly independent: so are their operators `K'ₐ`, a Kraus
 representation of the operator form
-(`ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent`). -/
+(`ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent`). -/
 lemma rank_choiMatrix_eq_card_iff_linearIndependent {Φ : F} {ι : Type*} [Fintype ι]
     (K : ι → Matrix m n ℂ) (hK : ∀ A, Φ A = ∑ a, K a * A * (K a)ᴴ) :
     (choiMatrix Φ).rank = Fintype.card ι ↔ LinearIndependent ℂ K := by
@@ -206,8 +209,8 @@ lemma rank_choiMatrix_eq_card_iff_linearIndependent {Φ : F} {ι : Type*} [Finty
   have h (A : Matrix n n ℂ) : CompletelyPositiveMap.ofKraus T (toEuclideanCLM (𝕜 := ℂ) A) =
       toEuclideanCLM (𝕜 := ℂ) (Φ A) := by
     rw [hK, toEuclideanCLM_sum_mul_mul_conjTranspose]
-  rw [rank_choiMatrix_eq_finrank_range_choi h,
-    ContinuousLinearMap.finrank_range_choi_eq_card_iff_linearIndependent _
+  rw [rank_choiMatrix_eq_choiRank h,
+    ContinuousLinearMap.choiRank_eq_card_iff_linearIndependent
       (CompletelyPositiveMap.ofKraus_apply T)]
   exact LinearMap.linearIndependent_iff
     ((LinearMap.toContinuousLinearMap : (EuclideanSpace ℂ n →ₗ[ℂ] EuclideanSpace ℂ m) ≃ₗ[ℂ] _).toLinearMap ∘ₗ
@@ -313,15 +316,15 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- A completely positive map has a Kraus representation `φ(A) = Σₐ Kₐ A Kₐᴴ` with exactly
 `rank J(φ)` operators. This is the minimal number (`Matrix.rank_choiMatrix_le_card_of_kraus`). The
 `Kₐ` are the matrices of Kraus operators of the operator form of `φ`
-(`CompletelyPositiveMap.exists_kraus_finrank_range_choi`). -/
+(`CompletelyPositiveMap.exists_kraus_choiRank`). -/
 lemma exists_kraus_rank (φ : Matrix n n ℂ →CP Matrix m m ℂ) :
     ∃ K : Fin (choiMatrix φ).rank → Matrix m n ℂ, ∀ A, φ A = ∑ a, K a * A * (K a)ᴴ := by
   set ψ := arrowCongr (toEuclideanCLM (𝕜 := ℂ)) (toEuclideanCLM (𝕜 := ℂ)) φ
   have hψ (A : Matrix n n ℂ) : ψ (toEuclideanCLM (𝕜 := ℂ) A) =
       toEuclideanCLM (𝕜 := ℂ) (φ A) := by
     simp [ψ]
-  rw [rank_choiMatrix_eq_finrank_range_choi hψ]
-  have hT := exists_kraus_finrank_range_choi (EuclideanSpace.basisFun n ℂ) ψ
+  rw [rank_choiMatrix_eq_choiRank hψ]
+  have hT := exists_kraus_choiRank ψ
   obtain ⟨T, hT⟩ := hT
   refine ⟨fun a => toEuclideanLin.symm (LinearMap.toContinuousLinearMap.symm (T a)),
     fun A => EquivLike.injective (toEuclideanCLM (𝕜 := ℂ)) ?_⟩
@@ -332,13 +335,13 @@ open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely positive, i.e. it is the
 linear map of some `φ : M_n(ℂ) →CP M_m(ℂ)`, iff its Choi matrix `J(Φ)` is positive
 semidefinite: the Choi operator of its operator form is positive
-(`CompletelyPositiveMap.exists_coe_eq_iff_nonneg_choi`). -/
+(`CompletelyPositiveMap.exists_coe_eq_iff_choi_nonneg`). -/
 theorem exists_coe_eq_iff_posSemidef_choiMatrix (Φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) :
     (∃ φ : Matrix n n ℂ →CP Matrix m m ℂ, (φ : Matrix n n ℂ →ₗ[ℂ] Matrix m m ℂ) = Φ) ↔
       (choiMatrix Φ).PosSemidef := by
   rw [exists_coe_eq_iff_toEuclideanCLM (arrowCongr_toEuclideanCLM_apply Φ),
-    exists_coe_eq_iff_nonneg_choi (EuclideanSpace.basisFun n ℂ),
-    posSemidef_choiMatrix_iff_nonneg_choi (arrowCongr_toEuclideanCLM_apply Φ)]
+    exists_coe_eq_iff_choi_nonneg (EuclideanSpace.basisFun n ℂ),
+    posSemidef_choiMatrix_iff_choi_nonneg (arrowCongr_toEuclideanCLM_apply Φ)]
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
 /-- **Choi's theorem**, `min(n, m)`-positivity form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is
@@ -362,7 +365,7 @@ theorem exists_coe_eq_iff_exists_kPositiveMap (Φ : Matrix n n ℂ →ₗ[ℂ] M
   simp
 
 open scoped Matrix.Norms.L2Operator MatrixOrder in
-/-- **Choi's theorem** in Choi's original form: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely
+/-- **Choi's theorem**: a linear map `Φ : M_n(ℂ) → M_m(ℂ)` is completely
 positive iff `id_k ⊗ Φ` is positive for a single block size `k ≥ min(n, m)`, that is, it sends
 `k × k` block matrices with positive semidefinite `kn × kn` flattening to block matrices with
 positive semidefinite `km × km` flattening

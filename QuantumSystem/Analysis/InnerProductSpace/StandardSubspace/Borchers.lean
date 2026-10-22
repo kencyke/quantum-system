@@ -21,19 +21,19 @@ operators `Δ₁`, `Δ₂` and modular conjugations `J₁`, `J₂`.
 
 ## Theorem A
 
-Let `V : H₁ →L[ℂ] H₂` be a bounded operator with `V K₁ ⊆ K₂`. **Borchers' Theorem A** (Borchers
-1995, Theorem A) states that `V(t) = Δ₂^{-it} V Δ₁^{it}` extends to a family `V(z)` of bounded
+Let `V : H₁ →L[ℂ] H₂` be a bounded operator with `V K₁ ⊆ K₂`. **Borchers' Theorem A** states
+that `V(t) = Δ₂^{-it} V Δ₁^{it}` extends to a family `V(z)` of bounded
 operators on the strip `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in the interior and
 `*`-strongly continuous on the closed strip, with `‖V(z)‖ ≤ ‖V‖` and `V(t + i/2) = J₂ V(t) J₁`
 (`StandardSubspace.exists_modularGroup_continuation`). The proof: `V S₁ ⊆ S₂ V`
-(`StandardSubspace.compPMap_tomita_le_of_apply_mem`), and Theorem A for semilinear operators in polar
-decomposition form (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`), for `Sᵢ = Jᵢ Δᵢ^{1/2}`,
+(`StandardSubspace.compPMap_tomita_le_of_apply_mem`), and the strip continuation for semilinear
+operators in polar decomposition form (`IsSelfAdjoint.exists_stripContinuation_polarIsometry`), for `Sᵢ = Jᵢ Δᵢ^{1/2}`,
 continues `Δ₂^{-it} V Δ₁^{it}` to the strip, with boundary value `Δ₂^{-it} J₂† V J₁ Δ₁^{it}` on
 `im z = 1/2`, where the antilinear adjoint `J₂†` is `J₂` (`StandardSubspace.adjointₛₗ_modularConj`);
 here `J` commutes with `Δ^{it}`, and the modular operators are injective, so the imaginary powers
 are the modular groups. Borchers states
 the theorem for a unitary `V` on a single Hilbert space; here `V` is any bounded operator between
-two Hilbert spaces.
+two Hilbert spaces, as in Araki–Zsidó 2005, Theorem 2.12, which also proves the converse.
 
 ## Theorem B
 
@@ -41,7 +41,7 @@ Let `W : ℂ → (H₁ →L[ℂ] H₂)` be a
 family of operators, bounded on the strip `0 ≤ im z ≤ 1/2`, whose matrix coefficients
 `z ↦ ⟪η, W z ξ⟫` are holomorphic on `0 < im z < 1/2` and continuous up to the boundary. If
 `W(t) K₁ ⊆ K₂` and `W(t + i/2) K₁' ⊆ K₂'` for all real `t`, then **Borchers' Theorem B**
-(Borchers 1995, Theorem B) states that
+states that
 
 * `Δ₂^{it} W(s) Δ₁^{-it} = W(s - t)` (`StandardSubspace.modularGroup_apply_eq_of_upperStrip`), and
 * `J₂ W(s) J₁ = W(s + i/2)` (`StandardSubspace.modularConj_apply_eq_of_upperStrip`).
@@ -90,6 +90,8 @@ translations is `QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borch
 
 * H.-J. Borchers, *On the use of modular groups in quantum field theory*, Ann. Inst. H. Poincaré
   Phys. Théor. 63 (1995), 331–382, Theorems A and B
+* H. Araki, L. Zsidó, *Extension of the structure theorem of Borchers and its application to
+  half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Theorem 2.12
 -/
 
 @[expose] public section

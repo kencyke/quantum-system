@@ -57,7 +57,7 @@ The witnesses are deliberately the smallest ones that are not degenerate in the 
   `LocalNet.Examples.not_splitProperty_diagonalNet_extend` does the same on infinite regions, for
   the extension `diagonalNet.extend`, and `LocalNet.Examples.scalarNet_extend_splitProperty` is
   the one-dimensional positive witness there.
-* **Matsui's gap-free half-chain pair.** `LocalNet.Examples.not_isSplitPair_diagonalNet_extend`
+* **The gap-free half-chain pair.** `LocalNet.Examples.not_isSplitPair_diagonalNet_extend`
   refutes `VonNeumannNet.IsSplitPair` at `(-∞, 0]`, `[1, ∞)` for the diagonal net, and
   `LocalNet.Examples.scalarNet_extend_isSplitPair` inhabits it. At the state level,
   `LocalNet.Examples.evalState_hasHalfChainSplit` inhabits `LocalNet.HasHalfChainSplit` with the
@@ -84,10 +84,8 @@ there is `𝓑(ℂ)` (`VonNeumannAlgebra.eq_boundedLinearOperators_complex`), so
 Neumann algebras on `ℂ` splits (`VonNeumannNet.splitProperty_of_complex`), and both
 representation-level witnesses below are instances of that one theorem. So the degeneracy is
 `dim H = 1` — *not* the zero representation, which is why exchanging it for a unital one changes
-nothing mathematically. This is the one reason the literature explicitly sets aside:
-Halvorson–Müger's type III₁ proposition carries the escape clause "either `𝓡 = ℂ1` or `𝓡` is a
-type III₁ factor", and a reflexive proper containment is rejected precisely because it would force
-every local algebra to be type I. These witnesses show the interfaces are inhabited and applicable;
+nothing mathematically. A reflexive proper containment is rejected precisely because it would
+force every local algebra to be type I. These witnesses show the interfaces are inhabited and applicable;
 they are **not** evidence about nets whose local algebras are type III₁, and no argument should
 treat them as such. The degeneracy is also forced rather than chosen at the C⋆ level: over
 `Finset ℤ` with `⟂ = Disjoint`, any two disjoint regions lie under their union, so locality makes
@@ -327,7 +325,7 @@ theorem not_splitProperty_diagonalNet_extend : ¬ diagonalNet.extend.SplitProper
 /-- **The gap-free half-chain pair does not split for the diagonal net**: `(-∞, 0]` and `[1, ∞)` do
     not form a split pair of `diagonalNet.extend`. The diagonal algebra is its own commutant
     (`VonNeumannAlgebra.commutant_multiplicationAlgebra`), so a split pair would make its identity
-    inclusion split. This keeps `VonNeumannNet.IsSplitPair` at Matsui's pair from being automatic. -/
+    inclusion split. This keeps `VonNeumannNet.IsSplitPair` at this pair from being automatic. -/
 lemma not_isSplitPair_diagonalNet_extend :
     ¬ diagonalNet.extend.IsSplitPair (Set.Iic 0) (Set.Ici 1) := fun h => by
   rw [VonNeumannNet.IsSplitPair, diagonalNet_extend_algebra, diagonalNet_extend_algebra,
@@ -341,7 +339,7 @@ lemma scalarNet_extend_splitProperty : scalarNet.extend.SplitProperty :=
   VonNeumannNet.splitProperty_of_complex _
 
 /-- **Every pair of regions splits for the extended constant net at `𝓑(ℂ)`**, in particular
-    Matsui's gap-free half-chain pair. Evidence of inhabitation only: on `ℂ` every von Neumann
+    the gap-free half-chain pair. Evidence of inhabitation only: on `ℂ` every von Neumann
     algebra, commutants included, is `𝓑(ℂ)`. -/
 lemma scalarNet_extend_isSplitPair (S₁ S₂ : Set ℤ) : scalarNet.extend.IsSplitPair S₁ S₂ := by
   rw [VonNeumannNet.IsSplitPair,

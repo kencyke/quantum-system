@@ -220,8 +220,7 @@ lemma inv_def (a : N.Covariance) : a⁻¹ = a.inv := rfl
 
 /-- Build a covariance of a lattice net (`K = Finset sites`) from a **site permutation**: the
     induced region automorphism is `Λ ↦ Λ.map σ`, which preserves disjointness. This recovers the
-    site-permutation covariances of spin-system nets (Naaijkens, *Anyons in Infinite Quantum
-    Systems*, 2012, §3.2). Conversely every
+    site-permutation covariances of spin-system nets. Conversely every
     covariance of a lattice net arises this way — that is `exists_eq_ofSitePerm`, proved below via
     the fact that an order automorphism of `Finset sites` preserves atoms (singletons) and is
     therefore induced by a permutation of the sites. -/

@@ -21,7 +21,7 @@ Let `H` be a finite-dimensional complex Hilbert space. **Umegaki's relative entr
 functionals `ψ, φ` on `B(H) = H →L[ℂ] H`, with densities `ρ_ψ`, `ρ_φ`
 (`ContinuousLinearMap.density`, `ψ(A) = tr(ρ_ψ A)`), is
 `D(ψ ‖ φ) = tr ρ_ψ (log ρ_ψ - log ρ_φ)` if the support of `ψ` lies in that of `φ`, and `+∞`
-otherwise (Umegaki 1962). Neither functional needs to be a state. It is defined here as the
+otherwise. Neither functional needs to be a state. It is defined here as the
 finite-dimensional case of Araki's relative entropy: `umegakiEntropy ψ φ` is `S(ψ ‖ φ)` for `ψ, φ`
 as normal functionals of the von Neumann algebra `𝓑(H)` (`PositiveLinearMap.toNormalFunctional`,
 `VonNeumannAlgebra.arakiEntropy`), and Umegaki's trace formula is the theorem
@@ -204,7 +204,7 @@ variable {G G' : Type*} [FunLike G (H →L[ℂ] H) ℂ] [LinearMapClass G ℂ (H
 finite-dimensional (Umegaki 1962), defined as Araki's relative entropy `S(ψ ‖ φ)` of `ψ` and `φ` as
 normal functionals of `𝓑(H)` (`PositiveLinearMap.toNormalFunctional`). Neither functional needs to
 be a state: the definition covers states as well as unnormalised references such as the trace in
-`D(ω ‖ tr) = -S(ω)`. Umegaki's formula — `tr ρ_ψ (log ρ_ψ - log ρ_φ)` if `supp ψ ⊆ supp φ`, and
+`D(ω ‖ tr) = -S(ω)`. The formula — `tr ρ_ψ (log ρ_ψ - log ρ_φ)` if `supp ψ ⊆ supp φ`, and
 `+∞` otherwise — is `umegakiEntropy_eq_ite`. Logarithms are natural, so the unit is the nat.
 
 The functionals are taken from any types with `FunLike`, `LinearMapClass` and `OrderHomClass`

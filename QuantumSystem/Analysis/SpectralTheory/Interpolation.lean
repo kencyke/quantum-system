@@ -62,14 +62,19 @@ because the intertwining passes to the adjoints, `A^{1/2} V'† ⊇ V† B^{1/2}
 coefficients of both sides are bounded and holomorphic and agree on the real line
 (`Complex.eqOn_zero_of_eqOn_zero_im_eq_lower`).
 
+For invertible positive `A`, `B` the continuation is Araki–Zsidó 2005, Theorem 2.3, whose proof
+bounds it by `max ‖V‖ ‖V'‖`. For positive `A`, `B` that need not
+be injective, Berta–Scholz–Tomamichel 2018, Lemma 16, prove holomorphy and the three lines bound for
+the vector-valued functions `z ↦ A^{h(z)} V B^{g(z)} φ`, assuming them bounded on the boundary lines.
+
 ## Main results
 
 * `IsSelfAdjoint.exists_stripContinuation` — the interpolation theorem.
-* `IsSelfAdjoint.exists_stripContinuation_polarIsometry` — **Borchers' Theorem A for semilinear
+* `IsSelfAdjoint.exists_stripContinuation_polarIsometry` — **strip continuation for semilinear
   operators**: for closed `σ`-semilinear `T₁`, `T₂` with polar decompositions `Tᵢ = Jᵢ Δᵢ^{1/2}`
   and a bounded `V` with `V T₁ ⊆ T₂ V`, `t ↦ Δ₂^{-it} V Δ₁^{it}` continues to the strip with
   boundary value `Δ₂^{-it} J₂† V J₁ Δ₁^{it}` on `im z = 1/2`.
-* `IsSelfAdjoint.exists_stripContinuation_of_le` — **Theorem A with contractions**: the same for
+* `IsSelfAdjoint.exists_stripContinuation_of_le` — **strip continuation with contractions**: the same for
   arbitrary self-adjoint `A`, `B` and `σ`-semilinear contractions `U₁`, `U₂` with
   `T₁ ⊇ U₁ A^{1/2}`, `B^{1/2} ⊇ U₂ T₂`: boundary value `B^{-it} U₂ V U₁ A^{it}`.
 
@@ -77,8 +82,10 @@ coefficients of both sides are bounded and holomorphic and agree on the real lin
 
 * H.-J. Borchers, *On the use of modular groups in quantum field theory*, Ann. Inst. H. Poincaré
   Phys. Théor. 63 (1995), 331–382, Theorem A
-* H. Araki, T. Masuda, *Positive cones and Lp-spaces for von Neumann algebras*,
-  Publ. RIMS 18 (1982) — the relative modular operators with supports.
+* H. Araki, L. Zsidó, *Extension of the structure theorem of Borchers and its application to
+  half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Theorem 2.3
+* M. Berta, V. B. Scholz, M. Tomamichel, *Rényi divergences as weighted non-commutative vector
+  valued Lp-spaces*, Ann. Henri Poincaré 19 (2018), 1843–1867, Lemma 16
 
 ## TODO
 
@@ -1094,7 +1101,7 @@ section Semilinear
 variable {σ : ℂ →+* ℂ} [RingHomInvPair σ σ] [RingHomIsometric σ] {T₁ : H₁ →ₛₗ.[σ] H₁}
   {T₂ : H₂ →ₛₗ.[σ] H₂}
 
-/-- **Borchers' Theorem A for semilinear contractions.** Let `T₁` on `H₁` and `T₂` on `H₂` be
+/-- **Strip continuation for semilinear contractions.** Let `T₁` on `H₁` and `T₂` on `H₂` be
 `σ`-semilinear operators, `σ` the identity or the conjugation, `A`, `B` self-adjoint operators on
 `H₁`, `H₂`, and `U₁`, `U₂` `σ`-semilinear contractions with `U₁ A^{1/2} ⊆ T₁` and
 `U₂ T₂ ⊆ B^{1/2}`. Let `V` be a bounded operator with `V T₁ ⊆ T₂ V`. Then `t ↦ B^{-it} V A^{it}`,
@@ -1158,9 +1165,11 @@ theorem exists_stripContinuation_of_le (hA : IsSelfAdjoint A) (hB : IsSelfAdjoin
   · rw [hF1]
     rfl
 
-/-- **Borchers' Theorem A for semilinear operators, polar decomposition form.** Let `T₁` on `H₁`
+/-- **Strip continuation for semilinear operators, polar decomposition form.** Let `T₁` on `H₁`
 and `T₂` on `H₂` be closed `σ`-semilinear operators, with polar decompositions `Tᵢ = Jᵢ Δᵢ^{1/2}`:
-`Δ₁ = T₁†T₁`, `Δ₂ = T₂†T₂` and the partial isometries `Jᵢ` (`IsSelfAdjoint.polarIsometry`). Let
+`Δ₁ = T₁†T₁` and `Δ₂ = T₂†T₂` are the self-adjoint `A` and `B` of the statement (`hAT`, `hBT`), with
+`Δ₁^{it}`, `Δ₂^{it}` their imaginary powers, and `Jᵢ` are the partial isometries
+(`IsSelfAdjoint.polarIsometry`). Let
 `V` be a bounded operator with `V T₁ ⊆ T₂ V`. Then `t ↦ Δ₂^{-it} V Δ₁^{it}` extends to a family
 `F z` of bounded operators on the strip `0 ≤ im z ≤ 1/2`, holomorphic in the operator norm in the
 interior and `*`-strongly continuous on the closed strip, with `‖F z‖ ≤ ‖V‖` and
@@ -1170,8 +1179,8 @@ interior and `*`-strongly continuous on the closed strip, with `‖F z‖ ≤ �
 This is `IsSelfAdjoint.exists_stripContinuation_of_le` with `U₁ = J₁` and `U₂ = J₂†`:
 `T₁ = J₁ Δ₁^{1/2}` and `Δ₂^{1/2} = J₂† T₂` hold for every polar decomposition
 (`IsSelfAdjoint.eq_polarIsometry_compPMap`, `IsSelfAdjoint.adjointₛₗ_polarIsometry_compPMap`). For
-the Tomita operators of standard subspaces, `J₂† = J₂` and it is Borchers' Theorem A
-(`StandardSubspace.exists_modularGroup_continuation`); for relative Tomita operators,
+the Tomita operators of standard subspaces, `J₂† = J₂` and it is
+`StandardSubspace.exists_modularGroup_continuation`; for relative Tomita operators,
 `J₂† = J_{Ω₂,η₂}` and it is the relative version
 (`VonNeumannAlgebra.exists_relativeModularGroup_continuation_of_le`). -/
 theorem exists_stripContinuation_polarIsometry (hA : IsSelfAdjoint A) (hB : IsSelfAdjoint B)

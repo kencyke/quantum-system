@@ -81,13 +81,8 @@ out anyway. The symbols stay in the prose; the code writes the projections.
     and is carried separately, as the mixin `CausalIndexSet` below. Splitting it off keeps this
     class available where the third condition is absent or in doubt: the corpus secures it in
     three different ways — through a membership condition (Guido–Longo–Roberts–Verch's regular
-    diamonds and Köster's proper intervals demand a non-void causal complement to *be* a region),
-    by admitting the empty region (lattice regions, where `∅` is disjoint from everything), or not
-    at all (Halvorson–Müger's double cones state no such clause) — and on a time-slab around a
-    compact Cauchy surface it fails under the reading of Brunetti–Fredenhagen–Verch that their own
-    category of spacetimes forces, though read literally their index set contains `∅` and the
-    condition then holds vacuously. A class demanding the condition could not carry such an index
-    set at all.
+    diamonds demand a non-void causal complement to *be* a region), by admitting the empty region
+    (lattice regions, where `∅` is disjoint from everything), or not at all.
 
     What the third condition buys — on a *directed* index set, through heredity — is that causal
     orthogonality refines the *other* derived relation of Guido–Longo–Roberts–Verch (`⊥̃`, a common
@@ -216,9 +211,7 @@ theorem orthogonalHat_iff [IsDirectedOrder K] {O₁ O₂ : K} :
 
 /-- **Directedness is exactly the coincidence of `⊥̂` with `⟂`, quantified over the relation.**
     For one fixed `CausalOrthogonality K` the coincidence is strictly weaker than directedness —
-    the empty relation collapses on every preorder — so the literature's "`⊥̂ = ⟂` precisely on
-    directed index sets" is a statement about the index set, not about a single net's causal
-    structure. Read that way it is true: the forward direction is `orthogonalHat_iff`, and the
+    the empty relation collapses on every preorder. The forward direction is `orthogonalHat_iff`, and the
     converse tests directedness against the *total* relation, in which every pair is causally
     orthogonal and `⊥̂` therefore records nothing but the existence of a common upper bound. -/
 theorem isDirectedOrder_iff_forall_orthogonalHat_iff (K : Type*) [Preorder K] :
@@ -304,7 +297,7 @@ instance {α : Type*} : CausalIndexSet (Set α) :=
     `O ↦ 𝔄(O)` together with isotony embeddings `incl : 𝔄(O) →⋆ₐ[ℂ] 𝔄(O')` for `O ≤ O'`,
     functorial (`incl_refl`/`incl_trans`) and local (`locality`). This is the Haag–Kastler net
     structure over an abstract index set, *without* the injectivity requirement on the isotony
-    embeddings; the literature's net (Naaijkens, *Anyons in Infinite Quantum Systems*, 2012, §3.4)
+    embeddings; the literature's net
     is `LocalNet` together with the `Faithful` class, which carries that requirement. Lattice nets are the instance
     `K = Finset sites` with `⟂ = Disjoint`. -/
 structure LocalNet (K : Type*) [Preorder K] [CausalOrthogonality K] where
@@ -421,9 +414,8 @@ non-degeneracy condition). The quasi-local C⋆-norm built from this hypothesis 
 -/
 
 /-- A local net is **faithful** when all its isotony embeddings are injective. In the standard
-    AQFT definition the isotony embeddings are *injective* unital `*`-homomorphisms (Naaijkens,
-    *Anyons in Infinite Quantum Systems*, 2012, §3.4), so a faithful local net — `LocalNet`
-    together with `Faithful` — is the literature's net.
+    AQFT definition the isotony embeddings are *injective* unital `*`-homomorphisms, so a faithful local
+    net — `LocalNet` together with `Faithful` — is the literature's net.
     Carried as a typeclass rather than a structure field so algebraic constructions can state the
     non-degeneracy hypothesis only where they need it. -/
 class Faithful {K : Type*} [Preorder K] [CausalOrthogonality K] (N : LocalNet K) : Prop where

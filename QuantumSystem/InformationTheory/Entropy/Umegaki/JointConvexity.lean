@@ -17,7 +17,7 @@ convex**: for positive functionals `ψᵢ, φᵢ` on `B(H)` and weights `wᵢ �
 `D(Σᵢ wᵢ ψᵢ ‖ Σᵢ wᵢ φᵢ) ≤ Σᵢ wᵢ D(ψᵢ ‖ φᵢ)` (`umegakiEntropy_jointly_convex`);
 the weights need not sum to one, `D` being positively homogeneous.
 
-## Proof (Lindblad, Uhlmann)
+## Proof
 
 Joint convexity follows from three properties of `D`: monotonicity, additivity on direct sums, and
 positive homogeneity. Adjoin a classical register `ℂ^ι` with orthonormal basis `eᵢ`, and let

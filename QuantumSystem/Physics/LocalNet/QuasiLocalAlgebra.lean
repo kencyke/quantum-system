@@ -24,9 +24,9 @@ with the empty region as base point.
   (`ιLocal_injective`).
 * For a `Faithful` net the connecting maps are isometric, so the algebra of local observables
   carries a C⋆-norm whose completion `LocalNet.quasiLocalCStarAlgebra` is the AQFT quasi-local
-  algebra `𝔄 = ‾⋃_O 𝔄(O)` (Naaijkens, *Anyons in Infinite Quantum Systems*, 2012, §1.3;
-  Bratteli–Robinson Vol.2 §6.2), with isometric local embeddings `ιLocalCStar` — unital
-  `*`-homomorphisms `𝔄(O) →⋆ₐ[ℂ] 𝔄`, injective and with *closed* range, whose ranges are dense
+  algebra `𝔄 = ‾⋃_O 𝔄(O)` (Naaijkens, *Anyons in Infinite Quantum Systems*, 2012, §1.3), with
+  isometric local embeddings `ιLocalCStar` — unital `*`-homomorphisms `𝔄(O) →⋆ₐ[ℂ] 𝔄`, injective
+  and with *closed* range, whose ranges are dense
   in `𝔄` only taken together (`denseRange_iUnion_ιLocalCStar`).
 
 A `LocalNet.Covariance` (defined in `QuantumSystem.Physics.LocalNet.Covariance`) acts on these
