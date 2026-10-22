@@ -26,38 +26,39 @@ import Mathlib.Topology.Compactification.OnePoint.Basic
 A continuous real function `f` on a set `s ⊆ ℝ` is *operator convex* (`IsOperatorConvexOn`)
 when, in every unital C⋆-algebra, `a ↦ f(a)` (the continuous functional calculus `cfc f`) is convex
 on the self-adjoint elements with spectrum in `s`. Quantifying over the matrix algebras `M_n(ℂ)`
-alone gives *matrix convexity* (`IsMatrixConvexOn`), which needs no
-continuity, since matrices have finite spectra. For `f` continuous on `s` the two agree, but they
-differ on discontinuous functions: on `[0, ∞)`, `f(0) = 1` and `f(t) = 0` for `t > 0` gives the
-projection `f(A)` onto `ker A`, and is matrix convex (`isMatrixConvexOn_indicator_zero`) but not
-operator convex (`not_isOperatorConvexOn_indicator_zero`, through the continuity at the endpoint
-`0` that operator convexity requires). A matrix convex function is convex
+alone gives *matrix convexity* (`IsMatrixConvexOn`). Hansen–Pedersen 2003 define both notions for
+continuous functions only; `IsOperatorConvexOn` keeps that continuity, while `IsMatrixConvexOn`
+drops it, since matrices have finite spectra and `cfc f` needs no continuity there. For `f`
+continuous on `s` the two predicates agree, but they differ on discontinuous functions: on
+`[0, ∞)`, `f(0) = 1` and `f(t) = 0` for `t > 0` gives the projection `f(A)` onto `ker A`, and
+satisfies `IsMatrixConvexOn` (`isMatrixConvexOn_indicator_zero`) but not `IsOperatorConvexOn`
+(`not_isOperatorConvexOn_indicator_zero`, through the continuity at the endpoint `0` that
+`IsOperatorConvexOn` requires). A matrix convex function is convex
 (`IsMatrixConvexOn.convexOn_real`), hence continuous on the interior of `s`
-(`IsMatrixConvexOn.continuousOn_interior`), so the two notions can differ only at the endpoints of
-`s`. The argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is given here for finite
-spectra. In an infinite-dimensional C⋆-algebra the convexity of `cfc f` forces continuity at the
-endpoints as well (`continuousOn_of_forall_convexOn_cfc`): Mathlib's `cfc f` takes the junk value
-`0` where `f` is discontinuous on the spectrum, and testing the convexity on functions on
-`OnePoint ℕ ⊕ Unit` rules out a discontinuity at an endpoint. Thus the continuity in
-`IsOperatorConvexOn` is a consequence of its convexity field (`IsOperatorConvexOn.of_convexOn`),
-and is kept as a field only to match the definition in the literature. Both notions are kept. This
-file proves the specialisation `IsOperatorConvexOn.isMatrixConvexOn` (operator convex ⇒ matrix convex),
-and the converse direction (matrix convex ⇒ operator convex) for continuous `f` on bounded operators
-on a Hilbert space, `IsMatrixConvexOn.convexOn_continuousLinearMap`. The converse in every
-C⋆-algebra transfers the Hilbert space case along a faithful representation (Gelfand–Naimark,
-`ConvexOn.cfc_of_injective`); it needs the Gelfand–Naimark theorem, which Mathlib does not provide
-and which the project builds from direct sums of Mathlib's GNS representations
-(`GNS.DirectSum.repStarAlgHom`), and is proved outside `ForMathlib` in
-`QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean`
-(`IsMatrixConvexOn.isOperatorConvexOn`), together with the resulting independence of
-`IsOperatorConvexOn` from the universe of the C⋆-algebras it quantifies over
-(`isOperatorConvexOn_congr_universe`). The set `s` of a matrix convex function is an interval
-(`IsMatrixConvexOn.ordConnected`), and hence so is that of an operator convex one.
+(`IsMatrixConvexOn.continuousOn_interior`), so the two predicates can differ only at the endpoints
+of `s`. The argument for matrix convexity, `ker(a A + b B) = ker A ∩ ker B`, is given here for
+finite spectra. The convexity of `cfc f` in every C⋆-algebra forces continuity at the endpoints as
+well (`continuousOn_of_forall_convexOn_cfc`): Mathlib's `cfc f` takes the junk value `0` where `f`
+is discontinuous on the spectrum, and testing the convexity in the algebra of continuous functions
+on `OnePoint ℕ ⊕ Unit` rules out a discontinuity at an endpoint. Not every
+infinite-dimensional C⋆-algebra detects it: in `C([0, 1], ℂ)` the spectra are connected, and `cfc`
+of the indicator of `{0}` is convex. Thus the continuity in `IsOperatorConvexOn` is a consequence
+of its convexity field (`IsOperatorConvexOn.of_convexOn`), and is kept as a field only to match
+the definition of Hansen–Pedersen 2003. Both predicates are kept. This file proves the specialisation
+`IsOperatorConvexOn.isMatrixConvexOn` (operator convex ⇒ matrix convex), and the converse direction
+(matrix convex ⇒ operator convex) for continuous `f` on bounded operators on a Hilbert space,
+`IsMatrixConvexOn.convexOn_continuousLinearMap`. The converse in every C⋆-algebra transfers the
+Hilbert space case along a faithful representation (`ConvexOn.cfc_of_injective`), and so needs the
+Gelfand–Naimark theorem, which Mathlib does not provide; so does the independence of
+`IsOperatorConvexOn` from the universe of the C⋆-algebras it quantifies over. Neither is proved
+here. The set `s` of a matrix convex function is an interval (`IsMatrixConvexOn.ordConnected`), and
+hence so is that of an operator convex one.
 
 The core of Jensen's operator inequality is stated over an arbitrary unital C⋆-algebra `A`, from
 the convexity of `cfc f` over the matrix algebra `CStarMatrix ι ι A` and the continuity of `f` on
 the spectra that occur. For matrix convex `f` the same argument applies to `A = Matrix m m ℂ` by
-presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) ℂ`.
+presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) ℂ`
+(`IsMatrixConvexOn.cfc_sum_le`).
 
 ## Main definitions
 
@@ -78,20 +79,23 @@ presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) �
   of a nontrivial algebra, and the converse passage from scalar bounds to the spectrum.
 * `ConvexOn.cfc_of_injective`: convexity of `cfc f` on the domain pulls back along an injective
   unital ⋆-homomorphism, without continuity assumptions.
-* `cfc_sum_le_of_convexOn_cstarMatrix` (the implication from convexity to Jensen's inequality in
-  Hansen–Pedersen 2003, Theorem 2.1): Jensen's operator inequality
+* `cfc_sum_le_of_convexOn_cstarMatrix`: Jensen's operator inequality
   `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ` for `Σᵢ aᵢ⋆ aᵢ = 1`, from the convexity of `cfc f` on
-  `CStarMatrix ι ι A`, presented through an injective unital ⋆-homomorphism.
+  `CStarMatrix ι ι A`, presented through an injective unital ⋆-homomorphism. For operators on a
+  Hilbert space, the implication from operator convexity to this inequality is (i) ⇒ (ii) of
+  Hansen–Pedersen 2003, Theorem 2.1.
 * `cfc_sum_le_of_le_one_of_forall`: the
   unital inequality implies the sub-unital one for `Σᵢ aᵢ⋆ aᵢ ≤ 1`, on `s ∋ 0` with `f(0) ≤ 0`.
 * `IsOperatorConvexOn.cfc_sum_le`, `IsOperatorConvexOn.cfc_sum_le_of_le_one`: Jensen's operator
   inequality for an operator convex `f`, in the unital and the sub-unital form, in every unital
   C⋆-algebra. The converses of Hansen–Pedersen, from Jensen's inequality back to operator
   convexity, are not stated.
+* `IsMatrixConvexOn.cfc_sum_le`: Jensen's operator inequality for a matrix convex `f` on the matrix
+  algebras `M_m(ℂ)`, with no continuity assumption.
 * `IsOperatorConvexOn.isMatrixConvexOn`: an operator convex function is matrix convex;
   `IsMatrixConvexOn.ordConnected`: a matrix convex function is defined on an interval;
   `IsMatrixConvexOn.convexOn_real`, `IsMatrixConvexOn.continuousOn_interior`: it is convex, hence
-  continuous on the interior of its domain (`ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset`).
+  continuous on the interior of its domain (`ConvexOn.of_cfc`).
 * `continuousOn_of_forall_convexOn_cfc`, `IsOperatorConvexOn.of_convexOn`: convexity of `cfc f` in
   every C⋆-algebra forces continuity on `s`, endpoints included, so operator convexity needs no
   continuity hypothesis.
@@ -114,15 +118,19 @@ For a partial isometry `v` with
 `f((x + S x S) / 2) ≤ (f(x) + S f(x) S) / 2`, and `v⋆` intertwines `(x + S x S) / 2` with
 `v⋆ x v + t (1 - e)`, so compressing by `v` gives `f(v⋆ x v + t (1 - e)) e ≤ v⋆ f(x) v`. The
 `n`-term inequality takes `x = diag(xᵢ)` and the column `v` of the `aᵢ` in `CStarMatrix ι ι A` and
-reads off a diagonal entry. Every statement about `cfc` in the Jensen inequality is made over an
-abstract C⋆-algebra, whose real algebra structure is `Algebra.complexToReal`, so that it applies to
-`CStarMatrix` without an instance mismatch; only `IsMatrixConvexOn` uses `cfc` on
-`Matrix (Fin n) (Fin n) ℂ` with its own real algebra structure. `cfc_sum_le_of_convexOn_cstarMatrix`
+reads off a diagonal entry. The statements about `cfc` over an abstract C⋆-algebra use the real
+algebra structure `Algebra.complexToReal`, so that they apply to `CStarMatrix` without an instance
+mismatch; `IsMatrixConvexOn` and `IsMatrixConvexOn.cfc_sum_le` use `cfc` on matrices with the
+matrix algebra's own real algebra structure, which `cfc_sum_le_of_convexOn_cstarMatrix` accepts at
+`A = Matrix m m ℂ` by definitional unfolding. `IsMatrixConvexOn` is stated under
+`open scoped MatrixOrder` (the Löwner order); using it as a convexity statement in a C⋆-algebra also
+needs the operator norm of `open scoped Matrix.Norms.L2Operator`. `cfc_sum_le_of_convexOn_cstarMatrix`
 receives the convexity over `CStarMatrix ι ι A` through an injective unital ⋆-homomorphism `ψ` into
 another C⋆-algebra `B` (the generality of `ConvexOn.cfc_of_injective`): operator convexity in the
 universe of `A` reaches `CStarMatrix ι ι A` only after reindexing `ι` by `Fin n`, and for
-`A = Matrix m m ℂ` matrix convexity supplies the convexity of `cfc f` on
-`B = Matrix (ι × m) (ι × m) ℂ`; in both cases `ψ` is a ⋆-isomorphism.
+`A = Matrix m m ℂ` matrix convexity supplies the convexity of `cfc f` on `B = Matrix (Fin N) (Fin N) ℂ`,
+`N = card (ι × m)`, reached by flattening the blocks (`Matrix.compAlgEquiv`) and reindexing; in both
+cases `ψ` is a ⋆-isomorphism.
 
 The converse on a Hilbert space `H` tests positivity of `t f(X) + u f(Y) - f(tX + uY)` in a
 vector state `ξ`. The spectra of `X`, `Y` lie in an interval `[lo, hi] ⊆ s`, on which `f` is
@@ -219,7 +227,7 @@ lemma Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset [StarModule
 /-- If `cfc f` is convex on the self-adjoint elements with spectrum in `s` of a nontrivial algebra,
 then `f` is convex on `s`: the domain contains the scalars `algebraMap ℝ A r`, `r ∈ s`, on which
 `cfc f` is `f` (`cfc_algebraMap`), and the order on the scalars is that of `ℝ`. -/
-lemma ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
+lemma ConvexOn.of_cfc [StarModule ℝ A]
     [Nontrivial A] {s : Set ℝ} {f : ℝ → ℝ}
     (h : ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) : ConvexOn ℝ s f := by
   refine ⟨convex_iff_ordConnected.2
@@ -642,13 +650,12 @@ unital C⋆-algebra `a ↦ f(a)` is convex on the self-adjoint elements with spe
 
 The C⋆-algebras range over a universe `u`, so `IsOperatorConvexOn.{u} s f` is a priori one predicate
 per universe; `IsOperatorConvexOn.isMatrixConvexOn` reads the matrix algebras off any of them. The
-predicates agree across universes, since each is equivalent to continuity and matrix convexity.
-The direction from matrix convexity to operator convexity needs
-Gelfand–Naimark and is proved outside `ForMathlib`, in
-`QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean` (`isOperatorConvexOn_congr_universe`);
-the examples below are proved uniformly in every C⋆-algebra and hold in every universe.
+predicates agree across universes, since each is equivalent to continuity and matrix convexity;
+the direction from matrix convexity to operator convexity needs the Gelfand–Naimark theorem, which
+Mathlib does not provide, and is not proved here. The examples below are proved uniformly in every
+C⋆-algebra and hold in every universe.
 
-The field `continuousOn` is part of the definition of operator convexity, which is stated for
+The field `continuousOn` follows the definition of Hansen–Pedersen 2003, which is stated for
 continuous functions on an interval. It is redundant: the field `convexOn` already forces the
 continuity of `f` on `s`, on the interior of `s` through `IsMatrixConvexOn.continuousOn_interior`
 and at the endpoints through the junk value of `cfc` (`continuousOn_of_forall_convexOn_cfc`,
@@ -686,9 +693,8 @@ to the matrices indexed by `ULift.{u} (Fin n)`, and reindexing along `Equiv.ulif
 
 The universe `u` does not occur in the conclusion, so a universe-polymorphic hypothesis must fix it
 at the call site, e.g. `isOperatorConvexOn_inv.{0}.isMatrixConvexOn`. The lemma is stated for every
-`u` because the independence of the universe (`isOperatorConvexOn_congr_universe` in
-`QuantumSystem/Analysis/CStarAlgebra/OperatorConvexIffMatrixConvex.lean`) is proved from it, together with the
-direction from matrix convexity to operator convexity. -/
+`u` so that it applies to operator convexity in any universe; with the direction from matrix
+convexity to operator convexity, it shows that operator convexity does not depend on the universe. -/
 lemma isMatrixConvexOn_of_forall_convexOn_cfc
     (hf : ∀ (A : Type u) [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A],
       ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) :
@@ -709,7 +715,7 @@ lemma IsMatrixConvexOn.ordConnected (hf : IsMatrixConvexOn s f) : s.OrdConnected
 
 /-- A matrix convex function is convex: its domain in `M_1(ℂ)` contains the scalars. -/
 lemma IsMatrixConvexOn.convexOn_real (hf : IsMatrixConvexOn s f) : ConvexOn ℝ s f :=
-  ConvexOn.real_of_convexOn_cfc_setOf_isSelfAdjoint_spectrum_subset (hf 1)
+  ConvexOn.of_cfc (hf 1)
 
 /-- A matrix convex function is continuous on the interior of its domain, as every convex function
 on an interval is (`ConvexOn.continuousOn_interior`). Continuity at the endpoints does not follow:
@@ -1096,14 +1102,16 @@ private lemma spectrum_sum_star_mul_mul_subset {ι : Type*} [Fintype ι] (hs : s
   · rw [← hscal]
     exact Finset.sum_le_sum fun i _ => star_left_conjugate_le_conjugate (hbd i).2 _
 
-/-- **Jensen's operator inequality from matrix convexity over `A`**: if `cfc f` is convex on the
+/-- **Jensen's operator inequality from the convexity of `cfc f` over `CStarMatrix ι ι A`**: if
+`cfc f` is convex on the
 self-adjoint elements of `CStarMatrix ι ι A` with spectrum in `s`, and `f` is continuous on the
 spectrum of every such element, then `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ` for every family
 `aᵢ` with `Σᵢ aᵢ⋆ aᵢ = 1` and self-adjoint `xᵢ ∈ A` with spectrum in `s`. The convexity and the
 continuity are received on a C⋆-algebra `B` through an injective unital ⋆-homomorphism
 `ψ : CStarMatrix ι ι A → B`, along which both pull back (`ConvexOn.cfc_of_injective`). This covers
-⋆-isomorphisms, so that `B` may be a matrix algebra `Matrix (ι × m) (ι × m) ℂ` when
-`A = Matrix m m ℂ`: this is the form that matrix convexity alone supplies.
+⋆-isomorphisms, so that `B` may be a complex matrix algebra `Matrix (Fin N) (Fin N) ℂ` when
+`A = Matrix m m ℂ`: this is the form that matrix convexity alone supplies
+(`IsMatrixConvexOn.cfc_sum_le`).
 For operator convex `f` (`IsOperatorConvexOn.cfc_sum_le`), `ψ` is the reindexing
 `CStarMatrix.reindexₐ` along `Fintype.equivFin ι` onto `CStarMatrix (Fin n) (Fin n) A`,
 `n = card ι`, which lies in the universe of `A`. It also covers faithful representations of
@@ -1215,13 +1223,14 @@ lemma cfc_sum_le_of_le_one_of_forall (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {�
   rw [Algebra.algebraMap_eq_smul_one, mul_smul_comm, smul_mul_assoc, mul_one, hdd]
   exact smul_nonpos_of_nonpos_of_nonneg hf0 hd0
 
-/-- **Jensen's operator inequality** (Hansen–Pedersen 2003, Theorem 2.1, the implication from
-operator convexity): for `f` operator convex on `s`, a finite family `aᵢ ∈ A` with
+/-- **Jensen's operator inequality**: for `f` operator convex on `s`, a finite family `aᵢ ∈ A` with
 `Σᵢ aᵢ⋆ aᵢ = 1` and self-adjoint `xᵢ ∈ A` with spectrum in `s`,
-`f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ`. This is `cfc_sum_le_of_convexOn_cstarMatrix` with the
-convexity of `cfc f` over `CStarMatrix (Fin n) (Fin n) A`, `n = card ι`, and the continuity of `f`
-on `s` read off `IsOperatorConvexOn` itself; the operator convexity is used in the universe of `A`,
-while the index type `ι` is arbitrary. -/
+`f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ`. For operators on a Hilbert space this is (i) ⇒ (ii) of
+Hansen–Pedersen 2003, Theorem 2.1; here `A` is any unital C⋆-algebra. This is
+`cfc_sum_le_of_convexOn_cstarMatrix` with the convexity of `cfc f` over
+`CStarMatrix (Fin n) (Fin n) A`, `n = card ι`, and the continuity of `f` on `s` read off
+`IsOperatorConvexOn` itself; the operator convexity is used in the universe of `A`, while the index
+type `ι` is arbitrary. -/
 theorem IsOperatorConvexOn.cfc_sum_le {ι : Type*} [Fintype ι]
     (hf : IsOperatorConvexOn.{u} s f) (a x : ι → A)
     (hx : ∀ i, x i ∈ {b : A | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s})
@@ -1244,6 +1253,36 @@ theorem IsOperatorConvexOn.cfc_sum_le_of_le_one {ι : Type*} [Fintype ι]
   cfc_sum_le_of_le_one_of_forall h0 hf0 (fun a x hx ha => hf.cfc_sum_le a x hx ha) a x hx ha
 
 end JensenTheorems
+
+section MatrixJensen
+
+open scoped Matrix.Norms.L2Operator MatrixOrder
+
+variable {s : Set ℝ} {f : ℝ → ℝ}
+
+/-- **Jensen's operator inequality for matrix convex functions**: for `f` matrix convex on `s`, a
+finite family `aᵢ ∈ M_m(ℂ)` with `Σᵢ aᵢ⋆ aᵢ = 1` and self-adjoint `xᵢ ∈ M_m(ℂ)` with spectrum in
+`s`, `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ`. No continuity of `f` is needed, since matrices have
+finite spectra. This is `cfc_sum_le_of_convexOn_cstarMatrix` with the convexity of `cfc f` on
+`M_N(ℂ)`, `N = card (ι × m)`, received through the flattening of `CStarMatrix ι ι (M_m(ℂ))` to
+`M_{ι × m}(ℂ)` (`Matrix.compAlgEquiv`) and a reindexing to `Fin N`. -/
+theorem IsMatrixConvexOn.cfc_sum_le {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι]
+    (hf : IsMatrixConvexOn s f) (a x : ι → Matrix m m ℂ)
+    (hx : ∀ i, x i ∈ {b : Matrix m m ℂ | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s})
+    (ha : ∑ i, star (a i) * a i = 1) :
+    cfc f (∑ i, star (a i) * x i * a i) ≤ ∑ i, star (a i) * cfc f (x i) * a i := by
+  classical
+  let N := Fintype.card (ι × m)
+  let e : CStarMatrix ι ι (Matrix m m ℂ) ≃⋆ₐ[ℂ] Matrix (Fin N) (Fin N) ℂ :=
+    CStarMatrix.ofMatrixStarAlgEquiv.symm.trans <| StarAlgEquiv.ofAlgEquiv
+      ((Matrix.compAlgEquiv ι m ℂ ℂ).trans (Matrix.reindexAlgEquiv ℂ ℂ (Fintype.equivFin (ι × m))))
+      fun M => by
+        ext i j
+        simp [Matrix.star_eq_conjTranspose, Matrix.conjTranspose_apply]
+  exact cfc_sum_le_of_convexOn_cstarMatrix e (EquivLike.injective _) (hf N)
+    (fun _ _ _ => Matrix.finite_real_spectrum.continuousOn f) a x hx ha
+
+end MatrixJensen
 
 /-! ### Examples -/
 
@@ -1287,14 +1326,14 @@ lemma isMatrixConvexOn_inv : IsMatrixConvexOn (Ioi 0) (fun t => t⁻¹) :=
 
 /-! ### A matrix convex function that is not operator convex
 
-The indicator `f = 1_{\{0\}}` of `{0}` on `[0, ∞)` sends `A ⪰ 0` to the projection `f(A)` onto
-`ker A`. For `A, B ⪰ 0` and `a, b > 0`, `ker(a A + b B) = ker A ∩ ker B`, so the projection onto
+The indicator `f = 1_{{0}}` of `{0}` on `[0, ∞)` sends `A` with `0 ≤ A` to the projection `f(A)` onto
+`ker A`. For `0 ≤ A`, `0 ≤ B` and `a, b > 0`, `ker(a A + b B) = ker A ∩ ker B`, so the projection onto
 `ker(a A + b B)` lies below those onto `ker A` and `ker B`, and `f` is matrix convex. It is not
 continuous at the endpoint `0`, so it fails the continuity required by `IsOperatorConvexOn`, which
 is how `not_isOperatorConvexOn_indicator_zero` refutes operator convexity. The kernel argument as
 formalised here assumes finite spectra and does not carry over to a general C⋆-algebra, where
-`cfc f` takes its junk value `0` whenever `0` is an accumulation point of the spectrum; indeed
-`f(A)` is not convex there (`continuousOn_of_forall_convexOn_cfc`). In the interior `(0, ∞)`
+`cfc f` takes its junk value `0` whenever `0` is an accumulation point of the spectrum; in some
+such algebras `f(A)` is not convex (`continuousOn_of_forall_convexOn_cfc`). In the interior `(0, ∞)`
 matrix convexity does give continuity (`IsMatrixConvexOn.continuousOn_interior`), and `f` is `0`
 there.
 -/
@@ -1303,7 +1342,7 @@ section IndicatorZero
 
 variable {A : Type*} [CStarAlgebra A]
 
-/-- For `X` with finite spectrum, `1_{\{0\}}(X)` is a projection. -/
+/-- For `X` with finite spectrum, `1_{{0}}(X)` is a projection. -/
 private lemma isStarProjection_cfc_indicator_zero {X : A} (hX : (spectrum ℝ X).Finite) :
     IsStarProjection (cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X) := by
   refine ⟨?_, cfc_predicate _ _⟩
@@ -1312,7 +1351,7 @@ private lemma isStarProjection_cfc_indicator_zero {X : A} (hX : (spectrum ℝ X)
   funext x
   by_cases hx : x = 0 <;> simp [hx]
 
-/-- `X · 1_{\{0\}}(X) = 0` for self-adjoint `X` with finite spectrum: the range of `1_{\{0\}}(X)`
+/-- `X · 1_{{0}}(X) = 0` for self-adjoint `X` with finite spectrum: the range of `1_{{0}}(X)`
 lies in `ker X`. -/
 private lemma mul_cfc_indicator_zero {X : A} (hX : IsSelfAdjoint X) (hfin : (spectrum ℝ X).Finite) :
     X * cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X = 0 := by
@@ -1323,7 +1362,7 @@ private lemma mul_cfc_indicator_zero {X : A} (hX : IsSelfAdjoint X) (hfin : (spe
     funext fun x => by by_cases hx : x = 0 <;> simp [hx]]
   simp
 
-/-- `1 - 1_{\{0\}}(X) = X⁻¹ X` with `0⁻¹ = 0`, for self-adjoint `X` with finite spectrum: the
+/-- `1 - 1_{{0}}(X) = X⁻¹ X` with `0⁻¹ = 0`, for self-adjoint `X` with finite spectrum: the
 complementary projection factors through `X`. -/
 private lemma one_sub_cfc_indicator_zero {X : A} (hX : IsSelfAdjoint X)
     (hfin : (spectrum ℝ X).Finite) :
@@ -1339,7 +1378,7 @@ private lemma one_sub_cfc_indicator_zero {X : A} (hX : IsSelfAdjoint X)
 variable [PartialOrder A] [StarOrderedRing A]
 
 /-- For self-adjoint `X` with finite spectrum, a projection `P` with `X P = 0`, i.e. with range in
-`ker X`, lies below the projection `1_{\{0\}}(X)` onto `ker X`. -/
+`ker X`, lies below the projection `1_{{0}}(X)` onto `ker X`. -/
 private lemma le_cfc_indicator_zero {X P : A} (hX : IsSelfAdjoint X)
     (hfin : (spectrum ℝ X).Finite) (hP : IsStarProjection P) (hXP : X * P = 0) :
     P ≤ cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X := by
@@ -1348,7 +1387,7 @@ private lemma le_cfc_indicator_zero {X P : A} (hX : IsSelfAdjoint X)
     rw [one_sub_cfc_indicator_zero hX hfin, mul_assoc, hXP, mul_zero]
   rwa [sub_mul, one_mul, sub_eq_zero, eq_comm] at h
 
-/-- For `a ≥ 0`, `q⋆ a q = 0` forces `a q = 0`. -/
+/-- For `0 ≤ a`, `q⋆ a q = 0` forces `a q = 0`. -/
 private lemma mul_eq_zero_of_star_mul_mul_eq_zero {a q : A} (ha : 0 ≤ a)
     (h : star q * a * q = 0) : a * q = 0 := by
   obtain ⟨d, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp ha
@@ -1359,8 +1398,8 @@ private lemma mul_eq_zero_of_star_mul_mul_eq_zero {a q : A} (ha : 0 ≤ a)
 
 end IndicatorZero
 
-/-- The indicator `1_{\{0\}}` of `{0}` is matrix convex on `[0, ∞)`: `1_{\{0\}}(A)` is the
-projection onto `ker A`, and `ker(a A + b B) = ker A ∩ ker B` for `A, B ⪰ 0` and `a, b > 0`. It
+/-- The indicator `1_{{0}}` of `{0}` is matrix convex on `[0, ∞)`: `1_{{0}}(A)` is the
+projection onto `ker A`, and `ker(a A + b B) = ker A ∩ ker B` for `0 ≤ A`, `0 ≤ B` and `a, b > 0`. It
 is not continuous, hence not operator convex (`not_isOperatorConvexOn_indicator_zero`): the two
 notions differ on discontinuous functions, through the continuity that operator convexity
 requires. -/
@@ -1397,7 +1436,7 @@ lemma isMatrixConvexOn_indicator_zero :
   calc Q = a • Q + b • Q := by rw [← add_smul, hab, one_smul]
     _ ≤ _ := add_le_add (smul_le_smul_of_nonneg_left hQA ha) (smul_le_smul_of_nonneg_left hQB hb)
 
-/-- The indicator `1_{\{0\}}` of `{0}` is not operator convex on `[0, ∞)`, in any universe: it is
+/-- The indicator `1_{{0}}` of `{0}` is not operator convex on `[0, ∞)`, in any universe: it is
 not continuous at `0`, and the proof uses only the field `IsOperatorConvexOn.continuousOn`. It is
 matrix convex (`isMatrixConvexOn_indicator_zero`). -/
 lemma not_isOperatorConvexOn_indicator_zero :
