@@ -4,7 +4,6 @@
     "lean-lsp"
   ],
   "enabledPlugins": {
-    "lean4@lean4-skills": true,
-    "skill-creator@claude-plugins-official": true
+    "lean4@lean4-skills": true
   }
 }
