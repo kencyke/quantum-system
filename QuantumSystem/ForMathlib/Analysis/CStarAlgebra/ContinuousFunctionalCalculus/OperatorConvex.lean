@@ -25,7 +25,8 @@ import Mathlib.Topology.Compactification.OnePoint.Basic
 
 A continuous real function `f` on a set `s ⊆ ℝ` is *operator convex* (`IsOperatorConvexOn`)
 when, in every unital C⋆-algebra, `a ↦ f(a)` (the continuous functional calculus `cfc f`) is convex
-on the self-adjoint elements with spectrum in `s`. Quantifying over the matrix algebras `M_n(ℂ)`
+on the self-adjoint elements with spectrum in `s`; this set `{a | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s}`
+is called the *domain* for `s` below. Quantifying over the matrix algebras `M_n(ℂ)`
 alone gives *matrix convexity* (`IsMatrixConvexOn`). Hansen–Pedersen 2003 define both notions for
 continuous functions only; `IsOperatorConvexOn` keeps that continuity, while `IsMatrixConvexOn`
 drops it, since matrices have finite spectra and `cfc f` needs no continuity there. For `f`
@@ -69,10 +70,10 @@ presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) �
 
 ## Main results
 
-* `setOf_isSelfAdjoint_spectrum_subset_Ici`, `setOf_isSelfAdjoint_spectrum_subset_Ioi`: for
+* `setOfPred_isSelfAdjoint_spectrum_subset_Ici`, `setOfPred_isSelfAdjoint_spectrum_subset_Ioi`: for
   `s = [0, ∞)` the domain is `Set.Ici 0`, for `s = (0, ∞)` the strictly positive elements;
-  `Set.OrdConnected.convex_setOf_isSelfAdjoint_spectrum_subset`: it is convex for an interval `s`,
-  and conversely `Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset` for nontrivial
+  `Set.OrdConnected.convex_setOfPred_isSelfAdjoint_spectrum_subset`: it is convex for an interval `s`,
+  and conversely `Set.OrdConnected.of_convex_setOfPred_isSelfAdjoint_spectrum_subset` for nontrivial
   `A`.
 * `exists_algebraMap_le_and_le_algebraMap`, `Set.OrdConnected.spectrum_subset_of_algebraMap_le`:
   common scalar bounds `lo ≤ xᵢ ≤ hi` in `s` of a nonempty finite family of elements of the domain
@@ -133,8 +134,8 @@ universe of `A` reaches `CStarMatrix ι ι A` only after reindexing `ι` by `Fin
 cases `ψ` is a ⋆-isomorphism.
 
 The converse on a Hilbert space `H` tests positivity of `t f(X) + u f(Y) - f(tX + uY)` in a
-vector state `ξ`. The spectra of `X`, `Y` lie in an interval `[lo, hi] ⊆ s`, on which `f` is
-uniformly within `δ` of a polynomial `p` (Weierstrass). On the finite-dimensional Krylov subspace
+vector functional `⟪· ξ, ξ⟫`. The spectra of `X`, `Y` lie in an interval `[lo, hi] ⊆ s`, on which `f` is
+uniformly within `δ` of a polynomial `p` (Weierstrass). On the finite-dimensional Krylov-type subspace
 `F` spanned by the words of length at most `deg p` in `X` and `Y` applied to `ξ`, the compressions
 `Z_F` of `Z = X, Y, tX + uY` satisfy `p(Z_F) ξ = p(Z) ξ` and have spectrum in `[lo, hi]`; matrix
 convexity applies to them through an orthonormal basis of `F`. The six estimates `f ≈ p`, weighted
@@ -175,7 +176,7 @@ variable {A : Type*} [Ring A] [StarRing A] [PartialOrder A] [StarOrderedRing A] 
   [Algebra ℝ A] [ContinuousFunctionalCalculus ℝ A IsSelfAdjoint] [NonnegSpectrumClass ℝ A]
 
 /-- The self-adjoint elements with spectrum in `[0, ∞)` are the nonnegative elements. -/
-lemma setOf_isSelfAdjoint_spectrum_subset_Ici :
+lemma setOfPred_isSelfAdjoint_spectrum_subset_Ici :
     {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ Ici 0} = Ici 0 := by
   ext a
   refine ⟨fun ⟨ha, h⟩ => (StarOrderedRing.nonneg_iff_spectrum_nonneg (R := ℝ) a ha).2
@@ -184,7 +185,7 @@ lemma setOf_isSelfAdjoint_spectrum_subset_Ici :
       (StarOrderedRing.nonneg_iff_spectrum_nonneg (R := ℝ) a (IsSelfAdjoint.of_nonneg h)).1 h x hx⟩⟩
 
 /-- The self-adjoint elements with spectrum in `(0, ∞)` are the strictly positive elements. -/
-lemma setOf_isSelfAdjoint_spectrum_subset_Ioi :
+lemma setOfPred_isSelfAdjoint_spectrum_subset_Ioi :
     {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ Ioi 0} = {a | IsStrictlyPositive a} := by
   ext a
   refine ⟨fun ⟨ha, h⟩ => (StarOrderedRing.isStrictlyPositive_iff_spectrum_pos (R := ℝ) a ha).2
@@ -194,27 +195,26 @@ lemma setOf_isSelfAdjoint_spectrum_subset_Ioi :
 
 omit [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A] in
 /-- A real scalar `t ∈ s` lies in the domain for `s`. -/
-lemma algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A] {s : Set ℝ} {t : ℝ}
+lemma algebraMap_mem_setOfPred_isSelfAdjoint_spectrum_subset {s : Set ℝ} {t : ℝ}
     (ht : t ∈ s) : algebraMap ℝ A t ∈ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} :=
-  ⟨IsSelfAdjoint.algebraMap _ (.all t),
-    (CFC.spectrum_algebraMap_subset t).trans (singleton_subset_iff.2 ht)⟩
+  ⟨cfc_predicate_algebraMap t, (CFC.spectrum_algebraMap_subset t).trans (singleton_subset_iff.2 ht)⟩
 
 omit [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A] in
 /-- The zero element lies in the domain for `s ∋ 0`. -/
-lemma zero_mem_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A] {s : Set ℝ}
+lemma zero_mem_setOfPred_isSelfAdjoint_spectrum_subset {s : Set ℝ}
     (h0 : (0 : ℝ) ∈ s) : (0 : A) ∈ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} :=
-  map_zero (algebraMap ℝ A) ▸ algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset h0
+  map_zero (algebraMap ℝ A) ▸ algebraMap_mem_setOfPred_isSelfAdjoint_spectrum_subset h0
 
 omit [PartialOrder A] [StarOrderedRing A] [NonnegSpectrumClass ℝ A] in
 /-- If the self-adjoint elements with spectrum in `s` of a nontrivial algebra form a convex set,
 then `s` is an interval: it contains the convex combinations of the scalars in it. -/
-lemma Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
-    [Nontrivial A] {s : Set ℝ} (h : Convex ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s}) :
+lemma Set.OrdConnected.of_convex_setOfPred_isSelfAdjoint_spectrum_subset [Nontrivial A] {s : Set ℝ}
+    (h : Convex ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s}) :
     s.OrdConnected := by
   rw [← convex_iff_ordConnected]
   intro r hr r' hr' α β hα hβ hαβ
-  have h' := (h (algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset hr)
-    (algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset hr') hα hβ hαβ).2
+  have h' := (h (algebraMap_mem_setOfPred_isSelfAdjoint_spectrum_subset hr)
+    (algebraMap_mem_setOfPred_isSelfAdjoint_spectrum_subset hr') hα hβ hαβ).2
   rw [Algebra.smul_def, Algebra.smul_def, ← map_mul, ← map_mul, ← map_add, spectrum.scalar_eq]
     at h'
   exact h' rfl
@@ -222,24 +222,24 @@ lemma Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset [StarModule
 /-- If `cfc f` is convex on the self-adjoint elements with spectrum in `s` of a nontrivial algebra,
 then `f` is convex on `s`: the domain contains the scalars `algebraMap ℝ A r`, `r ∈ s`, on which
 `cfc f` is `f` (`cfc_algebraMap`), and the order on the scalars is that of `ℝ`. -/
-lemma ConvexOn.of_cfc [StarModule ℝ A]
-    [Nontrivial A] {s : Set ℝ} {f : ℝ → ℝ}
+lemma ConvexOn.of_cfc [Nontrivial A] {s : Set ℝ} {f : ℝ → ℝ}
     (h : ConvexOn ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f)) : ConvexOn ℝ s f := by
   refine ⟨convex_iff_ordConnected.2
-    (Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset h.1), ?_⟩
+    (Set.OrdConnected.of_convex_setOfPred_isSelfAdjoint_spectrum_subset h.1), ?_⟩
   intro r hr r' hr' α β hα hβ hαβ
-  have h' := h.2 (algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset hr)
-    (algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset hr') hα hβ hαβ
+  have h' := h.2 (algebraMap_mem_setOfPred_isSelfAdjoint_spectrum_subset hr)
+    (algebraMap_mem_setOfPred_isSelfAdjoint_spectrum_subset hr') hα hβ hαβ
   simp only [Algebra.smul_def, ← map_mul, ← map_add, cfc_algebraMap] at h'
-  rw [algebraMap_le_iff_le_spectrum (IsSelfAdjoint.algebraMap _ (.all _)), spectrum.scalar_eq] at h'
+  rw [algebraMap_le_iff_le_spectrum (cfc_predicate_algebraMap _), spectrum.scalar_eq] at h'
   simpa [smul_eq_mul] using h' _ rfl
 
-/-- Scalar bounds `lo ≤ a ≤ hi` with `lo, hi` in an order-connected `s` confine the spectrum of a
-self-adjoint `a` to `s`. -/
+/-- Scalar bounds `lo ≤ a ≤ hi` with `lo, hi` in an order-connected `s` confine the spectrum of
+`a` to `s`; the lower bound already makes `a` self-adjoint. -/
 lemma Set.OrdConnected.spectrum_subset_of_algebraMap_le {s : Set ℝ} (hs : s.OrdConnected)
-    {a : A} (ha : IsSelfAdjoint a) {lo hi : ℝ} (hlo : lo ∈ s) (hhi : hi ∈ s)
-    (h₁ : algebraMap ℝ A lo ≤ a) (h₂ : a ≤ algebraMap ℝ A hi) : spectrum ℝ a ⊆ s :=
-  fun x hx => hs.out hlo hhi ⟨(algebraMap_le_iff_le_spectrum ha).1 h₁ x hx,
+    {a : A} {lo hi : ℝ} (hlo : lo ∈ s) (hhi : hi ∈ s)
+    (h₁ : algebraMap ℝ A lo ≤ a) (h₂ : a ≤ algebraMap ℝ A hi) : spectrum ℝ a ⊆ s := by
+  have ha : IsSelfAdjoint a := IsSelfAdjoint.of_ge h₁ (cfc_predicate_algebraMap lo)
+  exact fun x hx => hs.out hlo hhi ⟨(algebraMap_le_iff_le_spectrum ha).1 h₁ x hx,
     (le_algebraMap_iff_spectrum_le ha).1 h₂ x hx⟩
 
 /-- A nonempty finite family of self-adjoint elements of a nontrivial algebra with spectra in `s`
@@ -265,7 +265,7 @@ lemma exists_algebraMap_le_and_le_algebraMap [Nontrivial A] {ι : Type*} [Finite
 
 /-- For an order-connected `s ⊆ ℝ`, the self-adjoint elements with spectrum in `s` form a convex
 set. -/
-lemma Set.OrdConnected.convex_setOf_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
+lemma Set.OrdConnected.convex_setOfPred_isSelfAdjoint_spectrum_subset [StarModule ℝ A]
     {s : Set ℝ} (hs : s.OrdConnected) :
     Convex ℝ {a : A | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} := by
   rintro a ha b hb t u ht hu htu
@@ -277,7 +277,7 @@ lemma Set.OrdConnected.convex_setOf_isSelfAdjoint_spectrum_subset [StarModule �
   obtain ⟨lo, hlo, hi, hhi, hbd⟩ :=
     exists_algebraMap_le_and_le_algebraMap (x := ![a, b]) (Fin.forall_fin_two.2 ⟨ha, hb⟩)
   have h := convex_Icc (𝕜 := ℝ) (algebraMap ℝ A lo) (algebraMap ℝ A hi) (hbd 0) (hbd 1) ht hu htu
-  exact hs.spectrum_subset_of_algebraMap_le hc hlo hhi h.1 h.2
+  exact hs.spectrum_subset_of_algebraMap_le hlo hhi h.1 h.2
 
 end Domain
 
@@ -285,13 +285,15 @@ section Pi
 
 variable {ι A C : Type*} [CStarAlgebra A] [CStarAlgebra C]
 
-/-- A continuous ⋆-homomorphism out of `ι → A` intertwines the continuous functional calculus
+/-- A ⋆-homomorphism out of `ι → A` intertwines the continuous functional calculus
 coordinatewise: `f(φ(d)) = φ(i ↦ f(dᵢ))` for self-adjoint `dᵢ`. -/
-private lemma StarAlgHom.cfc_map_pi [Finite ι] (φ : (ι → A) →⋆ₐ[ℂ] C) (hφ : Continuous φ)
-    (f : ℝ → ℝ) (d : ι → A) (hd : ∀ i, IsSelfAdjoint (d i))
+private lemma StarAlgHom.cfc_map_pi [Finite ι] (φ : (ι → A) →⋆ₐ[ℂ] C) (f : ℝ → ℝ) (d : ι → A)
+    (hd : ∀ i, IsSelfAdjoint (d i))
     (hf : ContinuousOn f (⋃ i, spectrum ℝ (d i))) :
     cfc f (φ d) = φ fun i => cfc f (d i) := by
   have := Fintype.ofFinite ι
+  have hφ : Continuous φ := AddMonoidHomClass.continuous_of_bound φ 1 fun y => by
+    simpa using NonUnitalStarAlgHom.norm_apply_le φ y
   let _ : Algebra ℝ (ι → A) := Algebra.complexToReal
   have hd' : IsSelfAdjoint d := funext hd
   have hspec : spectrum ℝ d = ⋃ i, spectrum ℝ (d i) := Pi.spectrum_eq d
@@ -314,9 +316,11 @@ private lemma StarAlgHom.spectrum_map_pi_subset (φ : (ι → A) →⋆ₐ[ℂ] 
 /-- An injective ⋆-homomorphism out of `ι → A` preserves the real spectrum of a self-adjoint
 element, which is the union of the spectra of its coordinates. -/
 private lemma StarAlgHom.spectrum_map_pi [Finite ι] (φ : (ι → A) →⋆ₐ[ℂ] C)
-    (hφ : Function.Injective φ) (hφ' : Continuous φ) (d : ι → A) (hd : ∀ i, IsSelfAdjoint (d i)) :
+    (hφ : Function.Injective φ) (d : ι → A) (hd : ∀ i, IsSelfAdjoint (d i)) :
     spectrum ℝ (φ d) = ⋃ i, spectrum ℝ (d i) := by
   have := Fintype.ofFinite ι
+  have hφ' : Continuous φ := AddMonoidHomClass.continuous_of_bound φ 1 fun y => by
+    simpa using NonUnitalStarAlgHom.norm_apply_le φ y
   let _ : Algebra ℝ (ι → A) := Algebra.complexToReal
   let _ : ContinuousFunctionalCalculus ℝ (ι → A) IsSelfAdjoint :=
     IsSelfAdjoint.instContinuousFunctionalCalculus
@@ -360,12 +364,6 @@ private noncomputable def diagonalStarAlgHom [CStarAlgebra A] :
 @[simp] private lemma diagonalStarAlgHom_apply [CStarAlgebra A] (d : ι → A) (i j : ι) :
     diagonalStarAlgHom d i j = if i = j then d i else 0 :=
   rfl
-
-private lemma continuous_diagonalStarAlgHom [CStarAlgebra A] :
-    Continuous (diagonalStarAlgHom (ι := ι) (A := A)) :=
-  continuous_pi fun i => continuous_pi fun j => by
-    simp only [diagonalStarAlgHom_apply]
-    split_ifs <;> fun_prop
 
 /-- The diagonal embedding is injective. -/
 private lemma diagonalStarAlgHom_injective [CStarAlgebra A] :
@@ -431,14 +429,14 @@ private lemma SemiconjBy.cfc_real {a b y : B} (h : SemiconjBy y a b) (ha : IsSel
     fin_cases i <;> fin_cases j <;>
       simp [CStarMatrix.mul_apply, d, z, CStarMatrix.ofMatrix_apply, h.eq]
   have hc := commute_cfc_real hcomm f
-  rw [StarAlgHom.cfc_map_pi _ CStarMatrix.continuous_diagonalStarAlgHom f d hd hdf] at hc
+  rw [StarAlgHom.cfc_map_pi _ f d hd hdf] at hc
   have h10 := congrArg (fun M : CStarMatrix (Fin 2) (Fin 2) B => M 1 0) hc.eq
   change y * cfc f a = cfc f b * y
   simpa [CStarMatrix.mul_apply, Fin.sum_univ_two, d, z, CStarMatrix.ofMatrix_apply] using h10.symm
 
 /-- Jensen's inequality for a partial isometry `v`: with
 `e = v⋆ v` a projection, `t ∈ s` and `n = v⋆ x v + t (1 - e)`, `f(n) e ≤ v⋆ f(x) v`. -/
-private lemma cfc_mul_le_of_isIdempotentElem {s : Set ℝ} {f : ℝ → ℝ} (hs : s.OrdConnected)
+private lemma cfc_mul_le_of_isIdempotentElem {s : Set ℝ} {f : ℝ → ℝ}
     (hcont : ∀ b : B, IsSelfAdjoint b → spectrum ℝ b ⊆ s → ContinuousOn f (spectrum ℝ b))
     (hconv : ConvexOn ℝ {a : B | IsSelfAdjoint a ∧ spectrum ℝ a ⊆ s} (cfc f))
     {v x n : B} (hv : IsIdempotentElem (star v * v)) (hx : IsSelfAdjoint x)
@@ -448,6 +446,7 @@ private lemma cfc_mul_le_of_isIdempotentElem {s : Set ℝ} {f : ℝ → ℝ} (hs
   subst hn
   rcases subsingleton_or_nontrivial B with hB | hB
   · exact le_of_eq (Subsingleton.elim _ _)
+  have hs := Set.OrdConnected.of_convex_setOfPred_isSelfAdjoint_spectrum_subset hconv.1
   set e := star v * v with he_def
   have he_sa : IsSelfAdjoint e := by simp [e, IsSelfAdjoint, star_mul]
   have hee : e * e = e := hv.eq
@@ -522,8 +521,8 @@ private lemma cfc_mul_le_of_isIdempotentElem {s : Set ℝ} {f : ℝ → ℝ} (hs
       rw [Algebra.algebraMap_eq_smul_one, mul_smul_comm, smul_mul_assoc, mul_one]
     have hsplit (r : ℝ) : algebraMap ℝ B r = r • e + r • (1 - e) := by
       rw [← smul_add, add_sub_cancel, Algebra.algebraMap_eq_smul_one]
-    refine hs.spectrum_subset_of_algebraMap_le hN_sa (min_rec' (· ∈ s) hlo ht)
-      (max_rec' (· ∈ s) hhi ht) ?_ ?_
+    refine hs.spectrum_subset_of_algebraMap_le (min_rec' (· ∈ s) hlo ht) (max_rec' (· ∈ s) hhi ht)
+      ?_ ?_
     · rw [hcoe, hsplit, ← hscal]
       exact add_le_add (star_left_conjugate_le_conjugate
           ((algebraMap_mono B (min_le_left lo t)).trans (hbd ()).1) v)
@@ -587,7 +586,7 @@ private lemma map_cfc_real_of_injective (φ : F) (hφ : Function.Injective φ) (
 omit [PartialOrder B] [PartialOrder C] [StarOrderedRing B] [StarOrderedRing C] in
 /-- An injective ⋆-homomorphism maps an element into the self-adjoint elements with spectrum
 in `s` exactly when the element is self-adjoint with spectrum in `s`. -/
-private lemma map_mem_setOf_isSelfAdjoint_spectrum_subset_iff (φ : F) (hφ : Function.Injective φ)
+private lemma map_mem_setOfPred_isSelfAdjoint_spectrum_subset_iff (φ : F) (hφ : Function.Injective φ)
     {b : B} :
     φ b ∈ {c : C | IsSelfAdjoint c ∧ spectrum ℝ c ⊆ s} ↔
       b ∈ {b : B | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s} := by
@@ -606,7 +605,7 @@ private lemma continuousOn_spectrum_of_forall_of_injective (φ : F) (hφ : Funct
     (hcont : ∀ c : C, IsSelfAdjoint c → spectrum ℝ c ⊆ s → ContinuousOn f (spectrum ℝ c)) :
     ∀ b : B, IsSelfAdjoint b → spectrum ℝ b ⊆ s → ContinuousOn f (spectrum ℝ b) :=
   fun b hb hbs => by
-    have h := (map_mem_setOf_isSelfAdjoint_spectrum_subset_iff φ hφ).2 ⟨hb, hbs⟩
+    have h := (map_mem_setOfPred_isSelfAdjoint_spectrum_subset_iff φ hφ).2 ⟨hb, hbs⟩
     rw [← hb.map_spectrum_real φ hφ (NonUnitalStarAlgHom.isometry φ hφ).continuous]
     exact hcont (φ b) h.1 h.2
 
@@ -625,7 +624,7 @@ representations on a Hilbert space alike. -/
 lemma ConvexOn.cfc_of_injective (φ : F) (hφ : Function.Injective φ)
     (h : ConvexOn ℝ {c : C | IsSelfAdjoint c ∧ spectrum ℝ c ⊆ s} (cfc f)) :
     ConvexOn ℝ {b : B | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s} (cfc f) := by
-  have hmem {b : B} := map_mem_setOf_isSelfAdjoint_spectrum_subset_iff (s := s) φ hφ (b := b)
+  have hmem {b : B} := map_mem_setOfPred_isSelfAdjoint_spectrum_subset_iff (s := s) φ hφ (b := b)
   refine ⟨fun b₁ hb₁ b₂ hb₂ t u ht hu htu => ?_, fun b₁ hb₁ b₂ hb₂ t u ht hu htu => ?_⟩
   · rw [← hmem, map_add, map_real_smul_of_algHomClass, map_real_smul_of_algHomClass]
     exact h.1 (hmem.2 hb₁) (hmem.2 hb₂) ht hu htu
@@ -706,7 +705,7 @@ lemma IsOperatorConvexOn.isMatrixConvexOn (hf : IsOperatorConvexOn.{u} s f) :
 
 /-- The set `s` of a matrix convex function is an interval: its domain in `M_1(ℂ)` is convex. -/
 lemma IsMatrixConvexOn.ordConnected (hf : IsMatrixConvexOn s f) : s.OrdConnected :=
-  Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset (hf 1).1
+  Set.OrdConnected.of_convex_setOfPred_isSelfAdjoint_spectrum_subset (hf 1).1
 
 /-- A matrix convex function is convex: its domain in `M_1(ℂ)` contains the scalars. -/
 lemma IsMatrixConvexOn.convexOn_real (hf : IsMatrixConvexOn s f) : ConvexOn ℝ s f :=
@@ -1090,8 +1089,7 @@ private lemma spectrum_sum_star_mul_mul_subset {ι : Type*} [Fintype ι] (hs : s
   have hscal (r : ℝ) : ∑ i, star (a i) * algebraMap ℝ A r * a i = algebraMap ℝ A r := by
     simp_rw [Algebra.algebraMap_eq_smul_one, mul_smul_comm, smul_mul_assoc, mul_one,
       ← Finset.smul_sum, ha]
-  refine hs.spectrum_subset_of_algebraMap_le (isSelfAdjoint_sum_star_mul_mul a x fun i => (hx i).1)
-    hlo hhi ?_ ?_
+  refine hs.spectrum_subset_of_algebraMap_le hlo hhi ?_ ?_
   · rw [← hscal]
     exact Finset.sum_le_sum fun i _ => star_left_conjugate_le_conjugate (hbd i).1 _
   · rw [← hscal]
@@ -1131,7 +1129,7 @@ lemma cfc_sum_le_of_convexOn_cstarMatrix {ι : Type*} [Fintype ι] [DecidableEq 
   have : Nonempty ι := ⟨i₀⟩
   have hconv' := ConvexOn.cfc_of_injective (B := CStarMatrix ι ι A) ψ hψ hconv
   have hcont' := continuousOn_spectrum_of_forall_of_injective (B := CStarMatrix ι ι A) ψ hψ hcont
-  have hs := Set.OrdConnected.of_convex_setOf_isSelfAdjoint_spectrum_subset hconv'.1
+  have hs := Set.OrdConnected.of_convex_setOfPred_isSelfAdjoint_spectrum_subset hconv'.1
   obtain ⟨t, ht⟩ := ContinuousFunctionalCalculus.spectrum_nonempty (R := ℝ) (x i₀) (hx i₀).1
   have ht : t ∈ s := (hx i₀).2 ht
   let φ := CStarMatrix.diagonalStarAlgHom (ι := ι) (A := A)
@@ -1163,12 +1161,12 @@ lemma cfc_sum_le_of_convexOn_cstarMatrix {ι : Type*} [Fintype ι] [DecidableEq 
         rw [Algebra.algebraMap_eq_smul_one, RCLike.real_smul_eq_coe_smul (K := ℂ)]
         simp [dN, hj]
       rw [h]
-      exact algebraMap_mem_setOf_isSelfAdjoint_spectrum_subset ht
+      exact algebraMap_mem_setOfPred_isSelfAdjoint_spectrum_subset ht
   have hmap (d : ι → A) (hd : ∀ i, d i ∈ {b : A | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s}) :=
-    StarAlgHom.cfc_map_pi φ CStarMatrix.continuous_diagonalStarAlgHom f d (fun i => (hd i).1)
+    StarAlgHom.cfc_map_pi φ f d (fun i => (hd i).1)
       (by
-        rw [← StarAlgHom.spectrum_map_pi φ CStarMatrix.diagonalStarAlgHom_injective
-          CStarMatrix.continuous_diagonalStarAlgHom d fun i => (hd i).1]
+        rw [← StarAlgHom.spectrum_map_pi φ CStarMatrix.diagonalStarAlgHom_injective d
+          fun i => (hd i).1]
         exact hcont' _ ((show IsSelfAdjoint d from funext fun i => (hd i).1).map φ)
           ((StarAlgHom.spectrum_map_pi_subset φ d).trans (iUnion_subset fun i => (hd i).2)))
   have hX : IsSelfAdjoint (φ x) := (show IsSelfAdjoint x from funext fun i => (hx i).1).map φ
@@ -1183,7 +1181,7 @@ lemma cfc_sum_le_of_convexOn_cstarMatrix {ι : Type*} [Fintype ι] [DecidableEq 
     by_cases hj : j = i₀ <;> simp [hj]
   have hN : star v * φ x * v + (t : ℂ) • (1 - star v * v) = φ dN := by
     rw [hconj, hvv, ← map_one φ, ← map_sub, ← map_smul, ← map_add]
-  have key := cfc_mul_le_of_isIdempotentElem hs hcont' hconv' hidem hX hXs ht hN
+  have key := cfc_mul_le_of_isIdempotentElem hcont' hconv' hidem hX hXs ht hN
   rw [hmap dN hdN, hmap x hx, hvv, hconj, ← map_mul] at key
   simpa [φ, dN] using CStarMatrix.apply_self_le_apply_self key i₀
 
@@ -1206,7 +1204,7 @@ lemma cfc_sum_le_of_le_one_of_forall (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0) {�
   have hdd : star d * d = 1 - ∑ i, star (a i) * a i := by
     rw [(CFC.sqrt_nonneg _).isSelfAdjoint.star_eq, CFC.sqrt_mul_sqrt_self _ hd0]
   have h0mem : (0 : A) ∈ {b : A | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s} :=
-    zero_mem_setOf_isSelfAdjoint_spectrum_subset h0
+    zero_mem_setOfPred_isSelfAdjoint_spectrum_subset h0
   have h := hJ (Option.elim · d a) (Option.elim · 0 x)
     (fun i => match i with
       | none => h0mem
@@ -1256,11 +1254,12 @@ open scoped Matrix.Norms.L2Operator MatrixOrder
 variable {s : Set ℝ} {f : ℝ → ℝ}
 
 /-- **Jensen's operator inequality for matrix convex functions**: for `f` matrix convex on `s`, a
-finite family `aᵢ ∈ M_m(ℂ)` with `Σᵢ aᵢ⋆ aᵢ = 1` and self-adjoint `xᵢ ∈ M_m(ℂ)` with spectrum in
-`s`, `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ`. No continuity of `f` is needed, since matrices have
-finite spectra. This is `cfc_sum_le_of_convexOn_cstarMatrix` with the convexity of `cfc f` on
-`M_N(ℂ)`, `N = card (ι × m)`, received through the flattening of `CStarMatrix ι ι (M_m(ℂ))` to
-`M_{ι × m}(ℂ)` (`Matrix.compAlgEquiv`) and a reindexing to `Fin N`. -/
+finite family `aᵢ : Matrix m m ℂ` with `Σᵢ aᵢ⋆ aᵢ = 1` and self-adjoint `xᵢ : Matrix m m ℂ` with
+spectrum in `s`, `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ` in the Löwner order (`open scoped MatrixOrder`).
+No continuity of `f` is needed, since matrices have finite spectra. This is
+`cfc_sum_le_of_convexOn_cstarMatrix` with the convexity of `cfc f` on `Matrix (Fin N) (Fin N) ℂ`,
+`N = card (ι × m)`, received through the flattening of `CStarMatrix ι ι (Matrix m m ℂ)` to
+`Matrix (ι × m) (ι × m) ℂ` (`Matrix.compAlgEquiv`) and a reindexing to `Fin N`. -/
 theorem IsMatrixConvexOn.cfc_sum_le {m ι : Type*} [Fintype m] [DecidableEq m] [Fintype ι]
     (hf : IsMatrixConvexOn s f) (a x : ι → Matrix m m ℂ)
     (hx : ∀ i, x i ∈ {b : Matrix m m ℂ | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s})
@@ -1286,7 +1285,7 @@ operator concavity of `tᵖ` (Mathlib's `CFC.concaveOn_rpow`). -/
 lemma isOperatorConvexOn_neg_rpow {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1) :
     IsOperatorConvexOn (Ici 0) (fun t => -(t ^ p)) := by
   refine ⟨(Real.continuous_rpow_const hp0).neg.continuousOn, fun A _ _ _ => ?_⟩
-  rw [setOf_isSelfAdjoint_spectrum_subset_Ici]
+  rw [setOfPred_isSelfAdjoint_spectrum_subset_Ici]
   exact (CFC.concaveOn_rpow ⟨hp0, hp1⟩).neg.congr fun a ha => by
     rw [cfc_neg, ← CFC.rpow_eq_cfc_real (a := a) ha, Pi.neg_apply]
 
@@ -1294,14 +1293,14 @@ lemma isOperatorConvexOn_neg_rpow {p : ℝ} (hp0 : 0 ≤ p) (hp1 : p ≤ 1) :
 of `log` (Mathlib's `CFC.concaveOn_log`). -/
 lemma isOperatorConvexOn_neg_log : IsOperatorConvexOn (Ioi 0) (fun t => -Real.log t) := by
   refine ⟨(Real.continuousOn_log.mono fun t ht => ht.ne').neg, fun A _ _ _ => ?_⟩
-  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  rw [setOfPred_isSelfAdjoint_spectrum_subset_Ioi]
   exact CFC.concaveOn_log.neg.congr fun a _ => by rw [cfc_neg, Pi.neg_apply]; rfl
 
 /-- The inverse `t⁻¹` is operator convex on `(0, ∞)` (Mathlib's
 `CStarAlgebra.convexOn_ringInverse`). -/
 lemma isOperatorConvexOn_inv : IsOperatorConvexOn (Ioi 0) (fun t => t⁻¹) := by
   refine ⟨continuousOn_inv₀.mono fun t ht => ht.ne', fun A _ _ _ => ?_⟩
-  rw [setOf_isSelfAdjoint_spectrum_subset_Ioi]
+  rw [setOfPred_isSelfAdjoint_spectrum_subset_Ioi]
   exact CStarAlgebra.convexOn_ringInverse.congr fun a ha =>
     (cfc_ringInverse_id (R := ℝ) (a := a) ha.isUnit).symm
 
@@ -1337,25 +1336,32 @@ section IndicatorZero
 
 variable {A : Type*} [CStarAlgebra A]
 
-/-- For `X` with finite spectrum, `1_{{0}}(X)` is a projection. -/
-private lemma isStarProjection_cfc_indicator_zero {X : A} (hX : (spectrum ℝ X).Finite) :
+/-- `1_{{0}}(X)` is a projection; where `cfc` takes its junk value it is the projection `0`. -/
+private lemma isStarProjection_cfc_indicator_zero (X : A) :
     IsStarProjection (cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X) := by
-  refine ⟨?_, cfc_predicate _ _⟩
-  rw [IsIdempotentElem, ← cfc_mul (hf := hX.continuousOn _) (hg := hX.continuousOn _)]
-  congr 1
-  funext x
-  by_cases hx : x = 0 <;> simp [hx]
+  by_cases hc : ContinuousOn (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) (spectrum ℝ X)
+  · refine ⟨?_, cfc_predicate _ _⟩
+    rw [IsIdempotentElem, ← cfc_mul (hf := hc) (hg := hc)]
+    congr 1
+    funext x
+    by_cases hx : x = 0 <;> simp [hx]
+  · rw [cfc_apply_of_not_continuousOn X hc]
+    exact IsStarProjection.zero A
 
-/-- `X · 1_{{0}}(X) = 0` for self-adjoint `X` with finite spectrum: the range of `1_{{0}}(X)`
-lies in `ker X`. -/
-private lemma mul_cfc_indicator_zero {X : A} (hX : IsSelfAdjoint X) (hfin : (spectrum ℝ X).Finite) :
+/-- `X · 1_{{0}}(X) = 0`: the range of `1_{{0}}(X)` lies in `ker X`; where `cfc` takes its junk
+value both sides are `0`. -/
+private lemma mul_cfc_indicator_zero (X : A) :
     X * cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X = 0 := by
-  have h := cfc_mul (fun x : ℝ => x) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X
-    (hfin.continuousOn _) (hfin.continuousOn _)
-  rw [cfc_id' ℝ X] at h
-  rw [← h, show (fun x : ℝ => x * ({0} : Set ℝ).indicator (1 : ℝ → ℝ) x) = (0 : ℝ → ℝ) from
-    funext fun x => by by_cases hx : x = 0 <;> simp [hx]]
-  simp
+  by_cases hX : IsSelfAdjoint X
+  · by_cases hc : ContinuousOn (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) (spectrum ℝ X)
+    · have h := cfc_mul (fun x : ℝ => x) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X
+        continuous_id.continuousOn hc
+      rw [cfc_id' ℝ X] at h
+      rw [← h, show (fun x : ℝ => x * ({0} : Set ℝ).indicator (1 : ℝ → ℝ) x) = (0 : ℝ → ℝ) from
+        funext fun x => by by_cases hx : x = 0 <;> simp [hx]]
+      simp
+    · rw [cfc_apply_of_not_continuousOn X hc, mul_zero]
+  · rw [cfc_apply_of_not_predicate X hX, mul_zero]
 
 /-- `1 - 1_{{0}}(X) = X⁻¹ X` with `0⁻¹ = 0`, for self-adjoint `X` with finite spectrum: the
 complementary projection factors through `X`. -/
@@ -1377,7 +1383,7 @@ variable [PartialOrder A] [StarOrderedRing A]
 private lemma le_cfc_indicator_zero {X P : A} (hX : IsSelfAdjoint X)
     (hfin : (spectrum ℝ X).Finite) (hP : IsStarProjection P) (hXP : X * P = 0) :
     P ≤ cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X := by
-  refine hP.le_of_mul_eq_right (isStarProjection_cfc_indicator_zero hfin) ?_
+  refine hP.le_of_mul_eq_right (isStarProjection_cfc_indicator_zero X) ?_
   have h : (1 - cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) X) * P = 0 := by
     rw [one_sub_cfc_indicator_zero hX hfin, mul_assoc, hXP, mul_zero]
   rwa [sub_mul, one_mul, sub_eq_zero, eq_comm] at h
@@ -1401,9 +1407,9 @@ requires. -/
 lemma isMatrixConvexOn_indicator_zero :
     IsMatrixConvexOn (Ici 0) (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) := fun n => by
   open scoped MatrixOrder Matrix.Norms.L2Operator in
-  refine ⟨ordConnected_Ici.convex_setOf_isSelfAdjoint_spectrum_subset, ?_⟩
+  refine ⟨ordConnected_Ici.convex_setOfPred_isSelfAdjoint_spectrum_subset, ?_⟩
   intro A hA B hB a b ha hb hab
-  rw [setOf_isSelfAdjoint_spectrum_subset_Ici] at hA hB
+  rw [setOfPred_isSelfAdjoint_spectrum_subset_Ici] at hA hB
   change 0 ≤ A at hA
   change 0 ≤ B at hB
   rcases ha.eq_or_lt with rfl | ha'
@@ -1414,13 +1420,11 @@ lemma isMatrixConvexOn_indicator_zero :
     simp [hab]
   set Q := cfc (({0} : Set ℝ).indicator (1 : ℝ → ℝ)) (a • A + b • B) with hQ
   have hC : 0 ≤ a • A + b • B := add_nonneg (smul_nonneg ha hA) (smul_nonneg hb hB)
-  have hQP : IsStarProjection Q :=
-    isStarProjection_cfc_indicator_zero (a • A + b • B).finite_real_spectrum
+  have hQP : IsStarProjection Q := isStarProjection_cfc_indicator_zero _
   -- `Q⋆ (a A + b B) Q = 0` splits into two nonnegative terms, so `Q⋆ A Q = Q⋆ B Q = 0`.
   have hsum : a • (star Q * A * Q) + b • (star Q * B * Q) = 0 := by
     have h : star Q * (a • A + b • B) * Q = 0 := by
-      rw [mul_assoc, mul_cfc_indicator_zero hC.isSelfAdjoint (a • A + b • B).finite_real_spectrum,
-        mul_zero]
+      rw [mul_assoc, mul_cfc_indicator_zero, mul_zero]
     simpa only [mul_add, add_mul, mul_smul_comm, smul_mul_assoc] using h
   have h0 := (add_eq_zero_iff_of_nonneg (smul_nonneg ha (star_left_conjugate_nonneg hA Q))
     (smul_nonneg hb (star_left_conjugate_nonneg hB Q))).1 hsum
@@ -1538,7 +1542,7 @@ private lemma coe_aeval_compress_apply {Z : H →L[ℂ] H} {ξ : F} {p : ℝ[X]}
 
 end ContinuousLinearMap
 
-/-! #### Krylov subspaces -/
+/-! #### Krylov-type subspaces -/
 
 namespace ContinuousLinearMap
 
@@ -1567,7 +1571,7 @@ private lemma krylov_mono : Monotone (krylov X Y ξ) :=
 private lemma mem_krylov_zero : ξ ∈ krylov X Y ξ 0 :=
   Submodule.mem_span_singleton_self ξ
 
-/-- `t X + u Y` maps the `k`-th Krylov subspace into the next one. -/
+/-- `t X + u Y` maps the `k`-th Krylov-type subspace into the next one. -/
 private lemma add_smul_apply_mem_krylov (t u : ℝ) {k : ℕ} {v : H} (hv : v ∈ krylov X Y ξ k) :
     (t • X + u • Y) v ∈ krylov X Y ξ (k + 1) := by
   have hX : X v ∈ krylov X Y ξ (k + 1) :=
@@ -1576,7 +1580,7 @@ private lemma add_smul_apply_mem_krylov (t u : ℝ) {k : ℕ} {v : H} (hv : v �
   simpa using Submodule.add_mem _ (Submodule.smul_of_tower_mem _ t hX)
     (Submodule.smul_of_tower_mem _ u hY)
 
-/-- If `Z` maps each Krylov subspace into the next one, the powers `Z^k ξ`, `k ≤ d`, lie in the
+/-- If `Z` maps each Krylov-type subspace into the next one, the powers `Z^k ξ`, `k ≤ d`, lie in the
 `d`-th one. -/
 private lemma pow_apply_mem_krylov {Z : H →L[ℂ] H}
     (hZ : ∀ k v, v ∈ krylov X Y ξ k → Z v ∈ krylov X Y ξ (k + 1)) {d : ℕ} :
@@ -1595,10 +1599,11 @@ section Approximation
 
 open ContinuousLinearMap
 
-/-- A self-adjoint element with scalar bounds `lo ≤ Z ≤ hi` has spectrum in `[lo, hi]`. -/
+/-- An element with scalar bounds `lo ≤ Z ≤ hi` has spectrum in `[lo, hi]`. -/
 private lemma spectrum_subset_Icc {A : Type*} [CStarAlgebra A] [PartialOrder A]
-    [StarOrderedRing A] {Z : A} (hZ : IsSelfAdjoint Z) {lo hi : ℝ}
+    [StarOrderedRing A] {Z : A} {lo hi : ℝ}
     (h₁ : algebraMap ℝ A lo ≤ Z) (h₂ : Z ≤ algebraMap ℝ A hi) : spectrum ℝ Z ⊆ Icc lo hi :=
+  have hZ : IsSelfAdjoint Z := IsSelfAdjoint.of_ge h₁ (cfc_predicate_algebraMap lo)
   fun x hx => ⟨(algebraMap_le_iff_le_spectrum hZ).1 h₁ x hx,
     (le_algebraMap_iff_spectrum_le hZ).1 h₂ x hx⟩
 
@@ -1650,30 +1655,33 @@ private lemma IsMatrixConvexOn.convexOn_finiteDimensional (hf : IsMatrixConvexOn
     ((stdOrthonormalBasis ℂ K).repr.conjStarAlgEquiv.trans Matrix.toEuclideanCLM.symm)
     (EquivLike.injective _) (hf _)
 
-/-- In a vector state, `f(Z)` and `p(Z)` are `δ`-close if `|p - f| < δ` on `[lo, hi]` and
+/-- In a vector functional, `f(Z)` and `p(Z)` are `δ`-close if `|p - f| < δ` on `[lo, hi]` and
 `lo ≤ Z ≤ hi`. -/
 private lemma abs_re_inner_cfc_sub_aeval_le {E : Type*} [NormedAddCommGroup E]
     [InnerProductSpace ℂ E] [CompleteSpace E] {lo hi δ : ℝ} (hδ : 0 ≤ δ)
     (hcI : ContinuousOn f (Icc lo hi)) {p : ℝ[X]} (hp : ∀ x ∈ Icc lo hi, |p.eval x - f x| < δ)
-    {Z : E →L[ℂ] E} (hZ : IsSelfAdjoint Z) (hZb : algebraMap ℝ _ lo ≤ Z ∧ Z ≤ algebraMap ℝ _ hi)
+    {Z : E →L[ℂ] E} (hZb : algebraMap ℝ _ lo ≤ Z ∧ Z ≤ algebraMap ℝ _ hi)
     (η : E) : |RCLike.re ⟪cfc f Z η, η⟫_ℂ - RCLike.re ⟪aeval Z p η, η⟫_ℂ| ≤ δ * ‖η‖ ^ 2 :=
-  abs_re_inner_sub_le _ _ η (norm_cfc_sub_aeval_le hδ hcI hp hZ (spectrum_subset_Icc hZ hZb.1 hZb.2))
+  abs_re_inner_sub_le _ _ η (norm_cfc_sub_aeval_le hδ hcI hp
+    (IsSelfAdjoint.of_ge hZb.1 (cfc_predicate_algebraMap lo)) (spectrum_subset_Icc hZb.1 hZb.2))
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
 /-- The core estimate: for `f` continuous and matrix convex on `s`, self-adjoint `X, Y` with
-spectra in `[lo, hi] ⊆ s`, a vector `ξ` and `ε > 0`, the vector state of `ξ` satisfies
+spectra in `[lo, hi] ⊆ s`, a vector `ξ` and `ε > 0`, the vector functional of `ξ` satisfies
 `⟪f(tX + uY) ξ, ξ⟫ ≤ t ⟪f(X) ξ, ξ⟫ + u ⟪f(Y) ξ, ξ⟫ + ε`. A polynomial `p` with `|p - f| < δ` on
-`[lo, hi]` has `p(Z) ξ = p(Z_F) ξ` for the compressions `Z_F` of `Z = X, Y, tX + uY` to the Krylov
-subspace `F` of the words of length at most `deg p` in `X, Y` applied to `ξ`, and matrix convexity
+`[lo, hi]` has `p(Z) ξ = p(Z_F) ξ` for the compressions `Z_F` of `Z = X, Y, tX + uY` to the
+Krylov-type subspace `F` of the words of length at most `deg p` in `X, Y` applied to `ξ`, and matrix convexity
 applies on `F`. -/
 private lemma re_inner_cfc_add_smul_le (hc : ContinuousOn f s) (hf : IsMatrixConvexOn s f)
-    {lo hi : ℝ} (hlo : lo ∈ s) (hhi : hi ∈ s) {X Y : H →L[ℂ] H} (hX : IsSelfAdjoint X)
-    (hY : IsSelfAdjoint Y) (hXb : algebraMap ℝ _ lo ≤ X ∧ X ≤ algebraMap ℝ _ hi)
+    {lo hi : ℝ} (hlo : lo ∈ s) (hhi : hi ∈ s) {X Y : H →L[ℂ] H}
+    (hXb : algebraMap ℝ _ lo ≤ X ∧ X ≤ algebraMap ℝ _ hi)
     (hYb : algebraMap ℝ _ lo ≤ Y ∧ Y ≤ algebraMap ℝ _ hi) {t u : ℝ} (ht : 0 ≤ t) (hu : 0 ≤ u)
     (htu : t + u = 1) (ξ : H) {ε : ℝ} (hε : 0 < ε) :
     RCLike.re ⟪cfc f (t • X + u • Y) ξ, ξ⟫_ℂ ≤
       t * RCLike.re ⟪cfc f X ξ, ξ⟫_ℂ + u * RCLike.re ⟪cfc f Y ξ, ξ⟫_ℂ + ε := by
+  have hX : IsSelfAdjoint X := IsSelfAdjoint.of_ge hXb.1 (cfc_predicate_algebraMap lo)
+  have hY : IsSelfAdjoint Y := IsSelfAdjoint.of_ge hYb.1 (cfc_predicate_algebraMap lo)
   have hIcc : Icc lo hi ⊆ s := hf.ordConnected.out hlo hhi
   have hcI : ContinuousOn f (Icc lo hi) := hc.mono hIcc
   set δ := ε / (4 * (‖ξ‖ ^ 2 + 1)) with hδ_def
@@ -1694,9 +1702,6 @@ private lemma re_inner_cfc_add_smul_le (hc : ContinuousOn f s) (hf : IsMatrixCon
   let ξ' : F := ⟨ξ, krylov_mono (Nat.zero_le _) mem_krylov_zero⟩
   have hξ' : ‖ξ'‖ = ‖ξ‖ := rfl
   have : CompleteSpace F := FiniteDimensional.complete ℂ F
-  have hsa {P Q : H →L[ℂ] H} (hP : IsSelfAdjoint P) (hQ : IsSelfAdjoint Q) :
-      IsSelfAdjoint (t • P + u • Q) :=
-    ((IsSelfAdjoint.all t).smul hP).add ((IsSelfAdjoint.all u).smul hQ)
   have hcompb {Z : H →L[ℂ] H} (hZb : algebraMap ℝ _ lo ≤ Z ∧ Z ≤ algebraMap ℝ _ hi) :
       algebraMap ℝ (F →L[ℂ] F) lo ≤ compress F Z ∧ compress F Z ≤ algebraMap ℝ _ hi :=
     ⟨algebraMap_le_compress hZb.1, compress_le_algebraMap hZb.2⟩
@@ -1709,25 +1714,23 @@ private lemma re_inner_cfc_add_smul_le (hc : ContinuousOn f s) (hf : IsMatrixCon
   have hKY := hK (Z := Y) fun k v hv => by simpa using add_smul_apply_mem_krylov 0 1 hv
   have hKW := hK (Z := t • X + u • Y) fun k v hv => add_smul_apply_mem_krylov t u hv
   have hWb := convex_Icc (𝕜 := ℝ) (algebraMap ℝ (H →L[ℂ] H) lo) (algebraMap ℝ _ hi) hXb hYb ht hu htu
-  have hW := hsa hX hY
   have hFX := hcompb hXb
   have hFY := hcompb hYb
   have hFW := hcompb hWb
   have hcX := isSelfAdjoint_compress (F := F) hX
   have hcY := isSelfAdjoint_compress (F := F) hY
-  have hcW := isSelfAdjoint_compress (F := F) hW
   -- matrix convexity on `F`
   have hconvF := (hf.convexOn_finiteDimensional F).2
-    ⟨hcX, (spectrum_subset_Icc hcX hFX.1 hFX.2).trans hIcc⟩
-    ⟨hcY, (spectrum_subset_Icc hcY hFY.1 hFY.2).trans hIcc⟩ ht hu htu
+    ⟨hcX, (spectrum_subset_Icc hFX.1 hFX.2).trans hIcc⟩
+    ⟨hcY, (spectrum_subset_Icc hFY.1 hFY.2).trans hIcc⟩ ht hu htu
   have hconv := (nonneg_iff_isPositive.1 (sub_nonneg.2 hconvF)).re_inner_nonneg_left ξ'
   rw [re_inner_add_smul_sub_apply] at hconv
-  have e1 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hW hWb ξ)
-  have e2 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hcW (compress_add_smul (F := F) t u X Y ▸ hFW) ξ')
-  have e3 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hcX hFX ξ')
-  have e4 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hcY hFY ξ')
-  have e5 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hX hXb ξ)
-  have e6 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hY hYb ξ)
+  have e1 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hWb ξ)
+  have e2 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hFW ξ')
+  have e3 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hFX ξ')
+  have e4 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hFY ξ')
+  have e5 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hXb ξ)
+  have e6 := abs_le.1 (abs_re_inner_cfc_sub_aeval_le hδ.le hcI hp hYb ξ)
   rw [hξ', compress_add_smul] at e2
   rw [hξ'] at e3 e4
   rw [compress_add_smul] at hKW
@@ -1740,13 +1743,13 @@ variable (H) in
 /-- **Matrix convexity implies convexity on bounded operators**: for `f` continuous and matrix
 convex on `s`, `X ↦ f(X)` is convex on the self-adjoint operators on a complex Hilbert space `H`
 with spectrum in `s`, in every universe. Positivity of `t f(X) + u f(Y) - f(tX + uY)` is tested
-in the vector states, on the compressions to finite-dimensional Krylov subspaces. This is the
+in the vector functionals, on the compressions to finite-dimensional Krylov-type subspaces. This is the
 Hilbert-space case of convexity in every C⋆-algebra, and the step that case is reduced to through
 a faithful representation (Gelfand–Naimark). -/
 theorem IsMatrixConvexOn.convexOn_continuousLinearMap (hc : ContinuousOn f s)
     (hf : IsMatrixConvexOn s f) :
     ConvexOn ℝ {X : H →L[ℂ] H | IsSelfAdjoint X ∧ spectrum ℝ X ⊆ s} (cfc f) := by
-  refine ⟨hf.ordConnected.convex_setOf_isSelfAdjoint_spectrum_subset,
+  refine ⟨hf.ordConnected.convex_setOfPred_isSelfAdjoint_spectrum_subset,
     fun X hX Y hY t u ht hu htu => ?_⟩
   rcases subsingleton_or_nontrivial (H →L[ℂ] H) with _ | _
   · exact le_of_eq (Subsingleton.elim _ _)
@@ -1757,7 +1760,7 @@ theorem IsMatrixConvexOn.convexOn_continuousLinearMap (hc : ContinuousOn f s)
     ((IsSelfAdjoint.all u).smul (cfc_predicate f Y))).sub (cfc_predicate f _), fun ξ => ?_⟩
   rw [reApplyInnerSelf_apply, re_inner_add_smul_sub_apply, sub_nonneg]
   exact le_of_forall_pos_le_add fun ε hε =>
-    re_inner_cfc_add_smul_le hc hf hlo hhi hX.1 hY.1 (hbd 0) (hbd 1) ht hu htu ξ hε
+    re_inner_cfc_add_smul_le hc hf hlo hhi (hbd 0) (hbd 1) ht hu htu ξ hε
 
 end BoundedOperators
 
