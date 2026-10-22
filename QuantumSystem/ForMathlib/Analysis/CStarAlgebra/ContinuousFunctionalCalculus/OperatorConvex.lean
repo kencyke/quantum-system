@@ -89,14 +89,15 @@ presenting `CStarMatrix ι ι (Matrix m m ℂ)` as `Matrix (ι × m) (ι × m) �
   unital inequality implies the sub-unital one for `Σᵢ aᵢ⋆ aᵢ ≤ 1`, on `s ∋ 0` with `f(0) ≤ 0`.
 * `IsOperatorConvexOn.cfc_sum_le`, `IsOperatorConvexOn.cfc_sum_le_of_le_one`: Jensen's operator
   inequality for an operator convex `f`, in the unital and the sub-unital form, in every unital
-  C⋆-algebra. The converses of Hansen–Pedersen, from Jensen's inequality back to operator
+  C⋆-algebra. The converses of Hansen–Pedersen 2003, from Jensen's inequality back to operator
   convexity, are not stated.
-* `IsMatrixConvexOn.cfc_sum_le`: Jensen's operator inequality for a matrix convex `f` on the matrix
-  algebras `M_m(ℂ)`, with no continuity assumption.
+* `IsMatrixConvexOn.cfc_sum_le`, `IsMatrixConvexOn.cfc_sum_le_of_le_one`: Jensen's operator
+  inequality for a matrix convex `f` on the matrix algebras `Matrix m m ℂ`, in the unital and the
+  sub-unital form, with no continuity assumption.
 * `IsOperatorConvexOn.isMatrixConvexOn`: an operator convex function is matrix convex;
   `IsMatrixConvexOn.ordConnected`: a matrix convex function is defined on an interval;
-  `IsMatrixConvexOn.convexOn_real`, `IsMatrixConvexOn.continuousOn_interior`: it is convex, hence
-  continuous on the interior of its domain (`ConvexOn.of_cfc`).
+  `IsMatrixConvexOn.convexOn_real`, `IsMatrixConvexOn.continuousOn_interior`: it is convex
+  (`ConvexOn.of_cfc`), hence continuous on the interior of its domain.
 * `continuousOn_of_forall_convexOn_cfc`, `IsOperatorConvexOn.of_convexOn`: convexity of `cfc f` in
   every C⋆-algebra forces continuity on `s`, endpoints included, so operator convexity needs no
   continuity hypothesis.
@@ -1275,6 +1276,23 @@ theorem IsMatrixConvexOn.cfc_sum_le {m ι : Type*} [Fintype m] [DecidableEq m] [
         simp [Matrix.star_eq_conjTranspose, Matrix.conjTranspose_apply]
   exact cfc_sum_le_of_convexOn_cstarMatrix e (EquivLike.injective _) (hf N)
     (fun _ _ _ => Matrix.finite_real_spectrum.continuousOn f) a x hx ha
+
+/-- **Jensen's operator inequality for matrix convex functions, sub-unital form**: for `f` matrix
+convex on `s ∋ 0` with `f(0) ≤ 0`, a finite family `aᵢ : Matrix m m ℂ` with `Σᵢ aᵢ⋆ aᵢ ≤ 1` and
+self-adjoint `xᵢ : Matrix m m ℂ` with spectrum in `s`, `f(Σᵢ aᵢ⋆ xᵢ aᵢ) ≤ Σᵢ aᵢ⋆ f(xᵢ) aᵢ`. For
+operators on a Hilbert space this is the implication from operator convexity in
+Hansen–Pedersen 2003, Corollary 2.3. -/
+theorem IsMatrixConvexOn.cfc_sum_le_of_le_one {m ι : Type*} [Fintype m] [DecidableEq m]
+    [Fintype ι] (hf : IsMatrixConvexOn s f) (h0 : (0 : ℝ) ∈ s) (hf0 : f 0 ≤ 0)
+    (a x : ι → Matrix m m ℂ) (hx : ∀ i, x i ∈ {b : Matrix m m ℂ | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s})
+    (ha : ∑ i, star (a i) * a i ≤ 1) :
+    cfc f (∑ i, star (a i) * x i * a i) ≤ ∑ i, star (a i) * cfc f (x i) * a i := by
+  have hJ (a' x' : Option ι → Matrix m m ℂ)
+      (hx' : ∀ i, x' i ∈ {b : Matrix m m ℂ | IsSelfAdjoint b ∧ spectrum ℝ b ⊆ s})
+      (ha' : ∑ i, star (a' i) * a' i = 1) :
+      cfc f (∑ i, star (a' i) * x' i * a' i) ≤ ∑ i, star (a' i) * cfc f (x' i) * a' i :=
+    hf.cfc_sum_le a' x' hx' ha'
+  exact cfc_sum_le_of_le_one_of_forall (A := Matrix m m ℂ) h0 hf0 hJ a x hx ha
 
 end MatrixJensen
 
