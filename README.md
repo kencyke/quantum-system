@@ -113,8 +113,9 @@ and Phase III in particular will be set as the foundations take shape.
    Connes cocycle [Dψ : Dφ] of two faithful normal states, a unitary 1-cocycle for σ^φ (M2).
 9. Standard form: the natural cone, the unique vector in it representing each normal positive
    functional, and the unitary implementation of ⋆-automorphisms (M2).
-10. Operator system theory: Arveson's extension theorem, giving the injectivity of B(H); the
-    Choi–Effros characterization of abstract operator systems as concrete ones (M1, M2).
+10. Operator system theory: Arveson's extension theorem, giving the injectivity of B(H), already
+    formalized for a completely positive map from an operator subsystem of any operator system into
+    B(H); the Choi–Effros characterization of abstract operator systems as concrete ones (M1, M2).
 11. Multiplication from complete positivity: the Choi–Effros product X ∘ Y = Φ(XY) on the image
     of an idempotent unital completely positive map Φ, already formalized for idempotent Schwarz
     maps and hence for idempotent unital 2-positive maps; Tomiyama's theorem on conditional
