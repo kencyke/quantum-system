@@ -387,13 +387,13 @@ at most `‖V₁‖ ‖V₂‖`. As operators on `Hᵏ` and `Kᵏ`, `⟪A ξ, A 
 lemma norm_map_compression_le (V₁ V₂ : H →L[ℂ] K) {k : ℕ}
     (X : CStarMatrix (Fin k) (Fin k) (K →L[ℂ] K)) :
     ‖X.map fun T => adjoint V₁ ∘L T ∘L V₂‖ ≤ ‖V₁‖ * ‖V₂‖ * ‖X‖ := by
-  rw [← NonUnitalStarAlgHom.norm_map (toPiLpStarAlgEquiv (n := Fin k) (H := H))
-      (toPiLpStarAlgEquiv (n := Fin k) (H := H)).injective,
-    ← NonUnitalStarAlgHom.norm_map (toPiLpStarAlgEquiv (n := Fin k) (H := K))
-      (toPiLpStarAlgEquiv (n := Fin k) (H := K)).injective]
-  set B := toPiLpStarAlgEquiv (n := Fin k) (H := K) X
+  rw [← NonUnitalStarAlgHom.norm_map (toPiLpStarAlgEquiv (Fin k) H)
+      (toPiLpStarAlgEquiv (Fin k) H).injective,
+    ← NonUnitalStarAlgHom.norm_map (toPiLpStarAlgEquiv (Fin k) K)
+      (toPiLpStarAlgEquiv (Fin k) K).injective]
+  set B := toPiLpStarAlgEquiv (Fin k) K X
   refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun ξ => ?_
-  set Aξ := toPiLpStarAlgEquiv (n := Fin k) (H := H) (X.map fun T => adjoint V₁ ∘L T ∘L V₂) ξ
+  set Aξ := toPiLpStarAlgEquiv (Fin k) H (X.map fun T => adjoint V₁ ∘L T ∘L V₂) ξ
   let η : PiLp 2 (fun _ : Fin k => K) := WithLp.toLp 2 fun i => V₁ (Aξ.ofLp i)
   let ζ : PiLp 2 (fun _ : Fin k => K) := WithLp.toLp 2 fun j => V₂ (ξ.ofLp j)
   have hinner : ⟪Aξ, Aξ⟫_ℂ = ⟪η, B ζ⟫_ℂ := by

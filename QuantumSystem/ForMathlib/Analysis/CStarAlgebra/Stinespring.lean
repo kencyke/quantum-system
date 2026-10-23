@@ -276,6 +276,7 @@ omit [CompleteSpace H] in
 
 variable [DecidableEq n]
 
+variable (n) (H) in
 /-- Operator matrices are the operators on the Hilbert sum `Hⁿ = PiLp 2 (fun _ ↦ H)`: the
 ⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` sends `N` to `ξ ↦ (Σⱼ Nᵢⱼ ξⱼ)ᵢ`
 (`CStarMatrix.toPiLpStarAlgEquiv_apply`), and its inverse sends `T` to its blocks
@@ -317,7 +318,7 @@ noncomputable def toPiLpStarAlgEquiv :
 /-- `toPiLpStarAlgEquiv N` acts on `ξ ∈ Hⁿ` as `(N ξ)ᵢ = Σⱼ Nᵢⱼ ξⱼ`. -/
 @[simp] lemma toPiLpStarAlgEquiv_apply (N : CStarMatrix n n (H →L[ℂ] H))
     (ξ : PiLp 2 (fun _ : n => H)) (i : n) :
-    (toPiLpStarAlgEquiv (n := n) (H := H) N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) :=
+    (toPiLpStarAlgEquiv n H N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) :=
   toPiLpCLM_apply N ξ i
 
 omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [DecidableEq n] in
@@ -329,10 +330,10 @@ lemma nonneg_iff_sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} :
     0 ≤ N ↔ ∀ ξ : n → H, 0 ≤ ∑ i, ∑ j, ⟪ξ i, N i j (ξ j)⟫_ℂ := by
   classical
   refine ⟨sum_inner_apply_nonneg, fun h => ?_⟩
-  rw [← map_le_map_iff (toPiLpStarAlgEquiv (n := n) (H := H)), map_zero,
+  rw [← map_le_map_iff (toPiLpStarAlgEquiv n H), map_zero,
     ContinuousLinearMap.nonneg_iff_isPositive, ContinuousLinearMap.isPositive_iff_complex]
   intro x
-  have hx : ⟪toPiLpStarAlgEquiv (n := n) (H := H) N x, x⟫_ℂ =
+  have hx : ⟪toPiLpStarAlgEquiv n H N x, x⟫_ℂ =
       starRingEnd ℂ (∑ i, ∑ j, ⟪x.ofLp i, N i j (x.ofLp j)⟫_ℂ) := by
     rw [← inner_conj_symm, PiLp.inner_apply]
     simp [inner_sum]

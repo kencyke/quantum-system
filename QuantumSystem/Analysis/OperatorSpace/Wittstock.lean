@@ -94,7 +94,7 @@ private lemma exists_completelyPositiveMap_paulsen [Nontrivial A] (φ : E →CB 
         PiLp 2 (fun _ : Fin 2 => H)), Ψ 1 = 1 ∧
       ∀ (x : E) (ξ η : H), ⟪ι (H := H) 0 η, Ψ (cornerCB (x : A)) (ι (H := H) 1 ξ)⟫_ℂ =
         ⟪η, φ x ξ⟫_ℂ := by
-  let e := toPiLpStarAlgEquiv (n := Fin 2) (H := H)
+  let e := toPiLpStarAlgEquiv (Fin 2) H
   let eCP : CStarMatrix (Fin 2) (Fin 2) (H →L[ℂ] H) →CP' (PiLp 2 (fun _ : Fin 2 => H) →L[ℂ]
       PiLp 2 (fun _ : Fin 2 => H)) :=
     CompletelyPositiveMapClass'.toCompletelyPositiveMap' e
