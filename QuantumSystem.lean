@@ -1,5 +1,6 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
+public import QuantumSystem.Analysis.CStarAlgebra.ChoiEffros
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Kraus
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.PartialTrace
@@ -7,6 +8,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Stinespr
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TensorProduct
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TraceDual
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePreserving
+public import QuantumSystem.Analysis.CStarAlgebra.ConditionalExpectation
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Irreducible
@@ -35,6 +37,13 @@ public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
+public import QuantumSystem.Analysis.OperatorSpace.Basic
+public import QuantumSystem.Analysis.OperatorSpace.CompletelyBounded
+public import QuantumSystem.Analysis.OperatorSpace.CompletelyPositive
+public import QuantumSystem.Analysis.OperatorSpace.Factorization
+public import QuantumSystem.Analysis.OperatorSpace.Paulsen
+public import QuantumSystem.Analysis.OperatorSpace.Ruan
+public import QuantumSystem.Analysis.OperatorSystem.Arveson
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
 public import QuantumSystem.Analysis.SpectralTheory.Interpolation
 public import QuantumSystem.Analysis.SpectralTheory.Multiplication
@@ -94,6 +103,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Completion
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContractiveProjection
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
@@ -104,9 +114,11 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.UnitalContraction
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.Complex.Strip
 public import QuantumSystem.ForMathlib.Analysis.Complex.WeakHolomorphic
+public import QuantumSystem.ForMathlib.Analysis.Convex.Cone.Extension
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Abs
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.DiagonalAmplification
@@ -118,23 +130,27 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Clo
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Positive
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Smul
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.OrthogonalFamily
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Orthonormal
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.StandardSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Transpose
+public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.PiLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Resolvent
+public import QuantumSystem.ForMathlib.Analysis.OperatorSystem.Basic
 public import QuantumSystem.ForMathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Commute
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 public import QuantumSystem.ForMathlib.Data.EReal.BigOperators

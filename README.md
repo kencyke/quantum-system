@@ -91,10 +91,15 @@ and Phase III in particular will be set as the foundations take shape.
    Wedderburn–Artin (M1, M2).
 3. Minimal tensor product of C⋆-algebras and nuclearity; the projective tensor product of Banach
    algebras, which holds bounded approximate diagonals (M1, M2).
-4. Operator systems as matrix-ordered ⋆-vector spaces with an Archimedean matrix order unit, with
-   C⋆-algebras as examples; completely positive maps between them, by generalizing the hypotheses
-   of Mathlib's definition upstream rather than by a parallel definition; completely bounded maps
-   (M1, M2).
+4. ~~Operator systems as matrix-ordered ⋆-vector spaces with an Archimedean matrix order unit, with
+   C⋆-algebras and their unital ⋆-closed subspaces as examples; completely positive maps between
+   them, by generalizing the hypotheses of Mathlib's definition upstream rather than by a
+   parallel definition, formalized in `ForMathlib` as Mathlib's definition with only the matrix
+   orders assumed, which agrees with it between C⋆-algebras, the upstream generalization being
+   recorded as a TODO there; completely bounded maps between operator spaces, with Ruan's theorem
+   representing every operator space completely isometrically on a Hilbert space, the
+   Wittstock–Paulsen–Haagerup factorization through a ⋆-homomorphism and, as a corollary, the
+   Arveson–Wittstock–Hahn–Banach extension theorem (M1, M2).~~
 5. C⋆- and W⋆-dynamical systems: a group acting by ⋆-automorphisms, continuously in the point-norm
    (W⋆: point-σ-weak) topology; as an example, the action of the covariance group of a faithful
    local net by ⋆-automorphisms of its quasi-local algebra, already formalized, through which a
@@ -113,11 +118,15 @@ and Phase III in particular will be set as the foundations take shape.
    Connes cocycle [Dψ : Dφ] of two faithful normal states, a unitary 1-cocycle for σ^φ (M2).
 9. Standard form: the natural cone, the unique vector in it representing each normal positive
    functional, and the unitary implementation of ⋆-automorphisms (M2).
-10. Operator system theory: Arveson's extension theorem, giving the injectivity of B(H); the
-    Choi–Effros characterization of abstract operator systems as concrete ones (M1, M2).
+10. Operator system theory: Arveson's extension theorem, giving the injectivity of B(H), already
+    formalized for a completely positive map from an operator subsystem of any operator system into
+    B(H); the Choi–Effros characterization of abstract operator systems as concrete ones (M1, M2).
 11. Multiplication from complete positivity: the Choi–Effros product X ∘ Y = Φ(XY) on the image
-    of an idempotent unital completely positive map Φ; Tomiyama's theorem on conditional
-    expectations; Hamana's injective envelope, built from a minimal idempotent unital completely
+    of an idempotent unital completely positive map Φ, already formalized for idempotent Schwarz
+    maps and hence for idempotent unital 2-positive maps; Tomiyama's theorem on conditional
+    expectations, already formalized: a projection of norm one onto a C⋆-subalgebra is positive, a
+    bimodule map over it and satisfies the Kadison–Schwarz inequality, and it is moreover completely
+    positive; Hamana's injective envelope, built from a minimal idempotent unital completely
     positive map, and the C⋆-envelope as the C⋆-algebra generated in it (M1).
 12. ~~Rigidity: the Kadison–Schwarz inequality for 2-positive maps Φ, already formalized in
     `ForMathlib` with Φ(1) ≤ 1 and, without the normalization, as Φ(X)⋆Φ(X) ≤ ‖Φ(1)‖ Φ(X⋆X);

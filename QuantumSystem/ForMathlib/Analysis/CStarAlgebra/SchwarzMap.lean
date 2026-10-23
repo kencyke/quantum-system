@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import Mathlib.LinearAlgebra.Projection
 
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
@@ -86,7 +87,9 @@ noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwa
 * `LinearMap.isClosed_multiplicativeDomain` — the multiplicative domain of a continuous ⋆-linear
   map is closed; for a Schwarz map it is therefore a C⋆-algebra.
 * `SchwarzMapClass.map_star_mul_of_map_star_mul_self` — the equality case: `f(a⋆ a) = f(a)⋆ f(a)`
-  implies `f(a⋆ b) = f(a)⋆ f(b)` for every `b`.
+  implies `f(a⋆ b) = f(a)⋆ f(b)` for every `b`;
+  `SchwarzMapClass.map_map_star_mul_of_map_map_star_mul_self` — the same through a positive map
+  `g`: `g(f(a⋆ a)) = g(f(a)⋆ f(a))` implies `g(f(a⋆ b)) = g(f(a)⋆ f(b))`.
 * `SchwarzMapClass.mem_multiplicativeDomain_iff` — the multiplicative domain of a Schwarz map is
   the set of `a` at which the inequality is an equality at both `a` and `a⋆`;
   `SchwarzMapClass.le_multiplicativeDomain_iff` — it is the largest ⋆-subalgebra on which the map
@@ -95,6 +98,10 @@ noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwa
   has the whole algebra as its multiplicative domain.
 * `SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap` — **an injective Schwarz map which
   reverses products has a commutative domain**.
+* `SchwarzMapClass.map_map_mul_map_eq_map_map_mul`, `SchwarzMapClass.map_map_mul_map_eq_map_mul_map`
+  — an idempotent Schwarz map satisfies `φ(φ(x) φ(y)) = φ(φ(x) y) = φ(x φ(y))`, the identities
+  behind the Choi–Effros product; `SchwarzMapClass.le_multiplicativeDomain_of_isProj` — **a
+  Schwarz map projecting onto a ⋆-subalgebra `S` is multiplicative on `S`**.
 -/
 
 @[expose] public section
@@ -453,38 +460,65 @@ variable {F A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgeb
   [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂]
   [FunLike F A₁ A₂] [LinearMapClass F ℂ A₁ A₂] [SchwarzMapClass F A₁ A₂]
 
-/-- With `X = f(a⋆ b) - f(a)⋆ f(b)`, equality at `a` gives `X + X⋆ = 0`: the inequality at
-`a + t • b` reads `0 ≤ t • (X + X⋆) + t² • (f(b⋆ b) - f(b)⋆ f(b))` for real `t`. -/
-private lemma add_star_eq_zero (f : F) {a : A₁} (ha : f (star a * a) = star (f a) * f a)
-    (b : A₁) :
-    f (star a * b) - star (f a) * f b + star (f (star a * b) - star (f a) * f b) = 0 := by
-  refine eq_zero_of_forall_nonneg_smul_add_sq_smul
-    (K := f (star b * b) - star (f b) * f b) fun t => ?_
-  have hr (x : A₁) : f (t • x) = t • f x := LinearMapClass.map_smul_of_tower f t x
-  have hs : star (f (star a * b)) = f (star b * a) := by rw [← map_star, star_mul, star_star]
-  convert sub_nonneg.mpr (le_map_star_mul f (a + t • b)) using 1
-  simp only [star_add, star_smul, star_trivial, add_mul, mul_add, smul_mul_assoc, mul_smul_comm,
-    map_add, hr, star_sub, star_mul, star_star, hs, ha]
-  module
+section Comp
 
-/-- **The equality case of the Kadison–Schwarz inequality.** If `f(a⋆ a) = f(a)⋆ f(a)`, then
-`f(a⋆ b) = f(a)⋆ f(b)` for every `b`. With `X = f(a⋆ b) - f(a)⋆ f(b)`, the inequality at `a + t • b`
-for real `t` gives `X + X⋆ = 0`, and at `a + t • (I • b)` gives `X - X⋆ = 0`. -/
-theorem map_star_mul_of_map_star_mul_self (f : F) {a : A₁}
-    (ha : f (star a * a) = star (f a) * f a) (b : A₁) :
-    f (star a * b) = star (f a) * f b := by
-  set X := f (star a * b) - star (f a) * f b
-  have h₁ : X + star X = 0 := add_star_eq_zero f ha b
-  have hI : f (star a * (Complex.I • b)) - star (f a) * f (Complex.I • b) = Complex.I • X := by
-    rw [mul_smul_comm, map_smul, map_smul, mul_smul_comm, ← smul_sub]
-  have h₂ := add_star_eq_zero f ha (Complex.I • b)
+variable {G A₃ : Type*} [NonUnitalCStarAlgebra A₃] [PartialOrder A₃] [StarOrderedRing A₃]
+  [FunLike G A₂ A₃] [LinearMapClass G ℂ A₂ A₃] [OrderHomClass G A₂ A₃]
+
+/-- With `X = g(f(a⋆ b) - f(a)⋆ f(b))`, `g`-equality at `a` gives `X + X⋆ = 0`: the inequality at
+`a + t • b`, sent through `g`, reads `0 ≤ t • (X + X⋆) + t² • g(f(b⋆ b) - f(b)⋆ f(b))` for real
+`t`. -/
+private lemma add_star_eq_zero (f : F) (g : G) {a : A₁}
+    (ha : g (f (star a * a)) = g (star (f a) * f a)) (b : A₁) :
+    g (f (star a * b) - star (f a) * f b) + star (g (f (star a * b) - star (f a) * f b)) = 0 := by
+  refine eq_zero_of_forall_nonneg_smul_add_sq_smul
+    (K := g (f (star b * b) - star (f b) * f b)) fun t => ?_
+  have hr (x : A₁) : f (t • x) = t • f x := LinearMapClass.map_smul_of_tower f t x
+  have hr' (x : A₂) : g (t • x) = t • g x := LinearMapClass.map_smul_of_tower g t x
+  have hs : star (f (star a * b)) = f (star b * a) := by rw [← map_star, star_mul, star_star]
+  have ha' : g (f (star a * a) - star (f a) * f a) = 0 := by rw [map_sub, ha, sub_self]
+  convert map_nonneg g (sub_nonneg.mpr (le_map_star_mul f (a + t • b))) using 1
+  rw [← map_star g, star_sub, star_mul, star_star, hs]
+  have hexp : f (star (a + t • b) * (a + t • b)) - star (f (a + t • b)) * f (a + t • b) =
+      (f (star a * a) - star (f a) * f a) +
+        t • ((f (star a * b) - star (f a) * f b) + (f (star b * a) - star (f b) * f a)) +
+        t ^ 2 • (f (star b * b) - star (f b) * f b) := by
+    simp only [star_add, star_smul, star_trivial, add_mul, mul_add, smul_mul_assoc, mul_smul_comm,
+      map_add, hr]
+    module
+  rw [hexp, map_add, map_add, ha', zero_add, hr', map_add, LinearMapClass.map_smul_of_tower g]
+
+/-- **The equality case of the Kadison–Schwarz inequality, through a positive map.** If a positive
+map `g` identifies `f(a⋆ a)` with `f(a)⋆ f(a)`, then it identifies `f(a⋆ b)` with `f(a)⋆ f(b)` for
+every `b`. With `X = g(f(a⋆ b) - f(a)⋆ f(b))`, the inequality at `a + t • b` for real `t`, sent
+through `g`, gives `X + X⋆ = 0`, and at `a + t • (I • b)` gives `X - X⋆ = 0`. -/
+lemma map_map_star_mul_of_map_map_star_mul_self (f : F) (g : G) {a : A₁}
+    (ha : g (f (star a * a)) = g (star (f a) * f a)) (b : A₁) :
+    g (f (star a * b)) = g (star (f a) * f b) := by
+  set X := g (f (star a * b) - star (f a) * f b)
+  have h₁ : X + star X = 0 := add_star_eq_zero f g ha b
+  have hI : g (f (star a * (Complex.I • b)) - star (f a) * f (Complex.I • b)) = Complex.I • X := by
+    rw [mul_smul_comm, map_smul, map_smul, mul_smul_comm, ← smul_sub, map_smul]
+  have h₂ := add_star_eq_zero f g ha (Complex.I • b)
   rw [hI, star_smul, Complex.star_def, Complex.conj_I, neg_smul, ← sub_eq_add_neg, ← smul_sub,
     smul_eq_zero] at h₂
   have h₃ : X - star X = 0 := h₂.resolve_left Complex.I_ne_zero
   have h₄ : (2 : ℂ) • X = 0 :=
     calc (2 : ℂ) • X = (X + star X) + (X - star X) := by rw [two_smul]; abel
       _ = 0 := by rw [h₁, h₃, add_zero]
-  exact sub_eq_zero.mp ((smul_eq_zero.mp h₄).resolve_left two_ne_zero)
+  rw [← sub_eq_zero, ← map_sub]
+  exact (smul_eq_zero.mp h₄).resolve_left two_ne_zero
+
+end Comp
+
+/-- **The equality case of the Kadison–Schwarz inequality.** If `f(a⋆ a) = f(a)⋆ f(a)`, then
+`f(a⋆ b) = f(a)⋆ f(b)` for every `b`. With `X = f(a⋆ b) - f(a)⋆ f(b)`, the inequality at `a + t • b`
+for real `t` gives `X + X⋆ = 0`, and at `a + t • (I • b)` gives `X - X⋆ = 0`
+(`SchwarzMapClass.map_map_star_mul_of_map_map_star_mul_self` with `g` the identity). -/
+theorem map_star_mul_of_map_star_mul_self (f : F) {a : A₁}
+    (ha : f (star a * a) = star (f a) * f a) (b : A₁) :
+    f (star a * b) = star (f a) * f b :=
+  map_map_star_mul_of_map_map_star_mul_self f (PositiveLinearMap.id ℂ A₂) ha b
 
 /-- The equality case of the Kadison–Schwarz inequality, multiplying on the right:
 `f(a⋆ a) = f(a)⋆ f(a)` implies `f(b a) = f(b) f(a)` for every `b`. -/
@@ -618,5 +652,55 @@ theorem mul_comm_of_injective_of_map_mul_swap (f : F) (hf : Function.Injective f
   exact sub_eq_zero.mp ((smul_eq_zero.mp h₄).resolve_left two_ne_zero)
 
 end MulSwap
+
+/-! ### Idempotent Schwarz maps -/
+
+section Idempotent
+
+variable {F A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+  [FunLike F A A] [LinearMapClass F ℂ A A] [SchwarzMapClass F A A] {φ : F}
+  (hφ : IsIdempotentElem (φ : A →ₗ[ℂ] A))
+
+include hφ
+
+private lemma map_map (x : A) : φ (φ x) = φ x :=
+  LinearMap.congr_fun hφ x
+
+/-- For `a` in the range of an idempotent Schwarz map `φ`, `φ(a⋆ φ(b)) = φ(a⋆ b)`: `φ` identifies
+`φ(a⋆ a)` with `φ(a)⋆ φ(a) = a⋆ a`, hence `φ(a⋆ b)` with `φ(a)⋆ φ(b)`
+(`SchwarzMapClass.map_map_star_mul_of_map_map_star_mul_self`). -/
+lemma map_star_mul_map_of_map_eq_self {a : A} (ha : φ a = a) (b : A) :
+    φ (star a * φ b) = φ (star a * b) := by
+  have h := map_map_star_mul_of_map_map_star_mul_self φ φ (a := a) (by rw [map_map hφ, ha]) b
+  rw [map_map hφ, ha] at h
+  exact h.symm
+
+/-- For `a` in the range of an idempotent Schwarz map `φ`, `φ(a φ(b)) = φ(a b)`. -/
+lemma map_mul_map_of_map_eq_self {a : A} (ha : φ a = a) (b : A) : φ (a * φ b) = φ (a * b) := by
+  simpa using map_star_mul_map_of_map_eq_self hφ (a := star a) (by rw [map_star, ha]) b
+
+/-- For `a` in the range of an idempotent Schwarz map `φ`, `φ(φ(b) a) = φ(b a)`. -/
+lemma map_map_mul_of_map_eq_self {a : A} (ha : φ a = a) (b : A) : φ (φ b * a) = φ (b * a) := by
+  simpa [star_mul, ← map_star] using congr(star $(map_star_mul_map_of_map_eq_self hφ ha (star b)))
+
+/-- An idempotent Schwarz map satisfies `φ(φ(x) φ(y)) = φ(φ(x) y)`. -/
+theorem map_map_mul_map_eq_map_map_mul (x y : A) : φ (φ x * φ y) = φ (φ x * y) :=
+  map_mul_map_of_map_eq_self hφ (map_map hφ x) y
+
+/-- An idempotent Schwarz map satisfies `φ(φ(x) φ(y)) = φ(x φ(y))`. -/
+theorem map_map_mul_map_eq_map_mul_map (x y : A) : φ (φ x * φ y) = φ (x * φ y) :=
+  map_map_mul_of_map_eq_self hφ (map_map hφ y) x
+
+omit hφ in
+/-- **A Schwarz map projecting onto a ⋆-subalgebra is multiplicative on it.** If a Schwarz map `φ`
+is a projection onto a ⋆-subalgebra `S`, then `S` lies in the multiplicative domain of `φ`, so
+`φ(s x) = s φ(x)` and `φ(x s) = φ(x) s` for `s ∈ S`: `φ` fixes `S`, and `S` is closed under
+products (`SchwarzMapClass.le_multiplicativeDomain_iff`). -/
+theorem le_multiplicativeDomain_of_isProj {S : NonUnitalStarSubalgebra ℂ A}
+    (hS : LinearMap.IsProj S.toSubmodule φ) : S ≤ LinearMap.multiplicativeDomain φ :=
+  le_multiplicativeDomain_iff.mpr fun x hx y hy => by
+    rw [hS.map_id _ (show x * y ∈ S from mul_mem hx hy), hS.map_id _ hx, hS.map_id _ hy]
+
+end Idempotent
 
 end SchwarzMapClass

@@ -55,6 +55,8 @@ C⋆-algebras are automatically bounded.
 * `CompletelyPositiveMap.stinespringOperator` — the operator `V : H →L[ℂ] K`.
 * `CStarMatrix.toPiLpStarAlgEquiv` — the ⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` between operator
   matrices and operators on the Hilbert sum `Hⁿ`.
+* `CStarMatrix.diagonalStarAlgHom` — the diagonal embedding `a ↦ diag(a, …, a)` of a unital
+  C⋆-algebra into its matrices.
 
 ## Main statements
 
@@ -125,6 +127,27 @@ instance instSMulCommClassMul {R : Type*} [Monoid R] [NonUnitalNonAssocSemiring 
 
 variable [NonUnitalCStarAlgebra A]
 
+/-- The continuous functional calculus for self-adjoint matrices. Mathlib's instance restricts the
+`ℂ`-module structure to `ℝ`, while that of `CStarMatrix n n A` is entrywise; the two agree only
+after unfolding instances, so instance search does not find it. -/
+noncomputable instance instNonUnitalContinuousFunctionalCalculusReal [PartialOrder A]
+    [StarOrderedRing A] : NonUnitalContinuousFunctionalCalculus ℝ (CStarMatrix n n A) IsSelfAdjoint :=
+  IsSelfAdjoint.instNonUnitalContinuousFunctionalCalculus
+
+/-- The quasispectrum of a nonnegative matrix is nonnegative; not found by instance search for the
+same reason as `CStarMatrix.instNonUnitalContinuousFunctionalCalculusReal`. -/
+noncomputable instance instNonnegSpectrumClassReal [PartialOrder A] [StarOrderedRing A] :
+    NonnegSpectrumClass ℝ (CStarMatrix n n A) :=
+  CStarAlgebra.instNonnegSpectrumClass'
+
+/-- The continuous functional calculus for self-adjoint matrices over a unital C⋆-algebra; not
+found by instance search for the same reason as
+`CStarMatrix.instNonUnitalContinuousFunctionalCalculusReal`. -/
+noncomputable instance instContinuousFunctionalCalculusReal {A : Type*} [CStarAlgebra A]
+    [PartialOrder A] [StarOrderedRing A] [DecidableEq n] :
+    ContinuousFunctionalCalculus ℝ (CStarMatrix n n A) IsSelfAdjoint :=
+  IsSelfAdjoint.instContinuousFunctionalCalculus
+
 section DecidableEq
 
 variable [DecidableEq n]
@@ -145,6 +168,20 @@ def diagonalNonUnitalStarAlgHom : A →⋆ₙₐ[ℂ] CStarMatrix n n A where
   map_add' a b := by ext i j; by_cases h : i = j <;> simp [h]
   map_mul' a b := by ext i j; by_cases h : i = j <;> simp [Matrix.diagonal_apply, h, mul_apply]
   map_star' a := by ext i j; by_cases h : i = j <;> simp [h, star_apply, eq_comm]
+
+/-- The diagonal embedding `a ↦ diag(a, …, a)` of a unital C⋆-algebra as a unital
+⋆-homomorphism. -/
+noncomputable def diagonalStarAlgHom {A : Type*} [CStarAlgebra A] : A →⋆ₐ[ℂ] CStarMatrix n n A :=
+  { diagonalNonUnitalStarAlgHom with
+    map_one' := by ext i j; by_cases h : i = j <;> simp [diagonalNonUnitalStarAlgHom, h, one_apply]
+    commutes' := fun c => by
+      ext i j
+      by_cases h : i = j <;> simp [diagonalNonUnitalStarAlgHom, h, Algebra.algebraMap_eq_smul_one] }
+
+/-- `diagonalStarAlgHom a` is the diagonal matrix `diag(a, …, a)`. -/
+lemma diagonalStarAlgHom_apply {A : Type*} [CStarAlgebra A] (a : A) :
+    diagonalStarAlgHom (n := n) a = ofMatrix (Matrix.diagonal fun _ => a) :=
+  rfl
 
 /-- `diag(a, …, a) · updateRow 0 i₀ b = updateRow 0 i₀ (a b)`. -/
 lemma diagonalNonUnitalStarAlgHom_mul_ofMatrix_updateRow_zero (a : A) (i₀ : n) (b : n → A) :
@@ -239,6 +276,7 @@ omit [CompleteSpace H] in
 
 variable [DecidableEq n]
 
+variable (n) (H) in
 /-- Operator matrices are the operators on the Hilbert sum `Hⁿ = PiLp 2 (fun _ ↦ H)`: the
 ⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` sends `N` to `ξ ↦ (Σⱼ Nᵢⱼ ξⱼ)ᵢ`
 (`CStarMatrix.toPiLpStarAlgEquiv_apply`), and its inverse sends `T` to its blocks
@@ -280,7 +318,7 @@ noncomputable def toPiLpStarAlgEquiv :
 /-- `toPiLpStarAlgEquiv N` acts on `ξ ∈ Hⁿ` as `(N ξ)ᵢ = Σⱼ Nᵢⱼ ξⱼ`. -/
 @[simp] lemma toPiLpStarAlgEquiv_apply (N : CStarMatrix n n (H →L[ℂ] H))
     (ξ : PiLp 2 (fun _ : n => H)) (i : n) :
-    (toPiLpStarAlgEquiv (n := n) (H := H) N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) :=
+    (toPiLpStarAlgEquiv n H N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) :=
   toPiLpCLM_apply N ξ i
 
 omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [DecidableEq n] in
@@ -292,10 +330,10 @@ lemma nonneg_iff_sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} :
     0 ≤ N ↔ ∀ ξ : n → H, 0 ≤ ∑ i, ∑ j, ⟪ξ i, N i j (ξ j)⟫_ℂ := by
   classical
   refine ⟨sum_inner_apply_nonneg, fun h => ?_⟩
-  rw [← map_le_map_iff (toPiLpStarAlgEquiv (n := n) (H := H)), map_zero,
+  rw [← map_le_map_iff (toPiLpStarAlgEquiv n H), map_zero,
     ContinuousLinearMap.nonneg_iff_isPositive, ContinuousLinearMap.isPositive_iff_complex]
   intro x
-  have hx : ⟪toPiLpStarAlgEquiv (n := n) (H := H) N x, x⟫_ℂ =
+  have hx : ⟪toPiLpStarAlgEquiv n H N x, x⟫_ℂ =
       starRingEnd ℂ (∑ i, ∑ j, ⟪x.ofLp i, N i j (x.ofLp j)⟫_ℂ) := by
     rw [← inner_conj_symm, PiLp.inner_apply]
     simp [inner_sum]
