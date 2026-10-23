@@ -25,7 +25,10 @@ an operator space, with the restricted matrix norms (`Submodule.instOperatorSpac
 `OperatorSubsystem.instOperatorSpace`).
 
 That the level norms are nonnegative, vanish at `0` and are homogeneous follows from the axioms
-(`OperatorSpace.norm_nonneg`, `OperatorSpace.norm_smul`).
+(`OperatorSpace.norm_nonneg`, `OperatorSpace.norm_smul`). The bound for square scalar matrices
+extends to rectangular ones, `‖a Y b‖² ≤ ‖a a⋆‖ ‖Y‖² ‖b⋆ b‖` (`OperatorSpace.norm_scalarMul_sq_le`), by
+padding with zeros; in particular an entry has norm at most the norm of its matrix
+(`OperatorSpace.norm_entry_le_norm`), so the level norms are norms.
 
 ## Main definitions
 
@@ -33,13 +36,14 @@ That the level norms are nonnegative, vanish at `0` and are homogeneous follows 
 
 ## Main results
 
+* `OperatorSpace.norm_scalarMul_sq_le` — the bound for rectangular scalar matrices.
 * `CStarAlgebra.instOperatorSpace` — C⋆-algebras are operator spaces.
 * `Submodule.instOperatorSpace`, `OperatorSubsystem.instOperatorSpace` — so are their subspaces.
 -/
 
 @[expose] public section
 
-open scoped CStarAlgebra ComplexOrder
+open scoped CStarAlgebra ComplexOrder Matrix
 open CStarMatrix
 
 /-- An **operator space**: a complex normed space `V` with norms on the matrix spaces
@@ -74,15 +78,6 @@ lemma scalarMul_smul_one_one {k : ℕ} (c : ℂ) (X : CStarMatrix (Fin k) (Fin k
   ext i j
   simp [scalarMul_apply, CStarMatrix.one_apply, mul_ite, ite_smul]
 
-omit [∀ k, Norm (CStarMatrix (Fin k) (Fin k) V)] [OperatorSpace V] in
-/-- The identity scalar matrix has norm at most `1` (it is `0` at level `0`). -/
-private lemma norm_one_le {k : ℕ} : ‖(1 : CStarMatrix (Fin k) (Fin k) ℂ)‖ ≤ 1 := by
-  rcases isEmpty_or_nonempty (Fin k) with hk | hk
-  · rw [show (1 : CStarMatrix (Fin k) (Fin k) ℂ) = 0 from ext fun i => isEmptyElim i,
-      _root_.norm_zero]
-    exact zero_le_one
-  · exact CStarRing.norm_one.le
-
 /-- The norm of a scalar multiple `c • X` at level `k` is at most `‖c‖ ‖1‖² ‖X‖`. -/
 private lemma norm_smul_le_aux {k : ℕ} (c : ℂ) (X : CStarMatrix (Fin k) (Fin k) V) :
     ‖c • X‖ ≤ ‖c‖ * ‖(1 : CStarMatrix (Fin k) (Fin k) ℂ)‖ * ‖X‖ *
@@ -105,7 +100,7 @@ lemma norm_nonneg {k : ℕ} (X : CStarMatrix (Fin k) (Fin k) V) : 0 ≤ ‖X‖ 
   rw [add_neg_cancel, norm_zero] at h₁
   have h₂ := norm_smul_le_aux (-1 : ℂ) X
   rw [neg_one_smul, _root_.norm_neg, norm_one, one_mul] at h₂
-  have h₃ := norm_one_le (k := k)
+  have h₃ := CStarMatrix.norm_one_le (Fin k) ℂ
   have h₀ := _root_.norm_nonneg (1 : CStarMatrix (Fin k) (Fin k) ℂ)
   by_contra hX
   rw [not_le] at hX
@@ -118,7 +113,7 @@ lemma norm_nonneg {k : ℕ} (X : CStarMatrix (Fin k) (Fin k) V) : 0 ≤ ‖X‖ 
 lemma norm_smul {k : ℕ} (c : ℂ) (X : CStarMatrix (Fin k) (Fin k) V) : ‖c • X‖ = ‖c‖ * ‖X‖ := by
   have h₁ : ∀ (c : ℂ) (X : CStarMatrix (Fin k) (Fin k) V), ‖c • X‖ ≤ ‖c‖ * ‖X‖ := fun c X => by
     have h := norm_smul_le_aux c X
-    have h₃ := norm_one_le (k := k)
+    have h₃ := CStarMatrix.norm_one_le (Fin k) ℂ
     have h₀ := _root_.norm_nonneg (1 : CStarMatrix (Fin k) (Fin k) ℂ)
     have hc := _root_.norm_nonneg c
     have hX := norm_nonneg X
@@ -132,6 +127,103 @@ lemma norm_smul {k : ℕ} (c : ℂ) (X : CStarMatrix (Fin k) (Fin k) V) : ‖c �
   · have := h₁ c⁻¹ (c • X)
     rw [smul_smul, inv_mul_cancel₀ hc, one_smul, norm_inv] at this
     rwa [← div_eq_inv_mul, le_div_iff₀' (norm_pos_iff.mpr hc)] at this
+
+/-! ### Rectangular scalar matrices -/
+
+section Rectangular
+
+variable {n m : ℕ}
+
+/-- The block matrix `!![0, 0; a, 0]`, padding a rectangular `n × m` matrix to a square one, indexing
+`Fin (m + n)` by `finSumFinEquiv`. -/
+private abbrev padLower (a : Matrix (Fin n) (Fin m) ℂ) : Matrix (Fin (m + n)) (Fin (m + n)) ℂ :=
+  (Matrix.fromBlocks 0 0 a 0 : Matrix (Fin m ⊕ Fin n) (Fin m ⊕ Fin n) ℂ).reindex finSumFinEquiv
+    finSumFinEquiv
+
+/-- The block matrix `!![0, b; 0, 0]`, padding a rectangular `m × n` matrix to a square one, indexing
+`Fin (m + n)` by `finSumFinEquiv`. -/
+private abbrev padUpper (b : Matrix (Fin m) (Fin n) ℂ) : Matrix (Fin (m + n)) (Fin (m + n)) ℂ :=
+  (Matrix.fromBlocks 0 b 0 0 : Matrix (Fin m ⊕ Fin n) (Fin m ⊕ Fin n) ℂ).reindex finSumFinEquiv
+    finSumFinEquiv
+
+omit [∀ k, Norm (CStarMatrix (Fin k) (Fin k) V)] [OperatorSpace V] in
+private lemma scalarMul_pad (a : Matrix (Fin n) (Fin m) ℂ) (b : Matrix (Fin m) (Fin n) ℂ)
+    (Y : CStarMatrix (Fin m) (Fin m) V) :
+    scalarMul (padLower a) (padUpper b) (directSum Y (0 : CStarMatrix (Fin n) (Fin n) V)) =
+      directSum (0 : CStarMatrix (Fin m) (Fin m) V) (scalarMul a b Y) := by
+  ext I J
+  obtain ⟨s, rfl⟩ := finSumFinEquiv.surjective I
+  obtain ⟨t, rfl⟩ := finSumFinEquiv.surjective J
+  simp only [scalarMul_apply, Fin.sum_univ_add, Matrix.reindex_apply, Matrix.submatrix_apply]
+  cases s <;> cases t <;> simp [directSum, ofMatrix_apply, scalarMul_apply]
+
+private lemma padLower_mul_star (a : Matrix (Fin n) (Fin m) ℂ) :
+    (ofMatrix (padLower a) : CStarMatrix (Fin (m + n)) (Fin (m + n)) ℂ) * star (ofMatrix (padLower a)) =
+      directSum 0 (ofMatrix (a * aᴴ)) := by
+  ext I J
+  obtain ⟨s, rfl⟩ := finSumFinEquiv.surjective I
+  obtain ⟨t, rfl⟩ := finSumFinEquiv.surjective J
+  simp only [CStarMatrix.mul_apply, star_apply, Fin.sum_univ_add, ofMatrix_apply, Matrix.reindex_apply,
+    Matrix.submatrix_apply]
+  cases s <;> cases t <;> simp [directSum, ofMatrix_apply, Matrix.mul_apply]
+
+private lemma star_mul_padUpper (b : Matrix (Fin m) (Fin n) ℂ) :
+    star (ofMatrix (padUpper b) : CStarMatrix (Fin (m + n)) (Fin (m + n)) ℂ) * ofMatrix (padUpper b) =
+      directSum 0 (ofMatrix (bᴴ * b)) := by
+  ext I J
+  obtain ⟨s, rfl⟩ := finSumFinEquiv.surjective I
+  obtain ⟨t, rfl⟩ := finSumFinEquiv.surjective J
+  simp only [CStarMatrix.mul_apply, star_apply, Fin.sum_univ_add, ofMatrix_apply, Matrix.reindex_apply,
+    Matrix.submatrix_apply]
+  cases s <;> cases t <;> simp [directSum, ofMatrix_apply, Matrix.mul_apply]
+
+/-- **The scalar-matrix bound for rectangular matrices.** For an `n × m` matrix `a`, an `m × n` matrix
+`b` and `Y ∈ M_m(V)`, `‖a Y b‖² ≤ ‖a a⋆‖ ‖Y‖² ‖b⋆ b‖`. Padding `a`, `b` with zeros to square matrices
+and `Y` to `Y ⊕ 0` reduces this to the axiom for square matrices. -/
+lemma norm_scalarMul_sq_le (a : Matrix (Fin n) (Fin m) ℂ) (b : Matrix (Fin m) (Fin n) ℂ)
+    (Y : CStarMatrix (Fin m) (Fin m) V) :
+    ‖scalarMul a b Y‖ ^ 2 ≤ ‖ofMatrix (a * aᴴ)‖ *
+      ‖Y‖ ^ 2 * ‖ofMatrix (bᴴ * b)‖ := by
+  have h₁ : ‖scalarMul a b Y‖ =
+      ‖scalarMul (padLower a) (padUpper b) (directSum Y (0 : CStarMatrix (Fin n) (Fin n) V))‖ := by
+    rw [scalarMul_pad, norm_directSum, norm_zero, max_eq_right (norm_nonneg _)]
+  have h₂ : ‖directSum Y (0 : CStarMatrix (Fin n) (Fin n) V)‖ = ‖Y‖ := by
+    rw [norm_directSum, norm_zero, max_eq_left (norm_nonneg _)]
+  have h₃ := norm_scalarMul_le (ofMatrix (padLower a)) (ofMatrix (padUpper b))
+    (directSum Y (0 : CStarMatrix (Fin n) (Fin n) V))
+  have hα : ‖ofMatrix (padLower a)‖ ^ 2 = ‖ofMatrix (a * aᴴ)‖ := by
+    rw [sq, ← CStarRing.norm_self_mul_star, padLower_mul_star, CStarMatrix.norm_directSum,
+      _root_.norm_zero, max_eq_right (_root_.norm_nonneg _)]
+  have hβ : ‖ofMatrix (padUpper b)‖ ^ 2 = ‖ofMatrix (bᴴ * b)‖ := by
+    rw [sq, ← CStarRing.norm_star_mul_self, star_mul_padUpper, CStarMatrix.norm_directSum,
+      _root_.norm_zero, max_eq_right (_root_.norm_nonneg _)]
+  rw [h₁, ← hα, ← hβ, ← h₂, ← mul_pow, ← mul_pow]
+  exact pow_le_pow_left₀ (norm_nonneg _) h₃ 2
+
+/-- An entry of a matrix has norm at most the norm of the matrix: it is `eᵢ X eⱼ` for the unit row and
+column vectors `eᵢ`, `eⱼ`. -/
+lemma norm_entry_le_norm {k : ℕ} (X : CStarMatrix (Fin k) (Fin k) V) (i j : Fin k) : ‖X i j‖ ≤ ‖X‖ := by
+  classical
+  let a : Matrix (Fin 1) (Fin k) ℂ := Matrix.of fun _ q => if q = i then 1 else 0
+  let b : Matrix (Fin k) (Fin 1) ℂ := Matrix.of fun p _ => if p = j then 1 else 0
+  have hX : scalarMul a b X = single₁ (X i j) := by
+    ext p q
+    simp [scalarMul_apply, a, b, Subsingleton.elim p 0, Subsingleton.elim q 0]
+  have ha : (ofMatrix (a * aᴴ) : CStarMatrix (Fin 1) (Fin 1) ℂ) = 1 := by
+    ext p q
+    simp [a, Matrix.mul_apply, Subsingleton.elim p q, CStarMatrix.one_apply]
+  have hb : (ofMatrix (bᴴ * b) : CStarMatrix (Fin 1) (Fin 1) ℂ) = 1 := by
+    ext p q
+    simp [b, Matrix.mul_apply, Subsingleton.elim p q, CStarMatrix.one_apply]
+  have h := norm_scalarMul_sq_le a b X
+  rw [hX, norm_single₁, ha, hb, CStarRing.norm_one, one_mul, mul_one] at h
+  exact (pow_le_pow_iff_left₀ (_root_.norm_nonneg _) (norm_nonneg X) two_ne_zero).mp h
+
+/-- A matrix of norm `0` is zero. -/
+lemma eq_zero_of_norm_eq_zero {k : ℕ} {X : CStarMatrix (Fin k) (Fin k) V} (hX : ‖X‖ = 0) : X = 0 :=
+  CStarMatrix.ext fun i j => norm_le_zero_iff.mp ((norm_entry_le_norm X i j).trans hX.le)
+
+end Rectangular
 
 end OperatorSpace
 
@@ -174,8 +266,8 @@ private lemma norm_scalarMul_le_of_unital {C : Type*} [CStarAlgebra C] [PartialO
         · exact NonUnitalStarAlgHom.norm_apply_le _ β
 
 /-- A (possibly non-unital) C⋆-algebra, with the norms Mathlib puts on `CStarMatrix (Fin k) (Fin k) A`,
-is an operator space. The scalar bound passes to the unitization, which is isometrically embedded
-at every matrix level. -/
+is an operator space; those norms require the order `[PartialOrder A] [StarOrderedRing A]` of `A`. The
+scalar bound passes to the unitization, which is isometrically embedded at every matrix level. -/
 instance instOperatorSpace {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A]
     [StarOrderedRing A] : OperatorSpace A where
   norm_add_le X Y := _root_.norm_add_le X Y

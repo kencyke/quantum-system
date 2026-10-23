@@ -22,6 +22,9 @@ defines the operator norm, and makes `V →CB W` a normed space when `V` and `W`
   `open scoped CStarAlgebra`, with the cb norm as their norm.
 * `CompletelyBoundedMap.comp`, `CompletelyBoundedMap.id`, `CompletelyBoundedMap.restrict` — composition,
   identity and restriction to a subspace.
+* `OperatorSpace.IsCompleteIsometry j` — linear maps preserving the norms of all matrices,
+  `‖X.map j‖ = ‖X‖`; `OperatorSpace.IsCompleteIsometry.toCompletelyBoundedMap` as a completely bounded
+  map of cb norm at most `1`, and `Submodule.isCompleteIsometry_subtype` for the inclusion of a subspace.
 * `NonUnitalStarAlgHom.toCompletelyBoundedMap` — ⋆-homomorphisms of C⋆-algebras.
 * `ContinuousLinearMap.compressionCB V₁ V₂` — the compression `T ↦ V₁† T V₂` of operators.
 
@@ -29,7 +32,12 @@ defines the operator norm, and makes `V →CB W` a normed space when `V` and `W`
 
 * `CompletelyBoundedMap.norm_map_cstarMatrix_le` — `‖X.map φ‖ ≤ ‖φ‖ ‖X‖` at every level.
 * `CompletelyBoundedMap.norm_comp_le` — the cb norm is submultiplicative.
-* `ContinuousLinearMap.norm_compressionCB_le` — `‖T ↦ V₁† T V₂‖_cb ≤ ‖V₁‖ ‖V₂‖`.
+* `OperatorSpace.IsCompleteIsometry.exists_completelyBoundedMap_range` — a completely bounded map
+  transports to the range of a complete isometry with the same cb norm.
+* `NonUnitalStarAlgHom.isCompleteIsometry` — injective ⋆-homomorphisms are complete isometries.
+* `ContinuousLinearMap.norm_compressionCB_le` — `‖T ↦ V₁† T V₂‖_cb ≤ ‖V₁‖ ‖V₂‖`, and
+  `ContinuousLinearMap.norm_compressionCB_comp_le` for its composite `a ↦ V₁† π(a) V₂` with a
+  ⋆-homomorphism.
 -/
 
 @[expose] public noncomputable section
@@ -130,7 +138,7 @@ lemma norm_le_bound (φ : V →CB W) {C : ℝ} (hC : 0 ≤ C)
 
 omit [OperatorSpace W] in
 /-- `‖X.map φ‖ ≤ ‖φ‖ ‖X‖` at every level. -/
-theorem norm_map_cstarMatrix_le (φ : V →CB W) {k : ℕ} (X : CStarMatrix (Fin k) (Fin k) V) :
+lemma norm_map_cstarMatrix_le (φ : V →CB W) {k : ℕ} (X : CStarMatrix (Fin k) (Fin k) V) :
     ‖X.map φ‖ ≤ ‖φ‖ * ‖X‖ := by
   rcases (OperatorSpace.norm_nonneg X).eq_or_lt with hX | hX
   · obtain ⟨C, -, hC⟩ := φ.exists_nonneg_bound
@@ -270,7 +278,7 @@ omit [OperatorSpace U] in
 
 omit [OperatorSpace U] in
 /-- The cb norm is submultiplicative. -/
-theorem norm_comp_le (ψ : W →CB U) (φ : V →CB W) : ‖ψ.comp φ‖ ≤ ‖ψ‖ * ‖φ‖ :=
+lemma norm_comp_le (ψ : W →CB U) (φ : V →CB W) : ‖ψ.comp φ‖ ≤ ‖ψ‖ * ‖φ‖ :=
   norm_le_bound _ (mul_nonneg ψ.norm_nonneg' φ.norm_nonneg') fun _ X =>
     ((ψ.norm_map_cstarMatrix_le (X.map φ)).trans
       (mul_le_mul_of_nonneg_left (φ.norm_map_cstarMatrix_le X) ψ.norm_nonneg')).trans_eq
@@ -340,6 +348,113 @@ lemma norm_restrict_le (φ : V →CB W) (E : Submodule ℂ V) : ‖φ.restrict E
 
 end CompletelyBoundedMap
 
+/-! ### Complete isometries -/
+
+namespace OperatorSpace
+
+variable {V W U : Type*}
+
+section Def
+
+variable [AddCommGroup V] [Module ℂ V] [AddCommGroup W] [Module ℂ W]
+  [∀ k, Norm (CStarMatrix (Fin k) (Fin k) V)] [∀ k, Norm (CStarMatrix (Fin k) (Fin k) W)]
+
+/-- A linear map `j : V → W` between spaces with matrix norms is a **complete isometry** if it
+preserves the norm of every square matrix: `‖X.map j‖ = ‖X‖`. -/
+def IsCompleteIsometry (j : V →ₗ[ℂ] W) : Prop :=
+  ∀ (k : ℕ) (X : CStarMatrix (Fin k) (Fin k) V), ‖X.map j‖ = ‖X‖
+
+end Def
+
+variable [NormedAddCommGroup V] [NormedSpace ℂ V] [∀ k, Norm (CStarMatrix (Fin k) (Fin k) V)]
+  [OperatorSpace V] [NormedAddCommGroup W] [NormedSpace ℂ W] [∀ k, Norm (CStarMatrix (Fin k) (Fin k) W)]
+  [OperatorSpace W] [NormedAddCommGroup U] [NormedSpace ℂ U] [∀ k, Norm (CStarMatrix (Fin k) (Fin k) U)]
+  [OperatorSpace U]
+
+namespace IsCompleteIsometry
+
+variable {j : V →ₗ[ℂ] W}
+
+/-- A complete isometry is isometric: its level `1`. -/
+lemma norm_apply (hj : IsCompleteIsometry j) (v : V) : ‖j v‖ = ‖v‖ := by
+  have := hj 1 (single₁ v)
+  rwa [show (single₁ v).map j = single₁ (j v) from rfl, norm_single₁, norm_single₁] at this
+
+/-- A complete isometry is injective. -/
+lemma injective (hj : IsCompleteIsometry j) : Function.Injective j :=
+  (injective_iff_map_eq_zero j).mpr fun v hv =>
+    norm_eq_zero.mp ((hj.norm_apply v).symm.trans (by rw [hv, _root_.norm_zero]))
+
+omit [OperatorSpace V] [OperatorSpace W] [OperatorSpace U] in
+/-- A composite of complete isometries is a complete isometry. -/
+lemma comp {i : W →ₗ[ℂ] U} (hi : IsCompleteIsometry i) (hj : IsCompleteIsometry j) :
+    IsCompleteIsometry (i ∘ₗ j) := fun k X => (hi k (X.map j)).trans (hj k X)
+
+omit [OperatorSpace V] [OperatorSpace W] [OperatorSpace U] in
+/-- A complete isometry onto its range is a complete isometry, the range carrying the matrix norms of
+`W`. -/
+lemma rangeRestrict (hj : IsCompleteIsometry j) : IsCompleteIsometry j.rangeRestrict :=
+  fun k X => hj k X
+
+/-- A complete isometry, as a completely bounded map. -/
+def toCompletelyBoundedMap (hj : IsCompleteIsometry j) : V →CB W where
+  toLinearMap := j
+  exists_bound' := ⟨1, fun k X => by rw [one_mul, hj k X]⟩
+
+omit [OperatorSpace V] [OperatorSpace W] in
+/-- A complete isometry as a completely bounded map is the same function. -/
+@[simp] lemma coe_toCompletelyBoundedMap (hj : IsCompleteIsometry j) : ⇑hj.toCompletelyBoundedMap = j :=
+  rfl
+
+omit [OperatorSpace V] [OperatorSpace W] in
+/-- A complete isometry has cb norm at most `1`. -/
+lemma norm_toCompletelyBoundedMap_le (hj : IsCompleteIsometry j) : ‖hj.toCompletelyBoundedMap‖ ≤ 1 :=
+  CompletelyBoundedMap.norm_le_bound _ zero_le_one fun k X => by
+    rw [one_mul]
+    exact (hj k X).le
+
+omit [OperatorSpace V] [OperatorSpace W] in
+/-- The inverse of a complete isometry that is a linear equivalence is a complete isometry. -/
+lemma symm {e : V ≃ₗ[ℂ] W} (he : IsCompleteIsometry e.toLinearMap) :
+    IsCompleteIsometry e.symm.toLinearMap := fun k Y => by
+  rw [← he k (Y.map e.symm.toLinearMap)]
+  congr 1
+  ext i j
+  exact e.apply_symm_apply (Y i j)
+
+omit [OperatorSpace U] in
+/-- **Transport along a complete isometry.** A completely bounded map `φ` on `V` induces a
+completely bounded map on the range of a complete isometry `j : V → W`, with the same cb norm. -/
+lemma exists_completelyBoundedMap_range (hj : IsCompleteIsometry j) (φ : V →CB U) :
+    ∃ φ' : LinearMap.range j →CB U,
+      (∀ v, φ' ⟨j v, LinearMap.mem_range_self j v⟩ = φ v) ∧ ‖φ'‖ = ‖φ‖ := by
+  let e : V ≃ₗ[ℂ] LinearMap.range j := LinearEquiv.ofInjective j hj.injective
+  have he : IsCompleteIsometry e.toLinearMap := hj.rangeRestrict
+  let φ' := φ.comp he.symm.toCompletelyBoundedMap
+  have hφ : φ = φ'.comp he.toCompletelyBoundedMap :=
+    CompletelyBoundedMap.ext fun v => by
+      change φ v = φ (e.symm (e v))
+      rw [e.symm_apply_apply]
+  refine ⟨φ', fun v => ?_, le_antisymm ?_ ?_⟩
+  · change φ (e.symm ⟨j v, _⟩) = φ v
+    rw [show (⟨j v, LinearMap.mem_range_self j v⟩ : LinearMap.range j) = e v from rfl,
+      e.symm_apply_apply]
+  · exact (CompletelyBoundedMap.norm_comp_le _ _).trans
+      (mul_le_of_le_one_right φ.norm_nonneg' he.symm.norm_toCompletelyBoundedMap_le)
+  · conv_lhs => rw [hφ]
+    exact (CompletelyBoundedMap.norm_comp_le _ _).trans
+      (mul_le_of_le_one_right φ'.norm_nonneg' he.norm_toCompletelyBoundedMap_le)
+
+end IsCompleteIsometry
+
+end OperatorSpace
+
+/-- The inclusion of a subspace is a complete isometry. -/
+lemma Submodule.isCompleteIsometry_subtype {V : Type*} [NormedAddCommGroup V] [NormedSpace ℂ V]
+    [∀ k, Norm (CStarMatrix (Fin k) (Fin k) V)] (E : Submodule ℂ V) :
+    OperatorSpace.IsCompleteIsometry E.subtype :=
+  fun _ _ => rfl
+
 /-! ### ⋆-homomorphisms and compressions -/
 
 namespace NonUnitalStarAlgHom
@@ -363,6 +478,14 @@ lemma norm_toCompletelyBoundedMap_le (π : A →⋆ₙₐ[ℂ] B) : ‖π.toComp
   CompletelyBoundedMap.norm_le_bound _ zero_le_one fun k X => by
     rw [one_mul]
     exact NonUnitalStarAlgHom.norm_apply_le (mapₙₐ π) X
+
+/-- An injective ⋆-homomorphism of C⋆-algebras is a complete isometry: at every level it is an
+injective ⋆-homomorphism of C⋆-algebras of matrices, hence isometric. -/
+lemma isCompleteIsometry (π : A →⋆ₙₐ[ℂ] B) (hπ : Function.Injective π) :
+    OperatorSpace.IsCompleteIsometry (π : A →ₗ[ℂ] B) := fun k X => by
+  have hinj : Function.Injective (mapₙₐ (n := Fin k) π) := fun M N h =>
+    CStarMatrix.ext fun i j => hπ (congrFun (congrFun h i) j)
+  exact NonUnitalStarAlgHom.norm_map (mapₙₐ π) hinj X
 
 end NonUnitalStarAlgHom
 
@@ -429,7 +552,16 @@ def compressionCB (V₁ V₂ : H →L[ℂ] K) : (K →L[ℂ] K) →CB (H →L[�
   rfl
 
 /-- The compression `T ↦ V₁† T V₂` has cb norm at most `‖V₁‖ ‖V₂‖`. -/
-theorem norm_compressionCB_le (V₁ V₂ : H →L[ℂ] K) : ‖compressionCB V₁ V₂‖ ≤ ‖V₁‖ * ‖V₂‖ :=
+lemma norm_compressionCB_le (V₁ V₂ : H →L[ℂ] K) : ‖compressionCB V₁ V₂‖ ≤ ‖V₁‖ * ‖V₂‖ :=
   CompletelyBoundedMap.norm_le_bound _ (by positivity) fun _ X => norm_map_compression_le V₁ V₂ X
+
+/-- The compression `a ↦ V₁† π(a) V₂` of a ⋆-homomorphism `π : A → B(K)` has cb norm at most
+`‖V₁‖ ‖V₂‖`. -/
+lemma norm_compressionCB_comp_le {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A]
+    [StarOrderedRing A] (π : A →⋆ₙₐ[ℂ] (K →L[ℂ] K)) (V₁ V₂ : H →L[ℂ] K) :
+    ‖(compressionCB V₁ V₂).comp π.toCompletelyBoundedMap‖ ≤ ‖V₁‖ * ‖V₂‖ :=
+  (CompletelyBoundedMap.norm_comp_le _ _).trans ((mul_le_of_le_one_right
+    (compressionCB V₁ V₂).norm_nonneg' π.norm_toCompletelyBoundedMap_le).trans
+      (norm_compressionCB_le V₁ V₂))
 
 end ContinuousLinearMap

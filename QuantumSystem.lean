@@ -40,8 +40,9 @@ public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
 public import QuantumSystem.Analysis.OperatorSpace.Basic
 public import QuantumSystem.Analysis.OperatorSpace.CompletelyBounded
 public import QuantumSystem.Analysis.OperatorSpace.CompletelyPositive
+public import QuantumSystem.Analysis.OperatorSpace.Factorization
 public import QuantumSystem.Analysis.OperatorSpace.Paulsen
-public import QuantumSystem.Analysis.OperatorSpace.Wittstock
+public import QuantumSystem.Analysis.OperatorSpace.Ruan
 public import QuantumSystem.Analysis.OperatorSystem.Arveson
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
 public import QuantumSystem.Analysis.SpectralTheory.Interpolation

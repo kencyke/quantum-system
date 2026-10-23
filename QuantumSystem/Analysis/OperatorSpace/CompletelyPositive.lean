@@ -25,6 +25,8 @@ the complete positivity of `φ` at level `2k`, and then `‖φₖ(X)‖ ≤ ‖�
 * `CompletelyPositiveMap'.toCompletelyBoundedMap` — a completely positive map on an operator
   subsystem of a unital C⋆-algebra, as a completely bounded map.
 * `CompletelyPositiveMap.toCompletelyBoundedMap` — the same for a unital C⋆-algebra.
+* `ContinuousLinearMap.compressionCP V` — the compression `T ↦ V† T V` of operators, a completely
+  positive map.
 
 ## Main results
 
@@ -187,3 +189,26 @@ theorem norm_toCompletelyBoundedMap (ψ : A →CP B) : ‖ψ.toCompletelyBounded
     exact h.trans (mul_le_of_le_one_right (CompletelyBoundedMap.norm_nonneg' _) h₁)
 
 end CompletelyPositiveMap
+
+namespace ContinuousLinearMap
+
+variable {H K : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+  [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
+
+open scoped InnerProductSpace in
+/-- The compression `T ↦ V† T V` of operators on `K` to operators on `H` is completely positive: the
+quadratic form `∑ᵢⱼ ⟪ξᵢ, V† Tᵢⱼ V ξⱼ⟫` is `∑ᵢⱼ ⟪V ξᵢ, Tᵢⱼ V ξⱼ⟫`. -/
+def compressionCP (V : H →L[ℂ] K) : (K →L[ℂ] K) →CP (H →L[ℂ] H) where
+  toLinearMap := (compressionCB V V).toLinearMap
+  map_cstarMatrix_nonneg' k M hM := by
+    classical
+    rw [CStarMatrix.nonneg_iff_sum_inner_apply_nonneg] at hM ⊢
+    intro ξ
+    simpa [compressionCB_apply, adjoint_inner_right] using hM fun i => V (ξ i)
+
+/-- `compressionCP V` sends `T` to `V† T V`. -/
+@[simp] lemma compressionCP_apply (V : H →L[ℂ] K) (T : K →L[ℂ] K) :
+    compressionCP V T = adjoint V ∘L T ∘L V :=
+  rfl
+
+end ContinuousLinearMap
