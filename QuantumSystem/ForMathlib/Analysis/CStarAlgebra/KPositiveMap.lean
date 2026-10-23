@@ -7,6 +7,8 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.ApproximateUnit
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
+public import Mathlib.Analysis.CStarAlgebra.Hom
+public import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Positive
 
@@ -50,6 +52,8 @@ while a `ForMathlib` file imports Mathlib only.
 * `KPositiveMap.ofLE` — a `k`-positive map as a `j`-positive map, `j ≤ k`.
 * `KPositiveMap.arrowCongr` — the transport `φ ↦ e₂ ∘ φ ∘ e₁⁻¹` of `k`-positive maps along
   ⋆-isomorphisms `e₁`, `e₂`.
+* `CStarMatrix.ofScalar C n` — the scalar matrices `α ↦ (αᵢⱼ • 1)ᵢⱼ` in the matrices over a unital
+  C⋆-algebra `C`, as a unital ⋆-homomorphism.
 
 ## Main results
 
@@ -57,6 +61,13 @@ while a `ForMathlib` file imports Mathlib only.
   generally every reindexing `(M (f i) (f j))ᵢⱼ`, of a nonnegative `CStarMatrix` are nonnegative.
 * `CStarMatrix.star_mul_le_norm_smul_of_nonneg` — if `!![p, b; b⋆, q]` is nonnegative, then
   `b⋆ b ≤ ‖p‖ • q`.
+* `CStarMatrix.norm_sq_le_of_nonneg` — if `!![p, b; b⋆, q]` is nonnegative, then
+  `‖b‖² ≤ ‖p‖ ‖q‖`.
+* `CStarMatrix.nonneg_one_star_one_iff` — in a unital C⋆-algebra, `!![1, y; y⋆, 1]` is nonnegative
+  exactly when `‖y‖ ≤ 1`.
+* `CStarMatrix.nonneg_star_mul_self_block_iff` — for units `s`, `t` of a unital C⋆-algebra,
+  `!![s⋆ s, x; x⋆, t⋆ t]` is nonnegative exactly when `‖(s⁻¹)⋆ x t⁻¹‖ ≤ 1`.
+* `CStarMatrix.norm_ofMatrix_zero_one_le` — `‖!![0, x; 0, 0]‖ ≤ ‖x‖`.
 * `CompletelyPositiveMapClass.instKPositiveMapClass` — completely positive maps, of any
   `CompletelyPositiveMapClass`, are `k`-positive.
 * `KPositiveMapClass.of_le`, `KPositiveMapClass.orderHomClass` — a `k`-positive map is
@@ -217,6 +228,89 @@ lemma star_mul_le_norm_smul_of_nonneg {p b q : A} (hN : 0 ≤ ofMatrix !![p, b; 
   convert this using 1
   · simp [Unitization.inr_mul, Unitization.inr_star]
   · rw [← Complex.coe_smul, Unitization.inr_smul, Complex.coe_smul]
+
+/-- If `!![p, b; b⋆, q]` is nonnegative, then `‖b‖² ≤ ‖p‖ ‖q‖`: take norms in `b⋆ b ≤ ‖p‖ • q`
+(`CStarMatrix.star_mul_le_norm_smul_of_nonneg`). -/
+lemma norm_sq_le_of_nonneg {p b q : A} (hN : 0 ≤ ofMatrix !![p, b; star b, q]) :
+    ‖b‖ ^ 2 ≤ ‖p‖ * ‖q‖ := by
+  have h := star_mul_le_norm_smul_of_nonneg hN
+  rw [sq, ← CStarRing.norm_star_mul_self, ← norm_smul_of_nonneg (norm_nonneg p)]
+  exact CStarAlgebra.norm_le_norm_of_le_of_nonneg h (star_mul_self_nonneg b)
+
+section Single
+
+variable {n : Type*} [Fintype n] [DecidableEq n]
+
+/-- The embedding `a ↦ Eᵢᵢ a` of `A` as the `(i, i)` corner of `CStarMatrix n n A`, a
+⋆-homomorphism. -/
+def singleNonUnitalStarAlgHom (i : n) : A →⋆ₙₐ[ℂ] CStarMatrix n n A where
+  toFun a := ofMatrix (Matrix.single i i a)
+  map_smul' c a := by ext; simp [Matrix.single_apply]
+  map_zero' := by ext; simp
+  map_add' a b := by ext; simp [Matrix.single_add]
+  map_mul' a b := by
+    change _ = ofMatrix (Matrix.single i i a * Matrix.single i i b)
+    rw [Matrix.single_mul_single_same]
+  map_star' a := by
+    change _ = ofMatrix (Matrix.single i i a).conjTranspose
+    rw [Matrix.conjTranspose_single]
+
+end Single
+
+/-- The off-diagonal matrix `!![0, x; 0, 0]` has norm at most `‖x‖`: by the C⋆-identity its square
+norm is that of `!![0, 0; 0, x⋆ x]`, the image of `x⋆ x` under an injective ⋆-homomorphism. -/
+lemma norm_ofMatrix_zero_one_le (x : A) :
+    ‖(ofMatrix !![0, x; 0, 0] : CStarMatrix (Fin 2) (Fin 2) A)‖ ≤ ‖x‖ := by
+  have hinj : Function.Injective (singleNonUnitalStarAlgHom (A := A) (1 : Fin 2)) := by
+    intro a b h
+    have := congrFun (congrFun (congrArg (fun M : CStarMatrix (Fin 2) (Fin 2) A =>
+      (M : Matrix _ _ A)) h) 1) 1
+    simpa [singleNonUnitalStarAlgHom] using this
+  have h : star (ofMatrix !![0, x; 0, 0] : CStarMatrix (Fin 2) (Fin 2) A) * ofMatrix !![0, x; 0, 0] =
+      singleNonUnitalStarAlgHom 1 (star x * x) := by
+    ext i j
+    fin_cases i <;> fin_cases j <;>
+      simp [singleNonUnitalStarAlgHom, CStarMatrix.mul_apply, CStarMatrix.star_apply,
+        ofMatrix_apply, Fin.sum_univ_two]
+  have := congrArg norm h
+  rw [CStarRing.norm_star_mul_self, NonUnitalStarAlgHom.norm_map _ hinj,
+    CStarRing.norm_star_mul_self] at this
+  nlinarith [norm_nonneg x, norm_nonneg (ofMatrix !![0, x; 0, 0] : CStarMatrix (Fin 2) (Fin 2) A)]
+
+section Unital
+
+variable {C : Type*} [CStarAlgebra C] [PartialOrder C] [StarOrderedRing C]
+
+/-- **Contractions as positive `2 × 2` matrices.** In a unital C⋆-algebra, `!![1, y; y⋆, 1]` is
+nonnegative exactly when `‖y‖ ≤ 1`. If `‖y‖ ≤ 1`, then `1 - y⋆ y ≥ 0` has a square root `s` and
+`!![1, y; y⋆, 1] = E⋆ E` for `E = !![1, y; 0, s]`; conversely `‖y‖² ≤ ‖1‖²`
+(`CStarMatrix.norm_sq_le_of_nonneg`). -/
+lemma nonneg_one_star_one_iff {y : C} :
+    0 ≤ (ofMatrix !![1, y; star y, 1] : CStarMatrix (Fin 2) (Fin 2) C) ↔ ‖y‖ ≤ 1 := by
+  rcases subsingleton_or_nontrivial C with hC | hC
+  · simp [Subsingleton.elim y 0]
+  constructor
+  · intro h
+    have := norm_sq_le_of_nonneg h
+    rw [norm_one, mul_one] at this
+    nlinarith [norm_nonneg y]
+  · intro hy
+    have hle : star y * y ≤ 1 := by
+      refine (CStarAlgebra.star_mul_le_algebraMap_norm_sq (a := y)).trans ?_
+      rw [← sub_nonneg, ← map_one (algebraMap ℝ C), ← map_sub]
+      exact algebraMap_nonneg C (by nlinarith [norm_nonneg y])
+    set s := CFC.sqrt (1 - star y * y)
+    have hs : star s * s = 1 - star y * y := by
+      rw [(CFC.sqrt_nonneg _).isSelfAdjoint.star_eq, CFC.sqrt_mul_sqrt_self _ (sub_nonneg.mpr hle)]
+    let E : CStarMatrix (Fin 2) (Fin 2) C := ofMatrix !![1, y; 0, s]
+    have : (ofMatrix !![1, y; star y, 1] : CStarMatrix (Fin 2) (Fin 2) C) = star E * E := by
+      ext i j
+      fin_cases i <;> fin_cases j <;>
+        simp [E, CStarMatrix.mul_apply, CStarMatrix.star_apply, ofMatrix_apply, Fin.sum_univ_two, hs]
+    rw [this]
+    exact star_mul_self_nonneg E
+
+end Unital
 
 end CStarMatrix
 
@@ -542,3 +636,129 @@ theorem le_map_star_mul (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
 end Unital₂
 
 end KPositiveMapClass
+
+/-! ### Scalar matrices and positive `2 × 2` block matrices -/
+
+open scoped ComplexOrder
+
+namespace CStarMatrix
+
+section Scalar
+
+variable {C : Type*} [CStarAlgebra C] {n : ℕ}
+
+variable (C n) in
+/-- The scalar matrices inside the matrices over a unital C⋆-algebra `C`, `α ↦ (αᵢⱼ • 1)ᵢⱼ`, as a
+unital ⋆-homomorphism. -/
+noncomputable def ofScalar : CStarMatrix (Fin n) (Fin n) ℂ →⋆ₐ[ℂ] CStarMatrix (Fin n) (Fin n) C :=
+  { mapₙₐ (StarAlgHom.ofId ℂ C).toNonUnitalStarAlgHom with
+    map_one' := by
+      ext i j
+      change algebraMap ℂ C ((1 : CStarMatrix (Fin n) (Fin n) ℂ) i j) = (1 : CStarMatrix _ _ C) i j
+      rw [CStarMatrix.one_apply, CStarMatrix.one_apply]
+      split_ifs <;> simp
+    commutes' := fun c => by
+      ext i j
+      change algebraMap ℂ C ((algebraMap ℂ (CStarMatrix (Fin n) (Fin n) ℂ) c) i j) =
+        (algebraMap ℂ (CStarMatrix (Fin n) (Fin n) C) c) i j
+      rw [algebraMap_apply, algebraMap_apply]
+      split_ifs <;> simp }
+
+/-- The entries `αᵢⱼ • 1` of `ofScalar C n α`. -/
+lemma ofScalar_apply (α : CStarMatrix (Fin n) (Fin n) ℂ) (i j : Fin n) :
+    ofScalar C n α i j = algebraMap ℂ C (α i j) :=
+  rfl
+
+/-- Over a nontrivial unital C⋆-algebra, the scalar matrices embed injectively. -/
+lemma ofScalar_injective [Nontrivial C] : Function.Injective (ofScalar C n) := fun α β h =>
+  ext fun i j => (algebraMap ℂ C).injective (by
+    rw [← ofScalar_apply, ← ofScalar_apply, h])
+
+end Scalar
+
+section TwoByTwo
+
+variable {C : Type*} [CStarAlgebra C]
+
+/-- Multiplying a `2 × 2` matrix by diagonal matrices on both sides. -/
+lemma diag_mul_mul_diag (u v p x y q u' v' : C) :
+    (ofMatrix !![u, 0; 0, v] : CStarMatrix (Fin 2) (Fin 2) C) * ofMatrix !![p, x; y, q] *
+      ofMatrix !![u', 0; 0, v'] = ofMatrix !![u * p * u', u * x * v'; v * y * u', v * q * v'] := by
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [CStarMatrix.mul_apply, Fin.sum_univ_two, ofMatrix_apply]
+
+/-- The adjoint of a diagonal `2 × 2` matrix. -/
+lemma star_diag (u v : C) :
+    star (ofMatrix !![u, 0; 0, v] : CStarMatrix (Fin 2) (Fin 2) C) =
+      ofMatrix !![star u, 0; 0, star v] := by
+  ext i j
+  fin_cases i <;> fin_cases j <;> simp [CStarMatrix.star_apply, ofMatrix_apply]
+
+variable [PartialOrder C] [StarOrderedRing C]
+
+/-- **Positive `2 × 2` matrices with invertible diagonal.** For units `s`, `t`, the matrix
+`!![s⋆ s, x; x⋆, t⋆ t]` is positive exactly when `‖(s⁻¹)⋆ x t⁻¹‖ ≤ 1`: conjugating by
+`!![s⁻¹, 0; 0, t⁻¹]` turns it into `!![1, y; y⋆, 1]` with `y = (s⁻¹)⋆ x t⁻¹`
+(`CStarMatrix.nonneg_one_star_one_iff`), and conjugating back by `!![s, 0; 0, t]` undoes this. -/
+theorem nonneg_star_mul_self_block_iff (s t : Cˣ) (x : C) :
+    0 ≤ (ofMatrix !![star (s : C) * s, x; star x, star (t : C) * t] : CStarMatrix (Fin 2) (Fin 2) C) ↔
+      ‖star (↑s⁻¹ : C) * x * ↑t⁻¹‖ ≤ 1 := by
+  set y := star (↑s⁻¹ : C) * x * ↑t⁻¹
+  have h₁ : ∀ u : Cˣ, star (↑u⁻¹ : C) * (star (u : C) * u) * ↑u⁻¹ = 1 := fun u => by
+    rw [← mul_assoc, ← star_mul, Units.mul_inv, star_one, one_mul, Units.mul_inv]
+  have hy : star (s : C) * y * t = x := by
+    rw [show star (s : C) * y * t = star (↑s⁻¹ * (s : C)) * x * (↑t⁻¹ * t) by
+      simp only [y, star_mul, mul_assoc], Units.inv_mul, Units.inv_mul, star_one, one_mul, mul_one]
+  have hy' : star (t : C) * star y * s = star x := by
+    rw [← hy]
+    simp only [star_mul, star_star, mul_assoc]
+  have hD : star (ofMatrix !![(↑s⁻¹ : C), 0; 0, ↑t⁻¹] : CStarMatrix (Fin 2) (Fin 2) C) *
+      ofMatrix !![star (s : C) * s, x; star x, star (t : C) * t] *
+        ofMatrix !![(↑s⁻¹ : C), 0; 0, ↑t⁻¹] = ofMatrix !![1, y; star y, 1] := by
+    rw [star_diag, diag_mul_mul_diag, h₁, h₁]
+    congr 3
+    simp only [y, star_mul, star_star, mul_assoc]
+  have hD' : star (ofMatrix !![(s : C), 0; 0, t] : CStarMatrix (Fin 2) (Fin 2) C) *
+      ofMatrix !![1, y; star y, 1] * ofMatrix !![(s : C), 0; 0, t] =
+        ofMatrix !![star (s : C) * s, x; star x, star (t : C) * t] := by
+    rw [star_diag, diag_mul_mul_diag, mul_one, mul_one, hy, hy']
+  constructor
+  · intro h
+    have := star_left_conjugate_nonneg h (ofMatrix !![(↑s⁻¹ : C), 0; 0, ↑t⁻¹])
+    rw [hD] at this
+    exact nonneg_one_star_one_iff.mp this
+  · intro h
+    have := star_left_conjugate_nonneg (nonneg_one_star_one_iff.mpr h) (ofMatrix !![(s : C), 0; 0, t])
+    rwa [hD'] at this
+
+variable {n : ℕ}
+
+/-- Adding `ε • 1` to `!![α 1, X; X⋆, β 1]` adds `ε` to `α` and `β`. -/
+lemma ofScalar_block_add_smul_one (ε : ℝ) (a b : CStarMatrix (Fin n) (Fin n) ℂ)
+    (x : CStarMatrix (Fin n) (Fin n) C) :
+    (ofMatrix !![ofScalar C n a, x; star x, ofScalar C n b] :
+      CStarMatrix (Fin 2) (Fin 2) (CStarMatrix (Fin n) (Fin n) C)) + (ε : ℂ) • 1 =
+    ofMatrix !![ofScalar C n (a + (ε : ℂ) • 1), x; star x, ofScalar C n (b + (ε : ℂ) • 1)] := by
+  rw [map_add, map_add, map_smul, map_one]
+  refine CStarMatrix.ext fun i j => ?_
+  fin_cases i <;> fin_cases j
+  · rfl
+  · change x + (ε : ℂ) • (0 : CStarMatrix (Fin n) (Fin n) C) = x
+    rw [smul_zero, add_zero]
+  · change star x + (ε : ℂ) • (0 : CStarMatrix (Fin n) (Fin n) C) = star x
+    rw [smul_zero, add_zero]
+  · rfl
+
+end TwoByTwo
+
+end CStarMatrix
+
+/-- In a unital C⋆-algebra, a positive element plus `ε • 1` with `ε > 0` is strictly positive. -/
+lemma isStrictlyPositive_add_smul_one {D : Type*} [CStarAlgebra D] [PartialOrder D]
+    [StarOrderedRing D] {a : D} (ha : 0 ≤ a) {ε : ℝ} (hε : 0 < ε) :
+    IsStrictlyPositive (a + (ε : ℂ) • 1) := by
+  refine IsStrictlyPositive.nonneg_add ha ?_
+  have := isStrictlyPositive_algebraMap (A := D) hε
+  convert this using 1
+  rw [Algebra.algebraMap_eq_smul_one]
+  exact Complex.coe_smul ε 1

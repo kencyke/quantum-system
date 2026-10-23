@@ -55,6 +55,8 @@ C⋆-algebras are automatically bounded.
 * `CompletelyPositiveMap.stinespringOperator` — the operator `V : H →L[ℂ] K`.
 * `CStarMatrix.toPiLpStarAlgEquiv` — the ⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` between operator
   matrices and operators on the Hilbert sum `Hⁿ`.
+* `CStarMatrix.diagonalStarAlgHom` — the diagonal embedding `a ↦ diag(a, …, a)` of a unital
+  C⋆-algebra into its matrices.
 
 ## Main statements
 
@@ -138,6 +140,14 @@ noncomputable instance instNonnegSpectrumClassReal [PartialOrder A] [StarOrdered
     NonnegSpectrumClass ℝ (CStarMatrix n n A) :=
   CStarAlgebra.instNonnegSpectrumClass'
 
+/-- The continuous functional calculus for self-adjoint matrices over a unital C⋆-algebra; not
+found by instance search for the same reason as
+`CStarMatrix.instNonUnitalContinuousFunctionalCalculusReal`. -/
+noncomputable instance instContinuousFunctionalCalculusReal {A : Type*} [CStarAlgebra A]
+    [PartialOrder A] [StarOrderedRing A] [DecidableEq n] :
+    ContinuousFunctionalCalculus ℝ (CStarMatrix n n A) IsSelfAdjoint :=
+  IsSelfAdjoint.instContinuousFunctionalCalculus
+
 section DecidableEq
 
 variable [DecidableEq n]
@@ -158,6 +168,20 @@ def diagonalNonUnitalStarAlgHom : A →⋆ₙₐ[ℂ] CStarMatrix n n A where
   map_add' a b := by ext i j; by_cases h : i = j <;> simp [h]
   map_mul' a b := by ext i j; by_cases h : i = j <;> simp [Matrix.diagonal_apply, h, mul_apply]
   map_star' a := by ext i j; by_cases h : i = j <;> simp [h, star_apply, eq_comm]
+
+/-- The diagonal embedding `a ↦ diag(a, …, a)` of a unital C⋆-algebra as a unital
+⋆-homomorphism. -/
+noncomputable def diagonalStarAlgHom {A : Type*} [CStarAlgebra A] : A →⋆ₐ[ℂ] CStarMatrix n n A :=
+  { diagonalNonUnitalStarAlgHom with
+    map_one' := by ext i j; by_cases h : i = j <;> simp [diagonalNonUnitalStarAlgHom, h, one_apply]
+    commutes' := fun c => by
+      ext i j
+      by_cases h : i = j <;> simp [diagonalNonUnitalStarAlgHom, h, Algebra.algebraMap_eq_smul_one] }
+
+/-- `diagonalStarAlgHom a` is the diagonal matrix `diag(a, …, a)`. -/
+lemma diagonalStarAlgHom_apply {A : Type*} [CStarAlgebra A] (a : A) :
+    diagonalStarAlgHom (n := n) a = ofMatrix (Matrix.diagonal fun _ => a) :=
+  rfl
 
 /-- `diag(a, …, a) · updateRow 0 i₀ b = updateRow 0 i₀ (a b)`. -/
 lemma diagonalNonUnitalStarAlgHom_mul_ofMatrix_updateRow_zero (a : A) (i₀ : n) (b : n → A) :

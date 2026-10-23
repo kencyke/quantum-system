@@ -37,6 +37,11 @@ public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
+public import QuantumSystem.Analysis.OperatorSpace.Basic
+public import QuantumSystem.Analysis.OperatorSpace.CompletelyBounded
+public import QuantumSystem.Analysis.OperatorSpace.CompletelyPositive
+public import QuantumSystem.Analysis.OperatorSpace.Paulsen
+public import QuantumSystem.Analysis.OperatorSpace.Wittstock
 public import QuantumSystem.Analysis.OperatorSystem.Arveson
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
 public import QuantumSystem.Analysis.SpectralTheory.Interpolation
@@ -138,6 +143,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopo
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Transpose
+public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.PiLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension

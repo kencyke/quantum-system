@@ -91,10 +91,13 @@ and Phase III in particular will be set as the foundations take shape.
    Wedderburn–Artin (M1, M2).
 3. Minimal tensor product of C⋆-algebras and nuclearity; the projective tensor product of Banach
    algebras, which holds bounded approximate diagonals (M1, M2).
-4. Operator systems as matrix-ordered ⋆-vector spaces with an Archimedean matrix order unit, with
-   C⋆-algebras as examples; completely positive maps between them, by generalizing the hypotheses
-   of Mathlib's definition upstream rather than by a parallel definition; completely bounded maps
-   (M1, M2).
+4. ~~Operator systems as matrix-ordered ⋆-vector spaces with an Archimedean matrix order unit, with
+   C⋆-algebras and their unital ⋆-closed subspaces as examples; completely positive maps between
+   them, by generalizing the hypotheses of Mathlib's definition upstream rather than by a
+   parallel definition, formalized in `ForMathlib` as Mathlib's definition with only the matrix
+   orders assumed, which agrees with it between C⋆-algebras, the upstream generalization being
+   recorded as a TODO there; completely bounded maps between operator spaces, with Wittstock's
+   extension theorem and their factorization through a ⋆-homomorphism (M1, M2).~~
 5. C⋆- and W⋆-dynamical systems: a group acting by ⋆-automorphisms, continuously in the point-norm
    (W⋆: point-σ-weak) topology; as an example, the action of the covariance group of a faithful
    local net by ⋆-automorphisms of its quasi-local algebra, already formalized, through which a
