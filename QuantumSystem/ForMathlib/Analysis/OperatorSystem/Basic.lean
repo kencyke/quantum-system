@@ -105,6 +105,18 @@ lemma scalarMul_map (α : Matrix n m ℂ) (β : Matrix m n ℂ) (X : CStarMatrix
   ext i j
   simp [scalarMul_apply, map_sum, map_smul]
 
+/-- `1 X 1 = X`. -/
+lemma scalarMul_one_one [DecidableEq m] (X : CStarMatrix m m V) :
+    scalarMul (1 : Matrix m m ℂ) 1 X = X := by
+  ext i j
+  simp [scalarMul_apply, Matrix.one_apply, ite_smul]
+
+/-- Scalars factor out of a two-sided scalar multiplication: `(c α) X (d β) = (c d) • (α X β)`. -/
+lemma scalarMul_smul_smul (c d : ℂ) (α : Matrix n m ℂ) (β : Matrix m n ℂ) (X : CStarMatrix m m V) :
+    scalarMul (c • α) (d • β) X = (c * d) • scalarMul α β X := by
+  ext i j
+  simp [scalarMul_apply, Finset.smul_sum, smul_smul, mul_mul_mul_comm]
+
 /-- The conjugation `X ↦ α⋆ X α` of an `m × m` matrix over a complex vector space `V` by a scalar
 `m × n` matrix `α`: `(α⋆ X α) i j = ∑ p q, conj (α p i) α q j • X p q`. -/
 def scalarConj (α : Matrix m n ℂ) : CStarMatrix m m V →ₗ[ℂ] CStarMatrix n n V :=

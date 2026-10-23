@@ -269,4 +269,19 @@ lemma norm_directSum (X : CStarMatrix (Fin k) (Fin k) A) (Y : CStarMatrix (Fin l
 
 end DirectSum
 
+section One
+
+variable (n : Type*) [Fintype n] [DecidableEq n] (A : Type*) [CStarAlgebra A] [PartialOrder A]
+  [StarOrderedRing A]
+
+/-- The identity matrix has norm at most `1`: it is `0` when `CStarMatrix n n A` is trivial, that is when
+`n` is empty or `A` is trivial. -/
+lemma norm_one_le : ‖(1 : CStarMatrix n n A)‖ ≤ 1 := by
+  rcases subsingleton_or_nontrivial (CStarMatrix n n A) with h | h
+  · rw [Subsingleton.elim (1 : CStarMatrix n n A) 0, norm_zero]
+    exact zero_le_one
+  · exact CStarRing.norm_one.le
+
+end One
+
 end CStarMatrix
