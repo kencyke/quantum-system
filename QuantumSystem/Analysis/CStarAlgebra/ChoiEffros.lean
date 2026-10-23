@@ -8,6 +8,7 @@ module
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContractiveProjection
 
 /-!
 # The Choi–Effros product
@@ -32,10 +33,10 @@ order of `A` (`ChoiEffros.val_nonneg_iff`): a positive `x⋆ ∘ x = φ(x⋆ x)`
 conversely `0 ≤ x ≤ t` in `A` gives `‖t s - x ∘ s‖ = ‖φ((t - x) s)‖ ≤ ‖t - x‖ ‖s‖ ≤ t ‖s‖` for `s`
 in the range, so that `‖t - x‖ ≤ t` in the unitization of the range.
 
-When the range is a ⋆-subalgebra `S`, it lies in the multiplicative domain of `φ`
-(`SchwarzMapClass.le_multiplicativeDomain_of_range_eq`): `φ` is `S`-bilinear,
-`φ(s x s') = s φ(x) s'`, and the Choi–Effros product is the product of `A`
-(`ChoiEffros.val_mul_of_range_eq`).
+When `φ` is a projection onto a ⋆-subalgebra `S` (`LinearMap.IsProj S.toSubmodule φ`), `S` lies in
+the multiplicative domain of `φ` (`SchwarzMapClass.le_multiplicativeDomain_of_isProj`): `φ` is
+`S`-bilinear, `φ(s x s') = s φ(x) s'`, and the Choi–Effros product is the product of `A`
+(`ChoiEffros.val_mul_of_isProj`).
 
 The idempotence of `φ` is a `Fact` instance argument of the C⋆-algebra structure rather than an
 argument of the type, so that the type does not depend on a proof.
@@ -49,8 +50,8 @@ argument of the type, so that the type does not depend on a proof.
 
 * `ChoiEffros.val_nonneg_iff`, `ChoiEffros.val_le_val` — the order of the range as a C⋆-algebra is the
   order of `A`.
-* `ChoiEffros.val_mul_of_range_eq` — when the range is a ⋆-subalgebra, the Choi–Effros product is
-  the product of `A`.
+* `ChoiEffros.val_mul_of_isProj` — when `φ` is a projection onto a ⋆-subalgebra, the Choi–Effros
+  product is the product of `A`.
 
 The identities on idempotent Schwarz maps that the construction rests on live in
 `QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap`.
@@ -128,12 +129,9 @@ variable [hφ : Fact (IsIdempotentElem (φ : A →ₗ[ℂ] A))]
 @[simp] lemma ofMap_val (x : ChoiEffros φ) : ofMap φ x.val = x := ext <| map_val x
 
 /-- The range of a continuous idempotent map is its set of fixed points, hence closed. -/
-instance [ContinuousMapClass F A A] : CompleteSpace (ChoiEffros φ) := by
-  have hc : IsClosed (LinearMap.range (φ : A →ₗ[ℂ] A) : Set A) := by
-    convert isClosed_eq (map_continuous φ) continuous_id using 1
-    ext a
-    exact LinearMap.IsIdempotentElem.mem_range_iff hφ.out
-  exact hc.completeSpace_coe
+instance [ContinuousMapClass F A A] : CompleteSpace (ChoiEffros φ) :=
+  (((LinearMap.isProj_range_iff_isIdempotentElem _).mpr hφ.out).isClosed
+    (map_continuous φ)).completeSpace_coe
 
 section Schwarz
 
@@ -245,12 +243,12 @@ theorem val_nonneg_iff {x : ChoiEffros φ} : 0 ≤ x.val ↔ 0 ≤ x := by
 lemma val_le_val {x y : ChoiEffros φ} : x.val ≤ y.val ↔ x ≤ y := by
   rw [← sub_nonneg, ← val_sub, val_nonneg_iff, sub_nonneg]
 
-/-- When the range of `φ` is a ⋆-subalgebra `S`, the Choi–Effros product is the product of `A`. -/
-lemma val_mul_of_range_eq {S : NonUnitalStarSubalgebra ℂ A} (hS : Set.range φ = S)
+/-- When `φ` is a projection onto a ⋆-subalgebra `S`, the Choi–Effros product is the product of
+`A`. -/
+lemma val_mul_of_isProj {S : NonUnitalStarSubalgebra ℂ A} (hS : LinearMap.IsProj S.toSubmodule φ)
     (x y : ChoiEffros φ) : (x * y).val = x.val * y.val := by
-  rw [val_mul, ((le_multiplicativeDomain_of_range_eq hφ.out hS) _ _).1, map_val, map_val]
-  rw [← SetLike.mem_coe, ← hS]
-  exact ⟨x.val, map_val x⟩
+  rw [val_mul, ((le_multiplicativeDomain_of_isProj hS) _ _).1, map_val, map_val]
+  exact map_val x ▸ hS.map_mem x.val
 
 end Schwarz
 

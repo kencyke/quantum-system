@@ -125,6 +125,19 @@ instance instSMulCommClassMul {R : Type*} [Monoid R] [NonUnitalNonAssocSemiring 
 
 variable [NonUnitalCStarAlgebra A]
 
+/-- The continuous functional calculus for self-adjoint matrices. Mathlib's instance restricts the
+`ℂ`-module structure to `ℝ`, while that of `CStarMatrix n n A` is entrywise; the two agree only
+after unfolding instances, so instance search does not find it. -/
+noncomputable instance instNonUnitalContinuousFunctionalCalculusReal [PartialOrder A]
+    [StarOrderedRing A] : NonUnitalContinuousFunctionalCalculus ℝ (CStarMatrix n n A) IsSelfAdjoint :=
+  IsSelfAdjoint.instNonUnitalContinuousFunctionalCalculus
+
+/-- The quasispectrum of a nonnegative matrix is nonnegative; not found by instance search for the
+same reason as `CStarMatrix.instNonUnitalContinuousFunctionalCalculusReal`. -/
+noncomputable instance instNonnegSpectrumClassReal [PartialOrder A] [StarOrderedRing A] :
+    NonnegSpectrumClass ℝ (CStarMatrix n n A) :=
+  CStarAlgebra.instNonnegSpectrumClass'
+
 section DecidableEq
 
 variable [DecidableEq n]

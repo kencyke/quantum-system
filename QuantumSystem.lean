@@ -8,6 +8,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Stinespr
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TensorProduct
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TraceDual
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePreserving
+public import QuantumSystem.Analysis.CStarAlgebra.ConditionalExpectation
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Irreducible
@@ -95,6 +96,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Completion
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContractiveProjection
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
@@ -105,6 +107,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.UnitalContraction
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.Complex.Strip
 public import QuantumSystem.ForMathlib.Analysis.Complex.WeakHolomorphic

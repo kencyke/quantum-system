@@ -8,6 +8,7 @@ module
 public import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 public import Mathlib.Analysis.CStarAlgebra.PositiveLinearMap
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
+public import Mathlib.LinearAlgebra.Projection
 
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 
@@ -99,8 +100,8 @@ noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwa
   reverses products has a commutative domain**.
 * `SchwarzMapClass.map_map_mul_map_eq_map_map_mul`, `SchwarzMapClass.map_map_mul_map_eq_map_mul_map`
   — an idempotent Schwarz map satisfies `φ(φ(x) φ(y)) = φ(φ(x) y) = φ(x φ(y))`, the identities
-  behind the Choi–Effros product; `SchwarzMapClass.le_multiplicativeDomain_of_range_eq` — **an
-  idempotent Schwarz map whose range is a ⋆-subalgebra `S` is multiplicative on `S`**.
+  behind the Choi–Effros product; `SchwarzMapClass.le_multiplicativeDomain_of_isProj` — **a
+  Schwarz map projecting onto a ⋆-subalgebra `S` is multiplicative on `S`**.
 -/
 
 @[expose] public section
@@ -690,17 +691,15 @@ theorem map_map_mul_map_eq_map_map_mul (x y : A) : φ (φ x * φ y) = φ (φ x *
 theorem map_map_mul_map_eq_map_mul_map (x y : A) : φ (φ x * φ y) = φ (x * φ y) :=
   map_map_mul_of_map_eq_self hφ (map_map hφ y) x
 
-/-- **An idempotent Schwarz map onto a ⋆-subalgebra is multiplicative on it.** If the range of an
-idempotent Schwarz map `φ` is a ⋆-subalgebra `S`, then `S` lies in the multiplicative domain of
-`φ`, so `φ(s x) = s φ(x)` and `φ(x s) = φ(x) s` for `s ∈ S`: `φ` fixes `S`, and `S` is closed
-under products (`SchwarzMapClass.le_multiplicativeDomain_iff`). -/
-theorem le_multiplicativeDomain_of_range_eq {S : NonUnitalStarSubalgebra ℂ A}
-    (hS : Set.range φ = S) : S ≤ LinearMap.multiplicativeDomain φ := by
-  have hfix {s : A} (hs : s ∈ S) : φ s = s := by
-    obtain ⟨x, rfl⟩ : s ∈ Set.range φ := hS ▸ hs
-    exact map_map hφ x
-  refine le_multiplicativeDomain_iff.mpr fun x hx y hy => ?_
-  rw [hfix (mul_mem hx hy), hfix hx, hfix hy]
+omit hφ in
+/-- **A Schwarz map projecting onto a ⋆-subalgebra is multiplicative on it.** If a Schwarz map `φ`
+is a projection onto a ⋆-subalgebra `S`, then `S` lies in the multiplicative domain of `φ`, so
+`φ(s x) = s φ(x)` and `φ(x s) = φ(x) s` for `s ∈ S`: `φ` fixes `S`, and `S` is closed under
+products (`SchwarzMapClass.le_multiplicativeDomain_iff`). -/
+theorem le_multiplicativeDomain_of_isProj {S : NonUnitalStarSubalgebra ℂ A}
+    (hS : LinearMap.IsProj S.toSubmodule φ) : S ≤ LinearMap.multiplicativeDomain φ :=
+  le_multiplicativeDomain_iff.mpr fun x hx y hy => by
+    rw [hS.map_id _ (show x * y ∈ S from mul_mem hx hy), hS.map_id _ hx, hS.map_id _ hy]
 
 end Idempotent
 
