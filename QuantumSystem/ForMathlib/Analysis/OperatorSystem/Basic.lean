@@ -94,8 +94,12 @@ linear isomorphism that is one has an inverse that is one too
 
 * Upstream to Mathlib the weakening of the hypotheses of `CompletelyPositiveMap` and
   `CompletelyPositiveMapClass` from C⋆-algebras to the matrix orders on `CStarMatrix (Fin k) (Fin k) V`,
-  following `CompletelyPositiveMap'` and `CompletelyPositiveMapClass'`, and then replace these and
-  `CompletelyPositiveMap'.equivCompletelyPositiveMap` by Mathlib's definitions.
+  following `CompletelyPositiveMap'` and `CompletelyPositiveMapClass'`. Then replace these by
+  Mathlib's definitions and remove `CompletelyPositiveMap'.equivCompletelyPositiveMap` and
+  `CompletelyPositiveMapClass.instCompletelyPositiveMapClass'`; weaken the hypotheses of
+  `CompletelyPositiveMapClass.instKPositiveMapClass` to the matrix orders likewise, and remove
+  `CompletelyPositiveMapClass'.instKPositiveMapClass` (in
+  `QuantumSystem.Analysis.OperatorSystem.KPositiveMap`).
 -/
 
 @[expose] public section

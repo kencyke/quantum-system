@@ -15,12 +15,18 @@ public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Positive
 /-!
 # `k`-positive maps
 
-A ℂ-linear map `φ` between C⋆-algebras is **`k`-positive** if applying it entrywise to a `k × k`
-matrix over its domain preserves nonnegativity. Mathlib's completely positive maps
-(`CompletelyPositiveMap`) are the maps that are `k`-positive for every `k`; this file adds the
-notion at a single matrix size `k`, mirroring Mathlib's structure and morphism class. A
-`k`-positive map is `j`-positive for every `j ≤ k` (`KPositiveMapClass.of_le`), and, when linear,
-positive for `k ≥ 1` (`KPositiveMapClass.orderHomClass`).
+A ℂ-linear map `φ : A₁ → A₂` between complex vector spaces with partial orders on the matrix spaces
+`CStarMatrix (Fin n) (Fin n) Aᵢ` is **`k`-positive** if applying it entrywise to a nonnegative
+`k × k` matrix over `A₁` gives a nonnegative matrix over `A₂`. Mathlib's completely positive maps
+(`CompletelyPositiveMap`) are the maps between C⋆-algebras that are `k`-positive for every `k`; this
+file adds the notion at a single matrix size `k`, mirroring Mathlib's structure and morphism class
+with only the matrix orders assumed, as `CompletelyPositiveMap'` does in
+`QuantumSystem.ForMathlib.Analysis.OperatorSystem.Basic`. The completely positive maps between such
+spaces are `k`-positive (`CompletelyPositiveMapClass'.instKPositiveMapClass`, in
+`QuantumSystem.Analysis.OperatorSystem.KPositiveMap`). The results of this file are stated between
+C⋆-algebras, with the orders Mathlib puts on `CStarMatrix (Fin n) (Fin n) A`. A `k`-positive map is
+`j`-positive for every `j ≤ k` (`KPositiveMapClass.of_le`), and, when linear, positive for `k ≥ 1`
+(`KPositiveMapClass.orderHomClass`).
 
 The main result is the **Kadison–Schwarz inequality** for `2`-positive, in particular
 completely positive, maps between possibly non-unital C⋆-algebras. Its source is the
@@ -44,7 +50,7 @@ while a `ForMathlib` file imports Mathlib only.
 
 ## Main definitions
 
-* `KPositiveMap k A₁ A₂` — `k`-positive ℂ-linear maps.
+* `KPositiveMap k A₁ A₂` — `k`-positive ℂ-linear maps between spaces with matrix orders.
 * `KPositiveMapClass F k A₁ A₂` — the corresponding morphism class. As
   `CompletelyPositiveMapClass`, it records only the order property and is meant to be used
   together with `LinearMapClass`; unlike that class, `A₁` and `A₂` are `outParam`s, so that
@@ -314,24 +320,26 @@ end Unital
 
 end CStarMatrix
 
-/-- A ℂ-linear map `φ : A₁ →ₗ[ℂ] A₂` between C⋆-algebras is **`k`-positive** if applying it
-entrywise to a `k × k` matrix over `A₁` preserves nonnegativity. The completely positive maps
-(`CompletelyPositiveMap`) are the maps that are `k`-positive for every `k`. -/
-structure KPositiveMap (k : ℕ) (A₁ : Type*) (A₂ : Type*) [NonUnitalCStarAlgebra A₁]
-    [NonUnitalCStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁]
-    [StarOrderedRing A₂] extends A₁ →ₗ[ℂ] A₂ where
+/-- A ℂ-linear map `φ : A₁ →ₗ[ℂ] A₂` between complex vector spaces with matrix orders is
+**`k`-positive** if applying it entrywise to a nonnegative `k × k` matrix over `A₁` gives a
+nonnegative matrix over `A₂`. Between C⋆-algebras, with the orders Mathlib puts on
+`CStarMatrix (Fin n) (Fin n) A`, the completely positive maps (`CompletelyPositiveMap`) are the maps
+that are `k`-positive for every `k`. -/
+structure KPositiveMap (k : ℕ) (A₁ : Type*) (A₂ : Type*) [AddCommMonoid A₁] [Module ℂ A₁]
+    [AddCommMonoid A₂] [Module ℂ A₂] [∀ n, PartialOrder (CStarMatrix (Fin n) (Fin n) A₁)]
+    [∀ n, PartialOrder (CStarMatrix (Fin n) (Fin n) A₂)] extends A₁ →ₗ[ℂ] A₂ where
   /-- Applying the map entrywise to a nonnegative `k × k` matrix over `A₁` gives a nonnegative
   matrix over `A₂`. -/
   map_cstarMatrix_nonneg' (M : CStarMatrix (Fin k) (Fin k) A₁) (hM : 0 ≤ M) :
     0 ≤ M.map toLinearMap
 
-/-- The morphism class of `k`-positive maps. As `CompletelyPositiveMapClass`, it records only the
-order property and is meant to be used together with `LinearMapClass`. Unlike that class, `A₁` and
-`A₂` are `outParam`s, determined by `F`, so that lemmas about `φ : F` elaborate without an expected
-type. -/
-class KPositiveMapClass (F : Type*) (k : ℕ) (A₁ A₂ : outParam Type*)
-    [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁] [PartialOrder A₂]
-    [StarOrderedRing A₁] [StarOrderedRing A₂] [FunLike F A₁ A₂] : Prop where
+/-- The morphism class of `k`-positive maps between spaces with matrix orders. As
+`CompletelyPositiveMapClass`, it records only the order property and is meant to be used together
+with `LinearMapClass`. Unlike that class, `A₁` and `A₂` are `outParam`s, determined by `F`, so that
+lemmas about `φ : F` elaborate without an expected type. -/
+class KPositiveMapClass (F : Type*) (k : ℕ) (A₁ A₂ : outParam Type*) [AddCommMonoid A₁]
+    [Module ℂ A₁] [AddCommMonoid A₂] [Module ℂ A₂] [∀ n, PartialOrder (CStarMatrix (Fin n) (Fin n) A₁)]
+    [∀ n, PartialOrder (CStarMatrix (Fin n) (Fin n) A₂)] [FunLike F A₁ A₂] : Prop where
   /-- Applying `φ` entrywise to a nonnegative `k × k` matrix over `A₁` gives a nonnegative
   matrix over `A₂`. -/
   map_cstarMatrix_nonneg' (φ : F) (M : CStarMatrix (Fin k) (Fin k) A₁) (hM : 0 ≤ M) :
@@ -339,8 +347,8 @@ class KPositiveMapClass (F : Type*) (k : ℕ) (A₁ A₂ : outParam Type*)
 
 namespace KPositiveMap
 
-variable {k : ℕ} {A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂]
-  [PartialOrder A₁] [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂]
+variable {k : ℕ} {A₁ A₂ : Type*} [AddCommMonoid A₁] [Module ℂ A₁] [AddCommMonoid A₂] [Module ℂ A₂]
+  [∀ n, PartialOrder (CStarMatrix (Fin n) (Fin n) A₁)] [∀ n, PartialOrder (CStarMatrix (Fin n) (Fin n) A₂)]
 
 instance : FunLike (KPositiveMap k A₁ A₂) A₁ A₂ where
   coe f := f.toFun
@@ -461,7 +469,7 @@ variable {B₁ B₂ : Type*} [NonUnitalCStarAlgebra B₁] [NonUnitalCStarAlgebra
 `e₂ : A₂ ≃ B₂` of the codomains, `φ ↦ e₂ ∘ φ ∘ e₁⁻¹`: applying it entrywise to a `k × k` matrix
 applies `e₁⁻¹`, `φ` and `e₂` in turn, and ⋆-homomorphisms are completely positive
 (`NonUnitalStarAlgHomClass.instCompletelyPositiveMapClass`). -/
-def arrowCongr (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂) :
+noncomputable def arrowCongr (e₁ : A₁ ≃⋆ₐ[ℂ] B₁) (e₂ : A₂ ≃⋆ₐ[ℂ] B₂) :
     KPositiveMap k A₁ A₂ ≃ KPositiveMap k B₁ B₂ where
   toFun φ :=
     { toFun b := e₂ (φ (e₁.symm b))
