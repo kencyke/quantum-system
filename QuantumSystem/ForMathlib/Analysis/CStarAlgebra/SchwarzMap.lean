@@ -100,8 +100,10 @@ noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwa
   reverses products has a commutative domain**.
 * `SchwarzMapClass.map_map_mul_map_eq_map_map_mul`, `SchwarzMapClass.map_map_mul_map_eq_map_mul_map`
   — an idempotent Schwarz map satisfies `φ(φ(x) φ(y)) = φ(φ(x) y) = φ(x φ(y))`, the identities
-  behind the Choi–Effros product; `SchwarzMapClass.le_multiplicativeDomain_of_isProj` — **a
-  Schwarz map projecting onto a ⋆-subalgebra `S` is multiplicative on `S`**.
+  behind the Choi–Effros product; `SchwarzMapClass.map_mul_eq_of_range_eq` — **idempotent Schwarz
+  maps with the same range agree on products of its elements**;
+  `SchwarzMapClass.le_multiplicativeDomain_of_isProj` — **a Schwarz map projecting onto a
+  ⋆-subalgebra `S` is multiplicative on `S`**.
 -/
 
 @[expose] public section
@@ -690,6 +692,36 @@ theorem map_map_mul_map_eq_map_map_mul (x y : A) : φ (φ x * φ y) = φ (φ x *
 /-- An idempotent Schwarz map satisfies `φ(φ(x) φ(y)) = φ(x φ(y))`. -/
 theorem map_map_mul_map_eq_map_mul_map (x y : A) : φ (φ x * φ y) = φ (x * φ y) :=
   map_map_mul_of_map_eq_self hφ (map_map hφ y) x
+
+omit hφ in
+/-- **Idempotent Schwarz maps with the same range agree on products of its elements.** For `c` in
+the range, `c⋆ c ≤ φ(c⋆ c)` sent through `ψ` gives `ψ(c⋆ c) ≤ φ(c⋆ c)`, and symmetrically, so
+`φ` identifies `ψ(c⋆ c)` with `ψ(c)⋆ ψ(c) = c⋆ c`, hence `ψ(c⋆ b)` with `c⋆ b`
+(`SchwarzMapClass.map_map_star_mul_of_map_map_star_mul_self`). -/
+theorem map_mul_eq_of_range_eq {G : Type*} [FunLike G A A] [LinearMapClass G ℂ A A]
+    [SchwarzMapClass G A A] {ψ : G}
+    (h : LinearMap.range (φ : A →ₗ[ℂ] A) = LinearMap.range (ψ : A →ₗ[ℂ] A))
+    (hφ : IsIdempotentElem (φ : A →ₗ[ℂ] A)) (hψ : IsIdempotentElem (ψ : A →ₗ[ℂ] A)) {a b : A}
+    (ha : φ a = a) (hb : φ b = b) : φ (a * b) = ψ (a * b) := by
+  have hφψ (x : A) : φ (ψ x) = ψ x := by
+    obtain ⟨y, hy⟩ : ψ x ∈ LinearMap.range (φ : A →ₗ[ℂ] A) := h ▸ LinearMap.mem_range_self _ x
+    rw [← hy]
+    exact map_map hφ y
+  have hψφ (x : A) : ψ (φ x) = φ x := by
+    obtain ⟨y, hy⟩ : φ x ∈ LinearMap.range (ψ : A →ₗ[ℂ] A) := h ▸ LinearMap.mem_range_self _ x
+    rw [← hy]
+    exact map_map hψ y
+  have hψ_eq {x : A} (hx : φ x = x) : ψ x = x := hx ▸ hψφ x
+  have hc : φ (star a) = star a := by rw [map_star, ha]
+  have hsq : φ (star (star a) * star a) = ψ (star (star a) * star a) := by
+    refine le_antisymm ?_ ?_
+    · have := OrderHomClass.mono φ (le_map_star_mul ψ (star a))
+      rwa [hψ_eq hc, hφψ] at this
+    · have := OrderHomClass.mono ψ (le_map_star_mul φ (star a))
+      rwa [hc, hψφ] at this
+  have key := map_map_star_mul_of_map_map_star_mul_self ψ φ (a := star a)
+    (by rw [hφψ, hψ_eq hc, hsq]) b
+  rwa [hφψ, hψ_eq hc, hψ_eq hb, star_star, eq_comm] at key
 
 omit hφ in
 /-- **A Schwarz map projecting onto a ⋆-subalgebra is multiplicative on it.** If a Schwarz map `φ`

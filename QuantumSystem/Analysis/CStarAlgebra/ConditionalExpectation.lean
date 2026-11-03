@@ -11,6 +11,7 @@ public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Basic
+import QuantumSystem.Analysis.CStarAlgebra.ChoiEffros
 import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.UnitalContraction
@@ -273,6 +274,21 @@ noncomputable def toSchwarzMap : SchwarzMap A A :=
 @[simp]
 lemma toSchwarzMap_apply (x : A) : toSchwarzMap hφ hn x = φ x :=
   rfl
+
+/-- A projection is idempotent, so that `ChoiEffros (toSchwarzMap hφ hn)` is a C⋆-algebra. -/
+instance : Fact (IsIdempotentElem (toSchwarzMap hφ hn : A →ₗ[ℂ] A)) :=
+  ⟨LinearMap.ext fun a => hφ.map_id _ (hφ.map_mem a)⟩
+
+/-- `toSchwarzMap hφ hn` is the projection `φ` onto `S`, so that `ChoiEffros.val_mul_of_isProj`
+applies to it. -/
+lemma isProj_toSchwarzMap : IsProj S.toSubmodule (toSchwarzMap hφ hn) :=
+  ⟨hφ.map_mem, hφ.map_id⟩
+
+noncomputable example : NonUnitalCStarAlgebra (ChoiEffros (toSchwarzMap hφ hn)) :=
+  inferInstance
+
+example (x y : ChoiEffros (toSchwarzMap hφ hn)) : (x * y).val = x.val * y.val :=
+  ChoiEffros.val_mul_of_isProj (isProj_toSchwarzMap hφ hn) x y
 
 /-- The range `S` of a contractive projection lies in its multiplicative domain. -/
 lemma le_multiplicativeDomain_of_norm_apply_le :

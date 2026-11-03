@@ -8,6 +8,8 @@ module
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 
+import QuantumSystem.Analysis.CStarAlgebra.ChoiEffros
+
 /-!
 # `2`-positive maps as Schwarz maps
 
@@ -74,6 +76,19 @@ noncomputable def toSchwarzMap (φ : F) (hφ : φ 1 ≤ 1) : SchwarzMap A₁ A�
 /-- `toSchwarzMap φ hφ` evaluates as `φ`. -/
 @[simp] lemma toSchwarzMap_apply (φ : F) (hφ : φ 1 ≤ 1) (a : A₁) :
     toSchwarzMap φ hφ a = φ a := rfl
+
+/-- `toSchwarzMap φ hφ` is idempotent when `φ` is, so that `ChoiEffros (toSchwarzMap φ hφ)` is a
+C⋆-algebra. -/
+instance {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {F : Type*}
+    [FunLike F A A] [LinearMapClass F ℂ A A] [KPositiveMapClass F 2 A A] (φ : F) (hφ : φ 1 ≤ 1)
+    [h : Fact (IsIdempotentElem (φ : A →ₗ[ℂ] A))] :
+    Fact (IsIdempotentElem (toSchwarzMap φ hφ : A →ₗ[ℂ] A)) :=
+  ⟨h.out⟩
+
+noncomputable example {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A] {F : Type*}
+    [FunLike F A A] [LinearMapClass F ℂ A A] [KPositiveMapClass F 2 A A] (φ : F) (hφ : φ 1 ≤ 1)
+    [Fact (IsIdempotentElem (φ : A →ₗ[ℂ] A))] : CStarAlgebra (ChoiEffros (toSchwarzMap φ hφ)) :=
+  inferInstance
 
 variable {G : Type*} [FunLike G A₂ A₁] [KPositiveMapClass G 2 A₂ A₁]
 
