@@ -22,7 +22,8 @@ describes the completely bounded maps `φ : F → B(H)`: they are the maps `x �
 into some `B(K')` (`OperatorSpace.exists_isCompleteIsometry`, Ruan's theorem), and the
 **Arveson–Wittstock–Hahn–Banach theorem** is the special form in which `x ↦ V₁† π(j x) V₂` is read on the
 whole space: a completely bounded map on a subspace `E` of an operator space `F` extends to `F` with the
-same cb norm.
+same cb norm. Read on the range of a complete isometry, it makes `B(H)` injective among operator
+spaces: a completely bounded map extends along every complete isometry with the same cb norm.
 
 For nontrivial unital `A` and `‖φ‖_cb ≤ 1`, the map `!![λ 1, x; y⋆, μ 1] ↦ !![λ 1, φ x; (φ y)⋆, μ 1]` on the Paulsen
 system of the range of `j` is completely positive (`Submodule.paulsenCompletelyPositiveMap`), so Arveson's
@@ -53,6 +54,8 @@ forces `φ = 0` and is handled directly in `CompletelyBoundedMap.exists_factoriz
   theorem for operator spaces**: for a subspace `E` of an operator space `F`, through a complete isometry
   `j : F → B(K')`.
 * `CompletelyBoundedMap.exists_extension` — **the Arveson–Wittstock–Hahn–Banach theorem**.
+* `OperatorSpace.IsCompleteIsometry.exists_extension_completelyBoundedMap` — **the injectivity of
+  `B(H)` among operator spaces**: the extension along a complete isometry.
 -/
 
 @[expose] public noncomputable section
@@ -540,3 +543,24 @@ theorem exists_extension (φ : E →CB (H →L[ℂ] H)) :
 end OperatorSpace
 
 end CompletelyBoundedMap
+
+namespace OperatorSpace.IsCompleteIsometry
+
+variable [CompleteSpace H] {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
+  [∀ k, Norm (CStarMatrix (Fin k) (Fin k) E)] [OperatorSpace E] [NormedAddCommGroup F] [NormedSpace ℂ F]
+  [∀ k, Norm (CStarMatrix (Fin k) (Fin k) F)] [OperatorSpace F] {j : E →ₗ[ℂ] F}
+
+/-- **`B(H)` is injective among operator spaces.** A completely bounded map `φ : E → B(H)` extends along
+every complete isometry `j : E → F` into an operator space `F` with the same cb norm: there is a completely
+bounded `ψ : F → B(H)` with `ψ ∘ j = φ` and `‖ψ‖_cb = ‖φ‖_cb`. The map `φ` transports to the range of `j`
+with the same cb norm (`OperatorSpace.IsCompleteIsometry.exists_completelyBoundedMap_range`), and the
+Arveson–Wittstock–Hahn–Banach theorem (`CompletelyBoundedMap.exists_extension`) extends it from there. -/
+theorem exists_extension_completelyBoundedMap (hj : IsCompleteIsometry j) (φ : E →CB (H →L[ℂ] H)) :
+    ∃ ψ : F →CB (H →L[ℂ] H), ψ.comp hj.toCompletelyBoundedMap = φ ∧ ‖ψ‖ = ‖φ‖ := by
+  obtain ⟨φ', hφ', hn'⟩ := hj.exists_completelyBoundedMap_range φ
+  obtain ⟨ψ, hψ, hn⟩ := CompletelyBoundedMap.exists_extension φ'
+  refine ⟨ψ, CompletelyBoundedMap.ext fun v => ?_, hn.trans hn'⟩
+  rw [← hφ' v, ← hψ]
+  rfl
+
+end OperatorSpace.IsCompleteIsometry
