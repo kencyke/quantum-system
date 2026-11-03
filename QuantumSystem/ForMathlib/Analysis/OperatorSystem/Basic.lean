@@ -41,6 +41,17 @@ definitionally with Mathlib's between C⋆-algebras (`CompletelyPositiveMap'.equ
 It is meant to replace Mathlib's definition upstream, by weakening the hypotheses of the latter, and
 to disappear from this file then.
 
+In an operator system every self-adjoint `h` is the difference `(r • 1 + h) - r • 1` of positive
+elements (`OperatorSystem.instSelfAdjointDecompose`), so that completely positive maps from it into a
+matrix-ordered space preserve the involution (`CompletelyPositiveMapClass'.instStarHomClass`), as
+Mathlib's positive maps into a C⋆-algebra do; the range of a unital one is an operator subsystem
+(`CompletelyPositiveMap'.range`). A linear map that preserves and reflects the positivity of all
+square matrices is a complete order embedding (`LinearMap.IsCompleteOrderEmbedding`); on a
+matrix-ordered space it is injective (`LinearMap.IsCompleteOrderEmbedding.injective`), it is a
+complete order embedding onto its range (`LinearMap.IsCompleteOrderEmbedding.rangeRestrict`), and a
+linear isomorphism that is one has an inverse that is one too
+(`LinearMap.IsCompleteOrderEmbedding.symm`).
+
 ## Main definitions
 
 * `CStarMatrix.scalarMul α β` — the two-sided multiplication `X ↦ α X β` of a matrix over `V` by
@@ -52,6 +63,10 @@ to disappear from this file then.
 * `OperatorSubsystem T` — the unital ⋆-closed subspaces of `T`, with the induced matrix orders.
 * `CompletelyPositiveMap' A₁ A₂`, `CompletelyPositiveMapClass' F A₁ A₂` — completely positive maps
   between matrix-ordered spaces.
+* `CompletelyPositiveMap'.range` — the range of a unital completely positive map on an operator
+  system, as an operator subsystem.
+* `LinearMap.IsCompleteOrderEmbedding j` — linear maps with `0 ≤ X.map j ↔ 0 ≤ X` for every square
+  matrix `X`.
 
 ## Main results
 
@@ -64,6 +79,14 @@ to disappear from this file then.
 * `CStarAlgebra.instOperatorSystem`, `OperatorSubsystem.instOperatorSystem` — C⋆-algebras and their
   operator subsystems are operator systems.
 * `CompletelyPositiveMapClass'.instOrderHomClass` — completely positive maps are positive.
+* `OperatorSystem.instSelfAdjointDecompose` — self-adjoint elements of an operator system are
+  differences of positive elements.
+* `CompletelyPositiveMapClass'.instStarHomClass` — completely positive maps from an operator system
+  preserve the involution.
+* `LinearMap.IsCompleteOrderEmbedding.injective` — complete order embeddings are injective.
+* `LinearMap.IsCompleteOrderEmbedding.rangeRestrict` — a complete order embedding is one onto its
+  range.
+* `LinearMap.IsCompleteOrderEmbedding.symm` — the inverse of a complete order isomorphism is one.
 * `CompletelyPositiveMap'.equivCompletelyPositiveMap` — between C⋆-algebras, these are Mathlib's
   completely positive maps.
 
@@ -148,7 +171,7 @@ lemma scalarConj_smul_one [DecidableEq m] (a : ℂ) (X : CStarMatrix m m V) :
 /-- The diagonal matrix with all diagonal entries `v` is the sum over `i` of the conjugations of
 the `1 × 1` matrix `v` by the `i`-th unit row. -/
 lemma diagonal_eq_sum_scalarConj [DecidableEq m] (v : V) :
-    (ofMatrix (Matrix.of fun i j => if i = j then v else 0) : CStarMatrix m m V) =
+    (ofMatrix (Matrix.diagonal fun _ => v) : CStarMatrix m m V) =
       ∑ i, scalarConj (Matrix.of fun (_ : Fin 1) (j : m) => if j = i then (1 : ℂ) else 0)
         (ofMatrix (Matrix.of fun _ _ => v)) := by
   ext a b
@@ -243,8 +266,7 @@ lemma star_smulRight [StarAddMonoid V] [StarModule ℂ V] (M : CStarMatrix m m �
 /-- The matrix `smulRight (B⋆ B) v` is the conjugation of the diagonal matrix with entries `v` by
 the scalar matrix `B`. -/
 lemma smulRight_star_mul_self [DecidableEq m] (B : CStarMatrix m m ℂ) (v : V) :
-    smulRight (star B * B) v =
-      scalarConj (ofMatrix.symm B) (ofMatrix (Matrix.of fun i j => if i = j then v else 0)) := by
+    smulRight (star B * B) v = scalarConj (ofMatrix.symm B) (ofMatrix (Matrix.diagonal fun _ => v)) := by
   ext i j
   rw [smulRight_apply, scalarConj_apply, CStarMatrix.mul_apply, Finset.sum_smul]
   refine Finset.sum_congr rfl fun p _ => ?_
@@ -328,7 +350,8 @@ class MatrixOrdered (V : Type*) [AddCommGroup V] [Module ℂ V] [StarAddMonoid V
 unit is positive, each self-adjoint element lies below a real multiple of it, and at every level a
 matrix is positive when adding any positive multiple of the identity matrix makes it positive. That
 the identity matrix is an order unit at every level follows
-(`OperatorSystem.exists_le_smul_one_of_isSelfAdjoint`). -/
+(`OperatorSystem.exists_le_smul_one_of_isSelfAdjoint`). The axioms admit the zero space, the only
+operator system with `1 = 0` (`OperatorSystem.subsingleton_of_one_eq_zero`). -/
 class OperatorSystem (V : Type*) [AddCommGroup V] [Module ℂ V] [StarAddMonoid V] [StarModule ℂ V]
     [PartialOrder V] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)] [One V] : Prop
     extends MatrixOrdered V where
@@ -439,8 +462,8 @@ positive `1 × 1` matrix `1` by the `i`-th unit row. -/
 lemma one_nonneg (k : ℕ) : 0 ≤ (1 : CStarMatrix (Fin k) (Fin k) V) := by
   classical
   have h₁ : 0 ≤ single₁ (1 : V) := single₁_nonneg_iff'.mpr zero_le_one'
-  rw [show (1 : CStarMatrix (Fin k) (Fin k) V) = ofMatrix (Matrix.of fun i j => if i = j then 1 else 0)
-    from ext fun _ _ => rfl, diagonal_eq_sum_scalarConj]
+  rw [show (1 : CStarMatrix (Fin k) (Fin k) V) = ofMatrix (Matrix.diagonal fun _ => 1) from rfl,
+    diagonal_eq_sum_scalarConj]
   exact Finset.sum_nonneg fun i _ => scalarConj_nonneg _ h₁
 
 /-- A self-adjoint element lies between `-r` and `r` times the unit for some `r ≥ 0`. -/
@@ -455,6 +478,17 @@ lemma exists_abs_le_smul_one' {a : V} (ha : IsSelfAdjoint a) :
   · refine h₁.trans ?_
     rw [← sub_nonneg, ← sub_smul, ← Complex.ofReal_sub]
     exact smul_nonneg_of_nonneg' (by simp) zero_le_one'
+
+/-- An operator system with `1 = 0` is the zero space: a self-adjoint element lies between `-r • 1`
+and `r • 1`, and every element is `ℜ v + i ℑ v`. -/
+lemma subsingleton_of_one_eq_zero (h : (1 : V) = 0) : Subsingleton V := by
+  have hsa : ∀ v : V, IsSelfAdjoint v → v = 0 := fun v hv => by
+    obtain ⟨r, -, h₁, h₂⟩ := exists_abs_le_smul_one' hv
+    simp only [h, smul_zero, neg_zero] at h₁ h₂
+    exact le_antisymm h₂ h₁
+  refine ⟨fun v w => ?_⟩
+  rw [← realPart_add_I_smul_imaginaryPart v, ← realPart_add_I_smul_imaginaryPart w, hsa _ (ℜ v).2,
+    hsa _ (ℑ v).2, hsa _ (ℜ w).2, hsa _ (ℑ w).2]
 
 /-- `smulRight P v` is positive for a positive scalar matrix `P` and a positive `v`: for `P = B⋆ B` it
 is the conjugation by `B` of the positive diagonal matrix with entries `v`, and the positive scalar
@@ -615,6 +649,33 @@ instance instOperatorSystem {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarO
 
 end CStarAlgebra
 
+/-! ### Subspaces with the induced matrix orders -/
+
+namespace Submodule
+
+variable {V : Type*} [AddCommMonoid V] [Module ℂ V] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)]
+  (E : Submodule ℂ V)
+
+/-- The matrix orders of a subspace are those of the ambient space: a matrix over `E` is positive when
+it is positive as a matrix over `V`. -/
+instance instPartialOrderCStarMatrix (k : ℕ) : PartialOrder (CStarMatrix (Fin k) (Fin k) E) :=
+  PartialOrder.lift (fun X => X.map Subtype.val) fun _ _ h =>
+    CStarMatrix.ext fun i j => Subtype.val_injective (congrFun (congrFun h i) j)
+
+variable {E}
+
+/-- Matrices over a subspace are ordered as matrices over the ambient space. -/
+lemma cstarMatrix_le_iff {k : ℕ} {X Y : CStarMatrix (Fin k) (Fin k) E} :
+    X ≤ Y ↔ X.map Subtype.val ≤ Y.map Subtype.val :=
+  Iff.rfl
+
+/-- A matrix over a subspace is positive when it is positive over the ambient space. -/
+lemma cstarMatrix_nonneg_iff {k : ℕ} {X : CStarMatrix (Fin k) (Fin k) E} :
+    0 ≤ X ↔ 0 ≤ X.map Subtype.val :=
+  Iff.rfl
+
+end Submodule
+
 /-! ### Operator subsystems -/
 
 /-- An **operator subsystem** of `T`: a complex subspace of `T` closed under `star` and containing
@@ -671,11 +732,10 @@ lemma mem_toSubmodule {S : OperatorSubsystem T} {x : T} : x ∈ S.toSubmodule �
 
 variable [PartialOrder T] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) T)] (S : OperatorSubsystem T)
 
-/-- The matrix orders of an operator subsystem are those of the ambient space: a matrix over `S`
-is positive when it is positive as a matrix over `T`. -/
+/-- The matrix orders of an operator subsystem are those of its underlying subspace: a matrix over
+`S` is positive when it is positive as a matrix over `T`. -/
 instance instPartialOrderCStarMatrix (k : ℕ) : PartialOrder (CStarMatrix (Fin k) (Fin k) S) :=
-  PartialOrder.lift (fun X => X.map Subtype.val) fun _ _ h =>
-    CStarMatrix.ext fun i j => Subtype.val_injective (congrFun (congrFun h i) j)
+  inferInstanceAs (PartialOrder (CStarMatrix (Fin k) (Fin k) S.toSubmodule))
 
 variable {S}
 
@@ -852,10 +912,12 @@ end Defs
 
 namespace CompletelyPositiveMapClass'
 
-variable {F A₁ A₂ : Type*} [AddCommGroup A₁] [Module ℂ A₁] [StarAddMonoid A₁] [StarModule ℂ A₁]
-  [PartialOrder A₁] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) A₁)] [MatrixOrdered A₁]
-  [AddCommGroup A₂] [Module ℂ A₂] [StarAddMonoid A₂] [StarModule ℂ A₂] [PartialOrder A₂]
-  [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) A₂)] [MatrixOrdered A₂] [FunLike F A₁ A₂]
+-- `FunLike` comes first so that an instance search with `A₁`, `A₂` unknown determines them before
+-- looking for their matrix orders, which would otherwise diverge.
+variable {F A₁ A₂ : Type*} [FunLike F A₁ A₂] [AddCommGroup A₁] [Module ℂ A₁] [StarAddMonoid A₁]
+  [StarModule ℂ A₁] [PartialOrder A₁] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) A₁)]
+  [MatrixOrdered A₁] [AddCommGroup A₂] [Module ℂ A₂] [StarAddMonoid A₂] [StarModule ℂ A₂]
+  [PartialOrder A₂] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) A₂)] [MatrixOrdered A₂]
   [LinearMapClass F ℂ A₁ A₂] [CompletelyPositiveMapClass' F A₁ A₂]
 
 /-- Completely positive maps between matrix-ordered spaces are positive: the order at level `1` is
@@ -867,7 +929,139 @@ instance instOrderHomClass : OrderHomClass F A₁ A₂ := .of_addMonoidHom fun �
   convert h using 1
   exact CStarMatrix.ext fun _ _ => by simp [CStarMatrix.map]; rfl
 
+/-- Completely positive maps into a matrix-ordered space preserve the involution when self-adjoint
+elements of the domain are differences of positive elements, as in an operator system: the images of
+the positive parts of a self-adjoint element are positive, hence self-adjoint, and every element is
+`ℜ a + i ℑ a`. This is Mathlib's instance for positive maps into a C⋆-algebra, with the codomain a
+matrix-ordered space. It applies to every `F`, so it has low priority: trying it first on a
+⋆-algebra isomorphism of matrix algebras exhausts the search budget on the matrix orders. -/
+instance (priority := 100) instStarHomClass [SelfAdjointDecompose A₁] : StarHomClass F A₁ A₂ where
+  map_star φ a := by
+    have h : ∀ b : A₁, IsSelfAdjoint b → IsSelfAdjoint (φ b) := fun b hb => by
+      obtain ⟨c, d, hc, hd, rfl⟩ := hb.exists_nonneg_sub_nonneg
+      rw [map_sub]
+      exact (MatrixOrdered.isSelfAdjoint_of_nonneg (map_nonneg φ hc)).sub
+        (MatrixOrdered.isSelfAdjoint_of_nonneg (map_nonneg φ hd))
+    rw [← realPart_add_I_smul_imaginaryPart a]
+    simp [h _ (ℜ a).2, IsSelfAdjoint.star_eq, h _ (ℑ a).2]
+
 end CompletelyPositiveMapClass'
+
+/-! ### Self-adjoint elements as differences of positive elements -/
+
+namespace OperatorSystem
+
+variable {V : Type*} [AddCommGroup V] [Module ℂ V] [StarAddMonoid V] [StarModule ℂ V]
+  [PartialOrder V] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)] [One V] [OperatorSystem V]
+
+/-- In an operator system every self-adjoint `h` is a difference of positive elements,
+`h = (r • 1 + h) - r • 1` for `-r • 1 ≤ h ≤ r • 1`. Through this, completely positive maps from an
+operator system preserve the involution (`CompletelyPositiveMapClass'.instStarHomClass`). -/
+instance instSelfAdjointDecompose : SelfAdjointDecompose V where
+  exists_nonneg_sub_nonneg {h} hh := by
+    obtain ⟨r, hr, h₁, -⟩ := exists_abs_le_smul_one' hh
+    exact ⟨(r : ℂ) • 1 + h, (r : ℂ) • 1, neg_le_iff_add_nonneg'.mp h₁,
+      MatrixOrdered.smul_nonneg_of_nonneg' hr zero_le_one', (add_sub_cancel_left _ _).symm⟩
+
+end OperatorSystem
+
+/-! ### The range of a unital completely positive map -/
+
+namespace CompletelyPositiveMap'
+
+variable {V W : Type*} [AddCommGroup V] [Module ℂ V] [StarAddMonoid V] [StarModule ℂ V]
+  [PartialOrder V] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)] [One V] [OperatorSystem V]
+  [AddCommGroup W] [Module ℂ W] [StarAddMonoid W] [StarModule ℂ W] [PartialOrder W]
+  [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) W)] [MatrixOrdered W] [One W]
+
+/-- The range of a unital completely positive map `φ` from an operator system into a matrix-ordered
+space, as an operator subsystem: it is closed under `star`, as `φ` preserves the involution. -/
+def range (φ : V →CP' W) (hφ : φ 1 = 1) : OperatorSubsystem W where
+  toSubmodule := LinearMap.range φ.toLinearMap
+  star_mem' {x} hx := by
+    obtain ⟨v, rfl⟩ := LinearMap.mem_range.mp hx
+    exact LinearMap.mem_range.mpr ⟨star v, map_star φ v⟩
+  one_mem' := LinearMap.mem_range.mpr ⟨1, hφ⟩
+
+/-- `x` lies in the range of `φ` when it is a value of `φ`. -/
+@[simp] lemma mem_range {φ : V →CP' W} {hφ : φ 1 = 1} {x : W} : x ∈ φ.range hφ ↔ ∃ v, φ v = x :=
+  Iff.rfl
+
+/-- `φ v` lies in the range of `φ`. -/
+lemma mem_range_self (φ : V →CP' W) (hφ : φ 1 = 1) (v : V) : φ v ∈ φ.range hφ := ⟨v, rfl⟩
+
+end CompletelyPositiveMap'
+
+/-! ### Complete order embeddings -/
+
+namespace LinearMap
+
+section CompleteOrderEmbedding
+
+variable {U V W : Type*} [AddCommMonoid U] [Module ℂ U] [AddCommMonoid V] [Module ℂ V]
+  [AddCommMonoid W] [Module ℂ W] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) U)]
+  [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) W)]
+
+/-- A linear map `j : V → W` between spaces with matrix orders is a **complete order embedding** if it
+preserves and reflects the positivity of every square matrix: `0 ≤ X.map j ↔ 0 ≤ X`. For arbitrary
+matrix orders this does not make `j` injective; on a matrix-ordered space it does
+(`LinearMap.IsCompleteOrderEmbedding.injective`). -/
+def IsCompleteOrderEmbedding (j : V →ₗ[ℂ] W) : Prop :=
+  ∀ (k : ℕ) (X : CStarMatrix (Fin k) (Fin k) V), 0 ≤ X.map j ↔ 0 ≤ X
+
+namespace IsCompleteOrderEmbedding
+
+variable {j : V →ₗ[ℂ] W}
+
+/-- A complete order embedding as a completely positive map. -/
+def toCompletelyPositiveMap' (hj : IsCompleteOrderEmbedding j) : V →CP' W where
+  toLinearMap := j
+  map_cstarMatrix_nonneg' k _ hX := (hj k _).mpr hX
+
+/-- `hj.toCompletelyPositiveMap'` is `j` as a function. -/
+@[simp] lemma coe_toCompletelyPositiveMap' (hj : IsCompleteOrderEmbedding j) :
+    ⇑hj.toCompletelyPositiveMap' = j :=
+  rfl
+
+/-- Complete order embeddings compose. -/
+lemma comp {i : W →ₗ[ℂ] U} (hi : IsCompleteOrderEmbedding i) (hj : IsCompleteOrderEmbedding j) :
+    IsCompleteOrderEmbedding (i ∘ₗ j) :=
+  fun k X => (hi k (X.map j)).trans (hj k X)
+
+/-- The inverse of a linear isomorphism that is a complete order embedding is one too: such an
+isomorphism is a complete order isomorphism. -/
+lemma symm {e : V ≃ₗ[ℂ] W} (he : IsCompleteOrderEmbedding (e : V →ₗ[ℂ] W)) :
+    IsCompleteOrderEmbedding (e.symm : W →ₗ[ℂ] V) := fun k Y => by
+  have hY : (Y.map (e.symm : W →ₗ[ℂ] V)).map (e : V →ₗ[ℂ] W) = Y :=
+    CStarMatrix.ext fun _ _ => e.apply_symm_apply _
+  exact (he k _).symm.trans (by rw [hY])
+
+/-- A complete order embedding onto its range is a complete order embedding, the range carrying the
+matrix orders of `W`. -/
+lemma rangeRestrict (hj : IsCompleteOrderEmbedding j) : IsCompleteOrderEmbedding j.rangeRestrict :=
+  fun k X => hj k X
+
+end IsCompleteOrderEmbedding
+
+end CompleteOrderEmbedding
+
+namespace IsCompleteOrderEmbedding
+
+variable {V W : Type*} [AddCommGroup V] [Module ℂ V] [StarAddMonoid V] [StarModule ℂ V]
+  [PartialOrder V] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)] [MatrixOrdered V]
+  [AddCommGroup W] [Module ℂ W] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) W)] {j : V →ₗ[ℂ] W}
+
+/-- A complete order embedding of a matrix-ordered space is injective: if `j v = 0`, the `1 × 1`
+matrices with entries `v` and `-v` are positive, as their images are `0`. -/
+lemma injective (hj : IsCompleteOrderEmbedding j) : Function.Injective j := by
+  have h : ∀ v, j v = 0 → 0 ≤ v := fun v hv => MatrixOrdered.single₁_nonneg_iff'.mp
+    ((hj 1 (single₁ v)).mp (le_of_eq (CStarMatrix.ext fun _ _ => hv.symm)))
+  refine (injective_iff_map_eq_zero j).mpr fun v hv => le_antisymm ?_ (h v hv)
+  exact neg_nonneg.mp (h (-v) (by rw [map_neg, hv, neg_zero]))
+
+end IsCompleteOrderEmbedding
+
+end LinearMap
 
 /-! ### Mathlib's completely positive maps -/
 

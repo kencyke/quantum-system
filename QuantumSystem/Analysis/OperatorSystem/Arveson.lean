@@ -17,7 +17,9 @@ public import QuantumSystem.ForMathlib.Analysis.OperatorSystem.Basic
 A completely positive map `φ : S → B(H)` on an operator subsystem `S` of an operator system `T`
 extends to a completely positive map `T → B(H)` (`OperatorSubsystem.exists_extension_completelyPositiveMap`);
 for `T` a unital C⋆-algebra the extension is one of Mathlib's completely positive maps
-(`CompletelyPositiveMap.exists_extension_of_operatorSubsystem`).
+(`CompletelyPositiveMap.exists_extension_of_operatorSubsystem`). Hence `B(H)` is injective: a
+completely positive map on an operator system extends along every unital complete order embedding
+into another (`LinearMap.IsCompleteOrderEmbedding.exists_extension_completelyPositiveMap`).
 
 The proof first compresses to finite-dimensional subspaces of `H`. For orthonormal vectors
 `e₁, …, eₙ`, completely positive maps into `B(H)` compressed to their span correspond to positive
@@ -48,6 +50,8 @@ on the matrix coefficients `⟪x, ψ(a) y⟫`, which the net eventually satisfie
 * `OperatorSubsystem.exists_extension_completelyPositiveMap` — **Arveson's extension theorem** for
   operator systems.
 * `CompletelyPositiveMap.exists_extension_of_operatorSubsystem` — its form for a unital C⋆-algebra.
+* `LinearMap.IsCompleteOrderEmbedding.exists_extension_completelyPositiveMap` — the injectivity of
+  `B(H)`.
 -/
 
 @[expose] public noncomputable section
@@ -172,6 +176,26 @@ lemma inner_mapOfFunctional_apply {n : ℕ} (F : CStarMatrix (Fin n) (Fin n) T �
   refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
   ring
 
+omit [CompleteSpace H] in
+/-- The quadratic form `∑ₚ_q ⟪ξₚ, ψ(Xₚ_q) ξ_q⟫` of `ψ = mapOfFunctional F e` at a `k × k` matrix `X`
+is `F (β⋆ X β)` for the scalar matrix `β q j = ⟪eⱼ, ξ_q⟫`. -/
+lemma sum_inner_mapOfFunctional_apply {n k : ℕ} (F : CStarMatrix (Fin n) (Fin n) T →ₗ[ℂ] ℂ)
+    (e : Fin n → H) (X : CStarMatrix (Fin k) (Fin k) T) (ξ : Fin k → H) :
+    ∑ p, ∑ q, ⟪ξ p, mapOfFunctional F e (X p q) (ξ q)⟫_ℂ =
+      F (scalarConj (Matrix.of fun q j => ⟪e j, ξ q⟫_ℂ) X) := by
+  rw [apply_eq_sum_entryFunctional]
+  simp only [scalarConj_apply, map_sum, map_smul, smul_eq_mul, Matrix.of_apply,
+    inner_mapOfFunctional_apply]
+  rw [Finset.sum_congr rfl fun p _ => Finset.sum_comm]
+  rw [Finset.sum_congr rfl fun p _ => Finset.sum_congr rfl fun i _ => Finset.sum_comm]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun p _ =>
+    Finset.sum_congr rfl fun q _ => ?_
+  rw [Complex.star_def, inner_conj_symm]
+  ring
+
 variable [StarAddMonoid T] [StarModule ℂ T] [PartialOrder T]
   [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) T)] [MatrixOrdered T]
 
@@ -186,21 +210,8 @@ def completelyPositiveMapOfFunctional {n : ℕ} (F : CStarMatrix (Fin n) (Fin n)
     intro ξ
     let β : Matrix (Fin k) (Fin n) ℂ := Matrix.of fun q j => ⟪e j, ξ q⟫_ℂ
     have key : ∑ p, ∑ q, ⟪ξ p, X.map (mapOfFunctional F e) p q (ξ q)⟫_ℂ =
-        F (scalarConj β X) := by
-      rw [apply_eq_sum_entryFunctional]
-      simp only [scalarConj_apply, map_sum, map_smul, smul_eq_mul, β, Matrix.of_apply,
-        ]
-      change ∑ p, ∑ q, ⟪ξ p, mapOfFunctional F e (X p q) (ξ q)⟫_ℂ = _
-      simp only [inner_mapOfFunctional_apply]
-      rw [Finset.sum_congr rfl fun p _ => Finset.sum_comm]
-      rw [Finset.sum_congr rfl fun p _ => Finset.sum_congr rfl fun i _ => Finset.sum_comm]
-      rw [Finset.sum_comm]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      rw [Finset.sum_comm]
-      refine Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun p _ =>
-        Finset.sum_congr rfl fun q _ => ?_
-      rw [Complex.star_def, inner_conj_symm]
-      ring
+        F (scalarConj β X) :=
+      sum_inner_mapOfFunctional_apply F e X ξ
     rw [key]
     exact hF _ (MatrixOrdered.scalarConj_nonneg β hX)
 
@@ -454,3 +465,32 @@ theorem CompletelyPositiveMap.exists_extension_of_operatorSubsystem {A : Type*} 
   exact ⟨CompletelyPositiveMap'.equivCompletelyPositiveMap ψ, fun s => by
     rw [← hψ]
     rfl⟩
+
+/-! ### Injectivity of `B(H)` -/
+
+namespace LinearMap.IsCompleteOrderEmbedding
+
+variable {V W : Type*} [AddCommGroup V] [Module ℂ V] [StarAddMonoid V] [StarModule ℂ V]
+  [PartialOrder V] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)] [One V] [OperatorSystem V]
+  [AddCommGroup W] [Module ℂ W] [StarAddMonoid W] [StarModule ℂ W] [PartialOrder W]
+  [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) W)] [One W] [OperatorSystem W] {j : V →ₗ[ℂ] W}
+
+/-- **`B(H)` is injective.** A completely positive map `φ : V → B(H)` on an operator system `V`
+extends along every unital complete order embedding `j : V → W` into an operator system `W`: there is
+a completely positive `ψ : W → B(H)` with `ψ ∘ j = φ`. The range of `j` is an operator subsystem of
+`W` (`CompletelyPositiveMap'.range`) onto which `j` is a complete order isomorphism
+(`LinearMap.IsCompleteOrderEmbedding.rangeRestrict`), and Arveson's extension theorem extends
+`φ ∘ j⁻¹` from it. -/
+theorem exists_extension_completelyPositiveMap (hj : IsCompleteOrderEmbedding j) (hj1 : j 1 = 1)
+    (φ : V →CP' (H →L[ℂ] H)) : ∃ ψ : W →CP' (H →L[ℂ] H), ψ.comp hj.toCompletelyPositiveMap' = φ := by
+  let S := hj.toCompletelyPositiveMap'.range hj1
+  let e : V ≃ₗ[ℂ] S := LinearEquiv.ofInjective j hj.injective
+  have he : IsCompleteOrderEmbedding (e : V →ₗ[ℂ] S) := hj.rangeRestrict
+  obtain ⟨ψ, hψ⟩ := OperatorSubsystem.exists_extension_completelyPositiveMap
+    (φ.comp he.symm.toCompletelyPositiveMap')
+  refine ⟨ψ, CompletelyPositiveMap'.ext fun v => ?_⟩
+  have h := DFunLike.congr_fun hψ (e v)
+  change ψ (j v) = φ (e.symm (e v)) at h
+  rwa [e.symm_apply_apply] at h
+
+end LinearMap.IsCompleteOrderEmbedding
