@@ -58,7 +58,11 @@ and `2 • id` is not a Schwarz map.
 commutative domain (`SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap`): the inequality at
 `x` and at `x⋆` gives `f(x x⋆) = f(x)⋆ f(x) ≤ f(x⋆ x) ≤ f(x x⋆)`, so every element is normal, and
 the normality of `a + b⋆` and of `a + I • b⋆` gives `a b = b a`. So a ⋆-anti-automorphism of a
-noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwarz map.
+noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwarz map. A ⋆-linear
+map reversing products is a contraction, being a ⋆-homomorphism into the opposite algebra
+(`StarHomClass.norm_apply_le_of_map_mul_swap`); so a `2`-positive map reversing products is a
+Schwarz map with no normalisation assumed, by the Kadison–Schwarz inequality for `2`-positive
+contractions.
 
 ## Main definitions
 
@@ -96,6 +100,8 @@ noncommutative C⋆-algebra, such as the transpose of matrices, is never a Schwa
   is multiplicative.
 * `SchwarzMapClass.multiplicativeDomain_eq_top_of_inverse` — a Schwarz map with a Schwarz inverse
   has the whole algebra as its multiplicative domain.
+* `StarHomClass.norm_apply_le_of_map_mul_swap` — a ⋆-linear map reversing products is a
+  contraction.
 * `SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap` — **an injective Schwarz map which
   reverses products has a commutative domain**.
 * `SchwarzMapClass.map_map_mul_map_eq_map_map_mul`, `SchwarzMapClass.map_map_mul_map_eq_map_mul_map`
@@ -427,6 +433,32 @@ lemma one_mem_multiplicativeDomain {f : F} (hf : f 1 = 1) : 1 ∈ multiplicative
 end Unital
 
 end LinearMap
+
+/-! ### ⋆-anti-homomorphisms are contractions -/
+
+namespace StarHomClass
+
+variable {F A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [FunLike F A₁ A₂]
+  [LinearMapClass F ℂ A₁ A₂] [StarHomClass F A₁ A₂]
+
+/-- A ⋆-linear map `φ` between C⋆-algebras which reverses products, `φ(a b) = φ(b) φ(a)`, is a
+contraction: `a ↦ op (φ a)` is a ⋆-homomorphism into the opposite C⋆-algebra `A₂ᵐᵒᵖ`, which carries
+the norm of `A₂`, and ⋆-homomorphisms of C⋆-algebras are contractions
+(`NonUnitalStarAlgHom.norm_apply_le`). -/
+lemma norm_apply_le_of_map_mul_swap (φ : F) (hφ : ∀ a b, φ (a * b) = φ b * φ a) (a : A₁) :
+    ‖φ a‖ ≤ ‖a‖ := by
+  let ψ : A₁ →⋆ₙₐ[ℂ] A₂ᵐᵒᵖ :=
+    { toFun x := MulOpposite.op (φ x)
+      map_smul' c x := by simp
+      map_zero' := by simp
+      map_add' x y := by simp
+      map_mul' x y := by simp [hφ]
+      map_star' x := by simp [map_star] }
+  have h := NonUnitalStarAlgHom.norm_apply_le ψ a
+  change ‖MulOpposite.op (φ a)‖ ≤ ‖a‖ at h
+  rwa [MulOpposite.norm_op] at h
+
+end StarHomClass
 
 namespace SchwarzMapClass
 
