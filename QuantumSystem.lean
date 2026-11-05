@@ -105,9 +105,11 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Completion
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Intertwine
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContractiveProjection
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Hom
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Matrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.PositiveMapCommutative

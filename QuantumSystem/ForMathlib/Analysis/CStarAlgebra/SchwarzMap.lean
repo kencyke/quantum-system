@@ -95,6 +95,8 @@ contractions.
   implies `f(a⋆ b) = f(a)⋆ f(b)` for every `b`;
   `SchwarzMapClass.map_map_star_mul_of_map_map_star_mul_self` — the same through a positive map
   `g`: `g(f(a⋆ a)) = g(f(a)⋆ f(a))` implies `g(f(a⋆ b)) = g(f(a)⋆ f(b))`.
+* `SchwarzMapClass.apply_mem_multiplicativeDomain_of_rightInverse` — the values of a Schwarz right
+  inverse of a Schwarz map lie in its multiplicative domain.
 * `SchwarzMapClass.mem_multiplicativeDomain_iff` — the multiplicative domain of a Schwarz map is
   the set of `a` at which the inequality is an equality at both `a` and `a⋆`;
   `SchwarzMapClass.le_multiplicativeDomain_iff` — it is the largest ⋆-subalgebra on which the map
@@ -589,14 +591,33 @@ lemma le_multiplicativeDomain_iff {f : F} {S : NonUnitalStarSubalgebra ℂ A₁}
 
 variable {G : Type*} [FunLike G A₂ A₁] [SchwarzMapClass G A₂ A₁]
 
+/-- A Schwarz map `f` attains equality in the Kadison–Schwarz inequality at the values of a
+Schwarz right inverse `g`: `f(g(x)⋆ g(x)) ≤ f(g(x⋆ x)) = x⋆ x = f(g(x))⋆ f(g(x))`, by the inequality
+for `g` at `x` and the positivity of `f`. Here `h` says `f ∘ g = id`. -/
+lemma map_star_mul_self_apply_of_rightInverse (f : F) (g : G) (h : Function.RightInverse g f)
+    (x : A₂) : f (star (g x) * g x) = star (f (g x)) * f (g x) := by
+  refine le_antisymm ?_ (le_map_star_mul f (g x))
+  have := OrderHomClass.mono f (le_map_star_mul g x)
+  rw [h] at this
+  rwa [h x]
+
+/-- **Multiplicativity on the values of a right inverse.** The values of a Schwarz right inverse
+`g` of a Schwarz map `f` lie in the multiplicative domain of `f`
+(`SchwarzMapClass.map_star_mul_self_apply_of_rightInverse` at `x` and at `x⋆`). Here `h` says
+`f ∘ g = id`. -/
+lemma apply_mem_multiplicativeDomain_of_rightInverse [LinearMapClass G ℂ A₂ A₁] (f : F) (g : G)
+    (h : Function.RightInverse g f) (x : A₂) : g x ∈ LinearMap.multiplicativeDomain f := by
+  refine mem_multiplicativeDomain_iff.mpr ⟨map_star_mul_self_apply_of_rightInverse f g h x, ?_⟩
+  have := map_star_mul_self_apply_of_rightInverse f g h (star x)
+  simpa only [map_star, star_star] using this
+
 /-- A Schwarz map `f` with a Schwarz inverse `g` attains equality in the Kadison–Schwarz
-inequality: `f(a⋆ a) ≤ f(g(f(a)⋆ f(a))) = f(a)⋆ f(a)`, by the inequality for `g` at `f a` and the
-positivity of `f`. Here `h₁` and `h₂` say `g ∘ f = id` and `f ∘ g = id`. -/
+inequality: `a = g(f(a))` is a value of the right inverse `g`
+(`SchwarzMapClass.map_star_mul_self_apply_of_rightInverse`). Here `h₁` and `h₂` say `g ∘ f = id` and
+`f ∘ g = id`. -/
 lemma map_star_mul_self_of_inverse (f : F) (g : G) (h₁ : Function.LeftInverse g f)
     (h₂ : Function.RightInverse g f) (a : A₁) : f (star a * a) = star (f a) * f a := by
-  refine le_antisymm ?_ (le_map_star_mul f a)
-  have := OrderHomClass.mono f (le_map_star_mul g (f a))
-  rwa [h₁ a, h₂] at this
+  simpa [h₁ a] using map_star_mul_self_apply_of_rightInverse f g h₂ (f a)
 
 /-- **Rigidity.** A Schwarz map with a Schwarz inverse has the whole algebra as its multiplicative
 domain. Here `h₁` and `h₂` say `g ∘ f = id` and `f ∘ g = id`. -/

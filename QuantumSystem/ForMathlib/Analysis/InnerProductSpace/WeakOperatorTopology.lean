@@ -12,7 +12,8 @@ public import Mathlib.Analysis.InnerProductSpace.WeakOperatorTopology
 # Compactness of balls in the weak operator topology
 
 The closed balls of bounded operators from a normed space into a Hilbert space are compact in the
-weak operator topology (`ContinuousLinearMapWOT.isCompact_closedBall`).
+weak operator topology (`ContinuousLinearMapWOT.isCompact_closedBall`), hence closed in it
+(`ContinuousLinearMapWOT.isClosed_closedBall`).
 
 Along an ultrafilter on a ball of radius `r`, every matrix coefficient `⟪y, A x⟫` stays in a disc
 of radius `r ‖x‖ ‖y‖` and so converges; its limit `L x y` is linear in `x`, conjugate-linear in `y`
@@ -118,5 +119,11 @@ theorem isCompact_closedBall (x' : E →L[𝕜] F) (r : ℝ) :
       rwa [add_sub_cancel_right]
   rw [h]
   exact (isCompact_closedBall_zero r).image (continuous_id.add continuous_const)
+
+/-- The closed balls of operators into a Hilbert space are closed in the weak operator topology,
+being compact in a Hausdorff topology: the operator norm is lower semicontinuous in it. -/
+lemma isClosed_closedBall (x' : E →L[𝕜] F) (r : ℝ) :
+    IsClosed (toCLM ⁻¹' Metric.closedBall x' r : Set (E →WOT[𝕜] F)) :=
+  (isCompact_closedBall x' r).isClosed
 
 end ContinuousLinearMapWOT

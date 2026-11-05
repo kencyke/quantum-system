@@ -8,6 +8,7 @@ module
 public import Mathlib.Algebra.Order.Module.PositiveLinearMap
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+public import Mathlib.Analysis.CStarAlgebra.Hom
 
 /-!
 # Operator systems and completely positive maps between them
@@ -65,6 +66,12 @@ linear isomorphism that is one has an inverse that is one too
   between matrix-ordered spaces.
 * `CompletelyPositiveMap'.range` — the range of a unital completely positive map on an operator
   system, as an operator subsystem.
+* `CompletelyPositiveMap'.instAddCommMonoid`, `CompletelyPositiveMap'.instSMulNNReal` — sums and
+  nonnegative real multiples of completely positive maps into a matrix-ordered space.
+* `CompletelyPositiveMap'.instMonoid` — the completely positive maps on a space form a monoid under
+  composition.
+* `CompletelyPositiveMap'.codRestrict` — a completely positive map with values in an operator
+  subsystem, as a map into it.
 * `LinearMap.IsCompleteOrderEmbedding j` — linear maps with `0 ≤ X.map j ↔ 0 ≤ X` for every square
   matrix `X`.
 
@@ -87,6 +94,8 @@ linear isomorphism that is one has an inverse that is one too
 * `LinearMap.IsCompleteOrderEmbedding.rangeRestrict` — a complete order embedding is one onto its
   range.
 * `LinearMap.IsCompleteOrderEmbedding.symm` — the inverse of a complete order isomorphism is one.
+* `NonUnitalStarAlgHom.isCompleteOrderEmbedding_of_injective` — an injective ⋆-homomorphism between
+  C⋆-algebras is a complete order embedding.
 * `CompletelyPositiveMap'.equivCompletelyPositiveMap` — between C⋆-algebras, these are Mathlib's
   completely positive maps.
 
@@ -104,7 +113,7 @@ linear isomorphism that is one has an inverse that is one too
 
 @[expose] public section
 
-open scoped CStarAlgebra ComplexOrder ComplexStarModule
+open scoped CStarAlgebra ComplexOrder ComplexStarModule NNReal
 
 /-! ### Scalar conjugation of matrices -/
 
@@ -910,9 +919,95 @@ lemma comp_assoc {A₄ : Type*} [AddCommMonoid A₄] [Module ℂ A₄]
     [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) A₄)] (χ : A₃ →CP' A₄) (ψ : A₂ →CP' A₃)
     (φ : A₁ →CP' A₂) : (χ.comp ψ).comp φ = χ.comp (ψ.comp φ) := rfl
 
+/-- The completely positive maps on `A₁` form a monoid under composition. -/
+instance : Monoid (A₁ →CP' A₁) where
+  mul := comp
+  one := CompletelyPositiveMap'.id A₁
+  mul_assoc _ _ _ := rfl
+  one_mul _ := rfl
+  mul_one _ := rfl
+
+/-- The product of completely positive maps is their composition. -/
+@[simp] lemma mul_apply (ψ φ : A₁ →CP' A₁) (a : A₁) : (ψ * φ) a = ψ (φ a) := rfl
+
+/-- The unit of the monoid of completely positive maps is the identity. -/
+@[simp] lemma one_apply (a : A₁) : (1 : A₁ →CP' A₁) a = a := rfl
+
 end CompletelyPositiveMap'
 
 end Defs
+
+namespace CompletelyPositiveMap'
+
+/-! ### The cone of completely positive maps -/
+
+section Cone
+
+variable {A₁ A₂ : Type*} [AddCommMonoid A₁] [Module ℂ A₁]
+  [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) A₁)] [AddCommGroup A₂] [Module ℂ A₂]
+  [StarAddMonoid A₂] [StarModule ℂ A₂] [PartialOrder A₂]
+  [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) A₂)] [MatrixOrdered A₂]
+
+/-- The zero map is completely positive. -/
+instance : Zero (A₁ →CP' A₂) where
+  zero.toLinearMap := 0
+  zero.map_cstarMatrix_nonneg' _ _ _ := le_of_eq (CStarMatrix.ext fun _ _ => rfl)
+
+/-- A sum of completely positive maps is completely positive. -/
+instance : Add (A₁ →CP' A₂) where
+  add φ ψ :=
+    { toLinearMap := φ.toLinearMap + ψ.toLinearMap
+      map_cstarMatrix_nonneg' k M hM :=
+        (add_nonneg (φ.map_cstarMatrix_nonneg' k M hM) (ψ.map_cstarMatrix_nonneg' k M hM)).trans_eq
+          (CStarMatrix.ext fun _ _ => rfl) }
+
+/-- A natural multiple of a completely positive map is completely positive. -/
+instance : SMul ℕ (A₁ →CP' A₂) where
+  smul n φ :=
+    { toLinearMap := n • φ.toLinearMap
+      map_cstarMatrix_nonneg' k M hM :=
+        (nsmul_nonneg (φ.map_cstarMatrix_nonneg' k M hM) n).trans_eq (CStarMatrix.ext fun _ _ => rfl) }
+
+/-- A nonnegative real multiple of a completely positive map is completely positive. -/
+instance : SMul ℝ≥0 (A₁ →CP' A₂) where
+  smul c φ :=
+    { toLinearMap := ((c : ℝ) : ℂ) • φ.toLinearMap
+      map_cstarMatrix_nonneg' k M hM :=
+        (MatrixOrdered.smul_nonneg_of_nonneg c.2 (φ.map_cstarMatrix_nonneg' k M hM)).trans_eq
+          (CStarMatrix.ext fun _ _ => rfl) }
+
+omit [StarAddMonoid A₂] [StarModule ℂ A₂] [PartialOrder A₂] [MatrixOrdered A₂] in
+/-- The zero completely positive map is the zero function. -/
+@[simp] lemma coe_zero : ⇑(0 : A₁ →CP' A₂) = 0 := rfl
+
+/-- The sum of completely positive maps is the pointwise sum. -/
+@[simp] lemma coe_add (φ ψ : A₁ →CP' A₂) : ⇑(φ + ψ) = φ + ψ := rfl
+
+/-- A natural multiple of a completely positive map is the pointwise multiple. -/
+@[simp] lemma coe_nsmul (n : ℕ) (φ : A₁ →CP' A₂) : ⇑(n • φ) = n • ⇑φ := rfl
+
+/-- A nonnegative real multiple of a completely positive map is the pointwise multiple. -/
+@[simp] lemma smul_apply (c : ℝ≥0) (φ : A₁ →CP' A₂) (a : A₁) : (c • φ) a = ((c : ℝ) : ℂ) • φ a :=
+  rfl
+
+/-- The completely positive maps form an additive commutative monoid under pointwise addition. -/
+instance : AddCommMonoid (A₁ →CP' A₂) :=
+  DFunLike.coe_injective.addCommMonoid _ coe_zero coe_add fun _ _ => coe_nsmul _ _
+
+/-- The coercion of completely positive maps to functions, as an additive monoid homomorphism. -/
+def coeFnAddMonoidHom : (A₁ →CP' A₂) →+ (A₁ → A₂) where
+  toFun := (⇑)
+  map_zero' := coe_zero
+  map_add' := coe_add
+
+/-- A finite sum of completely positive maps is the pointwise sum. -/
+@[simp] lemma coe_sum {ι : Type*} (s : Finset ι) (φ : ι → A₁ →CP' A₂) :
+    ⇑(∑ i ∈ s, φ i) = ∑ i ∈ s, ⇑(φ i) :=
+  map_sum coeFnAddMonoidHom φ s
+
+end Cone
+
+end CompletelyPositiveMap'
 
 namespace CompletelyPositiveMapClass'
 
@@ -1074,6 +1169,17 @@ section CStarAlgebra
 variable {F A₁ A₂ : Type*} [NonUnitalCStarAlgebra A₁] [NonUnitalCStarAlgebra A₂] [PartialOrder A₁]
   [PartialOrder A₂] [StarOrderedRing A₁] [StarOrderedRing A₂]
 
+/-- An injective ⋆-homomorphism between C⋆-algebras is a complete order embedding: its entrywise
+amplifications are injective ⋆-homomorphisms, hence order embeddings
+(`NonUnitalStarAlgHom.map_le_map_iff`). -/
+lemma NonUnitalStarAlgHom.isCompleteOrderEmbedding_of_injective {F : Type*} [FunLike F A₁ A₂]
+    [NonUnitalAlgHomClass F ℂ A₁ A₂] [StarHomClass F A₁ A₂] (ρ : F) (hρ : Function.Injective ρ) :
+    (ρ : A₁ →ₗ[ℂ] A₂).IsCompleteOrderEmbedding := fun k X => by
+  have hinj : Function.Injective (CStarMatrix.mapₙₐ (n := Fin k) (NonUnitalStarAlgHom.ofClass ρ)) :=
+    fun X Y h => CStarMatrix.ext fun i j => hρ congr($h i j)
+  have h := NonUnitalStarAlgHom.map_le_map_iff _ hinj (x := 0) (y := X)
+  rwa [map_zero] at h
+
 /-- Mathlib's completely positive maps between C⋆-algebras are completely positive maps between
 the underlying matrix-ordered spaces. -/
 instance CompletelyPositiveMapClass.instCompletelyPositiveMapClass' [FunLike F A₁ A₂]
@@ -1134,6 +1240,17 @@ def restrict (φ : T →CP' B) (S : OperatorSubsystem T) : S →CP' B := φ.comp
 /-- The restriction of `φ` to `S` sends `s` to `φ s`. -/
 @[simp] lemma restrict_apply (φ : T →CP' B) (S : OperatorSubsystem T) (s : S) :
     φ.restrict S s = φ s :=
+  rfl
+
+/-- The corestriction of a completely positive map with values in an operator subsystem `S`: the
+matrix orders of `S` are those of `T`. -/
+def codRestrict (φ : B →CP' T) (S : OperatorSubsystem T) (h : ∀ b, φ b ∈ S) : B →CP' S where
+  toLinearMap := LinearMap.codRestrict S.toSubmodule φ.toLinearMap h
+  map_cstarMatrix_nonneg' k M hM := φ.map_cstarMatrix_nonneg' k M hM
+
+/-- The corestriction of `φ` to `S` sends `b` to `φ b`. -/
+@[simp] lemma coe_codRestrict_apply (φ : B →CP' T) (S : OperatorSubsystem T) (h : ∀ b, φ b ∈ S)
+    (b : B) : (φ.codRestrict S h b : T) = φ b :=
   rfl
 
 end CompletelyPositiveMap'
