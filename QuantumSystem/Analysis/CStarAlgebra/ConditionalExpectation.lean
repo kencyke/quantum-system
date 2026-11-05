@@ -9,8 +9,6 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContractiveProjecti
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 
-import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
-import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.PosPart.Basic
 import QuantumSystem.Analysis.CStarAlgebra.ChoiEffros
 import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
@@ -20,7 +18,9 @@ import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.UnitalContraction
 # Contractive projections onto C⋆-subalgebras are conditional expectations
 
 Let `φ` be a linear projection of a C⋆-algebra `A` onto a ⋆-subalgebra `S`
-(`LinearMap.IsProj S.toSubmodule φ`), with `‖φ x‖ ≤ ‖x‖` for every `x`. Besides being `S`-linear
+(`LinearMap.IsProj S.toSubmodule φ`), with `‖φ x‖ ≤ ‖x‖` for every `x`. The subalgebra `S` is not
+assumed closed: it is the range of the bounded idempotent `φ`, hence closed
+(`LinearMap.IsProj.isClosed`), so it is a C⋆-subalgebra. Besides being `S`-linear
 on both sides (`LinearMap.IsProj.map_mul_left_of_norm_apply_le`,
 `LinearMap.IsProj.map_mul_right_of_norm_apply_le`), `φ` is positive and satisfies the
 Kadison–Schwarz inequality; these three properties are Tomiyama's theorem
@@ -34,10 +34,10 @@ Kadison–Schwarz inequality; these three properties are Tomiyama's theorem
   `φ((x - φ x)⋆ (x - φ x)) = φ(x⋆ x) - φ(x)⋆ φ(x)`. So `φ` is a Schwarz map whose multiplicative
   domain contains `S`, and the Choi–Effros product on its range (`ChoiEffros`) is the product of `A`
   (`ChoiEffros.val_mul_of_isProj`).
-* **Complete positivity.** For `M = Y⋆ Y ≥ 0` in `Mₖ(A)` and `c ∈ Sᵏ`,
-  `Σᵢⱼ cᵢ⋆ φ(Mᵢⱼ) cⱼ = φ(Σₘ zₘ⋆ zₘ) ≥ 0` with `zₘ = Σⱼ Yₘⱼ cⱼ`. A self-adjoint matrix `T` with
-  entries in `S` and this property is positive: the columns of `N = T⁻`, whose entries lie in `S`,
-  give the diagonal of `N T N = -N³`, so `N³ ≥ 0` has zero diagonal and vanishes, and `N = 0`.
+* **Complete positivity.** For `M ≥ 0` in `Mₖ(A)` and `c ∈ Sᵏ`, `S`-linearity gives
+  `Σᵢⱼ cᵢ⋆ φ(Mᵢⱼ) cⱼ = φ(Σᵢⱼ cᵢ⋆ Mᵢⱼ cⱼ) ≥ 0` (`CStarMatrix.sum_star_mul_mul_nonneg`). A matrix
+  with entries in `S` and this property is positive
+  (`CStarMatrix.nonneg_of_forall_sum_star_mul_mul_nonneg`).
 
 ## Main definitions
 
@@ -66,108 +66,6 @@ Kadison–Schwarz inequality; these three properties are Tomiyama's theorem
 @[expose] public section
 
 open scoped CStarAlgebra
-
-section Matrix
-
-variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
-  {n : Type*} [Fintype n]
-
-/-- The matrices over `A` with entries in `S`. -/
-private def matrixSubalgebra (n : Type*) [Fintype n] (S : NonUnitalStarSubalgebra ℂ A) :
-    NonUnitalStarSubalgebra ℂ (CStarMatrix n n A) where
-  carrier := {M | ∀ i j, M i j ∈ S}
-  add_mem' hM hN i j := add_mem (hM i j) (hN i j)
-  zero_mem' _ _ := zero_mem S
-  mul_mem' {M N} hM hN i j := by
-    change (M * N) i j ∈ S
-    rw [CStarMatrix.mul_apply]
-    exact sum_mem fun l _ => mul_mem (hM i l) (hN l j)
-  smul_mem' r _ hM i j := SMulMemClass.smul_mem r (hM i j)
-  star_mem' {M} hM i j := by
-    rw [CStarMatrix.star_apply]
-    exact star_mem (hM j i)
-
-private instance {S : NonUnitalStarSubalgebra ℂ A} [hS : IsClosed (S : Set A)] :
-    IsClosed (matrixSubalgebra n S : Set (CStarMatrix n n A)) := by
-  change IsClosed {M : CStarMatrix n n A | ∀ i j, M i j ∈ S}
-  simp only [Set.ofPred_forall]
-  exact isClosed_iInter fun i => isClosed_iInter fun j =>
-    hS.preimage ((continuous_apply j).comp (continuous_apply i))
-
-/-- A positive matrix with zero diagonal is zero: `X = Y⋆ Y` has `X i i = Σₖ (Y k i)⋆ Y k i`. -/
-private lemma eq_zero_of_nonneg_of_diag_eq_zero {X : CStarMatrix n n A} (hX : 0 ≤ X)
-    (hd : ∀ i, X i i = 0) : X = 0 := by
-  obtain ⟨Y, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hX
-  have hY : Y = 0 := CStarMatrix.ext fun k i => by
-    have h := hd i
-    rw [CStarMatrix.mul_apply] at h
-    simp only [CStarMatrix.star_apply] at h
-    have := (Finset.sum_eq_zero_iff_of_nonneg fun k _ => star_mul_self_nonneg (Y k i)).mp h k
-      (Finset.mem_univ k)
-    exact star_mul_self_eq_zero.mp this
-  rw [hY, mul_zero]
-
-/-- A self-adjoint matrix `T` over `A` with entries in a closed ⋆-subalgebra `S` is positive if
-`Σᵢⱼ cᵢ⋆ Tᵢⱼ cⱼ ≥ 0` for every `c` with entries in `S`. For `N = T⁻`, whose entries lie in `S`, the
-columns of `N` give the diagonal of `N T N = -N³`, so `N³ ≥ 0` has zero diagonal; hence `N³ = 0`,
-`N = 0` and `T = T⁺`. -/
-private lemma nonneg_of_forall_sum_star_mul_mul_nonneg {S : NonUnitalStarSubalgebra ℂ A}
-    [IsClosed (S : Set A)] {T : CStarMatrix n n A} (hT : IsSelfAdjoint T)
-    (hTS : ∀ i j, T i j ∈ S)
-    (h : ∀ c : n → A, (∀ i, c i ∈ S) → 0 ≤ ∑ i, ∑ j, star (c i) * T i j * c j) : 0 ≤ T := by
-  set N := T⁻
-  have hN : 0 ≤ N := CFC.negPart_nonneg T
-  have hNS : N ∈ matrixSubalgebra n S := by
-    change T⁻ ∈ _
-    rw [CFC.negPart_def]
-    exact cfcₙ_mem _ (show T ∈ matrixSubalgebra n S from hTS)
-  have hNTN : star N * T * N = -(N * N * N) := by
-    conv_lhs => rw [← CFC.posPart_sub_negPart T hT]
-    rw [hN.isSelfAdjoint.star_eq, mul_sub, sub_mul, CFC.negPart_mul_posPart, zero_mul, zero_sub]
-  have hX : 0 ≤ N * N * N := by
-    simpa [hN.isSelfAdjoint.star_eq, mul_assoc] using star_left_conjugate_nonneg hN N
-  have hdiag (i : n) : (N * N * N) i i = 0 := by
-    refine le_antisymm ?_ (CStarMatrix.diag_nonneg hX)
-    have hc := h (fun j => N j i) fun j => hNS j i
-    have e : (star N * T * N) i i = ∑ j, ∑ l, star (N j i) * T j l * N l i := by
-      simp only [CStarMatrix.mul_apply, CStarMatrix.star_apply, Finset.sum_mul]
-      exact Finset.sum_comm
-    rw [← e, hNTN] at hc
-    exact neg_nonneg.mp hc
-  have hN3 : N * N * N = 0 := eq_zero_of_nonneg_of_diag_eq_zero hX hdiag
-  have hN0 : N = 0 := by
-    have hNs : star N = N := hN.isSelfAdjoint.star_eq
-    have h₁ : ‖N * N‖ = ‖N‖ * ‖N‖ := by rw [← CStarRing.norm_star_mul_self, hNs]
-    have h₂ : ‖(N * N) * (N * N)‖ = ‖N * N‖ * ‖N * N‖ := by
-      rw [← CStarRing.norm_star_mul_self (x := N * N), star_mul, hNs]
-    have h₃ : (N * N) * (N * N) = 0 := by
-      rw [show (N * N) * (N * N) = (N * N * N) * N by simp only [mul_assoc], hN3, zero_mul]
-    rw [h₃, norm_zero, h₁] at h₂
-    exact norm_eq_zero.mp (mul_self_eq_zero.mp (mul_self_eq_zero.mp h₂.symm))
-  rw [← CFC.posPart_sub_negPart T hT]
-  change 0 ≤ T⁺ - N
-  rw [hN0, sub_zero]
-  exact CFC.posPart_nonneg T
-
-omit [PartialOrder A] [StarOrderedRing A] [Fintype n] in
-/-- A self-adjoint matrix stays self-adjoint under an entrywise map commuting with `star`. -/
-private lemma isSelfAdjoint_cstarMatrix_map {M : CStarMatrix n n A} (hM : IsSelfAdjoint M) {f : A → A}
-    (hf : ∀ x, f (star x) = star (f x)) : IsSelfAdjoint (M.map f) :=
-  isSelfAdjoint_iff.mpr <| CStarMatrix.ext fun i j => by
-    rw [CStarMatrix.star_apply, CStarMatrix.map_apply, CStarMatrix.map_apply, ← hf,
-      ← CStarMatrix.star_apply, hM.star_eq]
-
-omit [PartialOrder A] [StarOrderedRing A] in
-/-- `Σᵢⱼ cᵢ⋆ (Y⋆ Y)ᵢⱼ cⱼ = Σₘ zₘ⋆ zₘ` with `zₘ = Σⱼ Yₘⱼ cⱼ`. -/
-private lemma sum_star_mul_star_mul_self_mul (Y : CStarMatrix n n A) (c : n → A) :
-    ∑ i, ∑ j, star (c i) * (star Y * Y) i j * c j =
-      ∑ m, star (∑ j, Y m j * c j) * ∑ j, Y m j * c j := by
-  simp only [CStarMatrix.mul_apply, CStarMatrix.star_apply, star_sum, star_mul, Finset.sum_mul,
-    Finset.mul_sum, mul_assoc]
-  refine (Finset.sum_congr rfl fun _ _ => Finset.sum_comm).trans ?_
-  refine Finset.sum_comm.trans (Finset.sum_congr rfl fun _ _ => Finset.sum_comm)
-
-end Matrix
 
 namespace LinearMap.IsProj
 
@@ -227,6 +125,7 @@ theorem map_nonneg_of_norm_apply_le {a : A} (ha : 0 ≤ a) : 0 ≤ φ a := by
 noncomputable def toPositiveLinearMap : A →ₚ[ℂ] A :=
   PositiveLinearMap.mk₀ (φ : A →ₗ[ℂ] A) fun _ ha => map_nonneg_of_norm_apply_le hφ hn ha
 
+/-- `toPositiveLinearMap hφ hn` evaluates as `φ`. -/
 @[simp]
 lemma toPositiveLinearMap_apply (x : A) : toPositiveLinearMap hφ hn x = φ x :=
   rfl
@@ -271,6 +170,7 @@ theorem tomiyama_of_norm_apply_le :
 noncomputable def toSchwarzMap : SchwarzMap A A :=
   { (φ : A →ₗ[ℂ] A) with le_map_star_mul' := star_map_mul_map_le_of_norm_apply_le hφ hn }
 
+/-- `toSchwarzMap hφ hn` evaluates as `φ`. -/
 @[simp]
 lemma toSchwarzMap_apply (x : A) : toSchwarzMap hφ hn x = φ x :=
   rfl
@@ -297,20 +197,15 @@ lemma le_multiplicativeDomain_of_norm_apply_le :
   exact ⟨map_mul_left_of_norm_apply_le hφ hn hs b, map_mul_right_of_norm_apply_le hφ hn hs b⟩
 
 /-- **A contractive projection onto a C⋆-subalgebra is completely positive.**
-For `M = Y⋆ Y ≥ 0` and `c` with entries in `S`, `S`-linearity gives
-`Σᵢⱼ cᵢ⋆ φ(Mᵢⱼ) cⱼ = φ(Σₘ zₘ⋆ zₘ) ≥ 0` with `zₘ = Σⱼ Yₘⱼ cⱼ`, and a self-adjoint matrix over `S`
-with this property is positive. -/
+For `M ≥ 0` and `c` with entries in `S`, `S`-linearity gives
+`Σᵢⱼ cᵢ⋆ φ(Mᵢⱼ) cⱼ = φ(Σᵢⱼ cᵢ⋆ Mᵢⱼ cⱼ) ≥ 0`, and a matrix over `S` with this property is
+positive (`CStarMatrix.nonneg_of_forall_sum_star_mul_mul_nonneg`). -/
 theorem map_cstarMatrix_nonneg_of_norm_apply_le {k : ℕ} {M : CStarMatrix (Fin k) (Fin k) A}
     (hM : 0 ≤ M) : 0 ≤ M.map φ := by
-  have := hφ.isClosed (AddMonoidHomClass.continuous_of_bound φ 1 fun x => by simpa using hn x)
-  obtain ⟨Y, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hM
-  refine nonneg_of_forall_sum_star_mul_mul_nonneg (S := S)
-    (isSelfAdjoint_cstarMatrix_map (IsSelfAdjoint.star_mul_self Y)
-      (map_star_of_norm_apply_le hφ hn))
-    (fun i j => hφ.map_mem _) fun c hc => ?_
-  have h := map_nonneg_of_norm_apply_le hφ hn
-    (Finset.sum_nonneg (s := Finset.univ) fun m _ => star_mul_self_nonneg (∑ j, Y m j * c j))
-  rw [← sum_star_mul_star_mul_self_mul, map_sum] at h
+  refine CStarMatrix.nonneg_of_forall_sum_star_mul_mul_nonneg (S := S) (fun i j => hφ.map_mem _)
+    fun c hc => ?_
+  have h := map_nonneg_of_norm_apply_le hφ hn (CStarMatrix.sum_star_mul_mul_nonneg hM c)
+  rw [map_sum] at h
   convert h using 2 with i _
   rw [map_sum]
   refine Finset.sum_congr rfl fun j _ => ?_
@@ -322,6 +217,7 @@ noncomputable def toCompletelyPositiveMap : A →CP A :=
   { (φ : A →ₗ[ℂ] A) with
     map_cstarMatrix_nonneg' := fun _ _ hM => map_cstarMatrix_nonneg_of_norm_apply_le hφ hn hM }
 
+/-- `toCompletelyPositiveMap hφ hn` evaluates as `φ`. -/
 @[simp]
 lemma toCompletelyPositiveMap_apply (x : A) : toCompletelyPositiveMap hφ hn x = φ x :=
   rfl

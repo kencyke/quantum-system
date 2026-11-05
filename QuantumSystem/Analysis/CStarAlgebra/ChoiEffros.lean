@@ -5,11 +5,14 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import Mathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import Mathlib.Analysis.Normed.Module.TransferInstance
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 
 import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
+import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContractiveProjection
+import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 
 /-!
 # The Choi–Effros product
@@ -36,12 +39,26 @@ for `s` in the range, so that `‖t - x‖ ≤ t` in the unitization of the rang
 only on the range: idempotent Schwarz maps with the same range have the same Choi–Effros product
 (`ChoiEffros.starAlgEquivOfRangeEq`).
 
+The matrix orders are compared through the corestriction `ofMap φ : A → ChoiEffros φ`, which is
+completely positive for every idempotent Schwarz map (`ChoiEffros.map_ofMap_nonneg`): for `X ≥ 0`
+over `A` and `c` over the range, `∑ᵢⱼ cᵢ⋆ * φ(Xᵢⱼ) * cⱼ = φ(∑ᵢⱼ cᵢ⋆ Xᵢⱼ cⱼ)` is positive, and a
+matrix with this property is positive (`CStarMatrix.nonneg_iff_forall_sum_star_mul_mul_nonneg`).
+As `ofMap φ` is a left inverse of `val`, `val` reflects the positivity of matrices; as
+`φ = val ∘ ofMap φ`, it preserves the positivity of `n × n` matrices exactly when `φ` does
+(`ChoiEffros.forall_map_val_nonneg_iff_forall_map_nonneg`). So `val` is a complete order embedding
+exactly when `φ` is completely positive (`ChoiEffros.isCompleteOrderEmbedding_valₗ_iff` in
+`QuantumSystem.Analysis.OperatorSystem.ChoiEffrosProduct`): then the C⋆-algebra `ChoiEffros φ`, with
+its matrix orders as a C⋆-algebra, is the range of `φ` with the matrix orders of `A`.
+
 When `φ` is a projection onto a subalgebra `S` (`LinearMap.IsProj S.toSubmodule φ`), the range is
 `S`, closed under products and fixed by `φ`, so the Choi–Effros product is the product of `A`
 (`ChoiEffros.val_mul_of_isProj`).
 
-The idempotence of `φ` is a `Fact` instance argument of the C⋆-algebra structure rather than an
-argument of the type, so that the type does not depend on a proof.
+The idempotence of `φ` is a `Fact` instance argument of the product, the involution and the
+C⋆-algebra structure rather than an argument of the type, so that the type does not depend on a
+proof: the product needs it to land in the range, and the involution needs it together with the
+Kadison–Schwarz inequality. For a `φ` that is not idempotent, `ChoiEffros φ` is a normed space with
+the distinguished element `φ 1` only.
 
 `ChoiEffros φ` is a structure wrapping the range rather than a type synonym for it, so that the
 range is not unfolded to the subtype of `A`, whose order (`Subtype.partialOrder`) agrees with the
@@ -54,6 +71,9 @@ structure is transferred along `ChoiEffros.equivRange`.
   product, a `NonUnitalCStarAlgebra`, and a `CStarAlgebra` when `A` is unital.
 * `ChoiEffros.linearIsometryEquivRange` — `ChoiEffros φ` is isometrically isomorphic to the range
   of `φ` as a normed space.
+* `ChoiEffros.valₗ` — the underlying element of `A`, as a linear map `ChoiEffros φ → A`.
+* `ChoiEffros.ofMapCompletelyPositiveMap` — the corestriction `ofMap φ : A → ChoiEffros φ`, as a
+  completely positive map.
 * `ChoiEffros.starAlgEquivOfRangeEq` — idempotent Schwarz maps with the same range give
   ⋆-isomorphic C⋆-algebras.
 * `ChoiEffros.starAlgEquivId` — `ChoiEffros (SchwarzMap.id A)` is `A`.
@@ -62,6 +82,9 @@ structure is transferred along `ChoiEffros.equivRange`.
 
 * **`ChoiEffros.val_nonneg_iff`**, `ChoiEffros.val_le_val` — the order of the range as a C⋆-algebra is
   the order of `A`.
+* `ChoiEffros.map_ofMap_nonneg` — the corestriction `ofMap φ` is completely positive.
+* `ChoiEffros.forall_map_val_nonneg_iff_forall_map_nonneg` — `val` preserves the positivity of
+  `n × n` matrices exactly when `φ` does.
 * `ChoiEffros.val_mul_of_isProj` — when `φ` is a projection onto a subalgebra, the Choi–Effros
   product is the product of `A`.
 
@@ -151,6 +174,20 @@ def linearIsometryEquivRange : ChoiEffros φ ≃ₗᵢ[ℂ] LinearMap.range (φ 
   norm_map' _ := rfl
 
 variable (φ) in
+/-- The underlying element of `A`, as a linear map `ChoiEffros φ → A`: the isomorphism
+`linearIsometryEquivRange φ` followed by the inclusion of the range. -/
+def valₗ : ChoiEffros φ →ₗ[ℂ] A :=
+  (LinearMap.range (φ : A →ₗ[ℂ] A)).subtype ∘ₗ (linearIsometryEquivRange φ).toLinearEquiv.toLinearMap
+
+/-- `valₗ φ` evaluates as `val`. -/
+@[simp] lemma valₗ_apply (x : ChoiEffros φ) : valₗ φ x = x.val := rfl
+
+/-- The underlying element of a finite sum is the sum of the underlying elements. -/
+@[simp] lemma val_sum {ι : Type*} (s : Finset ι) (f : ι → ChoiEffros φ) :
+    (∑ i ∈ s, f i).val = ∑ i ∈ s, (f i).val :=
+  map_sum (valₗ φ) f s
+
+variable (φ) in
 /-- The element `φ a` of the range. -/
 def ofMap (a : A) : ChoiEffros φ :=
   ofRange ⟨φ a, LinearMap.mem_range_self (φ : A →ₗ[ℂ] A) a⟩
@@ -158,8 +195,20 @@ def ofMap (a : A) : ChoiEffros φ :=
 /-- The underlying element of `ofMap φ a` is `φ a`. -/
 @[simp] lemma val_ofMap (a : A) : (ofMap φ a).val = φ a := rfl
 
-/-- The Choi–Effros product `x * y = φ(x y)`. -/
-instance : Mul (ChoiEffros φ) := ⟨fun x y => ofMap φ (x.val * y.val)⟩
+variable [hφ : Fact (IsIdempotentElem (φ : A →ₗ[ℂ] A))]
+
+/-- `φ` fixes its range. -/
+@[simp] lemma map_val (x : ChoiEffros φ) : φ x.val = x.val :=
+  (LinearMap.IsIdempotentElem.mem_range_iff hφ.out).mp x.toRange.2
+
+/-- `ofMap φ` is a left inverse of `val`. -/
+@[simp] lemma ofMap_val (x : ChoiEffros φ) : ofMap φ x.val = x := ext <| map_val x
+
+/-- The Choi–Effros product `x * y = φ(x y)` of an idempotent `φ`: `φ(x y)` is fixed by `φ`, hence in
+the range. -/
+instance : Mul (ChoiEffros φ) :=
+  ⟨fun x y => ofRange ⟨φ (x.val * y.val),
+    (LinearMap.IsIdempotentElem.mem_range_iff hφ.out).mpr (DFunLike.congr_fun hφ.out _)⟩⟩
 
 /-- The underlying element of the Choi–Effros product `x * y` is `φ(x y)`. -/
 lemma val_mul (x y : ChoiEffros φ) : (x * y).val = φ (x.val * y.val) := rfl
@@ -182,25 +231,6 @@ instance : IsScalarTower ℂ (ChoiEffros φ) (ChoiEffros φ) where
 instance : SMulCommClass ℂ (ChoiEffros φ) (ChoiEffros φ) where
   smul_comm c x y := ext <| by simp [val_mul, mul_smul_comm]
 
-/-- The involution `star x = φ(x⋆)`, which is `x⋆` on the range of an idempotent Schwarz map
-(`ChoiEffros.val_star`). -/
-instance : Star (ChoiEffros φ) := ⟨fun x => ofMap φ (star x.val)⟩
-
-/-- The involution is conjugate-linear. -/
-instance : StarModule ℂ (ChoiEffros φ) where
-  star_smul c x := ext <| by
-    change φ (star (c • x.val)) = star c • φ (star x.val)
-    rw [star_smul, map_smul]
-
-variable [hφ : Fact (IsIdempotentElem (φ : A →ₗ[ℂ] A))]
-
-/-- `φ` fixes its range. -/
-@[simp] lemma map_val (x : ChoiEffros φ) : φ x.val = x.val :=
-  (LinearMap.IsIdempotentElem.mem_range_iff hφ.out).mp x.toRange.2
-
-/-- `ofMap φ` is a left inverse of `val`. -/
-@[simp] lemma ofMap_val (x : ChoiEffros φ) : ofMap φ x.val = x := ext <| map_val x
-
 /-- `ChoiEffros φ` is complete when `φ` is continuous: the range of a continuous idempotent map is its
 set of fixed points, hence closed. -/
 instance [ContinuousMapClass F A A] : CompleteSpace (ChoiEffros φ) :=
@@ -212,10 +242,19 @@ section Schwarz
 
 variable [PartialOrder A] [StarOrderedRing A] [SchwarzMapClass F A A]
 
-/-- The involution of `ChoiEffros φ` is the involution of `A`: `φ` preserves `star`. -/
-@[simp] lemma val_star (x : ChoiEffros φ) : (star x).val = star x.val := by
-  change φ (star x.val) = star x.val
-  rw [map_star, map_val]
+/-- The involution `star x = x⋆` of `A`: the range of an idempotent Schwarz map `φ` is closed under
+`star`, as `φ` preserves it. -/
+instance : Star (ChoiEffros φ) :=
+  ⟨fun x => ofRange ⟨star x.val, star x.val, by
+    change φ (star x.val) = star x.val
+    rw [map_star, map_val]⟩⟩
+
+/-- The involution of `ChoiEffros φ` is the involution of `A`. -/
+@[simp] lemma val_star (x : ChoiEffros φ) : (star x).val = star x.val := rfl
+
+/-- The involution is conjugate-linear. -/
+instance : StarModule ℂ (ChoiEffros φ) where
+  star_smul c x := ext <| by simp only [val_star, val_smul, star_smul]
 
 /-- The Choi–Effros product is associative and distributive. -/
 instance : NonUnitalRing (ChoiEffros φ) where
@@ -253,6 +292,12 @@ instance : CStarRing (ChoiEffros φ) where
 /-- The range of an idempotent Schwarz map, with the Choi–Effros product, is a C⋆-algebra. -/
 instance : NonUnitalCStarAlgebra (ChoiEffros φ) where
 
+/-- The involution of `ChoiEffros φ` is isometric, hence continuous. -/
+instance : ContinuousStar (ChoiEffros φ) :=
+  ⟨Isometry.continuous <| Isometry.of_dist_eq fun x y => by
+    rw [dist_eq_norm, dist_eq_norm, ← norm_val, ← norm_val, val_sub, val_sub, val_star, val_star,
+      ← star_sub, norm_star]⟩
+
 /-- The order of the C⋆-algebra `ChoiEffros φ`: `x ≤ y` when `y - x` is self-adjoint with
 nonnegative spectrum. It is the order of `A` (`ChoiEffros.val_le_val`). -/
 instance : PartialOrder (ChoiEffros φ) := CStarAlgebra.spectralOrder _
@@ -266,37 +311,17 @@ lemma val_nonneg {x : ChoiEffros φ} (hx : 0 ≤ x) : 0 ≤ x.val := by
   rw [val_mul, val_star]
   exact map_nonneg φ (star_mul_self_nonneg _)
 
-/-- In a C⋆-algebra, a self-adjoint `a` with `‖a‖ ≤ t` is positive if and only if `‖t - a‖ ≤ t`
-in the unitization. -/
-private lemma nonneg_iff_nnnorm_algebraMap_sub_inr_le {B : Type*} [NonUnitalCStarAlgebra B]
-    [PartialOrder B] [StarOrderedRing B] {a : B} (ha : IsSelfAdjoint a) {t : ℝ≥0}
-    (ht : ‖a‖₊ ≤ t) : 0 ≤ a ↔ ‖algebraMap ℝ B⁺¹ t - a‖₊ ≤ t := by
-  rw [← Unitization.inr_nonneg_iff, nonneg_iff_isSelfAdjoint_and_quasispectrumRestricts,
-    quasispectrumRestricts_iff_spectrumRestricts,
-    ← SpectrumRestricts.nnreal_iff_nnnorm (ha.inr ℂ) (by rwa [Unitization.nnnorm_inr])]
-  exact and_iff_right (ha.inr ℂ)
-
-/-- For `0 ≤ a` with `‖a‖ ≤ t`, `‖t s - a s‖ ≤ t ‖s‖`: in the unitization, `t s - a s = (t - a) s`
-and `‖t - a‖ ≤ t`. -/
-private lemma nnnorm_smul_sub_mul_le {B : Type*} [NonUnitalCStarAlgebra B] [PartialOrder B]
-    [StarOrderedRing B] {a : B} (ha : 0 ≤ a) {t : ℝ≥0} (ht : ‖a‖₊ ≤ t) (s : B) :
-    ‖algebraMap ℝ ℂ t • s - a * s‖₊ ≤ t * ‖s‖₊ := by
-  have h := (nonneg_iff_nnnorm_algebraMap_sub_inr_le (.of_nonneg ha) ht).mp ha
-  have hs : ((algebraMap ℝ ℂ t • s - a * s : B) : B⁺¹) = (algebraMap ℝ B⁺¹ t - a) * s := by
-    rw [sub_mul, Unitization.inr_sub, Unitization.inr_mul, Unitization.algebraMap_eq_inl_comp,
-      Function.comp_apply, Unitization.inl_mul_inr]
-  rw [← Unitization.nnnorm_inr (𝕜 := ℂ), hs, ← Unitization.nnnorm_inr (𝕜 := ℂ) s]
-  exact (nnnorm_mul_le _ _).trans (mul_le_mul_of_nonneg_right h (by simp))
-
 /-- **The order of the range is the order of `A`.** An element of the range is positive for the
 Choi–Effros product if and only if it is positive in `A`: conversely to `ChoiEffros.val_nonneg`,
 `0 ≤ x` in `A` with `‖x‖ ≤ t` gives `‖t s - x * s‖ = ‖φ((t - x) s)‖ ≤ ‖t - x‖ ‖s‖ ≤ t ‖s‖` for `s` in
-the range, so `‖t - x‖ ≤ t` in the unitization of the range. -/
+the range, so `‖t - x‖ ≤ t` in the unitization of the range
+(`CStarAlgebra.nonneg_iff_nnnorm_algebraMap_sub_inr_le`). -/
 @[simp, norm_cast]
 theorem val_nonneg_iff {x : ChoiEffros φ} : 0 ≤ x.val ↔ 0 ≤ x := by
   refine ⟨fun hx => ?_, val_nonneg⟩
   have hsa : IsSelfAdjoint x := ext <| by simp [(IsSelfAdjoint.of_nonneg hx).star_eq]
-  rw [nonneg_iff_nnnorm_algebraMap_sub_inr_le hsa le_rfl, sub_eq_add_neg, ← Unitization.inr_neg,
+  rw [CStarAlgebra.nonneg_iff_nnnorm_algebraMap_sub_inr_le hsa le_rfl, sub_eq_add_neg,
+    ← Unitization.inr_neg,
     Unitization.nnnorm_eq_sup, Unitization.algebraMap_eq_inl_comp, Function.comp_apply]
   simp only [Unitization.fst_add, Unitization.snd_add, Unitization.fst_inl, Unitization.snd_inl,
     Unitization.fst_inr, Unitization.snd_inr, add_zero, zero_add, nnnorm_algebraMap',
@@ -305,12 +330,65 @@ theorem val_nonneg_iff {x : ChoiEffros φ} : 0 ≤ x.val ↔ 0 ≤ x := by
   rw [add_apply, ContinuousLinearMap.mul_apply', neg_mul, ← sub_eq_add_neg,
     Algebra.algebraMap_eq_smul_one, smul_apply, one_apply_eq_self, ← nnnorm_val, val_sub, val_smul,
     val_mul, ← map_val s, ← map_smul, ← map_sub, map_val, ← nnnorm_val s]
-  exact (nnnorm_apply_le φ _).trans (nnnorm_smul_sub_mul_le hx (nnnorm_val x).le _)
+  exact (nnnorm_apply_le φ _).trans (CStarAlgebra.nnnorm_smul_sub_mul_le hx (nnnorm_val x).le _)
 
 /-- The order of `ChoiEffros φ` is the order of `A`. -/
 @[simp, norm_cast]
 lemma val_le_val {x y : ChoiEffros φ} : x.val ≤ y.val ↔ x ≤ y := by
   rw [← sub_nonneg, ← val_sub, val_nonneg_iff, sub_nonneg]
+
+/-! ### Matrix orders -/
+
+/-- `φ` is a bimodule map over its range: `x * φ(a) * y = φ(x a y)` for the Choi–Effros product. -/
+lemma val_mul_ofMap_mul (x y : ChoiEffros φ) (a : A) :
+    (x * ofMap φ a * y).val = φ (x.val * a * y.val) := by
+  rw [val_mul, val_mul, val_ofMap, map_map_mul_of_map_eq_self hφ.out (map_val y), mul_assoc,
+    ← map_mul_map_of_map_eq_self hφ.out (map_val x) (φ a * y.val),
+    map_map_mul_of_map_eq_self hφ.out (map_val y), map_mul_map_of_map_eq_self hφ.out (map_val x),
+    mul_assoc]
+
+/-- **The corestriction `ofMap φ : A → ChoiEffros φ` is completely positive.** For `X ≥ 0` over `A`
+and `c` over `ChoiEffros φ`, `∑ᵢⱼ cᵢ⋆ * φ(Xᵢⱼ) * cⱼ = φ(∑ᵢⱼ cᵢ⋆ Xᵢⱼ cⱼ)` is positive in `A`, hence in
+`ChoiEffros φ` (`ChoiEffros.val_nonneg_iff`). -/
+lemma map_ofMap_nonneg {n : Type*} [Fintype n] {X : CStarMatrix n n A} (hX : 0 ≤ X) :
+    0 ≤ X.map (ofMap φ) := by
+  refine CStarMatrix.nonneg_iff_forall_sum_star_mul_mul_nonneg.mpr fun c => ?_
+  rw [← val_nonneg_iff]
+  simp only [val_sum, CStarMatrix.map_apply, val_mul_ofMap_mul, val_star, ← map_sum]
+  exact map_nonneg φ (CStarMatrix.sum_star_mul_mul_nonneg hX fun i => (c i).val)
+
+variable (φ) in
+/-- The corestriction `ofMap φ : A → ChoiEffros φ` as a completely positive map. -/
+def ofMapCompletelyPositiveMap : A →CP ChoiEffros φ where
+  toFun := ofMap φ
+  map_add' a b := ext <| by simp
+  map_smul' c a := ext <| by simp
+  map_cstarMatrix_nonneg' _ _ hX := map_ofMap_nonneg hX
+
+/-- `ofMapCompletelyPositiveMap φ` evaluates as `ofMap φ`. -/
+@[simp] lemma ofMapCompletelyPositiveMap_apply (a : A) : ofMapCompletelyPositiveMap φ a = ofMap φ a :=
+  rfl
+
+/-- A matrix over `ChoiEffros φ` is positive when its underlying matrix over `A` is: it is the image of
+that matrix under `ofMap φ` (`ChoiEffros.map_ofMap_nonneg`). -/
+lemma nonneg_of_map_val_nonneg {n : Type*} [Fintype n] {X : CStarMatrix n n (ChoiEffros φ)}
+    (hX : 0 ≤ X.map val) : 0 ≤ X := by
+  have h := map_ofMap_nonneg (φ := φ) hX
+  rwa [show (X.map val).map (ofMap φ) = X from CStarMatrix.ext fun i j => ofMap_val (X i j)] at h
+
+/-- `val : ChoiEffros φ → A` preserves the positivity of `n × n` matrices if and only if `φ` does.
+Since `φ = val ∘ ofMap φ`, the forward direction follows from `ChoiEffros.map_ofMap_nonneg`;
+conversely, a positive matrix over `ChoiEffros φ` is `Y⋆ * Y`, whose underlying matrix is the image
+under `φ` of the positive matrix `Z⋆ Z`, `Z` the underlying matrix of `Y`. -/
+lemma forall_map_val_nonneg_iff_forall_map_nonneg {n : Type*} [Fintype n] :
+    (∀ X : CStarMatrix n n (ChoiEffros φ), 0 ≤ X → 0 ≤ X.map val) ↔
+      ∀ X : CStarMatrix n n A, 0 ≤ X → 0 ≤ X.map φ := by
+  refine ⟨fun h X hX => h _ (map_ofMap_nonneg hX), fun h X hX => ?_⟩
+  obtain ⟨Y, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hX
+  have hY : (star Y * Y).map val = (star (Y.map val) * Y.map val).map φ := CStarMatrix.ext fun i j => by
+    simp [CStarMatrix.mul_apply, CStarMatrix.star_apply, val_mul, map_sum]
+  rw [hY]
+  exact h _ (star_mul_self_nonneg _)
 
 variable (φ) in
 /-- Idempotent Schwarz maps with the same range give ⋆-isomorphic C⋆-algebras: the identity of the
@@ -341,7 +419,8 @@ section Unital
 
 variable {F A : Type*} [CStarAlgebra A] [FunLike F A A] [LinearMapClass F ℂ A A] {φ : F}
 
-/-- The unit `φ 1`: `φ(φ(1) x) = φ(x) = x` for `x` in the range. -/
+/-- The element `φ 1` of the range, the unit of the Choi–Effros product of an idempotent Schwarz map
+`φ`: `φ(φ(1) x) = φ(x) = x` for `x` in the range. -/
 instance : One (ChoiEffros φ) := ⟨ofMap φ 1⟩
 
 /-- The underlying element of the unit of `ChoiEffros φ` is `φ 1`. -/
