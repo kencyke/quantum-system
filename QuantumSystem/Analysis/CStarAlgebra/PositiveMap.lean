@@ -52,8 +52,8 @@ unital; at a matrix unit `a = Eᵢⱼ` with `i ≠ j` it has `φ(a)⋆ φ(a) = E
 `Eᵢᵢ ≰ Eⱼⱼ` (`Matrix.not_star_map_mul_le_map_star_mul_transpose`). In particular a positive map
 with `φ 1 ≤ 1` is neither a Schwarz map nor `2`-positive in general
 (`Matrix.not_exists_schwarzMap_transpose`, `Matrix.not_exists_kPositiveMap_transpose`). These are
-instances of a general fact: an injective Schwarz map, or injective `2`-positive map with
-`φ 1 ≤ 1`, which reverses products has a commutative domain
+instances of a general fact: an injective Schwarz map, or injective `2`-positive map, which
+reverses products has a commutative domain
 (`SchwarzMapClass.mul_comm_of_injective_of_map_mul_swap`,
 `KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap`), while the transpose is injective and
 reverses products, and `n × n` matrices do not commute (`Matrix.not_forall_mul_comm`).
@@ -89,12 +89,10 @@ and a `ForMathlib` file imports Mathlib only.
 
 ## References
 
-* M.-D. Choi, *A Schwarz inequality for positive linear maps on C⋆-algebras*, Illinois J. Math.
-  18 (1974), 565–574.
 * R. V. Kadison, *A generalized Schwarz inequality and algebraic invariants for operator
   algebras*, Ann. of Math. 56 (1952), 494–503.
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
-  (2002), Corollary 2.9 and Theorem 3.11.
+  (2002), Corollary 2.9.
 * B. Russo, H. A. Dye, *A note on unitary operators in C⋆-algebras*, Duke Math. J. 33 (1966),
   413–416.
 -/
@@ -340,14 +338,14 @@ theorem not_exists_schwarzMap_transpose :
 
 /-- **The transpose is not `2`-positive**: no `2`-positive map of `n × n` matrices, for `n` with
 two distinct indices, is the transpose, although it is positive and unital. The transpose is
-unital, injective and reverses products, so a `2`-positive map equal to it would make `n × n`
-matrices commute (`KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap`,
+injective and reverses products, so a `2`-positive map equal to it would make `n × n` matrices
+commute (`KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap`,
 `Matrix.not_forall_mul_comm`). -/
 theorem not_exists_kPositiveMap_transpose :
     ¬ ∃ φ : KPositiveMap 2 (Matrix n n ℂ) (Matrix n n ℂ), ∀ X, φ X = Xᵀ := by
   rintro ⟨φ, hφ⟩
   exact not_forall_mul_comm fun X Y =>
-    KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap φ (by simp [hφ])
+    KPositiveMapClass.mul_comm_of_injective_of_map_mul_swap φ
       (fun X Y h => transpose_injective (by rwa [hφ, hφ] at h)) (fun X Y => by simp [hφ]) X Y
 
 end Matrix

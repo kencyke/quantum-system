@@ -13,6 +13,8 @@ public import Mathlib.Analysis.InnerProductSpace.Completion
 public import Mathlib.Analysis.InnerProductSpace.StarOrder
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Positive
 
+import Mathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Range
+
 /-!
 # Stinespring's dilation theorem
 
@@ -55,12 +57,21 @@ C⋆-algebras are automatically bounded.
 * `CompletelyPositiveMap.stinespringOperator` — the operator `V : H →L[ℂ] K`.
 * `CStarMatrix.toPiLpStarAlgEquiv` — the ⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` between operator
   matrices and operators on the Hilbert sum `Hⁿ`.
+* `CStarMatrix.diagonalStarAlgHom` — the diagonal embedding `a ↦ diag(a, …, a)` of a unital
+  C⋆-algebra into its matrices.
 
 ## Main statements
 
 * `CStarMatrix.nonneg_iff_sum_inner_apply_nonneg` — an operator matrix `N` on `Hⁿ` is nonnegative
   iff `0 ≤ ∑ᵢⱼ ⟪ξᵢ, Nᵢⱼ ξⱼ⟫` for every `ξ`; this is how complete positivity of a map into `B(H)`
   is tested against vectors.
+* `CStarMatrix.nonneg_iff_forall_sum_star_mul_mul_nonneg` — a matrix `T` over a C⋆-algebra `A` is
+  nonnegative iff `0 ≤ ∑ᵢⱼ cᵢ⋆ Tᵢⱼ cⱼ` for every `c : n → A`;
+  `CStarMatrix.nonneg_of_forall_sum_star_mul_mul_nonneg` — for `T` with entries in a ⋆-subalgebra
+  `S`, the `c` with entries in `S` suffice.
+  These live here because their proofs use the continuous functional calculus of self-adjoint
+  matrices (`CStarMatrix.instNonUnitalContinuousFunctionalCalculusReal`), and a `ForMathlib` file
+  imports Mathlib only.
 * `CompletelyPositiveMap.apply_eq_adjoint_comp_stinespringNonUnitalStarAlgHom_comp` —
   **Stinespring's theorem** `φ a = V† π(a) V`.
 * `CompletelyPositiveMap.stinespringNonUnitalStarAlgHom_apply_stinespringOperator` —
@@ -125,6 +136,27 @@ instance instSMulCommClassMul {R : Type*} [Monoid R] [NonUnitalNonAssocSemiring 
 
 variable [NonUnitalCStarAlgebra A]
 
+/-- The continuous functional calculus for self-adjoint matrices. Mathlib's instance restricts the
+`ℂ`-module structure to `ℝ`, while that of `CStarMatrix n n A` is entrywise; the two agree only
+after unfolding instances, so instance search does not find it. -/
+noncomputable instance instNonUnitalContinuousFunctionalCalculusReal [PartialOrder A]
+    [StarOrderedRing A] : NonUnitalContinuousFunctionalCalculus ℝ (CStarMatrix n n A) IsSelfAdjoint :=
+  IsSelfAdjoint.instNonUnitalContinuousFunctionalCalculus
+
+/-- The quasispectrum of a nonnegative matrix is nonnegative; not found by instance search for the
+same reason as `CStarMatrix.instNonUnitalContinuousFunctionalCalculusReal`. -/
+noncomputable instance instNonnegSpectrumClassReal [PartialOrder A] [StarOrderedRing A] :
+    NonnegSpectrumClass ℝ (CStarMatrix n n A) :=
+  CStarAlgebra.instNonnegSpectrumClass'
+
+/-- The continuous functional calculus for self-adjoint matrices over a unital C⋆-algebra; not
+found by instance search for the same reason as
+`CStarMatrix.instNonUnitalContinuousFunctionalCalculusReal`. -/
+noncomputable instance instContinuousFunctionalCalculusReal {A : Type*} [CStarAlgebra A]
+    [PartialOrder A] [StarOrderedRing A] [DecidableEq n] :
+    ContinuousFunctionalCalculus ℝ (CStarMatrix n n A) IsSelfAdjoint :=
+  IsSelfAdjoint.instContinuousFunctionalCalculus
+
 section DecidableEq
 
 variable [DecidableEq n]
@@ -145,6 +177,20 @@ def diagonalNonUnitalStarAlgHom : A →⋆ₙₐ[ℂ] CStarMatrix n n A where
   map_add' a b := by ext i j; by_cases h : i = j <;> simp [h]
   map_mul' a b := by ext i j; by_cases h : i = j <;> simp [Matrix.diagonal_apply, h, mul_apply]
   map_star' a := by ext i j; by_cases h : i = j <;> simp [h, star_apply, eq_comm]
+
+/-- The diagonal embedding `a ↦ diag(a, …, a)` of a unital C⋆-algebra as a unital
+⋆-homomorphism. -/
+noncomputable def diagonalStarAlgHom {A : Type*} [CStarAlgebra A] : A →⋆ₐ[ℂ] CStarMatrix n n A :=
+  { diagonalNonUnitalStarAlgHom with
+    map_one' := by ext i j; by_cases h : i = j <;> simp [diagonalNonUnitalStarAlgHom, h, one_apply]
+    commutes' := fun c => by
+      ext i j
+      by_cases h : i = j <;> simp [diagonalNonUnitalStarAlgHom, h, Algebra.algebraMap_eq_smul_one] }
+
+/-- `diagonalStarAlgHom a` is the diagonal matrix `diag(a, …, a)`. -/
+lemma diagonalStarAlgHom_apply {A : Type*} [CStarAlgebra A] (a : A) :
+    diagonalStarAlgHom (n := n) a = ofMatrix (Matrix.diagonal fun _ => a) :=
+  rfl
 
 /-- `diag(a, …, a) · updateRow 0 i₀ b = updateRow 0 i₀ (a b)`. -/
 lemma diagonalNonUnitalStarAlgHom_mul_ofMatrix_updateRow_zero (a : A) (i₀ : n) (b : n → A) :
@@ -194,6 +240,148 @@ lemma gram_mul_left_le (a : A) (b : n → A) :
         rw [← sub_nonneg, ← sub_smul]
         exact smul_nonneg (sub_nonneg.mpr (by gcongr)) (star_mul_self_nonneg X)
 
+omit [PartialOrder A] [StarOrderedRing A] in
+/-- `Σᵢⱼ cᵢ⋆ (Y⋆ Y)ᵢⱼ cⱼ = Σₘ zₘ⋆ zₘ` with `zₘ = Σⱼ Yₘⱼ cⱼ`. -/
+private lemma sum_star_mul_star_mul_self_mul (Y : CStarMatrix n n A) (c : n → A) :
+    ∑ i, ∑ j, star (c i) * (star Y * Y) i j * c j =
+      ∑ m, star (∑ j, Y m j * c j) * ∑ j, Y m j * c j := by
+  simp only [mul_apply, star_apply, star_sum, star_mul, Finset.sum_mul, Finset.mul_sum, mul_assoc]
+  refine (Finset.sum_congr rfl fun _ _ => Finset.sum_comm).trans ?_
+  refine Finset.sum_comm.trans (Finset.sum_congr rfl fun _ _ => Finset.sum_comm)
+
+/-- For a nonnegative matrix `X` over `A` and `c : n → A`, `Σᵢⱼ cᵢ⋆ Xᵢⱼ cⱼ` is nonnegative: for
+`X = Y⋆ Y` it is `Σₘ zₘ⋆ zₘ` with `zₘ = Σⱼ Yₘⱼ cⱼ`. -/
+lemma sum_star_mul_mul_nonneg {X : CStarMatrix n n A} (hX : 0 ≤ X) (c : n → A) :
+    0 ≤ ∑ i, ∑ j, star (c i) * X i j * c j := by
+  obtain ⟨Y, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hX
+  rw [sum_star_mul_star_mul_self_mul]
+  exact Finset.sum_nonneg fun m _ => star_mul_self_nonneg _
+
+/-- A nonnegative matrix over `A` whose diagonal entries are nonpositive is zero: `X = Y⋆ Y` has
+`X i i = Σₖ (Y k i)⋆ Y k i`, a sum of nonnegative terms. -/
+lemma eq_zero_of_nonneg_of_diag_nonpos {X : CStarMatrix n n A} (hX : 0 ≤ X)
+    (hd : ∀ i, X i i ≤ 0) : X = 0 := by
+  obtain ⟨Y, rfl⟩ := CStarAlgebra.nonneg_iff_eq_star_mul_self.mp hX
+  have hY : Y = 0 := ext fun k i => by
+    have h := hd i
+    simp only [mul_apply, star_apply] at h
+    have hs : ∀ l ∈ Finset.univ, 0 ≤ star (Y l i) * Y l i := fun l _ => star_mul_self_nonneg _
+    exact star_mul_self_eq_zero.mp ((Finset.sum_eq_zero_iff_of_nonneg hs).mp
+      (le_antisymm h (Finset.sum_nonneg hs)) k (Finset.mem_univ k))
+  rw [hY, mul_zero]
+
+/-- The matrices over `A` with entries in `S`. -/
+private def matrixSubalgebra (n : Type*) [Fintype n] (S : NonUnitalStarSubalgebra ℂ A) :
+    NonUnitalStarSubalgebra ℂ (CStarMatrix n n A) where
+  carrier := {M | ∀ i j, M i j ∈ S}
+  add_mem' hM hN i j := add_mem (hM i j) (hN i j)
+  zero_mem' _ _ := zero_mem S
+  mul_mem' {M N} hM hN i j := by
+    change (M * N) i j ∈ S
+    rw [mul_apply]
+    exact sum_mem fun l _ => mul_mem (hM i l) (hN l j)
+  smul_mem' r _ hM i j := SMulMemClass.smul_mem r (hM i j)
+  star_mem' {M} hM i j := by
+    rw [star_apply]
+    exact star_mem (hM j i)
+
+private instance {S : NonUnitalStarSubalgebra ℂ A} [hS : IsClosed (S : Set A)] :
+    IsClosed (matrixSubalgebra n S : Set (CStarMatrix n n A)) := by
+  change IsClosed {M : CStarMatrix n n A | ∀ i j, M i j ∈ S}
+  simp only [Set.ofPred_forall]
+  exact isClosed_iInter fun i => isClosed_iInter fun j =>
+    hS.preimage ((continuous_apply j).comp (continuous_apply i))
+
+/-- `nonneg_of_forall_sum_star_mul_mul_nonneg` for self-adjoint `T` and closed `S`. For `N = T⁻`,
+whose entries lie in `S`, the columns of `N` give the diagonal of `N T N = -N³`, so `N³ ≥ 0` has
+nonpositive diagonal; hence `N³ = 0`, `N = 0` and `T = T⁺`. -/
+private lemma nonneg_of_forall_sum_star_mul_mul_nonneg_of_isClosed {S : NonUnitalStarSubalgebra ℂ A}
+    [IsClosed (S : Set A)] {T : CStarMatrix n n A} (hT : IsSelfAdjoint T)
+    (hTS : ∀ i j, T i j ∈ S)
+    (h : ∀ c : n → A, (∀ i, c i ∈ S) → 0 ≤ ∑ i, ∑ j, star (c i) * T i j * c j) : 0 ≤ T := by
+  set N := T⁻
+  have hN : 0 ≤ N := CFC.negPart_nonneg T
+  have hNS : N ∈ matrixSubalgebra n S := by
+    change T⁻ ∈ _
+    rw [CFC.negPart_def]
+    exact cfcₙ_mem _ (show T ∈ matrixSubalgebra n S from hTS)
+  have hNTN : star N * T * N = -(N * N * N) := by
+    conv_lhs => rw [← CFC.posPart_sub_negPart T hT]
+    rw [hN.isSelfAdjoint.star_eq, mul_sub, sub_mul, CFC.negPart_mul_posPart, zero_mul, zero_sub]
+  have hX : 0 ≤ N * N * N := by
+    simpa [hN.isSelfAdjoint.star_eq, mul_assoc] using star_left_conjugate_nonneg hN N
+  have hdiag (i : n) : (N * N * N) i i ≤ 0 := by
+    have hc := h (fun j => N j i) fun j => hNS j i
+    have e : (star N * T * N) i i = ∑ j, ∑ l, star (N j i) * T j l * N l i := by
+      simp only [mul_apply, star_apply, Finset.sum_mul]
+      exact Finset.sum_comm
+    rw [← e, hNTN] at hc
+    exact neg_nonneg.mp hc
+  have hN3 : N * N * N = 0 := eq_zero_of_nonneg_of_diag_nonpos hX hdiag
+  have hN0 : N = 0 := by
+    have hNs : star N = N := hN.isSelfAdjoint.star_eq
+    have h₁ : ‖N * N‖ = ‖N‖ * ‖N‖ := by rw [← CStarRing.norm_star_mul_self, hNs]
+    have h₂ : ‖(N * N) * (N * N)‖ = ‖N * N‖ * ‖N * N‖ := by
+      rw [← CStarRing.norm_star_mul_self (x := N * N), star_mul, hNs]
+    have h₃ : (N * N) * (N * N) = 0 := by
+      rw [show (N * N) * (N * N) = (N * N * N) * N by simp only [mul_assoc], hN3, zero_mul]
+    rw [h₃, norm_zero, h₁] at h₂
+    exact norm_eq_zero.mp (mul_self_eq_zero.mp (mul_self_eq_zero.mp h₂.symm))
+  rw [← CFC.posPart_sub_negPart T hT]
+  change 0 ≤ T⁺ - N
+  rw [hN0, sub_zero]
+  exact CFC.posPart_nonneg T
+
+omit [PartialOrder A] [StarOrderedRing A] in
+/-- `Σᵢⱼ cᵢ⋆ (T⋆)ᵢⱼ cⱼ` is the adjoint of `Σᵢⱼ cᵢ⋆ Tᵢⱼ cⱼ`. -/
+private lemma sum_star_mul_star_mul (T : CStarMatrix n n A) (c : n → A) :
+    ∑ i, ∑ j, star (c i) * star T i j * c j = star (∑ i, ∑ j, star (c i) * T i j * c j) := by
+  simp only [star_apply, star_sum, star_mul, star_star, mul_assoc]
+  exact Finset.sum_comm
+
+/-- A matrix `T` over `A` with entries in a ⋆-subalgebra `S` is nonnegative if `Σᵢⱼ cᵢ⋆ Tᵢⱼ cⱼ ≥ 0`
+for every `c` with entries in `S`. The condition extends by continuity to the closure of `S`. It
+makes `Σᵢⱼ cᵢ⋆ Hᵢⱼ cⱼ` vanish for the self-adjoint `H = i (T - T⋆)`, so `H` and `-H` are nonnegative
+by the closed self-adjoint case; hence `T` is self-adjoint and that case applies to `T`. -/
+lemma nonneg_of_forall_sum_star_mul_mul_nonneg {S : NonUnitalStarSubalgebra ℂ A}
+    {T : CStarMatrix n n A} (hTS : ∀ i j, T i j ∈ S)
+    (h : ∀ c : n → A, (∀ i, c i ∈ S) → 0 ≤ ∑ i, ∑ j, star (c i) * T i j * c j) : 0 ≤ T := by
+  set S' := S.topologicalClosure
+  have hS' : IsClosed (S' : Set A) := S.isClosed_topologicalClosure
+  have hTS' (i j : n) : T i j ∈ S' := S.le_topologicalClosure (hTS i j)
+  have h' (c : n → A) (hc : ∀ i, c i ∈ S') : 0 ≤ ∑ i, ∑ j, star (c i) * T i j * c j := by
+    have hcl : c ∈ closure (Set.univ.pi fun _ => (S : Set A)) := by
+      rw [closure_pi_set]
+      exact fun i _ => hc i
+    exact closure_minimal (fun c (hc : c ∈ Set.univ.pi _) => h c fun i => hc i (Set.mem_univ i))
+      (isClosed_le continuous_const (by fun_prop)) hcl
+  set H := Complex.I • (T - star T)
+  have hHS (i j : n) : H i j ∈ S' := by
+    simp only [H, smul_apply, sub_apply, star_apply]
+    exact SMulMemClass.smul_mem _ (sub_mem (hTS' i j) (star_mem (hTS' j i)))
+  have hH : IsSelfAdjoint H := by
+    simp only [IsSelfAdjoint, H, star_smul, star_sub, star_star, Complex.star_def, Complex.conj_I,
+      neg_smul, ← smul_neg, neg_sub]
+  have hq (c : n → A) (hc : ∀ i, c i ∈ S') : ∑ i, ∑ j, star (c i) * H i j * c j = 0 := by
+    have e := (IsSelfAdjoint.of_nonneg (h' c hc)).star_eq
+    simp only [H, smul_apply, sub_apply, mul_smul_comm, smul_mul_assoc, mul_sub, sub_mul,
+      Finset.sum_sub_distrib, ← Finset.smul_sum]
+    rw [sum_star_mul_star_mul, e, sub_self, smul_zero]
+  have hH0 : H = 0 := le_antisymm
+    (neg_nonneg.mp <| nonneg_of_forall_sum_star_mul_mul_nonneg_of_isClosed hH.neg
+      (fun i j => neg_mem (hHS i j)) fun c hc => by simp [hq c hc])
+    (nonneg_of_forall_sum_star_mul_mul_nonneg_of_isClosed hH hHS fun c hc => (hq c hc).ge)
+  have hT : IsSelfAdjoint T :=
+    (sub_eq_zero.mp ((smul_eq_zero.mp hH0).resolve_left Complex.I_ne_zero)).symm
+  exact nonneg_of_forall_sum_star_mul_mul_nonneg_of_isClosed hT hTS' h'
+
+/-- A matrix `T` over `A` is nonnegative if and only if `Σᵢⱼ cᵢ⋆ Tᵢⱼ cⱼ` is nonnegative for every
+`c : n → A`. -/
+lemma nonneg_iff_forall_sum_star_mul_mul_nonneg {T : CStarMatrix n n A} :
+    0 ≤ T ↔ ∀ c : n → A, 0 ≤ ∑ i, ∑ j, star (c i) * T i j * c j :=
+  ⟨sum_star_mul_mul_nonneg, fun h =>
+    nonneg_of_forall_sum_star_mul_mul_nonneg (S := ⊤) (fun _ _ => trivial) fun c _ => h c⟩
+
 section Hilbert
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
@@ -239,6 +427,7 @@ omit [CompleteSpace H] in
 
 variable [DecidableEq n]
 
+variable (n) (H) in
 /-- Operator matrices are the operators on the Hilbert sum `Hⁿ = PiLp 2 (fun _ ↦ H)`: the
 ⋆-isomorphism `M_n(B(H)) ≃ B(Hⁿ)` sends `N` to `ξ ↦ (Σⱼ Nᵢⱼ ξⱼ)ᵢ`
 (`CStarMatrix.toPiLpStarAlgEquiv_apply`), and its inverse sends `T` to its blocks
@@ -280,7 +469,7 @@ noncomputable def toPiLpStarAlgEquiv :
 /-- `toPiLpStarAlgEquiv N` acts on `ξ ∈ Hⁿ` as `(N ξ)ᵢ = Σⱼ Nᵢⱼ ξⱼ`. -/
 @[simp] lemma toPiLpStarAlgEquiv_apply (N : CStarMatrix n n (H →L[ℂ] H))
     (ξ : PiLp 2 (fun _ : n => H)) (i : n) :
-    (toPiLpStarAlgEquiv (n := n) (H := H) N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) :=
+    (toPiLpStarAlgEquiv n H N ξ).ofLp i = ∑ j, N i j (ξ.ofLp j) :=
   toPiLpCLM_apply N ξ i
 
 omit [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A] [DecidableEq n] in
@@ -292,10 +481,10 @@ lemma nonneg_iff_sum_inner_apply_nonneg {N : CStarMatrix n n (H →L[ℂ] H)} :
     0 ≤ N ↔ ∀ ξ : n → H, 0 ≤ ∑ i, ∑ j, ⟪ξ i, N i j (ξ j)⟫_ℂ := by
   classical
   refine ⟨sum_inner_apply_nonneg, fun h => ?_⟩
-  rw [← map_le_map_iff (toPiLpStarAlgEquiv (n := n) (H := H)), map_zero,
+  rw [← map_le_map_iff (toPiLpStarAlgEquiv n H), map_zero,
     ContinuousLinearMap.nonneg_iff_isPositive, ContinuousLinearMap.isPositive_iff_complex]
   intro x
-  have hx : ⟪toPiLpStarAlgEquiv (n := n) (H := H) N x, x⟫_ℂ =
+  have hx : ⟪toPiLpStarAlgEquiv n H N x, x⟫_ℂ =
       starRingEnd ℂ (∑ i, ∑ j, ⟪x.ofLp i, N i j (x.ofLp j)⟫_ℂ) := by
     rw [← inner_conj_symm, PiLp.inner_apply]
     simp [inner_sum]
