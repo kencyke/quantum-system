@@ -47,6 +47,9 @@ on the matrix coefficients `⟪x, ψ(a) y⟫`, which the net eventually satisfie
 ## Main results
 
 * `OperatorSubsystem.exists_completelyPositiveMap_of_orthonormal` — the finite step.
+* **`CompletelyPositiveMap'.isCompact_image_toPiWOT_setOf_norm_apply_one_le`** — the completely
+  positive maps into `B(H)` with `‖ψ 1‖` bounded are compact in the product of weak operator
+  topologies; `CompletelyPositiveMap'.exists_forall_isClosed` is its filter form.
 * `OperatorSubsystem.exists_extension_completelyPositiveMap` — **Arveson's extension theorem** for
   operator systems.
 * `CompletelyPositiveMap.exists_extension_of_operatorSubsystem` — its form for a unital C⋆-algebra.
@@ -361,6 +364,113 @@ lemma norm_apply_le_orderBound (ψ : T →CP' (H →L[ℂ] H)) (a : T) :
 
 end OperatorSystem
 
+namespace CompletelyPositiveMap'
+
+variable {T : Type*} [AddCommGroup T] [Module ℂ T] [StarAddMonoid T] [StarModule ℂ T]
+  [PartialOrder T] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) T)] [One T] [OperatorSystem T]
+
+open OperatorSystem ContinuousLinearMapWOT
+
+/-- A completely positive map `ψ` into `B(H)` as the point `a ↦ ψ a` of the product of the weak
+operator topologies. -/
+def toPiWOT (ψ : T →CP' (H →L[ℂ] H)) : T → (H →WOT[ℂ] H) := fun a => ofCLM (ψ a)
+
+omit [StarAddMonoid T] [StarModule ℂ T] [PartialOrder T] [One T] [OperatorSystem T] in
+/-- `toPiWOT ψ a` is `ψ a`. -/
+@[simp] lemma toPiWOT_apply (ψ : T →CP' (H →L[ℂ] H)) (a : T) : toPiWOT ψ a = ofCLM (ψ a) := rfl
+
+omit [StarAddMonoid T] [StarModule ℂ T] [PartialOrder T] [One T] [OperatorSystem T] in
+/-- **Completely positive maps into `B(H)` are closed in the product of the weak operator
+topologies**: linearity and complete positivity are closed conditions on the matrix coefficients
+`⟪x, ψ(a) y⟫`. -/
+lemma isClosed_range_toPiWOT : IsClosed (Set.range (toPiWOT (T := T) (H := H))) := by
+  refine isClosed_of_closure_subset fun g hg => ?_
+  have key : ∀ P : Set (T → H →WOT[ℂ] H), IsClosed P →
+      (∀ ψ : T →CP' (H →L[ℂ] H), toPiWOT ψ ∈ P) → g ∈ P :=
+    fun P hP h => closure_minimal (Set.range_subset_iff.mpr h) hP hg
+  have hinner : ∀ (a : T) (x y : H),
+      Continuous fun g : T → H →WOT[ℂ] H => ⟪x, g a y⟫_ℂ := fun a x y =>
+    (continuous_iff.mp (continuous_apply a)) y x
+  -- the closed conditions inherited from the completely positive maps
+  have hadd : ∀ a b x y, ⟪x, g (a + b) y⟫_ℂ = ⟪x, g a y⟫_ℂ + ⟪x, g b y⟫_ℂ := fun a b x y =>
+    key {g | ⟪x, g (a + b) y⟫_ℂ = ⟪x, g a y⟫_ℂ + ⟪x, g b y⟫_ℂ}
+      (isClosed_eq (hinner _ x y) ((hinner a x y).add (hinner b x y))) fun ψ => by
+        change ⟪x, ψ (a + b) y⟫_ℂ = ⟪x, ψ a y⟫_ℂ + ⟪x, ψ b y⟫_ℂ
+        rw [map_add, _root_.add_apply, inner_add_right]
+  have hsmul : ∀ (c : ℂ) a x y, ⟪x, g (c • a) y⟫_ℂ = c * ⟪x, g a y⟫_ℂ := fun c a x y =>
+    key {g | ⟪x, g (c • a) y⟫_ℂ = c * ⟪x, g a y⟫_ℂ}
+      (isClosed_eq (hinner _ x y) (continuous_const.mul (hinner a x y))) fun ψ => by
+        change ⟪x, ψ (c • a) y⟫_ℂ = c * ⟪x, ψ a y⟫_ℂ
+        rw [map_smul, _root_.smul_apply, inner_smul_right]
+  have hcp : ∀ (k : ℕ) (X : CStarMatrix (Fin k) (Fin k) T), 0 ≤ X → ∀ ξ : Fin k → H,
+      0 ≤ ∑ p, ∑ q, ⟪ξ p, g (X p q) (ξ q)⟫_ℂ := fun k X hX ξ =>
+    key {g | 0 ≤ ∑ p, ∑ q, ⟪ξ p, g (X p q) (ξ q)⟫_ℂ}
+      (isClosed_le continuous_const (continuous_finsetSum _ fun p _ =>
+        continuous_finsetSum _ fun q _ => hinner _ _ _)) fun ψ =>
+        CStarMatrix.nonneg_iff_sum_inner_apply_nonneg.mp (ψ.map_cstarMatrix_nonneg hX) ξ
+  -- the limit is a completely positive map
+  let ψ' : T →ₗ[ℂ] (H →L[ℂ] H) :=
+    { toFun := fun a => toCLM (g a)
+      map_add' := fun a b => ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => by
+        rw [_root_.add_apply, inner_add_right]
+        exact hadd a b x y
+      map_smul' := fun c a => ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => by
+        rw [RingHom.id_apply, _root_.smul_apply, inner_smul_right]
+        exact hsmul c a x y }
+  exact ⟨⟨ψ', fun k X hX => CStarMatrix.nonneg_iff_sum_inner_apply_nonneg.mpr (hcp k X hX)⟩,
+    funext fun _ => rfl⟩
+
+/-- **Compactness of completely positive maps into `B(H)`.** The completely positive maps
+`ψ : T → B(H)` with `‖ψ 1‖ ≤ c` form a compact set in the product of the weak operator topologies:
+the values `ψ a` lie in the ball of radius `3 r(a) c` (`OperatorSystem.norm_apply_le_orderBound`),
+compact in the weak operator topology (`ContinuousLinearMapWOT.isCompact_closedBall`), and the set
+is closed (`CompletelyPositiveMap'.isClosed_range_toPiWOT`,
+`ContinuousLinearMapWOT.isClosed_closedBall`). -/
+theorem isCompact_image_toPiWOT_setOf_norm_apply_one_le (c : ℝ) :
+    IsCompact (toPiWOT '' {ψ : T →CP' (H →L[ℂ] H) | ‖ψ 1‖ ≤ c}) := by
+  have hK : IsCompact (Set.univ.pi fun a : T => (toCLM ⁻¹' Metric.closedBall 0 (3 * orderBound a * c) :
+      Set (H →WOT[ℂ] H))) :=
+    isCompact_univ_pi fun a => isCompact_closedBall 0 _
+  refine hK.of_isClosed_subset ?_ ?_
+  · have : toPiWOT '' {ψ : T →CP' (H →L[ℂ] H) | ‖ψ 1‖ ≤ c} = Set.range (toPiWOT (T := T) (H := H)) ∩
+        (fun g : T → H →WOT[ℂ] H => g 1) ⁻¹' (toCLM ⁻¹' Metric.closedBall 0 c) := by
+      ext g
+      constructor
+      · rintro ⟨ψ, hψ, rfl⟩
+        refine ⟨⟨ψ, rfl⟩, ?_⟩
+        change ψ 1 ∈ Metric.closedBall 0 c
+        rwa [mem_closedBall_zero_iff]
+      · rintro ⟨⟨ψ, rfl⟩, h⟩
+        refine ⟨ψ, ?_, rfl⟩
+        change ψ 1 ∈ Metric.closedBall 0 c at h
+        rwa [mem_closedBall_zero_iff] at h
+    rw [this]
+    exact (isClosed_range_toPiWOT (T := T) (H := H)).inter ((isClosed_closedBall 0 c).preimage (continuous_apply 1))
+  · rintro _ ⟨ψ, hψ, rfl⟩ a _
+    change ψ a ∈ Metric.closedBall 0 _
+    rw [mem_closedBall_zero_iff]
+    exact (norm_apply_le_orderBound ψ a).trans
+      (mul_le_mul_of_nonneg_left hψ (mul_nonneg zero_le_three (orderBound_nonneg a)))
+
+/-- The filter form of `CompletelyPositiveMap'.isCompact_image_toPiWOT_setOf_norm_apply_one_le`: a
+family of completely positive maps `ψ i : T → B(H)` with `‖ψ i 1‖ ≤ c` has, along any nontrivial
+filter, a completely positive cluster point `ψ₀` in the product of the weak operator topologies, so
+that every closed condition on the values `a ↦ ψ i a` that the `ψ i` eventually satisfy, `ψ₀`
+satisfies. -/
+lemma exists_forall_isClosed {ι : Type*} {l : Filter ι} [l.NeBot] (ψ : ι → T →CP' (H →L[ℂ] H))
+    {c : ℝ} (hψ : ∀ i, ‖ψ i 1‖ ≤ c) :
+    ∃ ψ₀ : T →CP' (H →L[ℂ] H), ∀ P : Set (T → H →WOT[ℂ] H), IsClosed P →
+      (∀ᶠ i in l, toPiWOT (ψ i) ∈ P) → toPiWOT ψ₀ ∈ P := by
+  obtain ⟨g, -, hg⟩ := (isCompact_image_toPiWOT_setOf_norm_apply_one_le (T := T) (H := H) c).exists_mapClusterPt
+    (f := l) (u := fun i => toPiWOT (ψ i))
+    (tendsto_principal.mpr (Eventually.of_forall fun i => ⟨ψ i, hψ i, rfl⟩))
+  have key : ∀ P : Set (T → H →WOT[ℂ] H), IsClosed P → (∀ᶠ i in l, toPiWOT (ψ i) ∈ P) →
+      g ∈ P := fun P hP h => hP.mem_of_mapClusterPt hg h
+  obtain ⟨ψ₀, rfl⟩ := key _ (isClosed_range_toPiWOT (T := T) (H := H)) (Eventually.of_forall fun i => ⟨ψ i, rfl⟩)
+  exact ⟨ψ₀, key⟩
+
+end CompletelyPositiveMap'
+
 namespace OperatorSubsystem
 
 variable {T : Type*} [AddCommGroup T] [Module ℂ T] [StarAddMonoid T] [StarModule ℂ T]
@@ -374,11 +484,9 @@ subsystem `S` of an operator system `T` extends to a completely positive map `ψ
 
 For each finite set `t ⊆ H`, the finite step (`exists_completelyPositiveMap_of_orthonormal`), with
 an orthonormal basis of the span of `t`, gives a completely positive `ψₜ : T → B(H)` that agrees
-with `φ` on `S` in the matrix coefficients `⟪x, · y⟫`, `x, y ∈ t`, with `‖ψₜ a‖` bounded independently
-of `t` (`OperatorSystem.norm_apply_le_orderBound`). In the weak operator topology the bounded
-families of operators form a compact set (`ContinuousLinearMapWOT.isCompact_closedBall`), so the
-net `(ψₜ)ₜ` has a cluster point; linearity, complete positivity and agreement with `φ` are closed
-conditions that the `ψₜ` eventually satisfy, so the cluster point satisfies them. -/
+with `φ` on `S` in the matrix coefficients `⟪x, · y⟫`, `x, y ∈ t`, with `‖ψₜ 1‖ ≤ ‖φ 1‖`. The net
+`(ψₜ)ₜ` has a completely positive cluster point (`CompletelyPositiveMap'.exists_forall_isClosed`),
+and agreement with `φ` at `⟪x, · y⟫` is a closed condition that the `ψₜ` eventually satisfy. -/
 theorem exists_extension_completelyPositiveMap (φ : S →CP' (H →L[ℂ] H)) :
     ∃ ψ : T →CP' (H →L[ℂ] H), ψ.restrict S = φ := by
   classical
@@ -397,61 +505,13 @@ theorem exists_extension_completelyPositiveMap (φ : S →CP' (H →L[ℂ] H)) :
     refine ⟨ψ, hψ1, fun s x hx y hy => hψ s x ?_ y ?_⟩ <;> rw [hspan] <;>
       exact Submodule.subset_span ‹_›
   choose ψ hψ1 hψ using hfin
-  -- the cluster point of the net `t ↦ ψ t` in the product of weak operator topologies
-  let Ψ : Finset H → T → (H →WOT[ℂ] H) := fun t a => ofCLM (ψ t a)
-  let C : T → ℝ := fun a => 3 * orderBound a * ‖φ 1‖
-  have hK : IsCompact (Set.univ.pi fun a => (toCLM ⁻¹' Metric.closedBall 0 (C a) :
-      Set (H →WOT[ℂ] H))) :=
-    isCompact_univ_pi fun a => isCompact_closedBall 0 (C a)
-  have hΨK : ∀ t, Ψ t ∈ Set.univ.pi fun a => (toCLM ⁻¹' Metric.closedBall 0 (C a) :
-      Set (H →WOT[ℂ] H)) := fun t a _ => by
-    change ψ t a ∈ Metric.closedBall 0 (C a)
-    rw [mem_closedBall_zero_iff]
-    exact (norm_apply_le_orderBound (ψ t) a).trans
-      (mul_le_mul_of_nonneg_left (hψ1 t) (mul_nonneg zero_le_three (orderBound_nonneg a)))
-  obtain ⟨ψ₀, -, hψ₀⟩ := hK.exists_mapClusterPt (f := atTop)
-    (tendsto_principal.mpr (Eventually.of_forall hΨK))
-  have key : ∀ s : Set (T → H →WOT[ℂ] H), IsClosed s → (∀ t, Ψ t ∈ s) → ψ₀ ∈ s :=
-    fun s hs h => hs.mem_of_mapClusterPt hψ₀ (Eventually.of_forall h)
-  have hinner : ∀ (a : T) (x y : H),
-      Continuous fun g : T → H →WOT[ℂ] H => ⟪x, g a y⟫_ℂ := fun a x y =>
-    (continuous_iff.mp (continuous_apply a)) y x
-  -- the closed conditions inherited from the `ψ t`
-  have hadd : ∀ a b x y, ⟪x, ψ₀ (a + b) y⟫_ℂ = ⟪x, ψ₀ a y⟫_ℂ + ⟪x, ψ₀ b y⟫_ℂ := fun a b x y =>
-    key {g | ⟪x, g (a + b) y⟫_ℂ = ⟪x, g a y⟫_ℂ + ⟪x, g b y⟫_ℂ}
-      (isClosed_eq (hinner _ x y) ((hinner a x y).add (hinner b x y)))
-      fun t => by
-        change ⟪x, ψ t (a + b) y⟫_ℂ = ⟪x, ψ t a y⟫_ℂ + ⟪x, ψ t b y⟫_ℂ
-        rw [map_add, _root_.add_apply, inner_add_right]
-  have hsmul : ∀ (c : ℂ) a x y, ⟪x, ψ₀ (c • a) y⟫_ℂ = c * ⟪x, ψ₀ a y⟫_ℂ := fun c a x y =>
-    key {g | ⟪x, g (c • a) y⟫_ℂ = c * ⟪x, g a y⟫_ℂ}
-      (isClosed_eq (hinner _ x y) (continuous_const.mul (hinner a x y)))
-      fun t => by
-        change ⟪x, ψ t (c • a) y⟫_ℂ = c * ⟪x, ψ t a y⟫_ℂ
-        rw [map_smul, _root_.smul_apply, inner_smul_right]
-  have hcp : ∀ (k : ℕ) (X : CStarMatrix (Fin k) (Fin k) T), 0 ≤ X → ∀ ξ : Fin k → H,
-      0 ≤ ∑ p, ∑ q, ⟪ξ p, ψ₀ (X p q) (ξ q)⟫_ℂ := fun k X hX ξ =>
-    key {g | 0 ≤ ∑ p, ∑ q, ⟪ξ p, g (X p q) (ξ q)⟫_ℂ}
-      (isClosed_le continuous_const (continuous_finsetSum _ fun p _ =>
-        continuous_finsetSum _ fun q _ => hinner _ _ _))
-      fun t => CStarMatrix.nonneg_iff_sum_inner_apply_nonneg.mp
-        ((ψ t).map_cstarMatrix_nonneg hX) ξ
-  have hext : ∀ (s : S) (x y : H), ⟪x, ψ₀ s y⟫_ℂ = ⟪x, φ s y⟫_ℂ := fun s x y => by
-    refine (isClosed_eq (hinner s x y) continuous_const).mem_of_mapClusterPt hψ₀ ?_
-    filter_upwards [eventually_ge_atTop {x, y}] with t ht
-    exact hψ t s x (ht (by simp)) y (ht (by simp))
-  -- the cluster point is a completely positive extension of `φ`
-  let ψ' : T →ₗ[ℂ] (H →L[ℂ] H) :=
-    { toFun := fun a => toCLM (ψ₀ a)
-      map_add' := fun a b => ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => by
-        rw [_root_.add_apply, inner_add_right]
-        exact hadd a b x y
-      map_smul' := fun c a => ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => by
-        rw [RingHom.id_apply, _root_.smul_apply, inner_smul_right]
-        exact hsmul c a x y }
-  refine ⟨⟨ψ', fun k X hX => CStarMatrix.nonneg_iff_sum_inner_apply_nonneg.mpr (hcp k X hX)⟩, ?_⟩
-  refine CompletelyPositiveMap'.ext fun s => ContinuousLinearMap.ext fun y =>
-    ext_inner_left ℂ fun x => hext s x y
+  obtain ⟨ψ₀, hψ₀⟩ := CompletelyPositiveMap'.exists_forall_isClosed (l := atTop) ψ hψ1
+  refine ⟨ψ₀, CompletelyPositiveMap'.ext fun s => ContinuousLinearMap.ext fun y =>
+    ext_inner_left ℂ fun x => ?_⟩
+  refine hψ₀ {g | ⟪x, g s y⟫_ℂ = ⟪x, φ s y⟫_ℂ}
+    (isClosed_eq ((continuous_iff.mp (continuous_apply (s : T))) y x) continuous_const) ?_
+  filter_upwards [eventually_ge_atTop {x, y}] with t ht
+  exact hψ t s x (ht (by simp)) y (ht (by simp))
 
 end OperatorSubsystem
 

@@ -16,10 +16,9 @@ public import QuantumSystem.Analysis.OperatorSystem.Arveson
 Every operator system `V` (`OperatorSystem`), a matrix-ordered space with an Archimedean matrix order
 unit, is a concrete one: there is a unital linear map `j : V → B(H)` into the operators on a Hilbert
 space with `0 ≤ X.map j ↔ 0 ≤ X` for every square matrix `X` over `V`
-(`OperatorSystem.exists_isCompleteOrderEmbedding`), so that `V` is unitally completely order
-isomorphic to an operator subsystem of `B(H)` (`OperatorSystem.exists_linearEquiv_operatorSubsystem`).
-Conversely
-every operator subsystem of `B(H)` is an operator system (`OperatorSubsystem.instOperatorSystem`).
+(`OperatorSystem.isCompleteOrderEmbedding_directSumMap`), so that `V` is unitally completely order
+isomorphic to an operator subsystem of `B(H)` (`OperatorSystem.linearEquivRangeDirectSumMap`).
+Conversely every operator subsystem of `B(H)` is an operator system (`OperatorSubsystem.instOperatorSystem`).
 
 The map `j` is the direct sum of all unital completely positive maps `φ : V → B(ℂⁿ)`, acting on the
 Hilbert sum `⨁ ℂⁿ`; the norms `‖φ v‖` are bounded uniformly in `φ` through the order unit
@@ -34,13 +33,20 @@ with `τ(Y) = F(diag(tr Y))`, makes the value `P` at `1` strictly positive while
 `X` negative, and `P^{-1/2} φ P^{-1/2}` is unital. A matrix `X` that is not self-adjoint is reduced
 to the self-adjoint `i (X - X⋆)`, which every `φ` with `X.map φ ≥ 0` sends to `0`.
 
+## Main definitions
+
+* `OperatorSystem.directSumMap V` — the direct sum of the unital completely positive maps
+  `V → B(ℂⁿ)`, on the Hilbert sum `OperatorSystem.DirectSumSpace V`.
+* `OperatorSystem.rangeDirectSumMap V`, `OperatorSystem.linearEquivRangeDirectSumMap V` — its image,
+  an operator subsystem of `B(H)`, and the isomorphism of `V` onto it.
+
 ## Main results
 
 * `OperatorSystem.nonneg_iff_forall_map_nonneg` — the unital completely positive maps into `B(ℂᵏ)`
   detect the positivity of `k × k` matrices.
-* `OperatorSystem.exists_isCompleteOrderEmbedding` — **the Choi–Effros theorem**.
-* `OperatorSystem.exists_linearEquiv_operatorSubsystem` — its form with an operator subsystem of
-  `B(H)`.
+* `OperatorSystem.isCompleteOrderEmbedding_directSumMap` — **the Choi–Effros theorem**.
+* `OperatorSystem.isCompleteOrderEmbedding_linearEquivRangeDirectSumMap` — its form with an operator
+  subsystem of `B(H)`.
 -/
 
 @[expose] public noncomputable section
@@ -51,11 +57,9 @@ open CStarMatrix
 /-- The operators on `ℂᵏ`. -/
 local notation "B(ℂ^" k ")" => EuclideanSpace ℂ (Fin k) →L[ℂ] EuclideanSpace ℂ (Fin k)
 
-universe u
-
 namespace OperatorSystem
 
-variable {V : Type u} [AddCommGroup V] [Module ℂ V] [StarAddMonoid V] [StarModule ℂ V]
+variable {V : Type*} [AddCommGroup V] [Module ℂ V] [StarAddMonoid V] [StarModule ℂ V]
   [PartialOrder V] [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) V)] [One V] [OperatorSystem V]
 
 /-! ### Unital completely positive maps into `B(ℂᵏ)` detect positivity -/
@@ -236,16 +240,16 @@ section DirectSum
 
 variable (V) in
 /-- The unital completely positive maps `V → B(ℂⁿ)`, for all `n`. -/
-private abbrev UCP : Type u :=
+abbrev UCP :=
   Σ n : ℕ, {φ : V →CP' B(ℂ^n) // φ 1 = 1}
 
 variable (V) in
 /-- The Hilbert sum `⨁ ℂⁿ` over the unital completely positive maps `V → B(ℂⁿ)`. -/
-private abbrev DirectSumSpace : Type u :=
+abbrev DirectSumSpace :=
   ↥(lp (fun i : UCP V => EuclideanSpace ℂ (Fin i.1)) 2)
 
 /-- The unital completely positive maps `V → B(ℂⁿ)` are bounded at `v` uniformly. -/
-private lemma norm_apply_le (i : UCP V) (v : V) : ‖i.2.1 v‖ ≤ 3 * orderBound v := by
+lemma UCP.norm_apply_le (i : UCP V) (v : V) : ‖i.2.1 v‖ ≤ 3 * orderBound v := by
   have h := norm_apply_le_orderBound i.2.1 v
   rw [i.2.2] at h
   exact h.trans (mul_le_of_le_one_right (mul_nonneg (by norm_num) (orderBound_nonneg v))
@@ -253,9 +257,9 @@ private lemma norm_apply_le (i : UCP V) (v : V) : ‖i.2.1 v‖ ≤ 3 * orderBou
 
 variable (V) in
 /-- The direct sum `v ↦ ⨁ φ(v)` of the unital completely positive maps `φ : V → B(ℂⁿ)`. -/
-private def directSumMap : V →ₗ[ℂ] (DirectSumSpace V →L[ℂ] DirectSumSpace V) where
+def directSumMap : V →ₗ[ℂ] (DirectSumSpace V →L[ℂ] DirectSumSpace V) where
   toFun v := lp.mapCLM 2 (fun i : UCP V => i.2.1 v)
-    (mul_nonneg (by norm_num) (orderBound_nonneg v)) fun i => norm_apply_le i v
+    (mul_nonneg (by norm_num) (orderBound_nonneg v)) fun i => UCP.norm_apply_le i v
   map_add' v w := ContinuousLinearMap.ext fun x => lp.ext (funext fun i => by
     simp only [lp.mapCLM_apply_coe, _root_.add_apply, lp.coeFn_add, Pi.add_apply, map_add])
   map_smul' c v := ContinuousLinearMap.ext fun x => lp.ext (funext fun i => by
@@ -266,7 +270,9 @@ private lemma directSumMap_apply (v : V) (x : DirectSumSpace V) (i : UCP V) :
     (directSumMap V v x : ∀ i : UCP V, EuclideanSpace ℂ (Fin i.1)) i = i.2.1 v (x i) :=
   rfl
 
-private lemma directSumMap_one : directSumMap V 1 = 1 :=
+variable (V) in
+/-- The direct sum of the unital completely positive maps is unital. -/
+lemma directSumMap_one : directSumMap V 1 = 1 :=
   ContinuousLinearMap.ext fun x => lp.ext (funext fun i => by
     rw [directSumMap_apply, i.2.2]
     rfl)
@@ -307,33 +313,46 @@ private lemma map_nonneg_of_map_directSumMap_nonneg (i : UCP V) {k : ℕ}
 end DirectSum
 
 variable (V) in
-/-- **The Choi–Effros theorem.** Every operator system `V` is a concrete operator system: there are a
-Hilbert space `H` and a unital complete order embedding `j : V → B(H)`, a linear map with
-`0 ≤ X.map j ↔ 0 ≤ X` for every square matrix `X` over `V`. The map `j` is the direct sum of all unital
-completely positive maps `V → B(ℂⁿ)`, which detect positivity
+/-- **The Choi–Effros theorem.** Every operator system `V` is a concrete operator system: the direct
+sum `j : V → B(H)` of the unital completely positive maps `V → B(ℂⁿ)`, on the Hilbert sum `H = ⨁ ℂⁿ`
+(`OperatorSystem.DirectSumSpace`), is unital (`OperatorSystem.directSumMap_one`) and satisfies
+`0 ≤ X.map j ↔ 0 ≤ X` for every square matrix `X` over `V`, as these maps detect positivity
 (`OperatorSystem.nonneg_iff_forall_map_nonneg`). -/
-theorem exists_isCompleteOrderEmbedding :
-    ∃ (H : Type u) (_ : NormedAddCommGroup H) (_ : InnerProductSpace ℂ H) (_ : CompleteSpace H)
-      (j : V →ₗ[ℂ] (H →L[ℂ] H)), j 1 = 1 ∧ j.IsCompleteOrderEmbedding :=
-  ⟨DirectSumSpace V, inferInstance, inferInstance, inferInstance, directSumMap V, directSumMap_one,
-    fun _ _ => ⟨fun h => nonneg_iff_forall_map_nonneg.mpr fun φ hφ =>
-      map_nonneg_of_map_directSumMap_nonneg ⟨_, φ, hφ⟩ h, map_directSumMap_nonneg⟩⟩
+theorem isCompleteOrderEmbedding_directSumMap : (directSumMap V).IsCompleteOrderEmbedding :=
+  fun _ _ => ⟨fun h => nonneg_iff_forall_map_nonneg.mpr fun φ hφ =>
+    map_nonneg_of_map_directSumMap_nonneg ⟨_, φ, hφ⟩ h, map_directSumMap_nonneg⟩
 
 variable (V) in
-/-- **The Choi–Effros theorem**, with an operator subsystem: every operator system `V` is unitally
-completely order isomorphic to an operator subsystem `S` of `B(H)` for some Hilbert space `H`, by a
-linear isomorphism `e : V ≃ S` with `e 1 = 1` and `0 ≤ X.map e ↔ 0 ≤ X` for every square matrix `X`
-over `V`; its inverse is then a complete order embedding too
-(`LinearMap.IsCompleteOrderEmbedding.symm`). The subsystem is the range
-(`CompletelyPositiveMap'.range`) of the map of `OperatorSystem.exists_isCompleteOrderEmbedding`, which
-is injective (`LinearMap.IsCompleteOrderEmbedding.injective`) and a complete order embedding onto it
-(`LinearMap.IsCompleteOrderEmbedding.rangeRestrict`). -/
-theorem exists_linearEquiv_operatorSubsystem :
-    ∃ (H : Type u) (_ : NormedAddCommGroup H) (_ : InnerProductSpace ℂ H) (_ : CompleteSpace H)
-      (S : OperatorSubsystem (H →L[ℂ] H)) (e : V ≃ₗ[ℂ] S),
-        e 1 = 1 ∧ (e : V →ₗ[ℂ] S).IsCompleteOrderEmbedding := by
-  obtain ⟨H, _, _, _, j, hj1, hj⟩ := exists_isCompleteOrderEmbedding V
-  exact ⟨H, inferInstance, inferInstance, inferInstance, hj.toCompletelyPositiveMap'.range hj1,
-    LinearEquiv.ofInjective j hj.injective, Subtype.ext hj1, hj.rangeRestrict⟩
+/-- **The Choi–Effros theorem**, with an operator subsystem: the image of `V` under the direct sum of
+its unital completely positive maps into the matrix algebras (`OperatorSystem.directSumMap`), as an
+operator subsystem of `B(H)` for the Hilbert sum `H = OperatorSystem.DirectSumSpace V`. -/
+def rangeDirectSumMap : OperatorSubsystem (DirectSumSpace V →L[ℂ] DirectSumSpace V) :=
+  (isCompleteOrderEmbedding_directSumMap V).toCompletelyPositiveMap'.range (directSumMap_one V)
+
+/-- The image of `V` in `B(H)` consists of the operators `directSumMap V v`. -/
+lemma mem_rangeDirectSumMap {x : DirectSumSpace V →L[ℂ] DirectSumSpace V} :
+    x ∈ rangeDirectSumMap V ↔ ∃ v, directSumMap V v = x :=
+  Iff.rfl
+
+variable (V) in
+/-- **The Choi–Effros theorem**, as an isomorphism: `V` is linearly isomorphic to its image in
+`B(H)` (`OperatorSystem.rangeDirectSumMap`), since the direct sum is injective
+(`LinearMap.IsCompleteOrderEmbedding.injective`). The isomorphism is unital
+(`OperatorSystem.linearEquivRangeDirectSumMap_one`) and a complete order embedding
+(`OperatorSystem.isCompleteOrderEmbedding_linearEquivRangeDirectSumMap`), and so is its inverse
+(`LinearMap.IsCompleteOrderEmbedding.symm`). -/
+def linearEquivRangeDirectSumMap : V ≃ₗ[ℂ] rangeDirectSumMap V :=
+  LinearEquiv.ofInjective (directSumMap V) (isCompleteOrderEmbedding_directSumMap V).injective
+
+variable (V) in
+/-- The isomorphism of `V` onto its image in `B(H)` is unital. -/
+lemma linearEquivRangeDirectSumMap_one : linearEquivRangeDirectSumMap V 1 = 1 :=
+  Subtype.ext (directSumMap_one V)
+
+variable (V) in
+/-- The isomorphism of `V` onto its image in `B(H)` is a complete order embedding. -/
+lemma isCompleteOrderEmbedding_linearEquivRangeDirectSumMap :
+    (linearEquivRangeDirectSumMap V : V →ₗ[ℂ] rangeDirectSumMap V).IsCompleteOrderEmbedding :=
+  (isCompleteOrderEmbedding_directSumMap V).rangeRestrict
 
 end OperatorSystem

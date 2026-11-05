@@ -46,6 +46,8 @@ public import QuantumSystem.Analysis.OperatorSpace.Ruan
 public import QuantumSystem.Analysis.OperatorSystem.Arveson
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffros
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffrosProduct
+public import QuantumSystem.Analysis.OperatorSystem.Injective
+public import QuantumSystem.Analysis.OperatorSystem.InjectiveEnvelope
 public import QuantumSystem.Analysis.OperatorSystem.KPositiveMap
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
 public import QuantumSystem.Analysis.SpectralTheory.Interpolation
