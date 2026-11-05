@@ -13,7 +13,7 @@ import QuantumSystem.Analysis.CStarAlgebra.ChoiEffros
 /-!
 # `2`-positive maps as Schwarz maps
 
-By the Kadison–Schwarz inequality of Choi (`KPositiveMapClass.le_smul_map_star_mul_of_norm_le`),
+By the Kadison–Schwarz inequality (`KPositiveMapClass.le_smul_map_star_mul_of_norm_le`),
 a `2`-positive contraction `φ` (`‖φ x‖ ≤ ‖x‖`) between possibly non-unital C⋆-algebras is a
 Schwarz map. Between unital C⋆-algebras the condition reads `φ 1 ≤ 1`: the normalised
 Kadison–Schwarz inequality `KPositiveMapClass.le_map_star_mul` holds under it directly. This file
@@ -140,7 +140,8 @@ is a unital completely positive map with a completely positive inverse
 `φ` and unital as `ψ 1 = ψ (φ 1) = 1`, so both maps are Schwarz maps by the normalised
 Kadison–Schwarz inequality, hence contractions (`SchwarzMapClass.norm_apply_le`), and
 `KPositiveMapClass.starAlgEquivOfInverseOfNormLe` applies. Here `h₁` and `h₂` say `ψ ∘ φ = id` and
-`φ ∘ ψ = id`. -/
+`φ ∘ ψ = id`. For `φ` a ⋆-algebra homomorphism, whose `LinearMapClass` instance Mathlib does not
+register globally, supply it with `letI := AlgHomClass.linearMapClass`. -/
 @[simps! apply symm_apply]
 noncomputable def starAlgEquivOfInverse (φ : F) (ψ : G) (hφ : φ 1 = 1)
     (h₁ : Function.LeftInverse ψ φ) (h₂ : Function.RightInverse ψ φ) : A₁ ≃⋆ₐ[ℂ] A₂ :=

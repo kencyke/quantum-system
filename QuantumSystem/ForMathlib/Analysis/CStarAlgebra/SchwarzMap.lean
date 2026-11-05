@@ -19,7 +19,8 @@ A linear map `f : A₁ →ₗ[ℂ] A₂` between C⋆-algebras is a **Schwarz ma
 Kadison–Schwarz inequality `f(a)⋆ f(a) ≤ f(a⋆ a)` for every `a`. The *unital normal*
 Schwarz maps form a class of maps along which the data-processing inequality for Araki's relative
 entropy holds; unitality cannot be dropped, as `½ • id` shows once the entropy is
-taken between general positive functionals, where it can be negative: for `σ = 2ρ`,
+taken between general positive functionals, where it can be negative: for a faithful normal state
+`ρ` and `σ = 2ρ`,
 `S(½ρ‖½σ) = ½ S(ρ‖σ) = -½ log 2 > S(ρ‖σ)`.
 
 Positivity, star-preservation and contractivity are *consequences* of the inequality.

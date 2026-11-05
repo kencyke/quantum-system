@@ -95,11 +95,8 @@ while a `ForMathlib` file imports Mathlib only.
 
 ## References
 
-* M.-D. Choi, *A Schwarz inequality for positive linear maps on C⋆-algebras*, Illinois J. Math.
-  18 (1974), 565–574.
 * R. V. Kadison, *A generalized Schwarz inequality and algebraic invariants for operator
   algebras*, Ann. of Math. 56 (1952), 494–503.
-* E. C. Lance, *Hilbert C⋆-Modules*, London Math. Soc. Lecture Note Ser. 210 (1995).
 * V. Paulsen, *Completely Bounded Maps and Operator Algebras*, Cambridge Stud. Adv. Math. 78
   (2002), Corollary 2.9.
 * B. Russo, H. A. Dye, *A note on unitary operators in C⋆-algebras*, Duke Math. J. 33 (1966),
