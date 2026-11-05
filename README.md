@@ -121,13 +121,14 @@ and Phase III in particular will be set as the foundations take shape.
 10. ~~Operator system theory: Arveson's extension theorem, giving the injectivity of B(H), already
     formalized for a completely positive map from an operator subsystem of any operator system into
     B(H); the Choi–Effros characterization of abstract operator systems as concrete ones (M1, M2).~~
-11. Multiplication from complete positivity: the Choi–Effros product X ∘ Y = Φ(XY) on the image
+11. ~~Multiplication from complete positivity: the Choi–Effros product X ∘ Y = Φ(XY) on the image
     of an idempotent unital completely positive map Φ, already formalized for idempotent Schwarz
     maps and hence for idempotent unital 2-positive maps; Tomiyama's theorem on conditional
     expectations, already formalized: a projection of norm one onto a C⋆-subalgebra is positive, a
     bimodule map over it and satisfies the Kadison–Schwarz inequality, and it is moreover completely
     positive; Hamana's injective envelope, built from a minimal idempotent unital completely
-    positive map, and the C⋆-envelope as the C⋆-algebra generated in it (M1).
+    positive map, and the C⋆-envelope as the C⋆-algebra generated in it, characterized by its
+    universal property and shown to exist for every operator system (M1).~~
 12. ~~Rigidity: the Kadison–Schwarz inequality for 2-positive maps Φ, already formalized in
     `ForMathlib` with Φ(1) ≤ 1 and, without the normalization, as Φ(X)⋆Φ(X) ≤ ‖Φ(1)‖ Φ(X⋆X);
     Choi's multiplicative domain, from its equality case, and with it that unital complete order

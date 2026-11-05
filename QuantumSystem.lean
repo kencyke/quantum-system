@@ -44,6 +44,7 @@ public import QuantumSystem.Analysis.OperatorSpace.Factorization
 public import QuantumSystem.Analysis.OperatorSpace.Paulsen
 public import QuantumSystem.Analysis.OperatorSpace.Ruan
 public import QuantumSystem.Analysis.OperatorSystem.Arveson
+public import QuantumSystem.Analysis.OperatorSystem.CStarEnvelope
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffros
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffrosProduct
 public import QuantumSystem.Analysis.OperatorSystem.Injective
