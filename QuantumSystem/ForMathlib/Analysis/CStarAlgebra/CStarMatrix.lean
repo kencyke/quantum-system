@@ -8,9 +8,10 @@ module
 public import Mathlib.Analysis.CStarAlgebra.CStarMatrix
 public import Mathlib.Analysis.CStarAlgebra.Hom
 public import Mathlib.Analysis.Matrix.Order
+public import Mathlib.RingTheory.SimpleRing.Matrix
 
 /-!
-# Flattening block matrices and their positivity; block matrices of `CStarMatrix`
+# Flattening block matrices and their positivity; block and square matrices of `CStarMatrix`
 
 Flattening a `k × k` block matrix with entries in `Matrix n n R`, `Matrix.comp`, is a
 ⋆-algebra isomorphism `Matrix k k (Matrix n n R) ≃⋆ₐ Matrix (k × n) (k × n) R`, and also of the
@@ -18,6 +19,10 @@ C⋆-algebra of block matrices, `CStarMatrix k k (Matrix n n R) ≃⋆ₐ[ℂ] M
 For complex matrices, with the C⋆-structure of `Matrix.Norms.L2Operator` and the order of
 `MatrixOrder` (both scoped), this identifies the order of the C⋆-algebra of block matrices with
 positive semidefiniteness of the flattened `kn × kn` matrix.
+
+`M_[n](A)` (scoped to `CStarMatrix`) is notation for the `n × n` matrices
+`CStarMatrix (Fin n) (Fin n) A`. `CStarMatrix` over a simple ring is simple, and
+`CStarMatrix` with entries in a finite module is a finite module.
 
 ## Main definitions
 
@@ -35,6 +40,13 @@ positive semidefiniteness of the flattened `kn × kn` matrix.
 * `Matrix.comp_conjTranspose`: `Matrix.comp` intertwines the two conjugate transposes.
 * `CStarMatrix.nonneg_iff_posSemidef_comp`: `0 ≤ M ↔ (Matrix.comp k k n n ℂ M).PosSemidef`.
 * `CStarMatrix.norm_directSum`: `‖X ⊕ Y‖ = max ‖X‖ ‖Y‖` over a C⋆-algebra.
+* `CStarMatrix.instIsSimpleRing`, `CStarMatrix.instModuleFinite`: simplicity and finiteness,
+  inherited from `Matrix` and from functions.
+
+## Notation
+
+* `M_[n](A)`: `CStarMatrix (Fin n) (Fin n) A`, in scope
+  `CStarMatrix`.
 -/
 
 @[expose] public section
@@ -285,3 +297,21 @@ lemma norm_one_le : ‖(1 : CStarMatrix n n A)‖ ≤ 1 := by
 end One
 
 end CStarMatrix
+
+/-! ### Square matrices -/
+
+/-- `M_[n](A)` is the `n × n` matrices `CStarMatrix (Fin n) (Fin n) A`. -/
+scoped[CStarMatrix] notation "M_[" n "]" "(" A ")" => CStarMatrix (Fin n) (Fin n) A
+
+/-! ### Simplicity and finiteness -/
+
+/-- `CStarMatrix` over a simple ring is a simple ring, as `Matrix` is. -/
+instance CStarMatrix.instIsSimpleRing {n A : Type*} [Ring A] [Fintype n] [Nonempty n]
+    [IsSimpleRing A] : IsSimpleRing (CStarMatrix n n A) :=
+  inferInstanceAs <| IsSimpleRing (Matrix n n A)
+
+/-- `CStarMatrix` with entries in a finite module is a finite module. -/
+instance CStarMatrix.instModuleFinite {m n R M : Type*} [Finite m] [Finite n] [Semiring R]
+    [AddCommMonoid M] [Module R M] [Module.Finite R M] :
+    Module.Finite R (CStarMatrix m n M) :=
+  inferInstanceAs <| Module.Finite R (m → n → M)
