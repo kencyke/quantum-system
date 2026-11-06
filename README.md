@@ -86,40 +86,39 @@ and Phase III in particular will be set as the foundations take shape.
 
 **Phase I — Foundations**
 
-1. Closed two-sided ideals, quotient C⋆-algebras and c₀-direct sums (M1, M2).
-2. Finite-dimensional C⋆-algebras as finite direct sums of matrix algebras, from Mathlib's
+1. Finite-dimensional C⋆-algebras as finite direct sums of matrix algebras, from Mathlib's
    Wedderburn–Artin (M1, M2).
-3. Minimal tensor product of C⋆-algebras and nuclearity; the projective tensor product of Banach
+2. Minimal tensor product of C⋆-algebras and nuclearity; the projective tensor product of Banach
    algebras, which holds bounded approximate diagonals (M1, M2).
-4. C⋆- and W⋆-dynamical systems: a group acting by ⋆-automorphisms, continuously in the point-norm
+3. C⋆- and W⋆-dynamical systems: a group acting by ⋆-automorphisms, continuously in the point-norm
    (W⋆: point-σ-weak) topology; as an example, the action of the covariance group of a faithful
    local net by ⋆-automorphisms of its quasi-local algebra, already formalized, through which a
    discrete symmetry group acts by a homomorphism into it (M1, M3).
-5. Symmetric tensor C⋆-categories with conjugates, direct sums, subobjects and simple unit;
+4. Symmetric tensor C⋆-categories with conjugates, direct sums, subobjects and simple unit;
    fiber functors and their unitary tensor automorphisms (M3).
 
 **Phase II — Exact theory**
 
-6. Von Neumann algebras: Kaplansky density, normal ⋆-homomorphisms, the predual; Sakai's
+5. Von Neumann algebras: Kaplansky density, normal ⋆-homomorphisms, the predual; Sakai's
    characterization of von Neumann algebras as the C⋆-algebras with a predual; finite-dimensional
-   factors as matrix algebras, through item 2 (M2).
-7. Tomita–Takesaki theory, beyond the relative modular operators already formalized:
+   factors as matrix algebras, through item 1 (M2).
+6. Tomita–Takesaki theory, beyond the relative modular operators already formalized:
    JMJ = M′ and Δ^{it}MΔ^{-it} = M for a cyclic and separating vector, the modular automorphism
    group σ^φ of a faithful normal state, the KMS condition characterizing it (Takesaki), and the
    Connes cocycle [Dψ : Dφ] of two faithful normal states, a unitary 1-cocycle for σ^φ (M2).
-8. Standard form: the natural cone, the unique vector in it representing each normal positive
+7. Standard form: the natural cone, the unique vector in it representing each normal positive
    functional, and the unitary implementation of ⋆-automorphisms (M2).
-9. Reversibility: beyond the monotonicity of the relative entropy already formalized, its
+8. Reversibility: beyond the monotonicity of the relative entropy already formalized, its
    equality case — the Petz recovery of faithful normal states at finite divergence under a
-   unital 2-positive normal map, built on the modular theory and standard form of items 7
-   and 8 (M2).
-10. Averaging: Peter–Weyl; for a compact group acting continuously by ⋆-automorphisms, Haar
-    averaging as the conditional expectation onto the fixed points, and the density of the
-    spectral subspaces; for a finite-dimensional C⋆-algebra, the diagonal ∫ U⋆ ⊗ U dU over its
-    unitary group, of projective norm one whatever the dimension (M1, M2, M3).
-11. Duality: Tannaka–Krein for compact groups, the group law being composition and the topology
+   unital 2-positive normal map, built on the modular theory and standard form of items 6
+   and 7 (M2).
+9. Averaging: Peter–Weyl; for a compact group acting continuously by ⋆-automorphisms, Haar
+   averaging as the conditional expectation onto the fixed points, and the density of the
+   spectral subspaces; for a finite-dimensional C⋆-algebra, the diagonal ∫ U⋆ ⊗ U dU over its
+   unitary group, of projective norm one whatever the dimension (M1, M2, M3).
+10. Duality: Tannaka–Krein for compact groups, the group law being composition and the topology
     pointwise convergence, extending Mathlib's Tannaka duality for finite groups; the
-    Doplicher–Roberts duality theorem on the categories of item 5: existence and uniqueness of the
+    Doplicher–Roberts duality theorem on the categories of item 4: existence and uniqueness of the
     fiber functor that is symmetric for the twisted symmetry, and the equivalence with Rep G
     twisted by a central element k, k² = e; its form for a compact group acting faithfully on a
     unital C⋆-algebra F, A = F^G, with full Hilbert spectrum and A′ ∩ F = ℂ1: the endomorphisms
