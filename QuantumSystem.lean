@@ -9,6 +9,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TensorPr
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TraceDual
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePreserving
 public import QuantumSystem.Analysis.CStarAlgebra.ConditionalExpectation
+public import QuantumSystem.Analysis.CStarAlgebra.FiniteDimensional
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Irreducible
@@ -99,9 +100,11 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Defs
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem
+public import QuantumSystem.ForMathlib.Algebra.Algebra.Unitization
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
+public import QuantumSystem.ForMathlib.Algebra.Star.StarAlgHom
 public import QuantumSystem.ForMathlib.Algebra.Symmetrized
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.BoundedOperatorRepresentation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
@@ -121,6 +124,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.PositiveMapCommutat
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Quotient
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.RussoDye
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Semisimple
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
@@ -179,6 +183,8 @@ public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunct
 public import QuantumSystem.ForMathlib.MeasureTheory.Measure.Count
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
+public import QuantumSystem.ForMathlib.RepresentationTheory.AlgebraRepresentation.Basic
+public import QuantumSystem.ForMathlib.RingTheory.Ideal.Pi
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
