@@ -31,6 +31,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctiona
 public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
 public import QuantumSystem.Analysis.CStarAlgebra.State.Faithful
 public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
+public import QuantumSystem.Analysis.CStarAlgebra.ZeroAtInfty
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.BorchersTranslation
@@ -117,12 +118,14 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Hom
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Matrix
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.PositiveMapCommutative
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Quotient
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.RussoDye
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.UnitalContraction
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Complex.Basic
 public import QuantumSystem.ForMathlib.Analysis.Complex.Strip
 public import QuantumSystem.ForMathlib.Analysis.Complex.WeakHolomorphic
@@ -154,6 +157,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopolo
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Transpose
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.PiLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
+public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ZeroAtInfty
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.lpSpace
 public import QuantumSystem.ForMathlib.Analysis.Normed.Module.FiniteDimension
 public import QuantumSystem.ForMathlib.Analysis.Normed.Operator.Banach
