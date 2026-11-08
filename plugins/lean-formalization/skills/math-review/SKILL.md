@@ -1,8 +1,8 @@
 ---
 name: math-review
-description: Review the current Lean change — or an explicitly named file, directory, or commit range — from a working mathematician's viewpoint via parallel per-perspective `math-reviewer` sub-agents: statement fidelity (checked against a blind readback of the claims by a `statement-reader` agent), deferred hypotheses, abstraction/literature conformance, notation/naming/docs, and counterexample models/vacuity. Read-only: it reports findings and proposed fixes, and applies none. Literature citations are left to the `citation-check` skill.
+description: Review the current Lean change — or an explicitly named file, directory, or commit range — from a working mathematician's viewpoint via parallel per-perspective `math-reviewer` sub-agents: statement fidelity (checked against a blind readback of the claims by a `statement-reader` agent), deferred hypotheses, abstraction/literature conformance, notation/naming/docs, and counterexample models/vacuity. Read-only: it reports findings and proposed fixes, and applies none. Literature citations are left to the `citation-check` skill. Use it after a theorem has been stated or proved, or an important definition, structure or class added, before the change is reported as done.
 argument-hint: "[path | dir | main...HEAD]"
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 Dispatch the mathematical review to `math-reviewer` agents, one per review
