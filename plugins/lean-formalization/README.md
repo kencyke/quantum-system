@@ -118,19 +118,6 @@ its comments; long lines of text may be rewrapped.
 The script's dependencies are pinned, with hashes, in `cite.py.lock` next to it, which `uv run`
 follows; `uv lock --script <path to cite.py> --upgrade` refreshes it.
 
-The script is a polite client, and its `--help` text is the one statement of how: robots.txt (for its own
-product token and for `Claude-User`) before any request outside the APIs it uses (arXiv and Crossref, for
-a DOI that Crossref does not hold, doi.org's registration-agency lookup and DataCite, and OpenAlex for the
-copies of a work and their versions); one connection per host
-and an interval between requests; `Retry-After` or an exponential backoff with jitter after a 408, a 429 or a
-5xx (but 501 and 505), then status `retry-later`; redirects checked hop by hop; and every answer validated before use.
-
-Its cache lives in `$XDG_CACHE_HOME/lean-formalization-citation-check` (`~/.cache/…`), not under
-`${CLAUDE_PLUGIN_DATA}`: its `state/` directory (the locks, and per host the last request and the backoff) is
-what holds those rules across processes, so the skill's verifier, Claude in a session and a shell must share
-one directory, and the script also runs as a project skill, without a plugin. Only an answer that finds
-something is cached, never a 404, a refusal or a search with no candidate, and a lookup that would answer
-`mismatch` or `not-found` from the cache asks the source again, so a negative answer always comes from the
-source. A site's robots.txt answer is kept a day, a 4xx included, which RFC 9309 reads as no rules. To empty the
-cache, delete that directory — before uninstalling the plugin, since it is not under the plugin's own data and
-nothing else removes it.
+The script is a polite client, and its `--help` text is the one statement of how it treats the sources and
+of what it caches where. Its cache is not under the plugin's own data, so delete it before uninstalling the
+plugin; `--help` names the directory.
