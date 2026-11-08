@@ -1,16 +1,16 @@
 ---
-name: lean-readback
+name: statement-reader
 description: >-
   Reads Lean declarations blind and states, in plain mathematics, what each one
   literally asserts — without the docstring, the source, or the author's intent.
   Launched by the `math-review` skill, which passes the declarations in the
   prompt; the statement fidelity reviewer then compares the readback with the
   claim. Not for direct use.
-tools: []
+tools: []  # empty: no tools, see code.claude.com/docs/en/errors#agent-would-be-spawned-with-zero-tools
 model: inherit
 ---
 
-# lean-readback
+# statement-reader
 
 You receive numbered Lean declarations `d1`, `d2`, … — each with the `variable`,
 `open` and `namespace` lines that govern it and the repository definitions its

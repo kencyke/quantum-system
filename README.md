@@ -152,3 +152,13 @@ name = "QuantumSystem"
 git = "https://github.com/kencyke/quantum-system"
 rev = "v4.x.y" # the release tag matching your lean-toolchain
 ```
+
+### Claude Code skills for other Lean projects
+
+The `/math-review`, `/citation-check` and `/lint-fix` skills used here are published from
+`plugins/lean-formalization/` as the `lean-formalization` Claude Code plugin; its
+[README](plugins/lean-formalization/README.md) describes them, their requirements and how to install
+them. Do not install the plugin inside this repository: each entry of `.claude/skills` and
+`.claude/agents` already links to it, so every skill would be listed twice (`/math-review` and
+`/lean-formalization:math-review`) and the `math-reviewer` agent, which Claude Code uses proactively,
+would run twice.

@@ -1,0 +1,15 @@
+{
+  "name": "quantum-system",
+  "description": "Claude Code plugins for formalizing mathematics in Lean 4",
+  "owner": {
+    "name": "Keisuke Suzuki"
+  },
+  "plugins": [
+    {
+      "name": "lean-formalization",
+      "source": "./plugins/lean-formalization",
+      "description": "Skills and agents for formalizing mathematics in Lean 4.",
+      "category": "development"
+    }
+  ]
+}

@@ -1,14 +1,33 @@
 ---
 name: math-review
-description: Review the current Lean change — or an explicitly named file, directory, or commit range — from a mathematician's/physicist's viewpoint via parallel per-perspective `math-reviewer` sub-agents: statement fidelity (checked against a blind `lean-readback` of the claims), deferred hypotheses, abstraction/literature conformance, notation/naming/docs, and counterexample models/vacuity.
+description: Review the current Lean change — or an explicitly named file, directory, or commit range — from a working mathematician's viewpoint via parallel per-perspective `math-reviewer` sub-agents: statement fidelity (checked against a blind readback of the claims by a `statement-reader` agent), deferred hypotheses, abstraction/literature conformance, notation/naming/docs, and counterexample models/vacuity. Read-only: it reports findings and proposed fixes, and applies none. Literature citations are left to the `citation-check` skill.
 argument-hint: "[path | dir | main...HEAD]"
 disable-model-invocation: true
 ---
 
-Dispatch the math/physics review to `math-reviewer` agents, one per review
-perspective. The review methodology (the perspective definitions, the
-elaborated-type discipline, the per-agent output format) lives in
-`.claude/agents/math-reviewer.md` — never duplicate it here.
+Dispatch the mathematical review to `math-reviewer` agents, one per review
+perspective. The review methodology (the review policy, the perspective
+definitions, the elaborated-type discipline, the per-agent output format) lives
+in the agent file, `${CLAUDE_SKILL_DIR}/../../agents/math-reviewer.md` — never
+duplicate it here.
+
+Literature citations are not reviewed here: whether a cited work exists and states what the text
+attributes to it is the `citation-check` skill's job, run separately on the same target.
+
+This skill is read-only. It edits no repository file; everything it writes goes to the work
+directory below.
+
+**Agent names.** `math-reviewer` and `statement-reader` ship with this skill. As
+project agents they are listed under those names; installed from the plugin they are listed as
+`<plugin>:math-reviewer` and so on. Use the name the list of available agents shows.
+
+**Work directory.** `<your scratchpad>` below is the session's scratchpad directory. A session without
+one uses a directory made once with `mktemp -d` and kept for the whole run.
+
+**Lean tools.** The reviewers, and your own check of their blockers, use the tools of the lean-lsp
+MCP server (`lean_goal`, `lean_term_goal`, `lean_verify`, …), registered as `lean-lsp`. If they are
+not available in this session, stop before launching any agent and say so: the reviewers stop
+without them too.
 
 ## Process
 
@@ -25,8 +44,12 @@ Take the first non-empty option:
    - `git ls-files --others --exclude-standard -- '*.lean'` (untracked new
      files — `git diff` never lists these),
    - `git diff --name-only --diff-filter=ACMR <base>...HEAD -- '*.lean'`,
-     where `<base>` is `main`, falling back to `origin/main`, then
-     `origin/HEAD`; if none resolves, drop this component rather than failing.
+     where `<base>` is the remote default branch that `origin/HEAD` names
+     (`git symbolic-ref --short refs/remotes/origin/HEAD`), falling back to
+     `origin/main`, then `main`, then `master` — the remote ref first, because a
+     local default branch that is never pulled goes stale and drags every
+     commit since into the scope; if none resolves, drop this component rather
+     than failing.
 
 Filter to `.lean` files *before* testing an option for emptiness — reviewing
 "no issues" over an empty scope is the worst outcome this skill has. Deleted
@@ -34,6 +57,10 @@ files never appear under `--diff-filter=ACMR`; enumerate them separately with
 `--diff-filter=D` over the same bases and list them as unreviewed — they have
 no elaborated type to inspect. If every option is empty, ask the user what to
 review.
+
+An explicit argument is never replaced by option 2: when it names no `.lean`
+file (a markdown file, a directory without Lean sources), say so and ask the
+user what to review instead of falling through to the diff.
 
 For diff-derived targets, also collect the changed line ranges per file with
 `git diff -U0 <base> -- <file>` — step 3 hands them to the reviewers. An
@@ -57,7 +84,7 @@ neither the docstring nor the source:
    doc and comment removed.
 3. Write the prompt — the packets and nothing else — to
    `<your scratchpad>/math-review/readback-input.md`, then launch **one**
-   `lean-readback` agent (`subagent_type: lean-readback`) with that text pasted
+   `statement-reader` agent (`subagent_type: statement-reader`) with that text pasted
    into the prompt: it has no tools, so the prompt is all it sees. Do not add
    file paths, docstrings, citations or your reading of the intent.
 4. Save its reply verbatim to `<your scratchpad>/math-review/readback.md`,
@@ -155,9 +182,9 @@ is marked `fix-withheld: <reason>` and the diagnosis stays as reported.
 notes file is not one you follow.
 
 **Gate the verdict on coverage.** Print ✅ only when every perspective (or the
-single reviewer of step 3) ran to completion, every target file was reached, and
-every declaration that qualified in step 2 got a readback, none left beyond its
-cap. Otherwise the verdict is `⏸ incomplete — <worst severity in what was
+single reviewer of step 3) ran to completion, every target file was reached, and every
+declaration that qualified in step 2 got a readback, none left beyond its cap. Otherwise the
+verdict is `⏸ incomplete — <worst severity in what was
 reviewed>`, and a partial perspective's summary row gets ⏸, not ✅. Deleted
 files and unexamined dependencies are listed under `## Not reviewed` but do not
 block ✅: the former cannot be reviewed, and with the latter ✅ would never be

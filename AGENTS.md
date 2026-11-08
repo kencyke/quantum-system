@@ -6,6 +6,26 @@
 - `QuantumSystem.lean` — aggregate root that re-exports every module.
 - `lake exe mk_all --lib QuantumSystem` (Mathlib's script) — regenerates the aggregate.
 - `lakefile.toml`, `lean-toolchain`, `lake-manifest.json` — pinned toolchain and manifest.
+- `plugins/lean-formalization/` — a Claude Code plugin published from here through
+  `.claude-plugin/marketplace.json`; its `README.md` describes it. Each entry of `.claude/skills` and
+  `.claude/agents` is a symbolic link to the plugin's skill or agent of that name, so this repository
+  uses the plugin without installing it. A skill or agent for this repository alone goes there as a
+  regular entry and is not published; the repository's own rules stay outside the plugin, in `docs/`
+  and here. Two rules hold for every edit under `plugins/lean-formalization/`:
+  - **Nothing of this repository's domain goes in.** The plugin serves any Lean project: no name,
+    convention, degenerate model or citation of this repository (C⋆-algebras, the trace
+    normalisation, `QuantumSystem`, `docs/lint-rules.md`) in a skill, agent, script or the plugin's
+    README. Such content belongs here or in `docs/`, where the skills read it through the
+    instruction file. An example in the plugin's docs is drawn from another field (a measure space,
+    a group). Before finishing, grep the plugin for this repository's terms.
+  - **The citation script's politeness is not weakened.** `cite.py`'s module docstring is the one
+    statement of how it treats the sources (robots.txt for its own product token and `Claude-User`,
+    one connection and an interval per host, `Retry-After` and backoff, redirects checked hop by
+    hop, no retry of a refusal, no caching of negative answers). An edit that touches a request
+    keeps every one of those and the test in `plugins/lean-formalization/tests/test_cite.py` that
+    covers it, and changes an interval or the user agent only against the source's own published
+    terms, cited in the comment next to the constant. No skill or agent fetches a source by another
+    route (curl, WebFetch, another identity) to get around a refusal or a `retry-later`.
 - `.github/workflows/lean_action_ci.yml` — CI: `lake build`, `lake lint`, the `mk_all` check, and
   lean-action's `axiom-audit`, which fails on any declaration depending on an axiom other than
   `propext`, `Classical.choice` and `Quot.sound`. CI catches mistakes, not a malicious contributor:
@@ -139,14 +159,23 @@
 ## Lint Rules
 
 Editing hygiene, prohibited tokens, commit style, and style guidelines live in
-`.claude/skills/lint-fix/references/rules.md`. Read that file when a hygiene or
-style question arises while editing — it is the authoritative statement of the
-rules and stands on its own.
+`docs/lint-rules.md`, on top of the generic Lean rules in
+`plugins/lean-formalization/skills/lint-fix/references/rules.md`. Read both when a hygiene or style
+question arises while editing — together they are the authoritative statement of
+the rules, and the project file wins where the two differ.
 
 To fix a change rather than consult the rules, run `/lint-fix`: it applies the
 safe fixes, verifies with `lake build`, and reports what it deliberately left
 alone. It writes to the working tree, so it runs only when you ask for it by
 name.
+
+## Mathematical Review
+
+`/math-review` checks the following on top of its generic models and conventions:
+
+- Degenerate models: a system carrying only pure states.
+- Conventions to pin in the module doc: whether `Tr` is the normalised or the unnormalised trace, and
+  whether ℏ = 1 is in force.
 
 ## Source of Truth
 

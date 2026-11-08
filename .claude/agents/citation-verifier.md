@@ -1,0 +1,1 @@
+../../plugins/lean-formalization/agents/citation-verifier.md
