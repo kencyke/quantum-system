@@ -36,6 +36,15 @@ and the module docs, where `/citation-check` checks them.
     needs.
   - Matrix algebras are spelt three ways: `Matrix n n ℂ`, `CStarMatrix` (`M_[n](ℂ)`) and operators on
     `ℂⁿ`. This item and *Averaging* settle on one.
+- **Pull requests.**
+  1. Kaplansky density for a ⋆-subalgebra of `B(H)`: the strong closure of the unit ball, of its
+     self-adjoint part and of its positive part is the unit ball, its self-adjoint part and its
+     positive part of the strong closure.
+  2. Kaplansky density for unitaries, once a unitary of a von Neumann algebra is the exponential of a
+     self-adjoint element of it.
+  3. A finite-dimensional factor is a simple ring, hence `≃⋆ₐ[ℂ] M_[n](ℂ)`; matrix algebras are stated
+     as `CStarMatrix`, the spelling of the structure theorem.
+  4. The matrix sizes of the structure theorem are unique up to order.
 
 ## Tomita–Takesaki theory
 
