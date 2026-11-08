@@ -2,8 +2,5 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "lean-lsp"
-  ],
-  "enabledPlugins": {
-    "lean4@lean4-skills": true
-  }
+  ]
 }
