@@ -58,7 +58,7 @@ sources:
     type: article
     relationship: background
     checked:
-      url: https://arxiv.org/pdf/2010.05513
+      url: https://arxiv.org/pdf/2010.05513v1
       locators:
         Lemma 3: {page: '10', date: '2026-11-08', version: arXiv:2010.05513v1}
 automation:
