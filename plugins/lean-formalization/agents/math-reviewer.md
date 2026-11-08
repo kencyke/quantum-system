@@ -169,7 +169,10 @@ follow it; when that changes a verdict, say which policy you applied.
    it. A local copy kept alive by a conversion lemma or an equivalence between
    the two is a defect, not a fix. A conversion is legitimate when neither side
    is such a copy: both sides already in the library, or a local object that
-   carries structure the library's cannot.
+   carries structure the library's cannot. The same holds inside the project:
+   two spellings of one notion — a definition equal to another local or library
+   one, such as a homomorphism that re-spells a subobject's inclusion — are one
+   too many; one is chosen and every result is stated in it.
 4. **Raise the code to the docs.** A docstring records the intended claim. When
    it claims more than the code establishes, the fix strengthens the code;
    trimming the docstring to the code hides the gap instead of closing it.
