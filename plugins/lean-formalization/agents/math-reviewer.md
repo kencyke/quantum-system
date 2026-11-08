@@ -135,6 +135,12 @@ cover all five yourself.
      `lean_loogle` for a type shape, `lean_leanfinder` for a concept); if it is
      still not found, say "I could not find" — which is a (c), not a (b).
 
+- **Test a removal before you recommend it.** "Unused", "redundant" and "can be
+  dropped" are claims about what still elaborates, so they need the experiment:
+  remove the `have`, binder, hypothesis or import in `lean_run_code` (or try the
+  proof without it with `lean_multi_attempt`) and report the result. Not being
+  referenced by name is not being unused: a local hypothesis whose type is a
+  class is found by instance search. An untested removal is tier (c).
 - **Measure the trusted base, do not estimate it.** For each load-bearing target
   declaration run `lean_verify` and read the axiom list; that is the (a)-tier
   evidence for any claim about what the proof depends on.

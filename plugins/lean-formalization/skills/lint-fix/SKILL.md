@@ -102,6 +102,12 @@ under what you left alone, as needing lean-lsp.
   load-bearing — restore it and report the finding, noting *which* proof depends
   on it. That dependency is a real defect worth naming rather than a lint nit,
   and discovering it is more useful than silently keeping the line.
+- Visibility the project rules call for (say, `private` for declarations used
+  only in their own file): in a file that starts with `module`, a declaration
+  that the body of an exposed definition (`@[expose]`, or one in an
+  `@[expose] public section`) refers to — including a lemma used in one of its
+  proof fields — cannot be `private`; the build rejects it. Leave such a
+  declaration public and report why, rather than restructuring the definition.
 - A `namespace`/`section` the project rules forbid: removing it re-qualifies
   every declaration inside, so treat it as a rename of all of them — sweep
   references the same way, and expect to touch importers.
