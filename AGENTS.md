@@ -95,6 +95,15 @@
   upstream change that retires both the copy and the conversion
   (`CompletelyPositiveMap'` in `ForMathlib/Analysis/OperatorSystem/Basic.lean`).
 
+**Declare names in their own namespace.**
+- Avoid `_root_` as far as possible: do not escape the current namespace with `_root_.X.y` to
+  declare a name; open `namespace X` and declare `y` there, with the helpers that do not belong to it
+  in their own namespace. Keep `_root_` for the cases where splitting the namespaces would break the
+  order of the file, as when declarations of two namespaces depend on each other in alternation. The
+  rule binds new and edited code; existing uses are not rewritten for it.
+  **Why:** a `_root_` declaration's name differs from the namespace it sits in, so a reader cannot tell
+  where a name is declared from the `namespace` lines alone.
+
 **Prove what is provable; do not *defer* it.**
 - Do not introduce a `class` / `structure` field (or a `def … : Prop`
   hypothesis) that stands in for a theorem when that theorem has a known
