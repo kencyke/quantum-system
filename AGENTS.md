@@ -2,7 +2,10 @@
 
 ## Project Layout
 
-- `QuantumSystem/ForMathlib/` — only Mathlib imports allowed; candidates for upstreaming.
+- `QuantumSystem/ForMathlib/` — candidates for upstreaming, each file on its own: it imports Mathlib
+  only, never another `ForMathlib/` file. A candidate that needs another local result takes it into the
+  same file, or moves under `QuantumSystem/Analysis/`, which may import `ForMathlib/` freely.
+  **Why:** a chain of local imports cannot be upstreamed as one pull request.
 - `QuantumSystem.lean` — aggregate root that re-exports every module.
 - `lake exe mk_all --lib QuantumSystem` (Mathlib's script) — regenerates the aggregate.
 - `lakefile.toml`, `lean-toolchain`, `lake-manifest.json` — pinned toolchain and manifest.
@@ -60,6 +63,14 @@
   match whatever fragment Mathlib currently has the most lemmas for —
   follow the literature, even when it forces you to build supporting
   API that Mathlib does not yet provide.
+- A new abstraction — a `class`, a `structure`, a definition stated over a
+  general interface — lands in the same pull request as an instance of it other
+  than a degenerate one (the trivial type, the zero object) and at least one
+  theorem that uses it.
+  **Why:** an interface with no instance cannot be applied and no proof can
+  contradict it, so nothing stated over it is ever tested; one that no theorem
+  uses is a guess at what a later proof will need. Declarations that nothing
+  used have already had to be deleted here after the fact.
 
 **Do not bridge what should be unified.**
 - When Mathlib already provides an object — a type copy, a topology, a
@@ -77,6 +88,12 @@
   then pick a side and be transported across, and a `ForMathlib/` copy of
   something Mathlib already has can never be upstreamed — which is the only
   reason that directory exists.
+- The one exception is the draft of an upstream generalisation: a Mathlib
+  definition restated in `ForMathlib/` in a wider setting, with its complete API
+  and agreeing with Mathlib's by `rfl` in Mathlib's setting, may stand beside it
+  with a single conversion between the two. Its module doc's TODO names the
+  upstream change that retires both the copy and the conversion
+  (`CompletelyPositiveMap'` in `ForMathlib/Analysis/OperatorSystem/Basic.lean`).
 
 **Prove what is provable; do not *defer* it.**
 - Do not introduce a `class` / `structure` field (or a `def … : Prop`
