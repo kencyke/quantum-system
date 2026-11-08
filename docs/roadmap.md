@@ -45,6 +45,9 @@ and the module docs, where `/citation-check` checks them.
   3. A finite-dimensional factor is a simple ring, hence `≃⋆ₐ[ℂ] M_[n](ℂ)`; matrix algebras are stated
      as `CStarMatrix`, the spelling of the structure theorem.
   4. The matrix sizes of the structure theorem are unique up to order.
+  5. Kaplansky density in the strong* form: the joint approximation of `T` and `T⋆` along one net,
+     stated in `(H →Lₚₜ[ℂ] H) × (H →Lₚₜ[ℂ] H)`, or in a type copy carrying the strong* topology once
+     there is one. The proof of the unit-ball form already produces the net.
 
 ## Tomita–Takesaki theory
 

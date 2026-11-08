@@ -61,6 +61,19 @@ sources:
       url: https://arxiv.org/pdf/2010.05513v1
       locators:
         Lemma 3: {page: '10', date: '2026-11-08', version: arXiv:2010.05513v1}
+  - title: A theorem on rings of operators
+    authors: [Irving Kaplansky]
+    id: doi:10.2140/pjm.1951.1.227
+    type: article
+    relationship: formalizes
+    note: Theorem 1 (unit ball density), formalized for the strong closure of a non-unital
+      *-subalgebra, with the 2x2 matrix device of its proof (credited there to Halmos); the strong
+      continuity of f(t)=2t/(1+t^2), a case of Lemma 5 (proved there through the Cayley transform,
+      Lemma 4), is proved directly by a resolvent identity
+    checked:
+      url: http://msp.org/pjm/1951/1-2/pjm-v1-n2-p06-s.pdf
+      locators:
+        Theorem 1: {page: '227', date: '2026-11-08', version: publishedVersion}
 automation:
   methods:
     - {method: agent, framework: Claude Code}

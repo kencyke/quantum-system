@@ -79,6 +79,7 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosed
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.WOTClosedSubalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Factor
+public import QuantumSystem.Analysis.VonNeumannAlgebra.KaplanskyDensity
 public import QuantumSystem.Analysis.VonNeumannAlgebra.MinimalProjection
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.Borchers
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.BorchersTranslation
@@ -154,6 +155,7 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductC
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.ConvexOperatorClosure
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
