@@ -29,25 +29,12 @@
 - `formalization.yaml` — project metadata in the mathlib-initiative format (v0.4); its `sources`, with
   the `checked` key that the plugin's `citation-check` skill writes, are the ledger of citations
   checked against their source.
-- `.github/workflows/lean_action_ci.yml` — CI: `lake build`, `lake lint`, the `mk_all` check, and
-  lean-action's `axiom-audit`, which fails on any declaration depending on an axiom other than
-  `propext`, `Classical.choice` and `Quot.sound`. CI catches mistakes, not a malicious contributor:
-  pull request review is the trust boundary.
-- `.github/workflows/release.yml` — Mathlib's convention: once Lean Action CI passes on the head of a
-  push to `main`, a head that switches `lean-toolchain` to a Lean release is tagged with its version
-  (`v4.x.y` or `v4.x.y-rcN`) and gets a GitHub Release (a pre-release for `-rc` versions; "Latest" goes
-  to the highest stable version); any other toolchain is reported and skipped. A switch in an earlier
-  commit of the same push has no CI run of its own and is not released.
-- `.github/workflows/update_mathlib.yml` — weekly, opens a pull request bumping Mathlib and every
-  other direct dependency, each pinned to Mathlib's tag, to the newest stable `v4.x.y` tag they all
-  carry (release candidates are skipped): rewrites the `rev`s in `lakefile.toml` and derives
-  `lean-toolchain` and `lake-manifest.json` from the dependencies' own files at that tag, so the
-  workflow itself runs no `lake update` (and no dependency's code): their code first runs in the
-  pull request's own CI. It fails rather than guess when another direct dependency brings a
-  toolchain, a Mathlib commit or a dependency of its own, or is itself one of Mathlib's packages.
-  It uses a GitHub App token
-  (`UPDATE_APP_CLIENT_ID` / `UPDATE_APP_PRIVATE_KEY`, `contents` and `pull-requests` write only)
-  so that CI runs on the pull request.
+- `.github/workflows/` — `lean_action_ci.yml` runs `lake build`, `lake lint`, the `mk_all` check and an
+  axiom audit that fails on any axiom other than `propext`, `Classical.choice` and `Quot.sound`;
+  `plugin_ci.yml` runs the citation script's tests on a change under `plugins/`; `release.yml` tags and
+  releases a head of `main` that switches `lean-toolchain` to a Lean release; `update_mathlib.yml` opens
+  the weekly pull request that bumps Mathlib and the other pinned dependencies. CI catches mistakes, not a
+  malicious contributor: pull request review is the trust boundary.
 
 ## Working Principles
 

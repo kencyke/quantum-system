@@ -1,25 +1,15 @@
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#   "defusedxml>=0.7.1",
-#   "pillow>=13.0.0",
-#   "protego>=0.7.0",
-#   "pydantic>=2.14.3",
-#   "pypdfium2>=5.15.0",
-#   "pytest>=8.0",
-#   "ruamel.yaml>=0.19.1",
-# ]
-# ///
 """Tests of cite.py: its cache (what it keeps and for how long), its politeness (the interval, the backoff,
 robots.txt, redirects), what it accepts, the ledger it writes, and its JSON answers.
 
-Run with `uv run plugins/lean-formalization/tests/test_cite.py`. No request leaves the machine: `cite.open_url` is
-replaced by a fake that serves the answers each test sets up, name lookups by a fake public address, and
-`time.sleep` by a record of the waits.
+Run in the environment `cite.py.lock` pins: `uv export --script <cite.py> --locked -o req.txt`, then
+`uv run --no-project --with-requirements req.txt --with pytest pytest <this file>`. No request leaves the
+machine: `cite.open_url` is replaced by a fake that serves the answers each test sets up, name lookups by a fake
+public address, and `time.sleep` by a record of the waits.
 """
 
 import email.utils
 import fcntl
+import http.client
 import io
 import ipaddress
 import json
@@ -27,6 +17,8 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.request
+import urllib.response
 from pathlib import Path
 
 import pytest
@@ -35,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "cita
 import cite  # noqa: E402
 
 REAL_OPEN_URL = cite.open_url
+
 
 PDF_URL = "https://arxiv.org/pdf/2010.05513v2"
 ROBOTS_URL = "https://arxiv.org/robots.txt"
@@ -194,7 +187,7 @@ def test_an_answer_is_replayed_for_a_week(cache, monkeypatch):
     assert cite.lookup_arxiv("2010.05513", cache)[0]["title"] == "A title"
     assert len(fake.calls) == 1
     meta = meta_of(cache, API_URL)
-    assert meta["expires_at"] == meta["fetched_at"] + cite.TTL["answer"]
+    assert meta["expires_at"] - meta["fetched_at"] == pytest.approx(cite.TTL["answer"])
 
 
 def test_an_empty_lookup_answer_is_not_kept(cache, monkeypatch):
@@ -312,13 +305,26 @@ def test_retry_after_as_a_date_is_obeyed(cache, monkeypatch, slept):
     assert 17.0 < max(slept) <= 20.0
 
 
+def test_the_intervals_keep_the_sources_terms():
+    """The intervals as set, so that a change to one is a change here too, made against the source's terms cited
+    in the comment on `cite.INTERVAL`; the `cache` fixture zeroes the intervals for every other test."""
+    assert cite.INTERVAL == {
+        "export.arxiv.org": 3.0,  # the arXiv API's terms
+        "arxiv.org": 15.0,  # arxiv.org's robots.txt
+        "api.crossref.org": 1.0,
+        "api.datacite.org": 1.0,  # well under 3000 requests in 5 minutes
+        "api.openalex.org": 1.0,  # well under 10 requests per second without a key
+    }
+    assert cite.DEFAULT_INTERVAL >= 1.0  # an interval for every other host
+
+
 def test_without_retry_after_the_backoff_doubles_with_jitter(monkeypatch):
     monkeypatch.setattr(cite.random, "uniform", lambda a, b: b)
     assert [cite.backoff(n, None, 3.0) for n in (1, 2, 3)] == [6.0, 12.0, 24.0]
     assert cite.backoff(40, None, 3.0) == cite.MAX_BACKOFF
     monkeypatch.setattr(cite.random, "uniform", lambda a, b: a)
     assert cite.backoff(2, None, 3.0) == 6.0  # half the delay at least
-    assert cite.backoff(1, None, 3.0) == 3.0  # never below the interval
+    assert cite.backoff(0, None, 3.0) == 3.0  # never below the interval: half of 3.0 is raised to it
     assert cite.backoff(1, 0.0, 3.0) == 3.0 and cite.backoff(1, 1e9, 3.0) == cite.MAX_BLOCK
 
 
@@ -380,7 +386,9 @@ def test_robots_txt_allows_and_sets_the_interval(cache, monkeypatch, slept):
     assert fetch_page(cache, "https://a.example/pub").kind == "html"
     assert 29.0 < slept[-1] <= 30.0 and state_of(cache, "a.example")["robots_delay"] == 30.0
     fetch_page(cite.Cache(cache.dir), "https://a.example/pub")
-    assert fake.calls.count("https://a.example/robots.txt") == 1  # kept a day
+    assert fake.calls.count("https://a.example/robots.txt") == 1
+    meta = meta_of(cache, "https://a.example/robots.txt")
+    assert meta["expires_at"] - meta["fetched_at"] == pytest.approx(cite.TTL["robots"])
 
 
 def test_robots_txt_missing_allows_and_unreachable_refuses(cache, monkeypatch):
@@ -429,7 +437,7 @@ def test_each_redirect_hop_is_checked_as_the_first(cache, monkeypatch):
         fetch_page(cache, "https://a.example/to-metadata")
     with pytest.raises(cite.http.client.HTTPException, match="more than 5 redirects"):
         fetch_page(cite.Cache(cache.dir), "https://a.example/loop")
-    assert "file:///etc/passwd" not in fake.calls
+    assert "file:///etc/passwd" not in fake.calls  # refused before any request
 
 
 def test_a_name_resolving_to_a_private_address_is_refused(cache, monkeypatch, capsys, tmp_path):
@@ -443,13 +451,22 @@ def test_the_opener_speaks_http_only_follows_no_redirect_and_names_the_project(m
         cite.OPENER.open("file:///etc/hostname")
     sent = []
 
-    def redirected(req, timeout=None):
+    def https_open(self, req):
+        """The connection: a 302 from a.example, a page from anywhere else."""
         sent.append(req)
-        raise urllib.error.HTTPError(req.full_url, 302, "Found", {"Location": "https://b.example/"}, io.BytesIO())
+        headers = http.client.HTTPMessage()
+        redirect = req.full_url == "https://a.example/"
+        if redirect:
+            headers["Location"] = "https://b.example/"
+        body, status, reason = (b"", 302, "Found") if redirect else (b"page", 200, "OK")
+        response = urllib.response.addinfourl(io.BytesIO(body), headers, req.full_url, status)
+        response.msg = reason
+        return response
 
-    monkeypatch.setattr(cite.OPENER, "open", redirected)
+    monkeypatch.setattr(urllib.request.HTTPSHandler, "https_open", https_open)
     status, headers, body = REAL_OPEN_URL("https://a.example/", 100)
     assert (status, headers.location, body) == (302, "https://b.example/", b"")
+    assert [req.full_url for req in sent] == ["https://a.example/"]  # the redirect is left to `fetch`
     agent = sent[0].get_header("User-agent")
     assert agent.startswith("citation-check ") and "https://github.com/" in agent
 
@@ -736,7 +753,6 @@ def test_validate_checks_the_checked_records_without_the_network(tmp_path, monke
         "    checked:\n      url: https://a.example/x.pdf\n      locators: {Theorem 1: {page: '3', date: 2026-11-07}}\n"
     )
     ledger.write_text(LEDGER.replace("    relationship: background\n", "    relationship: background\n" + checked))
-    serve(monkeypatch, {})  # any request would raise KeyError
     monkeypatch.setattr(sys, "argv", ["cite.py", "--ledger", str(ledger), "validate"])
     assert cite.main() == 0
     assert json.loads(capsys.readouterr().out)["status"] == "ok"

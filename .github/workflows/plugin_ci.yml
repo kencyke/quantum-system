@@ -1,0 +1,33 @@
+name: Plugin CI
+
+# The citation script's tests: the politeness that AGENTS.md requires an edit to keep, offline.
+on:
+  push:
+    branches: [main]
+    paths: ["plugins/**", ".github/workflows/plugin_ci.yml"]
+  pull_request:
+    paths: ["plugins/**", ".github/workflows/plugin_ci.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test-cite:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      # The suite runs in the environment cite.py.lock pins, so that one lock serves the script and its tests.
+      - run: |
+          uv export --script plugins/lean-formalization/skills/citation-check/scripts/cite.py --locked \
+            -o "$RUNNER_TEMP/requirements.txt"
+          uv run --no-project --with-requirements "$RUNNER_TEMP/requirements.txt" --with pytest \
+            pytest -q plugins/lean-formalization/tests/test_cite.py
