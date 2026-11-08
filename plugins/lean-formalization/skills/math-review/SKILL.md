@@ -73,15 +73,19 @@ word to correct.
 
 A reviewer who has read the docstring reads the code through it. Before any
 reviewer starts, have the target's claims read back by an agent that has seen
-neither the docstring nor the source:
+neither the docstring nor the cited literature:
 
 1. Select the public `theorem` / `lemma` / `def` / `structure` / `class`
    declarations in the scope whose docstring states a mathematical claim, at
    most 20, theorems first; list the rest under `## Not reviewed`.
 2. Build one packet per declaration, numbered `d1`, `d2`, … : its source, the
-   `variable` / `open` / `namespace` lines governing it, and the repository
-   definitions its statement mentions, with every docstring (`/-- … -/`), module
-   doc and comment removed.
+   `variable` / `open` / `namespace` lines governing it, its elaborated signature
+   (`lean_hover_info` at the start of its name, which reads the file as it
+   stands; keep only what precedes the `***` line, after which the docstring
+   follows), and the repository definitions its statement mentions, with every
+   docstring (`/-- … -/`), module doc and comment removed. The elaborated
+   signature carries the binders a `variable` block or an instance argument adds,
+   which the source text alone leaves to the reader.
 3. Write the prompt — the packets and nothing else — to
    `<your scratchpad>/math-review/readback-input.md`, then launch **one**
    `statement-reader` agent (`subagent_type: statement-reader`) with that text pasted
