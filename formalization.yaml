@@ -1,0 +1,70 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/99c678e569c7c4c0772db297c5ddd5e4c9b6322e/schema/v0.4.schema.json
+# formalization.yaml (v0.4): https://github.com/mathlib-initiative/formalization.yaml
+# `sources[].checked` is an extension of the format, written by the lean-formalization plugin's
+# `citation-check` skill: the ledger of citations checked against their source.
+
+version: v0.4
+project:
+  name: QuantumSystem
+  description: A Lean 4 formalization of quantum systems through reconstruction theorems and the
+    operator-algebraic and cohomological arguments they share.
+  authors: [suzuki]
+  license: Apache-2.0
+sources:
+  - title: On the projection of norm one in W*-algebras
+    authors: [Jun Tomiyama]
+    id: doi:10.3792/pja/1195524885
+    type: article
+    relationship: adapts
+    note: Proc. Japan Acad. 33 (1957), 608–612. Theorem 1 assumes a unit and its proof passes to the
+      bidual; this repository proves it without either.
+    checked:
+      url: https://www.jstage.jst.go.jp/article/pjab1945/33/10/33_10_608/_pdf/-char/en
+      locators:
+        Theorem 1: {page: '608', date: '2026-11-06'}
+        Theorem 1, proof: {page: '608', date: '2026-11-06'}
+  - title: On the use of modular groups in quantum field theory
+    authors: [Hans-Jürgen Borchers]
+    id: https://www.numdam.org/item/AIHPA_1995__63_4_331_0
+    type: article
+    relationship: adapts
+    note: Ann. Inst. H. Poincaré Phys. Théor. 63 (1995), no. 4, 331–382. Theorem A as printed
+      defines V(t) := Δ_M^{-it} V Δ_N^{-it}; the proof (pp. 341–342, ψ(t, s) := Δ_M^{-it} V Δ_N^{is}
+      A′Ω on t = s) uses Δ_M^{-it} V Δ_N^{it}.
+    checked:
+      url: https://www.numdam.org/item/AIHPA_1995__63_4_331_0.pdf
+      locators:
+        Theorem A: {page: '340', date: '2026-11-08', version: publishedVersion}
+        Theorem B: {page: '341', date: '2026-11-08', version: publishedVersion}
+  - title: Extension of the structure theorem of Borchers and its application to half-sided modular
+      inclusions
+    authors: [Huzihiro Araki, László Zsidó]
+    id: doi:10.1142/S0129055X05002388
+    type: article
+    relationship: background
+    note: Rev. Math. Phys. 17 (2005), 491–543; arXiv:math/0412061. Locators and pages are those of
+      arXiv v3 (the journal version is not openly accessible).
+    checked:
+      url: https://arxiv.org/pdf/math/0412061v3
+      locators:
+        Definition 2.10: {page: '13', date: '2026-11-08', version: arXiv:math/0412061v3}
+        Lemma 2.11 (1): {page: '13', date: '2026-11-08', version: arXiv:math/0412061v3}
+        Theorem 2.12: {page: '14', date: '2026-11-08', version: arXiv:math/0412061v3}
+        Theorem 2.3: {page: 9–10, date: '2026-11-08', version: arXiv:math/0412061v3}
+  - title: 'Approximate recoverability and relative entropy II: 2-positive channels of general v. Neumann
+      algebras'
+    authors: [Thomas Faulkner, Stefan Hollands]
+    id: arXiv:2010.05513
+    type: article
+    relationship: background
+    checked:
+      url: https://arxiv.org/pdf/2010.05513
+      locators:
+        Lemma 3: {page: '10', date: '2026-11-08', version: arXiv:2010.05513v1}
+automation:
+  methods:
+    - {method: agent, framework: Claude Code}
+review:
+  status: agent-reviewed
+  notes: Citations are checked against their sources by `/citation-check` and recorded under
+    `sources`.

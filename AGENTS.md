@@ -26,6 +26,9 @@
     covers it, and changes an interval or the user agent only against the source's own published
     terms, cited in the comment next to the constant. No skill or agent fetches a source by another
     route (curl, WebFetch, another identity) to get around a refusal or a `retry-later`.
+- `formalization.yaml` — project metadata in the mathlib-initiative format (v0.4); its `sources`, with
+  the `checked` key that the plugin's `citation-check` skill writes, are the ledger of citations
+  checked against their source.
 - `.github/workflows/lean_action_ci.yml` — CI: `lake build`, `lake lint`, the `mk_all` check, and
   lean-action's `axiom-audit`, which fails on any declaration depending on an axiom other than
   `propext`, `Classical.choice` and `Quot.sound`. CI catches mistakes, not a malicious contributor:
@@ -125,6 +128,12 @@
   **Why:** a wrong locator or attribution looks authoritative and is rarely
   rechecked; an audit of this repository found dozens of them, nearly all in
   citations written without the source at hand.
+- Record each checked citation in `formalization.yaml` (`sources[].checked`: the URL read and, per
+  locator, the page, the date, the version of the work that page number belongs to (optional) and —
+  when that locator was read in another copy — its URL), with
+  `uv run plugins/lean-formalization/skills/citation-check/scripts/cite.py ledger add`. Citations
+  that cannot be checked against their source are removed: `/citation-check` deletes a citation that
+  it can neither find in that ledger nor check against an open copy of the source.
 
 **Goal-driven verification (Definition of Done).**
 - A change is done only when `lake build` completes with no new errors or
