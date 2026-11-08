@@ -211,7 +211,7 @@ theorem IsNormal.exists_inner_amplifyRight_eq {ω : M →ₚ[ℂ] ℂ} (h : M.Is
   obtain ⟨ξ, η, hξη⟩ := h.exists_hasSum_inner
   set ζ := lp.interleave ξ η
   set ρ : M →⋆ₐ[ℂ] (ℓ²(ℕ, ℂ) ⊗̂ H →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ H) :=
-    (𝟙 ⊗ₐ).comp (inclₐ M)
+    (𝟙 ⊗ₐ).comp M.toStarSubalgebra.subtype
   have hρ : ∀ x : M, ρ x = 𝟙 ⊗ x := fun _ => rfl
   have hω : ∀ x : M, ω x = ⟪lpTensorEquiv ξ, (𝟙 ⊗ x) (lpTensorEquiv η)⟫_ℂ :=
     fun x => (hξη x).unique (HilbertTensor.hasSum_inner_amplifyRight_lpTensorEquiv ξ η x)
@@ -300,7 +300,7 @@ lemma apply_star_mul_self_eq {ω : M →ₚ[ℂ] ℂ} {Ξ : ℓ²(ℕ, ℂ) ⊗�
 variable (M) in
 /-- The **defining representation** of `M` on `H`, the inclusion `M ⊆ B(H)`, as a `CStarRep`. -/
 noncomputable def toCStarRep : CStarRep M :=
-  ⟨H, (inclₐ M).toNonUnitalStarAlgHom⟩
+  ⟨H, M.toStarSubalgebra.subtype.toNonUnitalStarAlgHom⟩
 
 /-- The defining representation acts by inclusion. -/
 @[simp]
