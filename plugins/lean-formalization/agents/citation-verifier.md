@@ -122,7 +122,7 @@ reverse, is a mismatch only when the locator follows the other version's numberi
      pages and read the PNG with Read before you compare hypotheses or quote a passage.
    - Status `inaccessible` (`reason` `refused`: HTTP 401, 403 or 451; `not found`: 404 or 410;
      `no document text`: a bot check or an empty landing page; `robots.txt`: the site's robots.txt
-     rules this fetch out): try another open copy of the **same work** (an arXiv version of the
+     rules this fetch out; `content-signal …`: its robots.txt refuses this use of its content): try another open copy of the **same work** (an arXiv version of the
      article, the journal's own open-access platform). For a work with a DOI, `cite.py copies --doi`
      lists the copies OpenAlex knows, with `pdf_url`, `landing_page_url`, `is_oa` and `version`
      (`publishedVersion`, `acceptedVersion`, `submittedVersion`), `best` first; fetch an open one with
@@ -132,8 +132,8 @@ reverse, is a mismatch only when the locator follows the other version's numberi
      `inaccessible`: **`ledger-verified`** if the ledger has this locator (kept; say that the claim
      was checked only as of the ledger's date); else **`full-text-refused`** if you read the work's
      landing page (`fetch-text` answered `ok` for it, and it shows this work's title and authors)
-     and every copy of its full text was refused by its site (`refused`, `robots.txt`
-     or `no document text`), so that the user can take it by hand from that
+     and every copy of its full text was refused by its site (`refused`, `robots.txt`,
+     `content-signal …` or `no document text`), so that the user can take it by hand from that
      page; else **`inaccessible`**. Look for the landing page as for any copy: `copies`'
      `landing_page_url`, then *Web search*.
    - Status `retry-later` or `error` (any other HTTP status, a malformed answer): as in L2. A copy left

@@ -135,6 +135,9 @@ fetch, as does one that is missing or cannot be read. The bibliographic APIs the
 allowed. Any other request, every redirect hop included, goes only to a listed host; elsewhere the script
 answers `not-allowed` without making a request, and the `citation-check` skill keeps such a citation as
 unchecked rather than removing it. An entry's `interval` holds over the host and its subdomains together.
+Beyond robots.txt's rules, the script honours its `Content-Signal` line: `ai-input=no` or `use=immediate`,
+set for the script's own token or for `Claude-User` (for `*` where a token has no group of its own),
+refuses the fetch.
 
 The script's dependencies are pinned, with hashes, in `cite.py.lock` next to it, which `uv run`
 follows; `uv lock --script <path to cite.py> --upgrade` refreshes it.

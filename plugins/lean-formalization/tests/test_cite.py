@@ -837,6 +837,46 @@ def test_the_larger_of_the_terms_interval_and_crawl_delay_wins(cache, monkeypatc
     assert waited_between_two_requests(cache, monkeypatch, slept, tmp_path, config, robots_txt) >= 29
 
 
+def test_content_signals_refuse_ai_input_and_immediate_use_only(cache, monkeypatch):
+    page = (200, "text/html", WORDS)
+    cases = {
+        "User-agent: *\nContent-Signal: search=yes, ai-input=no\nAllow: /\n": "content-signal ai-input=no",
+        "User-agent: *\nContent-Signal: use=immediate\nAllow: /\n": "content-signal use=immediate",
+        "User-agent: *\nContent-signal: search=yes, ai-train=no, use=reference\nAllow: /\n": None,
+        # each token is read by itself: `citation-check` has no group of its own here, so `*` speaks for it
+        "User-agent: *\nContent-Signal: ai-input=no\n\nUser-agent: Claude-User\nContent-Signal: ai-input=yes\n": (
+            "content-signal ai-input=no"
+        ),
+        "User-agent: *\nContent-Signal: ai-input=no\n\nUser-agent: Claude-User\nAllow: /\n": (
+            "content-signal ai-input=no"
+        ),
+        (
+            "User-agent: citation-check\nContent-Signal: ai-input=yes\n\n"
+            "User-agent: Claude-User\nContent-Signal: use=immediate\n"
+        ): "content-signal use=immediate",
+        (
+            "User-agent: *\nContent-Signal: ai-input=no\n\n"
+            "User-agent: citation-check\nUser-agent: Claude-User\nContent-Signal: ai-input=yes\n"
+        ): None,
+        "User-agent: Claude-User\nContent-Signal: ai-input=no\n\nUser-agent: *\nAllow: /\n": (
+            "content-signal ai-input=no"
+        ),
+        "User-agent: *\nAllow: /\n": None,
+    }
+    for i, (robots_txt, refusal) in enumerate(cases.items()):
+        host = f"s{i}.example"
+        fake = serve(
+            monkeypatch,
+            {f"https://{host}/robots.txt": (200, "text/plain", robots_txt.encode()), f"https://{host}/x": page},
+        )
+        if refusal is None:
+            fetch_page(cite.Cache(cache.dir), f"https://{host}/x")
+        else:
+            with pytest.raises(cite.Disallowed, match=refusal):
+                fetch_page(cite.Cache(cache.dir), f"https://{host}/x")
+            assert f"https://{host}/x" not in fake.calls
+
+
 def test_the_default_config_applies_and_a_missing_one_stops_every_fetch(cache, monkeypatch, capsys, tmp_path):
     fake = serve(monkeypatch, {})
     code, out = run(monkeypatch, capsys, "fetch-text", "--url", "https://c.example/x", "--out", str(tmp_path / "t"))

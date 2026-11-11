@@ -30,9 +30,12 @@ its subdomains): the check is made on every redirect hop and on an answer read f
 is read, and a refusal is answered as `not-allowed` without a request; a configuration that is missing, cannot be
 read, or lists a host without its terms stops every fetch.
 Before any request outside the APIs, robots.txt is read (RFC 9309, kept a day) and the request is dropped when
-the rules for `citation-check` or for `Claude-User` disallow it; a robots.txt answering 4xx, a refusal included,
-sets no rules (RFC 9309, 2.3.1.3), and one that cannot be reached disallows everything (2.3.1.4). Requests to one
-host go one at a time, across processes, at least an interval apart, and for documents a host is one entry of the
+the rules for `citation-check` or for `Claude-User` disallow it, or when its content signals for either of them
+(those of the token's own groups, else of the `*` groups) refuse this use: a fetch puts the text into an AI model
+at run time and keeps and quotes excerpts with a link back, so `Content-Signal: ai-input=no` or `use=immediate`
+drops it (a signal left out neither grants nor refuses); a robots.txt answering 4xx, a refusal included, sets no
+rules (RFC 9309, 2.3.1.3), and one that cannot be reached disallows everything (2.3.1.4). Requests to one host go
+one at a time, across processes, at least an interval apart, and for documents a host is one entry of the
 configuration with all its subdomains: the largest of `INTERVAL`, the configuration's `interval` for the host, and
 the robots.txt `Crawl-delay` or `Request-rate`. A 408, a 429, a 5xx other than 501 and 505, or a dropped connection
 is retried after its `Retry-After`, else after an exponential backoff with jitter that every process shares; a
@@ -1058,8 +1061,46 @@ def request(url: str, host: str, cache: Cache, kind: str, robots_delay: float | 
     raise RetryLater(slot.key, slot.state.blocked_until, last)
 
 
-def robots(parts: urllib.parse.SplitResult, cache: Cache) -> Protego | None:
-    """The robots.txt of the site of `parts`, kept a day; None when it has none (a 4xx)."""
+def content_signals(text: str) -> dict[str, dict[str, str]]:
+    """The `Content-Signal` values (`search`, `ai-input`, `ai-train`, `use`) a robots.txt sets for each token in
+    `ROBOT_TOKENS`: those of the groups naming that token, else of the `*` groups (and of lines before any
+    `User-agent`), the later line winning. A token is read by itself, as its rules are: a group for one token says
+    nothing for the other."""
+    groups: list[tuple[set[str], dict[str, str]]] = []
+    agents: set[str] = set()
+    signals: dict[str, str] = {}
+    in_rules = False
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        field, sep, value = line.partition(":")
+        if not sep:
+            continue
+        field, value = field.strip().lower(), value.strip()
+        if field == "user-agent":
+            if in_rules:
+                groups.append((agents, signals))
+                agents, signals, in_rules = set(), {}, False
+            agents.add(value.lower())
+            continue
+        in_rules = True
+        if field == "content-signal":
+            for item in value.split(","):
+                key, _, val = item.partition("=")
+                if key.strip():
+                    signals[key.strip().lower()] = val.strip().lower()
+    groups.append((agents, signals))
+    out: dict[str, dict[str, str]] = {}
+    for token in ROBOT_TOKENS:
+        chosen = [s for a, s in groups if token.lower() in a] or [s for a, s in groups if "*" in a or not a]
+        out[token] = {}
+        for s in chosen:
+            out[token] |= s
+    return out
+
+
+def robots(parts: urllib.parse.SplitResult, cache: Cache) -> tuple[Protego, dict[str, dict[str, str]]] | None:
+    """The robots.txt of the site of `parts`, kept a day, with its content signals; None when it has none (a
+    4xx)."""
     netloc = parts.hostname if parts.port is None else f"{parts.hostname}:{parts.port}"
     url = f"{parts.scheme}://{netloc}/robots.txt"
     reply = read_entry(url, cache.dir)
@@ -1071,17 +1112,25 @@ def robots(parts: urllib.parse.SplitResult, cache: Cache) -> Protego | None:
         return None
     if reply.status != 200:  # unreachable: RFC 9309 has it read as disallowing everything
         raise Disallowed(url, f"robots.txt answering HTTP {reply.status}")
-    return Protego.parse(RobotsFile(text=reply.body.decode("utf-8", "replace")).text)
+    text = RobotsFile(text=reply.body.decode("utf-8", "replace")).text
+    return Protego.parse(text), content_signals(text)
 
 
 def robots_allow(url: str, parts: urllib.parse.SplitResult, cache: Cache) -> float:
-    """Raise `Disallowed` unless the site's robots.txt lets every token in `ROBOT_TOKENS` fetch `url`; else the
-    interval it asks for."""
-    rules = robots(parts, cache)
-    if rules is None:
+    """Raise `Disallowed` unless the site's robots.txt lets every token in `ROBOT_TOKENS` fetch `url` and its
+    content signals for every one of them allow this use; else the interval it asks for. A fetch puts the content
+    into an AI model at run time (`ai-input`), keeps it in the cache and quotes excerpts with a link back
+    (`use=reference`): `ai-input=no` and `use=immediate` (store and reuse nothing) refuse it; a signal left out
+    neither grants nor refuses."""
+    found = robots(parts, cache)
+    if found is None:
         return 0.0
+    rules, signals = found
     if not all(rules.can_fetch(url, token) for token in ROBOT_TOKENS):
         raise Disallowed(url, "robots.txt")
+    for key, refused in (("ai-input", "no"), ("use", "immediate")):
+        if any(found.get(key) == refused for found in signals.values()):
+            raise Disallowed(url, f"content-signal {key}={refused}")
     delays = [0.0]
     for token in ROBOT_TOKENS:
         delays.append(float(rules.crawl_delay(token) or 0))
