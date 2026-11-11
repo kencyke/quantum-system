@@ -144,9 +144,9 @@
 - Record each checked citation in `formalization.yaml` (`sources[].checked`: the URL read and, per
   locator, the page, the date, the version of the work that page number belongs to (optional) and —
   when that locator was read in another copy — its URL), with
-  `uv run plugins/lean-formalization/skills/citation-check/scripts/cite.py ledger add`. Citations
-  that cannot be checked against their source are removed: `/citation-check` deletes a citation that
-  it can neither find in that ledger nor check against an open copy of the source.
+  `uv run plugins/lean-formalization/skills/citation-check/scripts/cite.py ledger add`. `/citation-check`
+  reports each citation that it can neither find in that ledger nor check against an open copy of the
+  source as unverified, and deletes one only when asked to.
 
 **Goal-driven verification (Definition of Done).**
 - A change is done only when `lake build` completes with no new errors or
