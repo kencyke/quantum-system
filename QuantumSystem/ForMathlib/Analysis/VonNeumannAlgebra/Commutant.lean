@@ -157,7 +157,7 @@ instance isClosed_coe (N : VonNeumannAlgebra H) : IsClosed (N : Set (H →L[ℂ]
 
 /-- A von Neumann algebra `↥N` is a star-ordered ring for the Loewner order of `B(H)`
 (`Subtype.starOrderedRing`, through `VonNeumannAlgebra.isClosed_coe`). Stated over a variable
-Hilbert space so that it is found directly: on a concrete space such as a Hilbert tensor product,
+Hilbert space so that it is found directly: on a concrete space such as a completed tensor product,
 the generic search times out. -/
 instance instStarOrderedRing (N : VonNeumannAlgebra H) : StarOrderedRing N :=
   inferInstance

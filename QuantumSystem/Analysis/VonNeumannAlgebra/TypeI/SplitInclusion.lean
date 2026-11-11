@@ -13,16 +13,15 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Classification
 
 An inclusion `A ≤ B` of von Neumann algebras on a Hilbert space is **split** when some type I
 factor `M` interpolates: `A ≤ M ≤ B`. This is the definition of Doplicher–Longo, *Standard and
-split inclusions of von Neumann algebras* (Invent. Math. 75, 1984); the notion originates in
-the analysis of local algebras by Buchholz, *Product states for local algebras* (Comm. Math.
-Phys. 36, 1974), where the interpolating type I factor is what produces normal product states
-across a commuting pair. The AQFT *split property* — this predicate applied to the inclusions
+split inclusions of von Neumann algebras* (Invent. Math. 75, 1984); the interpolating type I
+factor is what produces normal product states across a commuting pair. The AQFT *split
+property* — this predicate applied to the inclusions
 `𝓡(O₁) ≤ 𝓡(O₂)` of local von Neumann algebras of properly contained regions — lives at the net
 level in `QuantumSystem.Physics.LocalNet.SplitProperty`.
 
 The structural content of a split inclusion is the tensor decomposition
 `IsSplitInclusion.exists_tensor_decomposition`: on a nonzero Hilbert space, a spatial isomorphism
-`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)`
+`U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)`
 carrying `A` into the tensor factor `𝓑(ℓ²(F)) ⊗̄ 1` and the commutant `B′` into `1 ⊗̄ 𝓑(eH)`. It
 is inherited from the type I structure theorem
 (`QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem`).
@@ -43,7 +42,7 @@ is inherited from the type I structure theorem
   decomposition of the inclusion.
 * `VonNeumannAlgebra.not_isSplitInclusion_multiplicationAlgebra_count` — the negative control:
   the diagonal algebra `ℂ ⊕ ℂ = L∞(Fin 2, count)` on `ℂ² = L²(Fin 2, count)` is not a factor
-  (`not_isFactor_multiplicationAlgebra_count`), so its identity inclusion is *not* split. This is
+  (`not_isCentral_multiplicationAlgebra_count`), so its identity inclusion is *not* split. This is
   what keeps the predicate distinguishable from plain inclusion.
 
 ## Notation
@@ -57,8 +56,9 @@ where the algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.
 
 namespace VonNeumannAlgebra
 
-open HilbertTensor
-open scoped lp
+open scoped lp TensorProduct
+
+open UniformSpace
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -116,13 +116,15 @@ lemma isSplitInclusion_self_iff {M : VonNeumannAlgebra H} :
     IsSplitInclusion M M ↔ IsTypeIFactor M :=
   ⟨IsSplitInclusion.isTypeIFactor_of_self, IsTypeIFactor.isSplitInclusion_self⟩
 
+section TensorDecomposition
+
 /-- **Split tensor decomposition.** A split inclusion `A ≤ M ≤ B` on a nonzero Hilbert space is
 spatially tensor-split:
-there is a linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` (with `e` a minimal projection
+there is a linear isometric equivalence `U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` (with `e` a minimal projection
 of the interpolating type I factor `M`) under which `M` becomes exactly the tensor factor
 `𝓑(ℓ²(F)) ⊗̄ 1` and `M′` the factor `1 ⊗̄ 𝓑(eH)`, so that `A` lands in the left factor and the
 commutant `B′` in the right factor. This is the inclusion-form structural consequence of the
-split property (Doplicher–Longo; Buchholz), inherited from
+split property (Doplicher–Longo), inherited from
 `IsTypeIFactor.exists_split_tensor_decomposition`.
 
 The interpolating factor is returned with its full type I factoriality and its minimal projection,
@@ -131,7 +133,7 @@ theorem IsSplitInclusion.exists_tensor_decomposition [Nontrivial H] {A B : VonNe
     (h : IsSplitInclusion A B) :
     ∃ (M : VonNeumannAlgebra H) (e : H →L[ℂ] H) (he : IsMinimalProjection M e),
       haveI := he.1.completeSpace_range
-      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
+      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)),
         IsTypeIFactor M ∧ Nonempty F ∧ A ≤ M ∧ M ≤ B ∧
         VonNeumannAlgebra.conj U M = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
         VonNeumannAlgebra.conj U M′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) ∧
@@ -141,19 +143,22 @@ theorem IsSplitInclusion.exists_tensor_decomposition [Nontrivial H] {A B : VonNe
   obtain ⟨e, he, F, U, hF, hM, hM', hA, hB⟩ := hMt.exists_split_tensor_decomposition h₁ h₂
   exact ⟨M, e, he, F, U, hMt, hF, h₁, h₂, hM, hM', hA, hB⟩
 
+end TensorDecomposition
+
 /-! ### A non-split inclusion: the diagonal algebra on `ℂ²`
 
 The negative control for `IsSplitInclusion`. Everything above inhabits the *positive* side of the
-predicate; this section keeps the negations of `IsFactor`, `IsTypeIFactor` and `IsSplitInclusion`
-inhabited, realizing the minimal non-split witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ` (a commutative algebra is split in
-itself only when it is `ℂ·1`). Without it nothing built in this repository would distinguish `IsSplitInclusion`
-from plain inclusion, nor `IsFactor` from `True`.
+predicate; this section gives a von Neumann algebra that is not a factor, not a type I factor and
+not split in itself, realizing the minimal non-split witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ` (a commutative algebra is
+split in itself only when it is `ℂ·1`). It is a concrete witness of `¬ Algebra.IsCentral ℂ N`, and
+without it nothing built in this repository would distinguish `IsSplitInclusion` from plain
+inclusion.
 
 It lives here, next to the predicate it refutes, rather than among the local-net witnesses: it
 mentions no net, no index set and no representation. The algebra itself is the multiplication
 algebra `L∞(μ)` of `QuantumSystem.Analysis.VonNeumannAlgebra.Multiplication` for counting measure on
 `Fin 2`, which is not a factor because the measure splits
-(`VonNeumannAlgebra.not_isFactor_multiplicationAlgebra`).
+(`VonNeumannAlgebra.not_isCentral_multiplicationAlgebra`).
 -/
 
 section Diagonal
@@ -161,11 +166,11 @@ section Diagonal
 open MeasureTheory
 
 /-- **The diagonal algebra is not a factor**: the coordinate projection `M_{1_{\{0\}}}` lies in its
-centre and is not a scalar. The first refuted `IsFactor` in the repository — without it nothing
-built here distinguishes `IsFactor` from `True`. -/
-lemma not_isFactor_multiplicationAlgebra_count :
-    ¬ IsFactor (multiplicationAlgebra (Measure.count : Measure (Fin 2))) :=
-  not_isFactor_multiplicationAlgebra (measurableSet_singleton (0 : Fin 2))
+centre and is not a scalar. It is the first von Neumann algebra in the repository shown not to be a
+factor, a witness of `¬ Algebra.IsCentral ℂ N`. -/
+lemma not_isCentral_multiplicationAlgebra_count :
+    ¬ Algebra.IsCentral ℂ (multiplicationAlgebra (Measure.count : Measure (Fin 2))) :=
+  not_isCentral_multiplicationAlgebra (measurableSet_singleton (0 : Fin 2))
     (by simp) (measure_ne_top _ _)
     (by
       rw [Ne, Measure.count_eq_zero_iff]
@@ -175,7 +180,7 @@ lemma not_isFactor_multiplicationAlgebra_count :
 /-- The diagonal algebra is not a type I factor, not being a factor at all. -/
 lemma not_isTypeIFactor_multiplicationAlgebra_count :
     ¬ IsTypeIFactor (multiplicationAlgebra (Measure.count : Measure (Fin 2))) := fun h =>
-  not_isFactor_multiplicationAlgebra_count h.1
+  not_isCentral_multiplicationAlgebra_count h.isCentral
 
 /-- **A non-split inclusion** — the minimal witness `ℂ⊕ℂ ⊆ ℂ⊕ℂ`: the identity
 inclusion of the diagonal algebra on `ℂ²` is not split. An interpolating type I factor squeezed

@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.WOTClosedSubalgebra
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.ConvexOperatorClosure
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 
 /-!
@@ -20,18 +21,20 @@ automatic.
 
 ## Main results
 
-* `NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant`: any `T ∈ A''` lies in the
+* `NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant`: any `T ∈ A′′` lies in the
   SOT-closure of `A`.
   This is the key technical result, using diagonal amplification and the cyclic subspace argument.
 * `NonUnitalStarSubalgebra.sotClosure_eq_doubleCommutant`,
   `NonUnitalStarSubalgebra.wotClosure_eq_doubleCommutant`: the **density form** of the
   theorem — for every non-degenerate `*`-subalgebra, with no closedness hypothesis whatsoever,
-  `A'' = closure_SOT A = closure_WOT A`. This is the strongest statement the argument below
+  `A′′ = closure_SOT A = closure_WOT A`. This is the strongest statement the argument below
   establishes; everything after it is a corollary.
-* `StrongOperatorTopology.isSOTClosed_of_isWOTClosed` (with `continuous_sotToWOT`): SOT is finer
-  than WOT, so every WOT-closed set is SOT-closed — no hypothesis on the set. Stated here, not in
-  the `ForMathlib` topology files, because those import Mathlib only.
-* `NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed`: a SOT-closed non-degenerate *-subalgebra is WOT-closed.
+* `StrongOperatorTopology.isSOTClosed_of_isWOTClosed`: SOT is finer than WOT
+  (`PointwiseConvergenceCLM.toWOT`), so every WOT-closed set is SOT-closed — no hypothesis on the
+  set.
+* `Convex.isWOTClosed_of_isSOTClosed`, `Convex.isSOTClosed_iff_isWOTClosed`: a convex set of
+  operators is SOT-closed iff it is WOT-closed; no algebra structure, non-degeneracy or
+  completeness of `H` is needed.
 * `NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed`: if a non-degenerate *-subalgebra is SOT-closed, it equals
   its double commutant (the "hard half" of the SOT double commutant theorem).
 
@@ -39,69 +42,61 @@ automatic.
 
 The proof proceeds in two main steps:
 
-1. **Double commutant membership implies SOT approximability**: For any `T ∈ A''` and any finite
+1. **Double commutant membership implies SOT approximability**: For any `T ∈ A′′` and any finite
    set of points `x₁, ..., xₙ ∈ H`, we show that the tuple `(Tx₁, ..., Txₙ)` lies in the closure
    of `{(Sx₁, ..., Sxₙ) | S ∈ A}`. This uses diagonal amplification: embed `A` into operators on
    `H^n`, show that `diagonal T` lies in the double commutant of the amplified algebra, hence
    preserves reducing subspaces, and apply the cyclic subspace argument.
 
-2. **SOT-closed implies WOT-closed**: From step 1, any `T ∈ A''` lies in the SOT-closure of `A`
-   (`NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant`). If `A` is SOT-closed, this means `A'' ⊆ A`,
-   hence `A = A''`. Since double commutants are WOT-closed, `A` is WOT-closed.
+2. **SOT-closed implies double commutant**: From step 1, any `T ∈ A′′` lies in the SOT-closure of
+   `A` (`NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant`). If `A` is SOT-closed, this
+   means `A′′ ⊆ A`, hence `A = A′′`
+   (`NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed`).
 
-The final theorem `NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed` then reduces to the WOT version via
-`NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed`.
+That a SOT-closed `*`-subalgebra is WOT-closed does not depend on the theorem: a `*`-subalgebra is
+convex, and a convex set of operators is SOT-closed iff it is WOT-closed
+(`Convex.isSOTClosed_iff_isWOTClosed`).
 -/
 
 @[expose] public section
 
 /-!
-## SOT is finer than WOT
+## SOT-closed and WOT-closed sets
 
-The comparison of the two type copies lives here rather than in either `ForMathlib` topology
-file, because `ForMathlib` files import Mathlib only and the comparison needs both copies.
+The comparison of the two type copies is `PointwiseConvergenceCLM.toWOT`, in
+`QuantumSystem.ForMathlib.Analysis.LocallyConvex.ConvexOperatorClosure`. The statements below
+restate its consequences through `IsSOTClosed` and `IsWOTClosed`, which are declared in two
+`ForMathlib` files that, importing Mathlib only, cannot mention each other.
 -/
 
-namespace StrongOperatorTopology
+section Closed
 
-open WeakOperatorTopology
-open ContinuousLinearMap (toUniformConvergenceCLM)
+open StrongOperatorTopology WeakOperatorTopology
 
-variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
-
-local notation "B" => (H →L[ℂ] H)
-local notation "BSOT" => (H →SLₚₜ[RingHom.id ℂ] H)
-local notation "BWOT" => (H →WOT[ℂ] H)
-
-/-- The identity map on operators, read as a map from the SOT type-copy to the WOT type-copy. -/
-noncomputable def sotToWOT (T : BSOT) : BWOT :=
-  ContinuousLinearMapWOT.ofCLM ((toUniformConvergenceCLM _ _ _).symm T)
-
-/-- `sotToWOT` does not change the underlying operator: `sotToWOT T x = T x`. -/
-@[simp] lemma sotToWOT_apply (T : BSOT) (x : H) : (sotToWOT T) x = T x := rfl
-
-/-- **SOT is finer than WOT.** The identity map from the SOT type-copy to the WOT type-copy is
-continuous: a net converging pointwise in norm converges in every matrix coefficient. -/
-lemma continuous_sotToWOT : Continuous (sotToWOT (H := H)) := by
-  refine ContinuousLinearMapWOT.continuous_of_dual_apply_continuous ?_
-  intro x y
-  have hval : ∀ T : BSOT, y ((sotToWOT T) x) = y (T x) := fun _ => rfl
-  simp only [hval]
-  exact y.continuous.comp ((continuous_apply x).comp
-    (PointwiseConvergenceCLM.isEmbedding_coeFn (RingHom.id ℂ) H H).continuous)
-
-/-- The SOT view of a set is the preimage of its WOT view under `sotToWOT`. -/
-lemma Set.toSOT_eq_preimage_toWOT (S : Set B) :
-    Set.toSOT S = sotToWOT ⁻¹' Set.toWOT S := rfl
+variable {𝕜 H : Type*} [RCLike 𝕜] [NormedAddCommGroup H] [NormedSpace 𝕜 H]
 
 /-- A WOT-closed set is SOT-closed. No hypothesis on `S` is needed: this is nothing but SOT being
-the finer topology. The converse needs convexity and is not proved here. -/
-lemma isSOTClosed_of_isWOTClosed {S : Set B} (hS : IsWOTClosed S) :
-    IsSOTClosed S := by
-  rw [IsSOTClosed, Set.toSOT_eq_preimage_toWOT]
-  exact hS.preimage continuous_sotToWOT
+the finer topology (`PointwiseConvergenceCLM.toWOT`). For a convex set the converse holds
+(`Convex.isWOTClosed_of_isSOTClosed`). -/
+lemma StrongOperatorTopology.isSOTClosed_of_isWOTClosed {S : Set (H →L[𝕜] H)}
+    (hS : IsWOTClosed S) : IsSOTClosed S :=
+  ContinuousLinearMap.isClosed_image_toPointwiseConvergenceCLM_of_isClosed_image_ofCLM hS
 
-end StrongOperatorTopology
+variable [NormedSpace ℝ H] [IsScalarTower ℝ 𝕜 H]
+
+/-- **A convex set of operators is SOT-closed iff it is WOT-closed**
+(`Convex.isClosed_image_toPointwiseConvergenceCLM_iff`). -/
+lemma Convex.isSOTClosed_iff_isWOTClosed {C : Set (H →L[𝕜] H)} (hC : Convex ℝ C) :
+    IsSOTClosed C ↔ IsWOTClosed C :=
+  hC.isClosed_image_toPointwiseConvergenceCLM_iff
+
+/-- **A SOT-closed convex set of operators is WOT-closed.** In particular a SOT-closed subspace or
+`*`-subalgebra of `B(H)` is WOT-closed, with no non-degeneracy hypothesis. -/
+lemma Convex.isWOTClosed_of_isSOTClosed {C : Set (H →L[𝕜] H)} (hC : Convex ℝ C)
+    (h : IsSOTClosed C) : IsWOTClosed C :=
+  hC.isSOTClosed_iff_isWOTClosed.mp h
+
+end Closed
 
 /-- `S′` denotes the commutant `Set.centralizer S` of a set of operators, the prime notation of the
 operator-algebra literature, so that `S′′` is the double commutant. Local to this file. -/
@@ -110,7 +105,6 @@ local postfix:max "′" => Set.centralizer
 section SOTClosedSubalgebra
 
 open InnerProductSpace StrongOperatorTopology WeakOperatorTopology
-open ContinuousLinearMap (toUniformConvergenceCLM)
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -121,7 +115,7 @@ local notation "BWOT" => (H →WOT[ℂ] H)
 /-- Any element of the double commutant of a (possibly non-unital) *-subalgebra acting
 non-degenerately lies in the SOT-closure of the algebra.
 
-This is the key technical result: we show that for any `T ∈ A''` and any finite set of points
+This is the key technical result: we show that for any `T ∈ A′′` and any finite set of points
 `x₁, ..., xₙ ∈ H`, the tuple `(Tx₁, ..., Txₙ)` lies in the closure of `{(Sx₁, ..., Sxₙ) | S ∈ A}`.
 This uses diagonal amplification and the cyclic subspace argument. For the unital special case
 see `StarSubalgebra.mem_sotClosure_of_mem_doubleCommutant`.
@@ -129,7 +123,7 @@ see `StarSubalgebra.mem_sotClosure_of_mem_doubleCommutant`.
 lemma NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B) (T : B)
     (hnd : ActsNondegenerately (A : Set B))
     (hT : T ∈ (A : Set B)′′) :
-    (toUniformConvergenceCLM _ _ _ T : BSOT) ∈ closure (Set.toSOT (A : Set B)) := by
+    ↑ₚₜ T ∈ closure (↑ₚₜ '' (A : Set B)) := by
   -- The SOT is induced by the coercion `BSOT → (H → H)`.
   -- Use the criterion: T ∈ closure(S) iff `↑T ∈ closure (↑'' S)` in the product topology.
   rw [(PointwiseConvergenceCLM.isEmbedding_coeFn (RingHom.id ℂ) H
@@ -188,7 +182,7 @@ lemma NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : NonUnit
       intro y hy
       apply (heps' x).choose_spec.2
       exact Metric.ball_subset_ball hle hy
-    -- T^(n) ∈ (A^(n))''
+    -- T^(n) ∈ (A^(n))′′
     have hTn : diagonal (n := n) T ∈
         (Aamp : Set _)′′ := by
       have hdiag := diagonal_mem_double_commutant (n := n) (A := (A : Set _)) (T := T) hT
@@ -263,9 +257,8 @@ lemma NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : NonUnit
       calc ‖S z - T z‖
         _ ≤ dist (diagonal T x_amp) (diagonal S x_amp) := hnorm_ineq
         _ < ε := hdist
-    · -- Show S, as a function, lies in the image of `Set.toSOT A`.
-      simp only [Set.mem_image]
-      exact ⟨toUniformConvergenceCLM _ _ _ S, Set.mem_toSOT_iff.mpr hS, rfl⟩
+    · -- Show S, as a function, lies in the image of `↑ₚₜ '' A`.
+      exact ⟨↑ₚₜ S, ⟨S, hS, rfl⟩, rfl⟩
   · -- I is empty, so the pi set is the whole space; any element of `A` works, e.g. `0`.
     simp only [Set.not_nonempty_iff_eq_empty] at hI_nonempty
     use (0 : H →L[ℂ] H)
@@ -273,13 +266,13 @@ lemma NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : NonUnit
     · apply htU
       rw [hI_nonempty, Set.empty_pi]
       exact Set.mem_univ _
-    · exact ⟨toUniformConvergenceCLM _ _ _ 0, Set.mem_toSOT_iff.mpr A.zero_mem, rfl⟩
+    · exact ⟨↑ₚₜ 0, ⟨0, A.zero_mem, rfl⟩, rfl⟩
 
 /-- Unital special case of `NonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant`: since `1 ∈ A`, the algebra
 acts non-degenerately and the general lemma applies. -/
 lemma StarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : StarSubalgebra ℂ B) (T : B)
     (hT : T ∈ (A : Set B)′′) :
-    (toUniformConvergenceCLM _ _ _ T : BSOT) ∈ closure (Set.toSOT (A : Set B)) :=
+    ↑ₚₜ T ∈ closure (↑ₚₜ '' (A : Set B)) :=
   A.toNonUnitalStarSubalgebra.mem_sotClosure_of_mem_doubleCommutant T
     (actsNondegenerately_of_one_mem A.one_mem) hT
 
@@ -287,69 +280,37 @@ lemma StarSubalgebra.mem_sotClosure_of_mem_doubleCommutant (A : StarSubalgebra �
 `*`-subalgebra — with no closedness hypothesis at all — the double commutant is exactly the
 SOT-closure:
 
-`A'' = closure_SOT A`.
+`A′′ = closure_SOT A`.
 
 This is the statement the proof actually establishes; the three-condition equivalence
 (`NonUnitalStarSubalgebra.bicommutant_tfae`) is the corollary obtained by asking when the two sides equal
 `A` itself. -/
 theorem NonUnitalStarSubalgebra.sotClosure_eq_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B)) :
-    closure (Set.toSOT (A : Set B)) =
-      Set.toSOT ((A : Set B)′′) := by
+    closure (↑ₚₜ '' (A : Set B)) = ↑ₚₜ '' ((A : Set B)′′) := by
   refine Set.eq_of_subset_of_subset ?_ ?_
   · -- The right-hand side is SOT-closed and contains `A`, so it contains the SOT-closure.
-    refine closure_minimal (fun T hT => ?_) (isSOTClosed_centralizer_centralizer _)
-    exact Set.subset_centralizer_centralizer (S := (A : Set B)) hT
-  · intro T hT
-    exact A.mem_sotClosure_of_mem_doubleCommutant _ hnd (Set.mem_toSOT_iff.mp hT)
+    exact closure_minimal (Set.image_mono Set.subset_centralizer_centralizer)
+      (isSOTClosed_centralizer_centralizer _)
+  · rintro _ ⟨T, hT, rfl⟩
+    exact A.mem_sotClosure_of_mem_doubleCommutant _ hnd hT
 
 /-- **The density form of the bicommutant theorem, WOT half.** For every non-degenerate
-`*`-subalgebra, with no closedness hypothesis, `A'' = closure_WOT A`.
+`*`-subalgebra, with no closedness hypothesis, `A′′ = closure_WOT A`.
 
 Together with `NonUnitalStarSubalgebra.sotClosure_eq_doubleCommutant` this says that the SOT- and WOT-closures of a
-non-degenerate `*`-subalgebra coincide, both being `A''`. -/
+non-degenerate `*`-subalgebra coincide, both being `A′′`. -/
 theorem NonUnitalStarSubalgebra.wotClosure_eq_doubleCommutant (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B)) :
-    closure (Set.toWOT (A : Set B)) =
-      Set.toWOT ((A : Set B)′′) := by
+    closure (ContinuousLinearMapWOT.ofCLM '' (A : Set B)) =
+      ContinuousLinearMapWOT.ofCLM '' ((A : Set B)′′) := by
   refine Set.eq_of_subset_of_subset ?_ ?_
-  · refine closure_minimal (fun T hT => ?_) (isWOTClosed_centralizer_centralizer _)
-    exact Set.subset_centralizer_centralizer (Set.mem_toWOT_iff.mp hT)
-  · intro T hT
-    -- Go through the SOT-closure and push it forward along the continuous map `sotToWOT`.
-    have hSOT : (toUniformConvergenceCLM _ _ _ (ContinuousLinearMapWOT.toCLM T) : BSOT) ∈
-        closure (Set.toSOT (A : Set B)) :=
-      A.mem_sotClosure_of_mem_doubleCommutant _ hnd (Set.mem_toWOT_iff.mp hT)
-    have hsub : closure (Set.toSOT (A : Set B)) ⊆
-        sotToWOT ⁻¹' closure (Set.toWOT (A : Set B)) :=
-      closure_minimal (fun S hS => subset_closure (Set.mem_toSOT_iff.mp hS))
-        (isClosed_closure.preimage continuous_sotToWOT)
-    exact hsub hSOT
-
-/-- A SOT-closed (possibly non-unital) *-subalgebra acting non-degenerately is WOT-closed. -/
-lemma NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
-    (hnd : ActsNondegenerately (A : Set B))
-    (hSOT : IsSOTClosed (A : Set B)) :
-    IsWOTClosed (A : Set B) := by
-  -- Strategy: Show A = A'', then use that A'' is WOT-closed.
-  -- Key: any T ∈ A'' lies in SOT-closure(A), so if A is SOT-closed, then T ∈ A.
-  have hA_eq_Acc : (A : Set B) = (A : Set B)′′ := by
-    apply Set.eq_of_subset_of_subset Set.subset_centralizer_centralizer
-    intro T hT
-    -- T ∈ A'' → T ∈ SOT-closure(A) → T ∈ A (since A is SOT-closed)
-    have hT_in_SOT := A.mem_sotClosure_of_mem_doubleCommutant T hnd hT
-    rw [IsClosed.closure_eq hSOT] at hT_in_SOT
-    simpa [Set.mem_toSOT_iff] using hT_in_SOT
-  rw [hA_eq_Acc]
-  exact isWOTClosed_centralizer_centralizer (A : Set B)
-
-/-- Unital special case of `NonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed`: a SOT-closed unital *-subalgebra is
-WOT-closed. -/
-lemma StarSubalgebra.isWOTClosed_of_isSOTClosed (A : StarSubalgebra ℂ B)
-    (hSOT : IsSOTClosed (A : Set B)) :
-    IsWOTClosed (A : Set B) :=
-  A.toNonUnitalStarSubalgebra.isWOTClosed_of_isSOTClosed
-    (actsNondegenerately_of_one_mem A.one_mem) hSOT
+  · exact closure_minimal (Set.image_mono Set.subset_centralizer_centralizer)
+      (isWOTClosed_centralizer_centralizer _)
+  · rintro _ ⟨T, hT, rfl⟩
+    -- The SOT-closure of the convex set `A` is its WOT-closure.
+    exact ((A.toSubmodule.restrictScalars ℝ).convex.toPointwiseConvergenceCLM_mem_closure_image_iff
+      T).mp (A.mem_sotClosure_of_mem_doubleCommutant _ hnd hT)
 
 /-- The double commutant theorem (hard half) for SOT-closed *-subalgebras.
 
@@ -359,10 +320,10 @@ commutant. For the unital special case see `StarSubalgebra.doubleCommutant_eq_of
 theorem NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B))
     (hSOT : IsSOTClosed (A : Set B)) :
-    (A : Set B)′′ = (A : Set B) := by
-  -- Reduce to the WOT version.
-  have hWOT : IsWOTClosed (A : Set B) := A.isWOTClosed_of_isSOTClosed hnd hSOT
-  exact A.doubleCommutant_eq_of_isWOTClosed hnd hWOT
+    (A : Set B)′′ = (A : Set B) :=
+  -- Reduce to the WOT version: the convex set `A` is WOT-closed.
+  A.doubleCommutant_eq_of_isWOTClosed hnd
+    ((A.toSubmodule.restrictScalars ℝ).convex.isWOTClosed_of_isSOTClosed hSOT)
 
 /-- Unital special case of `NonUnitalStarSubalgebra.doubleCommutant_eq_of_isSOTClosed`: a SOT-closed unital
 *-subalgebra equals its double commutant. Since `1 ∈ A`, the algebra acts non-degenerately

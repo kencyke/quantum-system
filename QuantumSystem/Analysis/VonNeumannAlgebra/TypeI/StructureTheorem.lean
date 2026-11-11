@@ -11,13 +11,14 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.Analysis.InnerProductSpace.Subspace
 
 /-!
 # The structure theorem for type I factors
 
 This file proves the spatial structure theorem for a type I factor `N ⊆ B(H)` with minimal
-projection `e`: there is a linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` under which `N`
-becomes exactly the tensor factor `B(ℓ²(F)) ⊗̄ 1` and `N'` becomes the right factor `1 ⊗̄ B(eH)`.
+projection `e`: there is a linear isometric equivalence `U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` under which `N`
+becomes exactly the tensor factor `B(ℓ²(F)) ⊗̄ 1` and `N′` becomes the right factor `1 ⊗̄ B(eH)`.
 The ingredients — the covering orthogonal family `F` (`OrthEquivFam`), the matrix units
 `e_{pq} = v_p v_q⋆`, and the spatial isomorphism `multiplicityEquiv` — are built in
 `QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits`. The proof here has two halves.
@@ -28,8 +29,8 @@ The ingredients — the covering orthogonal family `F` (`OrthEquivFam`), the mat
 
 This is the von-Neumann-algebraic (double-commutant) reformulation of the strong-operator
 reconstruction `a = Σ_{pq} c_{pq}(a) e_{pq}`. The reformulation avoids the double series in `p, q`
-by working through the commutant: the inclusion `S'' ⊆ N` is monotonicity, and the content
-`N ⊆ S''` is the statement that every operator commuting with all matrix units commutes with all
+by working through the commutant: the inclusion `S′′ ⊆ N` is monotonicity, and the content
+`N ⊆ S′′` is the statement that every operator commuting with all matrix units commutes with all
 of `N`. The proof of that content (`commutes_of_mem_centralizer`) is genuinely analytic: it inserts
 the resolution of the identity `Σ_r p_r = 1` (here `p_r = e_{rr} = v_r v_r⋆`), a `HasSum` in the
 strong operator topology `H →Lₚₜ[ℂ] H`, and uses that each `↑p · a · ↑r` is a *scalar*
@@ -40,8 +41,8 @@ multiple of the matrix unit `e_{pr}` (multiplicity one, `exists_matrixEntry`), h
 
 **Identification half.** The identification glues the generation theorem `N = ⟨matrix units⟩''`
 to the tensor commutation theorem (`QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`) through
-the spatial isomorphism `U = multiplicityEquiv ∘ lpTensorEquiv`. The key computation is that `U`
-carries the matrix unit `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨δ_q| ⊗̂ 1`, where
+the spatial isomorphism `U = lp.completionTensorEquiv ∘ multiplicityEquiv`. The key computation is
+that `U` carries the matrix unit `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨δ_q| ⊗ 𝟙`, where
 `δ_p = lp.single 2 p 1` is the `p`-th standard basis vector of `ℓ²(F)`.
 
 ## Main results
@@ -57,12 +58,12 @@ carries the matrix unit `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨
 * `VonNeumannAlgebra.OrthEquivFam.coe_multiplicityEquiv_apply` — the explicit `i`-th coordinate of
   `U y`: `(multiplicityEquiv y) i = v_i⋆ y`.
 * `VonNeumannAlgebra.OrthEquivFam.hasSum_tmul_spatialEquiv` — the resulting expansion
-  `U y = ∑ᵢ δᵢ ⊗̂ (v_i⋆ y)`.
-* `VonNeumannAlgebra.OrthEquivFam.conjStarAlgEquiv_matrixUnit` — `U e_{pq} U⋆ = |δ_p⟩⟨δ_q| ⊗̂ 1`.
+  `U y = ∑ᵢ δᵢ ⊗ (v_i⋆ y)`.
+* `VonNeumannAlgebra.OrthEquivFam.conjStarAlgEquiv_matrixUnit` — `U e_{pq} U⋆ = |δ_p⟩⟨δ_q| ⊗ 𝟙`.
 * `VonNeumannAlgebra.OrthEquivFam.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators` — the identification
   `U N U⋆ = B(ℓ²(F)) ⊗̄ 1`, with commutant companion `conj_spatialEquiv_commutant_eq_oneTensor_boundedLinearOperators`.
-* `VonNeumannAlgebra.IsFactor.exists_spatial_tensor_decomposition` — the existence headline.
-* `VonNeumannAlgebra.IsFactor.exists_split_tensor_decomposition` — the split tensor decomposition:
+* `VonNeumannAlgebra.exists_spatial_tensor_decomposition_of_isCentral` — the existence headline.
+* `VonNeumannAlgebra.exists_split_tensor_decomposition_of_isCentral` — the split tensor decomposition:
   for an inclusion `A ≤ B` of von Neumann algebras with intermediate type I factor `A ≤ N ≤ B` —
   a *split inclusion* in the sense of Doplicher–Longo (see
   `VonNeumannAlgebra.IsSplitInclusion`) — the same `U` sends `A` into `B(ℓ²(F)) ⊗̄ 1` and the
@@ -77,7 +78,6 @@ carries the matrix unit `e_{pq}` to the amplified rank-one operator `|δ_p⟩⟨
   `𝒜₂ ⊂ 𝟏 ⊗ ℬ(ℋ₂)`.
 * [DL84] S. Doplicher, R. Longo, *Standard and split inclusions of von Neumann algebras*,
   Invent. Math. 75 (1984) 493–536.
-* [dB74] D. Buchholz, *Product states for local algebras*, Comm. Math. Phys. 36 (1974) 287–304.
 
 ## Notation
 
@@ -88,11 +88,13 @@ where the algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.
 
 @[expose] public section
 
-open scoped TensorProduct lp
+open scoped TensorProduct lp Amplification Submodule
+
+open UniformSpace
 
 namespace VonNeumannAlgebra
 
-open StrongOperatorTopology HilbertTensor
+open StrongOperatorTopology
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 variable {N : VonNeumannAlgebra H} {e : H →L[ℂ] H} {F : Set (H →L[ℂ] H)}
@@ -128,7 +130,7 @@ lemma OrthEquivFam.hasSum_resolutionOfIdentity (hF : OrthEquivFam N e F)
 
 /-- **The content of the generation theorem.** Any operator `b` commuting with every matrix unit
 commutes with every `a ∈ N`. Equivalently `Set.centralizer S ⊆ Set.centralizer N`, which is the
-nontrivial inclusion `N ⊆ S''`.
+nontrivial inclusion `N ⊆ S′′`.
 
 The proof tests `a * b = b * a` against arbitrary inner products. Inserting the resolution of the
 identity `Σ_r p_r = 1` between and around `a`, the commutator reduces to the family of operators
@@ -240,7 +242,7 @@ lemma OrthEquivFam.mem_sotClosure_adjoin (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     {a : H →L[ℂ] H} (ha : a ∈ N) :
-    (ContinuousLinearMap.toUniformConvergenceCLM _ _ _ a : H →SLₚₜ[RingHom.id ℂ] H) ∈ closure (Set.toSOT
+    ↑ₚₜ a ∈ closure (↑ₚₜ ''
       (StarAlgebra.adjoin ℂ (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) :
         Set (H →L[ℂ] H))) := by
   set S := Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2) with hSdef
@@ -287,40 +289,44 @@ lemma OrthEquivFam.coe_multiplicityEquiv_apply (hF : OrthEquivFam N e F)
     (hF.pisom_isPI i).coe_sourceRangeEquiv_symm (hF.pisom_source i) (hF.pisom_range i) _
   rw [h1, hF.coe_hilbertSumEquiv_apply htop y i, ← mul_apply_eq_comp, hop]
 
+
 /-- **The spatial isomorphism.** A covering orthogonal family of `e`-equivalent projections gives a
-linear isometric equivalence `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` of `H` with the completed Hilbert tensor
-product, identifying `H` with `ℓ²(F) ⊗̂ (eH)` via `multiplicityEquiv` and the tensor bridge. This is
+linear isometric equivalence `U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` of `H` with the completed
+tensor product, through `multiplicityEquiv` and the tensor bridge `lp.completionTensorEquiv`. This is
 the isomorphism implementing the type I structure theorem `N ≅ B(ℓ²(F)) ⊗̄ 1`. -/
 noncomputable def OrthEquivFam.spatialEquiv (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     [CompleteSpace (e.range)] [DecidableEq F] :
-    H ≃ₗᵢ[ℂ] HilbertTensor ℓ²(F, ℂ) (e.range) :=
-  (hF.multiplicityEquiv htop).trans (lpTensorEquiv (ι := F) (K := e.range))
+    H ≃ₗᵢ[ℂ] Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range) :=
+  (hF.multiplicityEquiv htop).trans (lp.completionTensorEquiv ℂ (ι := F) (K := e.range))
 
-/-- **Spatial expansion of `U`.** The spatial isomorphism `U = multiplicityEquiv ∘ lpTensorEquiv`
-expands a vector as `U y = ∑ᵢ δᵢ ⊗̂ (i-th multiplicity coordinate of y)`. -/
+/-- **Spatial expansion of `U`.** The spatial isomorphism
+`U = lp.completionTensorEquiv ∘ multiplicityEquiv` expands a vector as
+`U y = ∑ᵢ δᵢ ⊗ (i-th multiplicity coordinate of y)`. -/
 lemma OrthEquivFam.hasSum_tmul_spatialEquiv (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     [CompleteSpace (e.range)] [DecidableEq F] (y : H) :
-    HasSum (fun i : F => tmul (δ i) (hF.multiplicityEquiv htop y i))
+    HasSum (fun i : F => ((δ i ⊗ₜ[ℂ] hF.multiplicityEquiv htop y i : ℓ²(F, ℂ) ⊗[ℂ] e.range) :
+        Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)))
       (hF.spatialEquiv htop y) := by
   have h := (lp.hasSum_single (E := fun _ : F => e.range) (p := 2)
       (by norm_num) (hF.multiplicityEquiv htop y)).mapL
-      (lpTensorEquiv (ι := F)
+      (lp.completionTensorEquiv ℂ (ι := F)
         (K := e.range)).toLinearIsometry.toContinuousLinearMap
   simpa only [OrthEquivFam.spatialEquiv, LinearIsometryEquiv.coe_toLinearIsometry,
-    LinearIsometry.coe_toContinuousLinearMap, lpTensorEquiv_single,
+    LinearIsometry.coe_toContinuousLinearMap, lp.completionTensorEquiv_single,
     LinearIsometryEquiv.trans_apply] using h
 
 attribute [local irreducible] OrthEquivFam.spatialEquiv OrthEquivFam.multiplicityEquiv
 
-/-- The `p`-th coordinate of `U (e_{pq} y)` collapses to the single term `δ_p ⊗̂ (v_q⋆ y)`: every
+/-- The `p`-th coordinate of `U (e_{pq} y)` collapses to the single term `δ_p ⊗ (v_q⋆ y)`: every
 other coordinate vanishes because `v_i⋆ e_{pq} = 0` for `i ≠ p`. -/
 lemma OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     [CompleteSpace (e.range)] [DecidableEq F] (p q : F) (y : H) :
     hF.spatialEquiv htop (hF.matrixUnit p q y)
-      = tmul (δ p) (hF.multiplicityEquiv htop (hF.matrixUnit p q y) p) := by
+      = ((δ p ⊗ₜ[ℂ] hF.multiplicityEquiv htop (hF.matrixUnit p q y) p :
+          ℓ²(F, ℂ) ⊗[ℂ] e.range) : Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)) := by
   refine (hF.hasSum_tmul_spatialEquiv htop (hF.matrixUnit p q y)).unique ?_
   refine hasSum_single p (fun i hi => ?_)
   have hcoe : ((hF.multiplicityEquiv htop (hF.matrixUnit p q y) i :
@@ -331,7 +337,7 @@ lemma OrthEquivFam.spatialEquiv_matrixUnit_apply (hF : OrthEquivFam N e F)
         hF.star_pisom_mul_pisom_of_ne hi, zero_mul]
     rw [← mul_apply_eq_comp, h0, zero_apply]
   rw [show hF.multiplicityEquiv htop (hF.matrixUnit p q y) i = 0 from
-    Subtype.ext (by rw [hcoe]; rfl), ← tmulRightL_apply, map_zero]
+    Subtype.ext (by rw [hcoe]; rfl), TensorProduct.tmul_zero, Completion.coe_zero]
 
 /-- The surviving coordinates agree: `v_p⋆ (e_{pq} y) = v_q⋆ y`. -/
 lemma OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F)
@@ -344,105 +350,106 @@ lemma OrthEquivFam.multiplicityEquiv_matrixUnit_coord (hF : OrthEquivFam N e F)
     rw [OrthEquivFam.matrixUnit_def, ← mul_assoc, hF.pisom_source p, hF.e_mul_star_pisom q]
   rw [← mul_apply_eq_comp, hpp]
 
-/-- The amplified rank-one operator on `U y` collapses to the single term `δ_p ⊗̂ (v_q⋆ y)`: the
+/-- The amplified rank-one operator on `U y` collapses to the single term `δ_p ⊗ (v_q⋆ y)`: the
 rank-one operator picks out the `q`-th coordinate. -/
-lemma OrthEquivFam.amplifyLeft_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
+lemma OrthEquivFam.completion_rTensor_rankOne_spatialEquiv (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     [CompleteSpace (e.range)] [DecidableEq F] (p q : F) (y : H) :
-    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙) (hF.spatialEquiv htop y)
-      = tmul (δ p) (hF.multiplicityEquiv htop y q) := by
-  have key : ∀ i : F, ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
-      (tmul (δ i) (hF.multiplicityEquiv htop y i))
-      = (inner ℂ (δ q) (δ i) : ℂ) • tmul (δ p) (hF.multiplicityEquiv htop y i) :=
-    fun i => by rw [amplifyLeft_tmul, InnerProductSpace.rankOne_apply, tmul_smul_left]
-  have hqq : (inner ℂ (δ q) (δ q) : ℂ) = 1 := by
-    rw [lp.inner_single_left, lp.coeFn_single, Pi.single_eq_same,
-      RCLike.inner_apply, map_one, mul_one]
-  have hz : ∀ i : F, i ≠ q → ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
-      (tmul (δ i) (hF.multiplicityEquiv htop y i)) = 0 := by
-    intro i hi
+    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range]) (hF.spatialEquiv htop y)
+      = ((δ p ⊗ₜ[ℂ] hF.multiplicityEquiv htop y q : ℓ²(F, ℂ) ⊗[ℂ] e.range) :
+        Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)) := by
+  have key : ∀ (i : F) (v : e.range), ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range])
+      (δ i ⊗ₜ[ℂ] v : Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range))
+      = (inner ℂ (δ q) (δ i) : ℂ) •
+        (δ p ⊗ₜ[ℂ] v : Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)) :=
+    fun i v => by rw [ContinuousLinearMap.completion_apply_coe, ContinuousLinearMap.rTensor_tmul,
+      InnerProductSpace.rankOne_apply, ← TensorProduct.smul_tmul', Completion.coe_smul]
+  have hz : ∀ (i : F) (v : e.range), i ≠ q → ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range])
+      (δ i ⊗ₜ[ℂ] v : Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)) = 0 := by
+    intro i v hi
     have hzero : (inner ℂ (δ q) (δ i) : ℂ) = 0 := by
       rw [lp.inner_single_left, lp.coeFn_single,
         Pi.single_eq_of_ne (Ne.symm hi), inner_zero_right]
-    rw [key i, hzero, zero_smul]
-  have hval : ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
-      (tmul (δ q) (hF.multiplicityEquiv htop y q))
-      = tmul (δ p) (hF.multiplicityEquiv htop y q) := by
-    rw [key q, hqq, one_smul]
+    rw [key i, hzero]
+    exact zero_smul ℂ _
+  have hval : ∀ v : e.range, ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range])
+      (δ q ⊗ₜ[ℂ] v : Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range))
+      = (δ p ⊗ₜ[ℂ] v : Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)) := by
+    intro v
+    rw [key q, lp.inner_single_left, lp.coeFn_single, Pi.single_eq_same, RCLike.inner_apply,
+      map_one, mul_one]
+    exact one_smul ℂ _
   exact (((hF.hasSum_tmul_spatialEquiv htop y).mapL
-    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)).unique
-    (hasSum_single q hz)).trans hval
+    ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range])).unique
+    (hasSum_single q fun i hi => hz i _ hi)).trans (hval _)
 
 /-- **Intertwining relation.** The spatial isomorphism intertwines the matrix unit `e_{pq}` with
-the amplified rank-one operator: `U (e_{pq} y) = (|δ_p⟩⟨δ_q| ⊗̂ 1) (U y)`. -/
+the amplified rank-one operator: `U (e_{pq} y) = (|δ_p⟩⟨δ_q| ⊗ 𝟙[e.range]) (U y)`. -/
 lemma OrthEquivFam.spatialEquiv_intertwine (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     [CompleteSpace (e.range)] [DecidableEq F] (p q : F) (y : H) :
     hF.spatialEquiv htop (hF.matrixUnit p q y)
-      = ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙) (hF.spatialEquiv htop y) :=
+      = ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range]) (hF.spatialEquiv htop y) :=
   (hF.spatialEquiv_matrixUnit_apply htop p q y).trans
-    ((congrArg (tmul (δ p)) (hF.multiplicityEquiv_matrixUnit_coord htop p q y)).trans
-      (hF.amplifyLeft_rankOne_spatialEquiv htop p q y).symm)
+    ((congrArg (fun z => ((δ p ⊗ₜ[ℂ] z : ℓ²(F, ℂ) ⊗[ℂ] e.range) :
+        Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)))
+      (hF.multiplicityEquiv_matrixUnit_coord htop p q y)).trans
+      (hF.completion_rTensor_rankOne_spatialEquiv htop p q y).symm)
 
 /-- **Matrix unit identifies with an amplified rank-one operator.** Under the spatial isomorphism
 `U`, the matrix unit `e_{pq}` is carried to the amplification of the rank-one operator
-`|δ_p⟩⟨δ_q|` on `ℓ²(F)`: `U e_{pq} U⋆ = |δ_p⟩⟨δ_q| ⊗̂ 1`. This is the algebraic heart of the
+`|δ_p⟩⟨δ_q|` on `ℓ²(F)`: `U e_{pq} U⋆ = |δ_p⟩⟨δ_q| ⊗ 𝟙[e.range]`. This is the algebraic heart of the
 identification `N ≅ B(ℓ²(F)) ⊗̄ 1`. -/
 lemma OrthEquivFam.conjStarAlgEquiv_matrixUnit (hF : OrthEquivFam N e F)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤)
     [CompleteSpace (e.range)] [DecidableEq F] (p q : F) :
     (hF.spatialEquiv htop).conjStarAlgEquiv (hF.matrixUnit p q)
-      = (InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙 := by
+      = (InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range] := by
   refine ContinuousLinearMap.ext fun w => ?_
   rw [LinearIsometryEquiv.conjStarAlgEquiv_apply_apply]
   exact (hF.spatialEquiv_intertwine htop p q ((hF.spatialEquiv htop).symm w)).trans
-    (congrArg ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙)
+    (congrArg ((InnerProductSpace.rankOne ℂ (δ p) (δ q)) ⊗ 𝟙[e.range])
       (LinearIsometryEquiv.apply_symm_apply (hF.spatialEquiv htop) w))
 
 omit [CompleteSpace H] in
 /-- **The amplified basis rank-one operators generate `B(ℓ²(F)) ⊗̄ 1`.** The von Neumann algebra
-generated by `{|δ_p⟩⟨δ_q| ⊗̂ 1 : p q : F}` is the tensor factor `𝓑(ℓ²(F)) ⊗ 𝟙[eH] = B(ℓ²(F)) ⊗̄ 1`. The
+generated by `{|δ_p⟩⟨δ_q| ⊗ 𝟙 : p q : F}` is the tensor factor `𝓑(ℓ²(F)) ⊗ 𝟙[eH] = B(ℓ²(F)) ⊗̄ 1`. The
 proof computes the commutant: an operator commuting with all the amplified rank-one operators lies
 in `1 ⊗̄ B(eH)` (the dense slice lemma, using that `{δ_p}` spans densely), and conversely
 `1 ⊗̄ B(eH)` commutes with them; so the commutant is `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`, whose commutant is
 `𝓑(ℓ²(F)) ⊗ 𝟙[eH]`. -/
-lemma generated_amplifyLeft_rankOne_eq [DecidableEq F]
+lemma generated_completion_rTensor_rankOne_eq [DecidableEq F]
     [CompleteSpace (e.range)] :
     VonNeumannAlgebra.generated (Set.range (fun pq : F × F =>
-        amplifyLeft (H₂ := e.range)
-          (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))))
+        (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2)) ⊗ 𝟙[e.range]))
       = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] := by
+  set T := Set.range (fun pq : F × F =>
+    (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2)) ⊗ 𝟙[e.range]) with hTdef
+  have hle : 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) ≤ VonNeumannAlgebra.commutantSet T := by
+    rw [← tensorOne_boundedLinearOperators_commutant, ← commutant_generated]
+    refine commutant_le (generated_le ?_)
+    rintro _ ⟨pq, rfl⟩
+    exact completion_rTensor_mem_tensorOne (mem_boundedLinearOperators _)
   rcases isEmpty_or_nonempty F with hF | hF
-  · exact vonNeumannAlgebra_eq_of_subsingleton_left _ _
-  set T := Set.range (fun pq : F × F => amplifyLeft (H₂ := e.range)
-    (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) with hTdef
+  · exact eq_of_subsingleton_tensor_left _ _
   have hcomm : VonNeumannAlgebra.commutantSet T = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
-    refine le_antisymm (fun x hx => ?_) ?_
-    · refine mem_oneTensor_boundedLinearOperators_of_commutes_dense (δ (Classical.arbitrary F))
-        (lp.norm_single_one two_pos _) (Set.range fun i : F => δ i) lp.dense_span_single x (fun f hf => ?_)
-      obtain ⟨p, rfl⟩ := hf
-      have hg : amplifyLeft (H₂ := e.range)
-          (InnerProductSpace.rankOne ℂ (δ p) (δ (Classical.arbitrary F))) ∈ T :=
-        ⟨(p, Classical.arbitrary F), rfl⟩
-      have hcx := (VonNeumannAlgebra.mem_commutantSet_iff.mp hx _ hg).1
-      exact hcx.symm
-    · refine VonNeumannAlgebra.generated_le ?_
-      rintro g ⟨B, -, rfl⟩
-      rw [SetLike.mem_coe, VonNeumannAlgebra.mem_commutantSet_iff]
-      rintro h ⟨pq, rfl⟩
-      refine ⟨amplifyLeft_comp_amplifyRight
-        (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2)) B, ?_⟩
-      rw [amplifyLeft_star]
-      exact amplifyLeft_comp_amplifyRight
-        (star (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) B
+    refine le_antisymm (fun x hx => ?_) hle
+    refine mem_oneTensor_boundedLinearOperators_of_commutes_dense (δ (Classical.arbitrary F))
+      (lp.norm_single_one two_pos _) (Set.range fun i : F => δ i) lp.dense_span_single x
+      (fun f hf => ?_)
+    obtain ⟨p, rfl⟩ := hf
+    have hg : ((InnerProductSpace.rankOne ℂ (δ p) (δ (Classical.arbitrary F))).rTensor
+        e.range).completion ∈ T :=
+      ⟨(p, Classical.arbitrary F), rfl⟩
+    exact (VonNeumannAlgebra.mem_commutantSet_iff.mp hx _ hg).1.symm
   exact (congrArg VonNeumannAlgebra.commutant hcomm).trans
     (oneTensor_boundedLinearOperators_commutant (H₁ := ℓ²(F, ℂ))
       (H₂ := e.range))
 
 /-- **Type I factor structure theorem (explicit identification).** Under the spatial isomorphism
-`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)`, the type I factor `N` is carried exactly onto the tensor factor
+`U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)`, the type I factor `N` is carried exactly onto the tensor factor
 `B(ℓ²(F)) ⊗̄ 1`: `U N U⋆ = B(ℓ²(F)) ⊗̄ 1`. This glues the matrix-unit generation theorem
-`N = ⟨e_{pq}⟩''` to the identification `U e_{pq} U⋆ = |δ_p⟩⟨δ_q| ⊗̂ 1` through the fact that the
+`N = ⟨e_{pq}⟩''` to the identification `U e_{pq} U⋆ = |δ_p⟩⟨δ_q| ⊗ 𝟙` through the fact that the
 spatial conjugation commutes with the generated-algebra construction. -/
 theorem OrthEquivFam.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators (hF : OrthEquivFam N e F)
     (he : IsMinimalProjection N e)
@@ -454,26 +461,25 @@ theorem OrthEquivFam.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators (hF :
   have himg : ⇑(hF.spatialEquiv htop).conjStarAlgEquiv ''
       (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2))
       = Set.range (fun pq : F × F =>
-        amplifyLeft (H₂ := e.range)
-          (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2))) := by
+        (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2)) ⊗ 𝟙[e.range]) := by
     rw [← Set.range_comp]
-    exact congrArg Set.range (funext fun pq => hF.conjStarAlgEquiv_matrixUnit htop pq.1 pq.2)
+    congr 1
+    funext pq
+    exact hF.conjStarAlgEquiv_matrixUnit htop pq.1 pq.2
   calc VonNeumannAlgebra.conj (hF.spatialEquiv htop) N
       = VonNeumannAlgebra.conj (hF.spatialEquiv htop)
           (VonNeumannAlgebra.generated (Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2))) :=
-        congrArg (VonNeumannAlgebra.conj (hF.spatialEquiv htop))
-          (hF.generated_matrixUnits_eq he htop).symm
+        by rw [hF.generated_matrixUnits_eq he htop]
     _ = VonNeumannAlgebra.generated (⇑(hF.spatialEquiv htop).conjStarAlgEquiv ''
           Set.range (fun pq : F × F => hF.matrixUnit pq.1 pq.2)) :=
         VonNeumannAlgebra.conj_generated _ _
     _ = VonNeumannAlgebra.generated (Set.range (fun pq : F × F =>
-          amplifyLeft (H₂ := e.range)
-            (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2)))) :=
+          (InnerProductSpace.rankOne ℂ (δ pq.1) (δ pq.2)) ⊗ 𝟙[e.range])) :=
         congrArg VonNeumannAlgebra.generated himg
-    _ = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] := generated_amplifyLeft_rankOne_eq
+    _ = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] := generated_completion_rTensor_rankOne_eq
 
 /-- **Type I factor structure theorem (commutant).** The same spatial isomorphism carries the
-commutant `N'` onto `1 ⊗̄ B(eH)`: `U N' U⋆ = 1 ⊗̄ B(eH)`. This is the companion of
+commutant `N′` onto `1 ⊗̄ B(eH)`: `U N′ U⋆ = 1 ⊗̄ B(eH)`. This is the companion of
 `conj_spatialEquiv_eq_tensorOne_boundedLinearOperators`, obtained from it because conjugation commutes with taking
 commutants and `(B(ℓ²(F)) ⊗̄ 1)' = 1 ⊗̄ B(eH)`. -/
 theorem OrthEquivFam.conj_spatialEquiv_commutant_eq_oneTensor_boundedLinearOperators (hF : OrthEquivFam N e F)
@@ -536,18 +542,18 @@ lemma OrthEquivFam.nonempty_of_top [Nontrivial H] {F : Set (H →L[ℂ] H)}
 
 /-- **Type I factor structure theorem (existence form).** A type I factor `N ⊆ B(H)` with minimal
 projection `e` (acting on a nonzero Hilbert space) is, up to a spatial isomorphism
-`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)`, exactly the tensor factor `B(ℓ²(F)) ⊗̄ 1`, with commutant `1 ⊗̄ B(eH)`:
-conjugation by `U` carries `N` onto `𝓑(ℓ²(F)) ⊗ 𝟙[eH]` and `N'` onto `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`. This is
+`U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)`, exactly the tensor factor `B(ℓ²(F)) ⊗̄ 1`, with commutant `1 ⊗̄ B(eH)`:
+conjugation by `U` carries `N` onto `𝓑(ℓ²(F)) ⊗ 𝟙[eH]` and `N′` onto `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`. This is
 [Yngvason] §5.1 (38)→(39) in its model-independent von-Neumann-algebraic form (see the module
 doc's reference list). -/
-theorem IsFactor.exists_spatial_tensor_decomposition {N : VonNeumannAlgebra H}
-    (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
+theorem exists_spatial_tensor_decomposition_of_isCentral {N : VonNeumannAlgebra H}
+    [Algebra.IsCentral ℂ N] {e : H →L[ℂ] H} (he : IsMinimalProjection N e) :
     haveI := he.1.completeSpace_range
     ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
+      (U : H ≃ₗᵢ[ℂ] Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)),
       VonNeumannAlgebra.conj U N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
       VonNeumannAlgebra.conj U N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
-  obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
+  obtain ⟨F, hF, htop⟩ := exists_orthEquivFam_top_of_isCentral he
   have : CompleteSpace (e.range) := he.1.completeSpace_range
   have : DecidableEq F := Classical.decEq _
   exact ⟨F, hF.spatialEquiv htop, hF.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators he htop,
@@ -561,26 +567,26 @@ Neumann algebras admits an intermediate factor `N ⊆ B(H)` with minimal project
 algebras*, Invent. Math. 75, 1984); the named form of that definition, `IsSplitInclusion`, and its
 consequences live in `QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion`. In AQFT the split
 inclusions of interest are `𝓡(O₁) ≤ 𝓡(O₂)` for properly contained regions — the *split property*
-of a local net (Buchholz, *Product states for local algebras*, Comm. Math. Phys. 36, 1974).
+of a local net.
 
-The conclusion: there is a spatial isomorphism `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` simultaneously
+The conclusion: there is a spatial isomorphism `U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` simultaneously
 tensor-splitting the inclusion — `A` lands in the left factor `B(ℓ²(F)) ⊗̄ 1` and the commutant
 `B′` lands in the right factor `1 ⊗̄ B(eH)`, with `N` and its commutant identified exactly. The
 commuting-pair form of this statement — `A₁ ≤ N ≤ A₂′` for a pair `(A₁, A₂)` — is recovered by
 instantiating `B := A₂′`. -/
-theorem IsFactor.exists_split_tensor_decomposition {N : VonNeumannAlgebra H}
-    (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
+theorem exists_split_tensor_decomposition_of_isCentral {N : VonNeumannAlgebra H}
+    [Algebra.IsCentral ℂ N] {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
     {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     haveI := he.1.completeSpace_range
     ∃ (F : Set (H →L[ℂ] H))
-      (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
+      (U : H ≃ₗᵢ[ℂ] Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)),
       Nonempty F ∧
       VonNeumannAlgebra.conj U N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
       VonNeumannAlgebra.conj U N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) ∧
       VonNeumannAlgebra.conj U A ≤ 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
       VonNeumannAlgebra.conj U B′ ≤ 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
   have := he.nontrivial
-  obtain ⟨F, hF, htop⟩ := hN.exists_orthEquivFam_top he
+  obtain ⟨F, hF, htop⟩ := exists_orthEquivFam_top_of_isCentral he
   have : CompleteSpace (e.range) := he.1.completeSpace_range
   have : DecidableEq F := Classical.decEq _
   have : Nonempty F := OrthEquivFam.nonempty_of_top htop

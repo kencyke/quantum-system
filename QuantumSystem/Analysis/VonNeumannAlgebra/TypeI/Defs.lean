@@ -12,20 +12,20 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempot
 /-!
 # Type I von Neumann algebras and factors
 
-The general **type I** property, phrased as in the literature (Takesaki V.1):
+The general **type I** property:
 every nonzero central projection dominates a nonzero abelian projection; a type I factor
 (`IsTypeIFactor`) is a factor with this property. For a factor on a nonzero Hilbert space it is
 equivalent to the existence of a minimal projection. The equivalence is proved in full: the easy
 direction is minimal ⇒ abelian ⇒ type I; the converse is that a nonzero
 abelian projection of a factor is minimal
-(`IsFactor.isMinimalProjection_of_isAbelianProjection`, in
+(`isMinimalProjection_of_isAbelianProjection_of_isCentral`, in
 `QuantumSystem.Analysis.VonNeumannAlgebra.MinimalProjection`).
 
 This file is the root of the type I theory: it defines the factor-level predicates `IsTypeIFactor`
 and `IsTypeIInfinite` (a type I factor of infinite multiplicity), proves their invariance under
 spatial and abstract `⋆`-isomorphisms, and develops the **fundamental example** `B(H)`: the
 algebra of *all* bounded operators, `𝓑(H) : VonNeumannAlgebra H`, is a factor
-(`isFactor_boundedLinearOperators`, in `QuantumSystem.Analysis.VonNeumannAlgebra.Factor`) and
+(`isCentral_boundedLinearOperators`, in `QuantumSystem.Analysis.VonNeumannAlgebra.Factor`) and
 possesses a minimal projection, namely any rank-one orthogonal projection `|u⟩⟨u|` with `‖u‖ = 1`
 (`exists_isMinimalProjection_boundedLinearOperators`, in
 `QuantumSystem.Analysis.VonNeumannAlgebra.MinimalProjection`). Hence `B(H)` is a **type I
@@ -47,14 +47,17 @@ and the type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional 
 
 ## Main results
 
-* `VonNeumannAlgebra.IsFactor.isTypeI_iff_exists_isMinimalProjection` — on a nonzero Hilbert
+* `VonNeumannAlgebra.isTypeI_iff_exists_isMinimalProjection_of_isCentral` — on a nonzero Hilbert
   space, a factor is type I iff it has a minimal projection.
 * `VonNeumannAlgebra.IsTypeIFactor.exists_isMinimalProjection`,
-  `VonNeumannAlgebra.IsFactor.isTypeIFactor_of_isMinimalProjection` — on a nonzero Hilbert space, a
+  `VonNeumannAlgebra.IsMinimalProjection.isTypeIFactor_of_isCentral` — on a nonzero Hilbert space, a
   type I factor is a factor with a minimal projection.
 * `VonNeumannAlgebra.IsTypeIInfinite.exists_injective` — the witnessing minimal projections of a
   type I_∞ factor may be chosen injectively.
 * `VonNeumannAlgebra.isTypeIFactor_conj_iff` — type I factors are spatially invariant.
+* `VonNeumannAlgebra.isTypeIFactor_iff_of_starAlgEquiv`,
+  `VonNeumannAlgebra.isTypeIInfinite_iff_of_starAlgEquiv` — type I and type I_∞ factors are
+  invariant under `⋆`-isomorphisms `N ≃⋆ₐ M` of von Neumann algebras on possibly different spaces.
 * `VonNeumannAlgebra.isTypeIFactor_boundedLinearOperators` — `B(H)` is a type I factor.
 * `VonNeumannAlgebra.exists_starAlgEquiv_boundedLinearOperators` — `B(H) ≃⋆ₐ B(ℓ²(ι))`, implemented
   as `x ↦ U x U⁻¹` by an isometry `U : H ≃ₗᵢ ℓ²(ι)`, for `ι` the index set of a Hilbert basis of `H`.
@@ -62,10 +65,10 @@ and the type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional 
   is a type I_∞ factor, packaged as the intrinsic predicate `IsTypeIInfinite 𝓑(H)`.
 * `VonNeumannAlgebra.exists_starAlgEquiv_infiniteDimensional_boundedLinearOperators` — for
   infinite-dimensional `H`, the same with `ι` infinite, hence `ℓ²(ι)` infinite-dimensional.
-* `VonNeumannAlgebra.isMinimalProjection_iff_of_starAlgEquiv` — through `φ : N ≃⋆ₐ B(K)` the
+* `VonNeumannAlgebra.isMinimalProjection_iff_of_starAlgEquiv_continuousLinearMap` — through `φ : N ≃⋆ₐ B(K)` the
   minimal projections of `N` are the rank-one projections `φ⁻¹ |u⟩⟨u|`, `‖u‖ = 1`.
-* `VonNeumannAlgebra.isTypeIFactor_of_starAlgEquiv` — `N ≃⋆ₐ B(K)` makes `N` a type I factor.
-* `VonNeumannAlgebra.isTypeIInfinite_iff_of_starAlgEquiv` — if `N ≃⋆ₐ B(K)`, then `N` is type I_∞
+* `VonNeumannAlgebra.isTypeIFactor_of_starAlgEquiv_continuousLinearMap` — `N ≃⋆ₐ B(K)` makes `N` a type I factor.
+* `VonNeumannAlgebra.isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap` — if `N ≃⋆ₐ B(K)`, then `N` is type I_∞
   iff `K` is infinite-dimensional.
 
 ## Notation
@@ -94,21 +97,30 @@ def IsTypeI (N : VonNeumannAlgebra H) : Prop :=
 
 /-- A **type I factor**: a factor that is type I. On a nonzero Hilbert space this is a factor
 possessing a minimal projection (`IsTypeIFactor.exists_isMinimalProjection`,
-`IsFactor.isTypeIFactor_of_isMinimalProjection`); on the zero space every von Neumann algebra is a
+`IsMinimalProjection.isTypeIFactor_of_isCentral`); on the zero space every von Neumann algebra is a
 type I factor (`isTypeIFactor_of_subsingleton`). The spatial decomposition `N ≅ B(H₁) ⊗̄ 1` is a
 theorem, not part of the definition. -/
 def IsTypeIFactor (N : VonNeumannAlgebra H) : Prop :=
-  IsFactor N ∧ IsTypeI N
+  Algebra.IsCentral ℂ N ∧ IsTypeI N
+
+/-- A type I factor is a factor. -/
+lemma IsTypeIFactor.isCentral {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) :
+    Algebra.IsCentral ℂ N :=
+  hN.1
+
+/-- A type I factor is type I. -/
+lemma IsTypeIFactor.isTypeI {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) : IsTypeI N :=
+  hN.2
 
 /-- A factor with a minimal projection is type I: the only nonzero central projection of a factor
-is `1` (`central_projection_eq`), and it dominates the minimal projection, which is abelian and
-nonzero. -/
-lemma IsFactor.isTypeI_of_exists_isMinimalProjection {N : VonNeumannAlgebra H}
-    (hN : IsFactor N) (h : ∃ e : H →L[ℂ] H, IsMinimalProjection N e) : IsTypeI N := by
+is `1` (`IsCentralProjection.eq_zero_or_eq_one`), and it dominates the minimal
+projection, which is abelian and nonzero. -/
+lemma isTypeI_of_exists_isMinimalProjection_of_isCentral {N : VonNeumannAlgebra H}
+    [Algebra.IsCentral ℂ N] (h : ∃ e : H →L[ℂ] H, IsMinimalProjection N e) : IsTypeI N := by
   obtain ⟨e, he⟩ := h
   have : Nontrivial H := he.nontrivial
   intro z hz hz0
-  rcases hN.central_projection_eq hz with h0 | h1
+  rcases hz.eq_zero_or_eq_one with h0 | h1
   · exact absurd h0 hz0
   · exact ⟨e, he.isAbelianProjection, he.2.2.1, h1 ▸ he.1.le_one⟩
 
@@ -116,10 +128,10 @@ lemma IsFactor.isTypeI_of_exists_isMinimalProjection {N : VonNeumannAlgebra H}
 on factors**: a factor is type I iff it has a minimal projection. Nontriviality of `H` is
 essential for the forward direction only: on a subsingleton `H` the type I condition is vacuously
 satisfied while no nonzero projection exists, so `IsTypeI N` cannot produce one. The converse
-carries no such hypothesis (`isTypeI_of_exists_isMinimalProjection`) — the minimal projection it
+carries no such hypothesis (`isTypeI_of_exists_isMinimalProjection_of_isCentral`) — the minimal projection it
 is handed is nonzero and so supplies the nontriviality itself. -/
-theorem IsFactor.isTypeI_iff_exists_isMinimalProjection [Nontrivial H] {N : VonNeumannAlgebra H}
-    (hN : IsFactor N) : IsTypeI N ↔ ∃ e : H →L[ℂ] H, IsMinimalProjection N e := by
+theorem isTypeI_iff_exists_isMinimalProjection_of_isCentral [Nontrivial H] {N : VonNeumannAlgebra H}
+    [Algebra.IsCentral ℂ N] : IsTypeI N ↔ ∃ e : H →L[ℂ] H, IsMinimalProjection N e := by
   constructor
   · intro h
     have hone : (1 : H →L[ℂ] H) ≠ 0 := by
@@ -129,18 +141,19 @@ theorem IsFactor.isTypeI_iff_exists_isMinimalProjection [Nontrivial H] {N : VonN
       have h2 := congrArg (fun T : H →L[ℂ] H => T v) h1
       simpa using h2
     obtain ⟨q, hab, hq0, -⟩ := h 1 (isCentralProjection_one N) hone
-    exact ⟨q, hN.isMinimalProjection_of_isAbelianProjection hab hq0⟩
-  · exact hN.isTypeI_of_exists_isMinimalProjection
+    exact ⟨q, isMinimalProjection_of_isAbelianProjection_of_isCentral hab hq0⟩
+  · exact isTypeI_of_exists_isMinimalProjection_of_isCentral
 
 /-- A factor with a minimal projection is a type I factor. -/
-lemma IsFactor.isTypeIFactor_of_isMinimalProjection {N : VonNeumannAlgebra H} (hN : IsFactor N)
-    {e : H →L[ℂ] H} (he : IsMinimalProjection N e) : IsTypeIFactor N :=
-  ⟨hN, hN.isTypeI_of_exists_isMinimalProjection ⟨e, he⟩⟩
+lemma IsMinimalProjection.isTypeIFactor_of_isCentral {N : VonNeumannAlgebra H}
+    [h : Algebra.IsCentral ℂ N] {e : H →L[ℂ] H} (he : IsMinimalProjection N e) : IsTypeIFactor N :=
+  ⟨h, isTypeI_of_exists_isMinimalProjection_of_isCentral ⟨e, he⟩⟩
 
 /-- A type I factor on a nonzero Hilbert space has a minimal projection. -/
 lemma IsTypeIFactor.exists_isMinimalProjection [Nontrivial H] {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) : ∃ e : H →L[ℂ] H, IsMinimalProjection N e :=
-  hN.1.isTypeI_iff_exists_isMinimalProjection.mp hN.2
+  have := hN.isCentral
+  isTypeI_iff_exists_isMinimalProjection_of_isCentral.mp hN.isTypeI
 
 /-- On the zero Hilbert space every von Neumann algebra is type I: it has no nonzero central
 projection. -/
@@ -150,20 +163,20 @@ lemma isTypeI_of_subsingleton [Subsingleton H] (N : VonNeumannAlgebra H) : IsTyp
 /-- On the zero Hilbert space every von Neumann algebra is a type I factor. -/
 lemma isTypeIFactor_of_subsingleton [Subsingleton H] (N : VonNeumannAlgebra H) :
     IsTypeIFactor N :=
-  ⟨fun _ _ _ => ⟨0, Subsingleton.elim _ _⟩, isTypeI_of_subsingleton N⟩
+  ⟨isCentral_iff.mpr fun _ _ _ => ⟨0, Subsingleton.elim _ _⟩, isTypeI_of_subsingleton N⟩
 
 /-! ### Type I_∞ factors
 
 A **type I_∞ factor** is a type I factor of infinite multiplicity, recorded intrinsically as the
 existence of an infinite orthogonal family of minimal projections. Its identification with `B(K)`
-for an infinite-dimensional `K` is proved below (`isTypeIInfinite_iff_of_starAlgEquiv`) and in
+for an infinite-dimensional `K` is proved below (`isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap`) and in
 `QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Classification`. -/
 
 /-- A **type I_∞ factor**: a type I factor carrying an infinite sequence of pairwise orthogonal
 minimal projections. This is the intrinsic form of *infinite multiplicity*: through the structure
 theorem `N ≃⋆ₐ B(K)` (`IsTypeIFactor.exists_starAlgEquiv`) the minimal projections are the rank-one
-projections (`isMinimalProjection_iff_of_starAlgEquiv`), and an infinite orthogonal family of them
-exists exactly when `K` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv`) — a type
+projections (`isMinimalProjection_iff_of_starAlgEquiv_continuousLinearMap`), and an infinite orthogonal family of them
+exists exactly when `K` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap`) — a type
 `I_n` factor `B(ℂⁿ)` has at most `n` pairwise orthogonal nonzero projections
 (`ContinuousLinearMap.natCard_le_finrank_of_orthogonalIdempotents`). As with `IsTypeIFactor`, the
 spatial identification with an infinite-dimensional `B(K)` is then a theorem, not part of the
@@ -221,12 +234,13 @@ lemma isTypeIFactor_conj_iff {N : VonNeumannAlgebra H} (U : H ≃ₗᵢ[ℂ] H')
   have : Nontrivial H' := U.symm.toLinearEquiv.toEquiv.nontrivial
   refine ⟨fun h => ?_, fun h => ?_⟩
   · obtain ⟨e, he⟩ := h.exists_isMinimalProjection
-    refine ((isFactor_conj_iff U).mp h.1).isTypeIFactor_of_isMinimalProjection
-      (e := U.conjStarAlgEquiv.symm e) ?_
+    have := (isCentral_conj_iff U).mp h.isCentral
+    refine IsMinimalProjection.isTypeIFactor_of_isCentral (e := U.conjStarAlgEquiv.symm e) ?_
     rw [← isMinimalProjection_conj_iff U, StarAlgEquiv.apply_symm_apply]
     exact he
   · obtain ⟨e, he⟩ := h.exists_isMinimalProjection
-    exact (h.1.conj U).isTypeIFactor_of_isMinimalProjection (he.conj U)
+    have := h.isCentral
+    exact (he.conj U).isTypeIFactor_of_isCentral
 
 /-- If `N` is a type I factor, so is `U N U⋆`. -/
 lemma IsTypeIFactor.conj {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) (U : H ≃ₗᵢ[ℂ] H') :
@@ -234,6 +248,61 @@ lemma IsTypeIFactor.conj {N : VonNeumannAlgebra H} (hN : IsTypeIFactor N) (U : H
   (isTypeIFactor_conj_iff U).mpr hN
 
 end Conj
+
+section StarAlgEquiv
+
+variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
+  {N : VonNeumannAlgebra H} {M : VonNeumannAlgebra K}
+
+/-- A von Neumann algebra on `H` is trivial only on the zero space: `1 = 0` in it forces `H = 0`. -/
+private lemma subsingleton_of_subsingleton {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    [CompleteSpace E] {A : VonNeumannAlgebra E} [Subsingleton A] : Subsingleton E := by
+  have h : ((1 : A) : E →L[ℂ] E) = ((0 : A) : E →L[ℂ] E) :=
+    congrArg Subtype.val (Subsingleton.elim _ _)
+  exact ⟨fun x y => sub_eq_zero.mp (by simpa using congrArg (fun T : E →L[ℂ] E => T (x - y)) h)⟩
+
+/-- A `⋆`-isomorphism `N ≃⋆ₐ M` of von Neumann algebras on a nonzero `K` forces `H ≠ 0`: on the
+zero space `N`, hence `M`, is trivial, so `K = 0`. -/
+private lemma nontrivial_of_starAlgEquiv [Nontrivial K] (φ : N ≃⋆ₐ[ℂ] M) : Nontrivial H := by
+  by_contra h
+  rw [not_nontrivial_iff_subsingleton] at h
+  have : Subsingleton N := ⟨fun a b => Subtype.ext (ContinuousLinearMap.ext fun _ => Subsingleton.elim _ _)⟩
+  have : Subsingleton M := φ.symm.toEquiv.subsingleton
+  exact not_subsingleton K (subsingleton_of_subsingleton (A := M))
+
+/-- **Type I factors are invariant under `⋆`-isomorphisms**: if `N` is a type I factor and
+`φ : N ≃⋆ₐ M`, so is `M`. Being a factor is carried by `Algebra.IsCentral.of_algEquiv'`, and a
+minimal projection of `N` by `IsMinimalProjection.map_starAlgEquiv`. -/
+lemma IsTypeIFactor.of_starAlgEquiv (hN : IsTypeIFactor N) (φ : N ≃⋆ₐ[ℂ] M) : IsTypeIFactor M := by
+  rcases subsingleton_or_nontrivial K with _ | _
+  · exact isTypeIFactor_of_subsingleton M
+  have := nontrivial_of_starAlgEquiv φ
+  obtain ⟨e, he⟩ := hN.exists_isMinimalProjection
+  have := hN.isCentral
+  have : Algebra.IsCentral ℂ M := .of_algEquiv' φ.toAlgEquiv
+  exact (IsMinimalProjection.map_starAlgEquiv (x := ⟨e, he.2.1⟩) he φ).isTypeIFactor_of_isCentral
+
+/-- Two `⋆`-isomorphic von Neumann algebras are type I factors together. -/
+lemma isTypeIFactor_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] M) : IsTypeIFactor N ↔ IsTypeIFactor M :=
+  ⟨fun h => h.of_starAlgEquiv φ, fun h => h.of_starAlgEquiv φ.symm⟩
+
+/-- **Type I_∞ factors are invariant under `⋆`-isomorphisms**: `φ : N ≃⋆ₐ M` carries an orthogonal
+sequence of minimal projections of `N` to one of `M`. -/
+lemma IsTypeIInfinite.of_starAlgEquiv (hN : IsTypeIInfinite N) (φ : N ≃⋆ₐ[ℂ] M) :
+    IsTypeIInfinite M := by
+  obtain ⟨hI, e, hmin, horth⟩ := hN
+  let x : ℕ → N := fun n => ⟨e n, (hmin n).2.1⟩
+  refine ⟨hI.of_starAlgEquiv φ, fun n => φ (x n),
+    fun n => IsMinimalProjection.map_starAlgEquiv (x := x n) (hmin n) φ, fun m n hmn => ?_⟩
+  have h : φ (x m) * φ (x n) = 0 := by
+    rw [← map_mul, show x m * x n = 0 from Subtype.ext (horth m n hmn), map_zero]
+  exact congrArg Subtype.val h
+
+/-- Two `⋆`-isomorphic von Neumann algebras are type I_∞ factors together. -/
+lemma isTypeIInfinite_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] M) : IsTypeIInfinite N ↔ IsTypeIInfinite M :=
+  ⟨fun h => h.of_starAlgEquiv φ, fun h => h.of_starAlgEquiv φ.symm⟩
+
+end StarAlgEquiv
 
 /-! ### The fundamental example: `B(H)` is a type I factor -/
 
@@ -244,12 +313,12 @@ lemma isTypeIFactor_boundedLinearOperators : IsTypeIFactor 𝓑(H) := by
   rcases subsingleton_or_nontrivial H with _ | _
   · exact isTypeIFactor_of_subsingleton _
   obtain ⟨_, he⟩ := exists_isMinimalProjection_boundedLinearOperators (H := H)
-  exact isFactor_boundedLinearOperators.isTypeIFactor_of_isMinimalProjection he
+  exact he.isTypeIFactor_of_isCentral
 
 /-- The commutant of `B(H)` consists of scalars: it is the centre of the factor `B(H)`. -/
 lemma exists_eq_smul_one_of_mem_commutant_boundedLinearOperators {x : H →L[ℂ] H}
     (hx : x ∈ (𝓑(H))′) : ∃ c : ℂ, x = c • 1 :=
-  isFactor_boundedLinearOperators x (mem_boundedLinearOperators x) hx
+  exists_eq_smul_one_of_isCentral (mem_boundedLinearOperators x) hx
 
 /-- **`B(H) ≃⋆ₐ B(ℓ²(ι))`, implemented by `U : H ≃ₗᵢ ℓ²(ι)`.** The full algebra is `⋆`-isomorphic
 to the bounded operators on `ℓ²(ι)` for an index set `ι` — the index set of a Hilbert basis of
@@ -321,8 +390,8 @@ theorem isTypeIInfinite_boundedLinearOperators {H : Type u} [NormedAddCommGroup 
 /-! ### Minimal projections and multiplicity through `N ≃⋆ₐ B(K)`
 
 Through a `⋆`-isomorphism `φ : N ≃⋆ₐ B(K)` the minimal projections of `N` are the rank-one
-projections of `B(K)` (`isMinimalProjection_iff_of_starAlgEquiv`), and `N` carries an infinite
-orthogonal family of them iff `K` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv`):
+projections of `B(K)` (`isMinimalProjection_iff_of_starAlgEquiv_continuousLinearMap`), and `N` carries an infinite
+orthogonal family of them iff `K` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap`):
 on a finite-dimensional `K` a family of nonzero orthogonal projections has at most `dim K` members
 (`ContinuousLinearMap.natCard_le_finrank_of_orthogonalIdempotents`), while an infinite-dimensional
 `K` carries the rank-one projections onto an orthonormal sequence
@@ -350,23 +419,16 @@ private lemma isMinimalProjection_symm_apply_iff (φ : N ≃⋆ₐ[ℂ] (K →L[
 for a unit vector `u ∈ K`: minimality is invariant under `⋆`-isomorphisms
 (`isMinimalProjection_starAlgEquiv_iff`), and the minimal projections of `B(K)` are the rank-one
 projections (`isMinimalProjection_boundedLinearOperators_iff`). -/
-lemma isMinimalProjection_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) {x : N} :
+lemma isMinimalProjection_iff_of_starAlgEquiv_continuousLinearMap (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) {x : N} :
     IsMinimalProjection N (x : H →L[ℂ] H) ↔ ∃ u : K, ‖u‖ = 1 ∧ φ x = rankOne ℂ u u := by
   rw [← isMinimalProjection_apply_iff φ, isMinimalProjection_boundedLinearOperators_iff]
 
-/-- A von Neumann algebra `⋆`-isomorphic to `B(K)` is a factor: being a factor is invariant under
-`⋆`-isomorphisms (`isFactor_iff_of_starAlgEquiv`) and `B(K)` is a factor
-(`isFactor_boundedLinearOperators`). -/
-lemma isFactor_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : IsFactor N :=
-  (isFactor_iff_of_starAlgEquiv (M := 𝓑(K))
-    (φ.trans boundedLinearOperators.starAlgEquiv.symm)).mp isFactor_boundedLinearOperators
-
 /-- **A von Neumann algebra `⋆`-isomorphic to `B(K)` is a type I factor** — the converse of
-`IsTypeIFactor.exists_starAlgEquiv`. For `K ≠ 0` it is a factor (`isFactor_of_starAlgEquiv`), and
+`IsTypeIFactor.exists_starAlgEquiv`. It is a factor, as `B(K)` is (`Algebra.IsCentral.of_algEquiv'`), and
 the preimage of a rank-one projection of `B(K)` is a minimal projection
 (`isMinimalProjection_starAlgEquiv_iff`); for `K = 0` the algebra `N` is zero, so `1 = 0` on `H`
 and `H` is the zero space (`isTypeIFactor_of_subsingleton`). -/
-lemma isTypeIFactor_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : IsTypeIFactor N := by
+lemma isTypeIFactor_of_starAlgEquiv_continuousLinearMap (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : IsTypeIFactor N := by
   rcases subsingleton_or_nontrivial K with _ | _
   · have : Subsingleton N := φ.toEquiv.subsingleton
     have h : ((1 : N) : H →L[ℂ] H) = ((0 : N) : H →L[ℂ] H) :=
@@ -375,8 +437,8 @@ lemma isTypeIFactor_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) : Is
       ⟨fun x y => sub_eq_zero.mp (by simpa using congrArg (fun T : H →L[ℂ] H => T (x - y)) h)⟩
     exact isTypeIFactor_of_subsingleton N
   obtain ⟨_, he⟩ := exists_isMinimalProjection_boundedLinearOperators (H := K)
-  exact (isFactor_of_starAlgEquiv φ).isTypeIFactor_of_isMinimalProjection
-    ((isMinimalProjection_symm_apply_iff φ).mpr he)
+  have : Algebra.IsCentral ℂ N := .of_algEquiv' φ.toAlgEquiv.symm
+  exact ((isMinimalProjection_symm_apply_iff φ).mpr he).isTypeIFactor_of_isCentral
 
 /-- **Type I_∞ is infinite dimension of the model.** If `N ≃⋆ₐ B(K)`, then `N` is a type I_∞ factor
 iff `K` is infinite-dimensional. Forward: an infinite orthogonal sequence of minimal projections of
@@ -385,8 +447,8 @@ finite-dimensional `K` does not admit
 (`ContinuousLinearMap.finite_of_orthogonalIdempotents`). Backward: an infinite-dimensional `K`
 carries the rank-one projections onto an orthonormal sequence
 (`isTypeIInfinite_boundedLinearOperators`), whose preimages are orthogonal minimal projections of
-`N`; and `N` is a type I factor (`isTypeIFactor_of_starAlgEquiv`). -/
-theorem isTypeIInfinite_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
+`N`; and `N` is a type I factor (`isTypeIFactor_of_starAlgEquiv_continuousLinearMap`). -/
+theorem isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :
     IsTypeIInfinite N ↔ ¬FiniteDimensional ℂ K := by
   constructor
   · rintro ⟨-, e, hmin, horth⟩ _
@@ -404,7 +466,7 @@ theorem isTypeIInfinite_iff_of_starAlgEquiv (φ : N ≃⋆ₐ[ℂ] (K →L[ℂ] 
       rw [not_nontrivial_iff_subsingleton] at h
       exact hK inferInstance
     obtain ⟨-, f, hmin, horth⟩ := isTypeIInfinite_boundedLinearOperators hK
-    refine ⟨isTypeIFactor_of_starAlgEquiv φ, fun n => φ.symm (f n),
+    refine ⟨isTypeIFactor_of_starAlgEquiv_continuousLinearMap φ, fun n => φ.symm (f n),
       fun n => (isMinimalProjection_symm_apply_iff φ).mpr (hmin n), fun m n hmn => ?_⟩
     have h : φ.symm (f m) * φ.symm (f n) = 0 := by rw [← map_mul, horth m n hmn, map_zero]
     exact congrArg Subtype.val h

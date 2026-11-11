@@ -17,7 +17,7 @@ minimal projection) is `⋆`-isomorphic to the algebra `B(K)` of
 all bounded operators on some Hilbert space `K` (`IsTypeIFactor.exists_starAlgEquiv`); the spatial
 content — the implementing unitary and the multiplicity model `K = ℓ²(F)` — is
 `IsTypeIFactor.exists_spatial_tensor_decomposition`, the `IsTypeIFactor` form of the structure
-theorem `IsFactor.exists_spatial_tensor_decomposition` of
+theorem `exists_spatial_tensor_decomposition_of_isCentral` of
 `QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem`. The commutant of a type I factor
 is again a type I factor (`IsTypeIFactor.commutant`).
 
@@ -59,7 +59,9 @@ algebras it names (`VonNeumannAlgebra.tensorOne` / `VonNeumannAlgebra.oneTensor`
 
 namespace VonNeumannAlgebra
 
-open scoped lp
+open scoped lp TensorProduct Amplification Submodule
+
+open UniformSpace
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
@@ -69,73 +71,82 @@ universe u
 
 section SpatialTensor
 
-open HilbertTensor
-
 /-- **Spatial structure theorem for a type I factor.** A type I factor `N ⊆ B(H)` on a nonzero
 Hilbert space is spatially the tensor factor `B(ℓ²(F)) ⊗̄ 1`: for some minimal projection `e` of `N` there is
-`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` carrying `N` onto `𝓑(ℓ²(F)) ⊗ 𝟙[eH]` and `N′` onto `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`. This is
-the `IsTypeIFactor` form of `IsFactor.exists_spatial_tensor_decomposition`, which gives the same
+`U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` carrying `N` onto `𝓑(ℓ²(F)) ⊗ 𝟙[eH]` and `N′` onto `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`. This is
+the `IsTypeIFactor` form of `exists_spatial_tensor_decomposition_of_isCentral`, which gives the same
 for *every* minimal projection `e` of a factor. -/
 theorem IsTypeIFactor.exists_spatial_tensor_decomposition [Nontrivial H] {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) :
     ∃ (e : H →L[ℂ] H) (he : IsMinimalProjection N e),
       haveI := he.1.completeSpace_range
-      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
+      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)),
         VonNeumannAlgebra.conj U N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
         VonNeumannAlgebra.conj U N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) :=
   let ⟨e, he⟩ := hN.exists_isMinimalProjection
-  ⟨e, he, hN.1.exists_spatial_tensor_decomposition he⟩
+  have := hN.isCentral
+  ⟨e, he, VonNeumannAlgebra.exists_spatial_tensor_decomposition_of_isCentral he⟩
 
 /-- **Split tensor decomposition through a type I factor.** If a type I factor `N` on a nonzero
 Hilbert space interpolates an inclusion `A ≤ N ≤ B`, then for some minimal projection `e` of `N` there is
-`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` identifying `N` and `N′` with the tensor factors and sending `A` into
+`U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` identifying `N` and `N′` with the tensor factors and sending `A` into
 `𝓑(ℓ²(F)) ⊗ 𝟙[eH]` and `B′` into `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`. This is the `IsTypeIFactor` form of
-`IsFactor.exists_split_tensor_decomposition`, which gives the same for *every* minimal projection
+`exists_split_tensor_decomposition_of_isCentral`, which gives the same for *every* minimal projection
 `e` of a factor. -/
 lemma IsTypeIFactor.exists_split_tensor_decomposition [Nontrivial H] {N : VonNeumannAlgebra H}
     (hN : IsTypeIFactor N) {A B : VonNeumannAlgebra H} (h₁ : A ≤ N) (h₂ : N ≤ B) :
     ∃ (e : H →L[ℂ] H) (he : IsMinimalProjection N e),
       haveI := he.1.completeSpace_range
-      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range),
+      ∃ (F : Set (H →L[ℂ] H)) (U : H ≃ₗᵢ[ℂ] Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range)),
         Nonempty F ∧
         VonNeumannAlgebra.conj U N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
         VonNeumannAlgebra.conj U N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) ∧
         VonNeumannAlgebra.conj U A ≤ 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
         VonNeumannAlgebra.conj U B′ ≤ 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) :=
   let ⟨e, he⟩ := hN.exists_isMinimalProjection
-  ⟨e, he, hN.1.exists_split_tensor_decomposition he h₁ h₂⟩
+  have := hN.isCentral
+  ⟨e, he, VonNeumannAlgebra.exists_split_tensor_decomposition_of_isCentral he h₁ h₂⟩
 
-/-- **`1 ⊗̄ B(H₂)` is a type I factor**. If either leg is zero, so is `H₁ ⊗̂ H₂`
+/-- **`1 ⊗̄ B(H₂)` is a type I factor**. If either leg is zero, so is `Completion (H₁ ⊗[ℂ] H₂)`
 (`isTypeIFactor_of_subsingleton`). Otherwise it is a factor
-(`VonNeumannAlgebra.isFactor_oneTensor_boundedLinearOperators`), and `1 ⊗̂ |u⟩⟨u|` is a minimal projection for a unit
-vector `u ∈ H₂`: every element of `1 ⊗̄ B(H₂)` is a right amplification `1 ⊗̂ S`
+(`VonNeumannAlgebra.isCentral_oneTensor`), and `𝟙 ⊗ |u⟩⟨u|` is a minimal
+projection for a unit vector `u ∈ H₂`: every element of `1 ⊗̄ B(H₂)` is a right amplification `𝟙 ⊗ S`
 (`VonNeumannAlgebra.mem_oneTensor_iff`), so the corner reduces to the corner of the
 rank-one projection in `B(H₂)`. -/
 lemma isTypeIFactor_oneTensor_boundedLinearOperators {H₁ H₂ : Type*} [NormedAddCommGroup H₁]
-    [InnerProductSpace ℂ H₁] [CompleteSpace H₁] [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂]
-    [CompleteSpace H₂] : IsTypeIFactor (𝟙[H₁] ⊗ 𝓑(H₂)) := by
-  have of_one_eq_zero (h : (1 : H₁ ⊗̂ H₂ →L[ℂ] H₁ ⊗̂ H₂) = 0) : IsTypeIFactor (𝟙[H₁] ⊗ 𝓑(H₂)) := by
-    have : Subsingleton (H₁ ⊗̂ H₂) :=
+    [InnerProductSpace ℂ H₁] [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂] [CompleteSpace H₂] :
+    IsTypeIFactor (𝟙[H₁] ⊗ 𝓑(H₂)) := by
+  have of_one_eq_zero
+      (h : (1 : Completion (H₁ ⊗[ℂ] H₂) →L[ℂ] Completion (H₁ ⊗[ℂ] H₂)) = 0) :
+      IsTypeIFactor (𝟙[H₁] ⊗ 𝓑(H₂)) := by
+    have : Subsingleton (Completion (H₁ ⊗[ℂ] H₂)) :=
       ⟨fun x y => sub_eq_zero.mp (by simpa using congrArg (fun T => T (x - y)) h)⟩
     exact isTypeIFactor_of_subsingleton _
   rcases subsingleton_or_nontrivial H₁ with _ | _
   · exact of_one_eq_zero (by
-      rw [← amplifyLeft_one (H₂ := H₂), Subsingleton.elim (1 : H₁ →L[ℂ] H₁) 0, amplifyLeft_zero])
+      rw [← ContinuousLinearMap.completion_one, ← ContinuousLinearMap.rTensor_one (G := H₂) (E := H₁),
+        Subsingleton.elim (1 : H₁ →L[ℂ] H₁) 0, ContinuousLinearMap.rTensor_zero,
+        ContinuousLinearMap.completion_zero])
   rcases subsingleton_or_nontrivial H₂ with _ | _
   · exact of_one_eq_zero (by
-      rw [← amplifyRight_one (H₁ := H₁), Subsingleton.elim (1 : H₂ →L[ℂ] H₂) 0, amplifyRight_zero])
+      rw [← ContinuousLinearMap.completion_one, ← ContinuousLinearMap.lTensor_one (G := H₁) (E := H₂),
+        Subsingleton.elim (1 : H₂ →L[ℂ] H₂) 0, ContinuousLinearMap.lTensor_zero,
+        ContinuousLinearMap.completion_zero])
   obtain ⟨p, hp⟩ := exists_isMinimalProjection_boundedLinearOperators (H := H₂)
-  refine isFactor_oneTensor_boundedLinearOperators.isTypeIFactor_of_isMinimalProjection (e := 𝟙 ⊗ p)
-    ⟨hp.1.map (amplifyRightₐ (H₁ := H₁)), amplifyRight_mem_oneTensor (mem_boundedLinearOperators p),
-      fun h => hp.2.2.1 (amplifyRight_injective (H₁ := H₁) (h.trans amplifyRight_zero.symm)),
+  refine IsMinimalProjection.isTypeIFactor_of_isCentral (e := 𝟙[H₁] ⊗ p)
+    ⟨hp.1.map (ContinuousLinearMap.lTensorCompletionStarAlgHom H₁),
+      completion_lTensor_mem_oneTensor (mem_boundedLinearOperators p),
+      fun h => hp.2.2.1 (ContinuousLinearMap.completion_lTensor_injective (H₁ := H₁)
+        (h.trans (by simp))),
       fun T hT => ?_⟩
   obtain ⟨S, -, rfl⟩ := mem_oneTensor_iff.mp hT
   obtain ⟨c, hc⟩ := hp.2.2.2 S (mem_boundedLinearOperators S)
-  exact ⟨c, by rw [← amplifyRight_mul, ← amplifyRight_mul, hc, amplifyRight_smul]⟩
+  exact ⟨c, by rw [← ContinuousLinearMap.completion_mul, ← ContinuousLinearMap.completion_mul,
+    ← ContinuousLinearMap.lTensor_mul, ← ContinuousLinearMap.lTensor_mul, hc,
+    ContinuousLinearMap.lTensor_smul, ContinuousLinearMap.completion_smul]⟩
 
 end SpatialTensor
 
-open HilbertTensor in
 /-- **The commutant of a type I factor is a type I factor**. By the split tensor decomposition,
 `N` and `N′` are spatially
 `B(ℓ²(F)) ⊗̄ 1` and `1 ⊗̄ B(eH)` for a minimal projection `e` of `N`; the latter
@@ -176,7 +187,8 @@ theorem IsTypeIFactor.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
   have : CompleteSpace (e.range) := he.1.completeSpace_range
   have : Nontrivial (e.range) := he.nontrivial_range
   exact ⟨ℓ²(F, ℂ), inferInstance, inferInstance, inferInstance,
-    ⟨(conjEquiv U N).trans ((equivOfEq hU).trans HilbertTensor.amplifyLeftStarAlgEquiv.symm)⟩⟩
+    ⟨(conjEquiv U N).trans ((equivOfEq hU).trans
+      ((tensorOneEquiv _ 𝓑(ℓ²(F, ℂ))).symm.trans boundedLinearOperators.starAlgEquiv))⟩⟩
 
 /-- **The scalar algebra `ℂ1 = B(H)′` is a type I factor**, as the commutant of the type I factor
     `B(H)` (`IsTypeIFactor.commutant`); concretely its only elements are scalars, and on a nonzero
@@ -188,7 +200,7 @@ lemma isTypeIFactor_commutant_boundedLinearOperators :
 
 /-! ### Type I_∞ factors are `B(K)` with `K` infinite-dimensional
 
-Combining the structure theorem with `isTypeIInfinite_iff_of_starAlgEquiv` identifies the type I_∞
+Combining the structure theorem with `isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap` identifies the type I_∞
 factors with the `B(K)` for infinite-dimensional `K`, abstractly
 (`isTypeIInfinite_iff_exists_starAlgEquiv`) and spatially as `B(ℓ²(F)) ⊗̄ 1` for an infinite
 covering family `F` (`IsTypeIInfinite.exists_spatial_tensor_decomposition`). -/
@@ -200,7 +212,7 @@ variable {N : VonNeumannAlgebra H}
 /-- **A type I_∞ factor is `B(K)` for an infinite-dimensional `K`.** A type I_∞ factor is
 `⋆`-isomorphic to the algebra `B(K)` of all bounded operators on an infinite-dimensional complex
 Hilbert space `K`: the structure theorem `IsTypeIFactor.exists_starAlgEquiv` gives some `K`, and
-`isTypeIInfinite_iff_of_starAlgEquiv` forces it to be infinite-dimensional. The converse is
+`isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap` forces it to be infinite-dimensional. The converse is
 `isTypeIInfinite_iff_exists_starAlgEquiv`; the spatial form is
 `IsTypeIInfinite.exists_spatial_tensor_decomposition`. -/
 theorem IsTypeIInfinite.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
@@ -209,54 +221,55 @@ theorem IsTypeIInfinite.exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
     ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
       ¬FiniteDimensional ℂ K ∧ Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) := by
   obtain ⟨K, _, _, _, ⟨φ⟩⟩ := hN.isTypeIFactor.exists_starAlgEquiv
-  exact ⟨K, _, _, _, (isTypeIInfinite_iff_of_starAlgEquiv φ).mp hN, ⟨φ⟩⟩
+  exact ⟨K, _, _, _, (isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap φ).mp hN, ⟨φ⟩⟩
 
 /-- **Type I_∞ factors are exactly the `B(K)` with `K` infinite-dimensional.** A von Neumann
 algebra is a type I_∞ factor iff it is `⋆`-isomorphic to the algebra `B(K)` of all bounded operators
 on an infinite-dimensional complex Hilbert space `K`. The forward direction is
-`IsTypeIInfinite.exists_starAlgEquiv`, the backward one `isTypeIInfinite_iff_of_starAlgEquiv`. -/
+`IsTypeIInfinite.exists_starAlgEquiv`, the backward one `isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap`. -/
 theorem isTypeIInfinite_iff_exists_starAlgEquiv {H : Type u} [NormedAddCommGroup H]
     [InnerProductSpace ℂ H] [CompleteSpace H] {N : VonNeumannAlgebra H} :
     IsTypeIInfinite N ↔
       ∃ (K : Type u) (_ : NormedAddCommGroup K) (_ : InnerProductSpace ℂ K) (_ : CompleteSpace K),
         ¬FiniteDimensional ℂ K ∧ Nonempty (N ≃⋆ₐ[ℂ] (K →L[ℂ] K)) :=
   ⟨IsTypeIInfinite.exists_starAlgEquiv,
-    fun ⟨_, _, _, _, hK, ⟨φ⟩⟩ => (isTypeIInfinite_iff_of_starAlgEquiv φ).mpr hK⟩
+    fun ⟨_, _, _, _, hK, ⟨φ⟩⟩ => (isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap φ).mpr hK⟩
 
-open HilbertTensor in
-/-- **A factor is type I_∞ iff its covering family is infinite.** Let `e` be a minimal projection
-of a factor `N` and `F` a covering family of pairwise orthogonal projections equivalent to `e`
-(`IsFactor.exists_orthEquivFam_top`). Then `N` is type I_∞ iff `F` is infinite. Forward: the
-spatial isomorphism `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` of the structure theorem carries `N` onto
-`B(ℓ²(F)) ⊗̄ 1` (`OrthEquivFam.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators`), whence `N ≃⋆ₐ B(ℓ²(F))`; so
-`ℓ²(F)` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv`), i.e. `F` is infinite
+/-- **`N` is type I_∞ iff its covering family is infinite.** Let `e` be a minimal projection of
+`N` and `F` a covering family of pairwise orthogonal projections equivalent to `e`, as in a factor
+(`exists_orthEquivFam_top_of_isCentral`). Then `N` is type I_∞ iff `F` is infinite. The spatial
+isomorphism `U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` of the structure theorem carries `N` onto `B(ℓ²(F)) ⊗̄ 1`
+(`OrthEquivFam.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators`), whence
+`N ≃⋆ₐ B(ℓ²(F))`, and `N` is a factor. Forward:
+`ℓ²(F)` is infinite-dimensional (`isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap`), i.e. `F` is infinite
 (`lp.finiteDimensional_iff_finite`). Backward: the members of an infinite `F` are themselves an
 infinite orthogonal family of minimal projections (`OrthEquivFam.isMinimalProjection_of_mem`). -/
 lemma OrthEquivFam.isTypeIInfinite_iff_infinite {e : H →L[ℂ] H} {F : Set (H →L[ℂ] H)}
-    (hF : OrthEquivFam N e F) (hN : IsFactor N) (he : IsMinimalProjection N e)
+    (hF : OrthEquivFam N e F) (he : IsMinimalProjection N e)
     (htop : (⨆ f ∈ F, f.range).topologicalClosure = ⊤) :
     IsTypeIInfinite N ↔ Infinite F := by
+  have : DecidableEq F := Classical.decEq _
+  have : CompleteSpace (e.range) := he.1.completeSpace_range
+  have : Nontrivial (e.range) := he.nontrivial_range
+  -- the structure theorem gives `N ≃⋆ₐ B(ℓ²(F))`, which also makes `N` a factor
+  have φ := (conjEquiv (hF.spatialEquiv htop) N).trans
+    ((equivOfEq (hF.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators he htop)).trans
+      ((tensorOneEquiv _ 𝓑(ℓ²(F, ℂ))).symm.trans boundedLinearOperators.starAlgEquiv))
+  have : Algebra.IsCentral ℂ N := .of_algEquiv' φ.toAlgEquiv.symm
   constructor
   · intro hI
-    have : DecidableEq F := Classical.decEq _
-    have : CompleteSpace (e.range) := he.1.completeSpace_range
-    have : Nontrivial (e.range) := he.nontrivial_range
-    have φ := (conjEquiv (hF.spatialEquiv htop) N).trans
-      ((equivOfEq (hF.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators he htop)).trans
-        amplifyLeftStarAlgEquiv.symm)
     rw [← not_finite_iff_infinite, ← lp.finiteDimensional_iff_finite (𝕜 := ℂ)]
-    exact (isTypeIInfinite_iff_of_starAlgEquiv φ).mp hI
+    exact (isTypeIInfinite_iff_of_starAlgEquiv_continuousLinearMap φ).mp hI
   · intro _
     let g : ℕ ↪ F := Infinite.natEmbedding F
-    exact ⟨hN.isTypeIFactor_of_isMinimalProjection he, fun n => g n, fun n => hF.isMinimalProjection_of_mem he (g n).2,
+    exact ⟨he.isTypeIFactor_of_isCentral, fun n => g n, fun n => hF.isMinimalProjection_of_mem he (g n).2,
       fun m n hmn => hF.2 (g m).2 (g n).2 fun h => hmn (g.injective (Subtype.ext h))⟩
 
-open HilbertTensor in
 /-- **Spatial structure theorem for a type I_∞ factor.** A type I_∞ factor `N ⊆ B(H)` is spatially
 `B(ℓ²(F)) ⊗̄ 1` for an *infinite* covering family `F`: for a minimal projection `e` of `N` and a
 covering family `F` of pairwise orthogonal projections equivalent to `e`, `F` is infinite
 (`OrthEquivFam.isTypeIInfinite_iff_infinite`), and the spatial isomorphism
-`U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` carries `N` onto `𝓑(ℓ²(F)) ⊗ 𝟙[eH]` and `N′` onto `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`
+`U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` carries `N` onto `𝓑(ℓ²(F)) ⊗ 𝟙[eH]` and `N′` onto `𝟙[ℓ²(F)] ⊗ 𝓑(eH)`
 (`OrthEquivFam.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators`). This is the type I_∞ refinement of
 `IsTypeIFactor.exists_spatial_tensor_decomposition`. -/
 theorem IsTypeIInfinite.exists_spatial_tensor_decomposition (hN : IsTypeIInfinite N) :
@@ -264,15 +277,16 @@ theorem IsTypeIInfinite.exists_spatial_tensor_decomposition (hN : IsTypeIInfinit
       haveI := he.1.completeSpace_range
       ∃ F : Set (H →L[ℂ] H),
         OrthEquivFam N e F ∧ (⨆ f ∈ F, f.range).topologicalClosure = ⊤ ∧ Infinite F ∧
-        ∃ U : H ≃ₗᵢ[ℂ] ℓ²(F, ℂ) ⊗̂ e.range,
+        ∃ U : H ≃ₗᵢ[ℂ] Completion (ℓ²(F, ℂ) ⊗[ℂ] e.range),
           VonNeumannAlgebra.conj U N = 𝓑(ℓ²(F, ℂ)) ⊗ 𝟙[e.range] ∧
           VonNeumannAlgebra.conj U N′ = 𝟙[ℓ²(F, ℂ)] ⊗ 𝓑(e.range) := by
   obtain ⟨⟨hf, -⟩, e₀, hmin, -⟩ := id hN
   obtain ⟨e, he⟩ : ∃ e, IsMinimalProjection N e := ⟨e₀ 0, hmin 0⟩
-  obtain ⟨F, hF, htop⟩ := hf.exists_orthEquivFam_top he
+  have := hf
+  obtain ⟨F, hF, htop⟩ := exists_orthEquivFam_top_of_isCentral he
   have : DecidableEq F := Classical.decEq _
   have : CompleteSpace (e.range) := he.1.completeSpace_range
-  exact ⟨e, he, F, hF, htop, (hF.isTypeIInfinite_iff_infinite hf he htop).mp hN,
+  exact ⟨e, he, F, hF, htop, (hF.isTypeIInfinite_iff_infinite he htop).mp hN,
     hF.spatialEquiv htop, hF.conj_spatialEquiv_eq_tensorOne_boundedLinearOperators he htop,
     hF.conj_spatialEquiv_commutant_eq_oneTensor_boundedLinearOperators he htop⟩
 

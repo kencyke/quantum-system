@@ -51,16 +51,16 @@ are:
 
 The first conceptual step is a structural consequence of double commutant membership:
 
-* if `T ∈ S''` then `T ∈ InnerProductSpace.reducingHull S` (see
+* if `T ∈ S′′` then `T ∈ InnerProductSpace.reducingHull S` (see
   `InnerProductSpace.centralizer_centralizer_subset_reducingHull`).
 
 This is proved by showing that for any `S`-reducing subspace `K`, the orthogonal projection onto `K`
-lies in `S'`, hence commutes with any `T ∈ S''`, and commutation with the projection implies
+lies in `S′`, hence commutes with any `T ∈ S′′`, and commutation with the projection implies
 invariance of both `K` and `Kᗮ`.
 
 ## Proof strategy (high level)
 
-To prove the hard-half statement `A'' ⊆ A`, we argue by separation:
+To prove the hard-half statement `A′′ ⊆ A`, we argue by separation:
 
 1. Assume `T ∉ A`; since `A` is WOT-closed, find a WOT-continuous linear functional `f` separating
    `T` from `A` (via `exists_wotCLM_sep_of_isClosed_submodule_sum`).
@@ -163,7 +163,7 @@ def InnerProductSpace.PreservesReducingSubspaces (S : Set (B)) (T : B) : Prop :=
 /-- If `A` acts non-degenerately, then `x` lies in its own cyclic subspace.
 
 This replaces the appeal to `1 ∈ A` in the unital argument: the orthogonal projection `P` onto
-the cyclic subspace lies in `A'`, so every `T ∈ A` kills `x - P x`, and non-degeneracy forces
+the cyclic subspace lies in `A′`, so every `T ∈ A` kills `x - P x`, and non-degeneracy forces
 `x = P x`. -/
 lemma NonUnitalStarSubalgebra.mem_cyclicSubspace_of_actsNondegenerately (A : NonUnitalStarSubalgebra ℂ B)
     (hA : ActsNondegenerately (A : Set B)) (x : H) :
@@ -213,7 +213,7 @@ def InnerProductSpace.reducingHull (S : Set (B)) : Set (B) :=
 
 /-- Any element of the double commutant preserves all `S`-reducing subspaces.
 
-This is the easy structural part of the hard half: if `T ∈ S''` and `K` is reducing for `S`, then
+This is the easy structural part of the hard half: if `T ∈ S′′` and `K` is reducing for `S`, then
 `T` commutes with the orthogonal projection onto `K`, hence `T` leaves `K` invariant.
 -/
 lemma InnerProductSpace.preservesReducingSubspaces_of_mem_centralizer_centralizer
@@ -250,16 +250,12 @@ theorem NonUnitalStarSubalgebra.doubleCommutant_eq_of_isWOTClosed (A : NonUnital
   · intro T hT
     by_contra hTA
     -- Move to the WOT type-copy.
-    let AWOT : Submodule ℂ BWOT := submoduleToWOT A.toSubmodule
-    have hclosed : IsClosed (AWOT : Set BWOT) := by
-      rw [coe_submoduleToWOT]
-      exact hA
+    let AWOT : Submodule ℂ BWOT :=
+      A.toSubmodule.map (ContinuousLinearMapWOT.linearEquiv ℂ).symm.toLinearMap
+    have hclosed : IsClosed (AWOT : Set BWOT) := hA
     let TWOT : BWOT := ContinuousLinearMapWOT.ofCLM T
-    have hTWOT : TWOT ∉ (AWOT : Set BWOT) := by
-      intro hmem
-      have : ContinuousLinearMapWOT.toCLM TWOT ∈ A.toSubmodule :=
-        (mem_submoduleToWOT_iff A.toSubmodule TWOT).1 hmem
-      exact hTA this
+    have hTWOT : TWOT ∉ (AWOT : Set BWOT) := fun hmem =>
+      hTA (ContinuousLinearMapWOT.ofCLM_injective.mem_set_image.mp hmem)
     obtain ⟨I, coeff, hvan, hneq⟩ :=
       exists_wotCLM_sep_of_isClosed_submodule_sum (A := AWOT) hclosed (T := TWOT) hTWOT
     -- The separating functional.
@@ -329,9 +325,8 @@ theorem NonUnitalStarSubalgebra.doubleCommutant_eq_of_isWOTClosed (A : NonUnital
             ∑ i : Fin n,
               coeff (e i) • (inducingFnRestrictCLM I) (ContinuousLinearMapWOT.ofCLM S) (e i)
             from hsum]
-        simp only [inducingFnRestrictCLM, inducingFnCLM, restrictPiCLM,
-          ContinuousLinearMap.comp_apply, ContinuousLinearMap.coe_mk', LinearMap.coe_mk,
-          AddHom.coe_mk]
+        simp only [inducingFnRestrictCLM, ContinuousLinearMap.comp_apply, inducingFnCLM_apply,
+          ContinuousLinearMap.pi_apply, ContinuousLinearMap.proj_apply]
         congr 1
         funext i
         rw [ContinuousLinearMapWOT.inducingFn_apply]
@@ -350,10 +345,7 @@ theorem NonUnitalStarSubalgebra.doubleCommutant_eq_of_isWOTClosed (A : NonUnital
       rcases ha0 with ⟨S, hSA, rfl⟩
       have : f (ContinuousLinearMapWOT.ofCLM (S : B)) = 0 := by
         apply hvan
-        have : ContinuousLinearMapWOT.ofCLM (S : B) ∈ (AWOT : Set BWOT) := by
-          exact
-            (mem_submoduleToWOT_iff A.toSubmodule (ContinuousLinearMapWOT.ofCLM (S : B))).2 hSA
-        exact this
+        exact ⟨S, hSA, rfl⟩
       rw [h_eval] at this
       exact this
     -- Extend vanishing from generators to the entire cyclic subspace by continuity.
@@ -424,7 +416,7 @@ theorem NonUnitalStarSubalgebra.doubleCommutant_eq_of_isWOTClosed (A : NonUnital
 
 /-- **A non-degenerate WOT-closed `*`-subalgebra automatically contains `1`.** This is the exact
 extra content of the non-degenerate form over the unital one: granted, the non-degenerate form
-implies the unital one, and conversely — every commutant contains `1`, so `A = A''` forces
+implies the unital one, and conversely — every commutant contains `1`, so `A = A′′` forces
 `1 ∈ A`. -/
 lemma NonUnitalStarSubalgebra.one_mem_of_isWOTClosed (A : NonUnitalStarSubalgebra ℂ B)
     (hnd : ActsNondegenerately (A : Set B))

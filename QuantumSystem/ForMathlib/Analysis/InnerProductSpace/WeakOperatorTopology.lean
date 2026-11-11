@@ -34,11 +34,12 @@ variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace �
 
 /-- The operators of norm at most `r` form a compact set in the weak operator topology. -/
 private lemma isCompact_closedBall_zero (r : ℝ) :
-    IsCompact (toCLM ⁻¹' Metric.closedBall (0 : E →L[𝕜] F) r : Set (E →WOT[𝕜] F)) := by
+    IsCompact (ofCLM '' Metric.closedBall (0 : E →L[𝕜] F) r : Set (E →WOT[𝕜] F)) := by
   rw [isCompact_iff_ultrafilter_le_nhds]
   intro 𝒰 h𝒰
   have hK : ∀ᶠ A in (𝒰 : Filter (E →WOT[𝕜] F)), ‖toCLM A‖ ≤ r := by
     filter_upwards [le_principal_iff.mp h𝒰] with A hA
+    obtain ⟨A, hA, rfl⟩ := hA
     simpa using hA
   have hr : 0 ≤ r := by
     obtain ⟨A, hA⟩ := hK.exists
@@ -95,7 +96,7 @@ private lemma isCompact_closedBall_zero (r : ℝ) :
         rw [RingHom.id_apply, inner_smul_right, hT₀, hT₀, hL_smul] }
     r hT₀_le
   refine ⟨ofCLM T, ?_, ?_⟩
-  · simpa using LinearMap.mkContinuous_norm_le _ hr hT₀_le
+  · exact ⟨T, by simpa using LinearMap.mkContinuous_norm_le _ hr hT₀_le, rfl⟩
   · rw [le_nhds_iff_forall_inner_apply_le_nhds]
     intro x y
     change Tendsto _ _ _
@@ -106,24 +107,24 @@ private lemma isCompact_closedBall_zero (r : ℝ) :
 normed space into a Hilbert space are compact in the weak operator topology: the ball about `x'` is
 the translate by `x'` of the ball about `0`. -/
 theorem isCompact_closedBall (x' : E →L[𝕜] F) (r : ℝ) :
-    IsCompact (toCLM ⁻¹' Metric.closedBall x' r : Set (E →WOT[𝕜] F)) := by
-  have h : (toCLM ⁻¹' Metric.closedBall x' r : Set (E →WOT[𝕜] F)) =
-      (fun A => A + ofCLM x') '' (toCLM ⁻¹' Metric.closedBall 0 r) := by
+    IsCompact (ofCLM '' Metric.closedBall x' r : Set (E →WOT[𝕜] F)) := by
+  have h : (ofCLM '' Metric.closedBall x' r : Set (E →WOT[𝕜] F)) =
+      (fun A => A + ofCLM x') '' (ofCLM '' Metric.closedBall 0 r) := by
+    rw [Set.image_image]
     ext A
-    simp only [Set.mem_preimage, Set.mem_image, Metric.mem_closedBall, dist_eq_norm, sub_zero]
+    simp only [Set.mem_image, Metric.mem_closedBall, dist_eq_norm, sub_zero]
     constructor
-    · intro hA
-      exact ⟨A - ofCLM x', hA, sub_add_cancel A _⟩
     · rintro ⟨B, hB, rfl⟩
-      change ‖toCLM B + x' - x'‖ ≤ r
-      rwa [add_sub_cancel_right]
+      exact ⟨B - x', hB, by rw [← ofCLM_add, sub_add_cancel]⟩
+    · rintro ⟨B, hB, rfl⟩
+      exact ⟨B + x', by rwa [add_sub_cancel_right], rfl⟩
   rw [h]
   exact (isCompact_closedBall_zero r).image (continuous_id.add continuous_const)
 
 /-- The closed balls of operators into a Hilbert space are closed in the weak operator topology,
 being compact in a Hausdorff topology: the operator norm is lower semicontinuous in it. -/
 lemma isClosed_closedBall (x' : E →L[𝕜] F) (r : ℝ) :
-    IsClosed (toCLM ⁻¹' Metric.closedBall x' r : Set (E →WOT[𝕜] F)) :=
+    IsClosed (ofCLM '' Metric.closedBall x' r : Set (E →WOT[𝕜] F)) :=
   (isCompact_closedBall x' r).isClosed
 
 end ContinuousLinearMapWOT

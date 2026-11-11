@@ -193,7 +193,7 @@ lemma NonUnitalStarSubalgebra.one_mem_of_isSOTClosed (A : NonUnitalStarSubalgebr
     (hnd : ActsNondegenerately (A : Set B)) (hA : IsSOTClosed (H := H) (A : Set B)) :
     (1 : B) ∈ A :=
   A.one_mem_of_isWOTClosed hnd
-    (A.isWOTClosed_of_isSOTClosed hnd hA)
+    ((A.toSubmodule.restrictScalars ℝ).convex.isWOTClosed_of_isSOTClosed hA)
 
 /-- **The non-unital generality is inhabited.** On an infinite-dimensional Hilbert space the
 finite-rank operators `F(H)` act non-degenerately and do not contain `1`, so
@@ -251,7 +251,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 
 /-- **A WOT-closed unital `*`-subalgebra is a von Neumann algebra.** This is the reason the
 bicommutant theorem is proved: Mathlib defines `VonNeumannAlgebra` by the *algebraic* condition
-`A'' = A`, and this constructor supplies that field from the *topological* condition, so that an
+`A′′ = A`, and this constructor supplies that field from the *topological* condition, so that an
 algebra produced as a weak limit closure can be used as a von Neumann algebra. -/
 noncomputable def ofIsWOTClosed (A : StarSubalgebra ℂ (H →L[ℂ] H))
     (hA : IsWOTClosed (H := H) (A : Set (H →L[ℂ] H))) : VonNeumannAlgebra H where
@@ -269,7 +269,7 @@ only the `centralizer_centralizer'` field and leaves the underlying `*`-subalgeb
 `VonNeumannAlgebra.ofIsWOTClosed`. -/
 noncomputable def ofIsSOTClosed (A : StarSubalgebra ℂ (H →L[ℂ] H))
     (hA : IsSOTClosed (H := H) (A : Set (H →L[ℂ] H))) : VonNeumannAlgebra H :=
-  ofIsWOTClosed A (StarSubalgebra.isWOTClosed_of_isSOTClosed A hA)
+  ofIsWOTClosed A ((A.toSubmodule.restrictScalars ℝ).convex.isWOTClosed_of_isSOTClosed hA)
 
 /-- The carrier of `VonNeumannAlgebra.ofIsSOTClosed A hA` is `A` itself; the SOT companion of
 `VonNeumannAlgebra.coe_ofIsWOTClosed`. -/

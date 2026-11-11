@@ -32,9 +32,8 @@ measurable `S`, and the vectors `1_S ω` span a dense subspace.
 σ-finiteness is the hypothesis under which this is usually stated; it is not a proof convenience,
 since without some such hypothesis the commutant can be larger. For counting measure on the Borel
 sets of `[0, 1]`, `L²(μ) = ℓ²([0, 1])` and only `∅` is null, so the diagonal operator `1_A` of a
-non-Borel set `A` commutes with every `M_f` but is no `M_f`. The sharp condition is Segal's
-*localizability* (Segal, *Equivalences of measure spaces*, 1951), which is weaker than σ-finiteness
-and is not formalised here.
+non-Borel set `A` commutes with every `M_f` but is no `M_f`. The sharp condition is
+*localizability*, which is weaker than σ-finiteness and is not formalised here.
 
 Every normal positive functional `ψ` is a series `Σₙ ω_{ξₙ}` of vector functionals with
 `Σₙ ‖ξₙ‖² < ∞`, so `ψ(M_f) = ∫ f dP` for the finite measure `P = Σₙ |ξₙ|² μ ≪ μ`. For σ-finite `μ`,
@@ -162,10 +161,10 @@ lemma mulL2_indicatorConst_ne_smul_one {S : Set α} (hS : MeasurableSet S) (h0 :
 
 /-- **The multiplication algebra is not a factor** when `μ` splits: if some measurable `S` and its
 complement both have finite nonzero measure, `M_{1_S}` lies in the centre and is not a scalar. -/
-theorem not_isFactor_multiplicationAlgebra {S : Set α} (hS : MeasurableSet S) (h0 : μ S ≠ 0)
+theorem not_isCentral_multiplicationAlgebra {S : Set α} (hS : MeasurableSet S) (h0 : μ S ≠ 0)
     (htop : μ S ≠ ∞) (h0' : μ Sᶜ ≠ 0) (htop' : μ Sᶜ ≠ ∞) :
-    ¬ IsFactor (multiplicationAlgebra μ) := fun h =>
-  let ⟨c, hc⟩ := h _ (mulL2_mem_multiplicationAlgebra (indicatorConst hS (1 : ℂ)))
+    ¬ Algebra.IsCentral ℂ (multiplicationAlgebra μ) := fun h =>
+  let ⟨c, hc⟩ := isCentral_iff.mp h _ (mulL2_mem_multiplicationAlgebra (indicatorConst hS (1 : ℂ)))
     (mulL2_mem_commutant_multiplicationAlgebra _)
   mulL2_indicatorConst_ne_smul_one hS h0 htop h0' htop' c hc
 

@@ -10,6 +10,7 @@ public import Mathlib.Analysis.InnerProductSpace.WeakOperatorTopology
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.ConvexOperatorClosure
+public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 
 /-!
 # The Kaplansky density theorem
@@ -22,23 +23,25 @@ the unit ball of `A` is strongly dense in that of the von Neumann algebra `A′�
 
 No closedness or non-degeneracy is assumed of `A` except in the double commutant form. The strong
 closure is stated in Mathlib's type copy `H →Lₚₜ[ℂ] H` carrying the strong operator topology, as
-`closure (Set.toSOT S)`.
+`closure (↑ₚₜ '' S)`.
 
 ## Main results
 
-* **`NonUnitalStarSubalgebra.closure_toSOT_closedBall`**: Kaplansky density for the unit ball.
-* **`NonUnitalStarSubalgebra.closure_toSOT_selfAdjoint_closedBall`**: for its self-adjoint part.
-* **`NonUnitalStarSubalgebra.closure_toSOT_nonneg_closedBall`**: for its positive part.
-* **`NonUnitalStarSubalgebra.closure_toSOT_closedBall_eq_doubleCommutant`**: the von Neumann
-  algebra form, for a non-degenerate `A`.
-* **`NonUnitalStarSubalgebra.closure_toWOT_closedBall`**: the weak form, for the weak closure.
+* **`NonUnitalStarSubalgebra.sotClosure_inter_closedBall`**: Kaplansky density for the unit ball.
+* **`NonUnitalStarSubalgebra.sotClosure_selfAdjoint_inter_closedBall`**: for its self-adjoint part.
+* **`NonUnitalStarSubalgebra.sotClosure_nonneg_inter_closedBall`**: for its positive part.
+* **`NonUnitalStarSubalgebra.sotClosure_inter_closedBall_eq_doubleCommutant`**: the double
+  commutant form, for a non-degenerate `A`.
+* **`NonUnitalStarSubalgebra.sotClosure_inter_closedBall_eq_generated`**: the same for the von
+  Neumann algebra `VonNeumannAlgebra.generated A` that `A` generates.
+* **`NonUnitalStarSubalgebra.wotClosure_inter_closedBall`**: the weak form, for the weak closure.
 
 The strong and the weak closure of a convex set of operators agree
 (`Convex.toPointwiseConvergenceCLM_mem_closure_image_iff`), so the strong closure of `A` is also
 its weak closure. Not formalized: the density of the unitary group of `A` in that of its strong
 closure, for a unital norm-closed `A`; and the strong* form, the approximation of `T` and `T⋆` along
-one net, which the `2 × 2` matrix device of `closure_toSOT_closedBall` produces but which has no type
-copy carrying the strong* topology to be stated in.
+one net, which the `2 × 2` matrix device of `sotClosure_inter_closedBall` produces but which has no
+type copy carrying the strong* topology to be stated in.
 
 ## Proof
 
@@ -86,24 +89,7 @@ local postfix:max "′" => Set.centralizer
 
 namespace StrongOperatorTopology
 
-/-- For a convex set `C` of operators, `T` is in the strong closure of `C` iff it is in its weak
-closure; the case `E = F = H` of `Convex.toPointwiseConvergenceCLM_mem_closure_image_iff`, in the
-spelling `Set.toSOT`, `Set.toWOT` of the strong and weak copies. -/
-private lemma mem_closure_toSOT_iff_of_convex {C : Set B} (hC : Convex ℝ C) (T : B) :
-    ↑ₚₜ T ∈ closure (Set.toSOT C) ↔ sotToWOT (↑ₚₜ T) ∈ closure (Set.toWOT C) := by
-  have e1 : Set.toSOT C = ContinuousLinearMap.toPointwiseConvergenceCLM ℂ (RingHom.id ℂ) H H '' C :=
-    ((toUniformConvergenceCLM _ _ _).image_eq_preimage_symm C).symm
-  have e2 : Set.toWOT C = ContinuousLinearMapWOT.ofCLM '' C := by
-    ext Y
-    exact ⟨fun h => ⟨_, h, rfl⟩, by rintro ⟨S, hS, rfl⟩; exact hS⟩
-  rw [e1, e2]
-  exact hC.toPointwiseConvergenceCLM_mem_closure_image_iff T
-
 variable [CompleteSpace H]
-
-omit [CompleteSpace H] in
-/-- An operator lies in the SOT copy `Set.toSOT S` of a set `S` exactly when it lies in `S`. -/
-private lemma toSOT_mem_toSOT_iff {S : Set B} {T : B} : ↑ₚₜ T ∈ Set.toSOT S ↔ T ∈ S := Iff.rfl
 
 /-! ### The function `t ↦ 2t / (1 + t²)` is strongly continuous on self-adjoint operators -/
 
@@ -273,37 +259,49 @@ end Kaplansky
 /-! ### Strongly closed sets of operators -/
 
 omit [CompleteSpace H] in
-private lemma isClosed_toSOT_norm_le_one : IsClosed (Set.toSOT {T : B | ‖T‖ ≤ 1}) := by
-  have : Set.toSOT {T : B | ‖T‖ ≤ 1} = ⋂ x : H, {Y : BSOT | ‖Y x‖ ≤ ‖x‖} := by
+private lemma isSOTClosed_norm_le_one : IsSOTClosed {T : B | ‖T‖ ≤ 1} := by
+  have : (↑ₚₜ '' {T : B | ‖T‖ ≤ 1} : Set BSOT) = ⋂ x : H, {Y : BSOT | ‖Y x‖ ≤ ‖x‖} := by
     ext Y
-    simp only [Set.mem_toSOT_iff, Set.mem_ofPred_eq, Set.mem_iInter,
-      ContinuousLinearMap.opNorm_le_iff zero_le_one, one_mul]
-    rfl
-  rw [this]
+    simp only [Set.mem_ofPred_eq, Set.mem_iInter]
+    refine ⟨?_, fun h => ⟨(toUniformConvergenceCLM _ _ _).symm Y, ?_, rfl⟩⟩
+    · rintro ⟨T, hT, rfl⟩ x
+      exact (T.le_opNorm x).trans (mul_le_of_le_one_left (norm_nonneg _) hT)
+    · exact ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => (one_mul ‖x‖).symm ▸ h x
+  rw [IsSOTClosed, this]
   exact isClosed_iInter fun x => isClosed_le (continuous_eval_const x).norm continuous_const
 
-private lemma isClosed_toSOT_isSelfAdjoint : IsClosed (Set.toSOT {T : B | IsSelfAdjoint T}) := by
-  have : Set.toSOT {T : B | IsSelfAdjoint T} =
+private lemma isSOTClosed_isSelfAdjoint : IsSOTClosed {T : B | IsSelfAdjoint T} := by
+  have : (↑ₚₜ '' {T : B | IsSelfAdjoint T} : Set BSOT) =
       ⋂ x : H, ⋂ y : H, {Y : BSOT | inner ℂ (Y x) y = inner ℂ x (Y y)} := by
     ext Y
-    simp only [Set.mem_toSOT_iff, Set.mem_ofPred_eq, Set.mem_iInter,
-      ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric]
-    rfl
-  rw [this]
+    simp only [Set.mem_ofPred_eq, Set.mem_iInter]
+    refine ⟨?_, fun h => ⟨(toUniformConvergenceCLM _ _ _).symm Y,
+      ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mpr h, rfl⟩⟩
+    rintro ⟨T, hT, rfl⟩
+    exact ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mp hT
+  rw [IsSOTClosed, this]
   exact isClosed_iInter fun x => isClosed_iInter fun y => isClosed_eq
     ((continuous_eval_const x).inner continuous_const)
     (continuous_const.inner (continuous_eval_const y))
 
 omit [CompleteSpace H] in
-private lemma isClosed_toSOT_nonneg : IsClosed (Set.toSOT {T : B | 0 ≤ T}) := by
-  have : Set.toSOT {T : B | 0 ≤ T} = ⋂ x : H, {Y : BSOT |
+private lemma isSOTClosed_nonneg : IsSOTClosed {T : B | 0 ≤ T} := by
+  have : (↑ₚₜ '' {T : B | 0 ≤ T} : Set BSOT) = ⋂ x : H, {Y : BSOT |
       ((RCLike.re (inner ℂ (Y x) x) : ℝ) : ℂ) = inner ℂ (Y x) x ∧
         0 ≤ RCLike.re (inner ℂ (Y x) x)} := by
     ext Y
-    simp only [Set.mem_toSOT_iff, Set.mem_ofPred_eq, Set.mem_iInter,
-      ContinuousLinearMap.nonneg_iff_isPositive, ContinuousLinearMap.isPositive_iff_complex]
-    rfl
-  rw [this]
+    simp only [Set.mem_ofPred_eq, Set.mem_iInter]
+    constructor
+    · rintro ⟨T, hT, rfl⟩
+      simp only [Set.mem_ofPred_eq, ContinuousLinearMap.nonneg_iff_isPositive,
+        ContinuousLinearMap.isPositive_iff_complex] at hT
+      exact hT
+    · intro h
+      refine ⟨(toUniformConvergenceCLM _ _ _).symm Y, ?_, rfl⟩
+      simp only [Set.mem_ofPred_eq, ContinuousLinearMap.nonneg_iff_isPositive,
+        ContinuousLinearMap.isPositive_iff_complex]
+      exact h
+  rw [IsSOTClosed, this]
   have hc : ∀ x : H, Continuous fun Y : BSOT => inner ℂ (Y x) x := fun x =>
     (continuous_eval_const x).inner continuous_const
   exact isClosed_iInter fun x => (isClosed_eq (Complex.continuous_ofReal.comp
@@ -435,64 +433,66 @@ the adjoint is not strongly continuous on an infinite-dimensional `H`, but the s
 with the weak one, in which it is, because `A` is convex. -/
 private noncomputable def sotClosureSubalgebra (A : NonUnitalStarSubalgebra ℂ B) :
     NonUnitalStarSubalgebra ℂ B where
-  carrier := (ContinuousLinearMap.toSOT : B →L[ℂ] BSOT) ⁻¹' closure (Set.toSOT (A : Set B))
-  zero_mem' := subset_closure (s := Set.toSOT (A : Set B)) (toSOT_mem_toSOT_iff.mpr A.zero_mem)
+  carrier := (↑ₚₜ : B →L[ℂ] BSOT) ⁻¹' closure (↑ₚₜ '' (A : Set B))
+  zero_mem' := subset_closure (s := (↑ₚₜ '' (A : Set B) : Set BSOT)) ⟨0, A.zero_mem, rfl⟩
   add_mem' {T S} hT hS := by
-    let M : Submodule ℂ BSOT := A.toSubmodule.comap (toUniformConvergenceCLM _ _ _).symm.toLinearMap
+    let M : Submodule ℂ BSOT := A.toSubmodule.map (↑ₚₜ : B →L[ℂ] BSOT).toLinearMap
     exact (M.topologicalClosure.add_mem (x := ↑ₚₜ T) hT hS : _)
   smul_mem' c T hT := by
-    let M : Submodule ℂ BSOT := A.toSubmodule.comap (toUniformConvergenceCLM _ _ _).symm.toLinearMap
+    let M : Submodule ℂ BSOT := A.toSubmodule.map (↑ₚₜ : B →L[ℂ] BSOT).toLinearMap
     exact (M.topologicalClosure.smul_mem c (x := ↑ₚₜ T) hT : _)
   mul_mem' {T S} hT hS := by
-    have hleft : ∀ a ∈ A, ∀ S : B, ↑ₚₜ S ∈ closure (Set.toSOT (A : Set B)) →
-        ↑ₚₜ (a * S) ∈ closure (Set.toSOT (A : Set B)) := fun a ha S hS =>
+    have hleft : ∀ a ∈ A, ∀ S : B, ↑ₚₜ S ∈ closure (↑ₚₜ '' (A : Set B)) →
+        ↑ₚₜ (a * S) ∈ closure (↑ₚₜ '' (A : Set B)) := fun a ha S hS =>
       map_mem_closure (f := PointwiseConvergenceCLM.postcomp H a)
         (PointwiseConvergenceCLM.postcomp H a).continuous hS
-        fun R hR => toSOT_mem_toSOT_iff.mpr (A.mul_mem ha (toSOT_mem_toSOT_iff.mp hR))
+        (by rintro _ ⟨R, hR, rfl⟩; exact ⟨a * R, A.mul_mem ha hR, rfl⟩)
     have h := map_mem_closure (f := PointwiseConvergenceCLM.precomp H S)
-      (t := closure (Set.toSOT (A : Set B)))
+      (t := closure (↑ₚₜ '' (A : Set B)))
       (PointwiseConvergenceCLM.precomp H S).continuous hT
-      fun R hR => hleft _ (toSOT_mem_toSOT_iff.mp hR) S hS
+      (by rintro _ ⟨R, hR, rfl⟩; exact hleft R hR S hS)
     rwa [closure_closure] at h
   star_mem' {T} hT := by
     have hconv : Convex ℝ (A : Set B) := (A.toSubmodule.restrictScalars ℝ).convex
-    change ↑ₚₜ T ∈ closure (Set.toSOT (A : Set B)) at hT
-    change ↑ₚₜ (star T) ∈ closure (Set.toSOT (A : Set B))
-    rw [mem_closure_toSOT_iff_of_convex hconv] at hT ⊢
-    exact map_mem_closure (f := star) continuous_star hT fun R hR => star_mem (s := A) (Set.mem_toWOT_iff.mp hR)
+    change ↑ₚₜ T ∈ closure (↑ₚₜ '' (A : Set B)) at hT
+    change ↑ₚₜ (star T) ∈ closure (↑ₚₜ '' (A : Set B))
+    rw [hconv.toPointwiseConvergenceCLM_mem_closure_image_iff] at hT ⊢
+    exact map_mem_closure (f := star) continuous_star hT
+      (by rintro _ ⟨R, hR, rfl⟩; exact ⟨star R, star_mem (s := A) hR, rfl⟩)
 
 /-- `T` lies in the strong closure of `A` exactly when its SOT copy lies in the closure of the SOT
 copy of `A`. -/
 private lemma mem_sotClosureSubalgebra_iff {A : NonUnitalStarSubalgebra ℂ B} {T : B} :
-    T ∈ A.sotClosureSubalgebra ↔ ↑ₚₜ T ∈ closure (Set.toSOT (A : Set B)) :=
+    T ∈ A.sotClosureSubalgebra ↔ ↑ₚₜ T ∈ closure (↑ₚₜ '' (A : Set B)) :=
   Iff.rfl
 
 /-- The strong closure of `A` is norm-closed. -/
 private lemma isClosed_sotClosureSubalgebra (A : NonUnitalStarSubalgebra ℂ B) :
     IsClosed (A.sotClosureSubalgebra : Set B) :=
-  isClosed_closure.preimage (ContinuousLinearMap.toSOT (σ := RingHom.id ℂ) (E := H) (F := H)).continuous
+  isClosed_closure.preimage (↑ₚₜ : B →L[ℂ] BSOT).continuous
 
 /-- A self-adjoint element of the strong closure of `A` is a strong limit of self-adjoint
 elements of `A`. -/
-private lemma mem_closure_toSOT_selfAdjoint {A : NonUnitalStarSubalgebra ℂ B}
+private lemma mem_sotClosure_selfAdjoint {A : NonUnitalStarSubalgebra ℂ B}
     {T : B} (hT : T ∈ A.sotClosureSubalgebra) (hsa : IsSelfAdjoint T) :
-    ↑ₚₜ T ∈ closure (Set.toSOT {a | a ∈ A ∧ IsSelfAdjoint a}) := by
+    ↑ₚₜ T ∈ closure (↑ₚₜ '' {a | a ∈ A ∧ IsSelfAdjoint a}) := by
   have hconvA : Convex ℝ (A : Set B) := (A.toSubmodule.restrictScalars ℝ).convex
   have hconv : Convex ℝ {a | a ∈ A ∧ IsSelfAdjoint a} := by
     intro a ha b hb s t _ _ _
     refine ⟨hconvA ha.1 hb.1 ‹_› ‹_› ‹_›, ?_⟩
     exact ((IsSelfAdjoint.all s).smul ha.2).add ((IsSelfAdjoint.all t).smul hb.2)
   have hT' := A.mem_sotClosureSubalgebra_iff.mp hT
-  rw [mem_closure_toSOT_iff_of_convex hconvA] at hT'
-  rw [mem_closure_toSOT_iff_of_convex hconv]
+  rw [hconvA.toPointwiseConvergenceCLM_mem_closure_image_iff] at hT'
+  rw [hconv.toPointwiseConvergenceCLM_mem_closure_image_iff]
   let re : BWOT → BWOT := fun X => (2⁻¹ : ℂ) • (X + star X)
   have hre : Continuous re := by fun_prop
-  have h := map_mem_closure (f := re) (t := Set.toWOT {a | a ∈ A ∧ IsSelfAdjoint a}) hre hT'
-    fun X hX => by
-      have hX := Set.mem_toWOT_iff.mp hX
-      refine Set.mem_toWOT_iff.mpr ⟨SMulMemClass.smul_mem _ (A.add_mem hX (star_mem (s := A) hX)), ?_⟩
+  have h := map_mem_closure (f := re) (t := ContinuousLinearMapWOT.ofCLM '' {a | a ∈ A ∧ IsSelfAdjoint a})
+    hre hT' <| by
+      rintro _ ⟨X, hX, rfl⟩
+      refine ⟨(2⁻¹ : ℂ) • (X + star X), ⟨SMulMemClass.smul_mem _ (A.add_mem hX (star_mem (s := A) hX)),
+        ?_⟩, rfl⟩
       exact (IsSelfAdjoint.ofNat (R := ℂ) 2).inv₀.smul (IsSelfAdjoint.add_star_self _)
-  have hfix : re (sotToWOT (↑ₚₜ T)) = sotToWOT (↑ₚₜ T) := by
+  have hfix : re (ContinuousLinearMapWOT.ofCLM T) = ContinuousLinearMapWOT.ofCLM T := by
     refine ContinuousLinearMapWOT.ext fun x => ?_
     change (2⁻¹ : ℂ) • (T x + (star T) x) = T x
     rw [hsa.star_eq, ← two_smul ℂ (T x), smul_smul]
@@ -503,27 +503,28 @@ private lemma mem_closure_toSOT_selfAdjoint {A : NonUnitalStarSubalgebra ℂ B}
 private lemma mem_closure_selfAdjoint_closedBall_of_isClosed {A : NonUnitalStarSubalgebra ℂ B}
     (hA : IsClosed (A : Set B)) {T : B} (hT : T ∈ A.sotClosureSubalgebra)
     (hsa : IsSelfAdjoint T) (hn : ‖T‖ ≤ 1) :
-    ↑ₚₜ T ∈ closure (Set.toSOT {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}) := by
+    ↑ₚₜ T ∈ closure (↑ₚₜ '' {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}) := by
   set S := cfc tanHalfArcsin T
   have hSmem : S ∈ A.sotClosureSubalgebra :=
     cfc_mem_of_isClosed A.isClosed_sotClosureSubalgebra continuous_tanHalfArcsin tanHalfArcsin_zero hT
   have hSsa : IsSelfAdjoint S := cfc_predicate _ _
-  have hS := NonUnitalStarSubalgebra.mem_closure_toSOT_selfAdjoint hSmem hSsa
+  have hS := NonUnitalStarSubalgebra.mem_sotClosure_selfAdjoint hSmem hSsa
   -- the filter below is nontrivial because `↑ₚₜ S` is in the closure
   have := mem_closure_iff_nhdsWithin_neBot.mp hS
   let toB : BSOT → B := (toUniformConvergenceCLM _ _ _).symm
   refine mem_closure_of_tendsto (f := fun Y => ↑ₚₜ (cfc sinTwoArctan (toB Y)))
-    (b := 𝓝[Set.toSOT {a | a ∈ A ∧ IsSelfAdjoint a}] (↑ₚₜ S)) ?_ ?_
+    (b := 𝓝[↑ₚₜ '' {a | a ∈ A ∧ IsSelfAdjoint a}] (↑ₚₜ S)) ?_ ?_
   · rw [PointwiseConvergenceCLM.tendsto_iff_forall_tendsto]
     intro x
     rw [← sinTwoArctan_cfc_tanHalfArcsin hsa hn]
-    refine tendsto_cfc_sinTwoArctan (c := toB) (eventually_nhdsWithin_of_forall fun Y hY => hY.2) hSsa
-      (fun y => ?_) x
+    refine tendsto_cfc_sinTwoArctan (c := toB)
+      (eventually_nhdsWithin_of_forall <| by rintro _ ⟨a, ha, rfl⟩; exact ha.2) hSsa (fun y => ?_) x
     exact PointwiseConvergenceCLM.tendsto_iff_forall_tendsto.mp
       (tendsto_nhdsWithin_of_tendsto_nhds Filter.tendsto_id) y
-  · refine eventually_nhdsWithin_of_forall fun Y hY => ?_
-    exact ⟨cfc_mem_of_isClosed hA continuous_sinTwoArctan sinTwoArctan_zero hY.1, cfc_predicate _ _,
-      norm_cfc_sinTwoArctan_le⟩
+  · refine eventually_nhdsWithin_of_forall ?_
+    rintro _ ⟨a, ha, rfl⟩
+    exact ⟨cfc sinTwoArctan a, ⟨cfc_mem_of_isClosed hA continuous_sinTwoArctan sinTwoArctan_zero ha.1,
+      cfc_predicate _ _, norm_cfc_sinTwoArctan_le⟩, rfl⟩
 
 /-- An operator matrix whose entries lie in the strong closure of `A` lies in the strong closure
 of `matrixTwo A`. -/
@@ -533,7 +534,7 @@ private lemma mem_sotClosureSubalgebra_matrixTwo {A : NonUnitalStarSubalgebra �
   let toB : BSOT → B := (toUniformConvergenceCLM _ _ _).symm
   let G : (Fin 2 → Fin 2 → H →SLₚₜ[RingHom.id ℂ] H) →
       K →Lₚₜ[ℂ] K :=
-    fun M => ContinuousLinearMap.toSOT
+    fun M => ↑ₚₜ
       (Φ (CStarMatrix.ofMatrix fun i j => toB (M i j)))
   have hG : Continuous G := by
     refine PointwiseConvergenceCLM.continuous_of_continuous_eval fun ξ => ?_
@@ -546,20 +547,21 @@ private lemma mem_sotClosureSubalgebra_matrixTwo {A : NonUnitalStarSubalgebra �
       fun j _ => (continuous_eval_const _).comp ((continuous_apply j).comp (continuous_apply i)))
   have hM : (fun i j => ↑ₚₜ (N i j)) ∈
       closure (Set.univ.pi fun _ : Fin 2 => Set.univ.pi fun _ : Fin 2 =>
-        Set.toSOT (A : Set B)) := by
+        ↑ₚₜ '' (A : Set B)) := by
     rw [closure_pi_set]
     intro i _
     rw [closure_pi_set]
     exact fun j _ => hN i j
-  have h := map_mem_closure (t := Set.toSOT (matrixTwo A : Set _)) hG hM fun M hM => by
-    change (toUniformConvergenceCLM _ _ _).symm (G M) ∈ matrixTwo A
-    intro i j
-    change (Φ).symm
-      ((Φ) _) i j ∈ A
+  have h := map_mem_closure (t := ↑ₚₜ '' (matrixTwo A : Set _)) hG hM fun M hM => by
+    refine ⟨Φ (CStarMatrix.ofMatrix fun i j => toB (M i j)), fun i j => ?_, rfl⟩
+    change (Φ).symm ((Φ) _) i j ∈ A
     rw [StarAlgEquiv.symm_apply_apply]
-    exact hM i trivial j trivial
-  have hGN : G (fun i j => ↑ₚₜ (N i j)) = ContinuousLinearMap.toSOT (Φ N) := by
-    change ContinuousLinearMap.toSOT _ = _
+    obtain ⟨a, ha, hMa⟩ := hM i trivial j trivial
+    change toB (M i j) ∈ A
+    rw [← hMa]
+    exact ha
+  have hGN : G (fun i j => ↑ₚₜ (N i j)) = ↑ₚₜ (Φ N) := by
+    change ↑ₚₜ _ = _
     congr 2
   rw [NonUnitalStarSubalgebra.mem_sotClosureSubalgebra_iff, ← hGN]
   exact h
@@ -605,44 +607,42 @@ private lemma closedBall_eq : (Metric.closedBall 0 1 : Set B) = {a | ‖a‖ ≤
 /-- **Kaplansky density theorem, self-adjoint part.** For a `⋆`-subalgebra `A` of `B(H)`, the
 self-adjoint contractions of `A` are strongly dense in the self-adjoint contractions of the strong
 closure of `A`. -/
-theorem closure_toSOT_selfAdjoint_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
-    closure (Set.toSOT (A ∩ selfAdjoint B ∩ Metric.closedBall 0 1)) =
-      closure (Set.toSOT (A : Set B)) ∩ Set.toSOT (selfAdjoint B ∩ Metric.closedBall 0 1) := by
+theorem sotClosure_selfAdjoint_inter_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
+    closure (↑ₚₜ '' (A ∩ selfAdjoint B ∩ Metric.closedBall 0 1)) =
+      closure (↑ₚₜ '' (A : Set B)) ∩ ↑ₚₜ '' (selfAdjoint B ∩ Metric.closedBall 0 1) := by
   rw [inter_selfAdjoint_inter_closedBall_eq, selfAdjoint_inter_closedBall_eq]
-  refine subset_antisymm (closure_minimal (fun Y hY => ⟨subset_closure hY.1, hY.2⟩)
-    (isClosed_closure.inter (isClosed_toSOT_isSelfAdjoint.inter isClosed_toSOT_norm_le_one))) ?_
-  rintro Y ⟨hY, hsa, hn⟩
-  set T : B := (toUniformConvergenceCLM _ _ _).symm Y
-  have hYT : Y = ↑ₚₜ T := ((toUniformConvergenceCLM _ _ _).apply_symm_apply Y).symm
-  rw [hYT] at hY ⊢
+  have hcl : IsClosed (↑ₚₜ '' {a : B | IsSelfAdjoint a ∧ ‖a‖ ≤ 1}) := by
+    rw [Set.ofPred_and, Set.image_inter ContinuousLinearMap.toSOT_injective]
+    exact isSOTClosed_isSelfAdjoint.inter isSOTClosed_norm_le_one
+  refine subset_antisymm (closure_minimal ?_ (isClosed_closure.inter hcl)) ?_
+  · rintro _ ⟨a, ⟨ha, hsa, hn⟩, rfl⟩
+    exact ⟨subset_closure ⟨a, ha, rfl⟩, a, ⟨hsa, hn⟩, rfl⟩
+  rintro _ ⟨hY, T, ⟨hsa, hn⟩, rfl⟩
   let C := A.topologicalClosure
   have hTC : T ∈ C.sotClosureSubalgebra :=
-    closure_mono (s := Set.toSOT (A : Set B)) (t := Set.toSOT (C : Set B))
-      (Set.preimage_mono A.le_topologicalClosure) hY
+    closure_mono (s := (↑ₚₜ '' (A : Set B) : Set BSOT)) (t := ↑ₚₜ '' (C : Set B))
+      (Set.image_mono A.le_topologicalClosure) hY
   have h := mem_closure_selfAdjoint_closedBall_of_isClosed A.isClosed_topologicalClosure hTC
     hsa hn
-  refine closure_minimal (s := Set.toSOT {a | a ∈ C ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1})
-    (t := closure (Set.toSOT {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1})) (fun Z hZ => ?_)
-    isClosed_closure h
-  obtain ⟨hZC, hZsa, hZn⟩ := hZ
-  have hZ := ((toUniformConvergenceCLM _ _ _).apply_symm_apply Z).symm
-  rw [hZ]
-  exact map_mem_closure (ContinuousLinearMap.toSOT (σ := RingHom.id ℂ) (E := H) (F := H)).continuous
-    (Kaplansky.mem_closure_selfAdjoint_closedBall hZC hZsa hZn) fun a ha => ha
+  refine closure_minimal (fun Z hZ => ?_) isClosed_closure h
+  obtain ⟨Z, ⟨hZC, hZsa, hZn⟩, rfl⟩ := hZ
+  exact map_mem_closure (↑ₚₜ : B →L[ℂ] BSOT).continuous
+    (Kaplansky.mem_closure_selfAdjoint_closedBall hZC hZsa hZn) fun a ha => ⟨a, ha, rfl⟩
 
 /-- **Kaplansky density theorem, positive part.** For a `⋆`-subalgebra `A` of `B(H)`, the
 positive contractions of `A` are strongly dense in the positive contractions of the strong
 closure of `A`. -/
-theorem closure_toSOT_nonneg_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
-    closure (Set.toSOT (A ∩ {a | 0 ≤ a} ∩ Metric.closedBall 0 1)) =
-      closure (Set.toSOT (A : Set B)) ∩ Set.toSOT ({a | 0 ≤ a} ∩ Metric.closedBall 0 1) := by
+theorem sotClosure_nonneg_inter_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
+    closure (↑ₚₜ '' (A ∩ {a | 0 ≤ a} ∩ Metric.closedBall 0 1)) =
+      closure (↑ₚₜ '' (A : Set B)) ∩ ↑ₚₜ '' ({a | 0 ≤ a} ∩ Metric.closedBall 0 1) := by
   rw [inter_nonneg_inter_closedBall_eq, nonneg_inter_closedBall_eq]
-  refine subset_antisymm (closure_minimal (fun Y hY => ⟨subset_closure hY.1, hY.2⟩)
-    (isClosed_closure.inter (isClosed_toSOT_nonneg.inter isClosed_toSOT_norm_le_one))) ?_
-  rintro Y ⟨hY, hpos, hn⟩
-  set T : B := (toUniformConvergenceCLM _ _ _).symm Y
-  have hYT : Y = ↑ₚₜ T := ((toUniformConvergenceCLM _ _ _).apply_symm_apply Y).symm
-  rw [hYT] at hY ⊢
+  have hcl : IsClosed (↑ₚₜ '' {a : B | 0 ≤ a ∧ ‖a‖ ≤ 1}) := by
+    rw [Set.ofPred_and, Set.image_inter ContinuousLinearMap.toSOT_injective]
+    exact isSOTClosed_nonneg.inter isSOTClosed_norm_le_one
+  refine subset_antisymm (closure_minimal ?_ (isClosed_closure.inter hcl)) ?_
+  · rintro _ ⟨a, ⟨ha, hpos, hn⟩, rfl⟩
+    exact ⟨subset_closure ⟨a, ha, rfl⟩, a, ⟨hpos, hn⟩, rfl⟩
+  rintro _ ⟨hY, T, ⟨hpos, hn⟩, rfl⟩
   have hTsa : IsSelfAdjoint T := IsSelfAdjoint.of_nonneg hpos
   set S := cfc Real.sqrt T
   have hSmem : S ∈ A.sotClosureSubalgebra :=
@@ -655,42 +655,41 @@ theorem closure_toSOT_nonneg_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
     rw [← cfc_mul ..]
     refine (cfc_congr fun t ht => ?_).trans (cfc_id' ℝ T hTsa)
     exact Real.mul_self_sqrt (spectrum_nonneg_of_nonneg hpos ht)
-  have hS : ↑ₚₜ S ∈ closure (Set.toSOT {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}) := by
-    have h := A.closure_toSOT_selfAdjoint_closedBall
+  have hS : ↑ₚₜ S ∈ closure (↑ₚₜ '' {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}) := by
+    have h := A.sotClosure_selfAdjoint_inter_closedBall
     rw [inter_selfAdjoint_inter_closedBall_eq, selfAdjoint_inter_closedBall_eq] at h
     rw [h]
-    exact ⟨hSmem, hSsa, hSn⟩
+    exact ⟨hSmem, S, ⟨hSsa, hSn⟩, rfl⟩
   -- the filter below is nontrivial because `↑ₚₜ S` is in the closure
   have := mem_closure_iff_nhdsWithin_neBot.mp hS
   let toB : BSOT → B := (toUniformConvergenceCLM _ _ _).symm
   have hlim : ∀ x, Filter.Tendsto (fun Y => toB Y x)
-      (𝓝[Set.toSOT {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}] (↑ₚₜ S)) (𝓝 (S x)) := fun x =>
+      (𝓝[↑ₚₜ '' {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}] (↑ₚₜ S)) (𝓝 (S x)) := fun x =>
     PointwiseConvergenceCLM.tendsto_iff_forall_tendsto.mp
       (tendsto_nhdsWithin_of_tendsto_nhds Filter.tendsto_id) x
   refine mem_closure_of_tendsto (f := fun Y => ↑ₚₜ (toB Y * toB Y))
-    (b := 𝓝[Set.toSOT {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}] (↑ₚₜ S)) ?_ ?_
+    (b := 𝓝[↑ₚₜ '' {a | a ∈ A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}] (↑ₚₜ S)) ?_ ?_
   · rw [PointwiseConvergenceCLM.tendsto_iff_forall_tendsto, ← hSS]
-    exact Kaplansky.tendsto_mul_apply (eventually_nhdsWithin_of_forall fun Y hY => hY.2.2) hlim hlim
-  · refine eventually_nhdsWithin_of_forall fun Y hY => ?_
-    obtain ⟨hmem, hsa, hle⟩ := hY
-    refine ⟨A.mul_mem hmem hmem, ?_, ?_⟩
-    · have h := star_mul_self_nonneg (toB Y)
+    exact Kaplansky.tendsto_mul_apply
+      (eventually_nhdsWithin_of_forall <| by rintro _ ⟨a, ha, rfl⟩; exact ha.2.2) hlim hlim
+  · refine eventually_nhdsWithin_of_forall ?_
+    rintro _ ⟨a, ⟨hmem, hsa, hle⟩, rfl⟩
+    refine ⟨a * a, ⟨A.mul_mem hmem hmem, ?_, ?_⟩, rfl⟩
+    · have h := star_mul_self_nonneg a
       rw [hsa.star_eq] at h
       exact h
-    · exact (norm_mul_le _ _).trans (by nlinarith [norm_nonneg (toB Y)])
+    · exact (norm_mul_le _ _).trans (by nlinarith [norm_nonneg a])
 
 /-- **Kaplansky density theorem.** For a `⋆`-subalgebra `A` of `B(H)`, the contractions of `A`
 are strongly dense in the contractions of the strong closure of `A`. -/
-theorem closure_toSOT_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
-    closure (Set.toSOT (A ∩ Metric.closedBall 0 1)) =
-      closure (Set.toSOT (A : Set B)) ∩ Set.toSOT (Metric.closedBall 0 1) := by
+theorem sotClosure_inter_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
+    closure (↑ₚₜ '' (A ∩ Metric.closedBall 0 1)) =
+      closure (↑ₚₜ '' (A : Set B)) ∩ ↑ₚₜ '' (Metric.closedBall 0 1) := by
   rw [inter_closedBall_eq, closedBall_eq]
-  refine subset_antisymm (closure_minimal (fun Y hY => ⟨subset_closure hY.1, hY.2⟩)
-    (isClosed_closure.inter isClosed_toSOT_norm_le_one)) ?_
-  rintro Y ⟨hY, hn⟩
-  set T : B := (toUniformConvergenceCLM _ _ _).symm Y
-  have hYT : Y = ↑ₚₜ T := ((toUniformConvergenceCLM _ _ _).apply_symm_apply Y).symm
-  rw [hYT] at hY ⊢
+  refine subset_antisymm (closure_minimal ?_ (isClosed_closure.inter isSOTClosed_norm_le_one)) ?_
+  · rintro _ ⟨a, ⟨ha, hn⟩, rfl⟩
+    exact ⟨subset_closure ⟨a, ha, rfl⟩, a, hn, rfl⟩
+  rintro _ ⟨hY, T, hn, rfl⟩
   let N : CStarMatrix (Fin 2) (Fin 2) B := CStarMatrix.ofMatrix !![0, T; star T, 0]
   have hNsa : star N = N := by
     ext i j
@@ -723,45 +722,60 @@ theorem closure_toSOT_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
     · exact hY
     · exact star_mem (s := A.sotClosureSubalgebra) hY
     · exact zero_mem _
-  have h : (ContinuousLinearMap.toSOT (Φ N) :
-      K →Lₚₜ[ℂ] K) ∈
-      closure (Set.toSOT {a | a ∈ Kaplansky.matrixTwo A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}) := by
-    have h := (Kaplansky.matrixTwo A).closure_toSOT_selfAdjoint_closedBall
+  have h : (↑ₚₜ (Φ N) : K →Lₚₜ[ℂ] K) ∈
+      closure (↑ₚₜ '' {a | a ∈ Kaplansky.matrixTwo A ∧ IsSelfAdjoint a ∧ ‖a‖ ≤ 1}) := by
+    have h := (Kaplansky.matrixTwo A).sotClosure_selfAdjoint_inter_closedBall
     rw [inter_selfAdjoint_inter_closedBall_eq, selfAdjoint_inter_closedBall_eq] at h
     rw [h]
-    exact ⟨hXmem, hXsa, hXn⟩
-  have h' := map_mem_closure (t := Set.toSOT {a | a ∈ A ∧ ‖a‖ ≤ 1}) Kaplansky.continuous_corner h
-    fun Z hZ => ⟨hZ.1 0 1, (Kaplansky.norm_corner_le _).trans hZ.2.2⟩
+    exact ⟨hXmem, Φ N, ⟨hXsa, hXn⟩, rfl⟩
+  have h' := map_mem_closure (t := ↑ₚₜ '' {a | a ∈ A ∧ ‖a‖ ≤ 1}) Kaplansky.continuous_corner h <| by
+    rintro _ ⟨Z, hZ, rfl⟩
+    exact ⟨Kaplansky.corner Z, ⟨hZ.1 0 1, (Kaplansky.norm_corner_le _).trans hZ.2.2⟩, rfl⟩
   have hc : Kaplansky.corner ((toUniformConvergenceCLM _ _ _).symm
-      (ContinuousLinearMap.toSOT (Φ N) :
-        K →Lₚₜ[ℂ] K)) = T := by
+      (↑ₚₜ (Φ N) : K →Lₚₜ[ℂ] K)) = T := by
     change Kaplansky.corner ((Φ) N) = T
     rw [Kaplansky.corner_toPiLpStarAlgEquiv]
     rfl
   rwa [hc] at h'
 
-/-- **Kaplansky density theorem, von Neumann algebra form.** For a `⋆`-subalgebra `A` of `B(H)`
+/-- **Kaplansky density theorem, double commutant form.** For a `⋆`-subalgebra `A` of `B(H)`
 acting non-degenerately, the contractions of `A` are strongly dense in the contractions of the
 double commutant `A′′`. -/
-theorem closure_toSOT_closedBall_eq_doubleCommutant
+theorem sotClosure_inter_closedBall_eq_doubleCommutant
     (A : NonUnitalStarSubalgebra ℂ B) (hnd : InnerProductSpace.ActsNondegenerately (A : Set B)) :
-    closure (Set.toSOT (A ∩ Metric.closedBall 0 1)) = Set.toSOT ((A : Set B)′′ ∩ Metric.closedBall 0 1) := by
-  rw [A.closure_toSOT_closedBall, A.sotClosure_eq_doubleCommutant hnd]
-  rfl
+    closure (↑ₚₜ '' (A ∩ Metric.closedBall 0 1)) =
+      ↑ₚₜ '' ((A : Set B)′′ ∩ Metric.closedBall 0 1) := by
+  rw [A.sotClosure_inter_closedBall, A.sotClosure_eq_doubleCommutant hnd,
+    Set.image_inter ContinuousLinearMap.toSOT_injective]
 
 /-- **Kaplansky density theorem, weak form.** For a `⋆`-subalgebra `A` of `B(H)`, the contractions
 of `A` are weakly dense in the contractions of the weak closure of `A`. -/
-theorem closure_toWOT_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
-    closure (Set.toWOT (A ∩ Metric.closedBall 0 1)) =
-      closure (Set.toWOT (A : Set B)) ∩ Set.toWOT (Metric.closedBall 0 1) := by
+theorem wotClosure_inter_closedBall (A : NonUnitalStarSubalgebra ℂ B) :
+    closure (ContinuousLinearMapWOT.ofCLM '' (A ∩ Metric.closedBall 0 1)) =
+      closure (ContinuousLinearMapWOT.ofCLM '' (A : Set B)) ∩
+        ContinuousLinearMapWOT.ofCLM '' Metric.closedBall 0 1 := by
   have hconvA : Convex ℝ (A : Set B) := (A.toSubmodule.restrictScalars ℝ).convex
   have hconv : Convex ℝ ((A : Set B) ∩ Metric.closedBall 0 1) :=
     hconvA.inter (convex_closedBall 0 1)
   ext Y
-  have hY : Y = sotToWOT (↑ₚₜ (ContinuousLinearMapWOT.toCLM Y)) := rfl
-  rw [hY, ← mem_closure_toSOT_iff_of_convex hconv, Set.mem_inter_iff,
-    ← mem_closure_toSOT_iff_of_convex hconvA, A.closure_toSOT_closedBall]
-  rfl
+  obtain ⟨T, rfl⟩ := ContinuousLinearMapWOT.ofCLM_surjective Y
+  rw [← hconv.toPointwiseConvergenceCLM_mem_closure_image_iff, Set.mem_inter_iff,
+    ← hconvA.toPointwiseConvergenceCLM_mem_closure_image_iff, A.sotClosure_inter_closedBall,
+    Set.mem_inter_iff, ContinuousLinearMap.toSOT_injective.mem_set_image,
+    ContinuousLinearMapWOT.ofCLM_injective.mem_set_image]
+
+/-- **Kaplansky density theorem for the generated von Neumann algebra.** For a `⋆`-subalgebra `A`
+of `B(H)` acting non-degenerately, the contractions of `A` are strongly dense in the contractions of
+the von Neumann algebra `VonNeumannAlgebra.generated A` that `A` generates. -/
+theorem sotClosure_inter_closedBall_eq_generated
+    (A : NonUnitalStarSubalgebra ℂ B) (hnd : InnerProductSpace.ActsNondegenerately (A : Set B)) :
+    closure (↑ₚₜ '' (A ∩ Metric.closedBall 0 1)) =
+      ↑ₚₜ '' ((VonNeumannAlgebra.generated (A : Set B) : Set B) ∩ Metric.closedBall 0 1) := by
+  have hstar : star (A : Set B) = A :=
+    Set.ext fun x => ⟨fun hx => by simpa using star_mem (s := A) (Set.mem_star.mp hx),
+      fun hx => Set.mem_star.mpr (star_mem (s := A) hx)⟩
+  rw [VonNeumannAlgebra.coe_generated_of_star_eq hstar,
+    A.sotClosure_inter_closedBall_eq_doubleCommutant hnd]
 
 end NonUnitalStarSubalgebra
 
