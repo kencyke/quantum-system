@@ -98,10 +98,11 @@ before it can be stated is kept in `docs/roadmap.md`.
 
 **Phase II — Exact theory**
 
-4. **Von Neumann algebras.** Kaplansky density, normal ⋆-homomorphisms, the predual; Sakai's
-   characterization of von Neumann algebras as the C⋆-algebras with a predual; finite-dimensional
-   factors as matrix algebras, through the structure theorem of finite-dimensional C⋆-algebras
-   already formalized, and the uniqueness of the matrix sizes in that theorem up to order (M2).
+4. **Von Neumann algebras.** Beyond Kaplansky density for the unit ball and finite-dimensional
+   factors as matrix algebras, already formalized: Kaplansky density for unitaries and in the strong*
+   form, normal ⋆-homomorphisms, the predual; Sakai's characterization of von Neumann algebras as the
+   C⋆-algebras with a predual; and the uniqueness up to order of the matrix sizes in the structure
+   theorem of finite-dimensional C⋆-algebras (M2).
 5. **Tomita–Takesaki theory.** Beyond the relative modular operators already formalized:
    JMJ = M′ and Δ^{it}MΔ^{-it} = M for a cyclic and separating vector, the modular automorphism
    group σ^φ of a faithful normal state, the KMS condition characterizing it (Takesaki), and the

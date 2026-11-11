@@ -8,10 +8,12 @@ and the module docs, where `/citation-check` checks them.
 
 ## Tensor products
 
-- **Open.** Operators on a tensor product are spelt two ways: on the algebraic `H ⊗[ℂ] K` (the channel
-  and entropy files) and on its completion `HilbertTensor H K` (the von Neumann algebra files). The
-  minimal tensor product is built on one of them, and the other's results either move to it or are
-  shown to be its finite-dimensional case.
+- **Open.** Hilbert spaces are tensored with Mathlib's algebraic `H ⊗[ℂ] K` (the channel and entropy
+  files) and its completion `UniformSpace.Completion (H ⊗[ℂ] K)` (the von Neumann algebra files),
+  on which operators act by `ContinuousLinearMap.rTensor`/`lTensor` and `ContinuousLinearMap.completion`.
+  In finite dimensions the two coincide; the results on the algebraic tensor product are still to be
+  shown to be the finite-dimensional case of those on the completion. The minimal tensor product of
+  C⋆-algebras is built on the completion.
 
 ## Dynamical systems
 
@@ -32,20 +34,13 @@ and the module docs, where `/citation-check` checks them.
 - **Open.**
   - Everything is stated for Mathlib's concrete `VonNeumannAlgebra H`; Mathlib's abstract
     `WStarAlgebra` is not used yet. Sakai's characterization is where the two meet.
-  - Nothing yet links a finite-dimensional factor to `IsSimpleRing`, which the matrix-algebra statement
-    needs.
   - Matrix algebras are spelt three ways: `Matrix n n ℂ`, `CStarMatrix` (`M_[n](ℂ)`) and operators on
     `ℂⁿ`. This item and *Averaging* settle on one.
 - **Pull requests.**
-  1. Kaplansky density for a ⋆-subalgebra of `B(H)`: the strong closure of the unit ball, of its
-     self-adjoint part and of its positive part is the unit ball, its self-adjoint part and its
-     positive part of the strong closure.
-  2. Kaplansky density for unitaries, once a unitary of a von Neumann algebra is the exponential of a
+  1. Kaplansky density for unitaries, once a unitary of a von Neumann algebra is the exponential of a
      self-adjoint element of it.
-  3. A finite-dimensional factor is a simple ring, hence `≃⋆ₐ[ℂ] M_[n](ℂ)`; matrix algebras are stated
-     as `CStarMatrix`, the spelling of the structure theorem.
-  4. The matrix sizes of the structure theorem are unique up to order.
-  5. Kaplansky density in the strong* form: the joint approximation of `T` and `T⋆` along one net,
+  2. The matrix sizes of the structure theorem are unique up to order.
+  3. Kaplansky density in the strong* form: the joint approximation of `T` and `T⋆` along one net,
      stated in `(H →Lₚₜ[ℂ] H) × (H →Lₚₜ[ℂ] H)`, or in a type copy carrying the strong* topology once
      there is one. The proof of the unit-ball form already produces the net.
 
@@ -62,7 +57,7 @@ and the module docs, where `/citation-check` checks them.
 ## Reversibility
 
 - **Open.** `VonNeumannAlgebra.arakiEntropy` is defined through the amplification of the algebra to
-  `ℓ²(ℕ) ⊗̂ H`, in place of the missing standard form. Once *Standard form* lands, the natural-cone
+  `Completion (ℓ²(ℕ) ⊗[ℂ] H)`, in place of the missing standard form. Once *Standard form* lands, the natural-cone
   formula is proved as a theorem about this definition, not given as a second one.
 
 ## Averaging
