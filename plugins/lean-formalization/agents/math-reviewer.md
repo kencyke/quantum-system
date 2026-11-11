@@ -241,8 +241,9 @@ Six checks deserve an explicit procedure rather than a glance:
 
   First make sure the derivation tests the target. A spec that closes without
   it — `simp` or `exact?` finds a library lemma, or its hypotheses contradict
-  each other — follows from any target: try the spec without the target, and
-  when it closes, report it as `uninformative` and read nothing from it.
+  each other — follows from any target: try every spec without the target, not
+  a sample of them, and when one closes, report it as `uninformative` and read
+  nothing from it.
   Likewise a derivation whose proof never mentions the target shows nothing
   about it.
 
@@ -266,7 +267,11 @@ Six checks deserve an explicit procedure rather than a glance:
     and the target share them, so an `object-substituted` or `domain` defect
     carried by such a definition passes every derivation;
   - a spec whose `Unsettled` field reports that its writer saw the declaration:
-    it is not blind, and its outcome carries no weight.
+    it is not blind, and its outcome carries no weight;
+  - a docstring that only restates the statement in words or in code ("`0` is
+    a unit", a definition's body read aloud): the spec then repeats the
+    statement, and `both` says that the two agree, not that either is the
+    intended claim. Mark such an outcome `both (restated)`.
 
   A failed derivation is not a disproof: classify a candidate with the
   categories above and confirm it against the elaborated type before filing it.
@@ -513,7 +518,7 @@ first, report second (skip the file only when none was assigned).
   project rule only when you can name it and quote the offending line. A
   perspective 1 finding from the readback comparison also carries its category.
 - **List the derivation outcomes.** When your prompt gave a spec file, list
-  every `d<N>` in it with its outcome (`both`, `target⇒spec only`,
+  every `d<N>` in it with its outcome (`both`, `both (restated)`, `target⇒spec only`,
   `spec⇒target only`, `neither`, `uninformative`, `not attempted: <reason>`),
   flagged or not: the aggregator gates its verdict on that list.
 - **Give the diagnosis and the fix as separate items.** A real defect can carry

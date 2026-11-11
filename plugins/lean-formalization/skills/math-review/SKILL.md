@@ -85,12 +85,14 @@ code back without the docstring or the cited literature, and a `statement-writer
 writes the docstring's claim in Lean without the statement. Only the statement
 fidelity reviewer waits for them (step 3).
 
-1. Select the public `theorem` / `lemma` / `def` / `structure` / `class`
-   declarations in the scope whose docstring states a mathematical claim, at
-   most 20, theorems first; list the rest under `## Not reviewed`. All of them
-   get a readback. The theorems, lemmas and `def`s among them also get a spec; a
-   `structure` or `class` does not — what its docstring claims is its fields,
-   which the readback already sets beside it.
+1. Select the public `theorem` / `lemma` / `instance` / `def` / `structure` /
+   `class` declarations in the scope whose docstring states a mathematical
+   claim, at most 20, theorems first; list the rest under `## Not reviewed`. An
+   `instance` of a proposition-valued class counts as a theorem here, and one
+   that carries data as a `def`. All of them get a readback. The theorems,
+   lemmas and `def`s among them also get a spec; a `structure` or `class` does
+   not — what its docstring claims is its fields, which the readback already
+   sets beside it.
 2. Build one packet per declaration, numbered `d1`, `d2`, … : its statement —
    for a `theorem` / `lemma` the source up to the `:=` that opens the proof and
    never the proof, for a `def` / `structure` / `class` the whole declaration —
@@ -109,8 +111,11 @@ fidelity reviewer waits for them (step 3).
    deleted, or the two sides of an `→` between propositions swapped. Elaborate
    the changed declaration with `lean_run_code` — its module imported, the same
    context lines, a fresh name, `:= by sorry` for a theorem — followed by
-   `#check @<fresh name>`: that output, with the original name put back, is the
-   control's elaborated signature, so that its source and its signature agree. A
+   `#check @<fresh name>`, which shows what the change does to the elaborated
+   type. Write the control's elaborated signature by making that same change in
+   the original's own signature, so that it keeps the form of the other packets
+   — the binder layout and the universe names of `lean_hover_info`; the raw
+   `#check` output is laid out differently and would single the control out. A
    change that does not elaborate is no control; choose another. The control
    keeps its original's name, number and context lines, and nothing in it marks
    it as a control. A reader that repairs the code toward a plausible intent
@@ -133,7 +138,8 @@ fidelity reviewer waits for them (step 3).
        selected statement mentions. Definitions only — never a theorem or a
        lemma. Pooled, it tells the writer which objects exist without telling it
        which statement uses which;
-     - per target file, its module doc without what lists or restates the
+     - per target file, its module doc and the section docs (`/-! … -/`)
+       above the selected declarations, without what lists or restates the
        results — a `## Main results` / `## Main statements` section, a sentence
        naming a selected theorem — keeping the setting, the notation and the
        conventions;
@@ -304,7 +310,7 @@ Template:
 **Scope**: <N> files / <M> declarations   <!-- from the agents' reviewed-declaration lists -->
 **Verdict**: <worst severity present, ✅ no findings, or ⏸ incomplete — <worst severity>>
 **Readback control**: <passed (<change>) | failed-control | none planted>
-**Blind spec**: <k> of <n> derived both ways; <the other outcomes, by count>
+**Blind spec**: <k> of <n> derived both ways, <j> of them from a docstring that only restates the statement; <the other outcomes, by count>
 
 ## 🛑 Blocker
 ### 1. <one-line title>
