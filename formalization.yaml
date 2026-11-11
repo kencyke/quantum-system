@@ -74,6 +74,33 @@ sources:
       url: http://msp.org/pjm/1951/1-2/pjm-v1-n2-p06-s.pdf
       locators:
         Theorem 1: {page: '227', date: '2026-11-08', version: publishedVersion}
+  - title: Standard and split inclusions of von Neumann algebras
+    authors: [S. Doplicher, R. Longo]
+    id: doi:10.1007/bf01388641
+    type: article
+    relationship: formalizes
+    note: Invent. Math. 75 (1984), 493–536. Definition 1.4 (split W*-inclusion) is
+      VonNeumannAlgebra.IsSplitInclusion; the split property of Sect. 10 (double cones, O1 in the
+      interior of O2) is stated over an abstract proper containment.
+    checked:
+      url: https://gdz.sub.uni-goettingen.de/download/pdf/PPN356556735_0075/LOG_0034.pdf
+      locators:
+        Definition 1.4: {page: '497', date: '2026-11-10', version: publishedVersion}
+        Introduction: {page: '494', date: '2026-11-10', version: publishedVersion}
+        Section 10: {page: '527', date: '2026-11-10', version: publishedVersion}
+  - title: Localization and Entanglement in Relativistic Quantum Physics
+    authors: [Jakob Yngvason]
+    id: arXiv:1401.2652
+    type: article
+    relationship: formalizes
+    note: 'Book chapter: The Message of Quantum Science, Lecture Notes in Physics 899, Springer 2015,
+      pp. 325–348, doi:10.1007/978-3-662-46422-9_15. Section 5.1 states that the split property (38) means
+      the tensor product decomposition (39); the type I structure theorem proves this for von Neumann
+      algebras.'
+    checked:
+      url: https://arxiv.org/pdf/1401.2652v1
+      locators:
+        §5.1, (38)–(39): {page: '16', date: '2026-11-10', version: arXiv:1401.2652v1}
 automation:
   methods:
     - {method: agent, framework: Claude Code}
