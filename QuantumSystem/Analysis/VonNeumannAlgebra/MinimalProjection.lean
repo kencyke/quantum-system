@@ -35,7 +35,7 @@ a star projection with commutative corner `p N p`), and criteria for minimality.
   self-adjoint corner element to a real multiple of `p`.
 * **In a factor, nonzero abelian projections are minimal.** An abelian projection of a factor is
   order-minimal, by a corner-commutation argument through the central-support lemma
-  `exists_mul_ne_of_isCentral`; hence it is minimal.
+  `exists_mul_mul_ne_zero_of_isCentral`; hence it is minimal.
 * **The minimal projections of `B(H)` are the rank-one projections** `|u⟩⟨u|`, `‖u‖ = 1`;
   equivalently, the star projections with one-dimensional range.
 
@@ -95,7 +95,7 @@ def IsMinimalProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
 projection is nonzero, so it sends some vector to a nonzero vector, witnessing `Nontrivial H`. -/
 lemma IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsMinimalProjection N e) : Nontrivial H :=
-  nontrivial_of_ne_zero he.2.2.1
+  ContinuousLinearMap.nontrivial_of_ne_zero he.2.2.1
 
 /-- A minimal projection has no proper nonzero subprojection in `N`: if a projection `f ∈ N`
 satisfies `f ≤ e` (the operator order, equivalently the range inclusion `ran f ⊆ ran e`), then
@@ -228,7 +228,7 @@ is `0` or `p`.
 
 The proof avoids corner-commutant theory and polar decomposition: if `0 ≠ q ≠ p`, then
 `r := p - q` is a nonzero projection under `p` orthogonal to `q`, and the central-support lemma
-`exists_mul_ne_of_isCentral` produces `a ∈ N` with `z := r a q ≠ 0`. Both `z` and `z⋆` are corner
+`exists_mul_mul_ne_zero_of_isCentral` produces `a ∈ N` with `z := r a q ≠ 0`. Both `z` and `z⋆` are corner
 elements of `p`, so they commute by abelianness; but `q z = 0` and `q z⋆ = z⋆` force
 `z⋆ z = q (z z⋆) = (q z) z⋆ = 0`, and the C⋆-identity gives `z = 0` — a contradiction. -/
 lemma subprojection_eq_of_isAbelianProjection_of_isCentral {N : VonNeumannAlgebra H}
@@ -238,7 +238,7 @@ lemma subprojection_eq_of_isAbelianProjection_of_isCentral {N : VonNeumannAlgebr
   have hsub : p * q = q := (hq.le_iff_mul_eq_right hp.1).mp hle
   by_cases hq0 : q = 0
   · exact Or.inl hq0
-  have : Nontrivial H := nontrivial_of_ne_zero hq0
+  have : Nontrivial H := ContinuousLinearMap.nontrivial_of_ne_zero hq0
   by_cases hqp : q = p
   · exact Or.inr hqp
   exfalso
@@ -252,7 +252,7 @@ lemma subprojection_eq_of_isAbelianProjection_of_isCentral {N : VonNeumannAlgebr
     rw [hr, star_sub, hp.1.isSelfAdjoint.star_eq, hq.isSelfAdjoint.star_eq]
   have hrN : r ∈ N := sub_mem hp.2.1 hqN
   have hr0 : r ≠ 0 := fun h0 => hqp (by rw [hr, sub_eq_zero] at h0; exact h0.symm)
-  obtain ⟨a, haN, hz0⟩ := exists_mul_ne_of_isCentral hqN hq0 hr0
+  obtain ⟨a, haN, hz0⟩ := exists_mul_mul_ne_zero_of_isCentral hqN hq0 hr0
   set z : H →L[ℂ] H := r * a * q with hz
   have hzN : z ∈ N := mul_mem (mul_mem hrN haN) hqN
   have hzcorner : p * z * p = z := by

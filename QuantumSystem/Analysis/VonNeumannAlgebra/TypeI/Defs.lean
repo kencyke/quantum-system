@@ -140,7 +140,7 @@ theorem isTypeI_iff_exists_isMinimalProjection_of_isCentral [Nontrivial H] {N : 
       apply hv
       have h2 := congrArg (fun T : H →L[ℂ] H => T v) h1
       simpa using h2
-    obtain ⟨q, hab, hq0, -⟩ := h 1 (isCentralProjection_one N) hone
+    obtain ⟨q, hab, hq0, -⟩ := h 1 (IsCentralProjection.one N) hone
     exact ⟨q, isMinimalProjection_of_isAbelianProjection_of_isCentral hab hq0⟩
   · exact isTypeI_of_exists_isMinimalProjection_of_isCentral
 

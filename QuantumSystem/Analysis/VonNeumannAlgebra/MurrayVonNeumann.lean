@@ -18,7 +18,7 @@ classification: the **Murray–von Neumann equivalence** `p ∼[N] q` (a partial
 (`IsMinimalProjection.mvNSub_of_isCentral`).
 
 The comparison theorem for arbitrary projections of a factor, `VonNeumannAlgebra.mvNSub_or_mvNSub_of_isCentral`,
-combines the central-support lemma `VonNeumannAlgebra.exists_mul_ne_of_isCentral` with the polar decomposition
+combines the central-support lemma `VonNeumannAlgebra.exists_mul_mul_ne_zero_of_isCentral` with the polar decomposition
 (`QuantumSystem.Analysis.VonNeumannAlgebra.PolarDecomposition`) and the additivity of
 Murray–von Neumann equivalence over orthogonal families, and is proved in
 `QuantumSystem.Analysis.VonNeumannAlgebra.Comparison`. The minimal-projection case here
@@ -302,7 +302,7 @@ lemma IsMinimalProjection.mvNSub_of_ne {N : VonNeumannAlgebra H} {e : H →L[ℂ
 /-- **Comparison theorem (minimal projection case).** In a factor, a minimal projection `e` is
 Murray–von Neumann subordinate to *every* nonzero projection `q`: `e ≼ q`. This combines the
 scaling lemma (via `mvNSub_of_ne`) with the central-support input
-(`exists_mul_ne_of_isCentral`, which supplies an `a ∈ N` with `q a e ≠ 0`). It is the form of
+(`exists_mul_mul_ne_zero_of_isCentral`, which supplies an `a ∈ N` with `q a e ≠ 0`). It is the form of
 comparison needed to show a maximal orthogonal family of minimal projections exhausts the
 identity. The comparison of two arbitrary projections of a factor is `mvNSub_or_mvNSub_of_isCentral`
 (`QuantumSystem.Analysis.VonNeumannAlgebra.Comparison`). -/
@@ -311,7 +311,7 @@ theorem IsMinimalProjection.mvNSub_of_isCentral {N : VonNeumannAlgebra H}
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hq0 : q ≠ 0) :
     e ≼[N] q := by
   have : Nontrivial H := he.nontrivial
-  obtain ⟨a, haN, hane⟩ := exists_mul_ne_of_isCentral he.2.1 he.2.2.1 hq0
+  obtain ⟨a, haN, hane⟩ := exists_mul_mul_ne_zero_of_isCentral he.2.1 he.2.2.1 hq0
   exact he.mvNSub_of_ne hq hqN haN hane
 
 end VonNeumannAlgebra

@@ -26,7 +26,7 @@ needs only a scaling argument; the general case rests on two further ingredients
    the orthogonal ranges. Consequently Murray–von Neumann equivalence is additive
    over orthogonal families.
 2. **Local comparison**, in a factor. Nonzero projections `p, q` of a factor have nonzero
-   equivalent subprojections: the central-support lemma `exists_mul_ne_of_isCentral` gives `a ∈ N`
+   equivalent subprojections: the central-support lemma `exists_mul_mul_ne_zero_of_isCentral` gives `a ∈ N`
    with `x = q a p ≠ 0`, and the polar decomposition of `x`
    (`QuantumSystem.Analysis.VonNeumannAlgebra.PolarDecomposition`) makes the range projection
    `R(x⋆) ≤ p` equivalent to the range projection `R(x) ≤ q`.
@@ -62,7 +62,10 @@ evaluate it at vectors, `∀ x, HasSum (fun i => v i x) (w x)`, through
   `z ∈ {0, 1}`. Only local comparison is factor-specific — orthogonal sums and the polar
   decomposition already hold in any `N` — and it needs the **central support** (central carrier)
   `C_p` of a projection, the least central projection above `p`, together with the general form of
-  `exists_mul_ne_of_isCentral` beyond factors: `q N p ≠ 0` iff `C_p C_q ≠ 0`. Neither is developed yet.
+  `exists_mul_mul_ne_zero_of_isCentral` beyond factors: `q N p ≠ 0` iff `C_p C_q ≠ 0`.
+  `exists_isCentralProjection_mul_eq_zero_iff` gives a central projection `P` above `p` with
+  `q N p = 0` iff `q P = 0`; that it is the least one, and the form with `C_q`, are not developed
+  yet.
 -/
 
 @[expose] public section
@@ -282,13 +285,13 @@ variable {N : VonNeumannAlgebra H}
 
 /-- **Local comparison in a factor.** Two nonzero projections `p, q` of a factor `N` have nonzero
 Murray–von Neumann equivalent subprojections `p' ≤ p`, `q' ≤ q`. The central-support lemma
-`exists_mul_ne_of_isCentral` supplies `a ∈ N` with `x = q a p ≠ 0`, and the polar decomposition of `x`
+`exists_mul_mul_ne_zero_of_isCentral` supplies `a ∈ N` with `x = q a p ≠ 0`, and the polar decomposition of `x`
 makes the range projections `R(x⋆) ≤ p` and `R(x) ≤ q` equivalent (`mvNEquiv_rangeProj`). -/
 lemma exists_mvNEquiv_le_of_isCentral [Algebra.IsCentral ℂ N] {p q : H →L[ℂ] H}
     (hp : IsStarProjection p) (hpN : p ∈ N) (hp0 : p ≠ 0)
     (hq : IsStarProjection q) (hqN : q ∈ N) (hq0 : q ≠ 0) :
     ∃ p' q' : H →L[ℂ] H, p' ≠ 0 ∧ p' ≤ p ∧ q' ≤ q ∧ p' ∼[N] q' := by
-  obtain ⟨a, haN, hx0⟩ := exists_mul_ne_of_isCentral hpN hp0 hq0
+  obtain ⟨a, haN, hx0⟩ := exists_mul_mul_ne_zero_of_isCentral hpN hp0 hq0
   set x := q * a * p with hx
   have hxN : x ∈ N := mul_mem (mul_mem hqN haN) hpN
   have hqx : q * x = x := by rw [hx, ← mul_assoc, ← mul_assoc, hq.isIdempotentElem.eq]

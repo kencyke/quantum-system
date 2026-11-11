@@ -193,6 +193,7 @@ public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionVal
 public import QuantumSystem.ForMathlib.RepresentationTheory.AlgebraRepresentation.Basic
 public import QuantumSystem.ForMathlib.RingTheory.Ideal.Pi
 public import QuantumSystem.ForMathlib.RingTheory.SimpleModule.Central
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.ContinuousLinearMap.Nontrivial
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing

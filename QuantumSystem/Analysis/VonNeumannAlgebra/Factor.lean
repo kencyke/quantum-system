@@ -9,6 +9,8 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.BoundedOperators
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Algebra.Central.Basic
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
+public import QuantumSystem.ForMathlib.RingTheory.SimpleModule.Central
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.ContinuousLinearMap.Nontrivial
 
 /-!
 # Factors and central projections
@@ -24,8 +26,10 @@ three parts, followed by a remark:
 
 1. **Factors** — the characterisation `isCentral_iff` through the commutant, and `𝓑(H)` as the
    first example of a factor.
-2. **Central projections** — projections in the centre `N ∩ N′`; in a factor these are trivial,
-   the seed of the central-support lemma `VonNeumannAlgebra.exists_mul_ne_of_isCentral`.
+2. **Central projections** — projections in the centre `N ∩ N′`. Every `e ∈ N` is carried by a
+   central projection that detects whether `q N e = 0`
+   (`VonNeumannAlgebra.exists_isCentralProjection_mul_eq_zero_iff`); in a factor central
+   projections are trivial, which gives `VonNeumannAlgebra.exists_mul_mul_ne_zero_of_isCentral`.
 3. **Invariance under spatial isomorphisms** `N ↦ U N U⋆`.
 
 Being a factor is intrinsic to the algebra `N`, so it is invariant under algebra isomorphisms
@@ -33,7 +37,7 @@ Being a factor is intrinsic to the algebra `N`, so it is invariant under algebra
 spatial ones `N ↦ U N U⋆`: this is `Algebra.IsCentral.of_algEquiv'`, which allows the two algebras
 in different universes.
 
-Finite-dimensional factors are full matrix algebras: this is
+Nonzero finite-dimensional factors are full matrix algebras: this is
 `CStarAlgebra.exists_starAlgEquiv_cstarMatrix_of_isCentral`, stated for central C⋆-algebras in
 `QuantumSystem.Analysis.CStarAlgebra.FiniteDimensional`.
 
@@ -54,11 +58,13 @@ and the comparison of projections in
   is.
 * `VonNeumannAlgebra.IsCentralProjection.eq_zero_or_eq_one` — in a factor every
   central projection is `0` or `1`.
-* `VonNeumannAlgebra.isStarProjection_mem_commutant_iff` — a star projection lies in the commutant
+* `VonNeumannAlgebra.IsStarProjection.mem_commutant_iff` — a star projection lies in the commutant
   `N′` exactly when its range is invariant under every element of `N` (the projection–reducing
   subspace bridge used to build central supports).
-* `VonNeumannAlgebra.exists_mul_ne_of_isCentral` — the central-support lemma: in a factor, a nonzero `q` meets
-  the `N`-orbit of any nonzero `e ∈ N`.
+* `VonNeumannAlgebra.exists_isCentralProjection_mul_eq_zero_iff` — for `e ∈ N` there is a central
+  projection `P` of `N` with `P e = e` such that `q N e = 0` exactly when `q P = 0`.
+* `VonNeumannAlgebra.exists_mul_mul_ne_zero_of_isCentral` — the central-support lemma: in a factor,
+  `q N e ≠ 0` for nonzero `q` and nonzero `e ∈ N`: there is `a ∈ N` with `q a e ≠ 0`.
 * `VonNeumannAlgebra.isCentral_conj_iff` — factors are invariant under spatial isomorphisms
   `N ↦ U N U⋆`.
 
@@ -105,29 +111,18 @@ lemma exists_eq_smul_one_of_isCentral {N : VonNeumannAlgebra H} [h : Algebra.IsC
 instance isCentral_commutant {N : VonNeumannAlgebra H} [Algebra.IsCentral ℂ N] :
     Algebra.IsCentral ℂ N′ :=
   isCentral_iff.mpr fun x hx hx' =>
-    exists_eq_smul_one_of_isCentral (by rwa [VonNeumannAlgebra.commutant_commutant] at hx') hx
+    exists_eq_smul_one_of_isCentral (by rwa [commutant_commutant] at hx') hx
 
 /-- A von Neumann algebra is a factor iff its commutant is. -/
 lemma isCentral_commutant_iff {N : VonNeumannAlgebra H} :
     Algebra.IsCentral ℂ N′ ↔ Algebra.IsCentral ℂ N :=
-  ⟨fun _ => VonNeumannAlgebra.commutant_commutant N ▸ isCentral_commutant (N := N′),
+  ⟨fun _ => commutant_commutant N ▸ isCentral_commutant (N := N′),
     fun _ => inferInstance⟩
 
 /-- **`B(H)` is a factor.** `𝓑(H)` is `⋆`-isomorphic to `H →L[ℂ] H`, which is central by Mathlib's
 `Algebra.IsCentral.instContinuousLinearMap`. -/
 instance isCentral_boundedLinearOperators : Algebra.IsCentral ℂ 𝓑(H) :=
   .of_algEquiv' (boundedLinearOperators.starAlgEquiv (H := H)).symm.toAlgEquiv
-
-omit [CompleteSpace H] in
-/-- **A nonzero operator witnesses a nonzero space.** On a subsingleton `H` every operator is `0`,
-so exhibiting any `x ≠ 0` already gives `Nontrivial H`. This is why almost none of the results
-below need `[Nontrivial H]` as a hypothesis: they carry a nonzero projection, which supplies it.
-The exceptions are the statements that quantify over projections without asserting one exists
-(`isTypeI_iff_exists_isMinimalProjection_of_isCentral`, `IsTypeIFactor.exists_isMinimalProjection`) and
-the ones producing a minimal projection of `𝓑(H)` out of nothing. -/
-lemma nontrivial_of_ne_zero {x : H →L[ℂ] H} (hx : x ≠ 0) : Nontrivial H :=
-  let ⟨y, hy⟩ := ContinuousLinearMap.exists_ne_zero hx
-  ⟨⟨x y, 0, hy⟩⟩
 
 /-! ### Central projections -/
 
@@ -137,55 +132,48 @@ def IsCentralProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
   IsStarProjection e ∧ e ∈ N ∧ e ∈ N′
 
 /-- `0` is a central projection. -/
-lemma isCentralProjection_zero (N : VonNeumannAlgebra H) : IsCentralProjection N 0 :=
+lemma IsCentralProjection.zero (N : VonNeumannAlgebra H) : IsCentralProjection N 0 :=
   ⟨IsStarProjection.zero _, zero_mem _, zero_mem _⟩
 
 /-- `1` is a central projection. -/
-lemma isCentralProjection_one (N : VonNeumannAlgebra H) : IsCentralProjection N 1 :=
+lemma IsCentralProjection.one (N : VonNeumannAlgebra H) : IsCentralProjection N 1 :=
   ⟨IsStarProjection.one _, one_mem _, one_mem _⟩
 
 /-- In a factor, every central projection is trivial: it is `0` or `1`. This is the
-projection-level form of the triviality of the centre. On a subsingleton `H` the conclusion is
-vacuous (every operator is `0 = 1`), which is why no nontriviality hypothesis is needed. -/
+projection-level form of the triviality of the centre: a nonzero central idempotent of a central
+algebra is `1` (`Algebra.IsCentral.eq_one_of_isIdempotentElem`). On a subsingleton `H` the
+conclusion holds trivially (every operator is `0 = 1`), which is why no nontriviality hypothesis is
+needed. -/
 lemma IsCentralProjection.eq_zero_or_eq_one {N : VonNeumannAlgebra H} [Algebra.IsCentral ℂ N]
     {e : H →L[ℂ] H} (he : IsCentralProjection N e) :
     e = 0 ∨ e = 1 := by
-  rcases subsingleton_or_nontrivial H with hH | hH
-  · have := hH
-    exact Or.inl (Subsingleton.elim _ _)
-  obtain ⟨c, hc⟩ := exists_eq_smul_one_of_isCentral he.2.1 he.2.2
-  have hidem : e * e = e := he.1.isIdempotentElem
-  rw [hc] at hidem
-  have hcc : (c * c) • (1 : H →L[ℂ] H) = c • 1 := by
-    rw [← hidem, smul_mul_smul_comm, mul_one]
-  have hc2 : c * c = c := smul_left_injective ℂ one_ne_zero hcc
-  have h0 : c * (c - 1) = 0 := by rw [mul_sub, mul_one, hc2, sub_self]
-  rcases mul_eq_zero.mp h0 with h | h
-  · exact Or.inl (by rw [hc, h, zero_smul])
-  · exact Or.inr (by rw [hc, sub_eq_zero.mp h, one_smul])
+  by_cases he0 : e = 0
+  · exact Or.inl he0
+  have : Nontrivial H := ContinuousLinearMap.nontrivial_of_ne_zero he0
+  have h1 : (⟨e, he.2.1⟩ : N) = 1 :=
+    Algebra.IsCentral.eq_one_of_isIdempotentElem (K := ℂ)
+      (Subalgebra.mem_center_iff.mpr fun g => Subtype.ext (mem_commutant_iff.mp he.2.2 g g.2))
+      (Subtype.ext he.1.isIdempotentElem) fun h => he0 (congrArg Subtype.val h)
+  exact Or.inr (congrArg Subtype.val h1)
 
 /-- A star projection lies in the commutant `N′` exactly when its range is invariant under every
 element of `N`. This is the bridge between reducing subspaces and (eventually central)
 projections: it follows from the double-commutant characterisation
 `VonNeumannAlgebra.IsStarProjection.mem_iff` together with `commutant_commutant`. -/
-lemma isStarProjection_mem_commutant_iff {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+lemma IsStarProjection.mem_commutant_iff {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsStarProjection e) :
     e ∈ N′ ↔ ∀ y ∈ N, (e.range) ∈ Module.End.invtSubmodule (y : Module.End ℂ H) := by
-  rw [IsStarProjection.mem_iff he N.commutant, commutant_commutant]
+  rw [IsStarProjection.mem_iff he N′, commutant_commutant]
 
-/-- **Central support (factor case).** In a factor, a nonzero operator `q` meets the
-"`N`-orbit" of any nonzero `e ∈ N`: there is `a ∈ N` with `q a e ≠ 0`. The statement needs no
-projection hypothesis on `e` or `q`, only `e ∈ N`, `e ≠ 0` and `q ≠ 0`. The proof takes the
-orthogonal projection `P` onto the closed `N`-invariant subspace generated by `e H`; `P` reduces
-both `N` and `N′`, so it is central, hence `0` or `1`; since `P` acts as the identity on `e H`
-(so `P ≠ 0`, as `e ≠ 0`), `P = 1`, so the generated subspace is the whole space and `q` cannot
-annihilate it. This is the geometric input of the comparison theorem. -/
-lemma exists_mul_ne_of_isCentral {N : VonNeumannAlgebra H} [Algebra.IsCentral ℂ N]
-    {e q : H →L[ℂ] H} (heN : e ∈ N) (he0 : e ≠ 0) (hq0 : q ≠ 0) : ∃ a ∈ N, q * a * e ≠ 0 := by
-  have : Nontrivial H := nontrivial_of_ne_zero he0
-  by_contra hcon
-  have hcon' : ∀ a ∈ N, q * a * e = 0 := fun a haN => by
-    by_contra h; exact hcon ⟨a, haN, h⟩
+/-- **A central projection carrying `e`.** For `e ∈ N` there is a central projection `P` of `N`
+with `P e = e` such that an operator `q` satisfies `q a e = 0` for every `a ∈ N` exactly when
+`q P = 0`. Neither `e` nor `q` need be a projection, and `q` need not lie in `N`. `P` is the
+orthogonal projection onto the closed subspace generated by the vectors `a (e x)` with `a ∈ N`:
+that subspace is invariant under `N` and under `N′`, so `P` lies in `N′` and in `N″ = N`. -/
+theorem exists_isCentralProjection_mul_eq_zero_iff {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
+    (heN : e ∈ N) :
+    ∃ P : H →L[ℂ] H, IsCentralProjection N P ∧ P * e = e ∧
+      ∀ q : H →L[ℂ] H, (∀ a ∈ N, q * a * e = 0) ↔ q * P = 0 := by
   set S : Set H := {y | ∃ a ∈ N, ∃ x, (a : H →L[ℂ] H) (e x) = y} with hS
   set M : Submodule ℂ H := (Submodule.span ℂ S).topologicalClosure with hM
   set P : H →L[ℂ] H := M.starProjection with hP
@@ -206,8 +194,8 @@ lemma exists_mul_ne_of_isCentral {N : VonNeumannAlgebra H} [Algebra.IsCentral �
       simp only [Submodule.comap_coe, Set.mem_preimage, SetLike.mem_coe]
       exact hyS s hs
     rw [hP, Submodule.range_starProjection]; exact hle
-  have hPcomm : P ∈ N.commutant := by
-    rw [isStarProjection_mem_commutant_iff hPproj]
+  have hPcomm : P ∈ N′ := by
+    rw [IsStarProjection.mem_commutant_iff hPproj]
     intro y hyN
     refine hinv y ?_
     rintro s ⟨a, haN, x, rfl⟩
@@ -225,28 +213,39 @@ lemma exists_mul_ne_of_isCentral {N : VonNeumannAlgebra H} [Algebra.IsCentral �
       rw [show (a * y) (e x) = (a : H →L[ℂ] H) (y (e x)) from rfl]
       rw [show y (e x) = (y * e) x from rfl, ← hey]; rfl
     rw [heq]; exact hSmem a haN (y x)
-  have hPcentral : IsCentralProjection N P := ⟨hPproj, hPN, hPcomm⟩
-  have hP1 : P = 1 := by
-    rcases hPcentral.eq_zero_or_eq_one with h0 | h1
-    · exact absurd (by
-        ext x
-        have hpx : P (e x) = e x := by
-          rw [hP, Submodule.starProjection_eq_self_iff]; exact hSmem 1 (one_mem _) x
-        rw [h0] at hpx; simpa using hpx.symm : e = 0) he0
-    · exact h1
-  have hMtop : M = ⊤ := by
-    have hMr : M = P.range := (Submodule.range_starProjection M).symm
-    rw [hMr, hP1]; exact Submodule.eq_top_iff'.2 fun y => ⟨y, rfl⟩
-  have hqM : M ≤ LinearMap.ker (q : H →ₗ[ℂ] H) := by
-    apply Submodule.topologicalClosure_minimal (Submodule.span ℂ S) _ q.isClosed_ker
-    rw [Submodule.span_le]
-    rintro s ⟨a, haN, x, rfl⟩
-    simp only [SetLike.mem_coe, LinearMap.mem_ker, ContinuousLinearMap.coe_coe]
-    rw [show q ((a : H →L[ℂ] H) (e x)) = (q * a * e) x from rfl, hcon' a haN]; rfl
-  apply hq0
-  ext x
-  have hx : x ∈ LinearMap.ker (q : H →ₗ[ℂ] H) := hqM (hMtop ▸ Submodule.mem_top)
-  simpa using hx
+  have hPfix : ∀ (a : H →L[ℂ] H), a ∈ N → ∀ x, P ((a : H →L[ℂ] H) (e x)) = a (e x) :=
+    fun a haN x => by rw [hP, Submodule.starProjection_eq_self_iff]; exact hSmem a haN x
+  refine ⟨P, ⟨hPproj, hPN, hPcomm⟩, ?_, fun q => ⟨fun hq => ?_, fun hq a haN => ?_⟩⟩
+  · ext x
+    exact hPfix 1 (one_mem _) x
+  · have hqM : M ≤ LinearMap.ker (q : H →ₗ[ℂ] H) := by
+      apply Submodule.topologicalClosure_minimal (Submodule.span ℂ S) _ q.isClosed_ker
+      rw [Submodule.span_le]
+      rintro s ⟨a, haN, x, rfl⟩
+      simp only [SetLike.mem_coe, LinearMap.mem_ker, ContinuousLinearMap.coe_coe]
+      rw [show q ((a : H →L[ℂ] H) (e x)) = (q * a * e) x from rfl, hq a haN]; rfl
+    ext x
+    have hx : P x ∈ LinearMap.ker (q : H →ₗ[ℂ] H) := hqM (Submodule.starProjection_apply_mem M x)
+    simpa using hx
+  · ext x
+    rw [show (q * a * e) x = q ((a : H →L[ℂ] H) (e x)) from rfl, ← hPfix a haN x,
+      show q (P ((a : H →L[ℂ] H) (e x))) = (q * P) (a (e x)) from rfl, hq]; rfl
+
+/-- **Central support (factor case).** In a factor, `q N e ≠ 0` for a nonzero operator `q` and a
+nonzero `e ∈ N`: there is `a ∈ N` with `q a e ≠ 0`. The statement needs no projection hypothesis
+on `e` or `q`, only `e ∈ N`, `e ≠ 0` and `q ≠ 0`. The central projection `P` carrying `e`
+(`exists_isCentralProjection_mul_eq_zero_iff`) is `0` or `1` in a factor; `P e = e ≠ 0` excludes
+`0`, so `P = 1`, and `q P = 0` would give `q = 0`. This is the geometric input of the comparison
+theorem. -/
+lemma exists_mul_mul_ne_zero_of_isCentral {N : VonNeumannAlgebra H} [Algebra.IsCentral ℂ N]
+    {e q : H →L[ℂ] H} (heN : e ∈ N) (he0 : e ≠ 0) (hq0 : q ≠ 0) : ∃ a ∈ N, q * a * e ≠ 0 := by
+  obtain ⟨P, hPcentral, hPe, hP⟩ := exists_isCentralProjection_mul_eq_zero_iff heN
+  by_contra hcon
+  have hqP : q * P = 0 := (hP q).mp fun a haN => by
+    by_contra h; exact hcon ⟨a, haN, h⟩
+  rcases hPcentral.eq_zero_or_eq_one with h0 | h1
+  · exact he0 (by rw [← hPe, h0, zero_mul])
+  · exact hq0 (by rw [← mul_one q, ← h1, hqP])
 
 /-! ### Invariance under spatial isomorphisms -/
 
