@@ -50,6 +50,7 @@ public import QuantumSystem.Analysis.OperatorSystem.CStarEnvelope
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffros
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffrosProduct
 public import QuantumSystem.Analysis.OperatorSystem.Injective
+public import QuantumSystem.Analysis.OperatorSystem.Injective.CStarAlgebra
 public import QuantumSystem.Analysis.OperatorSystem.InjectiveEnvelope
 public import QuantumSystem.Analysis.OperatorSystem.KPositiveMap
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation

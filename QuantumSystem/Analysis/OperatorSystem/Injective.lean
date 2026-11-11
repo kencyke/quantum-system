@@ -42,6 +42,8 @@ each extends the other's embedding, and the two extensions compose to completely
   positive maps from operator systems in any universes.
 * `OperatorSystem.injective_continuousLinearMap` — `B(H)` is injective.
 * `OperatorSystem.Injective.of_retract` — a retract of an injective operator system is injective.
+* `OperatorSubsystem.injective_iff_exists_retraction` — an operator subsystem of an injective
+  operator system is injective iff it is the range of a completely positive retraction.
 * `OperatorSystem.IsInjectiveEnvelope.exists_linearEquiv` — injective envelopes are unique up to
   complete order isomorphism.
 -/
@@ -168,3 +170,27 @@ theorem IsInjectiveEnvelope.exists_linearEquiv {V : Type*} [AddCommGroup V] [Mod
   exact (CStarMatrix.ext fun i j => DFunLike.congr_fun hβα (X i j)).symm
 
 end OperatorSystem
+
+namespace OperatorSubsystem
+
+open OperatorSystem
+
+variable {W : Type*} [AddCommGroup W] [Module ℂ W] [StarAddMonoid W] [StarModule ℂ W] [PartialOrder W]
+  [∀ k, PartialOrder (CStarMatrix (Fin k) (Fin k) W)] [One W] [OperatorSystem W]
+
+/-- **An operator subsystem of an injective operator system is injective iff it is the range of a
+completely positive retraction.** Forward: the inclusion `S → W` is a unital complete order
+embedding, along which the identity of the injective `S` extends
+(`OperatorSystem.Injective.exists_extension`). Backward: `S` is a retract of the injective `W`
+(`OperatorSystem.Injective.of_retract`). -/
+theorem injective_iff_exists_retraction (hW : Injective W) (S : OperatorSubsystem W) :
+    Injective S ↔ ∃ E : W →CP' S, ∀ x : S, E x = x := by
+  constructor
+  · intro hS
+    obtain ⟨E, hE⟩ := hS.exists_extension (j := S.subtype.toLinearMap) (fun _ _ => Iff.rfl) rfl
+      (CompletelyPositiveMap'.id S)
+    exact ⟨E, fun x => DFunLike.congr_fun hE x⟩
+  · rintro ⟨E, hE⟩
+    exact hW.of_retract S.subtype E hE
+
+end OperatorSubsystem
