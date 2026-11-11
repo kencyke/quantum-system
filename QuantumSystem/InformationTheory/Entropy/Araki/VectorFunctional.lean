@@ -31,7 +31,7 @@ support projections `s(ξ) = VonNeumannAlgebra.supportProj M ξ`.
   order, `Δ_{η,ξ} = Δ[M]⟦η, ξ⟧` (Araki's and Longo's `Δ_{η,ξ}`; Witten's
   `Δ_{Ψ|Φ}` with `Ψ = ξ`, `Φ = η` has the subscripts the other way round).
 * **Finite dimensions.** For `M = B(H)`, `H` finite-dimensional, acting as `1 ⊗ B(H)` on
-  `K ⊗̂ H` and `ξ`, `η` purifications of positive operators `ρ`, `σ`, this is the eigenvalue sum of
+  `Completion (K ⊗[ℂ] H)` and `ξ`, `η` purifications of positive operators `ρ`, `σ`, this is the eigenvalue sum of
   Umegaki's `tr ρ (log ρ - log σ)` (natural logarithm, unit nat), in the same slot order as
   Umegaki's relative entropy `umegakiEntropy ψ φ` (`D(ψ ∥ φ)`), which is defined as `S(ψ ‖ φ)`:
   `VonNeumannAlgebra.arakiVec_purification`; for normal functionals,

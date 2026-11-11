@@ -13,8 +13,8 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopo
 # The comparison theorem for factors
 
 Any two projections `p, q` of a factor `N` are comparable in the Murray–von Neumann order:
-`p ≼[N] q` or `q ≼[N] p` (`IsFactor.mvNSub_or_mvNSub`). The minimal-projection case
-(`IsMinimalProjection.mvNSub_of_isFactor`, in `QuantumSystem.Analysis.VonNeumannAlgebra.MurrayVonNeumann`)
+`p ≼[N] q` or `q ≼[N] p` (`mvNSub_or_mvNSub_of_isCentral`). The minimal-projection case
+(`IsMinimalProjection.mvNSub_of_isCentral`, in `QuantumSystem.Analysis.VonNeumannAlgebra.MurrayVonNeumann`)
 needs only a scaling argument; the general case rests on two further ingredients.
 
 1. **Orthogonal sums of partial isometries**, in any von Neumann algebra. A family of partial
@@ -26,7 +26,7 @@ needs only a scaling argument; the general case rests on two further ingredients
    the orthogonal ranges. Consequently Murray–von Neumann equivalence is additive
    over orthogonal families.
 2. **Local comparison**, in a factor. Nonzero projections `p, q` of a factor have nonzero
-   equivalent subprojections: the central-support lemma `IsFactor.exists_mul_ne` gives `a ∈ N`
+   equivalent subprojections: the central-support lemma `exists_mul_mul_ne_zero_of_isCentral` gives `a ∈ N`
    with `x = q a p ≠ 0`, and the polar decomposition of `x`
    (`QuantumSystem.Analysis.VonNeumannAlgebra.PolarDecomposition`) makes the range projection
    `R(x⋆) ≤ p` equivalent to the range projection `R(x) ≤ q`.
@@ -51,25 +51,21 @@ evaluate it at vectors, `∀ x, HasSum (fun i => v i x) (w x)`, through
   whose source and range projections are the strong sums of the sources and of the ranges.
 * `VonNeumannAlgebra.mvNEquiv_of_hasSum` — **additivity of Murray–von Neumann equivalence**: if
   `p_i ∼[N] q_i` for orthogonal families `(p_i)`, `(q_i)`, then `∑ᵢ p_i ∼[N] ∑ᵢ q_i`.
-* `VonNeumannAlgebra.IsFactor.exists_mvNEquiv_le` — local comparison in a factor.
-* `VonNeumannAlgebra.IsFactor.mvNSub_or_mvNSub` — **the comparison theorem for factors**.
+* `VonNeumannAlgebra.exists_mvNEquiv_le_of_isCentral` — local comparison in a factor.
+* `VonNeumannAlgebra.mvNSub_or_mvNSub_of_isCentral` — **the comparison theorem for factors**.
 
 ## TODO
 
-* The comparison theorem for an arbitrary von Neumann algebra (Kadison–Ringrose §6.2, Takesaki
-  V.1.8): for projections `p, q ∈ N` there is a central projection `z` of `N` with
+* The comparison theorem for an arbitrary von Neumann algebra: for projections `p, q ∈ N` there
+  is a central projection `z` of `N` with
   `p z ≼[N] q z` and `q (1 - z) ≼[N] p (1 - z)`; the factor case above is then its corollary at
   `z ∈ {0, 1}`. Only local comparison is factor-specific — orthogonal sums and the polar
   decomposition already hold in any `N` — and it needs the **central support** (central carrier)
   `C_p` of a projection, the least central projection above `p`, together with the general form of
-  `IsFactor.exists_mul_ne`: `q N p ≠ 0` iff `C_p C_q ≠ 0`. Neither is developed yet.
-
-## References
-
-* R. V. Kadison, J. R. Ringrose, *Fundamentals of the Theory of Operator Algebras II*, §6.2
-  (the comparison theorem, of which the factor case is the statement here).
-* M. Takesaki, *Theory of Operator Algebras I*, Theorem V.1.8 (the comparability theorem, of which
-  the factor case is the statement here).
+  `exists_mul_mul_ne_zero_of_isCentral` beyond factors: `q N p ≠ 0` iff `C_p C_q ≠ 0`.
+  `centralSupport N p` is that least central projection, with `q N p = 0` iff `q C_p = 0`
+  (`mul_centralSupport_eq_zero_iff`); the form with `C_q` and local comparison are not developed
+  yet.
 -/
 
 @[expose] public section
@@ -289,13 +285,13 @@ variable {N : VonNeumannAlgebra H}
 
 /-- **Local comparison in a factor.** Two nonzero projections `p, q` of a factor `N` have nonzero
 Murray–von Neumann equivalent subprojections `p' ≤ p`, `q' ≤ q`. The central-support lemma
-`IsFactor.exists_mul_ne` supplies `a ∈ N` with `x = q a p ≠ 0`, and the polar decomposition of `x`
+`exists_mul_mul_ne_zero_of_isCentral` supplies `a ∈ N` with `x = q a p ≠ 0`, and the polar decomposition of `x`
 makes the range projections `R(x⋆) ≤ p` and `R(x) ≤ q` equivalent (`mvNEquiv_rangeProj`). -/
-lemma IsFactor.exists_mvNEquiv_le (hN : IsFactor N) {p q : H →L[ℂ] H}
+lemma exists_mvNEquiv_le_of_isCentral [Algebra.IsCentral ℂ N] {p q : H →L[ℂ] H}
     (hp : IsStarProjection p) (hpN : p ∈ N) (hp0 : p ≠ 0)
     (hq : IsStarProjection q) (hqN : q ∈ N) (hq0 : q ≠ 0) :
     ∃ p' q' : H →L[ℂ] H, p' ≠ 0 ∧ p' ≤ p ∧ q' ≤ q ∧ p' ∼[N] q' := by
-  obtain ⟨a, haN, hx0⟩ := hN.exists_mul_ne hpN hp0 hq0
+  obtain ⟨a, haN, hx0⟩ := exists_mul_mul_ne_zero_of_isCentral hpN hp0 hq0
   set x := q * a * p with hx
   have hxN : x ∈ N := mul_mem (mul_mem hqN haN) hpN
   have hqx : q * x = x := by rw [hx, ← mul_assoc, ← mul_assoc, hq.isIdempotentElem.eq]
@@ -312,10 +308,10 @@ By Zorn's lemma take a maximal set `S` of nonzero partial isometries `v ∈ N` w
 (`v p = v`) and range under `q` (`q v = v`), with pairwise orthogonal sources and pairwise
 orthogonal ranges. Their strong sum `w` (`exists_hasSum_isPartialIsometry`) is a partial isometry
 in `N` with source `p₀ = w⋆ w ≤ p` and range `q₀ = w w⋆ ≤ q`. If both `p - p₀` and `q - q₀` were
-nonzero, local comparison (`IsFactor.exists_mvNEquiv_le`) would produce a nonzero partial
+nonzero, local comparison (`exists_mvNEquiv_le_of_isCentral`) would produce a nonzero partial
 isometry from under `p - p₀` to under `q - q₀`, orthogonal to every member of `S`, contradicting
 maximality. Hence `p₀ = p`, so `p ∼[N] q₀ ≤ q`, or `q₀ = q`, so `q ∼[N] p₀ ≤ p`. -/
-theorem IsFactor.mvNSub_or_mvNSub (hN : IsFactor N) {p q : H →L[ℂ] H}
+theorem mvNSub_or_mvNSub_of_isCentral [Algebra.IsCentral ℂ N] {p q : H →L[ℂ] H}
     (hp : IsStarProjection p) (hpN : p ∈ N) (hq : IsStarProjection q) (hqN : q ∈ N) :
     p ≼[N] q ∨ q ≼[N] p := by
   have hsymm : ∀ {a b : H →L[ℂ] H}, IsSelfAdjoint a → IsSelfAdjoint b → a * b = 0 →
@@ -384,7 +380,7 @@ theorem IsFactor.mvNSub_or_mvNSub (hN : IsFactor N) {p q : H →L[ℂ] H}
   have hr0 : r ≠ 0 := fun h => hPp (sub_eq_zero.mp h).symm
   have hs0 : s ≠ 0 := fun h => hQq (sub_eq_zero.mp h).symm
   obtain ⟨p', q', hp'0, hrp', hsq', u, huN, hu, hup', huq'⟩ :=
-    hN.exists_mvNEquiv_le hrproj (sub_mem hpN hP₀N) hr0 hsproj (sub_mem hqN hQ₀N) hs0
+    exists_mvNEquiv_le_of_isCentral hrproj (sub_mem hpN hP₀N) hr0 hsproj (sub_mem hqN hQ₀N) hs0
   have hp' : IsStarProjection p' := hup' ▸ hu.isStarProjection_star_mul_self
   have hq'' : IsStarProjection q' := huq' ▸ hu.isStarProjection_mul_star_self
   replace hrp' : r * p' = p' := (hp'.le_iff_mul_eq_right hrproj).mp hrp'

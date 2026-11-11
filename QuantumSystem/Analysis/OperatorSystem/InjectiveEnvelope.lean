@@ -135,13 +135,11 @@ lemma exists_isMin : ∃ φ : FixingMap S, IsMin φ := by
     refine ⟨OrderDual.toDual ⟨ψ₀, hfix⟩, fun b hb => ?_⟩
     change ∀ x, ‖ψ₀ x‖ ≤ ‖(OrderDual.ofDual b).toMap x‖
     intro x
-    have h := hψ₀ ((fun g => g x) ⁻¹' (toCLM ⁻¹' Metric.closedBall 0 ‖(OrderDual.ofDual b).toMap x‖))
+    have h := hψ₀ ((fun g => g x) ⁻¹' (ofCLM '' Metric.closedBall 0 ‖(OrderDual.ofDual b).toMap x‖))
       ((isClosed_closedBall 0 _).preimage (continuous_apply x)) ?_
     · simpa using h
     filter_upwards [eventually_ge_atTop ⟨b, hb⟩] with i hi
-    have := hi x
-    simp only [Set.mem_preimage, Metric.mem_closedBall, dist_zero_right]
-    exact this
+    exact ⟨_, mem_closedBall_zero_iff.mpr (hi x), rfl⟩
   exact ⟨OrderDual.ofDual φ, hφ.ofDual⟩
 
 variable (S) in
@@ -310,11 +308,12 @@ lemma apply_eq_self_of_isIdempotentElem (hφ : IsIdempotentElem φ.toMap) {x : H
   exact DFunLike.congr_fun hφ.eq y
 
 /-- **The range of an idempotent map fixing `S` is injective**, in particular the injective envelope,
-the range of a minimal map: it is a retract of the injective `B(H)`
-(`OperatorSystem.injective_continuousLinearMap`), by `φ` itself. -/
+the range of a minimal map: `φ` itself is a completely positive retraction of the injective `B(H)`
+(`OperatorSystem.injective_continuousLinearMap`) onto it
+(`OperatorSubsystem.injective_iff_exists_retraction`). -/
 lemma injective_range (hφ : IsIdempotentElem φ.toMap) : OperatorSystem.Injective φ.range :=
-  (OperatorSystem.injective_continuousLinearMap H).of_retract φ.range.subtype φ.projection fun r =>
-    Subtype.ext (apply_eq_self_of_isIdempotentElem hφ r.2)
+  (injective_iff_exists_retraction (OperatorSystem.injective_continuousLinearMap H) φ.range).mpr
+    ⟨φ.projection, fun r => Subtype.ext (apply_eq_self_of_isIdempotentElem hφ r.2)⟩
 
 /-- **The injective envelope is rigid.** A completely positive map `γ` of the range of a minimal `φ`
 fixing `S` into itself that fixes `S` is the identity: `γ ∘ φ`, as a map on `B(H)`, fixes `S`, so

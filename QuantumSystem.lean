@@ -37,6 +37,7 @@ public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.BorchersTranslation
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Tomita
+public import QuantumSystem.Analysis.InnerProductSpace.Subspace
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
 public import QuantumSystem.Analysis.OperatorSpace.Basic
@@ -50,6 +51,7 @@ public import QuantumSystem.Analysis.OperatorSystem.CStarEnvelope
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffros
 public import QuantumSystem.Analysis.OperatorSystem.ChoiEffrosProduct
 public import QuantumSystem.Analysis.OperatorSystem.Injective
+public import QuantumSystem.Analysis.OperatorSystem.Injective.CStarAlgebra
 public import QuantumSystem.Analysis.OperatorSystem.InjectiveEnvelope
 public import QuantumSystem.Analysis.OperatorSystem.KPositiveMap
 public import QuantumSystem.Analysis.SpectralTheory.AnalyticContinuation
@@ -79,6 +81,8 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosed
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.WOTClosedSubalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Factor
+public import QuantumSystem.Analysis.VonNeumannAlgebra.Injective
+public import QuantumSystem.Analysis.VonNeumannAlgebra.KaplanskyDensity
 public import QuantumSystem.Analysis.VonNeumannAlgebra.MinimalProjection
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.Borchers
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Modular.BorchersTranslation
@@ -101,6 +105,7 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.ForMathlib.Algebra.Algebra.Unitization
+public import QuantumSystem.ForMathlib.Algebra.Central.Basic
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
@@ -154,11 +159,13 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductC
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
+public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.ConvexOperatorClosure
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.SigmaWeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.StrongOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Transpose
+public import QuantumSystem.ForMathlib.Analysis.Normed.Algebra.Central
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.PiLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ZeroAtInfty
@@ -185,6 +192,8 @@ public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
 public import QuantumSystem.ForMathlib.RepresentationTheory.AlgebraRepresentation.Basic
 public import QuantumSystem.ForMathlib.RingTheory.Ideal.Pi
+public import QuantumSystem.ForMathlib.RingTheory.SimpleModule.Central
+public import QuantumSystem.ForMathlib.Topology.Algebra.Module.ContinuousLinearMap.Nontrivial
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing

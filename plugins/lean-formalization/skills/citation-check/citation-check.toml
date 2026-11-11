@@ -1,0 +1,34 @@
+# Hosts whose documents cite.py may fetch (subdomains included); the bibliographic APIs are always allowed.
+# This is the skill's own list. A project adds its hosts in a file of this name and format at the root of its git
+# work tree, which cite.py lays over this one entry by entry; an edit made here is lost when the plugin is updated.
+# A host is listed only after its terms were read and allow single documents to be fetched for research; `terms`
+# is the page read, `reviewed` its date, `interval` the seconds between requests the terms set (none set one here).
+# Left out after review on 2026-11-10: ams.org (its eContent terms forbid automated downloading), msp.org and
+# doi.org (no terms on automated access found).
+# Left out after review on 2026-11-11: eudml.org (answers HTTP 403 to Claude-User; its policies page could not be
+# reached), einsteinpapers.press.princeton.edu (the free site has closed; only a paid portal remains).
+
+[hosts."arxiv.org"]
+terms = "https://info.arxiv.org/help/robots.html"
+reviewed = 2026-11-10
+note = "Indiscriminate automated downloads are not permitted; robots.txt (Crawl-delay 15) is obeyed."
+
+[hosts."gdz.sub.uni-goettingen.de"]
+terms = "https://gdz.sub.uni-goettingen.de/download/pdf/PPN243919689_0077/LOG_0014.pdf"
+reviewed = 2026-11-10
+note = "Terms and Conditions on each document's cover: noncommercial educational, research and private use."
+
+[hosts."numdam.org"]
+terms = "https://numdam.org/conditions/"
+reviewed = 2026-11-10
+note = "Full texts may be downloaded one by one for research; substantial volumes need explicit permission."
+
+[hosts."jstage.jst.go.jp"]
+terms = "https://www.jstage.jst.go.jp/static/pages/TermsAndPolicies/ForIndividuals/-char/en"
+reviewed = 2026-11-10
+note = "Art. 3(1)(5) forbids downloading a large amount by mechanical means; robots.txt disallows PDFs."
+
+[hosts."ems.press"]
+terms = "https://ems.press/subscribe-to-open"
+reviewed = 2026-11-11
+note = "Open access content (Subscribe to Open, Launch to Open) is CC BY 4.0; robots.txt allows all; no site terms on automated access."

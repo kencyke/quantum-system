@@ -33,9 +33,9 @@ a star projection with commutative corner `p N p`), and criteria for minimality.
   element (non-unital continuous functional calculus inside the norm-closed corner subalgebra)
   yield an order dichotomy, and a Dedekind-cut argument on `{c : ℝ | 0 ≤ x - c • p}` pins each
   self-adjoint corner element to a real multiple of `p`.
-* **In a factor, abelian projections are minimal.** An abelian projection of a factor is
+* **In a factor, nonzero abelian projections are minimal.** An abelian projection of a factor is
   order-minimal, by a corner-commutation argument through the central-support lemma
-  `IsFactor.exists_mul_ne`; hence it is minimal.
+  `exists_mul_mul_ne_zero_of_isCentral`; hence it is minimal.
 * **The minimal projections of `B(H)` are the rank-one projections** `|u⟩⟨u|`, `‖u‖ = 1`;
   equivalently, the star projections with one-dimensional range.
 
@@ -59,12 +59,12 @@ These are the ingredients of the minimal-projection characterisation of type I f
   `VonNeumannAlgebra.isMinimalProjection_starAlgEquiv_iff` — minimal projections are invariant
   under spatial isomorphisms `N ↦ U N U⋆` and under abstract `⋆`-isomorphisms `N ≃⋆ₐ M`
   (`VonNeumannAlgebra.isMinimalProjection_coe_iff`).
-* `VonNeumannAlgebra.IsFactor.subprojection_eq_of_isAbelianProjection` — in a factor, an abelian
+* `VonNeumannAlgebra.subprojection_eq_of_isAbelianProjection_of_isCentral` — in a factor, an abelian
   projection has no proper nonzero subprojection.
 * `VonNeumannAlgebra.rangeProj_mem` — the range projection `R(x)` of `x ∈ N` lies in `N`.
 * `VonNeumannAlgebra.isMinimalProjection_of_forall_subprojection` — order-minimality implies the
   trivial corner.
-* `VonNeumannAlgebra.IsFactor.isMinimalProjection_of_isAbelianProjection` — in a factor, a
+* `VonNeumannAlgebra.isMinimalProjection_of_isAbelianProjection_of_isCentral` — in a factor, a
   nonzero abelian projection is minimal.
 * `VonNeumannAlgebra.isMinimalProjection_rankOne_boundedLinearOperators`,
   `VonNeumannAlgebra.exists_isMinimalProjection_boundedLinearOperators` — rank-one projections are
@@ -95,7 +95,7 @@ def IsMinimalProjection (N : VonNeumannAlgebra H) (e : H →L[ℂ] H) : Prop :=
 projection is nonzero, so it sends some vector to a nonzero vector, witnessing `Nontrivial H`. -/
 lemma IsMinimalProjection.nontrivial {N : VonNeumannAlgebra H} {e : H →L[ℂ] H}
     (he : IsMinimalProjection N e) : Nontrivial H :=
-  nontrivial_of_ne_zero he.2.2.1
+  ContinuousLinearMap.nontrivial_of_ne_zero he.2.2.1
 
 /-- A minimal projection has no proper nonzero subprojection in `N`: if a projection `f ∈ N`
 satisfies `f ≤ e` (the operator order, equivalently the range inclusion `ran f ⊆ ran e`), then
@@ -228,17 +228,17 @@ is `0` or `p`.
 
 The proof avoids corner-commutant theory and polar decomposition: if `0 ≠ q ≠ p`, then
 `r := p - q` is a nonzero projection under `p` orthogonal to `q`, and the central-support lemma
-`IsFactor.exists_mul_ne` produces `a ∈ N` with `z := r a q ≠ 0`. Both `z` and `z⋆` are corner
+`exists_mul_mul_ne_zero_of_isCentral` produces `a ∈ N` with `z := r a q ≠ 0`. Both `z` and `z⋆` are corner
 elements of `p`, so they commute by abelianness; but `q z = 0` and `q z⋆ = z⋆` force
 `z⋆ z = q (z z⋆) = (q z) z⋆ = 0`, and the C⋆-identity gives `z = 0` — a contradiction. -/
-lemma IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra H}
-    (hN : IsFactor N) {p : H →L[ℂ] H} (hp : IsAbelianProjection N p)
+lemma subprojection_eq_of_isAbelianProjection_of_isCentral {N : VonNeumannAlgebra H}
+    [Algebra.IsCentral ℂ N] {p : H →L[ℂ] H} (hp : IsAbelianProjection N p)
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hle : q ≤ p) :
     q = 0 ∨ q = p := by
   have hsub : p * q = q := (hq.le_iff_mul_eq_right hp.1).mp hle
   by_cases hq0 : q = 0
   · exact Or.inl hq0
-  have : Nontrivial H := nontrivial_of_ne_zero hq0
+  have : Nontrivial H := ContinuousLinearMap.nontrivial_of_ne_zero hq0
   by_cases hqp : q = p
   · exact Or.inr hqp
   exfalso
@@ -252,7 +252,7 @@ lemma IsFactor.subprojection_eq_of_isAbelianProjection {N : VonNeumannAlgebra H}
     rw [hr, star_sub, hp.1.isSelfAdjoint.star_eq, hq.isSelfAdjoint.star_eq]
   have hrN : r ∈ N := sub_mem hp.2.1 hqN
   have hr0 : r ≠ 0 := fun h0 => hqp (by rw [hr, sub_eq_zero] at h0; exact h0.symm)
-  obtain ⟨a, haN, hz0⟩ := hN.exists_mul_ne hqN hq0 hr0
+  obtain ⟨a, haN, hz0⟩ := exists_mul_mul_ne_zero_of_isCentral hqN hq0 hr0
   set z : H →L[ℂ] H := r * a * q with hz
   have hzN : z ∈ N := mul_mem (mul_mem hrN haN) hqN
   have hzcorner : p * z * p = z := by
@@ -625,13 +625,13 @@ lemma isMinimalProjection_of_forall_subprojection {N : VonNeumannAlgebra H}
     _ = ((c₁ : ℂ) + Complex.I * (c₂ : ℂ)) • p := by rw [smul_smul, ← add_smul]
 
 /-- **In a factor, a nonzero abelian projection is minimal**: it is order-minimal
-(`subprojection_eq_of_isAbelianProjection`), and order-minimality forces the trivial corner
+(`subprojection_eq_of_isAbelianProjection_of_isCentral`), and order-minimality forces the trivial corner
 (`isMinimalProjection_of_forall_subprojection`). -/
-theorem IsFactor.isMinimalProjection_of_isAbelianProjection
-    {N : VonNeumannAlgebra H} (hN : IsFactor N) {p : H →L[ℂ] H}
+theorem isMinimalProjection_of_isAbelianProjection_of_isCentral
+    {N : VonNeumannAlgebra H} [Algebra.IsCentral ℂ N] {p : H →L[ℂ] H}
     (hp : IsAbelianProjection N p) (hp0 : p ≠ 0) : IsMinimalProjection N p :=
   isMinimalProjection_of_forall_subprojection hp.1 hp.2.1 hp0 fun _ hq hqN hsub =>
-    hN.subprojection_eq_of_isAbelianProjection hp hq hqN hsub
+    subprojection_eq_of_isAbelianProjection_of_isCentral hp hq hqN hsub
 
 /-! ### Minimal projections of `B(H)` -/
 

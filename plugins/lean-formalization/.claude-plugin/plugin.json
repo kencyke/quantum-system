@@ -1,0 +1,18 @@
+{
+  "name": "lean-formalization",
+  "description": "Skills and agents for formalizing mathematics in Lean 4.",
+  "author": {
+    "name": "Keisuke Suzuki"
+  },
+  "homepage": "https://github.com/kencyke/quantum-system/tree/main/plugins/lean-formalization",
+  "repository": "https://github.com/kencyke/quantum-system",
+  "license": "Apache-2.0",
+  "keywords": [
+    "lean4",
+    "mathlib",
+    "formalization",
+    "review",
+    "citations",
+    "lint"
+  ]
+}

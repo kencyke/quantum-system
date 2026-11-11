@@ -23,11 +23,11 @@ enter only there. The eigenbases are arbitrary, not Mathlib's chosen
 
 ## Setting
 
-`B(H)` acts on `K ⊗̂ H` as `1 ⊗ B(H) = VonNeumannAlgebra.oneTensor K 𝓑(H)`. For `K = ℓ²(ℕ)` it is the
+`B(H)` acts on `Completion (K ⊗[ℂ] H)` as `1 ⊗ B(H) = VonNeumannAlgebra.oneTensor K 𝓑(H)`. For `K = ℓ²(ℕ)` it is the
 amplification on which `VonNeumannAlgebra.arakiEntropy` represents normal functionals. Given an
 orthonormal family `g` in `K`, the **purification** `Ω_ρ = Σᵢ √rᵢ gᵢ ⊗ bᵢ`
 (`OrthonormalBasis.purification`) represents `A ↦ Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`
-(`OrthonormalBasis.inner_purification_amplifyRight`).
+(`OrthonormalBasis.inner_purification_completion_lTensor`).
 
 ## Computation
 
@@ -41,11 +41,11 @@ is `VonNeumannAlgebra.arakiEntropy_eq_top_of_apply_star_mul_self` and is not rep
 
 ## Main definitions
 
-* `OrthonormalBasis.purification b r g` — the purification `Σᵢ √rᵢ gᵢ ⊗ bᵢ ∈ K ⊗̂ H`.
+* `OrthonormalBasis.purification b r g` — the purification `Σᵢ √rᵢ gᵢ ⊗ bᵢ ∈ Completion (K ⊗[ℂ] H)`.
 
 ## Main results
 
-* `OrthonormalBasis.inner_purification_amplifyRight` — `⟪Ω_ρ, (1 ⊗ A) Ω_ρ⟫ = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`.
+* `OrthonormalBasis.inner_purification_completion_lTensor` — `⟪Ω_ρ, (1 ⊗ A) Ω_ρ⟫ = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`.
 * `VonNeumannAlgebra.mem_graph_relativeModular_purification` — the eigenvectors of `Δ_{Ω_σ, Ω_ρ}`.
 * `VonNeumannAlgebra.measure_pvm_relativeModular_purification` — the spectral measure.
 * `VonNeumannAlgebra.arakiVec_purification` — `S_{1 ⊗ B(H)}(ω_{Ω_ρ} ‖ ω_{Ω_σ})` is the eigenvalue
@@ -56,10 +56,11 @@ is `VonNeumannAlgebra.arakiEntropy_eq_top_of_apply_star_mul_self` and is not rep
 
 @[expose] public section
 
-open ClosedSubmodule MeasureTheory ContinuousLinearMap
-open scoped InnerProductSpace VonNeumannAlgebra HilbertTensor Araki ComplexOrder
+open ClosedSubmodule MeasureTheory UniformSpace
+open ContinuousLinearMap (completion_apply_coe lTensor_tmul rTensor_tmul adjoint_completion_lTensor
+  adjoint_completion_rTensor)
+open scoped InnerProductSpace TensorProduct VonNeumannAlgebra Amplification Araki ComplexOrder
 open InnerProductSpace (cyclicSubspace rankOne)
-open HilbertTensor (amplifyLeft amplifyRight)
 
 variable {ι : Type*} [Fintype ι]
   {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
@@ -70,48 +71,51 @@ local notation "√ᶜ" r => ((Real.sqrt r : ℝ) : ℂ)
 
 namespace OrthonormalBasis
 
-/-- The vector `Σᵢ √rᵢ gᵢ ⊗ bᵢ ∈ K ⊗̂ H` built from an orthonormal basis `b` of `H`, weights `r` and
+/-- The vector `Σᵢ √rᵢ gᵢ ⊗ bᵢ ∈ Completion (K ⊗[ℂ] H)` built from an orthonormal basis `b` of `H`, weights `r` and
 a family `g` in `K`. For an orthonormal eigenbasis `b` of a positive operator `ρ` with eigenvalues
 `r` and orthonormal `g`, it is a **purification** of `ρ`: it represents the positive functional
 `A ↦ Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫ = tr(ρ A)` of `1 ⊗ B(H)`
-(`OrthonormalBasis.inner_purification_amplifyRight`). -/
-noncomputable def purification (b : OrthonormalBasis ι ℂ H) (r : ι → ℝ) (g : ι → K) : K ⊗̂ H :=
-  ∑ i, (√ᶜ r i) • (g i ⊗ₕ b i)
+(`OrthonormalBasis.inner_purification_completion_lTensor`). -/
+noncomputable def purification (b : OrthonormalBasis ι ℂ H) (r : ι → ℝ) (g : ι → K) :
+    Completion (K ⊗[ℂ] H) :=
+  ∑ i, (√ᶜ r i) • (↑(g i ⊗ₜ[ℂ] b i) : Completion (K ⊗[ℂ] H))
 
 variable (b : OrthonormalBasis ι ℂ H) (r : ι → ℝ) {g : ι → K}
 
 /-- `(1 ⊗ |x⟩⟨bᵢ|) Ω = √rᵢ gᵢ ⊗ x`. -/
-lemma amplifyRight_rankOne_purification (x : H) (i : ι) :
-    (𝟙 ⊗ rankOne ℂ x (b i)) (b.purification r g) = (√ᶜ r i) • (g i ⊗ₕ x) := by
+lemma completion_lTensor_rankOne_purification (x : H) (i : ι) :
+    (𝟙[K] ⊗ rankOne ℂ x (b i)) (b.purification r g) = (√ᶜ r i) • (↑(g i ⊗ₜ[ℂ] x) : Completion (K ⊗[ℂ] H)) := by
   classical
   have hf := b.orthonormal
-  simp only [purification, map_sum, map_smul, HilbertTensor.amplifyRight_tmul,
+  simp only [purification, map_sum, map_smul, completion_apply_coe, lTensor_tmul,
     InnerProductSpace.rankOne_apply]
   rw [Finset.sum_eq_single i (fun k _ hk => by
-      rw [hf.2 hk.symm, zero_smul, HilbertTensor.tmul_zero, smul_zero]) (by simp),
+      rw [hf.2 hk.symm, zero_smul, TensorProduct.tmul_zero, Completion.coe_zero, smul_zero])
+      (by simp),
     orthonormal_iff_ite.mp hf i i]
   simp
 
 /-- `(|y⟩⟨gᵢ| ⊗ 1) Ω = √rᵢ y ⊗ bᵢ` for orthonormal `g`. -/
-lemma amplifyLeft_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : ι) :
-    (rankOne ℂ y (g i) ⊗ 𝟙) (b.purification r g) = (√ᶜ r i) • (y ⊗ₕ b i) := by
+lemma completion_rTensor_rankOne_purification (hg : Orthonormal ℂ g) (y : K) (i : ι) :
+    (rankOne ℂ y (g i) ⊗ 𝟙[H]) (b.purification r g) = (√ᶜ r i) • (↑(y ⊗ₜ[ℂ] b i) : Completion (K ⊗[ℂ] H)) := by
   classical
-  simp only [purification, map_sum, map_smul, HilbertTensor.amplifyLeft_tmul,
+  simp only [purification, map_sum, map_smul, completion_apply_coe, rTensor_tmul,
     InnerProductSpace.rankOne_apply]
   rw [Finset.sum_eq_single i (fun k _ hk => by
-      rw [hg.2 hk.symm, zero_smul, HilbertTensor.zero_tmul, smul_zero]) (by simp),
+      rw [hg.2 hk.symm, zero_smul, TensorProduct.zero_tmul, Completion.coe_zero, smul_zero])
+      (by simp),
     orthonormal_iff_ite.mp hg i i]
   simp
 
 /-- **The purification represents the weighted functional**: for nonnegative weights and
 orthonormal `g`, `⟪Ω, (1 ⊗ A) Ω⟫ = Σᵢ rᵢ ⟪bᵢ, A bᵢ⟫`. -/
-lemma inner_purification_amplifyRight (hr : ∀ i, 0 ≤ r i) (hg : Orthonormal ℂ g)
+lemma inner_purification_completion_lTensor (hr : ∀ i, 0 ≤ r i) (hg : Orthonormal ℂ g)
     (A : H →L[ℂ] H) :
-    ⟪b.purification r g, (𝟙 ⊗ A) (b.purification r g)⟫_ℂ =
+    ⟪b.purification r g, (𝟙[K] ⊗ A) (b.purification r g)⟫_ℂ =
       ∑ i, (r i : ℂ) * ⟪b i, A (b i)⟫_ℂ := by
   classical
-  simp only [purification, map_sum, map_smul, HilbertTensor.amplifyRight_tmul, sum_inner,
-    inner_sum, inner_smul_left, inner_smul_right, HilbertTensor.inner_tmul,
+  simp only [purification, map_sum, map_smul, completion_apply_coe, lTensor_tmul, sum_inner,
+    inner_sum, inner_smul_left, inner_smul_right, Completion.inner_coe, TensorProduct.inner_tmul,
     orthonormal_iff_ite.mp hg, ite_mul, one_mul, zero_mul, Complex.conj_ofReal, mul_ite, mul_zero,
     Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte]
   refine Finset.sum_congr rfl fun i _ => ?_
@@ -121,7 +125,7 @@ end OrthonormalBasis
 
 namespace VonNeumannAlgebra
 
-/-- `B(H)` acting on the second leg of `K ⊗̂ H`, i.e. `1 ⊗ B(H)`. -/
+/-- `B(H)` acting on the second leg of `Completion (K ⊗[ℂ] H)`, i.e. `1 ⊗ B(H)`. -/
 local notation "𝓜" => 𝟙[K] ⊗ 𝓑(H)
 
 variable [CompleteSpace H] {b c : OrthonormalBasis ι ℂ H} {r s : ι → ℝ} {g : ι → K}
@@ -132,49 +136,51 @@ private lemma sqrt_ne_zero {r : ℝ} (hr : 0 < r) : (√ᶜ r) ≠ 0 :=
 variable (b r) in
 /-- For `rᵢ > 0`, `s(Ω)` fixes `y ⊗ bᵢ`: it lies in `[𝓜′ Ω]`. -/
 lemma supportProj_purification_tmul (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (y : K) :
-    (𝓜).supportProj (b.purification r g) (y ⊗ₕ b i) = y ⊗ₕ b i := by
+    (𝓜).supportProj (b.purification r g) (↑(y ⊗ₜ[ℂ] b i) : Completion (K ⊗[ℂ] H)) =
+      (↑(y ⊗ₜ[ℂ] b i) : Completion (K ⊗[ℂ] H)) := by
   rw [supportProj, Submodule.starProjection_eq_self_iff]
   have h := Submodule.smul_mem _ (√ᶜ r i)⁻¹
     (InnerProductSpace.apply_mem_cyclicSubspace (b.purification r g)
-      (amplifyLeft_mem_commutant_oneTensor (M := 𝓑(H)) (rankOne ℂ y (g i))))
-  rwa [b.amplifyLeft_rankOne_purification r hg, smul_smul, inv_mul_cancel₀ (sqrt_ne_zero hi),
+      (completion_rTensor_mem_commutant_oneTensor (M := 𝓑(H)) (rankOne ℂ y (g i))))
+  rwa [b.completion_rTensor_rankOne_purification r hg, smul_smul, inv_mul_cancel₀ (sqrt_ne_zero hi),
     one_smul] at h
 
 variable (b r) in
 /-- For `rᵢ > 0`, `s′(Ω)` fixes `gᵢ ⊗ x`: it lies in `[𝓜 Ω]`. -/
 lemma supportProj_commutant_purification_tmul {i : ι} (hi : 0 < r i) (x : H) :
-    (𝓜)′.supportProj (b.purification r g) (g i ⊗ₕ x) = g i ⊗ₕ x := by
+    (𝓜)′.supportProj (b.purification r g) (↑(g i ⊗ₜ[ℂ] x) : Completion (K ⊗[ℂ] H)) =
+      (↑(g i ⊗ₜ[ℂ] x) : Completion (K ⊗[ℂ] H)) := by
   rw [supportProj_commutant, Submodule.starProjection_eq_self_iff]
   have h := Submodule.smul_mem _ (√ᶜ r i)⁻¹
     (InnerProductSpace.apply_mem_cyclicSubspace (b.purification r g)
-      (amplifyRight_mem_oneTensor (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ x (b i)))))
-  rwa [b.amplifyRight_rankOne_purification, smul_smul, inv_mul_cancel₀ (sqrt_ne_zero hi),
+      (completion_lTensor_mem_oneTensor (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ x (b i)))))
+  rwa [b.completion_lTensor_rankOne_purification, smul_smul, inv_mul_cancel₀ (sqrt_ne_zero hi),
     one_smul] at h
 
 /-- The relative Tomita operator `S_{Ω_σ, Ω_ρ}` of `1 ⊗ B(H)` sends `√rᵢ gᵢ ⊗ cⱼ` to `√sⱼ gⱼ ⊗ bᵢ`
 (`rᵢ > 0`). -/
 private lemma mem_graph_relativeTomita_purification (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i)
     (j : ι) :
-    ((√ᶜ r i) • (g i ⊗ₕ c j), (√ᶜ s j) • (g j ⊗ₕ b i)) ∈
+    ((√ᶜ r i) • (↑(g i ⊗ₜ[ℂ] c j) : Completion (K ⊗[ℂ] H)), (√ᶜ s j) • (↑(g j ⊗ₜ[ℂ] b i) : Completion (K ⊗[ℂ] H))) ∈
       (S[𝓜]⟦c.purification s g, b.purification r g⟧).graphₛₗ := by
   have h := apply_mem_graph_relativeTomita (η := c.purification s g) (ξ := b.purification r g)
-    (amplifyRight_mem_oneTensor (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ (c j) (b i))))
-  rwa [b.amplifyRight_rankOne_purification, HilbertTensor.amplifyRight_star,
-    ContinuousLinearMap.star_eq_adjoint, InnerProductSpace.adjoint_rankOne,
-    c.amplifyRight_rankOne_purification, map_smul, supportProj_purification_tmul b r hg hi] at h
+    (completion_lTensor_mem_oneTensor (H₁ := K) (mem_boundedLinearOperators (rankOne ℂ (c j) (b i))))
+  rwa [b.completion_lTensor_rankOne_purification, ContinuousLinearMap.star_eq_adjoint,
+    adjoint_completion_lTensor, InnerProductSpace.adjoint_rankOne,
+    c.completion_lTensor_rankOne_purification, map_smul, supportProj_purification_tmul b r hg hi] at h
 
 /-- The relative Tomita operator `F_{Ω_σ, Ω_ρ}` of the commutant sends `√rᵢ gⱼ ⊗ bᵢ` to
 `√sⱼ gᵢ ⊗ cⱼ` (`rᵢ > 0`). -/
 private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
-    ((√ᶜ r i) • (g j ⊗ₕ b i), (√ᶜ s j) • (g i ⊗ₕ c j)) ∈
+    ((√ᶜ r i) • (↑(g j ⊗ₜ[ℂ] b i) : Completion (K ⊗[ℂ] H)), (√ᶜ s j) • (↑(g i ⊗ₜ[ℂ] c j) : Completion (K ⊗[ℂ] H))) ∈
       (S[(𝓜)′]⟦c.purification s g, b.purification r g⟧).graphₛₗ := by
   have h := apply_mem_graph_relativeTomita (M := (𝓜)′) (η := c.purification s g)
     (ξ := b.purification r g)
-    (amplifyLeft_mem_commutant_oneTensor (M := 𝓑(H)) (rankOne ℂ (g j) (g i)))
-  rwa [b.amplifyLeft_rankOne_purification r hg, HilbertTensor.amplifyLeft_star,
-    ContinuousLinearMap.star_eq_adjoint, InnerProductSpace.adjoint_rankOne,
-    c.amplifyLeft_rankOne_purification s hg, map_smul,
+    (completion_rTensor_mem_commutant_oneTensor (M := 𝓑(H)) (rankOne ℂ (g j) (g i)))
+  rwa [b.completion_rTensor_rankOne_purification r hg, ContinuousLinearMap.star_eq_adjoint,
+    adjoint_completion_rTensor, InnerProductSpace.adjoint_rankOne,
+    c.completion_rTensor_rankOne_purification s hg, map_smul,
     supportProj_commutant_purification_tmul b r hi] at h
 
 /-- **The relative modular operator on eigenvectors.** For `rᵢ > 0` and `sⱼ ≥ 0`,
@@ -182,13 +188,14 @@ private lemma mem_graph_relativeTomita_commutant_purification [CompleteSpace K]
 `ρ̃ = Σᵢ rᵢ |gᵢ⟩⟨gᵢ|` acts on `K`. -/
 lemma mem_graph_relativeModular_purification [CompleteSpace K] (hs : ∀ j, 0 ≤ s j)
     (hg : Orthonormal ℂ g) {i : ι} (hi : 0 < r i) (j : ι) :
-    (g i ⊗ₕ c j, ((s j / r i : ℝ) : ℂ) • (g i ⊗ₕ c j)) ∈
+    ((↑(g i ⊗ₜ[ℂ] c j) : Completion (K ⊗[ℂ] H)),
+      ((s j / r i : ℝ) : ℂ) • (↑(g i ⊗ₜ[ℂ] c j) : Completion (K ⊗[ℂ] H))) ∈
       (Δ[𝓜]⟦c.purification s g, b.purification r g⟧).graph := by
   have hr := (Real.sqrt_pos.mpr hi).ne'
   have hrr := Real.mul_self_sqrt hi.le
   have htt := Real.mul_self_sqrt (hs j)
   rw [mem_graph_relativeModular_iff, LinearPMap.mem_graphₛₗ_compNat]
-  refine ⟨((Real.sqrt (s j) / Real.sqrt (r i) : ℝ) : ℂ) • (g j ⊗ₕ b i), ?_, ?_⟩
+  refine ⟨((Real.sqrt (s j) / Real.sqrt (r i) : ℝ) : ℂ) • (↑(g j ⊗ₜ[ℂ] b i) : Completion (K ⊗[ℂ] H)), ?_, ?_⟩
   · refine mem_graph_closure_relativeTomita ?_
     have h := LinearPMap.smul_mem_graphₛₗ (((Real.sqrt (r i))⁻¹ : ℝ) : ℂ)
       (mem_graph_relativeTomita_purification (b := b) (c := c) (s := s) hg hi j)
@@ -213,12 +220,15 @@ variable (b c r) in
 `Δ_{Ω_σ, Ω_ρ}`. -/
 lemma purification_eq_sum :
     b.purification r g =
-      ∑ p : ι × ι, ((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) • (g p.1 ⊗ₕ c p.2) := by
+      ∑ p : ι × ι, ((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) • (↑(g p.1 ⊗ₜ[ℂ] c p.2) : Completion (K ⊗[ℂ] H)) := by
   rw [Fintype.sum_prod_type, OrthonormalBasis.purification]
   refine Finset.sum_congr rfl fun i _ => ?_
   conv_lhs => rw [← c.sum_repr' (b i)]
-  rw [← HilbertTensor.tmulRightL_apply, map_sum, Finset.smul_sum]
-  simp only [map_smul, HilbertTensor.tmulRightL_apply, smul_smul]
+  have hι : ∀ v : H, (↑(g i ⊗ₜ[ℂ] v) : Completion (K ⊗[ℂ] H)) =
+      (Completion.toComplL ∘L TensorProduct.mkL ℂ K H (g i)) v := fun _ => rfl
+  rw [hι, map_sum, Finset.smul_sum]
+  simp only [map_smul, smul_smul]
+  rfl
 
 /-- **Spectral measure**: `μ_{Ω_ρ}` of `Δ_{Ω_σ, Ω_ρ}` is `Σᵢⱼ rᵢ |⟪cⱼ, bᵢ⟫|² δ_{sⱼ / rᵢ}`. -/
 lemma measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 0 ≤ r i)
@@ -226,15 +236,16 @@ lemma measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 0 
     μ[𝓜]⟦c.purification s g, b.purification r g⟧ =
       ∑ p : ι × ι, (r p.1 * ‖⟪c p.2, b p.1⟫_ℂ‖ ^ 2).toNNReal • Measure.dirac (s p.2 / r p.1) := by
   have he := c.orthonormal
-  have hnorm : ∀ p : ι × ι, ‖((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) • (g p.1 ⊗ₕ c p.2)‖₊ ^ 2 =
+  have hnorm : ∀ p : ι × ι, ‖((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) • (↑(g p.1 ⊗ₜ[ℂ] c p.2) : Completion (K ⊗[ℂ] H))‖₊ ^ 2 =
       (r p.1 * ‖⟪c p.2, b p.1⟫_ℂ‖ ^ 2).toNNReal := fun p => by
     ext
     rw [Real.coe_toNNReal _ (by positivity [hr p.1]), NNReal.coe_pow, coe_nnnorm, norm_smul,
-      HilbertTensor.norm_tmul, hg.1, he.1, mul_one, mul_one, norm_mul, Complex.norm_real,
+      Completion.norm_coe, TensorProduct.norm_tmul, hg.1, he.1, mul_one, mul_one, norm_mul, Complex.norm_real,
       Real.norm_of_nonneg (Real.sqrt_nonneg _), mul_pow, Real.sq_sqrt (hr p.1)]
   have hsum := purification_eq_sum (g := g) b c r
   calc _ = (isSelfAdjoint_relativeModular (𝓜) (c.purification s g) (b.purification r g)).pvm.measure
-        (∑ p : ι × ι, ((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) • (g p.1 ⊗ₕ c p.2)) := by rw [← hsum]
+        (∑ p : ι × ι, ((√ᶜ r p.1) * ⟪c p.2, b p.1⟫_ℂ) •
+          (↑(g p.1 ⊗ₜ[ℂ] c p.2) : Completion (K ⊗[ℂ] H))) := by rw [← hsum]
     _ = _ := by
       simp_rw [← hnorm]
       refine IsSelfAdjoint.measure_pvm_sum_of_mem_graph _ Finset.univ (fun p _ => ?_)
@@ -246,7 +257,7 @@ lemma measure_pvm_relativeModular_purification [CompleteSpace K] (hr : ∀ i, 0 
             (mem_graph_relativeModular_purification (b := b) hs hg hi p.2)
           rwa [Prod.smul_mk, smul_comm] at this
       · dsimp only
-        rw [inner_smul_left, inner_smul_right, HilbertTensor.inner_tmul]
+        rw [inner_smul_left, inner_smul_right, Completion.inner_coe, TensorProduct.inner_tmul]
         rcases eq_or_ne p.1 q.1 with h₁ | h₁
         · rw [he.2 fun h₂ => hpq (Prod.ext h₁ h₂), mul_zero, mul_zero, mul_zero]
         · rw [hg.2 h₁, zero_mul, mul_zero, mul_zero]
@@ -292,9 +303,9 @@ theorem arakiEntropy_boundedLinearOperators_eq_sum {ψ φ : 𝓑(H).NormalFuncti
     S⟦ψ ∥ φ⟧ =
       ((∑ i, ∑ j, r i * ‖⟪c j, b i⟫_ℂ‖ ^ 2 * (Real.log (r i) - Real.log (s j)) : ℝ) : EReal) :=
   (arakiEntropy_eq_arakiVec (Ξψ := b.purification r δ_ι) (Ξφ := c.purification s δ_ι)
-    (fun x => (b.inner_purification_amplifyRight r hr orthonormal_single_equivFin x).trans
+    (fun x => (b.inner_purification_completion_lTensor r hr orthonormal_single_equivFin x).trans
       (hψ x).symm)
-    (fun x => (c.inner_purification_amplifyRight s hs orthonormal_single_equivFin x).trans
+    (fun x => (c.inner_purification_completion_lTensor s hs orthonormal_single_equivFin x).trans
       (hφ x).symm)).trans (arakiVec_purification hr hs orthonormal_single_equivFin hsupp)
 
 end VonNeumannAlgebra

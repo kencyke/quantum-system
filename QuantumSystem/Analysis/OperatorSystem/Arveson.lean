@@ -428,26 +428,24 @@ is closed (`CompletelyPositiveMap'.isClosed_range_toPiWOT`,
 `ContinuousLinearMapWOT.isClosed_closedBall`). -/
 theorem isCompact_image_toPiWOT_setOf_norm_apply_one_le (c : ℝ) :
     IsCompact (toPiWOT '' {ψ : T →CP' (H →L[ℂ] H) | ‖ψ 1‖ ≤ c}) := by
-  have hK : IsCompact (Set.univ.pi fun a : T => (toCLM ⁻¹' Metric.closedBall 0 (3 * orderBound a * c) :
+  have hK : IsCompact (Set.univ.pi fun a : T => (ofCLM '' Metric.closedBall 0 (3 * orderBound a * c) :
       Set (H →WOT[ℂ] H))) :=
     isCompact_univ_pi fun a => isCompact_closedBall 0 _
   refine hK.of_isClosed_subset ?_ ?_
   · have : toPiWOT '' {ψ : T →CP' (H →L[ℂ] H) | ‖ψ 1‖ ≤ c} = Set.range (toPiWOT (T := T) (H := H)) ∩
-        (fun g : T → H →WOT[ℂ] H => g 1) ⁻¹' (toCLM ⁻¹' Metric.closedBall 0 c) := by
+        (fun g : T → H →WOT[ℂ] H => g 1) ⁻¹' (ofCLM '' Metric.closedBall 0 c) := by
       ext g
       constructor
       · rintro ⟨ψ, hψ, rfl⟩
-        refine ⟨⟨ψ, rfl⟩, ?_⟩
-        change ψ 1 ∈ Metric.closedBall 0 c
-        rwa [mem_closedBall_zero_iff]
+        exact ⟨⟨ψ, rfl⟩, ψ 1, by rwa [mem_closedBall_zero_iff], rfl⟩
       · rintro ⟨⟨ψ, rfl⟩, h⟩
         refine ⟨ψ, ?_, rfl⟩
-        change ψ 1 ∈ Metric.closedBall 0 c at h
-        rwa [mem_closedBall_zero_iff] at h
+        rwa [Set.mem_preimage, toPiWOT_apply, ofCLM_injective.mem_set_image,
+          mem_closedBall_zero_iff] at h
     rw [this]
     exact (isClosed_range_toPiWOT (T := T) (H := H)).inter ((isClosed_closedBall 0 c).preimage (continuous_apply 1))
   · rintro _ ⟨ψ, hψ, rfl⟩ a _
-    change ψ a ∈ Metric.closedBall 0 _
+    refine ⟨ψ a, ?_, rfl⟩
     rw [mem_closedBall_zero_iff]
     exact (norm_apply_le_orderBound ψ a).trans
       (mul_le_mul_of_nonneg_left hψ (mul_nonneg zero_le_three (orderBound_nonneg a)))

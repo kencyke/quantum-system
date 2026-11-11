@@ -18,11 +18,11 @@ The **data-processing inequality** (Uhlmann's monotonicity theorem): for von Neu
 (`VonNeumannAlgebra.arakiEntropy_comp_le`). Unitality `α 1 = 1` cannot be dropped: `½ • id` is a
 Schwarz map, and `S(½ψ ‖ ½φ) = ½ S(ψ ‖ φ)` is smaller than `S(ψ ‖ φ)` only when `S(ψ ‖ φ) ≥ 0`.
 
-## Proof (Petz)
+## Proof
 
 Let `ψ ∘ α = ω_ζ`, `φ ∘ α = ω_ζ'` on `N` and `ψ = ω_ξ`, `φ = ω_ξ'` on `M`, and let
 `S_N = S_{ζ',ζ}`, `S_M = S_{ξ',ξ}` be the relative Tomita operators, `Δ_N`, `Δ_M` the relative
-modular operators. Petz's map `V : y ζ ↦ α(y) ξ` is a contraction with `V† ξ = ζ` by the
+modular operators. The map `V : y ζ ↦ α(y) ξ` is a contraction with `V† ξ = ζ` by the
 Kadison–Schwarz inequality, and `‖S_M V u‖ ≤ ‖S_N u‖`. In the non-faithful case one writes
 `y ζ = (y s) ζ` with `s = s(ζ) ∈ N`: then `S_M α(y s) ξ = s(ξ) α(s y⋆) ξ'` and
 `‖α(s y⋆) ξ'‖ ≤ ‖s y⋆ ζ'‖ = ‖S_N (y ζ)‖`
@@ -41,7 +41,7 @@ of the graph of `S_N`, a dominating point of the graph of `S_M`.
 ## Without Tomita–Takesaki theory
 
 Uhlmann's original proof runs through the interpolation theory of quadratic forms. The route above
-(Petz) avoids Tomita–Takesaki theory, which is not formalised: the only inputs are the Kadison–Schwarz
+avoids Tomita–Takesaki theory, which is not formalised: the only inputs are the Kadison–Schwarz
 inequality for `α`, the graph inequality `‖S_M V u‖ ≤ ‖S_N u‖`, the variational characterisation
 of `⟪u, (t + Δ)⁻¹ u⟫` for a positive self-adjoint `Δ = S̄†S̄`, and the integral representation of
 `-log`. In particular neither `Δ^{it}` nor `Δ^{1/2}` nor `J` is needed, only the resolvents of
@@ -51,7 +51,7 @@ of `⟪u, (t + Δ)⁻¹ u⟫` for a positive self-adjoint `Δ = S̄†S̄`, and 
 
 * `VonNeumannAlgebra.norm_schwarzMap_apply_apply_le` — the vector bound `‖α(y) ξ‖ ≤ ‖y ζ‖` when
   `ω_ξ ∘ α = ω_ζ`.
-* `VonNeumannAlgebra.integral_inv_add_measure_pvm_relativeModular_le` — Petz's resolvent
+* `VonNeumannAlgebra.integral_inv_add_measure_pvm_relativeModular_le` — the resolvent
   inequality `⟪ζ, (t + Δ_{ζ',ζ})⁻¹ ζ⟫ ≤ ⟪ξ, (t + Δ_{ξ',ξ})⁻¹ ξ⟫`.
 * `VonNeumannAlgebra.arakiVec_le_of_schwarzMap` — the data-processing inequality for vector
   functionals: `S_N(ω_ζ ‖ ω_ζ') ≤ S_M(ω_ξ ‖ ω_ξ')` when `ω_ξ ∘ α = ω_ζ`, `ω_ξ' ∘ α = ω_ζ'`.
@@ -66,14 +66,12 @@ modular automorphism groups.
 
 * A. Uhlmann, *Relative entropy and the Wigner–Yanase–Dyson–Lieb concavity in an interpolation
   theory*, Comm. Math. Phys. 54 (1977), 21–32.
-* M. Ohya, D. Petz, *Quantum Entropy and Its Use*.
 -/
 
 @[expose] public section
 
 open Complex MeasureTheory
-open scoped InnerProductSpace ComplexOrder VonNeumannAlgebra HilbertTensor Araki lp
-open HilbertTensor (amplifyRight)
+open scoped InnerProductSpace ComplexOrder VonNeumannAlgebra Araki lp
 
 namespace VonNeumannAlgebra
 
@@ -95,7 +93,7 @@ section Vector
 
 variable (α : SchwarzMap N M)
 
-/-- **Contractivity of Petz's map** `y ζ ↦ α(y) ξ`: if `ω_ξ ∘ α = ω_ζ` on `N`, then
+/-- **Contractivity of the map** `y ζ ↦ α(y) ξ`: if `ω_ξ ∘ α = ω_ζ` on `N`, then
 `‖α(y) ξ‖ ≤ ‖y ζ‖`, by the Kadison–Schwarz inequality `α(y)⋆ α(y) ≤ α(y⋆ y)`. -/
 lemma norm_schwarzMap_apply_apply_le {ζ : K} {ξ : H}
     (hξ : ∀ y : N, ⟪ζ, (y : K →L[ℂ] K) ζ⟫_ℂ = ⟪ξ, (α y : H →L[ℂ] H) ξ⟫_ℂ) (y : N) :
@@ -106,7 +104,7 @@ lemma norm_schwarzMap_apply_apply_le {ζ : K} {ξ : H}
     inner_star_mul_self_apply, Complex.real_le_real] at hle
   exact (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).mp hle
 
-/-- **Petz's resolvent inequality.** Let `α : N → M` be a Schwarz map and `ζ, ζ' ∈ K`,
+/-- **Resolvent inequality.** Let `α : N → M` be a Schwarz map and `ζ, ζ' ∈ K`,
 `ξ, ξ' ∈ H` with `ω_ξ ∘ α = ω_ζ` and `ω_ξ' ∘ α = ω_ζ'` on `N`. Then for `t > 0`,
 `⟪ζ, (t + Δ_{ζ',ζ})⁻¹ ζ⟫ ≤ ⟪ξ, (t + Δ_{ξ',ξ})⁻¹ ξ⟫`, in the spectral form
 `∫ (t + λ)⁻¹ dμ_ζ ≤ ∫ (t + λ)⁻¹ dμ_ξ`.
@@ -203,23 +201,21 @@ lemma oneTensorSchwarzMap_one {α : SchwarzMap N M} (hα : α 1 = 1) :
 
 end Amplify
 
-/-- **Data-processing inequality** (Uhlmann; Petz's proof). For a unital normal Schwarz map
+/-- **Data-processing inequality** (Uhlmann). For a unital normal Schwarz map
 `α : N → M` and normal positive functionals `ψ, φ` on `M`, `S(ψ ∘ α ‖ φ ∘ α) ≤ S(ψ ‖ φ)`. -/
 theorem arakiEntropy_comp_le (α : SchwarzMap N M) (hα₁ : α 1 = 1) (hα : IsNormalMap α)
     (ψ φ : M.NormalFunctional) :
     S⟦ψ.comp α hα ∥ φ.comp α hα⟧ ≤ S⟦ψ ∥ φ⟧ := by
   have key : ∀ ω : M.NormalFunctional, ∀ y : 𝟙[ℓ²(ℕ, ℂ)] ⊗ N,
       ⟪(ω.comp α hα).2.vec,
-          (y : ℓ²(ℕ, ℂ) ⊗̂ K →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ K) (ω.comp α hα).2.vec⟫_ℂ =
-        ⟪ω.2.vec,
-          (oneTensorSchwarzMap ℓ²(ℕ, ℂ) α y : ℓ²(ℕ, ℂ) ⊗̂ H →L[ℂ] ℓ²(ℕ, ℂ) ⊗̂ H)
-            ω.2.vec⟫_ℂ :=
+          y.1 (ω.comp α hα).2.vec⟫_ℂ =
+        ⟪ω.2.vec, (oneTensorSchwarzMap ℓ²(ℕ, ℂ) α y).1 ω.2.vec⟫_ℂ :=
       fun ω y => by
     obtain ⟨y, rfl⟩ : ∃ y', oneTensorEquiv ℓ²(ℕ, ℂ) N y' = y :=
       ⟨(oneTensorEquiv ℓ²(ℕ, ℂ) N).symm y, (oneTensorEquiv ℓ²(ℕ, ℂ) N).apply_symm_apply y⟩
-    rw [oneTensorSchwarzMap_oneTensorEquiv, coe_oneTensorEquiv_apply, coe_oneTensorEquiv_apply,
-      (ω.comp α hα).2.inner_vec_amplifyRight, ω.2.inner_vec_amplifyRight,
-      NormalFunctional.comp_apply]
+    rw [oneTensorSchwarzMap_oneTensorEquiv]
+    exact ((ω.comp α hα).2.inner_vec_completion_lTensor y).trans
+      ((NormalFunctional.comp_apply _ _ _ _).trans (ω.2.inner_vec_completion_lTensor (α y)).symm)
   exact arakiVec_le_of_schwarzMap _ (oneTensorSchwarzMap_one hα₁) (key ψ) (key φ)
 
 end VonNeumannAlgebra

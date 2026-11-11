@@ -13,14 +13,14 @@ public import QuantumSystem.InformationTheory.Entropy.Araki.VectorFunctional
 
 For normal positive functionals `ψ, φ` on a von Neumann algebra `M ⊆ B(H)`, **Araki's relative
 entropy** `S(ψ ‖ φ)` is defined by representing both as vector functionals on the amplification
-`M̃ = oneTensor ℓ²(ℕ) M` on `ℓ²(ℕ) ⊗̂ H`: if `ψ(x) = ⟪Ξ_ψ, (1 ⊗ x) Ξ_ψ⟫` and
+`M̃ = oneTensor ℓ²(ℕ) M` on `Completion (ℓ²(ℕ) ⊗[ℂ] H)`: if `ψ(x) = ⟪Ξ_ψ, (1 ⊗ x) Ξ_ψ⟫` and
 `φ(x) = ⟪Ξ_φ, (1 ⊗ x) Ξ_φ⟫`, then `S(ψ ‖ φ) = S_{M̃}(ω_{Ξ_ψ} ‖ ω_{Ξ_φ})`
 (`VonNeumannAlgebra.arakiVec`). The value does not depend on the representing vectors
 (`VonNeumannAlgebra.arakiEntropy_eq_arakiVec`), and for vector functionals it is the relative
 entropy computed on `H` itself (`VonNeumannAlgebra.arakiEntropy_ofVector`).
 
 Normality is σ-weak continuity (`VonNeumannAlgebra.IsNormal`); the representing vectors on the
-amplification come from `VonNeumannAlgebra.isNormal_iff_exists_inner_amplifyRight_eq`.
+amplification come from `VonNeumannAlgebra.isNormal_iff_exists_inner_completion_lTensor_eq`.
 
 ## Without Tomita–Takesaki theory
 
@@ -105,8 +105,8 @@ read off from the functionals `ψ φ : M.NormalFunctional`; activate it with `op
 
 @[expose] public section
 
-open scoped InnerProductSpace HilbertTensor ComplexOrder Araki lp
-open HilbertTensor (amplifyRight amplifyRightₐ tmulRightL)
+open scoped InnerProductSpace TensorProduct Amplification ComplexOrder Araki lp
+open UniformSpace
 
 namespace VonNeumannAlgebra
 
@@ -119,20 +119,27 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 `S_{𝟙[H₁] ⊗ M}(ω_{e ⊗ ξ} ‖ ω_{e ⊗ η}) = S_M(ω_ξ ‖ ω_η)`. -/
 lemma arakiVec_oneTensor_tmul {H₁ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     {e : H₁} (he : ‖e‖ = 1) (ξ η : H) :
-    S[𝟙[H₁] ⊗ M]⟦e ⊗ₕ ξ ∥ e ⊗ₕ η⟧ = S[M]⟦ξ ∥ η⟧ := by
-  have h₁ : ∀ x : H →L[ℂ] H, 𝟙 ⊗ x ∘L tmulRightL e = tmulRightL e ∘L x := fun x =>
-    ContinuousLinearMap.ext fun u => by simp [HilbertTensor.amplifyRight_tmul]
-  have hπ : ∀ S : VonNeumannAlgebra H, ∀ x ∈ S, ∃ y ∈ (S : Set (H →L[ℂ] H)).image amplifyRight,
-      y ∘L tmulRightL e = tmulRightL e ∘L x ∧ star y ∘L tmulRightL e = tmulRightL e ∘L star x :=
-    fun S x hx => ⟨𝟙 ⊗ x, ⟨x, hx, rfl⟩, h₁ x, by rw [HilbertTensor.amplifyRight_star]; exact h₁ _⟩
-  refine arakiVec_of_intertwiner M ξ η (V := tmulRightL e)
+    S[𝟙[H₁] ⊗ M]⟦(e ⊗ₜ[ℂ] ξ : Completion (H₁ ⊗[ℂ] H)) ∥
+      (e ⊗ₜ[ℂ] η : Completion (H₁ ⊗[ℂ] H))⟧ = S[M]⟦ξ ∥ η⟧ := by
+  set V : H →L[ℂ] Completion (H₁ ⊗[ℂ] H) := Completion.toComplL ∘L TensorProduct.mkL ℂ H₁ H e
+    with hV
+  have h₁ : ∀ x : H →L[ℂ] H, (𝟙[H₁] ⊗ x) ∘L V = V ∘L x := fun x =>
+    ContinuousLinearMap.ext fun u => by
+      simp [hV, TensorProduct.mkL_apply_apply, ContinuousLinearMap.completion_apply_coe]
+  have hπ : ∀ S : VonNeumannAlgebra H, ∀ x ∈ S, ∃ y ∈ (S : Set (H →L[ℂ] H)).image
+      (fun x : H →L[ℂ] H => 𝟙[H₁] ⊗ x), y ∘L V = V ∘L x ∧ star y ∘L V = V ∘L star x :=
+    fun S x hx => ⟨𝟙[H₁] ⊗ x, ⟨x, hx, rfl⟩, h₁ x, by
+      rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_completion_lTensor,
+        ← ContinuousLinearMap.star_eq_adjoint]
+      exact h₁ _⟩
+  refine arakiVec_of_intertwiner M ξ η (V := V)
     (fun x hx => ?_) (fun x hx => ?_) ?_
   · obtain ⟨y, ⟨x', hx', rfl⟩, h⟩ := hπ M x hx
-    exact ⟨_, amplifyRight_mem_oneTensor hx', h⟩
+    exact ⟨_, completion_lTensor_mem_oneTensor hx', h⟩
   · obtain ⟨y, ⟨x', hx', rfl⟩, h⟩ := hπ M′ x hx
-    exact ⟨_, amplifyRight_mem_commutant_oneTensor hx', h⟩
-  · rw [HilbertTensor.tmulRightL_apply, HilbertTensor.adjoint_tmulRightL_tmul,
-      inner_self_eq_norm_sq_to_K, he]
+    exact ⟨_, completion_lTensor_mem_commutant_oneTensor hx', h⟩
+  · rw [hV, ContinuousLinearMap.comp_apply, Completion.coe_toComplL, TensorProduct.mkL_apply_apply,
+      ContinuousLinearMap.adjoint_toComplL_comp_mkL_apply_coe_tmul, inner_self_eq_norm_sq_to_K, he]
     simp
 
 /-! ### The relative entropy of normal functionals -/
@@ -152,18 +159,18 @@ scoped[Araki] notation "S⟦" ψ " ∥ " φ "⟧" => VonNeumannAlgebra.arakiEntr
 
 variable {M}
 
-/-- **Independence of the representing vectors.** For any `Ξ_ψ, Ξ_φ ∈ ℓ²(ℕ) ⊗̂ H` with
+/-- **Independence of the representing vectors.** For any `Ξ_ψ, Ξ_φ ∈ Completion (ℓ²(ℕ) ⊗[ℂ] H)` with
 `ψ(x) = ⟪Ξ_ψ, (1 ⊗ x) Ξ_ψ⟫` and `φ(x) = ⟪Ξ_φ, (1 ⊗ x) Ξ_φ⟫`,
 `S(ψ ‖ φ) = S_{oneTensor M}(ω_{Ξ_ψ} ‖ ω_{Ξ_φ})`. -/
-theorem arakiEntropy_eq_arakiVec {ψ φ : M.NormalFunctional} {Ξψ Ξφ : ℓ²(ℕ, ℂ) ⊗̂ H}
-    (hψ : ∀ x : M, ⟪Ξψ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξψ⟫_ℂ = ψ.1 x)
-    (hφ : ∀ x : M, ⟪Ξφ, (𝟙 ⊗ (x : H →L[ℂ] H)) Ξφ⟫_ℂ = φ.1 x) :
+theorem arakiEntropy_eq_arakiVec {ψ φ : M.NormalFunctional} {Ξψ Ξφ : Completion (ℓ²(ℕ, ℂ) ⊗[ℂ] H)}
+    (hψ : ∀ x : M, ⟪Ξψ, (𝟙[ℓ²(ℕ, ℂ)] ⊗ (x : H →L[ℂ] H)) Ξψ⟫_ℂ = ψ.1 x)
+    (hφ : ∀ x : M, ⟪Ξφ, (𝟙[ℓ²(ℕ, ℂ)] ⊗ (x : H →L[ℂ] H)) Ξφ⟫_ℂ = φ.1 x) :
     S⟦ψ ∥ φ⟧ = S[𝟙[ℓ²(ℕ, ℂ)] ⊗ M]⟦Ξψ ∥ Ξφ⟧ := by
   refine arakiVec_eq_of_inner_eq ?_ ?_
   · exact fun y hy => inner_apply_eq_of_mem_oneTensor (fun x hx =>
-      (ψ.2.inner_vec_amplifyRight ⟨x, hx⟩).trans (hψ ⟨x, hx⟩).symm) hy |>.symm
+      (ψ.2.inner_vec_completion_lTensor ⟨x, hx⟩).trans (hψ ⟨x, hx⟩).symm) hy |>.symm
   · exact fun y hy => inner_apply_eq_of_mem_oneTensor (fun x hx =>
-      (φ.2.inner_vec_amplifyRight ⟨x, hx⟩).trans (hφ ⟨x, hx⟩).symm) hy |>.symm
+      (φ.2.inner_vec_completion_lTensor ⟨x, hx⟩).trans (hφ ⟨x, hx⟩).symm) hy |>.symm
 
 variable (M) in
 /-- **Vector functionals.** `S(ω_ξ ‖ ω_η) = arakiVec M ξ η`: the relative entropy of vector
@@ -171,10 +178,15 @@ functionals computed through the amplification is the one computed on `H`. -/
 lemma arakiEntropy_ofVector (ξ η : H) :
     S⟦NormalFunctional.ofVector M ξ ∥ NormalFunctional.ofVector M η⟧ =
       S[M]⟦ξ ∥ η⟧ := by
-  rw [arakiEntropy_eq_arakiVec (Ξψ := lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₕ ξ)
-    (Ξφ := lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₕ η)
-    (fun x => HilbertTensor.inner_tmul_amplifyRight_tmul (lp.norm_single_one two_pos 0) ξ x)
-    (fun x => HilbertTensor.inner_tmul_amplifyRight_tmul (lp.norm_single_one two_pos 0) η x),
+  rw [arakiEntropy_eq_arakiVec
+    (Ξψ := ((lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₜ[ℂ] ξ : ℓ²(ℕ, ℂ) ⊗[ℂ] H) :
+      Completion (ℓ²(ℕ, ℂ) ⊗[ℂ] H)))
+    (Ξφ := ((lp.single (E := fun _ : ℕ => ℂ) 2 0 1 ⊗ₜ[ℂ] η : ℓ²(ℕ, ℂ) ⊗[ℂ] H) :
+      Completion (ℓ²(ℕ, ℂ) ⊗[ℂ] H)))
+    (fun x => ContinuousLinearMap.inner_coe_tmul_completion_lTensor_coe_tmul
+      (lp.norm_single_one two_pos 0) ξ x)
+    (fun x => ContinuousLinearMap.inner_coe_tmul_completion_lTensor_coe_tmul
+      (lp.norm_single_one two_pos 0) η x),
     arakiVec_oneTensor_tmul M (lp.norm_single_one two_pos 0)]
 
 variable (ψ φ : M.NormalFunctional)
@@ -193,9 +205,9 @@ variable {ψ φ} in
 lemma arakiEntropy_eq_top_of_not_supportProj_le (h : ¬ ψ.supportProj ≤ φ.supportProj) :
     S⟦ψ ∥ φ⟧ = ⊤ := by
   refine arakiVec_eq_top_of_not_supportProj_le fun hle => h ?_
-  rwa [← NormalFunctional.amplifyRight_supportProj, ← NormalFunctional.amplifyRight_supportProj,
-    amplifyRight_le_amplifyRight_iff (NormalFunctional.isStarProjection_supportProj ψ)
-      (NormalFunctional.isStarProjection_supportProj φ)] at hle
+  rwa [← NormalFunctional.completion_lTensor_supportProj, ← NormalFunctional.completion_lTensor_supportProj,
+    ContinuousLinearMap.completion_lTensor_le_completion_lTensor_iff
+      (NormalFunctional.isStarProjection_supportProj ψ) (NormalFunctional.isStarProjection_supportProj φ)] at hle
 
 variable {ψ φ} in
 /-- **Support condition**, null-ideal form. If `φ(x⋆x) = 0` but `ψ(x⋆x) ≠ 0` for some `x ∈ M` (the
@@ -215,16 +227,16 @@ theorem arakiEntropy_eq_top_iff [FiniteDimensional ℂ M] :
     S⟦ψ ∥ φ⟧ = ⊤ ↔ ¬ ψ.supportProj ≤ φ.supportProj := by
   have : FiniteDimensional ℂ (𝟙[ℓ²(ℕ, ℂ)] ⊗ M) :=
     LinearEquiv.finiteDimensional (M.oneTensorEquiv (H₁ := ℓ²(ℕ, ℂ))).toAlgEquiv.toLinearEquiv
-  rw [arakiEntropy, arakiVec_eq_top_iff, ← NormalFunctional.amplifyRight_supportProj,
-    ← NormalFunctional.amplifyRight_supportProj,
-    amplifyRight_le_amplifyRight_iff (NormalFunctional.isStarProjection_supportProj ψ)
-      (NormalFunctional.isStarProjection_supportProj φ)]
+  rw [arakiEntropy, arakiVec_eq_top_iff, ← NormalFunctional.completion_lTensor_supportProj,
+    ← NormalFunctional.completion_lTensor_supportProj,
+    ContinuousLinearMap.completion_lTensor_le_completion_lTensor_iff
+      (NormalFunctional.isStarProjection_supportProj ψ) (NormalFunctional.isStarProjection_supportProj φ)]
 
 /-! ### Scaling -/
 
 /-- `‖Ξ_ψ‖² = ψ(1)` for the representing vector. -/
 lemma NormalFunctional.norm_vec_sq : ‖ψ.2.vec‖ ^ 2 = (ψ.1 1).re :=
-  (re_apply_one_eq_norm_sq ψ.2.inner_vec_amplifyRight).symm
+  (re_apply_one_eq_norm_sq ψ.2.inner_vec_completion_lTensor).symm
 
 variable {ψ φ} in
 /-- **Scaling the second functional.** If `φ′ = c φ` with `c > 0`, then
@@ -233,9 +245,9 @@ lemma arakiEntropy_of_apply_eq_mul_right {φ' : M.NormalFunctional} {c : ℝ} (h
     (h : ∀ x, φ'.1 x = c * φ.1 x) :
     S⟦ψ ∥ φ'⟧ = S⟦ψ ∥ φ⟧ - (((ψ.1 1).re * Real.log c : ℝ) : EReal) := by
   rw [arakiEntropy_eq_arakiVec (Ξψ := ψ.2.vec) (Ξφ := (Real.sqrt c : ℂ) • φ.2.vec)
-    ψ.2.inner_vec_amplifyRight (fun x => ?_), arakiVec_sqrt_smul_right _ _ hc, NormalFunctional.norm_vec_sq,
+    ψ.2.inner_vec_completion_lTensor (fun x => ?_), arakiVec_sqrt_smul_right _ _ hc, NormalFunctional.norm_vec_sq,
     arakiEntropy]
-  rw [map_smul, inner_smul_left, inner_smul_right, φ.2.inner_vec_amplifyRight, h, Complex.conj_ofReal,
+  rw [map_smul, inner_smul_left, inner_smul_right, φ.2.inner_vec_completion_lTensor, h, Complex.conj_ofReal,
     ← mul_assoc, ← Complex.ofReal_mul, Real.mul_self_sqrt hc.le]
 
 variable {ψ φ} in
@@ -267,8 +279,8 @@ lemma arakiEntropy_of_apply_eq_mul_left {ψ' : M.NormalFunctional} {c : ℝ}
   have hsq : ‖(Real.sqrt c : ℂ)‖ ^ 2 = c := by
     rw [Complex.norm_real, Real.norm_of_nonneg (Real.sqrt_nonneg c), Real.sq_sqrt hc]
   rw [arakiEntropy_eq_arakiVec (Ξψ := (Real.sqrt c : ℂ) • ψ.2.vec) (Ξφ := φ.2.vec)
-    (fun x => ?_) φ.2.inner_vec_amplifyRight, arakiVec_smul_left, hsq, NormalFunctional.norm_vec_sq, arakiEntropy]
-  rw [map_smul, inner_smul_left, inner_smul_right, ψ.2.inner_vec_amplifyRight, h,
+    (fun x => ?_) φ.2.inner_vec_completion_lTensor, arakiVec_smul_left, hsq, NormalFunctional.norm_vec_sq, arakiEntropy]
+  rw [map_smul, inner_smul_left, inner_smul_right, ψ.2.inner_vec_completion_lTensor, h,
     Complex.conj_ofReal, ← mul_assoc, ← Complex.ofReal_mul, Real.mul_self_sqrt hc]
 
 /-! ### The Klein bound -/
@@ -289,11 +301,12 @@ lemma mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : IsSt
     (hpM : p ∈ M) (hψp : ψ.1 ⟨1 - p, sub_mem (one_mem M) hpM⟩ = 0) :
     (((ψ.1 1).re * Real.log ((ψ.1 1).re / (φ.1 ⟨p, hpM⟩).re) : ℝ) : EReal) ≤
       S⟦ψ ∥ φ⟧ := by
-  set q := amplifyRight (H₁ := ℓ²(ℕ, ℂ)) p
-  have hq : IsStarProjection q := isStarProjection_amplifyRight hp
+  set q := 𝟙[ℓ²(ℕ, ℂ)] ⊗ p
+  have hq : IsStarProjection q := ContinuousLinearMap.isStarProjection_completion_lTensor hp
   have hle : (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj ψ.2.vec ≤ q := by
-    rw [← NormalFunctional.amplifyRight_supportProj,
-      amplifyRight_le_amplifyRight_iff (NormalFunctional.isStarProjection_supportProj ψ) hp]
+    rw [← NormalFunctional.completion_lTensor_supportProj,
+      ContinuousLinearMap.completion_lTensor_le_completion_lTensor_iff
+        (NormalFunctional.isStarProjection_supportProj ψ) hp]
     exact (NormalFunctional.supportProj_le_iff ψ hp hpM).mpr hψp
   have hb : ‖(𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj ψ.2.vec φ.2.vec‖ ^ 2 ≤ (φ.1 ⟨p, hpM⟩).re := by
     have h₁ : (𝟙[ℓ²(ℕ, ℂ)] ⊗ M).supportProj ψ.2.vec =
@@ -305,7 +318,7 @@ lemma mul_log_le_arakiEntropy_of_isStarProjection {p : H →L[ℂ] H} (hp : IsSt
       exact Submodule.norm_starProjection_apply_le _ _
     have hpp : star (⟨p, hpM⟩ : M) * ⟨p, hpM⟩ = ⟨p, hpM⟩ :=
       Subtype.ext (by simp [hp.isSelfAdjoint.star_eq, hp.isIdempotentElem.eq])
-    have h₃ := apply_star_mul_self_eq φ.2.inner_vec_amplifyRight ⟨p, hpM⟩
+    have h₃ := apply_star_mul_self_eq φ.2.inner_vec_completion_lTensor ⟨p, hpM⟩
     rw [hpp] at h₃
     rw [h₃, Complex.ofReal_re]
     gcongr

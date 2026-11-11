@@ -19,7 +19,7 @@ in the same scope, so goals read `(V†) x` and `V ∘L A ∘L V†`.
 
 The delaborator is an **approved exception (2026-10-10)** to the project rule that display is
 achieved by shaping definitions rather than by metaprogramming (see the *Prohibited Tokens* section
-of `.claude/skills/lint-fix/references/rules.md`). It compensates for Mathlib's own `†` notation
+of `docs/lint-rules.md`). It compensates for Mathlib's own `†` notation
 not being displayed: `ContinuousLinearMap.adjoint` is a bundled equivalence owned by Mathlib, so no
 proof-free definition in this repository can make the `postfix` unexpander fire without bridging
 two spellings of the adjoint.

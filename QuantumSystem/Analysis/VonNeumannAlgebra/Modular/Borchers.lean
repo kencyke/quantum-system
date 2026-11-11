@@ -53,13 +53,15 @@ For a unitary `V` the conditions read `V Ω₁ = Ω₂` and `V M₁ V⋆ ⊆ M�
 Borchers (1995) states both theorems for unitaries on one Hilbert space with `Ω₁ = Ω₂`. The
 non-relative Theorem A for bounded `V` with `V† Ω₂ = Ω₁` and `V M₁ V† ⊆ M₂`, across two algebras,
 is Araki–Zsidó 2005, Definition 2.10, Lemma 2.11 (1) and Theorem 2.12 (stated for faithful normal
-semifinite weights).
-For faithful `ηᵢ`, `Ωᵢ` the relative Theorem A is their analytic extension theorem
+semifinite weights, with strong in place of `*`-strong continuity).
+For faithful `ηᵢ`, `Ωᵢ` the relative Theorem A, with a uniform bound in place of `‖V(z)‖ ≤ ‖V‖` and
+strong in place of `*`-strong continuity, is their analytic extension theorem
 (Araki–Zsidó 2005, Theorem 2.3) for invertible positive operators, once the intertwining
 `V S̄_{η₁,Ω₁} ⊆ S̄_{η₂,Ω₂} V` is established
 (`VonNeumannAlgebra.compPMap_closure_relativeTomita_le_of_adjoint_apply`, for arbitrary `ηᵢ`).
-Faulkner–Hollands (arXiv:2010.05513) treat contractions `V` induced by channels: their Lemma 3 bounds
-`Δ^{z} V Δ^{-z}` by `1` on the strip.
+Faulkner–Hollands (arXiv:2010.05513) treat contractions `V` induced by normal unital Schwarz maps
+`T : B → A`: for normal states `ω_η`, `ω_ψ` on `A` with `ω_η` and `ω_η ∘ T` faithful, their Lemma 3
+bounds `Δ_{η,ψ;A}^{z} V Δ_{η,ψ;B}^{-z}` by `1` for `0 ≤ re z ≤ 1/2`.
 
 ## Main results
 
@@ -94,7 +96,7 @@ Faulkner–Hollands (arXiv:2010.05513) treat contractions `V` induced by channel
   half-sided modular inclusions*, Rev. Math. Phys. 17 (2005), 491–543, Definition 2.10,
   Lemma 2.11 and Theorems 2.3, 2.12
 * T. Faulkner, S. Hollands, *Approximate recoverability and relative entropy II: 2-positive
-  channels of general von Neumann algebras*, arXiv:2010.05513, Lemma 3
+  channels of general v. Neumann algebras*, arXiv:2010.05513, Lemma 3
 -/
 
 @[expose] public section

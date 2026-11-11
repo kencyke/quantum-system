@@ -11,9 +11,9 @@ public import QuantumSystem.Physics.LocalNet.VonNeumannNet
 /-!
 # The split property of a local net
 
-The **split property** of a local net, in the form of Buchholz (*Product states for local
-algebras*, Comm. Math. Phys. 36, 1974) and Doplicher–Longo (*Standard and split inclusions of
-von Neumann algebras*, Invent. Math. 75, 1984): fix a representation `R` of the quasi-local
+The **split property** of a local net, in the form of Doplicher–Longo
+(*Standard and split inclusions of von Neumann algebras*, Invent. Math. 75, 1984): fix a
+representation `R` of the quasi-local
 C⋆-algebra on a Hilbert space, with representing map `R.π`, and form the **local von Neumann
 algebras**
 
@@ -42,7 +42,7 @@ isotone, local assignment `O ↦ 𝓡(O)` over a bare causal index set, with no 
 quasi-local C⋆-algebra and no faithfulness. That is the level at which the index set of the split
 property's own literature becomes expressible: the proper intervals of `S¹` are *not* directed
 (two intervals covering the circle have no proper upper bound). Wedges and spacelike cones are further standard
-non-directed examples from the wider AQFT literature (Buchholz 1974, Doplicher–Longo 1984 treat
+non-directed examples from the wider AQFT literature (Doplicher–Longo 1984 treats
 the split property itself; the non-directed index sets come from the surrounding literature).
 
 The representation-theoretic net above is one instance of that (`LocalNet.vonNeumannNet`), and
@@ -75,7 +75,7 @@ theorems impose nondegeneracy or cyclicity where they need it.
   splitting follows by applying `VonNeumannAlgebra.IsSplitInclusion.exists_tensor_decomposition`
   to it), `SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le` (stability under
   enlarging the pair), and `SplitProperty.isSplitPair` (the commutant form,
-  Borchers/Buchholz, `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`, obtained from the nested form via locality).
+  `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`, obtained from the nested form via locality).
   The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`,
   a symmetric relation (`VonNeumannNet.IsSplitPair.symm`); the half-chain split property of a
   chain state (`LocalNet.HasHalfChainSplit`) is of that form, in the split-inclusion form, which
@@ -200,9 +200,7 @@ lemma ProperlyContained.lt {O₁ O₂ : K} (h : O₁ ⋐ O₂) : O₁ < O₂ :=
     do. On a lattice index set they pin down strictness and nothing more: they do **not** by
     themselves exclude *touching* pairs such as `{0} ⋐ {0, 1}`, which the literature does exclude
     (a pair of local algebras of touching regions is not statistically independent, hence not
-    split — Buchholz's *Product states for local algebras* records that postulating normal product
-    states for touching regions already yields contradictions for the free field, the corpus's one
-    statement that the closure separation is *necessary*).
+    split).
     Genuine separation is therefore the model's job, not the class's — see `ofThicken`,
     whose thickening operator supplies a buffer layer between `O₁` and the collar. -/
 lemma exists_disjoint_iff_not_le {I : Type*} [GeneralizedBooleanAlgebra I] {O₁ O₂ : I} :
@@ -287,7 +285,7 @@ namespace VonNeumannNet
 variable {K : Type*} [Preorder K] [CausalOrthogonality K]
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
-/-- **The split property** of a net of von Neumann algebras (Buchholz; Doplicher–Longo): for every
+/-- **The split property** of a net of von Neumann algebras (Doplicher–Longo): for every
     properly contained pair of regions `O₁ ⋐ O₂`, some type I factor interpolates between the
     local algebras, `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O₂)`. This is genuinely model-dependent input — it fails for
     nets without the requisite phase-space (nuclearity) behaviour — and it is relative to the
@@ -301,7 +299,7 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
     `ProperContainment.properlyContained_singleton`, and there the property is not automatic:
     `LocalNet.Examples.not_splitProperty_diagonalNet` refutes it for a constant net.
 
-    This is the *nested* form. The historically original *commutant* form is
+    This is the *nested* form. The *commutant* form is
     `SplitProperty.isSplitPair`, which follows from this one through locality; the converse needs
     Haag duality and is not available here. The gap-free pair form `IsSplitPair` is stated
     separately, since no properly contained pair can produce it. -/
@@ -334,8 +332,7 @@ theorem splitProperty_of_complex [ProperContainment K] (vnNet : VonNeumannNet K 
     No proper containment and no gap between the regions is involved. This is the split-inclusion
     form of the half-chain split property of a spin chain, for the adjacent half-chains
     `(-∞, 0]` and `[1, ∞)` (which implies the quasi-equivalence form, and is
-    equivalent to it for pure states),
-    and the disjoint-pair form of Buchholz's *Product states for local algebras*. For causally
+    equivalent to it for pure states). For causally
     orthogonal regions the inclusion `𝓡(O₁) ≤ 𝓡(O₂)′` itself holds by
     locality (`algebra_le_commutant_of_orthogonal`), so the content is the interpolating factor.
 
@@ -372,8 +369,8 @@ lemma IsSplitPair.mono {vnNet : VonNeumannNet K H} {O₁ O₂ O₁' O₂' : K} (
 variable [ProperContainment K] {vnNet : VonNeumannNet K H}
 
 /-- **The split inclusion of a properly contained pair**: under the split property, `O₁ ⋐ O₂`
-    yields the split inclusion `𝓡(O₁) ≤ 𝓡(O₂)`. Buchholz's tensor splitting — a unitary
-    `U : H ≃ₗᵢ ℓ²(F) ⊗̂ (eH)` carrying `𝓡(O₁)` into the tensor factor `𝓑(ℓ²(F)) ⊗̄ 1` and the
+    yields the split inclusion `𝓡(O₁) ≤ 𝓡(O₂)`. The tensor splitting — a unitary
+    `U : H ≃ₗᵢ Completion (ℓ²(F) ⊗[ℂ] eH)` carrying `𝓡(O₁)` into the tensor factor `𝓑(ℓ²(F)) ⊗̄ 1` and the
     commutant `𝓡(O₂)′` into `1 ⊗̄ 𝓑(eH)`, with the interpolating type I factor and its commutant
     identified exactly — is obtained on a nonzero `H` by applying
     `VonNeumannAlgebra.IsSplitInclusion.exists_tensor_decomposition` to the conclusion. -/
@@ -388,18 +385,15 @@ lemma SplitProperty.isSplitInclusion_of_le_of_properlyContained_of_le (hs : vnNe
     VonNeumannAlgebra.IsSplitInclusion (vnNet.algebra O₀) (vnNet.algebra O₃) :=
   hs (h.mono h₀ h₃)
 
-/-- **The commutant form of the split property** (Borchers' conjecture as displayed in Buchholz,
-    *Product states for local algebras*): for a properly contained pair `O₁ ⋐ O₂` and any region
-    `O_B` causally orthogonal to `O₂`, the pair `(O₁, O_B)` is split (`IsSplitPair`),
+/-- **The commutant form of the split property**: for a properly contained pair `O₁ ⋐ O₂` and
+    any region `O_B` causally orthogonal to `O₂`, the pair `(O₁, O_B)` is split (`IsSplitPair`),
 
       `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`.
 
-    This is the historically original shape of the property, for a *disjoint* pair with slack
+    This is the shape of the property for a *disjoint* pair with slack
     rather than a nested one. The nested form implies it through locality
     (`algebra_le_commutant_of_orthogonal`); the converse needs Haag duality, which is not assumed
-    anywhere here. Buchholz displays the symmetric four-term chain `𝓡(O₁) ⊂ M₁ ⊂ M₂′ ⊂ 𝓡(O₂)′`
-    with two interpolating type I factors; this is its one-sided compression, which is the form
-    the adopted definition of a split inclusion carries.
+    anywhere here.
 
     The pair obtained this way always has the gap `O₂` between `O₁` and `O_B`. Since `⋐` is
     irreflexive, adjacent pairs such as the half-chains `(-∞, 0]`, `[1, ∞)` are out of its reach; for them
@@ -420,7 +414,7 @@ variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [N
 variable (N : LocalNet K) [N.Faithful]
 
 /-- **The split property** of a local net in a representation `π` of the quasi-local C⋆-algebra
-    (Buchholz; Doplicher–Longo): the split property of the associated net of local von Neumann
+    (Doplicher–Longo): the split property of the associated net of local von Neumann
     algebras (`VonNeumannNet.SplitProperty`) — for every properly contained pair of regions
     `O₁ ⋐ O₂`, some type I factor interpolates, `𝓡(O₁) ≤ M ≤ 𝓡(O₂)`. It is relative to the chosen
     `⋐` exactly as the von-Neumann-net property is; an inhabited `⋐` alone does not give it

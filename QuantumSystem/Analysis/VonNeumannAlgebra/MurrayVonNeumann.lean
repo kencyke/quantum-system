@@ -15,10 +15,10 @@ The comparison theory of projections in a von Neumann algebra `N`, the foundatio
 classification: the **Murray–von Neumann equivalence** `p ∼[N] q` (a partial isometry `v ∈ N` with
 `v⋆v = p`, `vv⋆ = q`), the **subordination** `p ≼[N] q` (`p` is equivalent to a subprojection of
 `q`), the calculus of partial isometries, and the comparison theorem for minimal projections
-(`IsMinimalProjection.mvNSub_of_isFactor`).
+(`IsMinimalProjection.mvNSub_of_isCentral`).
 
-The comparison theorem for arbitrary projections of a factor, `IsFactor.mvNSub_or_mvNSub`,
-combines the central-support lemma `IsFactor.exists_mul_ne` with the polar decomposition
+The comparison theorem for arbitrary projections of a factor, `VonNeumannAlgebra.mvNSub_or_mvNSub_of_isCentral`,
+combines the central-support lemma `VonNeumannAlgebra.exists_mul_mul_ne_zero_of_isCentral` with the polar decomposition
 (`QuantumSystem.Analysis.VonNeumannAlgebra.PolarDecomposition`) and the additivity of
 Murray–von Neumann equivalence over orthogonal families, and is proved in
 `QuantumSystem.Analysis.VonNeumannAlgebra.Comparison`. The minimal-projection case here
@@ -40,7 +40,7 @@ needs neither, and is the form the type I structure theorem uses.
 * `VonNeumannAlgebra.MvNSub.refl` / `MvNSub.trans` — subordination is a preorder on projections.
 * `VonNeumannAlgebra.mvNSub_of_posCorner` — the scaling step of the comparison theorem: a positive
   scalar corner `(q a e)⋆(q a e) = c • e`, `c > 0`, yields `e ≼[N] q`.
-* `VonNeumannAlgebra.IsMinimalProjection.mvNSub_of_isFactor` — the comparison theorem for minimal
+* `VonNeumannAlgebra.IsMinimalProjection.mvNSub_of_isCentral` — the comparison theorem for minimal
   projections: in a factor, a minimal projection is subordinate to every nonzero projection.
 
 ## Notation
@@ -302,16 +302,16 @@ lemma IsMinimalProjection.mvNSub_of_ne {N : VonNeumannAlgebra H} {e : H →L[ℂ
 /-- **Comparison theorem (minimal projection case).** In a factor, a minimal projection `e` is
 Murray–von Neumann subordinate to *every* nonzero projection `q`: `e ≼ q`. This combines the
 scaling lemma (via `mvNSub_of_ne`) with the central-support input
-(`IsFactor.exists_mul_ne`, which supplies an `a ∈ N` with `q a e ≠ 0`). It is the form of
+(`exists_mul_mul_ne_zero_of_isCentral`, which supplies an `a ∈ N` with `q a e ≠ 0`). It is the form of
 comparison needed to show a maximal orthogonal family of minimal projections exhausts the
-identity. The comparison of two arbitrary projections of a factor is `IsFactor.mvNSub_or_mvNSub`
+identity. The comparison of two arbitrary projections of a factor is `mvNSub_or_mvNSub_of_isCentral`
 (`QuantumSystem.Analysis.VonNeumannAlgebra.Comparison`). -/
-theorem IsMinimalProjection.mvNSub_of_isFactor {N : VonNeumannAlgebra H}
-    (hN : IsFactor N) {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
+theorem IsMinimalProjection.mvNSub_of_isCentral {N : VonNeumannAlgebra H}
+    [Algebra.IsCentral ℂ N] {e : H →L[ℂ] H} (he : IsMinimalProjection N e)
     {q : H →L[ℂ] H} (hq : IsStarProjection q) (hqN : q ∈ N) (hq0 : q ≠ 0) :
     e ≼[N] q := by
   have : Nontrivial H := he.nontrivial
-  obtain ⟨a, haN, hane⟩ := hN.exists_mul_ne he.2.1 he.2.2.1 hq0
+  obtain ⟨a, haN, hane⟩ := exists_mul_mul_ne_zero_of_isCentral he.2.1 he.2.2.1 hq0
   exact he.mvNSub_of_ne hq hqN haN hane
 
 end VonNeumannAlgebra

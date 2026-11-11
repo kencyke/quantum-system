@@ -5,6 +5,8 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.ForMathlib.Analysis.Normed.Algebra.Central
+public import QuantumSystem.ForMathlib.RingTheory.SimpleModule.Central
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
 import Mathlib.Analysis.Complex.Polynomial.Basic
 import Mathlib.RingTheory.SimpleModule.IsAlgClosed
@@ -54,6 +56,18 @@ the involution; the involution is recovered as follows.
   unital or not, is ⋆-isomorphic to a full matrix algebra.
 * `NonUnitalCStarAlgebra.exists_mul_eq_self`: a finite-dimensional C⋆-algebra is unital, that is,
   it has a two-sided multiplicative identity.
+* **`CStarAlgebra.isSimpleRing_of_isCentral_of_finiteDimensional`**: a finite-dimensional
+  nontrivial central C⋆-algebra is simple; conversely a simple C⋆-algebra of any dimension is
+  central (`NormedRing.isCentral_of_isSimpleRing`), so
+  `CStarAlgebra.isCentral_iff_isSimpleRing_of_finiteDimensional`. Simplicity is that of a ring
+  (`IsSimpleRing`), which for a unital C⋆-algebra agrees with having no non-trivial closed ideal;
+  that agreement is not formalized.
+* **`CStarAlgebra.exists_starAlgEquiv_cstarMatrix_of_isCentral`**: a finite-dimensional nontrivial
+  central C⋆-algebra is ⋆-isomorphic to a full matrix algebra.
+
+A von Neumann algebra `N` is a factor when `Algebra.IsCentral ℂ N`, so the last two items say that a
+finite-dimensional factor on a nonzero Hilbert space is a simple ring and a matrix algebra; the
+dimension of `N`, not of the Hilbert space, is the one that is finite.
 
 The statements use the notation `M_[n](A)` for `CStarMatrix (Fin n) (Fin n) A`, in scope `CStarMatrix`.
 -/
@@ -286,6 +300,42 @@ lemma NonUnitalCStarAlgebra.exists_mul_eq_self : ∃ e : A, ∀ a, e * a = a ∧
     exact Φ.symm_apply_apply a
 
 end NonUnital
+
+section Central
+
+/-! ### Central C⋆-algebras
+
+A C⋆-algebra `A` is **central** (`Algebra.IsCentral ℂ A`) when its centre is `ℂ 1`; for a von
+Neumann algebra this is being a factor. A simple C⋆-algebra is central whatever its dimension, as
+every simple complex normed algebra is (`NormedRing.isCentral_of_isSimpleRing`). Conversely a
+finite-dimensional nontrivial central C⋆-algebra is simple, hence a full matrix algebra; in
+infinite dimensions this fails, as for `B(H)`, which is central with the compact operators as a
+proper ideal. Not formalized: that failure, the non-simplicity of `B(H)` for an infinite-dimensional
+`H`. -/
+
+variable (A : Type*) [CStarAlgebra A] [FiniteDimensional ℂ A]
+
+/-- **A finite-dimensional nontrivial central C⋆-algebra is simple.** It is semisimple
+(`CStarAlgebra.isSemisimpleRing`), and a nontrivial central semisimple algebra is simple
+(`IsSemisimpleRing.isSimpleRing_of_isCentral`). -/
+theorem CStarAlgebra.isSimpleRing_of_isCentral_of_finiteDimensional [Nontrivial A]
+    [Algebra.IsCentral ℂ A] : IsSimpleRing A :=
+  IsSemisimpleRing.isSimpleRing_of_isCentral ℂ
+
+/-- A finite-dimensional nontrivial C⋆-algebra is central iff it is simple. -/
+lemma CStarAlgebra.isCentral_iff_isSimpleRing_of_finiteDimensional [Nontrivial A] :
+    Algebra.IsCentral ℂ A ↔ IsSimpleRing A :=
+  ⟨fun _ => CStarAlgebra.isSimpleRing_of_isCentral_of_finiteDimensional A, fun _ => inferInstance⟩
+
+/-- **A finite-dimensional nontrivial central C⋆-algebra is a full matrix algebra**:
+`A ≃⋆ₐ[ℂ] M_[n](ℂ)` for some `n ≠ 0`. For a von Neumann algebra `N`, this says that a
+finite-dimensional factor on a nonzero Hilbert space is a matrix algebra. -/
+theorem CStarAlgebra.exists_starAlgEquiv_cstarMatrix_of_isCentral [Nontrivial A]
+    [Algebra.IsCentral ℂ A] : ∃ n : ℕ, NeZero n ∧ Nonempty (A ≃⋆ₐ[ℂ] M_[n](ℂ)) :=
+  have := CStarAlgebra.isSimpleRing_of_isCentral_of_finiteDimensional A
+  IsSimpleRing.exists_starAlgEquiv_cstarMatrix A
+
+end Central
 
 section Examples
 
