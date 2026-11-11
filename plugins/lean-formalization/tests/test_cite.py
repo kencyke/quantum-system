@@ -17,6 +17,7 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import urllib.response
 from pathlib import Path
@@ -70,6 +71,15 @@ OPENALEX_WORK = json.dumps(
     }
 ).encode()
 ATOM = "application/atom+xml"
+
+
+def hosts_toml(*hosts, **extra):
+    """A configuration allowing `hosts`, each with terms read on 2026-11-10 and the `extra` keys."""
+    more = "".join(f"{k} = {json.dumps(v)}\n" for k, v in extra.items())
+    return "".join(f'[hosts."{h}"]\nterms = "https://{h}/terms"\nreviewed = 2026-11-10\n{more}' for h in hosts)
+
+
+TEST_HOSTS = hosts_toml("arxiv.org", "doi.org", "a.example", "b.example", "intranet.example", "landing.example")
 WORDS = b"<html><body>" + b"word " * 300 + b"</body></html>"
 
 
@@ -109,6 +119,11 @@ def public(host, port):
 def isolated(tmp_path, monkeypatch):
     """A cache of its own, no proxy, public addresses, no network, and waits recorded instead of slept."""
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
+    default_config = tmp_path / "default-citation-check.toml"
+    default_config.write_text(TEST_HOSTS)
+    monkeypatch.setattr(cite, "CONFIG_PATH", default_config)  # the hosts these tests reach, not the bundled list
+    # nor this repository's own list
+    monkeypatch.setattr(cite, "project_config", lambda: tmp_path / "project" / cite.CONFIG_NAME)
     for var in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "no_proxy", "NO_PROXY", "all_proxy"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setattr(cite, "addresses", public)
@@ -774,6 +789,184 @@ def test_fetch_text_tells_a_refusal_from_an_outage(cache, monkeypatch, capsys, t
         url = f"https://a.example/{status}"
         code, out = run(monkeypatch, capsys, "fetch-text", "--url", url, "--out", str(tmp_path / "t"))
         assert code == 2 and (out["status"], out["reason"]) == (verdict, reason)
+
+
+# ---------- the allowed hosts ----------
+
+
+def config_file(tmp_path, text):
+    path = tmp_path / "conf" / "citation-check.toml"
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(text)
+    return path
+
+
+ALLOW_A = hosts_toml("a.example", "doi.org")
+
+
+def fetch_with(monkeypatch, capsys, tmp_path, config, url):
+    return run(monkeypatch, capsys, "--config", str(config), "fetch-text", "--url", url, "--out", str(tmp_path / "t"))
+
+
+def test_the_bundled_config_names_the_terms_read_for_every_host():
+    rules = cite.load_hosts(Path(cite.__file__).resolve().parent.parent / cite.CONFIG_NAME)
+    assert "arxiv.org" in rules
+    for rule in rules.values():
+        assert rule.terms.startswith("https://") and rule.reviewed.year >= 2026
+
+
+def waited_between_two_requests(cache, monkeypatch, slept, tmp_path, config, robots_txt):
+    hosts = cite.load_hosts(config_file(tmp_path, config))
+    page = (200, "text/html", WORDS)
+    answers = {"https://a.example/robots.txt": robots_txt, "https://a.example/1": page, "https://a.example/2": page}
+    serve(monkeypatch, answers)
+    fetch_page(cite.Cache(cache.dir, hosts=hosts, config="c"), "https://a.example/1")
+    slept.clear()
+    fetch_page(cite.Cache(cache.dir, hosts=hosts, config="c"), "https://a.example/2")
+    return sum(slept)
+
+
+def test_a_host_interval_from_its_terms_is_waited(cache, monkeypatch, slept, tmp_path):
+    config = hosts_toml("a.example", interval=20)
+    assert waited_between_two_requests(cache, monkeypatch, slept, tmp_path, config, NO_ROBOTS) >= 19
+
+
+def test_the_larger_of_the_terms_interval_and_crawl_delay_wins(cache, monkeypatch, slept, tmp_path):
+    robots_txt = (200, "text/plain", b"User-agent: *\nCrawl-delay: 30\n")
+    config = hosts_toml("a.example", interval=2)
+    assert waited_between_two_requests(cache, monkeypatch, slept, tmp_path, config, robots_txt) >= 29
+
+
+def test_the_default_config_applies_and_a_missing_one_stops_every_fetch(cache, monkeypatch, capsys, tmp_path):
+    fake = serve(monkeypatch, {})
+    code, out = run(monkeypatch, capsys, "fetch-text", "--url", "https://c.example/x", "--out", str(tmp_path / "t"))
+    assert code == 2 and out["status"] == "not-allowed" and out["host"] == "c.example"
+    assert out["config"] == str(cite.project_config()) and out["refused"] == "https://c.example/x" and fake.calls == []
+    monkeypatch.setattr(cite, "CONFIG_PATH", tmp_path / "missing.toml")
+    code, out = run(monkeypatch, capsys, "fetch-text", "--url", "https://a.example/x", "--out", str(tmp_path / "t"))
+    assert code == 2 and out["status"] == "error" and "missing.toml" in out["error"] and fake.calls == []
+
+
+def test_listed_hosts_and_their_subdomains_are_fetched_and_no_other(cache, monkeypatch, capsys, tmp_path):
+    config = config_file(tmp_path, ALLOW_A)
+    answers = {}
+    for host in ("a.example", "www.a.example"):
+        answers[f"https://{host}/robots.txt"] = NO_ROBOTS
+        answers[f"https://{host}/x"] = (200, "text/html", WORDS)
+    fake = serve(monkeypatch, answers)
+    for host in ("a.example", "www.a.example"):
+        code, out = fetch_with(monkeypatch, capsys, tmp_path, config, f"https://{host}/x")
+        assert code == 0 and out["status"] == "ok"
+    calls = len(fake.calls)
+    for host in ("evila.example", "a.example.evil.example", "b.example"):
+        code, out = fetch_with(monkeypatch, capsys, tmp_path, config, f"https://{host}/x")
+        assert code == 2 and out["status"] == "not-allowed" and out["host"] == host
+    assert len(fake.calls) == calls  # no request at all, robots.txt included
+
+
+def test_a_redirect_to_an_unlisted_host_is_refused_at_that_hop(cache, monkeypatch, capsys, tmp_path):
+    config = config_file(tmp_path, ALLOW_A)
+    fake = serve(
+        monkeypatch,
+        {
+            "https://a.example/robots.txt": NO_ROBOTS,
+            "https://a.example/x": (302, {"Location": "https://b.example/y"}, b""),
+        },
+    )
+    code, out = fetch_with(monkeypatch, capsys, tmp_path, config, "https://a.example/x")
+    assert code == 2 and out["status"] == "not-allowed" and out["host"] == "b.example"
+    assert out["refused"] == "https://b.example/y" and out["url"] == "https://a.example/x"
+    assert "https://b.example/robots.txt" not in fake.calls and "https://b.example/y" not in fake.calls
+
+
+def test_a_robots_txt_redirected_to_an_unlisted_host_is_not_followed(cache, monkeypatch, capsys, tmp_path):
+    config = config_file(tmp_path, ALLOW_A)
+    robots_txt = "https://sub.a.example/robots.txt"
+    fake = serve(monkeypatch, {robots_txt: (301, {"Location": "https://b.example/robots.txt"}, b"")})
+    code, out = fetch_with(monkeypatch, capsys, tmp_path, config, "https://sub.a.example/x")
+    assert code == 2 and out["status"] == "not-allowed" and out["host"] == "b.example"
+    assert out["refused"] == "https://b.example/robots.txt" and fake.calls == [robots_txt]
+
+
+def test_a_cached_answer_from_an_unlisted_host_is_not_served(cache, monkeypatch, tmp_path):
+    serve(monkeypatch, {"https://b.example/robots.txt": NO_ROBOTS, "https://b.example/x": (200, "text/html", WORDS)})
+    cite.get("https://b.example/x", cache, "document", cite.document, keep=lambda d: d.usable)
+    assert cached(cache, "https://b.example/x")
+    hosts = cite.load_hosts(config_file(tmp_path, hosts_toml("a.example")))
+    restricted = cite.Cache(cache.dir, hosts=hosts, config="c.toml")
+    with pytest.raises(cite.NotAllowed):
+        cite.get("https://b.example/x", restricted, "document", cite.document)
+    assert cite.host_entry("x.a.example", restricted) == ("a.example", hosts["a.example"])
+
+
+def test_the_apis_are_always_allowed_and_doi_org_pages_need_listing(cache, monkeypatch, capsys, tmp_path):
+    config = config_file(tmp_path, hosts_toml("a.example"))
+    fake = serve(monkeypatch, {API_URL: (200, ATOM, ONE_ENTRY)})
+    code, out = run(monkeypatch, capsys, "--config", str(config), "lookup", "--arxiv", "2010.05513")
+    assert code == 0 and fake.calls == [API_URL]
+    code, out = fetch_with(monkeypatch, capsys, tmp_path, config, "https://doi.org/10.1000/x")
+    assert code == 2 and out["status"] == "not-allowed" and out["host"] == "doi.org" and fake.calls == [API_URL]
+
+
+def test_a_malformed_config_stops_every_fetch(cache, monkeypatch, capsys, tmp_path):
+    malformed = ['[fetch]\nallowed_hosts = ["a.example"]\n', "[hosts\n", hosts_toml("https://a.example/")]
+    malformed += ['[hosts."a.example"]\nreviewed = 2026-11-10\n']
+    malformed += ['[hosts."a.example"]\nterms = "https://a.example/t"\n']
+    malformed += [hosts_toml("a.example", interval=-1), hosts_toml("a.example", tos="yes")]
+    for text in [*malformed, ""]:
+        config = config_file(tmp_path, text)
+        fake = serve(monkeypatch, {"https://a.example/robots.txt": NO_ROBOTS, API_URL: (200, ATOM, ONE_ENTRY)})
+        code, out = fetch_with(monkeypatch, capsys, tmp_path, config, "https://a.example/x")
+        assert code == 2 and out["status"] == "error" and str(config) in out["error"] and fake.calls == []
+        code, out = run(monkeypatch, capsys, "--config", str(config), "lookup", "--arxiv", "2010.05513")
+        assert out["status"] == "error" and fake.calls == []
+
+
+def test_copies_marks_the_copies_fetch_text_may_read(cache, monkeypatch, capsys, tmp_path):
+    config = config_file(tmp_path, hosts_toml("arxiv.org"))
+    serve(monkeypatch, {OPENALEX_URL: (200, JSON, OPENALEX_WORK)})
+    code, out = run(monkeypatch, capsys, "--config", str(config), "copies", "--doi", "10.1000/x")
+    assert code == 0 and out["best"]["pdf_allowed"] is True and out["best"]["landing_allowed"] is True
+    assert [(c["pdf_allowed"], c["landing_allowed"]) for c in out["copies"]] == [(False, False), (True, True)]
+    code, out = run(monkeypatch, capsys, "copies", "--doi", "10.1000/x")  # the default list has doi.org
+    assert [(c["pdf_allowed"], c["landing_allowed"]) for c in out["copies"]] == [(False, True), (True, True)]
+
+
+def test_the_subdomains_of_an_entry_share_its_lock_and_interval(cache, monkeypatch, slept, tmp_path):
+    hosts = cite.load_hosts(config_file(tmp_path, hosts_toml("a.example", "arxiv.org", interval=20)))
+    answers = {}
+    for host in ("x.a.example", "y.a.example"):
+        answers |= {f"https://{host}/robots.txt": NO_ROBOTS, f"https://{host}/1": (200, "text/html", WORDS)}
+    serve(monkeypatch, answers)
+    fetch_page(cite.Cache(cache.dir, hosts=hosts, config="c"), "https://x.a.example/1")
+    slept.clear()
+    fetch_page(cite.Cache(cache.dir, hosts=hosts, config="c"), "https://y.a.example/1")
+    assert [s >= 19 for s in slept] == [True, True]  # its robots.txt waits for the other subdomain's request too
+    assert state_of(cache, "a.example")["last_request"] and not (cache.dir / "state" / "y.a.example.json").exists()
+    # an API keeps its own host, whose interval its terms set, under an entry that covers it
+    restricted = cite.Cache(cache.dir, hosts=hosts, config="c")
+    assert cite.site_of(urllib.parse.urlsplit(API_URL), restricted) == "export.arxiv.org"
+    assert cite.site_of(urllib.parse.urlsplit("https://export.arxiv.org/abs/2010.05513"), restricted) == "arxiv.org"
+
+
+def test_the_projects_config_is_laid_over_the_skills(cache, monkeypatch, capsys, tmp_path):
+    project = cite.project_config()
+    project.parent.mkdir()
+    project.write_text(hosts_toml("c.example") + hosts_toml("a.example", interval=20))
+    hosts, config = cite.load_config(None)
+    assert config == str(project) and "b.example" in hosts and "c.example" in hosts
+    assert hosts["a.example"].interval == 20  # the project's entry replaces the skill's
+    page = {"https://c.example/robots.txt": NO_ROBOTS, "https://c.example/x": (200, "text/html", WORDS)}
+    fake = serve(monkeypatch, page)
+    code, out = run(monkeypatch, capsys, "fetch-text", "--url", "https://c.example/x", "--out", str(tmp_path / "t"))
+    assert code == 0 and out["status"] == "ok"
+    alone = config_file(tmp_path, hosts_toml("a.example"))  # `--config` names the one file read
+    code, out = fetch_with(monkeypatch, capsys, tmp_path, alone, "https://c.example/x")
+    assert code == 2 and out["status"] == "not-allowed" and out["config"] == str(alone)
+    project.write_text("[hosts\n")
+    calls = len(fake.calls)
+    code, out = run(monkeypatch, capsys, "fetch-text", "--url", "https://a.example/x", "--out", str(tmp_path / "t"))
+    assert code == 2 and out["status"] == "error" and str(project) in out["error"] and len(fake.calls) == calls
 
 
 # ---------- the ledger ----------

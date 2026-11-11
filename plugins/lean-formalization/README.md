@@ -117,6 +117,25 @@ the project's own business (a `yaml-language-server` `$schema` line in the file,
 with `uv run <path to cite.py> --help`. Writing the ledger keeps
 its comments; long lines of text may be rewrapped.
 
+Where the script goes is limited by `skills/citation-check/citation-check.toml`, bundled with the skill,
+and by the project's own file of that name at the root of its git work tree, which adds hosts to the
+bundled list and replaces an entry of the same name (`--config` names one file to read instead of both).
+A project's hosts go in its own file: the bundled one is replaced when the plugin is updated.
+
+```toml
+[hosts."arxiv.org"]                                  # also covers its subdomains
+terms = "https://info.arxiv.org/help/robots.html"    # the site's terms, as read
+reviewed = 2026-11-10                                # the date they were read
+# interval = 10                                      # seconds between requests, when the terms set one
+```
+
+A host is listed only after its terms of use were read and allow fetching single documents for research;
+each entry names the page read and its date, and a configuration with a host lacking them stops every
+fetch, as does one that is missing or cannot be read. The bibliographic APIs the script queries are always
+allowed. Any other request, every redirect hop included, goes only to a listed host; elsewhere the script
+answers `not-allowed` without making a request, and the `citation-check` skill keeps such a citation as
+unchecked rather than removing it. An entry's `interval` holds over the host and its subdomains together.
+
 The script's dependencies are pinned, with hashes, in `cite.py.lock` next to it, which `uv run`
 follows; `uv lock --script <path to cite.py> --upgrade` refreshes it.
 

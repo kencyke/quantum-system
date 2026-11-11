@@ -20,7 +20,11 @@ the repository root, in the [formalization.yaml](https://github.com/mathlib-init
 format, with a `checked` key under each source — this plugin's extension of the format: the URL read
 and, per locator, the page, the date, the version of the work that page number belongs to (optional)
 and — when that locator was read in another copy — its URL. A
-project without that file has no ledger, and the helper answers `no-ledger`.
+project without that file has no ledger, and the helper answers `no-ledger`. The hosts the helper may
+read are listed in `${CLAUDE_SKILL_DIR}/citation-check.toml`, bundled with this skill, and in the
+project's own `citation-check.toml` at the repository root, when it has one, which adds to that list;
+each host is listed with the terms of use read before allowing it, and a fetch elsewhere answers
+`not-allowed` without a request.
 
 **Work directory.** `<your scratchpad>` below is the session's scratchpad directory. A session
 without one uses a directory made once with `mktemp -d` and kept for the whole run.
@@ -39,6 +43,10 @@ A `full-text-refused` citation is kept and reported the same way, with one diffe
 landing page was read, and only its full text was refused, so the user can take the full text by hand
 from that page and give it back (step 6). The user takes it; this skill and its verifier never fetch
 it by another route.
+
+A citation whose only readable copy is on a host that neither host list allows is
+`unchecked`, not `inaccessible`: an open copy exists, and the configuration chose not to read it. It
+is never deleted on that ground, and never fetched by another route.
 
 ## Process
 
@@ -78,6 +86,8 @@ rate limits are per host, not per agent. Its prompt states:
   has none;
 - the absolute path of the helper, `${CLAUDE_SKILL_DIR}/scripts/cite.py`, and a text directory
   `<your scratchpad>/citation-check/texts`;
+- the absolute paths of the host lists: `${CLAUDE_SKILL_DIR}/citation-check.toml` and, when the
+  project has one, `citation-check.toml` at the repository root;
 - the absolute path of its notes file: `<your scratchpad>/citation-check/citations.md`;
 - the copies the user obtained, if the user gave any (step 6): for each work, the file's absolute
   path and the URL the user took it from.
@@ -158,7 +168,10 @@ Print one markdown report to the chat:
 
 ## Not checked
 <files the verifier did not reach; `unchecked` citations and why; a missing ledger, so that verified
- citations were not recorded. Never omitted: write "nothing" when it is empty.>
+ citations were not recorded; the hosts that answered `not-allowed`, with the URLs the verifier would
+ have read there, for the user to review those sites' terms and add them or not to the project's
+ `citation-check.toml` at the repository root (the bundled list is replaced when the plugin is
+ updated). Never omitted: write "nothing" when it is empty.>
 ```
 
 Print ✅ only when the verifier ran to completion, no citation is `unchecked` or kept unverified (a

@@ -24,8 +24,9 @@ Do not touch repository files — other reviewers are reading them.
 ## Inputs
 
 Your prompt gives: the target files, the ledger (`formalization.yaml`) or that the project has
-none, the helper `cite.py`, a directory for fetched texts, and the absolute path of your
-notes file. It may also give **copies the user obtained**: for a work, the absolute path of a
+none, the helper `cite.py`, a directory for fetched texts, the host lists (the skill's
+`citation-check.toml` and, when the project has one, its own: each `[hosts."<name>"]` table in either
+names a host whose documents `fetch-text` may read), and the absolute path of your notes file. It may also give **copies the user obtained**: for a work, the absolute path of a
 file and the URL the user took it from.
 Run the helper as `uv run <cite.py> <command>` from inside the project; `--help` lists the commands.
 Without a ledger, `ledger get` answers `no-ledger`: nothing was checked before, so `ledger-verified`
@@ -80,8 +81,7 @@ for the others (do not run it again for each). Read the status:
   `inaccessible`. Never work around it (another tool, deleting the cache).
 
 Books and old articles without a DOI may be absent from both indices. Before calling such a work
-`fabricated`, look for a publisher's or library catalogue page with WebSearch, and record what you
-searched.
+`fabricated`, look for a publisher's or library catalogue page with WebSearch (see *Web search*).
 
 **Notices.** A Crossref candidate carries `updates`: the notices Crossref lists for the work — a
 retraction, a correction, an expression of concern — each with its `type`, the notice's `doi`, its
@@ -126,7 +126,8 @@ reverse, is a mismatch only when the locator follows the other version's numberi
      article, the journal's own open-access platform). For a work with a DOI, `cite.py copies --doi`
      lists the copies OpenAlex knows, with `pdf_url`, `landing_page_url`, `is_oa` and `version`
      (`publishedVersion`, `acceptedVersion`, `submittedVersion`), `best` first; fetch an open one with
-     `fetch-text --url`, which obeys its site's robots.txt as any fetch. WebSearch only after that.
+     `fetch-text --url`, which obeys its site's robots.txt as any fetch. Only then WebSearch, as
+     *Web search* says.
      Never retry the refused site under another identity or with another tool. Every copy
      `inaccessible`: **`ledger-verified`** if the ledger has this locator (kept; say that the claim
      was checked only as of the ledger's date); else **`full-text-refused`** if you read the work's
@@ -134,9 +135,18 @@ reverse, is a mismatch only when the locator follows the other version's numberi
      and every copy of its full text was refused by its site (`refused`, `robots.txt`
      or `no document text`), so that the user can take it by hand from that
      page; else **`inaccessible`**. Look for the landing page as for any copy: `copies`'
-     `landing_page_url`, then WebSearch.
+     `landing_page_url`, then *Web search*.
    - Status `retry-later` or `error` (any other HTTP status, a malformed answer): as in L2. A copy left
      so may still be readable: unless another copy settles the claim, the verdict is `unchecked`.
+   - Status `not-allowed`: no host list names `host`, and no request was made to it. `refused` is the
+     request not made: the URL you gave, the address a redirect led to, or the robots.txt of either
+     (a site may keep its robots.txt on another host). `copies` marks each copy's `pdf_url` and
+     `landing_page_url` with `pdf_allowed` and `landing_allowed`, which say whether `fetch-text` may
+     read that address; try those first. This is the configuration's choice, not a fact about the
+     source: unless another copy settles the claim, the verdict is **`unchecked`**, never
+     `inaccessible`, and the record names the URL, the `host` and `refused`; the user may review that
+     host's terms and add it to the project's `citation-check.toml` (`config` names the file). Never
+     fetch that host by another route.
    - **Make sure you have the work's text.** An HTML page with text may be only a landing page (an
      abstract, a table of contents), and a URL may serve another work: check the title and authors
      on the first page, and that the text runs past the abstract. A locator that a landing page lacks
@@ -215,8 +225,18 @@ to be (`publishedVersion` for the journal's own pages).
   read. What you only recall is `unchecked`.
 - **Be polite to the sources.** Every request to a source goes through `cite.py`, which obeys
   robots.txt, keeps one connection and an interval per host across processes, backs off when a source
-  asks, and caches answers (the policy is in `cite.py --help`). WebSearch is for discovery only. Do not
-  fetch a source with curl or any other tool. Do not use Google Scholar.
+  asks, caches answers, and reads only the hosts the host lists allow (the policy
+  is in `cite.py --help`). WebSearch is for discovery only; a URL it finds goes through `cite.py` like
+  any other. Do not fetch a source with curl or any other tool. Do not use Google Scholar.
+- **Web search.** A general query ranks hosts the host lists do not allow above those they do.
+  To find an open copy of a work (L4), search once with the title (no TeX) and the first author's
+  surname, passing every host of the host lists as `allowed_domains`; only if that gives no copy of
+  the work, search once more without it, and send what it finds to `fetch-text` all the same: a host
+  off the lists answers `not-allowed`, which the report puts before the user. The filter only ranks
+  results — `fetch-text` decides what may be read. To find that a work exists, or its catalogue page
+  (L2), search without `allowed_domains`, since that page may stand on any host. Search no more
+  than this for one work, and record every search (its query and `allowed_domains`) under
+  **Source read**.
 - **Write to the notes file as you go**: after each citation, rewrite the notes file with the Write
   tool, adding that citation's record. The invoking skill recovers from it if you die.
 
@@ -232,7 +252,7 @@ A summary of the notes file, one entry per citation, in L1 order:
 - **Notices**: none listed in Crossref as of <date> | <type>, <notice DOI>, <date> (checked <date>) —
   <what it withdraws or corrects> | not checked
 - **Source read**: <url, page> — "<passage>" | <why it could not be read: each URL tried and its
-  status>. A deletion verdict needs the
+  status>; each web search run, with its query and `allowed_domains`. A deletion verdict needs the
   URL (or, for a copy the user obtained, its file), the page and the passage: the skill reads them
   again before it deletes.
 - **Landing page** (for `full-text-refused` only): <url> — <each full-text URL refused, and its

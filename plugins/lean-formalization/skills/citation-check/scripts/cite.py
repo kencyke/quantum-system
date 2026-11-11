@@ -13,19 +13,28 @@
 
 Run with `uv run <skill directory>/scripts/cite.py <command> ...` from inside the project; every command prints
 JSON. The ledger defaults to `formalization.yaml` at the root of the git work tree containing the current
-directory; a missing ledger is reported as status `no-ledger`.
+directory; a missing ledger is reported as status `no-ledger`. The fetch configuration is the skill's own
+`citation-check.toml` with the project's laid over it, entry by entry: the file of that name at the root of the
+same work tree, when there is one (`--config` names one file to read instead of both). It has one
+`[hosts."<name>"]` table per host whose documents may be read, each with the URL of that site's terms read before
+allowing it (`terms`), their date (`reviewed`), and the interval they set, if any (`interval`).
 
 Politeness (this is the one statement of it). The sources are five APIs — the arXiv API at export.arxiv.org (its
 terms: one request per 3 s on one connection, over all of a user's machines together, which the locks below hold
 on this machine only), the Crossref REST API public pool, for a DOI that Crossref does not hold, the DOI
 proxy's registration-agency lookup at doi.org/doiRA/ and the DataCite REST API, and the OpenAlex API without a
 key, for the copies of a work (`copies`) — and documents: arXiv PDFs from
-arxiv.org, whose robots.txt allows them (export.arxiv.org's disallows everything), or any openly served URL.
+arxiv.org, whose robots.txt allows them (export.arxiv.org's disallows everything), or any openly served URL on a
+host the configuration allows. No request outside the APIs goes to a host that it does not list (an entry covers
+its subdomains): the check is made on every redirect hop and on an answer read from the cache, before robots.txt
+is read, and a refusal is answered as `not-allowed` without a request; a configuration that is missing, cannot be
+read, or lists a host without its terms stops every fetch.
 Before any request outside the APIs, robots.txt is read (RFC 9309, kept a day) and the request is dropped when
 the rules for `citation-check` or for `Claude-User` disallow it; a robots.txt answering 4xx, a refusal included,
-sets no rules (RFC 9309, 2.3.1.3), and one that cannot be reached disallows everything (2.3.1.4). Requests
-to one host go one at a time, across processes, at least an interval apart: the larger of `INTERVAL` and the
-robots.txt `Crawl-delay` or `Request-rate`. A 408, a 429, a 5xx other than 501 and 505, or a dropped connection
+sets no rules (RFC 9309, 2.3.1.3), and one that cannot be reached disallows everything (2.3.1.4). Requests to one
+host go one at a time, across processes, at least an interval apart, and for documents a host is one entry of the
+configuration with all its subdomains: the largest of `INTERVAL`, the configuration's `interval` for the host, and
+the robots.txt `Crawl-delay` or `Request-rate`. A 408, a 429, a 5xx other than 501 and 505, or a dropped connection
 is retried after its `Retry-After`, else after an exponential backoff with jitter that every process shares; a
 wait past `WAIT_BUDGET` ends the run with status `retry-later`, and no run contacts that host before then. A
 refusal (401, 403, 410) is not retried, and counts as a failure of its host. Redirects are followed by hand, at
@@ -68,6 +77,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 import traceback
 import unicodedata
 import urllib.error
@@ -96,6 +106,10 @@ from ruamel.yaml.scalarstring import LiteralScalarString
 from ruamel.yaml.util import load_yaml_guess_indent
 
 LEDGER_NAME = "formalization.yaml"
+# The fetch configuration: the hosts whose documents may be read, with their terms. One file is bundled with the
+# skill, and a project adds its own hosts in a file of the same name at the root of its work tree.
+CONFIG_NAME = "citation-check.toml"
+CONFIG_PATH = Path(__file__).resolve().parent.parent / CONFIG_NAME
 # The product token, and a page that says what the script is and whose it is (Crossref asks for both; DataCite asks
 # frequent clients for a `mailto:` as well, and this script asks it only for DOIs that Crossref does not hold).
 USER_AGENT = "citation-check (+https://github.com/kencyke/quantum-system/tree/main/plugins/lean-formalization)"
@@ -216,6 +230,23 @@ class Disallowed(Exception):
         self.reason = reason
 
 
+class NotAllowed(Exception):
+    """A host outside the APIs that the configuration does not list: no request is made to it. `url` is the request
+    not made (the URL asked for, a redirect's target, or the robots.txt of either), `config` the file a host is
+    added in."""
+
+    def __init__(self, host: str, config: str, url: str):
+        super().__init__(f"{host} is not a host the configuration allows ({config}): {url}")
+        self.host, self.config, self.url = host, config, url
+
+    def report(self) -> Record:
+        return {"status": "not-allowed", "host": self.host, "refused": self.url, "config": self.config}
+
+
+class BadConfig(Exception):
+    """A `citation-check.toml` that is missing or cannot be read as a list of allowed hosts; every fetch stops."""
+
+
 class Malformed(Exception):
     """An answer not in its source's format: an outage page, a bot check, a broken PDF."""
 
@@ -247,12 +278,12 @@ class Registered(Exception):
         return {"status": "registered", "agency": self.agency, "url": f"https://doi.org/{self.doi}"}
 
 
-FAILURES = (RetryLater, Disallowed, Malformed, Unsafe, *NETWORK_ERRORS)
+FAILURES = (RetryLater, Disallowed, NotAllowed, BadConfig, Malformed, Unsafe, *NETWORK_ERRORS)
 
 
 def failure(e: BaseException) -> Record:
     """The JSON status of a fetch that failed other than by an HTTP status."""
-    if isinstance(e, RetryLater):
+    if isinstance(e, (RetryLater, NotAllowed)):
         return e.report()
     if isinstance(e, Disallowed):
         return {"status": "inaccessible", "reason": e.reason}
@@ -598,6 +629,11 @@ class Cache:
     replies: list[Reply] = field(default_factory=list)
     waited: float = 0.0
     fresh: bool = False
+    # The hosts the configuration allows (None, only in a Cache made without one: no restriction), the file a host
+    # is added in, and why the configuration could not be read, which stops every fetch.
+    hosts: dict[str, "HostRule"] | None = None
+    config: str = ""
+    config_error: str = ""
 
 
 def cache_path() -> Path:
@@ -768,7 +804,8 @@ def host_state(cache: Cache, host: str, robots_delay: float | None = None) -> It
     key = host_key(host)
     folder = state_dir(cache.dir)
     with (folder / f"{key}.lock").open("a+") as f:
-        base = INTERVAL.get(key, DEFAULT_INTERVAL)
+        entry = host_entry(host, cache)
+        base = max(INTERVAL.get(key, DEFAULT_INTERVAL), entry[1].interval if entry else 0.0)
         while True:
             try:
                 fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -897,6 +934,99 @@ def is_api(parts: urllib.parse.SplitResult) -> bool:
     return prefix is not None and parts.path.startswith(prefix)
 
 
+LABEL = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+HOST_NAME = re.compile(rf"^(?=.{{1,253}}$){LABEL}(?:\.{LABEL})*$")
+
+
+@dataclass(frozen=True)
+class HostRule:
+    """An allowed host: the page of its terms read before allowing it, the date it was read, and the seconds between
+    requests those terms set (0 when they set none)."""
+
+    terms: str
+    reviewed: datetime.date
+    interval: float = 0.0
+
+
+HOST_KEYS = {"terms", "reviewed", "interval", "note"}
+
+
+def load_hosts(path: Path) -> dict[str, HostRule]:
+    """The hosts `path` allows, one `[hosts."<name>"]` table each, with the terms read for it: `terms` (the URL of
+    the page read), `reviewed` (its date), and optionally `interval` (seconds, set by the terms) and `note`."""
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as e:
+        raise BadConfig(f"{path}: {e}") from e
+    table = data.get("hosts")
+    if not isinstance(table, dict) or not table:
+        raise BadConfig(f"{path}: no [hosts] table")
+    rules: dict[str, HostRule] = {}
+    for raw, entry in table.items():
+        name = raw.strip().lower().rstrip(".")
+        if not HOST_NAME.match(name):
+            raise BadConfig(f"{path}: not a host name: {raw}")
+        if not isinstance(entry, dict) or not set(entry) <= HOST_KEYS:
+            raise BadConfig(f"{path}: hosts.{raw} takes only {sorted(HOST_KEYS)}")
+        terms, reviewed, interval = entry.get("terms"), entry.get("reviewed"), entry.get("interval", 0.0)
+        if not isinstance(terms, str) or not terms.startswith(("https://", "http://")):
+            raise BadConfig(f"{path}: hosts.{raw}.terms must be the URL of the terms read")
+        if not isinstance(reviewed, datetime.date) or isinstance(reviewed, datetime.datetime):
+            raise BadConfig(f"{path}: hosts.{raw}.reviewed must be a date (YYYY-MM-DD)")
+        if isinstance(interval, bool) or not isinstance(interval, (int, float)) or interval < 0:
+            raise BadConfig(f"{path}: hosts.{raw}.interval must be a number of seconds")
+        rules[name] = HostRule(terms, reviewed, float(interval))
+    return rules
+
+
+def host_entry(host: str, cache: Cache) -> tuple[str, HostRule] | None:
+    """The configuration's entry for `host` or for the closest domain above it, with the name it is listed under;
+    None when it lists neither."""
+    name, hosts = host.lower().rstrip("."), cache.hosts or {}
+    found = [h for h in hosts if name == h or name.endswith("." + h)]
+    if not found:
+        return None
+    closest = max(found, key=len)
+    return closest, hosts[closest]
+
+
+def site_of(parts: urllib.parse.SplitResult, cache: Cache) -> str:
+    """The name whose lock and interval a request to `parts` takes: for a document, the configuration's entry that
+    allows its host, so that an entry's subdomains share one interval; for an API, and with no entry, the host."""
+    entry = None if is_api(parts) else host_entry(parts.hostname or "", cache)
+    return entry[0] if entry else parts.hostname or ""
+
+
+def project_config() -> Path:
+    return repo_root() / CONFIG_NAME
+
+
+def load_config(config: str | None) -> tuple[dict[str, HostRule], str]:
+    """The allowed hosts, and the file a host is added in: `config` alone when it is given; else the skill's list
+    with the project's (`CONFIG_NAME` at the root of the work tree, when there is one) laid over it entry by entry."""
+    if config:
+        return load_hosts(Path(config)), config
+    project = project_config()
+    hosts = load_hosts(CONFIG_PATH)
+    if project.is_file():
+        hosts |= load_hosts(project)
+    return hosts, str(project)
+
+
+def check_allowed(url: str, cache: Cache) -> None:
+    """Raise unless `url` is an API request or its host is one the configuration allows, or a subdomain of one."""
+    if cache.config_error:
+        raise BadConfig(cache.config_error)
+    if cache.hosts is None:
+        return
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme not in ("http", "https") or not parts.hostname or is_api(parts):
+        return  # an API request, or one that `check_url` refuses as unsafe
+    host = parts.hostname.lower().rstrip(".")
+    if host_entry(host, cache) is None:
+        raise NotAllowed(host, cache.config, url)
+
+
 def transient(e: BaseException) -> bool:
     """A dropped or timed-out connection, which is retried; a name that does not resolve is not."""
     reason = e.reason if isinstance(e, urllib.error.URLError) else e
@@ -966,9 +1096,10 @@ def fetch(url: str, cache: Cache, kind: str) -> Reply:
     checked as the first."""
     current = url
     for _ in range(MAX_REDIRECTS + 1):
+        check_allowed(current, cache)
         parts = check_url(current)
         delay = None if kind == "robots" or is_api(parts) else robots_allow(current, parts, cache)
-        status, headers, body = request(current, parts.hostname or "", cache, kind, delay)
+        status, headers, body = request(current, site_of(parts, cache), cache, kind, delay)
         if status in REDIRECT and headers.location:
             current = urllib.parse.urljoin(current, headers.location)
             continue
@@ -981,7 +1112,10 @@ def get[T](
 ) -> tuple[Reply, T]:
     """The answer for `url` and what `parse` makes of it, from the cache unless expired; a fetched answer is cached
     once `parse` takes it and `keep` finds something in it. A status other than 200 raises `Http`, uncached."""
+    check_allowed(url, cache)
     reply = None if cache.fresh else read_entry(url, cache.dir)
+    if reply is not None and reply.final:
+        check_allowed(reply.final, cache)
     if reply is None:
         reply = fetch(url, cache, kind)
     cache.replies.append(reply)
@@ -1184,8 +1318,23 @@ def cmd_copies(args: argparse.Namespace, cache: Cache) -> int:
     except FAILURES as e:
         print(json.dumps(failure(e) | report(cache.replies), ensure_ascii=False, indent=2))
         return 2
+    for copy in [out["best"], *out["copies"]]:
+        if copy is not None:
+            copy["pdf_allowed"] = copy_allowed(copy.get("pdf_url"), cache)
+            copy["landing_allowed"] = copy_allowed(copy.get("landing_page_url"), cache)
     print(json.dumps({"status": "ok"} | out | report(cache.replies), ensure_ascii=False, indent=2))
     return 0
+
+
+def copy_allowed(url: str | None, cache: Cache) -> bool:
+    """Whether `fetch-text` may read `url`, a copy's address, under the configuration's hosts."""
+    if not url:
+        return False
+    try:
+        check_allowed(url, cache)
+    except (NotAllowed, BadConfig):
+        return False
+    return True
 
 
 def search_crossref(claim: Record, cache: Cache) -> list[Record]:
@@ -1624,6 +1773,11 @@ def cmd_validate(args: argparse.Namespace, cache: Cache) -> int:
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--ledger", help=f"ledger file (default: {LEDGER_NAME} at the root of the git work tree)")
+    p.add_argument(
+        "--config",
+        help=f"the one fetch configuration to read (default: the skill's {CONFIG_NAME}, {CONFIG_PATH}, with the "
+        "file of that name at the root of the git work tree laid over it)",
+    )
     sub = p.add_subparsers(dest="cmd", required=True)
 
     lk = sub.add_parser("lookup", help="canonical metadata, compared with the claimed fields")
@@ -1670,6 +1824,10 @@ def main() -> int:
     args = p.parse_args()
     args.ledger = args.ledger or str(repo_root() / LEDGER_NAME)
     cache = Cache(cache_path())
+    try:
+        cache.hosts, cache.config = load_config(args.config)
+    except BadConfig as e:
+        cache.config_error = str(e)
     # A run stopped by SIGTERM (a tool's timeout) still runs its `finally` blocks, which write the hosts' state.
     signal.signal(signal.SIGTERM, lambda signum, _: sys.exit(128 + signum))
     try:
