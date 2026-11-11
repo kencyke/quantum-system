@@ -6,7 +6,8 @@ Claude Code skills and agents for formalizing mathematics in Lean 4.
 
 - `/lean-formalization:math-review [path | dir | main...HEAD]` — reviews the current change (or the
   named target) through parallel `math-reviewer` agents, one per perspective: statement fidelity,
-  checked against a blind readback of each claim by a `statement-reader` agent; deferred hypotheses;
+  checked against a blind readback of each claim by a `statement-reader` agent and against a Lean
+  statement of each claim written blind to the code by a `statement-writer` agent; deferred hypotheses;
   conformance with the abstract setting and the literature; notation, naming and docs;
   counterexample models and vacuity. Read-only: it reports findings and proposed fixes, and applies
   none. It leaves literature citations to `citation-check`.

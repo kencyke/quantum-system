@@ -47,7 +47,9 @@ boundary, these tie-breaks decide the owner:
   perspective 3; one that can be deleted outright is perspective 5.
 - **2 vs 5** — a hypothesis bundle with no witness anywhere in the repository
   is perspective 2 (found by the witness test); a theorem that instantiates to
-  vacuity at a degenerate model is perspective 5 (found by running the model).
+  vacuity at a degenerate model is perspective 5 (found by running the model),
+  and so is an existential conclusion that a degenerate witness meets (found by
+  the cheap-witness test).
 - **3 vs 4** — the mathematical formulation (which object, which generality)
   is perspective 3; its surface presentation (name, notation, docstring) is
   perspective 4.
@@ -197,7 +199,7 @@ Hunt where Lean and mathematics silently diverge:
   instance arguments,
 - implications or `iff`s pointing the wrong way relative to the name.
 
-Five checks deserve an explicit procedure rather than a glance:
+Six checks deserve an explicit procedure rather than a glance:
 
 - **Compare the blind readback with the claim.** When your prompt gives a
   readback file — what each declaration literally asserts, written by an agent
@@ -224,7 +226,53 @@ Five checks deserve an explicit procedure rather than a glance:
   sign that an object is not the intended one; say which. The readback is
   evidence about its writer too: confirm each discrepancy against the elaborated
   type before filing it. A readback that reveals vacuity belongs to
-  perspective 5; put it under `## Out of perspective`.
+  perspective 5; put it under `## Out of perspective`. When your prompt marks
+  the readback `failed-control`, the agent that wrote it missed a planted change: clear no
+  declaration on the readback alone, only on your own reading of the elaborated
+  type.
+- **Derive the blind spec from the target, and the target from the spec.** When
+  your prompt gives a spec file — the claim of each theorem and `def` written in
+  Lean by an agent that saw the docstring but not the statement — take each
+  `d<N>` whose spec elaborated and try both directions in `lean_run_code`, with
+  the target's module imported: the spec from the target
+  (`example : <spec> := by …`, using the target theorem, or unfolding the target
+  definition), and for a theorem the target's statement from the spec (the spec
+  as a hypothesis). Spend a few attempts per direction, not a proof effort.
+
+  First make sure the derivation tests the target. A spec that closes without
+  it — `simp` or `exact?` finds a library lemma, or its hypotheses contradict
+  each other — follows from any target: try the spec without the target, and
+  when it closes, report it as `uninformative` and read nothing from it.
+  Likewise a derivation whose proof never mentions the target shows nothing
+  about it.
+
+  | Outcome | Reading |
+  |---|---|
+  | `both` — each follows from the other | the statement is equivalent to the spec: no discrepancy in hypotheses, conclusion, quantifiers or strictness against the claim *as the spec reads it* |
+  | `target⇒spec only` | the target says what the spec says and possibly more: a candidate `hypothesis-missing` / `conclusion-stronger`, or a spec that read the claim weakly — say which |
+  | `spec⇒target only` | the target says less than the spec: a candidate `hypothesis-added` / `conclusion-weaker`, or a spec that read the claim strongly — say which |
+  | `neither` | a candidate discrepancy of any category |
+  | `uninformative`, or `not attempted: <reason>` | nothing |
+
+  For a definition only the first direction exists: the body has the property
+  the spec states, and nothing is learnt about what else the body does.
+
+  The derivation never clears a declaration by itself: the rule of the readback
+  comparison above does, with the outcome as one of its inputs. Three things lie
+  outside what a derivation compares, whatever its outcome:
+  - the readings the writer chose (the spec's `Choices`), which need not be the
+    claim's;
+  - the project definitions the spec is built on (its `Vocabulary`): the spec
+    and the target share them, so an `object-substituted` or `domain` defect
+    carried by such a definition passes every derivation;
+  - a spec whose `Unsettled` field reports that its writer saw the declaration:
+    it is not blind, and its outcome carries no weight.
+
+  A failed derivation is not a disproof: classify a candidate with the
+  categories above and confirm it against the elaborated type before filing it.
+  The derivation is a review-time check and stays in `lean_run_code`; never
+  propose it as a lemma for the repository, which would be the bridge review
+  policy 3 rules out.
 
 - **Audit the quantifier prefix, in order.** For each target declaration, write
   the binders out in sequence, then decide *for each constant what it is allowed
@@ -406,6 +454,23 @@ does it wrongly say something in the worlds where it should fail?
      mathematics says it must fail. If you can build such a model and the
      statement survives it, either the statement is wrong or a hypothesis that
      rules the model out is missing.
+- **Witness every existential conclusion cheaply.** A conclusion of the form
+  `∃ x, P x` or `Nonempty S`, and a `def` / `instance` that builds a term of a
+  structure or class whose fields are the claim, can be met by a degenerate
+  object as well as by the intended one. Before reading the proof, try the cheap
+  witnesses in `lean_run_code`: the zero map, `⊥` / `⊤`, `PUnit`, a constant
+  function, the identity, `default`. If one of them closes the statement, the
+  statement asserts no more than that a degenerate object exists, and whatever
+  tied the witness to the intended construction has dropped out of it: a
+  theorem `∃ μ : Measure X, P μ` that the zero measure satisfies, an existence
+  of representations that the trivial representation provides. Report it with
+  the witness that closed it. A proof whose main goal closes with `⟨0, _⟩`,
+  `⟨default, _⟩` or `⟨⊥, _⟩` is the static sign of the same defect. A class
+  that a trivial model satisfies is not a defect in itself — the trivial group
+  is a group; the defect is offering existence over it as content. The fix
+  follows review policy 4: add to the conclusion the nontriviality the docstring
+  implies (`Nontrivial`, `≠ 0`, a non-vanishing condition), or state the
+  property of the constructed object itself instead of its existence.
 - **Mutation-test the hypotheses.** Drop one hypothesis and confirm the proof
   **breaks**. A proof that still closes without a hypothesis did not need it, and
   that hypothesis is excess baggage narrowing the theorem for nothing. Run
@@ -432,9 +497,9 @@ does it wrongly say something in the worlds where it should fail?
   trivial type, not from the mathematics. Name the contradiction or the
   subsingleton, then build a model satisfying the hypotheses; if you cannot,
   report suspected vacuity together with the obstruction you hit.
-- Report a cleared declaration as cleared *with the models you tried*. "Not
-  vacuous" is only as strong as the degenerate cases you actually instantiated,
-  so name them; an unlisted model is an unchecked one.
+- Report a cleared declaration as cleared *with the models and witnesses you
+  tried*. "Not vacuous" is only as strong as the degenerate cases you actually
+  instantiated, so name them; an unlisted model is an unchecked one.
 
 ## Output
 
@@ -447,6 +512,10 @@ first, report second (skip the file only when none was assigned).
   fix. Say who relies on the declaration and what they get instead. Cite a
   project rule only when you can name it and quote the offending line. A
   perspective 1 finding from the readback comparison also carries its category.
+- **List the derivation outcomes.** When your prompt gave a spec file, list
+  every `d<N>` in it with its outcome (`both`, `target⇒spec only`,
+  `spec⇒target only`, `neither`, `uninformative`, `not attempted: <reason>`),
+  flagged or not: the aggregator gates its verdict on that list.
 - **Give the diagnosis and the fix as separate items.** A real defect can carry
   a wrong fix, and a bad fix should not take an accurate diagnosis down with it.
   The fix must keep the intended claim — the docstring's, or the cited source's
