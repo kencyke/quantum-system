@@ -164,8 +164,9 @@ complement both have finite nonzero measure, `M_{1_S}` lies in the centre and is
 theorem not_isCentral_multiplicationAlgebra {S : Set α} (hS : MeasurableSet S) (h0 : μ S ≠ 0)
     (htop : μ S ≠ ∞) (h0' : μ Sᶜ ≠ 0) (htop' : μ Sᶜ ≠ ∞) :
     ¬ Algebra.IsCentral ℂ (multiplicationAlgebra μ) := fun h =>
-  let ⟨c, hc⟩ := isCentral_iff.mp h _ (mulL2_mem_multiplicationAlgebra (indicatorConst hS (1 : ℂ)))
-    (mulL2_mem_commutant_multiplicationAlgebra _)
+  let ⟨c, hc⟩ := exists_eq_smul_one_of_isCentral (h := h) (mem_center_iff.mpr
+    ⟨mulL2_mem_multiplicationAlgebra (indicatorConst hS (1 : ℂ)),
+      mulL2_mem_commutant_multiplicationAlgebra _⟩)
   mulL2_indicatorConst_ne_smul_one hS h0 htop h0' htop' c hc
 
 /-- A vector orthogonal to every `1_S ω`, for an almost everywhere nonvanishing `ω ∈ L²`, is `0`. -/

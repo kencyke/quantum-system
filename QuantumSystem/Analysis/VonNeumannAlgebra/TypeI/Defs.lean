@@ -163,7 +163,7 @@ lemma isTypeI_of_subsingleton [Subsingleton H] (N : VonNeumannAlgebra H) : IsTyp
 /-- On the zero Hilbert space every von Neumann algebra is a type I factor. -/
 lemma isTypeIFactor_of_subsingleton [Subsingleton H] (N : VonNeumannAlgebra H) :
     IsTypeIFactor N :=
-  ⟨isCentral_iff.mpr fun _ _ _ => ⟨0, Subsingleton.elim _ _⟩, isTypeI_of_subsingleton N⟩
+  ⟨isCentral_of_subsingleton N, isTypeI_of_subsingleton N⟩
 
 /-! ### Type I_∞ factors
 
@@ -314,11 +314,6 @@ lemma isTypeIFactor_boundedLinearOperators : IsTypeIFactor 𝓑(H) := by
   · exact isTypeIFactor_of_subsingleton _
   obtain ⟨_, he⟩ := exists_isMinimalProjection_boundedLinearOperators (H := H)
   exact he.isTypeIFactor_of_isCentral
-
-/-- The commutant of `B(H)` consists of scalars: it is the centre of the factor `B(H)`. -/
-lemma exists_eq_smul_one_of_mem_commutant_boundedLinearOperators {x : H →L[ℂ] H}
-    (hx : x ∈ (𝓑(H))′) : ∃ c : ℂ, x = c • 1 :=
-  exists_eq_smul_one_of_isCentral (mem_boundedLinearOperators x) hx
 
 /-- **`B(H) ≃⋆ₐ B(ℓ²(ι))`, implemented by `U : H ≃ₗᵢ ℓ²(ι)`.** The full algebra is `⋆`-isomorphic
 to the bounded operators on `ℓ²(ι)` for an index set `ι` — the index set of a Hilbert basis of

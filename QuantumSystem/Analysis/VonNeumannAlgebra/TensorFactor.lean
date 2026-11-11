@@ -609,7 +609,7 @@ lemma coe_tensorOneEquiv_apply [Nontrivial H₁] (x : M) :
 instance isCentral_oneTensor [Algebra.IsCentral ℂ M] : Algebra.IsCentral ℂ (𝟙[H₁] ⊗ M) := by
   rcases subsingleton_or_nontrivial H₁ with _ | _
   · have := subsingleton_of_subsingleton_left (H₁ := H₁) (H₂ := H)
-    exact isCentral_iff.mpr fun _ _ _ => ⟨0, Subsingleton.elim _ _⟩
+    exact isCentral_of_subsingleton _
   · exact .of_algEquiv' (oneTensorEquiv H₁ M).toAlgEquiv
 
 /-- **`M ⊗ 1` is a factor when `M` is**: swapping the factors carries it onto `1 ⊗ M`

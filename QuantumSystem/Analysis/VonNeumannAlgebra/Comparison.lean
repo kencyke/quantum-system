@@ -63,8 +63,8 @@ evaluate it at vectors, `∀ x, HasSum (fun i => v i x) (w x)`, through
   decomposition already hold in any `N` — and it needs the **central support** (central carrier)
   `C_p` of a projection, the least central projection above `p`, together with the general form of
   `exists_mul_mul_ne_zero_of_isCentral` beyond factors: `q N p ≠ 0` iff `C_p C_q ≠ 0`.
-  `exists_isCentralProjection_mul_eq_zero_iff` gives a central projection `P` above `p` with
-  `q N p = 0` iff `q P = 0`; that it is the least one, and the form with `C_q`, are not developed
+  `centralSupport N p` is that least central projection, with `q N p = 0` iff `q C_p = 0`
+  (`mul_centralSupport_eq_zero_iff`); the form with `C_q` and local comparison are not developed
   yet.
 -/
 

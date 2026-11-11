@@ -116,7 +116,7 @@ theorem IsSplitPairAt.of_map_mul {ω : State N.quasiLocalCStarAlgebra}
     rw [GNS[ω].π_eq_smul_one_of_map_mul hω]
     exact SetLike.mem_coe.2 (SMulMemClass.smul_mem _ (one_mem _))
   · intro x hx
-    obtain ⟨c, rfl⟩ := VonNeumannAlgebra.exists_eq_smul_one_of_mem_commutant_boundedLinearOperators hx
+    obtain ⟨c, rfl⟩ := VonNeumannAlgebra.mem_commutant_boundedLinearOperators_iff.mp hx
     exact VonNeumannAlgebra.mem_commutant_iff.2 fun g _ =>
       (mul_smul_one c g).trans (smul_one_mul c g).symm
 
