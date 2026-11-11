@@ -71,8 +71,10 @@ for the others (do not run it again for each). Read the status:
   DOI. Search by title; if the work exists, the verdict is `metadata-mismatch` with the right
   identifier, else `fabricated`.
 - `registered` on a DOI: the DOI exists, registered with `agency`, whose metadata `cite.py` does not
-  read. The identifier is right; take the bibliographic data from the work's landing page
-  (`fetch-text --url` with the `url` given) for L3. Never `fabricated`.
+  read. The identifier is right; take the bibliographic data for L3 from the work's landing page,
+  found as in L4 (`copies`' `landing_page_url`, then *Web search*). The `url` given is the DOI's own
+  address, which `fetch-text` reads only where a host list names `doi.org`. With no landing page
+  read, L3 has nothing to compare: say so in the record and go on to L4. Never `fabricated`.
 - `error`: the lookup failed, not the citation. Retry once later in the sweep; if it fails again,
   the verdict is `unchecked`, never `fabricated`.
 - `retry-later`: the source asked for a pause (`Retry-After`, a backoff after errors); `retry_after`
@@ -89,10 +91,12 @@ retraction, a correction, an expression of concern — each with its `type`, the
 `cite.py copies --doi` (L4) adds OpenAlex's `is_retracted`. Record, for every citation of a work with
 a DOI, `**Notices**: none listed in Crossref as of <fetched_at date>` or `<type>, <notice DOI>,
 <date> (checked <fetched_at date>)`; for a work with no DOI, `not checked`. Read the notice itself
-when it is openly served (`fetch-text --url https://doi.org/<notice DOI>`) and say in one line what it
-corrects or withdraws. A notice changes no verdict: whether a retraction or a correction touches the
-cited result is for the user to judge, so the skill reports it and deletes nothing; and `none listed`
-says only that, as of that date, not that the work is sound.
+when it is openly served — `lookup --doi <notice DOI>` gives its page as `landing`, which goes to
+`fetch-text --url` — and say in one line what it corrects or withdraws; a notice whose page cannot be
+read (`not-allowed` included) is reported by its type, DOI and date alone. A notice changes no
+verdict: whether a retraction or a correction touches the cited result is for the user to judge, so
+the skill reports it and deletes nothing; and `none listed` says only that, as of that date, not that
+the work is sound.
 
 ### L3. Bibliographic data
 
@@ -134,8 +138,9 @@ reverse, is a mismatch only when the locator follows the other version's numberi
      landing page (`fetch-text` answered `ok` for it, and it shows this work's title and authors)
      and every copy of its full text was refused by its site (`refused`, `robots.txt`,
      `content-signal …` or `no document text`), so that the user can take it by hand from that
-     page; else **`inaccessible`**. Look for the landing page as for any copy: `copies`'
-     `landing_page_url`, then *Web search*.
+     page; else **`inaccessible`**. Look for the landing page as for any copy: the `landing` of
+     `lookup`'s candidate (the address the DOI resolves to), `copies`' `landing_page_url`, then
+     *Web search*.
    - Status `retry-later` or `error` (any other HTTP status, a malformed answer): as in L2. A copy left
      so may still be readable: unless another copy settles the claim, the verdict is `unchecked`.
    - Status `not-allowed`: no host list names `host`, and no request was made to it. `refused` is the

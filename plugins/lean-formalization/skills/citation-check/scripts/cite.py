@@ -416,6 +416,16 @@ class CrossrefUpdate(Answer):
         return {"type": self.type, "label": self.label, "doi": self.doi, "date": date, "source": self.source}
 
 
+class CrossrefLink(Answer):
+    url: str | None = Field(None, alias="URL")
+
+
+class CrossrefResource(Answer):
+    """Where a DOI resolves to: `primary` is the address its publisher registered for the work."""
+
+    primary: CrossrefLink | None = None
+
+
 class CrossrefWork(Answer):
     doi: Annotated[str, StringConstraints(pattern=r"^10\.")] = Field(alias="DOI")
     title: list[str] = Field(default_factory=list)
@@ -427,10 +437,12 @@ class CrossrefWork(Answer):
     page: str | None = None
     type: str | None = None
     url: str | None = Field(None, alias="URL")
+    resource: CrossrefResource | None = None
     updated_by: list[CrossrefUpdate] = Field(default_factory=list, alias="updated-by")
 
     def record(self) -> Record:
         parts = self.issued.date_parts if self.issued else []
+        primary = self.resource.primary if self.resource else None
         return {
             "source": "crossref",
             "id": "doi:" + self.doi,
@@ -443,6 +455,8 @@ class CrossrefWork(Answer):
             "page": self.page,
             "type": self.type,
             "url": self.url,
+            # The work's page at its publisher, which the DOI resolves to: `url` is the DOI's own address.
+            "landing": primary.url if primary else None,
             # The notices Crossref knows of (`updated-by`): only a Crossref record carries this, and an empty
             # list says that Crossref lists none, not that there is none.
             "updates": [u.record() for u in self.updated_by],
@@ -524,6 +538,7 @@ class DataciteAttributes(Answer):
             "container": (self.container.title if self.container else None) or self.publisher,
             "type": self.types.resource_type_general if self.types else None,
             "url": self.url,
+            "landing": self.url,  # DataCite's `url` is the address the DOI resolves to
         }
 
 

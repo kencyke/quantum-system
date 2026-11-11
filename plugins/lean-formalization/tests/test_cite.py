@@ -586,7 +586,9 @@ def test_crossref_answers_are_validated(cache):
         return cite.validated(cite.CrossrefWorkAnswer, body, CROSSREF_URL)
 
     record = work({"DOI": "10.1000/x", "title": ["A  title"], "issued": {"date-parts": [[None]]}}).message.record()
-    assert record["title"] == "A title" and record["year"] is None
+    assert record["title"] == "A title" and record["year"] is None and record["landing"] is None
+    registered = work({"DOI": "10.1000/x", "resource": {"primary": {"URL": "https://a.example/x"}}}).message.record()
+    assert registered["landing"] == "https://a.example/x"
     for message in ({"DOI": "x"}, {"DOI": "10.1/x", "author": ["X"]}, {"DOI": "10.1/x", "title": "T"}):
         with pytest.raises(cite.Malformed):
             work(message)
@@ -737,6 +739,7 @@ def test_a_doi_crossref_does_not_hold_is_asked_of_its_agency(cache, monkeypatch,
                 "publicationYear": 2020,
                 "publisher": {"name": "arXiv"},
                 "types": {"resourceTypeGeneral": "Preprint"},
+                "url": "https://arxiv.org/abs/1000.00001",
             },
         }
     }
@@ -753,6 +756,7 @@ def test_a_doi_crossref_does_not_hold_is_asked_of_its_agency(cache, monkeypatch,
     code, out = run(monkeypatch, capsys, "lookup", "--doi", "10.1000/x", *CLAIM)
     assert code == 0 and out["status"] == "match" and out["candidates"][0]["source"] == "datacite"
     assert out["candidates"][0]["container"] == "arXiv"
+    assert out["candidates"][0]["landing"] == "https://arxiv.org/abs/1000.00001"
     assert fake.calls == [CROSSREF_URL, AGENCY_URL, DATACITE_URL]
     code, out = run(monkeypatch, capsys, "lookup", "--doi", "doi:10.1000/y", *CLAIM)
     assert code == 0 and out["status"] == "registered" and out["agency"] == "JaLC"
