@@ -155,8 +155,10 @@ def state_of(cache, host):
     return json.loads((cache.dir / "state" / f"{host}.json").read_text())
 
 
-def fetch_text_args(tmp_path, arxiv="2010.05513v2", render_pages=None, url=None):
-    return type("A", (), {"arxiv": arxiv, "url": url, "out": str(tmp_path / "t"), "render_pages": render_pages})
+def fetch_text_args(tmp_path, arxiv="2010.05513v2", render_pages=None, url=None, file=None):
+    return type(
+        "A", (), {"arxiv": arxiv, "url": url, "file": file, "out": str(tmp_path / "t"), "render_pages": render_pages}
+    )
 
 
 # ---------- the cache ----------
@@ -178,6 +180,36 @@ def test_an_unreadable_pdf_is_answered_in_json_and_not_kept(cache, monkeypatch, 
     out = json.loads(capsys.readouterr().out)
     assert out["status"] == "error" and out["reason"] == "malformed"
     assert not cached(cache, PDF_URL)
+
+
+def test_a_saved_copy_is_read_and_rendered_with_no_request(monkeypatch, capsys, tmp_path):
+    copy = tmp_path / "copy.pdf"
+    pdf = cite.pdfium.PdfDocument.new()
+    pdf.new_page(612, 792)
+    pdf.save(copy)
+    fake = serve(monkeypatch, {})
+    argv = ("fetch-text", "--file", str(copy), "--out", str(tmp_path / "t"), "--render-pages", "1")
+    code, out = run(monkeypatch, capsys, *argv)
+    assert code == 0 and out["status"] == "ok" and out["kind"] == "pdf"
+    assert out["file"] == str(copy.resolve()) and "opened_at" in out and "fetched_at" not in out
+    assert len(out["images"]) == 1 and Path(out["images"][0]).exists()
+    assert fake.calls == []
+
+
+def test_a_saved_copy_that_is_missing_too_large_or_empty_is_an_error(monkeypatch, capsys, tmp_path):
+    fake = serve(monkeypatch, {})
+    code, out = run(monkeypatch, capsys, "fetch-text", "--file", str(tmp_path / "none.pdf"), "--out", str(tmp_path))
+    assert code == 2 and out["status"] == "error"
+    big = tmp_path / "big.pdf"
+    big.write_bytes(b"%PDF-" + b"0" * 128)
+    monkeypatch.setitem(cite.MAX_BODY, "document", 64)
+    code, out = run(monkeypatch, capsys, "fetch-text", "--file", str(big), "--out", str(tmp_path))
+    assert code == 2 and out["status"] == "error" and "over 64 bytes" in out["error"]
+    page = tmp_path / "landing.html"
+    page.write_bytes(b"<html><body>Abstract only</body></html>")
+    code, out = run(monkeypatch, capsys, "fetch-text", "--file", str(page), "--out", str(tmp_path))
+    assert code == 2 and out["status"] == "error" and out["error"] == "no document text"
+    assert fake.calls == []
 
 
 def test_an_answer_is_replayed_for_a_week(cache, monkeypatch):

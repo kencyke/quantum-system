@@ -35,9 +35,11 @@ defaults:
   the instruction file governs.
 - **Domain models and conventions.** `math-review` also instantiates the degenerate models and checks
   the conventions that the instruction file lists for the project's domain.
-- **Citations that cannot be checked.** `citation-check` keeps a citation whose source it cannot
-  read, and reports it as unverified. It removes such citations only when the instruction file
-  requires citations that cannot be checked against their source to be removed.
+- **Citation rule.** `citation-check` counts a citation as verified by the standard in
+  `agents/citation-verifier.md` — the cited passage was read and states what the text attributes to
+  it — and by the instruction file's own citation rule where it states one. Whatever the rule, a
+  citation whose source it cannot read is kept and reported as unverified, with no recommendation:
+  the user may hold a copy it cannot reach. It deletes such a citation only when the user asks.
 - **Lint rules.** `lint-fix` applies `skills/lint-fix/references/rules.md` together with the rules
   file the instruction file names; the project's rules win where the two differ.
 
@@ -59,7 +61,7 @@ The project's own rules — prohibited tokens, pinned files, commit style, the l
 
 ## Citations
 
-Citations that cannot be checked against their source are removed.
+A citation names the edition it was checked in; a locator read in another edition does not count.
 ```
 
 ## Requirements

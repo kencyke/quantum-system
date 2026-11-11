@@ -30,7 +30,8 @@ is retried after its `Retry-After`, else after an exponential backoff with jitte
 wait past `WAIT_BUDGET` ends the run with status `retry-later`, and no run contacts that host before then. A
 refusal (401, 403, 410) is not retried, and counts as a failure of its host. Redirects are followed by hand, at
 most 5, each hop checked as the first: http(s) only, to public addresses only. Every answer is validated
-(pydantic models; XML with no DTD) before it is used or cached.
+(pydantic models; XML with no DTD) before it is used or cached. `fetch-text --file` reads a copy that the user
+obtained and saved, and makes no request.
 
 The cache is `$XDG_CACHE_HOME/lean-formalization-citation-check` (`~/.cache/…` when unset). One directory for
 every entry point (the skill's verifier, Claude in a session, a shell), because its `state/` (the locks, and per
@@ -1321,51 +1322,80 @@ def html_text(body: bytes) -> str:
 
 def document(reply: Reply) -> Document:
     """The document in an answer: a PDF (at most `MAX_PAGES` pages), an HTML page, or text."""
-    body = reply.body
+    return parse_document(reply.body, reply.type, reply.url)
+
+
+def parse_document(body: bytes, ctype: str, where: str) -> Document:
     if body[:5] == b"%PDF-":
         try:
             pdf = pdfium.PdfDocument(body)
             if len(pdf) > MAX_PAGES:
-                raise Malformed(f"{reply.url}: a PDF of {len(pdf)} pages, over {MAX_PAGES}")
+                raise Malformed(f"{where}: a PDF of {len(pdf)} pages, over {MAX_PAGES}")
             return Document(kind="pdf", text=pdf_text(pdf), pdf=pdf)
         except pdfium.PdfiumError as e:
-            raise Malformed(f"{reply.url}: an unreadable PDF ({e})") from e
-    if is_html(body, reply.type):
+            raise Malformed(f"{where}: an unreadable PDF ({e})") from e
+    if is_html(body, ctype):
         return Document(kind="html", text=html_text(body))
     return Document(kind="text", text=body.decode("utf-8", "replace"))
 
 
+def local_document(path: Path) -> Document:
+    """A copy the user obtained and saved, read from disk with no request, bounded as a fetched document."""
+    limit = MAX_BODY["document"]
+    with path.open("rb") as f:
+        body = f.read(limit + 1)
+    if len(body) > limit:
+        raise Malformed(f"{path}: over {limit} bytes")
+    return parse_document(body, "text/html" if path.suffix.lower() in (".html", ".htm") else "", str(path))
+
+
 def cmd_fetch_text(args: argparse.Namespace, cache: Cache) -> int:
-    sweep(cache_dir(cache))
-    url = f"https://arxiv.org/pdf/{arxiv_id(args.arxiv)}" if args.arxiv else args.url
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    try:
-        _, doc = get(url, cache, "document", document, keep=lambda d: d.usable)
-    except Http as e:
-        if e.code in UNREADABLE:
-            out = {"status": "inaccessible", "reason": UNREADABLE[e.code]}
-        else:  # a 3xx with no Location, a 400, a 501: no evidence about the source
-            out = {"status": "error", "reason": f"HTTP {e.code}"}
-        print(json.dumps(out | {"http": e.code, "url": url} | report(cache.replies)))
-        return 2
-    except FAILURES as e:
-        print(json.dumps(failure(e) | {"url": url} | report(cache.replies)))
-        return 2
+    if args.file:
+        path = Path(args.file).resolve()
+        where: Record = {"file": str(path)}
+        try:
+            doc = local_document(path)
+        except (OSError, Malformed) as e:
+            print(json.dumps({"status": "error", "error": str(e)} | where))
+            return 2
+        where["opened_at"] = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
+        key = str(path)
+    else:
+        sweep(cache_dir(cache))
+        url = f"https://arxiv.org/pdf/{arxiv_id(args.arxiv)}" if args.arxiv else args.url
+        try:
+            _, doc = get(url, cache, "document", document, keep=lambda d: d.usable)
+        except Http as e:
+            if e.code in UNREADABLE:
+                err: Record = {"status": "inaccessible", "reason": UNREADABLE[e.code]}
+            else:  # a 3xx with no Location, a 400, a 501: no evidence about the source
+                err = {"status": "error", "reason": f"HTTP {e.code}"}
+            print(json.dumps(err | {"http": e.code, "url": url} | report(cache.replies)))
+            return 2
+        except FAILURES as e:
+            print(json.dumps(failure(e) | {"url": url} | report(cache.replies)))
+            return 2
+        where = {"url": url} | report(cache.replies)
+        key = url
     if args.render_pages and doc.pdf is None:
-        print(json.dumps({"status": "error", "error": "--render-pages needs a PDF", "url": url}))
+        print(json.dumps({"status": "error", "error": "--render-pages needs a PDF"} | where))
         return 2
     if not doc.usable:
-        err = {"status": "inaccessible", "reason": "no document text", "url": url, "head": doc.text[:200]}
-        print(json.dumps(err | report(cache.replies)))
+        # A site answering no text has shown nothing of the work; a file the user saved is only the wrong file.
+        status: Record = {"status": "error", "error": "no document text"}
+        if not args.file:
+            status = {"status": "inaccessible", "reason": "no document text"}
+        print(json.dumps(status | where | {"head": doc.text[:200]}))
         return 2
-    stem = entry_key(url)[:16]
-    result: Record = {"status": "ok", "url": url, "kind": doc.kind} | report(cache.replies)
+    stem = entry_key(key)[:16]
+    result: Record = {"status": "ok", "kind": doc.kind} | where
     if args.render_pages and doc.pdf is not None:
         try:
             result["images"] = render_pages(doc.pdf, page_numbers(args.render_pages), out, stem)
         except (ValueError, pdfium.PdfiumError) as e:
-            print(json.dumps({"status": "error", "error": str(e), "url": url} | report(cache.replies)))
+            print(json.dumps({"status": "error", "error": str(e)} | where))
             return 2
     path = out / f"{stem}.txt"
     path.write_text(doc.text)
@@ -1613,6 +1643,7 @@ def main() -> int:
     g = ft.add_mutually_exclusive_group(required=True)
     g.add_argument("--arxiv")
     g.add_argument("--url")
+    g.add_argument("--file", help="read a copy the user obtained and saved, with no request")
     ft.add_argument("--out", required=True)
     ft.add_argument("--render-pages", help="also render these PDF pages to PNG, e.g. 11,12 or 11-13 (file order)")
     ft.set_defaults(fn=cmd_fetch_text)
