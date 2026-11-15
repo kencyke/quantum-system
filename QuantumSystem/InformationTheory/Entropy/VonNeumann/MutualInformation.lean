@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.Analysis.CStarAlgebra.State.TensorProduct
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.InformationTheory.Entropy.VonNeumann.Basic
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
@@ -14,7 +15,8 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 Let `H` and `K` be finite-dimensional complex Hilbert spaces and `ω` a state on
 `B(H ⊗ K) = B(H) ⊗ B(K)`. Its **marginals** are the restrictions `ω_A = ω(· ⊗ 1)` and
-`ω_B = ω(1 ⊗ ·)` (`State.traceRight`, `State.traceLeft`); their densities are the partial traces
+`ω_B = ω(1 ⊗ ·)` (`State.traceRight`, `State.traceLeft`), the marginals `State.marginalLeft`,
+`State.marginalRight` of `ω` as a state of `B(H) ⊗ₘᵢₙ B(K)`; their densities are the partial traces
 of `ρ_ω` (`State.density_traceRight`). The **quantum mutual information** is
 `I(A:B) = S(ω_A) + S(ω_B) - S(ω)` (`State.mutualInformation`), and it is the relative entropy of
 `ω` with respect to the product of its marginals:
@@ -22,15 +24,24 @@ of `ρ_ω` (`State.density_traceRight`). The **quantum mutual information** is
 `I(A:B) ≥ 0`, i.e. the von Neumann entropy is subadditive (`State.mutualInformation_nonneg`).
 
 The **product** `ψ ⊗ φ` of positive functionals on `B(H)` and `B(K)` is the functional on
-`B(H ⊗ K)` with `(ψ ⊗ φ)(A ⊗ B) = ψ(A) φ(B)` (`PositiveLinearMap.tensorProduct`), through
-`B(H) ⊗ B(K) ≅ B(H ⊗ K)` (`TensorProduct.mapLEquiv`); its density is `ρ_ψ ⊗ ρ_φ`.
+`B(H ⊗ K)` with `(ψ ⊗ φ)(A ⊗ B) = ψ(A) φ(B)` (`PositiveLinearMap.tensorProduct`): the product
+functional `PositiveLinearMap.minTensorProduct` of the minimal tensor product, read through
+`B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` (`MinTensorProduct.continuousLinearMapEquiv`); its density is
+`ρ_ψ ⊗ ρ_φ`.
+
+## Conventions
+
+`Tr` is the unnormalised trace `LinearMap.trace` (`Tr 1 = dim`), the trace of
+`ContinuousLinearMap.density`: `ψ(A) = Tr(ρ_ψ A)`, so the density of a state has trace one.
 
 ## Main definitions
 
 * `PositiveLinearMap.tensorProduct ψ φ` — the product functional `ψ ⊗ φ`;
-  `State.tensorProduct ω₁ ω₂` — the product state.
+  `State.tensorProduct ω₁ ω₂` — the product state. Both are the products of the minimal tensor
+  product (`PositiveLinearMap.minTensorProduct`, `State.minTensorProduct`), read through
+  `B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)`.
 * `State.traceRight ω`, `State.traceLeft ω` — the marginals `ω_A`, `ω_B` of a state on
-  `B(H ⊗ K)`.
+  `B(H ⊗ K)`, from `State.marginalLeft`, `State.marginalRight`.
 * `State.mutualInformation ω` — `I(A:B) = S(ω_A) + S(ω_B) - S(ω)`.
 
 ## Main results
@@ -44,10 +55,18 @@ The **product** `ψ ⊗ φ` of positive functionals on `B(H)` and `B(K)` is the 
 
 ## TODO
 
-The product state and the marginals are stated on `B(H) ⊗ B(K) ≅ B(H ⊗ K)` (finite dimensions,
-`TensorProduct.mapLEquiv`). For general C\*-algebras the product state lives on the minimal
-C\*-tensor product, which Mathlib does not have yet; move them to `State` then. The marginals are
-instances of the restriction `State.comp` along the ampliations.
+The mutual information is stated on `B(H) ⊗ B(K) ≅ B(H ⊗ K)` (finite dimensions); the product
+state and the marginals are already those of the minimal C\*-tensor product
+(`State.minTensorProduct`, `State.marginalLeft`, `State.marginalRight`), read through
+`MinTensorProduct.continuousLinearMapEquiv`. Still to do:
+
+* Define the relative entropy of states of a C\*-algebra. It exists only for normal functionals of
+  a von Neumann algebra (`VonNeumannAlgebra.arakiEntropy`), of which `umegakiEntropy` is the case
+  `𝓑(H)`.
+* Define the mutual information of a state `ω` of `A ⊗ₘᵢₙ B` as the relative entropy of `ω` with
+  respect to `ω.marginalLeft.minTensorProduct ω.marginalRight`, and show that
+  `State.mutualInformation` is the case `B(H) ⊗ₘᵢₙ B(K)`
+  (`State.umegakiEntropy_eq_mutualInformation`).
 
 ## Proof
 
@@ -69,60 +88,54 @@ variable {H K : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [FiniteD
 
 /-! ### Product functionals -/
 
-namespace ContinuousLinearMap
-
-variable {G G' : Type*} [FunLike G (H →L[ℂ] H) ℂ] [LinearMapClass G ℂ (H →L[ℂ] H) ℂ]
-  [FunLike G' (K →L[ℂ] K) ℂ] [LinearMapClass G' ℂ (K →L[ℂ] K) ℂ]
-
-/-- The product `f ⊗ g` of functionals on `B(H)` and `B(K)`, read on `B(H ⊗ K)` through
-`B(H) ⊗ B(K) ≅ B(H ⊗ K)`, is `Z ↦ tr((ρ_f ⊗ ρ_g) Z)`: both are linear and agree on the elementary
-tensors `A ⊗ B` (`TensorProduct.ext_mapL`), where they are `f(A) g(B)`. -/
-lemma mul'_map_mapLEquiv_symm_apply (f : G) (g : G') (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
-    LinearMap.mul' ℂ ℂ (TensorProduct.map (f : (H →L[ℂ] H) →ₗ[ℂ] ℂ) (g : (K →L[ℂ] K) →ₗ[ℂ] ℂ)
-      ((mapLEquiv ℂ H H K K).symm Z)) =
-      Tr (mapL (density f) (density g) ∘L Z) := by
-  have h := ext_mapL (𝕜 := ℂ) (E := H) (F := H) (G := K) (H := K) (M := ℂ)
-    (u := LinearMap.mul' ℂ ℂ ∘ₗ TensorProduct.map (f : (H →L[ℂ] H) →ₗ[ℂ] ℂ)
-      (g : (K →L[ℂ] K) →ₗ[ℂ] ℂ) ∘ₗ (mapLEquiv ℂ H H K K).symm.toLinearMap)
-    (v := (LinearMap.trace ℂ (H ⊗[ℂ] K) ∘ₗ coeLM ℂ) ∘ₗ
-      LinearMap.mulLeft ℂ (mapL (density f) (density g))) fun A B => by
-    have hs : (mapLEquiv ℂ H H K K).symm (mapL A B) = A ⊗ₜ B :=
-      (LinearEquiv.symm_apply_eq _).mpr (mapLEquiv_tmul A B).symm
-    simp only [LinearMap.coe_comp, Function.comp_apply, LinearEquiv.coe_coe, hs,
-      TensorProduct.map_tmul, LinearMap.mul'_apply, LinearMap.mulLeft_apply, coeLM_apply,
-      mul_def, ← mapL_comp, trace_mapL, trace_density_comp]
-    rfl
-  exact LinearMap.congr_fun h Z
-
-end ContinuousLinearMap
-
 namespace PositiveLinearMap
 
-/-- The **product functional** `ψ ⊗ φ` on `B(H ⊗ K)` of positive functionals on `B(H)` and `B(K)`,
-determined by `(ψ ⊗ φ)(A ⊗ B) = ψ(A) φ(B)` (`PositiveLinearMap.tensorProduct_mapL`) through
-`B(H) ⊗ B(K) ≅ B(H ⊗ K)` (`TensorProduct.mapLEquiv`). It is positive since its density is
-`ρ_ψ ⊗ ρ_φ ≥ 0` (`ContinuousLinearMap.mul'_map_mapLEquiv_symm_apply`,
-`TensorProduct.mapL_nonneg`). For states it is the product state. -/
+open scoped MinTensorProduct
+
+/-- The **product functional** `ψ ⊗ φ` on `B(H ⊗ K)` of positive functionals on `B(H)` and `B(K)`:
+the product functional `PositiveLinearMap.minTensorProduct` of the minimal tensor product, read on
+`B(H ⊗ K)` through `B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` (`MinTensorProduct.continuousLinearMapEquiv`). It
+is determined by `(ψ ⊗ φ)(A ⊗ B) = ψ(A) φ(B)` (`PositiveLinearMap.tensorProduct_mapL`), and for
+states it is the product state. -/
 noncomputable def tensorProduct (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (φ : (K →L[ℂ] K) →ₚ[ℂ] ℂ) :
     (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) →ₚ[ℂ] ℂ :=
-  .mk₀ (LinearMap.mul' ℂ ℂ ∘ₗ TensorProduct.map (ψ : (H →L[ℂ] H) →ₗ[ℂ] ℂ)
-      (φ : (K →L[ℂ] K) →ₗ[ℂ] ℂ) ∘ₗ (mapLEquiv ℂ H H K K).symm.toLinearMap) fun Z hZ => by
-    change 0 ≤ LinearMap.mul' ℂ ℂ (TensorProduct.map (ψ : (H →L[ℂ] H) →ₗ[ℂ] ℂ)
-      (φ : (K →L[ℂ] K) →ₗ[ℂ] ℂ) ((mapLEquiv ℂ H H K K).symm Z))
-    rw [mul'_map_mapLEquiv_symm_apply]
-    exact trace_comp_nonneg (mapL_nonneg (density_nonneg ψ) (density_nonneg φ)) hZ
+  (ψ.minTensorProduct φ).comp
+    (PositiveLinearMap.ofClass (MinTensorProduct.continuousLinearMapEquiv H K).symm)
 
 variable (ψ : (H →L[ℂ] H) →ₚ[ℂ] ℂ) (φ : (K →L[ℂ] K) →ₚ[ℂ] ℂ)
 
-/-- The product functional is `Z ↦ tr((ρ_ψ ⊗ ρ_φ) Z)`. -/
-lemma tensorProduct_apply (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
-    ψ.tensorProduct φ Z = Tr (mapL (density ψ) (density φ) ∘L Z) :=
-  mul'_map_mapLEquiv_symm_apply ψ φ Z
+/-- The product functional on `B(H ⊗ K)` is `PositiveLinearMap.minTensorProduct` after the inverse
+of `MinTensorProduct.continuousLinearMapEquiv`. -/
+lemma tensorProduct_eq_minTensorProduct (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
+    ψ.tensorProduct φ Z =
+      ψ.minTensorProduct φ ((MinTensorProduct.continuousLinearMapEquiv H K).symm Z) := by
+  simp only [tensorProduct, PositiveLinearMap.comp_apply, coe_toLinearMap, coe_ofClass]
+
+/-- The product functional on `B(H ⊗ K)` is the product functional of the minimal tensor product,
+under `B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` (`MinTensorProduct.continuousLinearMapEquiv`). -/
+lemma tensorProduct_continuousLinearMapEquiv (T : (H →L[ℂ] H) ⊗ₘᵢₙ (K →L[ℂ] K)) :
+    ψ.tensorProduct φ (MinTensorProduct.continuousLinearMapEquiv H K T) =
+      ψ.minTensorProduct φ T := by
+  rw [tensorProduct_eq_minTensorProduct, StarAlgEquiv.symm_apply_apply]
 
 /-- **The product functional on elementary tensors**: `(ψ ⊗ φ)(A ⊗ B) = ψ(A) φ(B)`. -/
 @[simp] lemma tensorProduct_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
     ψ.tensorProduct φ (mapL A B) = ψ A * φ B := by
-  rw [tensorProduct_apply, ← mapL_comp, trace_mapL, trace_density_comp, trace_density_comp]
+  rw [← MinTensorProduct.continuousLinearMapEquiv_of_tmul, tensorProduct_continuousLinearMapEquiv,
+    minTensorProduct_of_tmul]
+
+/-- The product functional is `Z ↦ tr((ρ_ψ ⊗ ρ_φ) Z)`: both are linear and agree on the elementary
+tensors `A ⊗ B` (`TensorProduct.ext_mapL`), where they are `ψ(A) φ(B)`. -/
+lemma tensorProduct_apply (Z : H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :
+    ψ.tensorProduct φ Z = Tr (mapL (density ψ) (density φ) ∘L Z) := by
+  have h := ext_mapL (𝕜 := ℂ) (E := H) (F := H) (G := K) (H := K) (M := ℂ)
+    (u := (ψ.tensorProduct φ).toLinearMap)
+    (v := (LinearMap.trace ℂ (H ⊗[ℂ] K) ∘ₗ coeLM ℂ) ∘ₗ
+      LinearMap.mulLeft ℂ (mapL (density ψ) (density φ))) fun A B => by
+    simp only [LinearMap.coe_comp, Function.comp_apply, LinearMap.mulLeft_apply, coeLM_apply,
+      mul_def, ← mapL_comp, trace_mapL, trace_density_comp]
+    exact tensorProduct_mapL ψ φ A B
+  exact LinearMap.congr_fun h Z
 
 /-- The density of the product functional is the tensor product of the densities. -/
 lemma density_tensorProduct : density (ψ.tensorProduct φ) = mapL (density ψ) (density φ) := by
@@ -133,26 +146,37 @@ end PositiveLinearMap
 
 namespace State
 
-/-- The **product state** `ω₁ ⊗ ω₂` on `B(H ⊗ K)` of states on `B(H)` and `B(K)`:
-`(ω₁ ⊗ ω₂)(A ⊗ B) = ω₁(A) ω₂(B)` (`PositiveLinearMap.tensorProduct`). -/
+open scoped MinTensorProduct in
+/-- The **product state** `ω₁ ⊗ ω₂` on `B(H ⊗ K)` of states on `B(H)` and `B(K)`: the product state
+`State.minTensorProduct` of the minimal tensor product, read on `B(H ⊗ K)` through
+`B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` (`MinTensorProduct.continuousLinearMapEquiv`). It is determined by
+`(ω₁ ⊗ ω₂)(A ⊗ B) = ω₁(A) ω₂(B)` (`State.tensorProduct_mapL`). -/
 noncomputable def tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
     State (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :=
-  ofPositiveLinearMap (A := H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K)
-    ((PositiveLinearMap.ofClass ω₁).tensorProduct (PositiveLinearMap.ofClass ω₂)) (by
-    rw [one_def, ← mapL_id_id, PositiveLinearMap.tensorProduct_mapL, ← one_def, ← one_def]
-    simp)
+  (ω₁.minTensorProduct ω₂).comp (MinTensorProduct.continuousLinearMapEquiv H K).symm (map_one _)
 
 /-- The positive functional underlying a product state is the product of the underlying
 positive functionals. -/
 @[simp] lemma ofClass_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
     PositiveLinearMap.ofClass (ω₁.tensorProduct ω₂) =
-      (PositiveLinearMap.ofClass ω₁).tensorProduct (PositiveLinearMap.ofClass ω₂) :=
+      (PositiveLinearMap.ofClass ω₁).tensorProduct (PositiveLinearMap.ofClass ω₂) := by
+  rw [tensorProduct, State.ofClass_comp, State.ofClass_minTensorProduct]
   rfl
+
+open scoped MinTensorProduct in
+/-- The product state on `B(H ⊗ K)` is the product state of the minimal tensor product, under
+`B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` (`MinTensorProduct.continuousLinearMapEquiv`). -/
+lemma tensorProduct_continuousLinearMapEquiv (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K))
+    (T : (H →L[ℂ] H) ⊗ₘᵢₙ (K →L[ℂ] K)) :
+    ω₁.tensorProduct ω₂ (MinTensorProduct.continuousLinearMapEquiv H K T) =
+      ω₁.minTensorProduct ω₂ T := by
+  rw [tensorProduct, State.comp_apply, StarAlgEquiv.symm_apply_apply]
 
 /-- **The product state on elementary tensors**: `(ω₁ ⊗ ω₂)(A ⊗ B) = ω₁(A) ω₂(B)`. -/
 @[simp] lemma tensorProduct_mapL (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K))
-    (A : H →L[ℂ] H) (B : K →L[ℂ] K) : ω₁.tensorProduct ω₂ (mapL A B) = ω₁ A * ω₂ B :=
-  PositiveLinearMap.tensorProduct_mapL (PositiveLinearMap.ofClass ω₁) (PositiveLinearMap.ofClass ω₂) A B
+    (A : H →L[ℂ] H) (B : K →L[ℂ] K) : ω₁.tensorProduct ω₂ (mapL A B) = ω₁ A * ω₂ B := by
+  rw [← MinTensorProduct.continuousLinearMapEquiv_of_tmul, tensorProduct_continuousLinearMapEquiv,
+    minTensorProduct_of_tmul]
 
 /-- The density of the product state is the tensor product of the densities. -/
 lemma density_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
@@ -162,8 +186,9 @@ lemma density_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K �
   have h₂ : density (PositiveLinearMap.ofClass ω₂) = density ω₂ :=
     density_eq_density_iff.mpr fun _ => rfl
   rw [← h₁, ← h₂, eq_comm, eq_density_iff]
-  exact fun Z => (PositiveLinearMap.tensorProduct_apply (PositiveLinearMap.ofClass ω₁)
-    (PositiveLinearMap.ofClass ω₂) Z).symm
+  exact fun Z => ((DFunLike.congr_fun (ofClass_tensorProduct ω₁ ω₂) Z).trans
+    (PositiveLinearMap.tensorProduct_apply (PositiveLinearMap.ofClass ω₁)
+      (PositiveLinearMap.ofClass ω₂) Z)).symm
 
 end State
 
@@ -173,35 +198,57 @@ namespace State
 
 variable (ω : State (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K))
 
-/-- The **marginal** `ω_A = ω(· ⊗ 1)` of a state on `B(H ⊗ K)` on the first factor: its restriction
-along the ampliation `A ↦ A ⊗ 1`. Its density is the partial trace `tr_K ρ_ω`
+open scoped MinTensorProduct in
+/-- The **marginal** `ω_A = ω(· ⊗ 1)` of a state on `B(H ⊗ K)` on the first factor: the marginal
+`State.marginalLeft` of `ω` read on `B(H) ⊗ₘᵢₙ B(K)` through
+`MinTensorProduct.continuousLinearMapEquiv`. Its density is the partial trace `tr_K ρ_ω`
 (`State.density_traceRight`). -/
 noncomputable def traceRight : State (H →L[ℂ] H) :=
-  ω.comp (rTensorStarAlgHom ℂ H K) (map_one _)
+  (ω.comp (MinTensorProduct.continuousLinearMapEquiv H K) (map_one _)).marginalLeft
 
-/-- The **marginal** `ω_B = ω(1 ⊗ ·)` of a state on `B(H ⊗ K)` on the second factor: its
-restriction along the ampliation `B ↦ 1 ⊗ B`. -/
+open scoped MinTensorProduct in
+/-- The **marginal** `ω_B = ω(1 ⊗ ·)` of a state on `B(H ⊗ K)` on the second factor: the marginal
+`State.marginalRight` of `ω` read on `B(H) ⊗ₘᵢₙ B(K)` through
+`MinTensorProduct.continuousLinearMapEquiv`. -/
 noncomputable def traceLeft : State (K →L[ℂ] K) :=
-  ω.comp (lTensorStarAlgHom ℂ K H) (map_one _)
+  (ω.comp (MinTensorProduct.continuousLinearMapEquiv H K) (map_one _)).marginalRight
 
-/-- `traceRight` evaluates `ω` on the ampliation `A ↦ A ⊗ 1`. -/
-@[simp] lemma traceRight_apply (A : H →L[ℂ] H) : ω.traceRight A = ω (A.rTensor K) :=
+/-- `traceRight` evaluates `ω` on the amplification `A ↦ A ⊗ 1`. -/
+@[simp] lemma traceRight_apply (A : H →L[ℂ] H) : ω.traceRight A = ω (A.rTensor K) := by
+  rw [traceRight, marginalLeft_apply, comp_apply, MinTensorProduct.continuousLinearMapEquiv_of_tmul,
+    rTensor_eq_mapL]
   rfl
 
-/-- `traceLeft` evaluates `ω` on the ampliation `B ↦ 1 ⊗ B`. -/
-@[simp] lemma traceLeft_apply (B : K →L[ℂ] K) : ω.traceLeft B = ω (B.lTensor H) :=
+/-- `traceLeft` evaluates `ω` on the amplification `B ↦ 1 ⊗ B`. -/
+@[simp] lemma traceLeft_apply (B : K →L[ℂ] K) : ω.traceLeft B = ω (B.lTensor H) := by
+  rw [traceLeft, marginalRight_apply, comp_apply, MinTensorProduct.continuousLinearMapEquiv_of_tmul,
+    lTensor_eq_mapL]
   rfl
+
+/-- The marginals of the product state are its factors. -/
+@[simp] lemma traceRight_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
+    (ω₁.tensorProduct ω₂).traceRight = ω₁ := by
+  ext A
+  rw [traceRight_apply, rTensor_eq_mapL, tensorProduct_mapL]
+  exact (congrArg (ω₁ A * ·) ω₂.apply_one).trans (mul_one _)
+
+@[simp, inherit_doc traceRight_tensorProduct]
+lemma traceLeft_tensorProduct (ω₁ : State (H →L[ℂ] H)) (ω₂ : State (K →L[ℂ] K)) :
+    (ω₁.tensorProduct ω₂).traceLeft = ω₂ := by
+  ext B
+  rw [traceLeft_apply, lTensor_eq_mapL, tensorProduct_mapL]
+  exact (congrArg (· * ω₂ B) ω₁.apply_one).trans (one_mul _)
 
 /-- The density of the marginal `ω_A` is the partial trace `tr_K ρ_ω`. -/
 lemma density_traceRight :
     density ω.traceRight = ContinuousLinearMap.traceRight H K (density ω) :=
-  density_eq_traceDual (rTensorStarAlgHom ℂ H K) fun _ => rfl
+  density_eq_traceDual (rTensorStarAlgHom ℂ H K) fun A => traceRight_apply ω A
 
 /-- The density of the marginal `ω_B` is the partial trace `tr₁(ρ_ω)` of `ρ_ω` over the first
 factor. -/
 lemma density_traceLeft :
     density ω.traceLeft = ContinuousLinearMap.traceLeft H K (density ω) :=
-  density_eq_traceDual (lTensorStarAlgHom ℂ K H) fun _ => rfl
+  density_eq_traceDual (lTensorStarAlgHom ℂ K H) fun B => traceLeft_apply ω B
 
 /-- The **quantum mutual information** `I(A:B) = S(ω_A) + S(ω_B) - S(ω)` of a state on
 `B(H ⊗ K)`. -/
