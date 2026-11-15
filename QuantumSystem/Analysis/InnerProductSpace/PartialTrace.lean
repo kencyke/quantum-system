@@ -16,7 +16,7 @@ public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 
 For finite-dimensional complex Hilbert spaces `H` and `K`, the **partial trace** over the right
 factor `tr₂ = ContinuousLinearMap.traceRight H K : B(H ⊗ K) → B(H)` is the trace dual of the
-ampliation `A ↦ A ⊗ 1` (`ContinuousLinearMap.rTensorStarAlgHom`):
+amplification `A ↦ A ⊗ 1` (`ContinuousLinearMap.rTensorStarAlgHom`):
 `tr(A ∘ tr₂(X)) = tr((A ⊗ 1) ∘ X)` (`ContinuousLinearMap.trace_comp_traceRight`). On operator
 tensors it is `tr₂(A ⊗ B) = tr(B) • A` (`ContinuousLinearMap.traceRight_mapL`). As the trace dual
 of a unital ⋆-homomorphism it is completely positive and trace preserving with no further proof:
@@ -77,7 +77,7 @@ namespace ContinuousLinearMap
 
 variable (H K) in
 /-- The **partial trace** `tr₂ : B(H ⊗ K) → B(H)` over the right factor: the trace dual of the
-ampliation `A ↦ A ⊗ 1`, so that `tr(A ∘ tr₂(X)) = tr((A ⊗ 1) ∘ X)`
+amplification `A ↦ A ⊗ 1`, so that `tr(A ∘ tr₂(X)) = tr((A ⊗ 1) ∘ X)`
 (`ContinuousLinearMap.trace_comp_traceRight`). -/
 noncomputable def traceRight : (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) →ₗ[ℂ] (H →L[ℂ] H) :=
   traceDual (rTensorStarAlgHom ℂ H K)
@@ -109,13 +109,13 @@ lemma traceRight_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
   have h := trace_comp_traceRight (1 : H →L[ℂ] H) X
   rwa [rTensor_one, ← mul_def, ← mul_def, one_mul, one_mul] at h
 
-/-- The trace dual of the partial trace is the ampliation, `tr₂* (A) = A ⊗ 1`
+/-- The trace dual of the partial trace is the amplification, `tr₂* (A) = A ⊗ 1`
 (`ContinuousLinearMap.traceDual_traceDual`). -/
 @[simp] lemma traceDual_traceRight (A : H →L[ℂ] H) :
     traceDual (traceRight H K) A = A.rTensor K :=
   traceDual_traceDual (rTensorStarAlgHom ℂ H K) A
 
-/-- For an orthonormal basis `(eₐ)` of `K`, the ampliation is `A ⊗ 1 = Σₐ ιₐ A ιₐ†` with the
+/-- For an orthonormal basis `(eₐ)` of `K`, the amplification is `A ⊗ 1 = Σₐ ιₐ A ιₐ†` with the
 insertions `ιₐ : x ↦ x ⊗ eₐ`. -/
 lemma rTensor_eq_sum {ι : Type*} [Fintype ι] (b : OrthonormalBasis ι ℂ K) (A : H →L[ℂ] H) :
     A.rTensor K = ∑ a, (mkL ℂ H K).flip (b a) ∘L A ∘L ((mkL ℂ H K).flip (b a))† := by
@@ -169,7 +169,7 @@ lemma traceDual_eq_iff_traceRight {F : Type*} [FunLike F (H →L[ℂ] H) (K →L
 
 variable (H K) in
 /-- The **partial trace** `tr₁ : B(H ⊗ K) → B(K)` over the left factor: the trace dual of the
-ampliation `B ↦ 1 ⊗ B`, so that `tr(B ∘ tr₁(X)) = tr((1 ⊗ B) ∘ X)`
+amplification `B ↦ 1 ⊗ B`, so that `tr(B ∘ tr₁(X)) = tr((1 ⊗ B) ∘ X)`
 (`ContinuousLinearMap.trace_comp_traceLeft`). -/
 noncomputable def traceLeft : (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) →ₗ[ℂ] (K →L[ℂ] K) :=
   traceDual (lTensorStarAlgHom ℂ K H)
@@ -202,7 +202,7 @@ lemma traceLeft_mapL (A : H →L[ℂ] H) (B : K →L[ℂ] K) :
   have h := trace_comp_traceLeft (1 : K →L[ℂ] K) X
   rwa [lTensor_one, ← mul_def, ← mul_def, one_mul, one_mul] at h
 
-/-- The trace dual of the partial trace over the left factor is the ampliation,
+/-- The trace dual of the partial trace over the left factor is the amplification,
 `tr₁* (B) = 1 ⊗ B` (`ContinuousLinearMap.traceDual_traceDual`). -/
 @[simp] lemma traceDual_traceLeft (B : K →L[ℂ] K) :
     traceDual (traceLeft H K) B = B.lTensor H :=
