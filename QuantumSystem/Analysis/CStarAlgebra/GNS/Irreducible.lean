@@ -36,6 +36,8 @@ vector functionals of `v₁` and `v₂` (`CStarRep.vectorFunctional`), `‖v₁�
 
 * `GNS.Representation.isPure_iff_isIrreducible` — **a state is pure iff its GNS
   representation is irreducible**, for every GNS triplet of the state.
+* `State.IsPure.exists_eq_smul_of_le` — a positive functional dominated by a pure state is a
+  multiple of it by a scalar of `[0, 1]`.
 -/
 
 @[expose] public section
@@ -52,7 +54,7 @@ variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing
 variable {f : A →ₚ[ℂ] ℂ}
 
 /-- The cyclic vector splits along a closed submodule `W` and its orthogonal complement. -/
-lemma cyclicVector_decomp (T : Representation f) (W : ClosedSubmodule ℂ T.H) :
+lemma exists_ξ_eq_add (T : Representation f) (W : ClosedSubmodule ℂ T.H) :
     ∃ v₁ v₂ : T.H, v₁ ∈ W.toSubmodule ∧ v₂ ∈ W.toSubmoduleᗮ ∧ T.ξ = v₁ + v₂ ∧ ⟪v₁, v₂⟫ = 0 := by
   -- A closed subspace of a Hilbert space is complete, so it has an orthogonal projection.
   have : CompleteSpace W.toSubmodule := W.isClosed.completeSpace_coe
@@ -75,7 +77,7 @@ lemma apply_eq_vectorFunctional_add (T : Representation f) (W : ClosedSubmodule 
   rfl
 
 /-- Pythagoras for the two components of the cyclic vector: `‖v₁‖² + ‖v₂‖² = ‖f‖ₒₚ`. -/
-lemma norm_sq_decomposition (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
+lemma norm_sq_add_norm_sq_eq_opNorm (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 + ‖v₂‖ ^ 2 = ‖f‖ₒₚ := by
   rw [← T.norm_ξ_sq, hξ]
@@ -85,7 +87,7 @@ lemma norm_sq_decomposition (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ
 lemma norm_sq_mem_Icc (T : Representation f) (v₁ v₂ : T.H) (hξ : T.ξ = v₁ + v₂)
     (horth : ⟪v₁, v₂⟫ = 0) :
     ‖v₁‖ ^ 2 ∈ Set.Icc (0 : ℝ) ‖f‖ₒₚ := by
-  have h := norm_sq_decomposition T v₁ v₂ hξ horth
+  have h := norm_sq_add_norm_sq_eq_opNorm T v₁ v₂ hξ horth
   exact ⟨sq_nonneg _, by linarith [sq_nonneg ‖v₂‖]⟩
 
 /-- **Purity forces a component of the cyclic vector to have norm `0` or `1`.** If the GNS
@@ -116,7 +118,7 @@ lemma norm_sq_eq_zero_or_eq_one_of_isPure {ω : State A} (hω : ω.IsPure)
     exact_mod_cast ht
   set t := ‖v₁‖ ^ 2
   have h_norm_v₂ : ‖v₂‖ ^ 2 = 1 - t := by
-    have h_sum := hω₁ ▸ norm_sq_decomposition T v₁ v₂ hξ horth
+    have h_sum := hω₁ ▸ norm_sq_add_norm_sq_eq_opNorm T v₁ v₂ hξ horth
     linarith
   have hv₂_ne : v₂ ≠ 0 := by
     intro h
@@ -329,7 +331,7 @@ vanishes. -/
 lemma eq_zero_of_norm_sq_eq_opNorm (T : Representation f) (v₁ v₂ : T.H)
     (hξ : T.ξ = v₁ + v₂) (horth : ⟪v₁, v₂⟫ = 0) (h : ‖v₁‖ ^ 2 = ‖f‖ₒₚ) :
     v₂ = 0 := by
-  have h_sum := norm_sq_decomposition T v₁ v₂ hξ horth
+  have h_sum := norm_sq_add_norm_sq_eq_opNorm T v₁ v₂ hξ horth
   rw [h] at h_sum
   exact norm_eq_zero.mp (pow_eq_zero_iff two_ne_zero |>.mp (by linarith))
 
@@ -373,7 +375,7 @@ lemma isIrreducible_canonical_of_isPure {ω : State A} (hω : ω.IsPure) :
     GNS[ω].IsIrreducible := by
   let T := GNS[ω]
   refine CStarRep.isIrreducible_iff.mpr ⟨T.π_ne_zero ω.ofClass_ne_zero, fun W hW => ?_⟩
-  obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := cyclicVector_decomp T W
+  obtain ⟨v₁, v₂, hv₁, hv₂, hξ, horth⟩ := exists_ξ_eq_add T W
   rcases norm_sq_eq_zero_or_eq_one_of_isPure hω W hW v₁ v₂ hv₁ hv₂ hξ with h_zero | h_one
   · exact Or.inl (eq_bot_of_norm_sq_eq_zero T W hW v₁ v₂ hv₂ hξ h_zero)
   · exact Or.inr (eq_top_of_norm_sq_eq_opNorm T W hW v₁ v₂ hv₁ hξ horth
@@ -483,3 +485,52 @@ theorem isPure_iff_isIrreducible (ω : State A)
 end Representation
 
 end GNS
+
+namespace State
+
+open scoped ComplexOrder
+
+variable {A : Type*} [NonUnitalCStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
+
+/-- **A positive functional dominated by a pure state is a multiple of it by a scalar of `[0, 1]`**:
+if `ω` is pure and `0 ≤ φ ≤ ω` on the positive elements, then `φ = t ω` with `0 ≤ t ≤ 1`. The GNS
+representation of `ω` is irreducible, so the operator of its commutant that represents `φ` is a
+scalar `c`; along an approximate unit `e`, `ω e → 1` and `0 ≤ φ e = c ω e ≤ ω e`. -/
+lemma IsPure.exists_eq_smul_of_le {ω : State A} (hω : ω.IsPure) {φ : WeakDual ℂ A}
+    (hφ : ∀ a : A, 0 ≤ a → 0 ≤ φ a) (hle : ∀ a : A, 0 ≤ a → φ a ≤ ω a) :
+    ∃ t : ℝ, 0 ≤ t ∧ t ≤ 1 ∧ φ = (t : ℂ) • ω.val := by
+  obtain ⟨c, hc⟩ := GNS.Representation.exists_eq_smul_of_add_eq (ψ := ω.val - φ)
+    (GNS.Representation.isIrreducible_canonical_of_isPure hω) hφ
+    (fun a ha => sub_nonneg.2 (hle a ha)) (add_sub_cancel φ ω.val)
+  have hl := CStarAlgebra.increasingApproximateUnit A
+  have hlim : Filter.Tendsto (fun e : A => ω e) (CStarAlgebra.approximateUnit A) (nhds 1) :=
+    ω.tendsto_approximateUnit hl
+  have hφe (e : A) : φ e = c * ω e := DFunLike.congr_fun hc e
+  have hclim : Filter.Tendsto (fun e : A => c * ω e) (CStarAlgebra.approximateUnit A) (nhds c) := by
+    have h := hlim.const_mul c
+    rwa [mul_one] at h
+  have hre : Filter.Tendsto (fun e : A => (c * ω e).re) (CStarAlgebra.approximateUnit A)
+      (nhds c.re) := (Complex.continuous_re.tendsto c).comp hclim
+  have him : Filter.Tendsto (fun e : A => (c * ω e).im) (CStarAlgebra.approximateUnit A)
+      (nhds c.im) := (Complex.continuous_im.tendsto c).comp hclim
+  have hωre : Filter.Tendsto (fun e : A => (ω e).re) (CStarAlgebra.approximateUnit A) (nhds 1) :=
+    (Complex.continuous_re.tendsto 1).comp hlim
+  have h0 : 0 ≤ c.re := ge_of_tendsto hre (hl.eventually_nonneg.mono fun e he => by
+    have h := hφ e he
+    rw [hφe] at h
+    exact (Complex.nonneg_iff.1 h).1)
+  have h1 : c.re ≤ 1 := le_of_tendsto_of_tendsto hre hωre (hl.eventually_nonneg.mono fun e he => by
+    have h := hle e he
+    rw [hφe] at h
+    exact (Complex.le_def.1 h).1)
+  have him0 : c.im = 0 := tendsto_nhds_unique him (tendsto_const_nhds.congr'
+    (hl.eventually_nonneg.mono fun e he => by
+      have h := hφ e he
+      rw [hφe] at h
+      exact (Complex.nonneg_iff.1 h).2))
+  refine ⟨c.re, h0, h1, ?_⟩
+  rw [hc]
+  congr 1
+  exact Complex.ext rfl him0
+
+end State
