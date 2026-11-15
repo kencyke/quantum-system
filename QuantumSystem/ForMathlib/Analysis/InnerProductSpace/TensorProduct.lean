@@ -265,7 +265,7 @@ variable (𝕜 E G) in
 /-- For finite-dimensional `E` and `G`, the linear equivalence `TensorProduct.mapLEquiv` of
 `B(E) ⊗ B(G)` onto `B(E ⊗ G)`, `f ⊗ g ↦ mapL f g`, is a `⋆`-algebra equivalence. -/
 noncomputable def mapLStarAlgEquiv [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G]
-    [CompleteSpace E] [CompleteSpace G] [CompleteSpace (E ⊗[𝕜] G)] :
+    [CompleteSpace E] [CompleteSpace G] :
     (E →L[𝕜] E) ⊗[𝕜] (G →L[𝕜] G) ≃⋆ₐ[𝕜] (E ⊗[𝕜] G →L[𝕜] E ⊗[𝕜] G) where
   __ := mapLEquiv 𝕜 E E G G
   map_mul' x y := by
@@ -288,8 +288,8 @@ noncomputable def mapLStarAlgEquiv [FiniteDimensional 𝕜 E] [FiniteDimensional
 
 /-- `mapLStarAlgEquiv` sends `f ⊗ g` to the operator tensor product `mapL f g`. -/
 @[simp] lemma mapLStarAlgEquiv_tmul [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G]
-    [CompleteSpace E] [CompleteSpace G] [CompleteSpace (E ⊗[𝕜] G)] (f : E →L[𝕜] E)
-    (g : G →L[𝕜] G) : mapLStarAlgEquiv 𝕜 E G (f ⊗ₜ g) = mapL f g :=
+    [CompleteSpace E] [CompleteSpace G] (f : E →L[𝕜] E) (g : G →L[𝕜] G) :
+    mapLStarAlgEquiv 𝕜 E G (f ⊗ₜ g) = mapL f g :=
   mapLEquiv_tmul f g
 
 /-- The tensor product of a rank-one operator with an operator `B` factors through the insertions
