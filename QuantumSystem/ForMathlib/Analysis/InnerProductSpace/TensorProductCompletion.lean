@@ -447,8 +447,9 @@ lemma adjoint_completion_mapL [CompleteSpace H₁] [CompleteSpace H₂] [Complet
 
 open scoped ComplexOrder in
 /-- **The tensor product of positive operators on Hilbert spaces is positive** on the Hilbert space
-tensor product: with `A = a⋆ a` and `B = b⋆ b`, `A ⊗ B = (a ⊗ b)⋆ (a ⊗ b)`. The spaces are complex,
-as the order of operators is. -/
+tensor product: with `A = a⋆ a` and `B = b⋆ b`, `A ⊗ B = (a ⊗ b)⋆ (a ⊗ b)`. The spaces are complex:
+Mathlib makes the operators a star-ordered ring, in which every positive element is some `a⋆ a`,
+only over `ℂ`, through their C⋆-algebra structure. -/
 theorem completion_mapL_nonneg {H₁ H₂ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace ℂ H₁]
     [CompleteSpace H₁] [NormedAddCommGroup H₂] [InnerProductSpace ℂ H₂] [CompleteSpace H₂]
     {A : H₁ →L[ℂ] H₁} {B : H₂ →L[ℂ] H₂} (hA : 0 ≤ A) (hB : 0 ≤ B) : 0 ≤ A ⊗ B := by
@@ -546,8 +547,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {A B H₁ H₂ : Type*}
   [NormedAddCommGroup H₂] [InnerProductSpace 𝕜 H₂] [CompleteSpace H₂]
 
 open TensorProduct in
-/-- The **tensor product of two `⋆`-homomorphisms** `π : A → B(H₁)` and `ρ : B → B(H₂)` into
-operator algebras: the `⋆`-homomorphism of the algebraic tensor product `A ⊗[𝕜] B` into the
+/-- The **tensor product of two `⋆`-homomorphisms into operator algebras** `π : A → B(H₁)` and
+`ρ : B → B(H₂)`, on the algebraic tensor product: the `⋆`-homomorphism of `A ⊗[𝕜] B` into the
 operators on the Hilbert space tensor product `Completion (H₁ ⊗[𝕜] H₂)` that sends `a ⊗ b` to
 `π(a) ⊗ ρ(b)`. -/
 noncomputable def mapLCompletion (π : A →⋆ₙₐ[𝕜] (H₁ →L[𝕜] H₁)) (ρ : B →⋆ₙₐ[𝕜] (H₂ →L[𝕜] H₂)) :
