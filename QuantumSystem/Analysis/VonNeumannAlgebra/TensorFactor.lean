@@ -155,9 +155,6 @@ An operator `T` commuting with every `A ⊗ 𝟙` must be of the form `𝟙 ⊗ 
 `y ↦ e ⊗ y`. The reduction to a pure-tensor computation uses the rank-one operators `|f⟩⟨e|` on
 `H₁`. -/
 
-/-- `ι[e]` is the inclusion `ι_e : H₂ → Completion (H₁ ⊗[ℂ] H₂)`, `y ↦ e ⊗ y`. -/
-local notation "ι[" e "]" => Completion.toComplL ∘L TensorProduct.mkL ℂ H₁ H₂ e
-
 /-- The left and right amplifications commute: `(A ⊗ 𝟙)(𝟙 ⊗ B) = (𝟙 ⊗ B)(A ⊗ 𝟙)`, also for
 `A : H₁ → H₃` between different first factors. -/
 lemma completion_rTensor_comp_completion_lTensor {H₃ : Type*} [NormedAddCommGroup H₃]
@@ -181,31 +178,6 @@ section CompleteRight
 
 variable [CompleteSpace H₂]
 
-/-- The adjoint of the inclusion `ι_e : y ↦ e ⊗ y` acts on pure tensors as the `e`-slice
-`g ⊗ z ↦ ⟪e, g⟫ • z`. -/
-lemma adjoint_toComplL_comp_mkL_apply_coe_tmul (e g : H₁) (z : H₂) :
-    (ι[e]†) (g ⊗ₜ[ℂ] z : Completion (H₁ ⊗[ℂ] H₂)) = (inner ℂ e g) • z := by
-  refine ext_inner_right ℂ fun y => ?_
-  rw [adjoint_inner_left, comp_apply, Completion.coe_toComplL, TensorProduct.mkL_apply_apply,
-    Completion.inner_coe, TensorProduct.inner_tmul, inner_smul_left, inner_conj_symm]
-
-/-- The amplification of a rank-one operator `|f⟩⟨e|` factors through the `e`-slice and the
-inclusion `ι_f`: `(|f⟩⟨e|) ⊗ 𝟙 = ι_f ∘ ι_e*`. This is the algebraic heart of the slice
-argument. -/
-lemma completion_rTensor_rankOne_eq (e f : H₁) :
-    (InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙[H₂]
-      = ι[f] ∘L ι[e]† := by
-  ext w
-  induction w using Completion.induction_on with
-  | hp => exact isClosed_eq (by fun_prop) (by fun_prop)
-  | ih a =>
-    induction a using TensorProduct.inductionOn with
-    | tmul g z =>
-      rw [completion_apply_coe, comp_apply, adjoint_toComplL_comp_mkL_apply_coe_tmul, comp_apply,
-        Completion.coe_toComplL, TensorProduct.mkL_apply_apply, rTensor_tmul,
-        InnerProductSpace.rankOne_apply, TensorProduct.smul_tmul]
-    | add p q hp hq => rw [Completion.coe_add, map_add, map_add, hp, hq]
-
 /-- **Slice lemma (dense form, explicit representation).** If `T` commutes with the rank-one
 amplifications `(|f⟩⟨e|) ⊗ 𝟙` for `f` ranging over a set `D` whose span is dense in `H₁` (and a
 fixed unit vector `e ∈ H₁`), then `T = 𝟙 ⊗ S` for `S = ι_e* ∘ T ∘ ι_e`. The relation
@@ -217,7 +189,8 @@ lemma exists_completion_lTensor_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) 
     (hT : ∀ f ∈ D, T.comp ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙[H₂])
       = ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙[H₂]).comp T) :
     ∃ S : H₂ →L[ℂ] H₂, T = 𝟙[H₁] ⊗ S := by
-  set S := ι[e]†.comp (T.comp ι[e]) with hS
+  set S := (Completion.toComplL ∘L TensorProduct.mkL ℂ H₁ H₂ e)†.comp
+    (T.comp (Completion.toComplL ∘L TensorProduct.mkL ℂ H₁ H₂ e)) with hS
   have hee : inner ℂ e e = (1 : ℂ) := by rw [inner_self_eq_norm_sq_to_K, he]; norm_num
   have key : ∀ f ∈ D, ∀ y : H₂, T (f ⊗ₜ[ℂ] y : Completion (H₁ ⊗[ℂ] H₂))
       = (f ⊗ₜ[ℂ] S y : Completion (H₁ ⊗[ℂ] H₂)) := by
@@ -225,7 +198,7 @@ lemma exists_completion_lTensor_of_commutes_dense (e : H₁) (he : ‖e‖ = 1) 
     have e1 : ((InnerProductSpace.rankOne ℂ f e) ⊗ 𝟙[H₂])
         (e ⊗ₜ[ℂ] y : Completion (H₁ ⊗[ℂ] H₂)) = ((f ⊗ₜ[ℂ] y : H₁ ⊗[ℂ] H₂) : _) := by
       rw [completion_apply_coe, rTensor_tmul, InnerProductSpace.rankOne_apply, hee, one_smul]
-    rw [← e1, ← comp_apply, hT f hf, comp_apply, completion_rTensor_rankOne_eq]
+    rw [← e1, ← comp_apply, hT f hf, comp_apply, completion_rTensor_rankOne]
     rfl
   have key_all : ∀ (f : H₁) (y : H₂), T (f ⊗ₜ[ℂ] y : Completion (H₁ ⊗[ℂ] H₂))
       = (f ⊗ₜ[ℂ] S y : Completion (H₁ ⊗[ℂ] H₂)) := by
