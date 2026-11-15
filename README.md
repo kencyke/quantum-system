@@ -87,8 +87,10 @@ before it can be stated is kept in `docs/roadmap.md`.
 
 **Phase I — Foundations**
 
-1. **Tensor products.** Minimal tensor product of C⋆-algebras and nuclearity; the projective tensor
-   product of Banach algebras, which holds bounded approximate diagonals (M1, M2).
+1. **Tensor products.** Beyond the minimal tensor product of C⋆-algebras and the definition of
+   nuclearity already formalized: the nuclearity of commutative C⋆-algebras and its permanence
+   properties; the projective tensor product of Banach algebras, which holds bounded approximate
+   diagonals (M1, M2).
 2. **Dynamical systems.** C⋆- and W⋆-dynamical systems: a group acting by ⋆-automorphisms,
    continuously in the point-norm (W⋆: point-σ-weak) topology; as an example, the action of the
    covariance group of a faithful local net by ⋆-automorphisms of its quasi-local algebra, already
