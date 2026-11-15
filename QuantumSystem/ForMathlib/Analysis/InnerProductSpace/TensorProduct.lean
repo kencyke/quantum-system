@@ -9,6 +9,7 @@ public import Mathlib.Analysis.InnerProductSpace.Positive
 public import Mathlib.Analysis.InnerProductSpace.TensorProduct
 
 import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
+import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.StarOrder
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
@@ -16,21 +17,30 @@ import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 # Operators on tensor products of inner product spaces
 
 Supplements to Mathlib's `Mathlib/Analysis/InnerProductSpace/TensorProduct.lean` for bounded
-operators on the inner product space `E ⊗[𝕜] G`: the ampliation `A ↦ A ⊗ 1` as a
+operators on the inner product space `E ⊗[𝕜] G`: the amplification `A ↦ A ⊗ 1` as a
 ⋆-homomorphism, tensor products of rank-one operators, and the adjoints of the insertions
 `y ↦ x ⊗ y` and `x ↦ x ⊗ y`.
 
 The operator tensor product `A ⊗ B` of `A : E →L[𝕜] F` and `B : G →L[𝕜] H` is Mathlib's
-`TensorProduct.mapL A B`, and the ampliation `A ⊗ 1` is `A.rTensor G`.
+`TensorProduct.mapL A B`, and the amplification `A ⊗ 1` is `A.rTensor G`.
+
+The statements that involve an adjoint or the order of operators on `E ⊗[𝕜] G` assume that algebraic
+tensor product complete, as Mathlib's `TensorProduct.adjoint_mapL` does. It is complete when one
+factor is finite-dimensional and the other complete
+(`TensorProduct.completeSpace_of_finiteDimensional_left`,
+`TensorProduct.completeSpace_of_finiteDimensional_right`); for Hilbert spaces in general the
+statements are those on the completion `UniformSpace.Completion (E ⊗[𝕜] G)`.
 
 ## Main definitions
 
-* `ContinuousLinearMap.rTensorStarAlgHom 𝕜 E G` — the ampliation `A ↦ A ⊗ 1 = A.rTensor G` as a
+* `ContinuousLinearMap.rTensorStarAlgHom 𝕜 E G` — the amplification `A ↦ A ⊗ 1 = A.rTensor G` as a
   unital ⋆-homomorphism `B(E) →⋆ₐ B(E ⊗ G)`; `ContinuousLinearMap.lTensorStarAlgHom 𝕜 E G` — the
-  ampliation `A ↦ 1 ⊗ A = A.lTensor G`, `B(E) →⋆ₐ B(G ⊗ E)`.
+  amplification `A ↦ 1 ⊗ A = A.lTensor G`, `B(E) →⋆ₐ B(G ⊗ E)`.
 * `TensorProduct.mapLEquiv 𝕜 E F G H` — for finite-dimensional `E` and `G`, the linear
   equivalence `(E →L F) ⊗ (G →L H) ≃ (E ⊗ G →L F ⊗ H)`, `f ⊗ g ↦ mapL f g`; so linear maps out
   of `E ⊗ G →L F ⊗ H` are determined on the `mapL f g` (`TensorProduct.ext_mapL`).
+* `TensorProduct.mapLStarAlgEquiv 𝕜 E G` — the same equivalence for `F = E` and `H = G`, as a
+  `⋆`-algebra equivalence `B(E) ⊗ B(G) ≃⋆ₐ B(E ⊗ G)`.
 
 Nested tensor products `E ⊗ (F ⊗ G)` and `(E ⊗ F) ⊗ G` get shortcut instances for their normed
 structures, without which the C⋆-algebra and Loewner order of their operators are not found
@@ -48,14 +58,15 @@ structures, without which the C⋆-algebra and Loewner order of their operators 
 * `TensorProduct.rTensor_rankOne_eq_sum`, `TensorProduct.lTensor_rankOne_eq_sum` —
   `|x⟩⟨y| ⊗ 1 = Σⱼ |x ⊗ bⱼ⟩⟨y ⊗ bⱼ|` and its mirror image.
 * `TensorProduct.trace_mapL` — `tr(A ⊗ B) = tr A · tr B`.
-* `TensorProduct.mapL_nonneg` — the tensor product of positive operators is positive.
+* `TensorProduct.mapL_nonneg` — the tensor product of positive operators is positive, for complex
+  spaces with `E ⊗[ℂ] G` complete.
 * `TensorProduct.adjoint_mkL_comp_mkL`, `TensorProduct.sum_mkL_comp_adjoint_mkL` — `ιₓ† ι_y = ⟪x, y⟫`,
   and `Σᵢ ι_{bᵢ} ι_{bᵢ}† = 1` along an orthonormal basis `b`.
 -/
 
 @[expose] public section
 
-open scoped TensorProduct InnerProductSpace
+open scoped TensorProduct InnerProductSpace InnerProduct
 
 variable {𝕜 E F G H : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
@@ -74,15 +85,11 @@ outer search was itself started inside a unification (as for `ContinuousSMul`, t
 `CStarAlgebra` on `E ⊗ (F ⊗ G) →L E ⊗ (F ⊗ G)`), this nested search runs at depth 2 and exceeds
 the default `maxSynthPendingDepth = 1`, so these instances are not found. The shortcut instances
 below state the normed structures with the nested type as it is elaborated, so that no nested
-search is needed; their values are Mathlib's instances. They make types such as
-`State ((E ⊗ F) ⊗ G →L[ℂ] (E ⊗ F) ⊗ G)` elaborate anywhere.
+search is needed; their values are Mathlib's instances. They make the C⋆-algebra structure and the
+order of `(E ⊗ F) ⊗ G →L[ℂ] (E ⊗ F) ⊗ G` available anywhere.
 
 `set_option maxSynthPendingDepth 2 in` is the other workaround. The shortcuts do not cover
-composites of generic constructions at nested types (a completely positive map
-`B(F ⊗ G) → B((E ⊗ F) ⊗ G)` built by `CompletelyPositiveMap.tensorProduct`, composed with a state),
-which still time out at depth `1`; the declarations doing so
-(`QuantumSystem.InformationTheory.Entropy.VonNeumann.StrongSubadditivity`) carry that option, as the one
-exception to the project's ban on `set_option`.
+composites of generic constructions at nested types, which still time out at depth `1`.
 
 TODO: fix the instance statements upstream so that nested tensor products of inner product spaces
 need no shortcut, and remove these. Only one level of nesting (three factors) is covered. -/
@@ -111,11 +118,62 @@ noncomputable instance instInnerProductSpaceTensorLeft :
 
 end TensorProduct
 
+/-! ### Completeness with a finite-dimensional factor
+
+The algebraic tensor product of a finite-dimensional inner product space `E` and a complete one `F`
+is complete: along an orthonormal basis `b` of `E`, `ξ ↦ ∑ᵢ bᵢ ⊗ ξᵢ` is an isometry of the Hilbert
+sum of copies of `F` onto `E ⊗ F`. -/
+
+namespace TensorProduct
+
+/-- `E ⊗[𝕜] F` is complete when `E` is finite-dimensional and `F` is complete. -/
+instance completeSpace_of_finiteDimensional_left [FiniteDimensional 𝕜 E] [CompleteSpace F] :
+    CompleteSpace (E ⊗[𝕜] F) := by
+  classical
+  let b := stdOrthonormalBasis 𝕜 E
+  let Ψ : PiLp 2 (fun _ : Fin (Module.finrank 𝕜 E) => F) →ₗ[𝕜] E ⊗[𝕜] F :=
+    { toFun := fun ξ => ∑ i, b i ⊗ₜ[𝕜] ξ i
+      map_add' := fun x y => by simp [TensorProduct.tmul_add, Finset.sum_add_distrib]
+      map_smul' := fun c x => by simp [Finset.smul_sum] }
+  have hnorm : ∀ ξ, ‖Ψ ξ‖ = ‖ξ‖ := fun ξ => by
+    rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), PiLp.norm_sq_eq_of_L2,
+      @norm_sq_eq_re_inner 𝕜]
+    change RCLike.re ⟪∑ i, b i ⊗ₜ[𝕜] ξ i, ∑ i, b i ⊗ₜ[𝕜] ξ i⟫_𝕜 = _
+    simp only [sum_inner, inner_sum, TensorProduct.inner_tmul, orthonormal_iff_ite.1 b.orthonormal,
+      ite_mul, one_mul, zero_mul, map_sum]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [Finset.sum_eq_single i (fun j _ hji => by simp [hji])
+      (fun h => (h (Finset.mem_univ i)).elim)]
+    simp only [↓reduceIte]
+    exact (@norm_sq_eq_re_inner 𝕜 _ _ _ _ (ξ i)).symm
+  have hsurj : Function.Surjective Ψ := fun z => by
+    induction z using TensorProduct.inductionOn with
+    | tmul e f =>
+      refine ⟨WithLp.toLp 2 fun i => b.repr e i • f, ?_⟩
+      calc ∑ i, b i ⊗ₜ[𝕜] (b.repr e i • f) = ∑ i, (b.repr e i • b i) ⊗ₜ[𝕜] f :=
+            Finset.sum_congr rfl fun i _ => by
+              rw [TensorProduct.tmul_smul, TensorProduct.smul_tmul']
+        _ = (∑ i, b.repr e i • b i) ⊗ₜ[𝕜] f := (TensorProduct.sum_tmul _ _ _).symm
+        _ = e ⊗ₜ[𝕜] f := by rw [b.sum_repr]
+    | add p q hp hq =>
+      obtain ⟨x, rfl⟩ := hp
+      obtain ⟨y, rfl⟩ := hq
+      exact ⟨x + y, map_add Ψ x y⟩
+  exact ((LinearIsometryEquiv.ofSurjective ⟨Ψ, hnorm⟩ hsurj).symm.toIsometryEquiv).completeSpace
+
+/-- `E ⊗[𝕜] F` is complete when `E` is complete and `F` is finite-dimensional. -/
+instance completeSpace_of_finiteDimensional_right [CompleteSpace E] [FiniteDimensional 𝕜 F] :
+    CompleteSpace (E ⊗[𝕜] F) :=
+  ((TensorProduct.commIsometry 𝕜 E F).toIsometryEquiv).completeSpace
+
+end TensorProduct
+
 namespace ContinuousLinearMap
 
 variable (𝕜 E G) in
-/-- The **ampliation** `A ↦ A ⊗ 1 = A.rTensor G` as a unital ⋆-homomorphism
-`B(E) →⋆ₐ B(E ⊗ G)`. It is the identity representation of `B(E)` with multiplicity `G`. -/
+/-- The **amplification** `A ↦ A ⊗ 1 = A.rTensor G` as a unital ⋆-homomorphism
+`B(E) →⋆ₐ B(E ⊗ G)`, for `E ⊗[𝕜] G` complete. It is the identity representation of `B(E)` with
+multiplicity `G`. -/
 noncomputable def rTensorStarAlgHom [CompleteSpace E] [CompleteSpace G]
     [CompleteSpace (E ⊗[𝕜] G)] : (E →L[𝕜] E) →⋆ₐ[𝕜] (E ⊗[𝕜] G →L[𝕜] E ⊗[𝕜] G) where
   toFun A := A.rTensor G
@@ -126,14 +184,14 @@ noncomputable def rTensorStarAlgHom [CompleteSpace E] [CompleteSpace G]
   commutes' r := by simp [Algebra.algebraMap_eq_smul_one]
   map_star' A := by simp [star_eq_adjoint]
 
-/-- The ampliation sends `A` to `A ⊗ 1 = A.rTensor G`. -/
+/-- The amplification sends `A` to `A ⊗ 1 = A.rTensor G`. -/
 @[simp] lemma rTensorStarAlgHom_apply [CompleteSpace E] [CompleteSpace G]
     [CompleteSpace (E ⊗[𝕜] G)] (A : E →L[𝕜] E) : rTensorStarAlgHom 𝕜 E G A = A.rTensor G :=
   rfl
 
 variable (𝕜 E G) in
-/-- The **ampliation** `A ↦ 1 ⊗ A = A.lTensor G` as a unital ⋆-homomorphism
-`B(E) →⋆ₐ B(G ⊗ E)`, with the multiplicity space on the left. -/
+/-- The **amplification** `A ↦ 1 ⊗ A = A.lTensor G` as a unital ⋆-homomorphism
+`B(E) →⋆ₐ B(G ⊗ E)`, for `G ⊗[𝕜] E` complete, with the multiplicity space on the left. -/
 noncomputable def lTensorStarAlgHom [CompleteSpace E] [CompleteSpace G]
     [CompleteSpace (G ⊗[𝕜] E)] : (E →L[𝕜] E) →⋆ₐ[𝕜] (G ⊗[𝕜] E →L[𝕜] G ⊗[𝕜] E) where
   toFun A := A.lTensor G
@@ -144,7 +202,7 @@ noncomputable def lTensorStarAlgHom [CompleteSpace E] [CompleteSpace G]
   commutes' r := by simp [Algebra.algebraMap_eq_smul_one]
   map_star' A := by simp [star_eq_adjoint]
 
-/-- The ampliation sends `A` to `1 ⊗ A = A.lTensor G`. -/
+/-- The amplification sends `A` to `1 ⊗ A = A.lTensor G`. -/
 @[simp] lemma lTensorStarAlgHom_apply [CompleteSpace E] [CompleteSpace G]
     [CompleteSpace (G ⊗[𝕜] E)] (A : E →L[𝕜] E) : lTensorStarAlgHom 𝕜 E G A = A.lTensor G :=
   rfl
@@ -164,14 +222,14 @@ lemma mapL_rankOne_rankOne (x : E) (y : F) (z : G) (w : H) :
 /-- The adjoint of the insertion `mkL 𝕜 E F x : y ↦ x ⊗ y` is the partial inner product
 `x' ⊗ y' ↦ ⟪x, x'⟫ • y'`. -/
 lemma adjoint_mkL_apply_tmul [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] (x x' : E) (y : F) :
-    (mkL 𝕜 E F x).adjoint (x' ⊗ₜ y) = ⟪x, x'⟫_𝕜 • y :=
+    ((mkL 𝕜 E F x)†) (x' ⊗ₜ y) = ⟪x, x'⟫_𝕜 • y :=
   ext_inner_left 𝕜 fun w => by
     rw [ContinuousLinearMap.adjoint_inner_right, mkL_apply_apply, inner_tmul, inner_smul_right]
 
 /-- The adjoint of the insertion `(mkL 𝕜 E F).flip y : x ↦ x ⊗ y` is the partial inner product
 `x' ⊗ y' ↦ ⟪y, y'⟫ • x'`. -/
 lemma adjoint_flip_mkL_apply_tmul [CompleteSpace E] [CompleteSpace (E ⊗[𝕜] F)] (y y' : F)
-    (x : E) : ((mkL 𝕜 E F).flip y).adjoint (x ⊗ₜ y') = ⟪y, y'⟫_𝕜 • x :=
+    (x : E) : (((mkL 𝕜 E F).flip y)†) (x ⊗ₜ y') = ⟪y, y'⟫_𝕜 • x :=
   ext_inner_left 𝕜 fun w => by
     rw [ContinuousLinearMap.adjoint_inner_right, ContinuousLinearMap.flip_apply, mkL_apply_apply,
       inner_tmul, inner_smul_right, mul_comm]
@@ -203,11 +261,42 @@ lemma ext_mapL [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] {M : Type*}
   | tmul f g => rw [mapLEquiv_tmul, h]
   | add z z' hz hz' => rw [map_add, map_add, map_add, hz, hz']
 
+variable (𝕜 E G) in
+/-- For finite-dimensional `E` and `G`, the linear equivalence `TensorProduct.mapLEquiv` of
+`B(E) ⊗ B(G)` onto `B(E ⊗ G)`, `f ⊗ g ↦ mapL f g`, is a `⋆`-algebra equivalence. -/
+noncomputable def mapLStarAlgEquiv [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G]
+    [CompleteSpace E] [CompleteSpace G] [CompleteSpace (E ⊗[𝕜] G)] :
+    (E →L[𝕜] E) ⊗[𝕜] (G →L[𝕜] G) ≃⋆ₐ[𝕜] (E ⊗[𝕜] G →L[𝕜] E ⊗[𝕜] G) where
+  __ := mapLEquiv 𝕜 E E G G
+  map_mul' x y := by
+    change mapLEquiv 𝕜 E E G G (x * y) = mapLEquiv 𝕜 E E G G x * mapLEquiv 𝕜 E E G G y
+    induction x using TensorProduct.inductionOn with
+    | tmul f g =>
+      induction y using TensorProduct.inductionOn with
+      | tmul f' g' =>
+        rw [Algebra.TensorProduct.tmul_mul_tmul, mapLEquiv_tmul, mapLEquiv_tmul, mapLEquiv_tmul,
+          mapL_mul]
+      | add p q hp hq => rw [mul_add, map_add, hp, hq, map_add, mul_add]
+    | add p q hp hq => rw [add_mul, map_add, hp, hq, map_add, add_mul]
+  map_star' x := by
+    change mapLEquiv 𝕜 E E G G (star x) = star (mapLEquiv 𝕜 E E G G x)
+    induction x using TensorProduct.inductionOn with
+    | tmul f g =>
+      rw [star_tmul, mapLEquiv_tmul, mapLEquiv_tmul, ContinuousLinearMap.star_eq_adjoint,
+        ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.star_eq_adjoint, adjoint_mapL]
+    | add p q hp hq => rw [star_add, map_add, hp, hq, map_add, star_add]
+
+/-- `mapLStarAlgEquiv` sends `f ⊗ g` to the operator tensor product `mapL f g`. -/
+@[simp] lemma mapLStarAlgEquiv_tmul [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G]
+    [CompleteSpace E] [CompleteSpace G] [CompleteSpace (E ⊗[𝕜] G)] (f : E →L[𝕜] E)
+    (g : G →L[𝕜] G) : mapLStarAlgEquiv 𝕜 E G (f ⊗ₜ g) = mapL f g :=
+  mapLEquiv_tmul f g
+
 /-- The tensor product of a rank-one operator with an operator `B` factors through the insertions
 `ιₓ = mkL 𝕜 E H x : z ↦ x ⊗ z`: `|x⟩⟨y| ⊗ B = ιₓ B ι_y†`. -/
 lemma mapL_rankOne_left [CompleteSpace G] [CompleteSpace (F ⊗[𝕜] G)] (x : E) (y : F)
     (B : G →L[𝕜] H) :
-    mapL (rankOne 𝕜 x y) B = mkL 𝕜 E H x ∘L B ∘L (mkL 𝕜 F G y).adjoint := by
+    mapL (rankOne 𝕜 x y) B = mkL 𝕜 E H x ∘L B ∘L (mkL 𝕜 F G y)† := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun u v => ?_
   simp [adjoint_mkL_apply_tmul, smul_tmul]
 
@@ -219,7 +308,7 @@ lemma lTensor_comp_mkL (x : E) (A : G →L[𝕜] H) :
 
 /-- The insertions are orthogonal: `ιₓ† ι_y = ⟪x, y⟫ • 1`. -/
 lemma adjoint_mkL_comp_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] (x y : E) :
-    (mkL 𝕜 E F x).adjoint ∘L mkL 𝕜 E F y = ⟪x, y⟫_𝕜 • (1 : F →L[𝕜] F) := by
+    (mkL 𝕜 E F x)† ∘L mkL 𝕜 E F y = ⟪x, y⟫_𝕜 • (1 : F →L[𝕜] F) := by
   ext v
   simp [adjoint_mkL_apply_tmul]
 
@@ -227,7 +316,7 @@ lemma adjoint_mkL_comp_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] (x 
 `Σᵢ ι_{bᵢ} ι_{bᵢ}† = 1`, that is, `z = Σᵢ bᵢ ⊗ ι_{bᵢ}† z`. -/
 lemma sum_mkL_comp_adjoint_mkL [CompleteSpace F] [CompleteSpace (E ⊗[𝕜] F)] {ι : Type*}
     [Fintype ι] (b : OrthonormalBasis ι 𝕜 E) :
-    ∑ i, mkL 𝕜 E F (b i) ∘L (mkL 𝕜 E F (b i)).adjoint = 1 := by
+    ∑ i, mkL 𝕜 E F (b i) ∘L (mkL 𝕜 E F (b i))† = 1 := by
   refine ContinuousLinearMap.coe_inj.mp <| ext' fun u v => ?_
   simp only [ContinuousLinearMap.coe_coe, ContinuousLinearMap.toLinearMap_sum,
     LinearMap.coe_sum, Finset.sum_apply, ContinuousLinearMap.coe_comp, Function.comp_apply,
@@ -264,7 +353,8 @@ lemma trace_mapL [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 G] (A : E �
   rw [toLinearMap_mapL, LinearMap.trace_tensorProduct']
 
 open scoped ComplexOrder in
-/-- **The tensor product of positive operators is positive**: with `A = a⋆ a` and `B = b⋆ b`,
+/-- **The tensor product of positive operators is positive**, for complex Hilbert spaces whose
+algebraic tensor product `E ⊗[ℂ] G` is complete: with `A = a⋆ a` and `B = b⋆ b`,
 `A ⊗ B = (a ⊗ b)⋆ (a ⊗ b)`. -/
 theorem mapL_nonneg {E G : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
     [NormedAddCommGroup G] [InnerProductSpace ℂ G] [CompleteSpace G] [CompleteSpace (E ⊗[ℂ] G)]
