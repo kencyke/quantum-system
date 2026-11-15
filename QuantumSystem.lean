@@ -32,6 +32,12 @@ public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctiona
 public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
 public import QuantumSystem.Analysis.CStarAlgebra.State.Faithful
 public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
+public import QuantumSystem.Analysis.CStarAlgebra.State.TensorProduct
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CStarNorm
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CompletelyPositiveMap
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Spatial
 public import QuantumSystem.Analysis.CStarAlgebra.ZeroAtInfty
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
