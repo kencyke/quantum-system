@@ -34,6 +34,9 @@ comparison map complete, and uses no C⋆-identity.
   `φ.closureRange → ψ.closureRange` extending `φ x ↦ ψ x`.
 * `NonUnitalStarAlgHom.closureRangeEquiv h` — for `‖φ x‖ = ‖ψ x‖`, the isometric `⋆`-isomorphism
   `φ.closureRange ≃⋆ₐ[𝕜] ψ.closureRange`.
+* `NonUnitalStarAlgHom.equivOfDenseRange hφ hψ h` — for `‖φ x‖ = ‖ψ x‖` and dense ranges, the
+  isometric `⋆`-isomorphism `C₁ ≃⋆ₐ[𝕜] C₂` that sends `φ x` to `ψ x`.
+* `NonUnitalStarSubalgebra.equivOfEq S T h` — equal `⋆`-subalgebras are `⋆`-isomorphic.
 
 ## Main results
 
@@ -42,6 +45,8 @@ comparison map complete, and uses no C⋆-identity.
 * `NonUnitalStarAlgHom.closureRangeRestrict_injective` — it is injective when `φ` is.
 * `NonUnitalStarAlgHom.closureRangeRestrict_surjective_of_isClosed` — it is surjective when the range of
   `φ` is closed.
+* `NonUnitalStarAlgHom.closureRange_comp_of_surjective` — composing `φ` with a surjective
+  `⋆`-homomorphism does not change the closure of its range.
 * `NonUnitalStarAlgHom.closureRangeMap_closureRangeRestrict`,
   `NonUnitalStarAlgHom.norm_closureRangeMap_le` — `closureRangeMap h` sends `φ x` to `ψ x` and is
   contractive.
@@ -51,6 +56,28 @@ These are general facts and are candidates for upstreaming to Mathlib.
 -/
 
 @[expose] public section
+
+namespace NonUnitalStarSubalgebra
+
+variable {R A : Type*} [CommSemiring R] [NonUnitalNonAssocSemiring A] [Module R A] [Star A]
+
+/-- Equal `⋆`-subalgebras are `⋆`-isomorphic, by the identity on the elements. -/
+def equivOfEq (S T : NonUnitalStarSubalgebra R A) (h : S = T) : S ≃⋆ₐ[R] T where
+  toFun x := ⟨x, h ▸ x.2⟩
+  invFun x := ⟨x, h.symm ▸ x.2⟩
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_mul' _ _ := rfl
+  map_add' _ _ := rfl
+  map_star' _ := rfl
+  map_smul' _ _ := rfl
+
+/-- `NonUnitalStarSubalgebra.equivOfEq` is the identity on the elements. -/
+@[simp] lemma coe_equivOfEq (S T : NonUnitalStarSubalgebra R A) (h : S = T) (x : S) :
+    (equivOfEq S T h x : A) = x :=
+  rfl
+
+end NonUnitalStarSubalgebra
 
 namespace NonUnitalStarAlgHom
 
@@ -99,6 +126,12 @@ lemma denseRange_closureRangeRestrict (φ : D →⋆ₙₐ[R] C) : DenseRange φ
   rintro _ ⟨x, rfl⟩
   exact ⟨φ.closureRangeRestrict x, ⟨x, rfl⟩, rfl⟩
 
+/-- An element of a space in which `φ` has dense range lies in the closure of the range of `φ`. -/
+lemma mem_closureRange_of_denseRange {φ : D →⋆ₙₐ[R] C} (hφ : DenseRange φ) (T : C) :
+    T ∈ φ.closureRange := by
+  rw [← SetLike.mem_coe, coe_closureRange, hφ.closure_eq]
+  trivial
+
 /-- `φ.closureRangeRestrict` is surjective when the range of `φ` is closed. -/
 lemma closureRangeRestrict_surjective_of_isClosed {φ : D →⋆ₙₐ[R] C} (h : IsClosed (Set.range φ)) :
     Function.Surjective φ.closureRangeRestrict := fun T => by
@@ -106,6 +139,13 @@ lemma closureRangeRestrict_surjective_of_isClosed {φ : D →⋆ₙₐ[R] C} (h 
   rw [h.closure_eq] at hT
   obtain ⟨x, hx⟩ := hT
   exact ⟨x, Subtype.ext hx⟩
+
+/-- Composing with a surjective `⋆`-homomorphism does not change the closure of the range. -/
+lemma closureRange_comp_of_surjective {D' : Type*} [NonUnitalNonAssocSemiring D'] [Module R D']
+    [Star D'] (φ : D →⋆ₙₐ[R] C) {e : D' →⋆ₙₐ[R] D} (he : Function.Surjective e) :
+    (φ.comp e).closureRange = φ.closureRange :=
+  SetLike.coe_injective <| by
+    rw [coe_closureRange, coe_closureRange, NonUnitalStarAlgHom.coe_comp, he.range_comp]
 
 variable {C₁ C₂ : Type*}
   [TopologicalSpace C₁] [Star C₁] [NonUnitalSemiring C₁] [Module R C₁] [ContinuousStar C₁]
@@ -288,6 +328,35 @@ lemma norm_closureRangeEquiv (h : ∀ x, ‖φ x‖ = ‖ψ x‖) (T : φ.closur
   have hT : closureRangeMap (fun x => (h x).le) (closureRangeEquiv h T) = T :=
     (closureRangeEquiv h).symm_apply_apply T
   rwa [hT] at hinv
+
+/-- For `⋆`-homomorphisms `φ` and `ψ` of `D` with dense ranges in Banach `⋆`-algebras and
+`‖φ x‖ = ‖ψ x‖`, the `⋆`-isomorphism `C₁ ≃⋆ₐ[𝕜] C₂` that sends `φ x` to `ψ x`: both algebras are
+the completion of `D` for the same seminorm. It is `NonUnitalStarAlgHom.closureRangeEquiv h`, the
+closures of the ranges being the whole algebras. -/
+noncomputable def equivOfDenseRange (hφ : DenseRange φ) (hψ : DenseRange ψ)
+    (h : ∀ x, ‖φ x‖ = ‖ψ x‖) : C₁ ≃⋆ₐ[𝕜] C₂ where
+  toFun T := closureRangeEquiv h ⟨T, mem_closureRange_of_denseRange hφ T⟩
+  invFun T := (closureRangeEquiv h).symm ⟨T, mem_closureRange_of_denseRange hψ T⟩
+  left_inv _ := congrArg Subtype.val ((closureRangeEquiv h).symm_apply_apply _)
+  right_inv _ := congrArg Subtype.val ((closureRangeEquiv h).apply_symm_apply _)
+  map_mul' T T' := congrArg Subtype.val (map_mul (closureRangeEquiv h)
+    ⟨T, mem_closureRange_of_denseRange hφ T⟩ ⟨T', mem_closureRange_of_denseRange hφ T'⟩)
+  map_add' T T' := congrArg Subtype.val (map_add (closureRangeEquiv h)
+    ⟨T, mem_closureRange_of_denseRange hφ T⟩ ⟨T', mem_closureRange_of_denseRange hφ T'⟩)
+  map_star' T := congrArg Subtype.val (map_star (closureRangeEquiv h)
+    ⟨T, mem_closureRange_of_denseRange hφ T⟩)
+  map_smul' c T := congrArg Subtype.val (map_smul (closureRangeEquiv h) c
+    ⟨T, mem_closureRange_of_denseRange hφ T⟩)
+
+/-- `equivOfDenseRange hφ hψ h` sends `φ x` to `ψ x`. -/
+@[simp] lemma equivOfDenseRange_apply (hφ : DenseRange φ) (hψ : DenseRange ψ)
+    (h : ∀ x, ‖φ x‖ = ‖ψ x‖) (x : D) : equivOfDenseRange hφ hψ h (φ x) = ψ x :=
+  congrArg Subtype.val (closureRangeEquiv_closureRangeRestrict h x)
+
+/-- `equivOfDenseRange hφ hψ h` is isometric. -/
+lemma norm_equivOfDenseRange (hφ : DenseRange φ) (hψ : DenseRange ψ) (h : ∀ x, ‖φ x‖ = ‖ψ x‖)
+    (T : C₁) : ‖equivOfDenseRange hφ hψ h T‖ = ‖T‖ :=
+  norm_closureRangeEquiv h ⟨T, mem_closureRange_of_denseRange hφ T⟩
 
 end Normed
 
