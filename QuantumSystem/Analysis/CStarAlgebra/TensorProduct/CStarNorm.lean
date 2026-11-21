@@ -707,7 +707,7 @@ private lemma norm_spatial_gns_le (hΦ : Function.Injective Φ) (ω : State A) {
         ((GNS[ω].toCStarRep).spatial (GNS[ψ].toCStarRep) : A ⊗[ℂ] B →ₗ[ℂ] _) :=
     TensorProduct.ext' fun a b => (hΛt a b).trans
       ((congrArg₂ (· * ·) (GNS[ω].gns_condition a) (GNS[ψ].gns_condition b)).trans
-        (CStarRep.inner_spatial_tmul_apply_tmul _ _ a b _ _).symm)
+        (CStarRep.inner_tmul_spatial_tmul_apply_tmul _ _ a b _ _).symm)
   exact norm_apply_le_of_apply_eq_inner _
     (CStarRep.denseRange_spatial_apply_tmul _ _ GNS[ω].denseRange_orbit GNS[ψ].denseRange_orbit)
     hΩpos (fun z => (hΩΦ z).trans (LinearMap.congr_fun hΛ z)) x

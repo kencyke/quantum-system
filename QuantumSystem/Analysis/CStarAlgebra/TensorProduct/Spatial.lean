@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import Mathlib.Algebra.Star.TensorProduct
-public import QuantumSystem.Analysis.CStarAlgebra.Representation.Basic
+public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctional
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 
 import Mathlib.Analysis.CStarAlgebra.Hom
@@ -121,7 +121,7 @@ lemma spatial_tmul_apply_tmul (R : CStarRep A) (S : CStarRep B) (a : A) (b : B)
 /-- The vector functional of `ξ ⊗ η` in the tensor product of two representations is, on pure
 tensors, the product of the vector functionals of `ξ` and `η`:
 `⟪ξ ⊗ η, (π ⊗ ρ)(a ⊗ b) (ξ ⊗ η)⟫ = ⟪ξ, π(a) ξ⟫ * ⟪η, ρ(b) η⟫`. -/
-lemma inner_spatial_tmul_apply_tmul (R : CStarRep A) (S : CStarRep B) (a : A)
+lemma inner_tmul_spatial_tmul_apply_tmul (R : CStarRep A) (S : CStarRep B) (a : A)
     (b : B) (ξ : R.H) (η : S.H) :
     ⟪(↑(ξ ⊗ₜ[ℂ] η) : Completion (R.H ⊗[ℂ] S.H)), R.spatial S (a ⊗ₜ[ℂ] b) ↑(ξ ⊗ₜ[ℂ] η)⟫_ℂ =
       ⟪ξ, R.π a ξ⟫_ℂ * ⟪η, S.π b η⟫_ℂ := by
@@ -163,7 +163,8 @@ lemma denseRange_spatial_apply_tmul (R : CStarRep A) (S : CStarRep B) {ξ : R.H}
 
 /-! ### Matrix coefficients along the second factor
 
-For vectors `η`, `η'` of the second representation, `id ⊗ ⟪η, ρ(·) η'⟫` maps `A ⊗[ℂ] B` to `A`.
+For vectors `η`, `η'` of the second representation, the matrix coefficient `⟪η, ρ(·) η'⟫` is
+`CStarRep.matrixCoeff`, and `id ⊗ ⟪η, ρ(·) η'⟫` maps `A ⊗[ℂ] B` to `A`.
 A finite family `e` of such vectors turns `x` into the matrix `[(id ⊗ ⟪eᵢ, ρ(·) eⱼ⟫) x]` over `A`,
 whose image under the first representation is the compression of `(π ⊗ ρ)(x)` to the range of
 `TensorProduct.sumTmulL e` in the completed tensor product. The matrix does not involve the first
@@ -173,27 +174,22 @@ section Slice
 
 variable {ι : Type*}
 
-/-- The functional `b ↦ ⟪η, ρ(b) η'⟫` on `B`. -/
-private noncomputable def coeff (S : CStarRep B) (η η' : S.H) : B →ₗ[ℂ] ℂ :=
-  (innerSL ℂ η ∘L S.orbit η' : B →L[ℂ] ℂ)
-
-private lemma coeff_apply (S : CStarRep B) (η η' : S.H) (b : B) :
-    S.coeff η η' b = ⟪η, S.π b η'⟫_ℂ := rfl
-
 /-- The matrix `[(id ⊗ ⟪eᵢ, ρ(·) eⱼ⟫) x]` over `A` of `x : A ⊗[ℂ] B`. -/
 private noncomputable def sliceMatrix (S : CStarRep B) (e : ι → S.H) :
     A ⊗[ℂ] B →ₗ[ℂ] CStarMatrix ι ι A where
   toFun x := CStarMatrix.ofMatrix
-    (Matrix.of fun i j => TensorProduct.rid ℂ A ((S.coeff (e i) (e j)).lTensor A x))
+    (Matrix.of fun i j =>
+      TensorProduct.rid ℂ A ((S.matrixCoeff (e i) (e j) : B →ₗ[ℂ] ℂ).lTensor A x))
   map_add' x y := by ext i j; simp
   map_smul' c x := by ext i j; simp
 
 private lemma sliceMatrix_apply (S : CStarRep B) (e : ι → S.H) (x : A ⊗[ℂ] B) (i j : ι) :
-    S.sliceMatrix e x i j = TensorProduct.rid ℂ A ((S.coeff (e i) (e j)).lTensor A x) := rfl
+    S.sliceMatrix e x i j =
+      TensorProduct.rid ℂ A ((S.matrixCoeff (e i) (e j) : B →ₗ[ℂ] ℂ).lTensor A x) := rfl
 
 private lemma sliceMatrix_tmul (S : CStarRep B) (e : ι → S.H) (a : A) (b : B) (i j : ι) :
     S.sliceMatrix e (a ⊗ₜ[ℂ] b) i j = ⟪e i, S.π b (e j)⟫_ℂ • a := by
-  simp [sliceMatrix_apply, coeff_apply]
+  simp [sliceMatrix_apply]
 
 variable [Fintype ι]
 
@@ -249,7 +245,8 @@ theorem spatial_injective {R : CStarRep A} {S : CStarRep B}
     Function.Injective (R.spatial S) := by
   rw [injective_iff_map_eq_zero]
   intro x hx
-  have hslice (η η' : S.H) : TensorProduct.rid ℂ A ((S.coeff η η').lTensor A x) = 0 := by
+  have hslice (η η' : S.H) :
+      TensorProduct.rid ℂ A ((S.matrixCoeff η η' : B →ₗ[ℂ] ℂ).lTensor A x) = 0 := by
     have hM : CStarMatrix.mapₙₐ R.π (S.sliceMatrix ![η, η'] x) = 0 := by
       have h0 : CStarMatrix.toPiLpStarAlgEquiv (Fin 2) R.H
           (CStarMatrix.mapₙₐ R.π (S.sliceMatrix ![η, η'] x)) = 0 := by
@@ -268,11 +265,49 @@ theorem spatial_injective {R : CStarRep A} {S : CStarRep B}
   rw [Finsupp.zero_apply, map_zero]
   refine ContinuousLinearMap.ext fun η' => ext_inner_left ℂ fun η => ?_
   have h := hslice η η'
-  simp only [Finsupp.sum, map_sum, LinearMap.lTensor_tmul, TensorProduct.rid_tmul, coeff_apply] at h
+  simp only [Finsupp.sum, map_sum, LinearMap.lTensor_tmul, TensorProduct.rid_tmul, LinearMap.coe_ofClass,
+    matrixCoeff_apply] at h
   by_cases hk : k ∈ c.support
   · simpa using linearIndependent_iff'.1 (Module.Basis.ofVectorSpace ℂ A).linearIndependent
       c.support _ h k hk
   · simp [Finsupp.notMem_support_iff.1 hk]
+
+omit [Fintype ι] in
+/-- The matrix coefficients of `(π ⊗ ρ)(z)` at pure tensors are those of `π` at the slice of `z` by
+a matrix coefficient of `ρ`. -/
+lemma inner_tmul_spatial_apply_tmul (R : CStarRep A) (S : CStarRep B) (ξ ξ' : R.H)
+    (η η' : S.H) (z : A ⊗[ℂ] B) :
+    ⟪(↑(ξ ⊗ₜ[ℂ] η) : Completion (R.H ⊗[ℂ] S.H)), R.spatial S z ↑(ξ' ⊗ₜ[ℂ] η')⟫_ℂ =
+      ⟪ξ, R.π (TensorProduct.rid ℂ A ((S.matrixCoeff η η' : B →ₗ[ℂ] ℂ).lTensor A z)) ξ'⟫_ℂ := by
+  induction z using TensorProduct.inductionOn with
+  | tmul a b =>
+    rw [spatial_tmul_apply_tmul, Completion.inner_coe, TensorProduct.inner_tmul,
+      LinearMap.lTensor_tmul, TensorProduct.rid_tmul, map_smul, smul_apply, inner_smul_right,
+      LinearMap.coe_ofClass, matrixCoeff_apply, mul_comm]
+  | add p q hp hq => simp only [map_add, add_apply, inner_add_right, hp, hq]
+
+omit [Fintype ι] in
+/-- For a faithful `π`, the slice `id ⊗ ⟪η, ρ(·) η'⟫ : A ⊗[ℂ] B → A` is bounded by `‖η‖ ‖η'‖` for
+the norm `z ↦ ‖(π ⊗ ρ)(z)‖`. -/
+lemma norm_rid_lTensor_matrixCoeff_le {R : CStarRep A} (hR : Function.Injective R.π) (S : CStarRep B)
+    (η η' : S.H) (z : A ⊗[ℂ] B) :
+    ‖TensorProduct.rid ℂ A ((S.matrixCoeff η η' : B →ₗ[ℂ] ℂ).lTensor A z)‖ ≤ ‖R.spatial S z‖ * ‖η‖ * ‖η'‖ := by
+  rw [← NonUnitalStarAlgHom.norm_map R.π hR]
+  refine ContinuousLinearMap.opNorm_le_of_re_inner_le (by positivity) fun ξ' ξ hξ' hξ => ?_
+  rw [← inner_re_symm, ← inner_tmul_spatial_apply_tmul]
+  calc RCLike.re ⟪(↑(ξ ⊗ₜ[ℂ] η) : Completion (R.H ⊗[ℂ] S.H)), R.spatial S z ↑(ξ' ⊗ₜ[ℂ] η')⟫_ℂ
+      ≤ ‖⟪(↑(ξ ⊗ₜ[ℂ] η) : Completion (R.H ⊗[ℂ] S.H)), R.spatial S z ↑(ξ' ⊗ₜ[ℂ] η')⟫_ℂ‖ :=
+        RCLike.re_le_norm _
+    _ ≤ ‖(↑(ξ ⊗ₜ[ℂ] η) : Completion (R.H ⊗[ℂ] S.H))‖ * ‖R.spatial S z ↑(ξ' ⊗ₜ[ℂ] η')‖ :=
+        norm_inner_le_norm _ _
+    _ ≤ ‖(↑(ξ ⊗ₜ[ℂ] η) : Completion (R.H ⊗[ℂ] S.H))‖ *
+          (‖R.spatial S z‖ * ‖(↑(ξ' ⊗ₜ[ℂ] η') : Completion (R.H ⊗[ℂ] S.H))‖) := by
+        gcongr
+        exact ContinuousLinearMap.le_opNorm _ _
+    _ = ‖R.spatial S z‖ * ‖η‖ * ‖η'‖ := by
+        rw [Completion.norm_coe, Completion.norm_coe, TensorProduct.norm_tmul,
+          TensorProduct.norm_tmul, hξ, hξ']
+        ring
 
 /-! ### A finite-dimensional factor
 
@@ -283,31 +318,13 @@ dual of `B`, and each `id ⊗ ⟪η, ρ(·) η⟫` is a contraction for that nor
 inclusions of the C⋆-algebras `π(A)` and `ρ(B)`, which are faithful. -/
 
 omit [Fintype ι] in
-/-- For a unit vector `η`, the map `id ⊗ ⟪η, ρ(·) η⟫ : A ⊗[ℂ] B → A` is a contraction for the norm
-`x ↦ ‖(π ⊗ ρ)(x)‖` of a faithful `π`. -/
-private lemma norm_rid_lTensor_coeff_le {R : CStarRep A} {S : CStarRep B}
-    (hR : Function.Injective R.π) {η : S.H} (hη : ‖η‖ = 1) (x : A ⊗[ℂ] B) :
-    ‖TensorProduct.rid ℂ A ((S.coeff η η).lTensor A x)‖ ≤ ‖R.spatial S x‖ := by
-  let := CStarAlgebra.spectralOrder A
-  have := CStarAlgebra.spectralOrderedRing A
-  have he : Orthonormal ℂ (fun _ : Unit => η) := orthonormal_subsingleton_iff.2 fun _ => hη
-  have hinj : Function.Injective (CStarMatrix.mapₙₐ (n := Unit) R.π) := fun M N h =>
-    CStarMatrix.ext fun p q => hR (congrFun (congrFun h p) q)
-  calc ‖TensorProduct.rid ℂ A ((S.coeff η η).lTensor A x)‖
-      = ‖S.sliceMatrix (fun _ : Unit => η) x () ()‖ := rfl
-    _ ≤ ‖S.sliceMatrix (fun _ : Unit => η) x‖ := CStarMatrix.norm_entry_le_norm
-    _ = ‖CStarMatrix.mapₙₐ R.π (S.sliceMatrix (fun _ : Unit => η) x)‖ :=
-      (NonUnitalStarAlgHom.norm_map _ hinj _).symm
-    _ ≤ ‖R.spatial S x‖ := norm_mapₙₐ_sliceMatrix_le R S he x
-
-omit [Fintype ι] in
 /-- For a faithful representation `ρ` of a finite-dimensional `B`, the vector functionals
 `⟪η, ρ(·) η⟫` of the unit vectors `η` span the dual of `B`. -/
-private lemma span_coeff_eq_top [FiniteDimensional ℂ B] {S : CStarRep B}
+private lemma span_vectorFunctional_eq_top [FiniteDimensional ℂ B] {S : CStarRep B}
     (hS : Function.Injective S.π) :
-    Submodule.span ℂ {φ : Module.Dual ℂ B | ∃ η : S.H, ‖η‖ = 1 ∧ φ = S.coeff η η} = ⊤ := by
+    Submodule.span ℂ {φ : Module.Dual ℂ B | ∃ η : S.H, ‖η‖ = 1 ∧ φ = S.vectorFunctional η} = ⊤ := by
   rw [← Subspace.dualCoannihilator_dualAnnihilator_eq (W := Submodule.span ℂ _)]
-  suffices h : (Submodule.span ℂ {φ : Module.Dual ℂ B | ∃ η : S.H, ‖η‖ = 1 ∧ φ = S.coeff η η}
+  suffices h : (Submodule.span ℂ {φ : Module.Dual ℂ B | ∃ η : S.H, ‖η‖ = 1 ∧ φ = S.vectorFunctional η}
       ).dualCoannihilator = ⊥ by rw [h, Submodule.dualAnnihilator_bot]
   refine (Submodule.eq_bot_iff _).2 fun b hb => ?_
   rw [Submodule.mem_dualCoannihilator] at hb
@@ -334,13 +351,16 @@ private lemma isClosed_range_spatial_of_injective [FiniteDimensional ℂ B]
   -- each `id ⊗ φ : A ⊗[ℂ] B → A`, `φ` a functional on `B`, is bounded for `x ↦ ‖(π ⊗ ρ)(x)‖`
   have hbound (φ : Module.Dual ℂ B) : ∃ C : ℝ, ∀ x : A ⊗[ℂ] B,
       ‖TensorProduct.rid ℂ A (φ.lTensor A x)‖ ≤ C * ‖R.spatial S x‖ := by
-    have hφ : φ ∈ Submodule.span ℂ {φ : Module.Dual ℂ B | ∃ η : S.H, ‖η‖ = 1 ∧ φ = S.coeff η η} := by
-      rw [span_coeff_eq_top hS]
+    have hφ : φ ∈ Submodule.span ℂ {φ : Module.Dual ℂ B | ∃ η : S.H, ‖η‖ = 1 ∧ φ = S.vectorFunctional η} := by
+      rw [span_vectorFunctional_eq_top hS]
       trivial
     induction hφ using Submodule.span_induction with
     | mem φ h =>
       obtain ⟨η, hη, rfl⟩ := h
-      exact ⟨1, fun x => by rw [one_mul]; exact norm_rid_lTensor_coeff_le hR hη x⟩
+      refine ⟨1, fun x => ?_⟩
+      have h := norm_rid_lTensor_matrixCoeff_le hR S η η x
+      rw [hη, mul_one, mul_one] at h
+      rwa [one_mul]
     | zero => exact ⟨0, fun x => by simp⟩
     | add φ ψ _ _ hφ hψ =>
       obtain ⟨C, hC⟩ := hφ

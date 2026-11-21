@@ -12,17 +12,21 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 /-!
 # Vector functionals of a `CStarRep`
 
-For a representation `R : CStarRep A` and a vector `v ∈ R.H`, the *vector functional*
-`a ↦ ⟪v, π a v⟫` is a positive continuous linear functional of norm at most `‖v‖²`.  Nothing here
+For a representation `R : CStarRep A` and vectors `v`, `w ∈ R.H`, the *matrix coefficient*
+`a ↦ ⟪v, π a w⟫` is a continuous linear functional of norm at most `‖v‖ ‖w‖`. Its diagonal case
+`w = v` is the *vector functional* `a ↦ ⟪v, π a v⟫`, which is positive.  Nothing here
 uses a cyclic vector or a state; the GNS triplets `GNS.Representation f` use it through their
 underlying `CStarRep`.
 
 ## Main definitions
 
-* `CStarRep.vectorFunctional R v` — the functional `a ↦ ⟪v, π a v⟫`, in the weak-\* dual.
+* `CStarRep.matrixCoeff R v w` — the functional `a ↦ ⟪v, π a w⟫`, in the weak-\* dual.
+* `CStarRep.vectorFunctional R v` — the functional `a ↦ ⟪v, π a v⟫`, the matrix coefficient
+  `R.matrixCoeff v v`.
 
 ## Main results
 
+* `CStarRep.opNorm_matrixCoeff_le` — `‖⟪v, π(·) w⟫‖ ≤ ‖v‖ ‖w‖`.
 * `CStarRep.vectorFunctional_nonneg` — vector functionals are positive.
 * `CStarRep.opNorm_vectorFunctional_le` — `‖⟪v, π(·) v⟫‖ ≤ ‖v‖²`.
 * `CStarRep.normalized_vectorFunctional_mem_quasiStateSpace` — `‖v‖⁻² ⟪v, π(·) v⟫` is a
@@ -39,9 +43,38 @@ open scoped ComplexOrder InnerProductSpace InnerProduct
 
 variable {A : Type*} [NonUnitalCStarAlgebra A] (R : CStarRep A)
 
-/-- The vector functional `a ↦ ⟪v, π a v⟫` of a vector `v` of a representation. -/
+/-- The matrix coefficient `a ↦ ⟪v, π a w⟫` of two vectors `v`, `w` of a representation, a
+continuous linear functional. For `w = v` it is the vector functional `CStarRep.vectorFunctional`. -/
+noncomputable def matrixCoeff (v w : R.H) : WeakDual ℂ A :=
+  (innerSL ℂ v).comp (R.orbit w)
+
+/-- `matrixCoeff v w a = ⟪v, π a w⟫`. -/
+@[simp]
+lemma matrixCoeff_apply (v w : R.H) (a : A) :
+    R.matrixCoeff v w a = ⟪v, R.π a w⟫_ℂ :=
+  rfl
+
+/-- The matrix coefficient of `v` and `w` has norm at most `‖v‖ ‖w‖`: `‖⟪v, π a w⟫‖ ≤ ‖v‖ ‖π a‖ ‖w‖`
+and `π` is contractive. -/
+lemma opNorm_matrixCoeff_le (v w : R.H) :
+    ‖WeakDual.toStrongDual (R.matrixCoeff v w)‖ ≤ ‖v‖ * ‖w‖ := by
+  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun a => ?_
+  calc ‖⟪v, R.π a w⟫_ℂ‖
+      ≤ ‖v‖ * ‖R.π a w‖ := norm_inner_le_norm _ _
+    _ ≤ ‖v‖ * (‖a‖ * ‖w‖) := by
+        gcongr
+        exact ((R.π a).le_opNorm w).trans
+          (mul_le_mul_of_nonneg_right (NonUnitalStarAlgHom.norm_apply_le _ a) (norm_nonneg _))
+    _ = ‖v‖ * ‖w‖ * ‖a‖ := by ring
+
+/-- The vector functional `a ↦ ⟪v, π a v⟫` of a vector `v` of a representation: the matrix
+coefficient `CStarRep.matrixCoeff` of `v` and `v`. -/
 noncomputable def vectorFunctional (v : R.H) : WeakDual ℂ A :=
-  (innerSL ℂ v).comp (R.orbit v)
+  R.matrixCoeff v v
+
+/-- The matrix coefficient of `v` and `v` is the vector functional of `v`. -/
+lemma matrixCoeff_self (v : R.H) : R.matrixCoeff v v = R.vectorFunctional v :=
+  rfl
 
 /-- `vectorFunctional v a = ⟪v, π a v⟫`. -/
 @[simp]
@@ -49,18 +82,11 @@ lemma vectorFunctional_apply (v : R.H) (a : A) :
     R.vectorFunctional v a = ⟪v, R.π a v⟫_ℂ :=
   rfl
 
-/-- The vector functional of `v` has norm at most `‖v‖²`: `‖⟪v, π a v⟫‖ ≤ ‖v‖ ‖π a‖ ‖v‖` and
-`π` is contractive. -/
+/-- The vector functional of `v` has norm at most `‖v‖²`, the case `w = v` of
+`CStarRep.opNorm_matrixCoeff_le`. -/
 lemma opNorm_vectorFunctional_le (v : R.H) :
-    ‖WeakDual.toStrongDual (R.vectorFunctional v)‖ ≤ ‖v‖ ^ 2 := by
-  refine ContinuousLinearMap.opNorm_le_bound _ (sq_nonneg ‖v‖) fun a => ?_
-  calc ‖⟪v, R.π a v⟫_ℂ‖
-      ≤ ‖v‖ * ‖R.π a v‖ := norm_inner_le_norm _ _
-    _ ≤ ‖v‖ * (‖a‖ * ‖v‖) := by
-        gcongr
-        exact ((R.π a).le_opNorm v).trans
-          (mul_le_mul_of_nonneg_right (NonUnitalStarAlgHom.norm_apply_le _ a) (norm_nonneg _))
-    _ = ‖v‖ ^ 2 * ‖a‖ := by ring
+    ‖WeakDual.toStrongDual (R.vectorFunctional v)‖ ≤ ‖v‖ ^ 2 :=
+  (R.opNorm_matrixCoeff_le v v).trans_eq (sq ‖v‖).symm
 
 /-- Along an invariant submodule `W`, the vector functional of `v₁ + v₂` with `v₁ ∈ W` and
 `v₂ ∈ Wᗮ` is the sum of the two vector functionals: the cross terms `⟪v₁, π a v₂⟫` and
