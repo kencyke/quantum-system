@@ -53,7 +53,7 @@ The following tokens are strictly prohibited in Lean sources, grouped by reason.
   elaborates to its coercion applied to `A`; no definition in this repository can change that without bridging two
   spellings of the adjoint.
   **Exception (approved 2026-11-15):** the three `notation3` declarations `A ⊗ 𝟙[H₂]`, `𝟙[H₁] ⊗ B` and `A ⊗ B` of
-  scope `Amplification` in `QuantumSystem/ForMathlib/Analysis/InnerProductSpace/TensorProductCompletion.lean`.
+  scope `Amplification` in `QuantumSystem/ForMathlib/Analysis/InnerProductSpace/TensorProduct.lean`.
   `notation3` generates a delaborator that matches the term; the unexpander of `notation` matches the printed syntax,
   in which `ContinuousLinearMap.rTensor` and `TensorProduct.mapL` are shortened inside `namespace ContinuousLinearMap`
   and `namespace TensorProduct`, so the notations were not displayed there. Shaping the definitions instead would need

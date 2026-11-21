@@ -665,11 +665,7 @@ noncomputable def continuousLinearMapEquivOfSurjective
     (h : Function.Surjective (TensorProduct.mapLCompletionStarAlgHom ℂ H K)) :
     (H →L[ℂ] H) ⊗ₘᵢₙ (K →L[ℂ] K) ≃⋆ₐ[ℂ] (H ⊗[ℂ] K →L[ℂ] H ⊗[ℂ] K) :=
   (continuousLinearMapCompletionEquiv h).trans
-    (LinearIsometryEquiv.ofSurjective (Completion.toComplₗᵢ (𝕜 := ℂ) (E := H ⊗[ℂ] K)) fun y => by
-      have hcl : IsClosed (Set.range ((↑) : H ⊗[ℂ] K → Completion (H ⊗[ℂ] K))) :=
-        Completion.coe_isometry.isClosedEmbedding.isClosed_range
-      exact Set.eq_univ_iff_forall.mp
-        (hcl.closure_eq ▸ Completion.denseRange_coe.closure_range) y).symm.conjStarAlgEquiv
+    (Completion.linearIsometryEquivOfComplete ℂ (H ⊗[ℂ] K)).symm.conjStarAlgEquiv
 
 variable {H K}
 
@@ -699,8 +695,7 @@ lemma completion_continuousLinearMapEquivOfSurjective
   rw [ContinuousLinearMap.completion_apply_coe, continuousLinearMapEquivOfSurjective,
     StarAlgEquiv.trans_apply, LinearIsometryEquiv.conjStarAlgEquiv_apply_apply,
     LinearIsometryEquiv.symm_symm]
-  exact LinearIsometryEquiv.apply_symm_apply
-    (LinearIsometryEquiv.ofSurjective (Completion.toComplₗᵢ (𝕜 := ℂ) (E := H ⊗[ℂ] K)) _) _
+  exact LinearIsometryEquiv.apply_symm_apply (Completion.linearIsometryEquivOfComplete ℂ (H ⊗[ℂ] K)) _
 
 end CompleteTensorProduct
 

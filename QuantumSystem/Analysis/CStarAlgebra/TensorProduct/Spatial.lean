@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Algebra.Star.TensorProduct
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Basic
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 
 import Mathlib.Analysis.CStarAlgebra.Hom
 import Mathlib.LinearAlgebra.Dual.Lemmas

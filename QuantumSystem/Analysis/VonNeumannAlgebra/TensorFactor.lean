@@ -8,7 +8,7 @@ module
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Factor
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Adjoint
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 
 /-!
@@ -16,7 +16,8 @@ public import QuantumSystem.ForMathlib.Analysis.VonNeumannAlgebra.Commutant
 
 On the completed tensor product `Completion (H₁ ⊗[ℂ] H₂)` of Hilbert spaces, an operator `A` on
 `H₁` acts as the amplification `A ⊗ 𝟙[H₂] = (A.rTensor H₂).completion` and an operator `B` on `H₂`
-as `𝟙[H₁] ⊗ B = (B.lTensor H₁).completion` (from `TensorProductCompletion`). A von Neumann algebra `M` on
+as `𝟙[H₁] ⊗ B = (B.lTensor H₁).completion` (from
+`QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct`). A von Neumann algebra `M` on
 `H` gives two von Neumann algebras on a completed tensor product:
 
 * `M ⊗ 𝟙[K] = VonNeumannAlgebra.tensorOne M K` on `Completion (H ⊗[ℂ] K)` — the von Neumann
@@ -30,8 +31,8 @@ For `M = B(H)` they are the two tensor factors `𝓑(H₁) ⊗ 𝟙[H₂] = B(H�
 Here and in the files downstream, `⊗̄` is documentation shorthand for the von Neumann (spatial)
 tensor product of algebras: it has no Lean declaration, and the algebras it names are the ones
 above. The tensor notations that *are* declared are `𝟙 ⊗ B` and `A ⊗ 𝟙` for the amplified operators
-(scope `Amplification`, in `TensorProductCompletion`), and `M ⊗ 𝟙[K]`, `𝟙[K] ⊗ M` for the algebras
-of this file.
+(scope `Amplification`, in `QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct`), and
+`M ⊗ 𝟙[K]`, `𝟙[K] ⊗ M` for the algebras of this file.
 
 These are the objects in the split-property tensor decomposition `A₁ ⊆ B(H₁)⊗̄1`,
 `A₂ ⊆ 1⊗̄B(H₂)` — equation (39) of J. Yngvason, *Localization and Entanglement in Relativistic
