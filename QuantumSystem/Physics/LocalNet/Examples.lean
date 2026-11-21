@@ -8,6 +8,7 @@ module
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.Physics.LocalNet.DHRCriterion
 public import QuantumSystem.Physics.LocalNet.HalfChainSplit
+public import QuantumSystem.Physics.LocalNet.Nuclear
 
 /-!
 # Witnesses for the local-net interfaces
@@ -37,7 +38,8 @@ The witnesses are deliberately the smallest ones that are not degenerate in the 
   touching pair `(-∞, 0] ⋐ (-∞, 1]` (`ProperContainment.not_Iic_properlyContained_Iic_one`).
 * **A faithful local net.** `LocalNet.Examples.trivialNet` assigns `ℂ` to every region of the
   integer chain, with identity isotony embeddings, built through the join-semilattice smart
-  constructor `LocalNet.mk'`; its `Faithful` instance is immediate.
+  constructor `LocalNet.mk'`; its `Faithful` instance is immediate, and its quasi-local C⋆-algebra
+  is nuclear (`LocalNet.Examples.isNuclear_quasiLocalCStarAlgebra_trivialNet`).
 * **A net of von Neumann algebras with the split property.**
   `LocalNet.Examples.scalarNet` is the constant net at `𝓑(ℂ)`, and
   `LocalNet.Examples.scalarNet_splitProperty` proves `VonNeumannNet.SplitProperty` for it. Locality
@@ -238,6 +240,13 @@ noncomputable def trivialNet : LocalNet (Finset ℤ) :=
 /-- The trivial net is faithful: its isotony embeddings are identities. -/
 instance : trivialNet.Faithful where
   incl_injective _ := fun _ _ h => h
+
+/-- The quasi-local C⋆-algebra of the trivial net is nuclear, its local algebras `ℂ` being so. -/
+theorem isNuclear_quasiLocalCStarAlgebra_trivialNet.{v, w} :
+    CStarAlgebra.IsNuclear.{v, w} trivialNet.quasiLocalCStarAlgebra :=
+  haveI : ∀ O, CStarAlgebra.IsNuclear.{v, w} (trivialNet.algebra O) := fun _ =>
+    inferInstanceAs (CStarAlgebra.IsNuclear.{v, w} ℂ)
+  trivialNet.isNuclear_quasiLocalCStarAlgebra
 
 /-! ### A covariance moving the regions -/
 
