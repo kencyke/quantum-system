@@ -125,7 +125,7 @@ the algebraic tensor product `A ⊗[ℂ] B` under the tensor product of the fait
 def MinTensorProduct : Type (max u v) :=
   π₀[A, B].closureRange
 
-@[inherit_doc] scoped[MinTensorProduct] infixl:100 " ⊗ₘᵢₙ " => MinTensorProduct
+@[inherit_doc] scoped[MinTensorProduct] notation:99 A:101 " ⊗ₘᵢₙ " B:101 => MinTensorProduct A B
 
 end Defs
 
