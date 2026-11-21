@@ -40,15 +40,26 @@ The algebras are not assumed unital. A C⋆-seminorm on `A ⊗[ℂ] B` is given 
 
 A class cannot quantify over all universes, so `CStarAlgebra.IsNuclear.{v, w} A` carries two universe
 parameters: `B` ranges over `Type v` and the target of `Φ` over `Type w`. Write `[IsNuclear.{v, w} A]`
-when `B : Type v` and the target lies in `Type w`. The instance for finite-dimensional algebras holds
-at every `v` and `w`.
+when `B : Type v` and the target lies in `Type w`. For `A : Type u`, the condition for one `v` at
+`w = max u v`, the universe of `A ⊗ₘₐₓ B`, implies it for every `v` and every `w`
+(`CStarAlgebra.IsNuclear.lift_universes`): finitely many elements of a test algebra lie in a closed
+`⋆`-subalgebra small in `Type`. At a smaller `w` alone the condition is weaker. The instance for
+finite-dimensional algebras holds at every `v` and `w`.
 
 ## Not formalized
 
-* The nuclearity of commutative C⋆-algebras, and its stability under tensor products, quotients and
-  inductive limits.
-* The maximal tensor product, for which nuclearity is the bijectivity of the canonical map onto the
-  minimal one.
+* The stability of nuclearity under quotients.
+
+## Related files
+
+* `QuantumSystem/Analysis/CStarAlgebra/TensorProduct/Nuclear/Commutative.lean` — commutative
+  C⋆-algebras are nuclear.
+* `QuantumSystem/Analysis/CStarAlgebra/TensorProduct/Nuclear/InductiveLimit.lean` — nuclearity passes
+  to inductive limits.
+* `QuantumSystem/Analysis/CStarAlgebra/TensorProduct/Nuclear/TensorProduct.lean` — nuclearity passes
+  to minimal tensor products of finitely many factors.
+* `QuantumSystem/Analysis/CStarAlgebra/TensorProduct/Maximal.lean` — the maximal tensor product;
+  nuclearity is the injectivity of its canonical map onto the minimal one.
 -/
 
 @[expose] public section
