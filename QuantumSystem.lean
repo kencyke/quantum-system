@@ -19,6 +19,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.GNS.Separable
 public import QuantumSystem.Analysis.CStarAlgebra.GelfandNaimark
 public import QuantumSystem.Analysis.CStarAlgebra.KPositiveMapSchwarz
 public import QuantumSystem.Analysis.CStarAlgebra.LiebConcavity
+public import QuantumSystem.Analysis.CStarAlgebra.Multiplier
 public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvexIffMatrixConvex
 public import QuantumSystem.Analysis.CStarAlgebra.Perspective
 public import QuantumSystem.Analysis.CStarAlgebra.PositiveMap
