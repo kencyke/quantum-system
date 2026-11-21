@@ -276,6 +276,36 @@ theorem norm_apply_tmul {Φ : A ⊗[ℂ] B →⋆ₙₐ[ℂ] C} (hΦ : Function.
   nlinarith [norm_nonneg a, norm_nonneg b, norm_nonneg (Φ (a ⊗ₜ[ℂ] b)),
     mul_nonneg (norm_nonneg a) (norm_nonneg b)]
 
+/-- **Dense subspaces of the factors give a dense subspace of a C⋆-tensor product**: for linear maps
+`f` and `g` with dense ranges in `A` and `B`, and a `⋆`-homomorphism `Φ` of `A ⊗[ℂ] B` with dense
+range, `Φ ∘ (f ⊗ g)` has dense range. The maps `a ↦ Φ (a ⊗ b)` and `b ↦ Φ (a ⊗ b)` are continuous by
+the cross norm bound `NonUnitalStarAlgHom.norm_apply_tmul_le`. -/
+lemma denseRange_comp_map {A₁ B₁ : Type*} [AddCommGroup A₁] [Module ℂ A₁] [AddCommGroup B₁]
+    [Module ℂ B₁] (Φ : A ⊗[ℂ] B →⋆ₙₐ[ℂ] C) (hΦ : DenseRange Φ) {f : A₁ →ₗ[ℂ] A} {g : B₁ →ₗ[ℂ] B}
+    (hf : DenseRange f) (hg : DenseRange g) : DenseRange fun x => Φ (TensorProduct.map f g x) := by
+  let L : A₁ ⊗[ℂ] B₁ →ₗ[ℂ] C := (Φ : A ⊗[ℂ] B →ₗ[ℂ] C) ∘ₗ TensorProduct.map f g
+  let K := (LinearMap.range L).topologicalClosure
+  have hK : IsClosed (K : Set C) := (LinearMap.range L).isClosed_topologicalClosure
+  have hcont₁ (b : B) : Continuous fun a : A => Φ (a ⊗ₜ[ℂ] b) :=
+    AddMonoidHomClass.continuous_of_bound
+      ((Φ : A ⊗[ℂ] B →ₗ[ℂ] C) ∘ₗ (TensorProduct.mk ℂ A B).flip b) ‖b‖ fun a => by
+        simpa [mul_comm] using norm_apply_tmul_le Φ a b
+  have hcont₂ (a : A) : Continuous fun b : B => Φ (a ⊗ₜ[ℂ] b) :=
+    AddMonoidHomClass.continuous_of_bound
+      ((Φ : A ⊗[ℂ] B →ₗ[ℂ] C) ∘ₗ TensorProduct.mk ℂ A B a) ‖a‖ fun b => by
+        simpa using norm_apply_tmul_le Φ a b
+  have htmul (a : A) (b : B) : Φ (a ⊗ₜ[ℂ] b) ∈ K := by
+    refine hg.induction_on b (hK.preimage (hcont₂ a)) fun b₁ => ?_
+    refine hf.induction_on a (hK.preimage (hcont₁ (g b₁))) fun a₁ => ?_
+    exact Submodule.le_topologicalClosure _ ⟨a₁ ⊗ₜ[ℂ] b₁, by simp [L]⟩
+  have hall (x : A ⊗[ℂ] B) : Φ x ∈ K := by
+    induction x using TensorProduct.inductionOn with
+    | tmul a b => exact htmul a b
+    | add x x' hx hx' => rw [map_add]; exact K.add_mem hx hx'
+  refine Dense.of_closure (hΦ.mono ?_)
+  rintro _ ⟨x, rfl⟩
+  exact hall x
+
 end CrossNorm
 
 /-! ### Extending a functional to a positive functional -/
