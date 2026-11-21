@@ -56,6 +56,7 @@ public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.InnerProductSpace.Subspace
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
+public import QuantumSystem.Analysis.Normed.Algebra.ProjectiveTensorProduct
 public import QuantumSystem.Analysis.OperatorSpace.Basic
 public import QuantumSystem.Analysis.OperatorSpace.CompletelyBounded
 public import QuantumSystem.Analysis.OperatorSpace.CompletelyPositive
