@@ -109,16 +109,14 @@ theorem IsSplitPairAt.of_map_mul {ω : State N.quasiLocalCStarAlgebra}
   refine ⟨_, VonNeumannAlgebra.isTypeIFactor_commutant_boundedLinearOperators, ?_, ?_⟩
   · refine VonNeumannAlgebra.generated_le fun x hx => ?_
     obtain ⟨Λ, -, hx⟩ := VonNeumannNet.mem_finiteLocalOperators.1 hx
+    rw [LocalNet.vonNeumannNet_algebra, LocalNet.localVonNeumannAlgebra] at hx
     refine VonNeumannAlgebra.generated_le
       (M := (𝓑(GNS[ω].H))′) ?_ hx
     rintro _ ⟨a, rfl⟩
     simp only
     rw [GNS[ω].π_eq_smul_one_of_map_mul hω]
     exact SetLike.mem_coe.2 (SMulMemClass.smul_mem _ (one_mem _))
-  · intro x hx
-    obtain ⟨c, rfl⟩ := VonNeumannAlgebra.mem_commutant_boundedLinearOperators_iff.mp hx
-    exact VonNeumannAlgebra.mem_commutant_iff.2 fun g _ =>
-      (mul_smul_one c g).trans (smul_one_mul c g).symm
+  · exact VonNeumannAlgebra.commutant_le fun x _ => VonNeumannAlgebra.mem_boundedLinearOperators x
 
 end State
 
