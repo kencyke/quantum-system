@@ -37,6 +37,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
 public import QuantumSystem.Analysis.CStarAlgebra.State.TensorProduct
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CStarNorm
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CompletelyPositiveMap
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.InfiniteMinimal
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Maximal
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Maximal.Associativity
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal
