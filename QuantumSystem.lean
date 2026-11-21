@@ -45,6 +45,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal.Slice
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear.Commutative
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear.InductiveLimit
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear.TensorProduct
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.PiMinimal
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Spatial
 public import QuantumSystem.Analysis.CStarAlgebra.ZeroAtInfty
