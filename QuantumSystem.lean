@@ -38,6 +38,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.State.TensorProduct
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CStarNorm
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CompletelyPositiveMap
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal.Slice
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Spatial
 public import QuantumSystem.Analysis.CStarAlgebra.ZeroAtInfty
