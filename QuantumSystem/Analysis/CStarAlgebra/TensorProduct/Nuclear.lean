@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CStarNorm
+public import QuantumSystem.ForMathlib.Algebra.Star.TensorProductMap
 
 /-!
 # Nuclear C⋆-algebras
@@ -31,6 +32,7 @@ The algebras are not assumed unital. A C⋆-seminorm on `A ⊗[ℂ] B` is given 
 * `CStarAlgebra.IsNuclear.norm_apply_eq_norm_of` — for a nuclear `A`, every C⋆-norm on `A ⊗[ℂ] B` is
   the norm of `A ⊗ₘᵢₙ B`.
 * `CStarAlgebra.IsNuclear.of_finiteDimensional` — finite-dimensional C⋆-algebras are nuclear.
+* `CStarAlgebra.IsNuclear.of_starAlgEquiv` — nuclearity is invariant under `⋆`-isomorphism.
 * `MinTensorProduct.norm_apply_le_norm_of_of_surjective` — when the algebraic tensor product is all
   of `A ⊗ₘᵢₙ B`, its norm dominates every C⋆-seminorm.
 
@@ -116,6 +118,30 @@ C⋆-algebra is already the minimal tensor product
 instance of_finiteDimensional [FiniteDimensional ℂ A] : IsNuclear.{v, w} A :=
   ⟨fun _ _ _ _ Φ x => MinTensorProduct.norm_apply_le_norm_of_of_surjective
     MinTensorProduct.of_surjective_of_finiteDimensional_left Φ x⟩
+
+/-- **Nuclearity is invariant under `⋆`-isomorphism**: a `⋆`-homomorphism `Φ` of `A' ⊗[ℂ] B` is read
+on `A ⊗[ℂ] B` through `e ⊗ id`, and `e⁻¹ ⊗ id` is isometric for the minimal norms
+(`MinTensorProduct.norm_map_of_injective`). -/
+lemma of_starAlgEquiv {A' : Type*} [NonUnitalCStarAlgebra A'] [IsNuclear.{v, w} A]
+    (e : A ≃⋆ₐ[ℂ] A') : IsNuclear.{v, w} A' := by
+  refine ⟨fun B _ C _ Φ x => ?_⟩
+  have key (y : A' ⊗[ℂ] B) : TensorProduct.map (e.toNonUnitalStarAlgHom : A →ₗ[ℂ] A')
+      (NonUnitalStarAlgHom.id ℂ B : B →ₗ[ℂ] B) (TensorProduct.map
+        (e.symm.toNonUnitalStarAlgHom : A' →ₗ[ℂ] A) (NonUnitalStarAlgHom.id ℂ B : B →ₗ[ℂ] B) y) =
+        y := by
+    induction y using TensorProduct.inductionOn with
+    | tmul a b => simp
+    | add y y' hy hy' => simp only [map_add, hy, hy']
+  calc ‖Φ x‖ = ‖(Φ.comp (NonUnitalStarAlgebra.TensorProduct.map e.toNonUnitalStarAlgHom
+        (NonUnitalStarAlgHom.id ℂ B))) (TensorProduct.map
+          (e.symm.toNonUnitalStarAlgHom : A' →ₗ[ℂ] A) (NonUnitalStarAlgHom.id ℂ B : B →ₗ[ℂ] B) x)‖ := by
+        rw [NonUnitalStarAlgHom.comp_apply, NonUnitalStarAlgebra.TensorProduct.map_apply, key]
+    _ ≤ ‖MinTensorProduct.of A B (TensorProduct.map
+          (e.symm.toNonUnitalStarAlgHom : A' →ₗ[ℂ] A) (NonUnitalStarAlgHom.id ℂ B : B →ₗ[ℂ] B) x)‖ :=
+        norm_apply_le_norm_of B C _ _
+    _ = ‖MinTensorProduct.of A' B x‖ := by
+        rw [← MinTensorProduct.map_of e.symm.toNonUnitalStarAlgHom (NonUnitalStarAlgHom.id ℂ B) x,
+          MinTensorProduct.norm_map_of_injective e.symm.injective Function.injective_id]
 
 end IsNuclear
 
