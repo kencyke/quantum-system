@@ -1,5 +1,6 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
+public import QuantumSystem.Analysis.CStarAlgebra.CStarSeminorm
 public import QuantumSystem.Analysis.CStarAlgebra.ChoiEffros
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Kraus

@@ -179,15 +179,21 @@ instance instNormedStarGroup : NormedStarGroup (Completion A) where
     rw [star_coe, norm_coe, norm_coe]
     exact (norm_star a).le
 
-/-- The completion of a C⋆-normed ring satisfies the C⋆-identity `‖star a * a‖ = ‖a‖ * ‖a‖`. -/
-instance instCStarRing {A : Type*} [NonUnitalNormedRing A] [StarRing A] [NormedStarGroup A]
-    [CStarRing A] : CStarRing (Completion A) where
+/-- The completion of a seminormed `⋆`-ring whose seminorm satisfies the C⋆-identity
+`‖a‖ * ‖a‖ ≤ ‖star a * a‖` satisfies it; the seminorm need not be a norm. -/
+lemma cstarRing_of_norm_mul_self_le (h : ∀ a : A, ‖a‖ * ‖a‖ ≤ ‖star a * a‖) :
+    CStarRing (Completion A) where
   norm_mul_self_le a := by
     refine induction_on a
       (isClosed_le (continuous_norm.mul continuous_norm)
         (continuous_id.star.mul continuous_id).norm) fun a => ?_
     rw [star_coe, ← coe_mul', norm_coe, norm_coe]
-    exact CStarRing.norm_mul_self_le a
+    exact h a
+
+/-- The completion of a C⋆-normed ring satisfies the C⋆-identity `‖star a * a‖ = ‖a‖ * ‖a‖`. -/
+instance instCStarRing {A : Type*} [NonUnitalNormedRing A] [StarRing A] [NormedStarGroup A]
+    [CStarRing A] : CStarRing (Completion A) :=
+  cstarRing_of_norm_mul_self_le CStarRing.norm_mul_self_le
 
 /-- The involution on the completion of a star module over `𝕜` is conjugate-linear:
 `star (c • a) = star c • star a`. -/
