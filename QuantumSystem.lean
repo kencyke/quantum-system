@@ -49,6 +49,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear.TensorPr
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.PiMinimal
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Spatial
 public import QuantumSystem.Analysis.CStarAlgebra.ZeroAtInfty
+public import QuantumSystem.Analysis.InnerProductSpace.InfiniteTensorProduct
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.BorchersTranslation
