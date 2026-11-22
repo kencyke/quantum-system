@@ -129,6 +129,7 @@ public import QuantumSystem.ForMathlib.Algebra.Algebra.Unitization
 public import QuantumSystem.ForMathlib.Algebra.Central.Basic
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
+public import QuantumSystem.ForMathlib.Algebra.Star.Aut
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Algebra.Star.StarAlgHom
 public import QuantumSystem.ForMathlib.Algebra.Star.TensorProductMap
