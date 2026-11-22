@@ -103,6 +103,7 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.Comparison
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.SOTClosedSubalgebra
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.TFAE
 public import QuantumSystem.Analysis.VonNeumannAlgebra.DoubleCommutant.WOTClosedSubalgebra
+public import QuantumSystem.Analysis.VonNeumannAlgebra.DynamicalSystem
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Factor
 public import QuantumSystem.Analysis.VonNeumannAlgebra.Injective
 public import QuantumSystem.Analysis.VonNeumannAlgebra.KaplanskyDensity
