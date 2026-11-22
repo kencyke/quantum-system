@@ -10,6 +10,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TensorPr
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TraceDual
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePreserving
 public import QuantumSystem.Analysis.CStarAlgebra.ConditionalExpectation
+public import QuantumSystem.Analysis.CStarAlgebra.DynamicalSystem
 public import QuantumSystem.Analysis.CStarAlgebra.FiniteDimensional
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.DirectSum
