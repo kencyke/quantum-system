@@ -56,6 +56,7 @@ public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.BorchersTranslation
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.InnerProductSpace.Subspace
+public import QuantumSystem.Analysis.InnerProductSpace.UnitarySOT
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
 public import QuantumSystem.Analysis.Normed.Algebra.InfiniteTensorProduct

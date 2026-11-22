@@ -14,24 +14,29 @@ public import QuantumSystem.ForMathlib.MeasureTheory.Measure.CharacteristicFunct
 # The SNAG theorem
 
 Let `V` be a finite-dimensional real vector space and `U` a **strongly continuous** unitary
-representation of `V` on a complex Hilbert space `H`: an `AddChar V (unitary (H →L[ℂ] H))` with
-`v ↦ U v` continuous into the strong operator topology (`AddChar.IsStronglyContinuous`, defined in
-`QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation`). Let `L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ` be a
+representation of `V` on a complex Hilbert space `H`: a `UnitaryAddRepresentation V H`,
+continuous into the unitary group with the strong operator topology (defined in
+`QuantumSystem.Analysis.SpectralTheory.UnitaryRepresentation`), whose unitary at `v : V` is
+`U v`. Let `L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ` be a
 continuous perfect pairing (`LinearMap.IsContPerfPair`), which realises `W` as the dual of `V`, and
 equip `W` with its Borel σ-algebra. The **SNAG theorem** (Stone–Naimark–Ambrose–Godement) states
 that there is a unique projection-valued measure `E_U` on `W` with
-`U v = ∫ exp (i L(p, v)) dE_U(p)`, i.e. `U` is the Fourier transform `E_U.fourier L _` of `E_U`
-(`MeasureTheory.ProjectionValuedMeasure.fourier`). Conversely the Fourier transform of every
-projection-valued measure on `W` is strongly continuous, with that measure as its projection-valued
-measure, so `E ↦ E.fourier L _` is a bijection from the projection-valued measures on `W` onto the
-strongly continuous unitary representations of `V`.
+`U v = ∫ exp (i L(p, v)) dE_U(p)`, i.e. `U` is the Fourier transform
+`E_U.fourierOfIsContPerfPair L` of `E_U`
+(`MeasureTheory.ProjectionValuedMeasure.fourierOfIsContPerfPair`). Conversely the Fourier transform of
+every projection-valued measure on `W` is a strongly continuous unitary representation, with that
+measure as its projection-valued measure, so `E ↦ E.fourierOfIsContPerfPair L` is a bijection from
+the projection-valued measures on `W` onto the strongly continuous unitary representations of `V`.
 
 The classical statement on the dual space is the case `W = StrongDual ℝ V`,
-`L = topDualPairing ℝ V` (`AddChar.IsStronglyContinuous.existsUnique_fourier_eq_strongDual`). For
+`L = topDualPairing ℝ V` (`UnitaryAddRepresentation.existsUnique_fourier_eq_strongDual`). For
 `V = W = ℝ` and `L = LinearMap.mul ℝ ℝ` it is the spectral form of Stone's theorem; this is the
 pairing along which `IsSelfAdjoint.unitaryGroup` is the Fourier transform of the spectral measure.
-The measurability of the pairing, required by `ProjectionValuedMeasure.fourier`, is
-`LinearMap.measurable_flip_apply_of_isContPerfPair`.
+The measurability and the continuity of the pairing, and the first countability of `V`, required by
+`ProjectionValuedMeasure.fourierRepresentation`, are
+`LinearMap.measurable_flip_apply_of_isContPerfPair`,
+`LinearMap.continuous_of_isContPerfPair` and `LinearMap.firstCountableTopology_of_isContPerfPair`;
+`ProjectionValuedMeasure.fourierOfIsContPerfPair` supplies them.
 
 ## Construction
 
@@ -63,31 +68,30 @@ The measurability of the pairing, required by `ProjectionValuedMeasure.fourier`,
 
 ## Main definitions
 
-* `AddChar.IsStronglyContinuous.pvm hU L` — the projection-valued measure `E_U` on `W` of a
-  strongly continuous unitary representation `U`.
+* `UnitaryAddRepresentation.pvm U L` — the projection-valued measure `E_U` on `W` of a strongly
+  continuous unitary representation `U`.
 
 ## Main results
 
-* `AddChar.isPositiveDefinite_inner_apply` — the matrix coefficients `v ↦ ⟪y, U v y⟫` of a unitary
-  representation are positive definite.
-* `AddChar.IsStronglyContinuous.fourier_pvm`, `AddChar.IsStronglyContinuous.eq_pvm_of_fourier_eq`
+* `UnitaryAddRepresentation.isPositiveDefinite_inner_apply` — the matrix coefficients
+  `v ↦ ⟪y, U v y⟫` of an additive character into the unitary group, continuous or not, are positive
+  definite.
+* `UnitaryAddRepresentation.fourier_pvm`, `UnitaryAddRepresentation.eq_pvm_of_fourier_eq`
   — existence and uniqueness: `U v = ∫ exp (i L(p, v)) dE_U(p)`, and `E_U` is the only
   projection-valued measure on `W` with Fourier transform `U`.
-* `AddChar.IsStronglyContinuous.existsUnique_fourier_eq` — **SNAG theorem**: `U` is the Fourier
+* `UnitaryAddRepresentation.existsUnique_fourier_eq` — **SNAG theorem**: `U` is the Fourier
   transform of a unique projection-valued measure on `W`.
-* `AddChar.IsStronglyContinuous.existsUnique_fourier_eq_strongDual` — **SNAG theorem** on the dual
+* `UnitaryAddRepresentation.existsUnique_fourier_eq_strongDual` — **SNAG theorem** on the dual
   space: `U v = ∫ exp (i p v) dE(p)` for a unique `E` on `StrongDual ℝ V`.
-* `AddChar.IsStronglyContinuous.pvm_one` — the trivial representation has the Dirac measure at `0`.
-* `AddChar.IsStronglyContinuous.inner_apply_eq_integral_measure_pvm` — the diagonal measures:
+* `UnitaryAddRepresentation.pvm_one` — the trivial representation has the Dirac measure at `0`.
+* `UnitaryAddRepresentation.inner_apply_eq_integral_measure_pvm` — the diagonal measures:
   `⟪y, U v y⟫ = ∫ exp (i L(p, v)) dE_y(p)`.
-* `AddChar.IsStronglyContinuous.pvm_compAddMonoidHom`,
-  `AddChar.IsStronglyContinuous.pvm_compAddMonoidHom_strongDual` — **functoriality**: for
+* `UnitaryAddRepresentation.pvm_compContinuousAddMonoidHom`,
+  `UnitaryAddRepresentation.pvm_compContinuousAddMonoidHom_strongDual` — **functoriality**: for
   `φ : V' →L[ℝ] V` the projection-valued measure of `U ∘ φ` is the image of `E_U` under the
   transpose of `φ`, `p ↦ p ∘ φ` on the dual spaces.
-* `MeasureTheory.ProjectionValuedMeasure.isStronglyContinuous_fourier_of_isContPerfPair`,
-  `MeasureTheory.ProjectionValuedMeasure.pvm_isStronglyContinuous_fourier` — the converse: the
-  Fourier transform of a projection-valued measure on `W` is strongly continuous, with that measure
-  as its projection-valued measure.
+* `MeasureTheory.ProjectionValuedMeasure.pvm_fourier` — the converse: a projection-valued measure on
+  `W` is the projection-valued measure of its Fourier transform.
 
 ## TODO
 
@@ -117,51 +121,97 @@ open scoped ENNReal NNReal InnerProductSpace ComplexConjugate
 
 /-! ### Unitary representations -/
 
-namespace AddChar
+namespace UnitaryAddRepresentation
 
-variable {G H : Type*} [AddCommGroup G] [NormedAddCommGroup H] [InnerProductSpace ℂ H]
-  [CompleteSpace H] (U : AddChar G (unitary (H →L[ℂ] H)))
+/-! The lemmas of this section are algebraic: they hold for every additive character `U` of `G` into
+the unitary group, a `UnitaryAddRepresentation G H` or an `AddChar G (UnitarySOT ℂ H)` on which no
+continuity is imposed; `G` need not be commutative. -/
+
+variable {G H F : Type*} [AddGroup G] [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+  [CompleteSpace H] [FunLike F G (UnitarySOT ℂ H)]
+  [AddCharClass F G (UnitarySOT ℂ H)] (U : F)
 
 /-- `U v (U w y) = U (v + w) y`. -/
-lemma apply_apply_unitary (v w : G) (y : H) :
-    (U v : H →L[ℂ] H) ((U w : H →L[ℂ] H) y) = (U (v + w) : H →L[ℂ] H) y := by
-  rw [AddChar.map_add_eq_mul, Submonoid.coe_mul, mul_apply_eq_comp]
+lemma apply_apply (v w : G) (y : H) :
+    U v (U w y) = U (v + w) y := by
+  rw [map_add_eq_mul, UnitarySOT.coe_mul, mul_apply_eq_comp]
 
 /-- The adjoint of `U w` is `U (-w)`: `⟪U w x, y⟫ = ⟪x, U (-w) y⟫`. -/
-lemma inner_apply_unitary_left (w : G) (x y : H) :
-    ⟪(U w : H →L[ℂ] H) x, y⟫_ℂ = ⟪x, (U (-w) : H →L[ℂ] H) y⟫_ℂ := by
-  rw [AddChar.map_neg_eq_inv, ← Unitary.star_eq_inv, Unitary.coe_star, star_eq_adjoint,
-    adjoint_inner_right]
+lemma inner_apply_left (w : G) (x y : H) :
+    ⟪U w x, y⟫_ℂ = ⟪x, U (-w) y⟫_ℂ := by
+  rw [map_neg_eq_inv, UnitarySOT.coe_inv, star_eq_adjoint, adjoint_inner_right]
 
-/-- The matrix coefficient `v ↦ ⟪y, U v y⟫` of a unitary representation is positive definite: the
-matrix `(⟪y, U (xᵢ - xⱼ) y⟫)ᵢⱼ` is the Gram matrix of the vectors `U (-xᵢ) y`. -/
+/-- The matrix coefficient `v ↦ ⟪y, U v y⟫` of an additive character `U` into the unitary group,
+continuous or not, is positive definite: the matrix `(⟪y, U (xᵢ - xⱼ) y⟫)ᵢⱼ` is the Gram matrix of the
+vectors `U (-xᵢ) y`. -/
 lemma isPositiveDefinite_inner_apply (y : H) :
-    IsPositiveDefinite fun v => ⟪y, (U v : H →L[ℂ] H) y⟫_ℂ := fun n x => by
-  convert Matrix.posSemidef_gram ℂ fun i => (U (-x i) : H →L[ℂ] H) y using 1
+    IsPositiveDefinite fun v : G => ⟪y, U v y⟫_ℂ := fun n x => by
+  convert Matrix.posSemidef_gram ℂ fun i => U (-x i) y using 1
   ext i j
-  rw [Matrix.of_apply, Matrix.gram_apply, inner_apply_unitary_left, neg_neg, apply_apply_unitary,
+  rw [Matrix.of_apply, Matrix.gram_apply, inner_apply_left, neg_neg, apply_apply,
     sub_eq_add_neg]
+
+end UnitaryAddRepresentation
+
+namespace UnitaryAddRepresentation
+
+variable {G H F : Type*} [AddCommGroup G] [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+  [CompleteSpace H] [FunLike F G (UnitarySOT ℂ H)]
+  [AddCharClass F G (UnitarySOT ℂ H)] (U : F)
 
 /-- The matrix coefficients of `U w y + c y`:
 `⟪U w y + c y, U v (U w y + c y)⟫ = (1 + c c̄) φ(v) + c̄ φ(v + w) + c φ(v - w)` with
 `φ(v) = ⟪y, U v y⟫`. -/
 private lemma inner_add_smul_apply_unitary (v w : G) (c : ℂ) (y : H) :
-    ⟪(U w : H →L[ℂ] H) y + c • y, (U v : H →L[ℂ] H) ((U w : H →L[ℂ] H) y + c • y)⟫_ℂ =
-      (1 + c * conj c) * ⟪y, (U v : H →L[ℂ] H) y⟫_ℂ +
-        conj c * ⟪y, (U (v + w) : H →L[ℂ] H) y⟫_ℂ + c * ⟪y, (U (v - w) : H →L[ℂ] H) y⟫_ℂ := by
-  have h₁ : ⟪(U w : H →L[ℂ] H) y, (U v : H →L[ℂ] H) ((U w : H →L[ℂ] H) y)⟫_ℂ =
-      ⟪y, (U v : H →L[ℂ] H) y⟫_ℂ := by
-    rw [U.inner_apply_unitary_left, U.apply_apply_unitary, U.apply_apply_unitary,
+    ⟪U w y + c • y,
+        U v (U w y + c • y)⟫_ℂ =
+      (1 + c * conj c) * ⟪y, U v y⟫_ℂ +
+        conj c * ⟪y, (U (v + w) : H →L[ℂ] H) y⟫_ℂ +
+          c * ⟪y, U (v - w) y⟫_ℂ := by
+  have h₁ : ⟪U w y,
+      U v (U w y)⟫_ℂ =
+        ⟪y, U v y⟫_ℂ := by
+    rw [inner_apply_left U, apply_apply U, apply_apply U,
       show -w + v + w = v by abel]
-  have h₂ : ⟪(U w : H →L[ℂ] H) y, (U v : H →L[ℂ] H) y⟫_ℂ = ⟪y, (U (v - w) : H →L[ℂ] H) y⟫_ℂ := by
-    rw [U.inner_apply_unitary_left, U.apply_apply_unitary, neg_add_eq_sub]
-  have h₃ : ⟪y, (U v : H →L[ℂ] H) ((U w : H →L[ℂ] H) y)⟫_ℂ = ⟪y, (U (v + w) : H →L[ℂ] H) y⟫_ℂ := by
-    rw [U.apply_apply_unitary]
+  have h₂ : ⟪U w y, U v y⟫_ℂ =
+      ⟪y, U (v - w) y⟫_ℂ := by
+    rw [inner_apply_left U, apply_apply U, neg_add_eq_sub]
+  have h₃ : ⟪y, U v (U w y)⟫_ℂ =
+      ⟪y, (U (v + w) : H →L[ℂ] H) y⟫_ℂ := by
+    rw [apply_apply U]
   simp only [map_add, map_smul, inner_add_left, inner_add_right, inner_smul_left, inner_smul_right,
     h₁, h₂, h₃]
   ring
 
-end AddChar
+end UnitaryAddRepresentation
+
+/-! ### The Fourier transform along a continuous perfect pairing -/
+
+namespace MeasureTheory.ProjectionValuedMeasure
+
+variable {V W : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V]
+  [IsTopologicalAddGroup V] [ContinuousSMul ℝ V] [FiniteDimensional ℝ V]
+  [AddCommGroup W] [Module ℝ W] [TopologicalSpace W] [IsTopologicalAddGroup W]
+  [ContinuousSMul ℝ W] [MeasurableSpace W] [BorelSpace W] {H : Type*} [NormedAddCommGroup H]
+  [InnerProductSpace ℂ H] [CompleteSpace H]
+
+/-- The **Fourier transform** `v ↦ ∫ exp (i L(p, v)) dE(p)` of a projection-valued measure `E` on `W`
+along a continuous perfect pairing `L` of `W` with a finite-dimensional `V`, as a strongly continuous
+unitary representation of `V`: `ProjectionValuedMeasure.fourierRepresentation`, the measurability and
+the continuity of the pairing and the first countability of `V` being supplied by the pairing. -/
+noncomputable def fourierOfIsContPerfPair (E : ProjectionValuedMeasure W H)
+    (L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ) [L.IsContPerfPair] : UnitaryAddRepresentation V H :=
+  haveI := L.firstCountableTopology_of_isContPerfPair
+  E.fourierRepresentation L L.measurable_flip_apply_of_isContPerfPair
+    fun _ => L.continuous_of_isContPerfPair
+
+/-- The unitaries of `fourierOfIsContPerfPair` are those of `fourier`. -/
+@[simp] lemma fourierOfIsContPerfPair_apply (E : ProjectionValuedMeasure W H)
+    (L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ) [L.IsContPerfPair] (v : V) :
+    E.fourierOfIsContPerfPair L v = E.fourier L L.measurable_flip_apply_of_isContPerfPair v :=
+  rfl
+
+end MeasureTheory.ProjectionValuedMeasure
 
 /-! ### Fourier uniqueness for complex combinations of finite measures -/
 
@@ -360,39 +410,39 @@ end Polarization
 
 /-! ### The SNAG theorem -/
 
-namespace AddChar.IsStronglyContinuous
+namespace UnitaryAddRepresentation
 
 variable {V W : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V]
   [IsTopologicalAddGroup V] [ContinuousSMul ℝ V] [FiniteDimensional ℝ V]
   [AddCommGroup W] [Module ℝ W] [TopologicalSpace W] [IsTopologicalAddGroup W]
   [ContinuousSMul ℝ W] [MeasurableSpace W] [BorelSpace W] {L : W →ₗ[ℝ] V →ₗ[ℝ] ℝ}
   [L.IsContPerfPair] {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
-  {U : AddChar V (unitary (H →L[ℂ] H))} (hU : U.IsStronglyContinuous)
+  (U : UnitaryAddRepresentation V H)
 
 /-! #### The scalar measures `μ_y` -/
 
 variable (L) in
 /-- The finite measure `μ_y` on `W` with `⟪y, U v y⟫ = ∫ exp (i L(p, v)) dμ_y(p)`, given by
-Bochner's theorem. It is the diagonal measure of `hU.pvm L` (`measure_pvm`). -/
+Bochner's theorem. It is the diagonal measure of `U.pvm L` (`measure_pvm`). -/
 private noncomputable def bochner (y : H) : Measure W :=
-  ((U.isPositiveDefinite_inner_apply y).exists_finiteMeasure L
-    (hU.continuous_inner_apply y y)).choose
+  ((isPositiveDefinite_inner_apply U y).exists_finiteMeasure L
+    (UnitaryRepresentation.continuous_inner_apply U y y)).choose
 
-private instance (y : H) : IsFiniteMeasure (hU.bochner L y) := by
+private instance (y : H) : IsFiniteMeasure (U.bochner L y) := by
   unfold bochner
   infer_instance
 
 /-- `∫ exp (i L(p, v)) dμ_y(p) = ⟪y, U v y⟫`. -/
 private lemma integral_bochner (y : H) (v : V) :
-    ∫ p, cexp (L p v * I) ∂hU.bochner L y = ⟪y, (U v : H →L[ℂ] H) y⟫_ℂ :=
-  (((U.isPositiveDefinite_inner_apply y).exists_finiteMeasure L
-    (hU.continuous_inner_apply y y)).choose_spec v).symm
+    ∫ p, cexp (L p v * I) ∂U.bochner L y = ⟪y, U v y⟫_ℂ :=
+  (((isPositiveDefinite_inner_apply U y).exists_finiteMeasure L
+    (UnitaryRepresentation.continuous_inner_apply U y y)).choose_spec v).symm
 
 /-- The total mass of `μ_y` is `‖y‖²`. -/
-private lemma measureReal_bochner_univ (y : H) : (hU.bochner L y).real univ = ‖y‖ ^ 2 := by
-  have h := hU.integral_bochner (L := L) y 0
+private lemma measureReal_bochner_univ (y : H) : (U.bochner L y).real univ = ‖y‖ ^ 2 := by
+  have h := U.integral_bochner (L := L) y 0
   simp only [map_zero, ofReal_zero, zero_mul, Complex.exp_zero, integral_const, Complex.real_smul,
-    mul_one, AddChar.map_zero_eq_one, OneMemClass.coe_one, one_apply_eq_self,
+    mul_one, map_zero_eq_one, UnitarySOT.coe_one, one_apply_eq_self,
     inner_self_eq_norm_sq_to_K] at h
   exact Complex.ofReal_injective (h.trans (by push_cast; rfl))
 
@@ -400,10 +450,11 @@ private lemma measureReal_bochner_univ (y : H) : (hU.bochner L y).real univ = �
 
 /-- The Fourier transform of the polarization of `(x, y)` is the matrix coefficient
 `v ↦ ⟪x, U v y⟫`. -/
-private lemma ft_pol (x y : H) : ft L (hU.bochner L) (pol x y) = fun v => ⟪x, (U v : H →L[ℂ] H) y⟫_ℂ := by
+private lemma ft_pol (x y : H) :
+    ft L (U.bochner L) (pol x y) = fun v => ⟪x, U v y⟫_ℂ := by
   funext v
   rw [linearCombination_apply_apply]
-  simp_rw [hU.integral_bochner (L := L)]
+  simp_rw [U.integral_bochner (L := L)]
   rw [← inner_apply_eq_linearCombination_pol]
 
 /-! #### The sesquilinear forms `(x, y) ↦ μ_{x,y}(s)` -/
@@ -412,55 +463,55 @@ variable (L) in
 /-- The value `μ_{x,y}(s)` of the polarized measure, `¼ (μ_{x+y} - μ_{x-y}) + i ¼ (μ_{x-iy} -
 μ_{x+iy})` on `s`. -/
 private noncomputable def form (s : Set W) (x y : H) : ℂ :=
-  ev (hU.bochner L) s (pol x y)
+  ev (U.bochner L) s (pol x y)
 
 private lemma form_add_left (s : Set W) (x x' y : H) :
-    hU.form L s (x + x') y = hU.form L s x y + hU.form L s x' y := by
+    U.form L s (x + x') y = U.form L s x y + U.form L s x' y := by
   rw [form, form, form, ← map_add]
   refine ev_eq_of_ft_eq (L := L) ?_ s
-  rw [map_add, hU.ft_pol (L := L), hU.ft_pol (L := L), hU.ft_pol (L := L)]
+  rw [map_add, U.ft_pol (L := L), U.ft_pol (L := L), U.ft_pol (L := L)]
   funext v
   simp [inner_add_left]
 
 private lemma form_smul_left (s : Set W) (c : ℂ) (x y : H) :
-    hU.form L s (c • x) y = conj c * hU.form L s x y := by
+    U.form L s (c • x) y = conj c * U.form L s x y := by
   rw [form, form, ← smul_eq_mul, ← map_smul]
   refine ev_eq_of_ft_eq (L := L) ?_ s
-  rw [map_smul, hU.ft_pol (L := L), hU.ft_pol (L := L)]
+  rw [map_smul, U.ft_pol (L := L), U.ft_pol (L := L)]
   funext v
   simp [inner_smul_left]
 
 private lemma form_add_right (s : Set W) (x y y' : H) :
-    hU.form L s x (y + y') = hU.form L s x y + hU.form L s x y' := by
+    U.form L s x (y + y') = U.form L s x y + U.form L s x y' := by
   rw [form, form, form, ← map_add]
   refine ev_eq_of_ft_eq (L := L) ?_ s
-  rw [map_add, hU.ft_pol (L := L), hU.ft_pol (L := L), hU.ft_pol (L := L)]
+  rw [map_add, U.ft_pol (L := L), U.ft_pol (L := L), U.ft_pol (L := L)]
   funext v
   simp [inner_add_right]
 
 private lemma form_smul_right (s : Set W) (c : ℂ) (x y : H) :
-    hU.form L s x (c • y) = c * hU.form L s x y := by
+    U.form L s x (c • y) = c * U.form L s x y := by
   rw [form, form, ← smul_eq_mul, ← map_smul]
   refine ev_eq_of_ft_eq (L := L) ?_ s
-  rw [map_smul, hU.ft_pol (L := L), hU.ft_pol (L := L)]
+  rw [map_smul, U.ft_pol (L := L), U.ft_pol (L := L)]
   funext v
   simp [inner_smul_right]
 
 /-- On the diagonal, `μ_{y,y}(s) = μ_y(s)`. -/
 private lemma form_self (s : Set W) (y : H) :
-    hU.form L s y y = ((hU.bochner L y).toSignedMeasure s : ℂ) := by
-  have h : ev (hU.bochner L) s (pol y y) = ev (hU.bochner L) s (Finsupp.single y 1) := by
+    U.form L s y y = ((U.bochner L y).toSignedMeasure s : ℂ) := by
+  have h : ev (U.bochner L) s (pol y y) = ev (U.bochner L) s (Finsupp.single y 1) := by
     refine ev_eq_of_ft_eq (L := L) ?_ s
-    rw [hU.ft_pol (L := L), Finsupp.linearCombination_single, one_smul]
+    rw [U.ft_pol (L := L), Finsupp.linearCombination_single, one_smul]
     funext v
-    rw [hU.integral_bochner (L := L)]
+    rw [U.integral_bochner (L := L)]
   rw [form, h, Finsupp.linearCombination_single, one_smul]
 
 /-- `0 ≤ μ_y(s) ≤ ‖y‖²`. -/
 private lemma toSignedMeasure_bochner_mem (s : Set W) (y : H) :
-    0 ≤ (hU.bochner L y).toSignedMeasure s ∧ (hU.bochner L y).toSignedMeasure s ≤ ‖y‖ ^ 2 := by
+    0 ≤ (U.bochner L y).toSignedMeasure s ∧ (U.bochner L y).toSignedMeasure s ≤ ‖y‖ ^ 2 := by
   by_cases hs : MeasurableSet s
-  · rw [Measure.toSignedMeasure_apply_measurable hs, ← hU.measureReal_bochner_univ (L := L) y]
+  · rw [Measure.toSignedMeasure_apply_measurable hs, ← U.measureReal_bochner_univ (L := L) y]
     exact ⟨measureReal_nonneg, measureReal_mono (subset_univ s)⟩
   · rw [VectorMeasure.not_measurable _ hs]
     exact ⟨le_rfl, by positivity⟩
@@ -468,19 +519,19 @@ private lemma toSignedMeasure_bochner_mem (s : Set W) (y : H) :
 /-- A crude bound, `‖μ_{x,y}(s)‖ ≤ ‖x‖² + ‖y‖²`, from the polarization formula and the
 parallelogram law. -/
 private lemma norm_form_le_sq (s : Set W) (x y : H) :
-    ‖hU.form L s x y‖ ≤ ‖x‖ ^ 2 + ‖y‖ ^ 2 := by
+    ‖U.form L s x y‖ ≤ ‖x‖ ^ 2 + ‖y‖ ^ 2 := by
   have p₁ := parallelogram_law_with_norm ℂ x y
   have p₂ := parallelogram_law_with_norm ℂ x (I • y)
   rw [norm_smul, norm_I, one_mul] at p₂
-  obtain ⟨a₀, a₁⟩ := hU.toSignedMeasure_bochner_mem (L := L) s (x + y)
-  obtain ⟨b₀, b₁⟩ := hU.toSignedMeasure_bochner_mem (L := L) s (x - y)
-  obtain ⟨c₀, c₁⟩ := hU.toSignedMeasure_bochner_mem (L := L) s (x - I • y)
-  obtain ⟨d₀, d₁⟩ := hU.toSignedMeasure_bochner_mem (L := L) s (x + I • y)
-  set a := (hU.bochner L (x + y)).toSignedMeasure s
-  set b := (hU.bochner L (x - y)).toSignedMeasure s
-  set c := (hU.bochner L (x - I • y)).toSignedMeasure s
-  set d := (hU.bochner L (x + I • y)).toSignedMeasure s
-  have hform : hU.form L s x y = ((4⁻¹ * (a - b) : ℝ) : ℂ) + ((4⁻¹ * (c - d) : ℝ) : ℂ) * I := by
+  obtain ⟨a₀, a₁⟩ := U.toSignedMeasure_bochner_mem (L := L) s (x + y)
+  obtain ⟨b₀, b₁⟩ := U.toSignedMeasure_bochner_mem (L := L) s (x - y)
+  obtain ⟨c₀, c₁⟩ := U.toSignedMeasure_bochner_mem (L := L) s (x - I • y)
+  obtain ⟨d₀, d₁⟩ := U.toSignedMeasure_bochner_mem (L := L) s (x + I • y)
+  set a := (U.bochner L (x + y)).toSignedMeasure s
+  set b := (U.bochner L (x - y)).toSignedMeasure s
+  set c := (U.bochner L (x - I • y)).toSignedMeasure s
+  set d := (U.bochner L (x + I • y)).toSignedMeasure s
+  have hform : U.form L s x y = ((4⁻¹ * (a - b) : ℝ) : ℂ) + ((4⁻¹ * (c - d) : ℝ) : ℂ) * I := by
     rw [form, linearCombination_pol]
     simp only [smul_eq_mul, a, b, c, d]
     push_cast
@@ -499,20 +550,20 @@ private lemma norm_form_le_sq (s : Set W) (x y : H) :
 /-- **Boundedness**: `‖μ_{x,y}(s)‖ ≤ 2 ‖x‖ ‖y‖`, by rescaling `(x, y)` to `(t x, t⁻¹ y)`, which
 leaves `μ_{x,y}` unchanged, in the crude bound. -/
 private lemma norm_form_le (s : Set W) (x y : H) :
-    ‖hU.form L s x y‖ ≤ 2 * ‖x‖ * ‖y‖ := by
+    ‖U.form L s x y‖ ≤ 2 * ‖x‖ * ‖y‖ := by
   rcases eq_or_ne x 0 with rfl | hx
-  · simpa using hU.form_smul_left (L := L) s 0 0 y
+  · simpa using U.form_smul_left (L := L) s 0 0 y
   rcases eq_or_ne y 0 with rfl | hy
-  · simpa using hU.form_smul_right (L := L) s 0 x 0
+  · simpa using U.form_smul_right (L := L) s 0 x 0
   have hx' : 0 < ‖x‖ := norm_pos_iff.mpr hx
   have hy' : 0 < ‖y‖ := norm_pos_iff.mpr hy
   set t := √(‖y‖ / ‖x‖)
   have ht : 0 < t := Real.sqrt_pos.mpr (div_pos hy' hx')
   have ht2 : t ^ 2 = ‖y‖ / ‖x‖ := Real.sq_sqrt (div_pos hy' hx').le
-  have key : hU.form L s ((t : ℂ) • x) ((t⁻¹ : ℝ) • y) = hU.form L s x y := by
-    rw [hU.form_smul_left (L := L), ← Complex.coe_smul, hU.form_smul_right (L := L), conj_ofReal, ← mul_assoc,
+  have key : U.form L s ((t : ℂ) • x) ((t⁻¹ : ℝ) • y) = U.form L s x y := by
+    rw [U.form_smul_left (L := L), ← Complex.coe_smul, U.form_smul_right (L := L), conj_ofReal, ← mul_assoc,
       ← ofReal_mul, mul_inv_cancel₀ ht.ne', ofReal_one, one_mul]
-  have h := hU.norm_form_le_sq (L := L) s ((t : ℂ) • x) ((t⁻¹ : ℝ) • y)
+  have h := U.norm_form_le_sq (L := L) s ((t : ℂ) • x) ((t⁻¹ : ℝ) • y)
   rw [key, norm_smul, norm_smul, norm_real, Real.norm_of_nonneg ht.le,
     Real.norm_of_nonneg (inv_pos.mpr ht).le, mul_pow, mul_pow, inv_pow, ht2] at h
   calc _ ≤ ‖y‖ / ‖x‖ * ‖x‖ ^ 2 + (‖y‖ / ‖x‖)⁻¹ * ‖y‖ ^ 2 := h
@@ -526,67 +577,67 @@ variable (L) in
 /-- The bounded sesquilinear form `(x, y) ↦ μ_{x,y}(s)`, conjugate-linear in `x`. -/
 private noncomputable def formCLM (s : Set W) : H →L⋆[ℂ] H →L[ℂ] ℂ :=
   LinearMap.mkContinuous₂
-    (LinearMap.mk₂'ₛₗ (starRingEnd ℂ) (RingHom.id ℂ) (hU.form L s)
-      (fun x x' y => hU.form_add_left s x x' y) (fun c x y => hU.form_smul_left (L := L) s c x y)
-      (fun x y y' => hU.form_add_right s x y y') (fun c x y => hU.form_smul_right (L := L) s c x y))
-    2 fun x y => hU.norm_form_le s x y
+    (LinearMap.mk₂'ₛₗ (starRingEnd ℂ) (RingHom.id ℂ) (U.form L s)
+      (fun x x' y => U.form_add_left s x x' y) (fun c x y => U.form_smul_left (L := L) s c x y)
+      (fun x y y' => U.form_add_right s x y y') (fun c x y => U.form_smul_right (L := L) s c x y))
+    2 fun x y => U.norm_form_le s x y
 
 variable (L) in
 /-- The operator `E(s)` represented by the form `(x, y) ↦ μ_{x,y}(s)`; it is the value on `s` of
-the projection-valued measure `hU.pvm`. -/
+the projection-valued measure `U.pvm`. -/
 private noncomputable def op (s : Set W) : H →L[ℂ] H :=
-  InnerProductSpace.continuousLinearMapOfBilin (hU.formCLM L s)
+  InnerProductSpace.continuousLinearMapOfBilin (U.formCLM L s)
 
 /-- `⟪E(s) x, y⟫ = μ_{x,y}(s)`. -/
 private lemma inner_op_left (s : Set W) (x y : H) :
-    ⟪hU.op L s x, y⟫_ℂ = hU.form L s x y :=
+    ⟪U.op L s x, y⟫_ℂ = U.form L s x y :=
   InnerProductSpace.continuousLinearMapOfBilin_apply _ x y
 
 /-- `E(s)` is self-adjoint, since its quadratic form `y ↦ μ_y(s)` is real. -/
-private lemma isSelfAdjoint_op (s : Set W) : IsSelfAdjoint (hU.op L s) := by
+private lemma isSelfAdjoint_op (s : Set W) : IsSelfAdjoint (U.op L s) := by
   refine ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.mpr
     ((LinearMap.isSymmetric_iff_inner_map_self_real _).mpr fun x => ?_)
   rw [ContinuousLinearMap.coe_coe, inner_op_left, form_self, conj_ofReal]
 
 /-- `⟪x, E(s) y⟫ = μ_{x,y}(s)`. -/
 private lemma inner_op (s : Set W) (x y : H) :
-    ⟪x, hU.op L s y⟫_ℂ = hU.form L s x y := by
+    ⟪x, U.op L s y⟫_ℂ = U.form L s x y := by
   rw [← inner_op_left, ← ContinuousLinearMap.adjoint_inner_left, ← star_eq_adjoint,
-    (hU.isSelfAdjoint_op s).star_eq]
+    (U.isSelfAdjoint_op s).star_eq]
 
 /-- `E(s) = 0` off the measurable sets. -/
 private lemma op_of_not_measurableSet {s : Set W} (hs : ¬MeasurableSet s) :
-    hU.op L s = 0 :=
+    U.op L s = 0 :=
   ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => by
     simp [inner_op, form, ev_of_not_measurableSet _ hs]
 
 /-- `E(X) = 1`: `μ_{x,y}(X)` is the matrix coefficient `⟪x, U 0 y⟫ = ⟪x, y⟫`. -/
-private lemma op_univ : hU.op L univ = (1 : H →L[ℂ] H) :=
+private lemma op_univ : U.op L univ = (1 : H →L[ℂ] H) :=
   ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => by
-    have h : ev (hU.bochner L) univ (pol x y) = ft L (hU.bochner L) (pol x y) 0 := by
+    have h : ev (U.bochner L) univ (pol x y) = ft L (U.bochner L) (pol x y) 0 := by
       rw [linearCombination_apply_apply]
       refine congrArg (fun g => Finsupp.linearCombination ℂ g (pol x y)) (funext fun u => ?_)
       simp only [map_zero, ofReal_zero, zero_mul, Complex.exp_zero, integral_const,
         Measure.toSignedMeasure_apply_measurable MeasurableSet.univ, Complex.real_smul, mul_one]
-    rw [inner_op, form, h, hU.ft_pol (L := L)]
+    rw [inner_op, form, h, U.ft_pol (L := L)]
     beta_reduce
-    rw [AddChar.map_zero_eq_one, OneMemClass.coe_one]
+    rw [map_zero_eq_one, UnitarySOT.coe_one]
 
 /-! #### Covariance and multiplicativity -/
 
 /-- **Covariance**: `μ_{U w y + c y}` has density `|exp (i L(p, w)) + c|²` with respect to `μ_y`, since
 both measures have Fourier transform `(1 + |c|²) φ(v) + c̄ φ(v + w) + c φ(v - w)`. -/
 private lemma bochner_add_smul (w : V) (c : ℂ) (y : H) :
-    hU.bochner L ((U w : H →L[ℂ] H) y + c • y) =
-      (hU.bochner L y).withDensity fun p => ENNReal.ofReal (‖cexp (L p w * I) + c‖ ^ 2) := by
+    U.bochner L (U w y + c • y) =
+      (U.bochner L y).withDensity fun p => ENNReal.ofReal (‖cexp (L p w * I) + c‖ ^ 2) := by
   have := continuous_pairing_left (L := L) w
   have hcont : Continuous fun p : W => ‖cexp (L p w * I) + c‖ ^ 2 := by fun_prop
-  have hint : Integrable (fun p : W => ‖cexp (L p w * I) + c‖ ^ 2) (hU.bochner L y) :=
+  have hint : Integrable (fun p : W => ‖cexp (L p w * I) + c‖ ^ 2) (U.bochner L y) :=
     Integrable.of_bound hcont.aestronglyMeasurable ((1 + ‖c‖) ^ 2) (ae_of_all _ fun p => by
       rw [Real.norm_of_nonneg (by positivity)]
       gcongr
       exact (norm_add_le _ _).trans_eq (by rw [norm_exp_ofReal_mul_I]))
-  have : IsFiniteMeasure ((hU.bochner L y).withDensity
+  have : IsFiniteMeasure ((U.bochner L y).withDensity
       fun p => ENNReal.ofReal (‖cexp (L p w * I) + c‖ ^ 2)) :=
     isFiniteMeasure_withDensity_ofReal hint.2
   have hpt : ∀ (v : V) (p : W),
@@ -608,25 +659,25 @@ private lemma bochner_add_smul (w : V) (c : ℂ) (y : H) :
       ring_nf
     linear_combination cexp (L p v * I) * ha + conj c * h₁ + c * h₂
   refine Measure.ext_of_integral_cexp_eq (L := L) fun v => ?_
-  rw [hU.integral_bochner (L := L), U.inner_add_smul_apply_unitary, integral_withDensity_eq_integral_toReal_smul
+  rw [U.integral_bochner (L := L), inner_add_smul_apply_unitary U, integral_withDensity_eq_integral_toReal_smul
     hcont.measurable.ennreal_ofReal (ae_of_all _ fun _ => ENNReal.ofReal_lt_top)]
   simp_rw [hpt v]
   have hi : ∀ (a : ℂ) (u : V), Integrable (fun p : W => a * cexp (L p u * I))
-      (hU.bochner L y) := fun a u => (integrable_cexp_pairing _ u).const_mul a
+      (U.bochner L y) := fun a u => (integrable_cexp_pairing _ u).const_mul a
   have hi₂ : Integrable (fun p : W => (1 + c * conj c) * cexp (L p v * I) +
-      conj c * cexp (L p (v + w) * I)) (hU.bochner L y) := (hi _ v).add (hi _ (v + w))
+      conj c * cexp (L p (v + w) * I)) (U.bochner L y) := (hi _ v).add (hi _ (v + w))
   rw [integral_add hi₂ (hi _ (v - w)),
     integral_add (hi _ v) (hi _ (v + w)), integral_const_mul, integral_const_mul,
-    integral_const_mul, hU.integral_bochner (L := L), hU.integral_bochner (L := L), hU.integral_bochner (L := L)]
+    integral_const_mul, U.integral_bochner (L := L), U.integral_bochner (L := L), U.integral_bochner (L := L)]
 
 /-- `μ_{U w y + c y}(t) = ∫_t |exp (i L(p, w)) + c|² dμ_y(p)`. -/
 private lemma measureReal_bochner_add_smul (w : V) (c : ℂ) (y : H) {t : Set W}
     (ht : MeasurableSet t) :
-    (hU.bochner L ((U w : H →L[ℂ] H) y + c • y)).real t =
-      ∫ p in t, ‖cexp (L p w * I) + c‖ ^ 2 ∂hU.bochner L y := by
+    (U.bochner L (U w y + c • y)).real t =
+      ∫ p in t, ‖cexp (L p w * I) + c‖ ^ 2 ∂U.bochner L y := by
   have := continuous_pairing_left (L := L) w
   have hcont : Continuous fun p : W => ‖cexp (L p w * I) + c‖ ^ 2 := by fun_prop
-  rw [hU.bochner_add_smul, measureReal_def, withDensity_apply _ ht,
+  rw [U.bochner_add_smul, measureReal_def, withDensity_apply _ ht,
     ← integral_toReal hcont.measurable.ennreal_ofReal.aemeasurable
       (ae_of_all _ fun _ => ENNReal.ofReal_lt_top)]
   exact integral_congr_ae (ae_of_all _ fun p => ENNReal.toReal_ofReal (by positivity))
@@ -637,10 +688,10 @@ private lemma measureReal_bochner_add_smul (w : V) (c : ℂ) (y : H) {t : Set W}
 `exp (i L(p, v))`. -/
 private lemma inner_apply_op_self (v : V) {t : Set W} (ht : MeasurableSet t)
     (y : H) :
-    ⟪y, (U v : H →L[ℂ] H) (hU.op L t y)⟫_ℂ = ∫ p in t, cexp (L p v * I) ∂hU.bochner L y := by
-  have hm : ∀ c : ℂ, ((hU.bochner L ((U (-v) : H →L[ℂ] H) y + c • y)).toSignedMeasure t : ℂ) =
-      ∫ p in t, ((‖cexp (L p (-v) * I) + c‖ ^ 2 : ℝ) : ℂ) ∂hU.bochner L y := fun c => by
-    rw [Measure.toSignedMeasure_apply_measurable ht, hU.measureReal_bochner_add_smul _ _ _ ht,
+    ⟪y, U v (U.op L t y)⟫_ℂ = ∫ p in t, cexp (L p v * I) ∂U.bochner L y := by
+  have hm : ∀ c : ℂ, ((U.bochner L (U (-v) y + c • y)).toSignedMeasure t : ℂ) =
+      ∫ p in t, ((‖cexp (L p (-v) * I) + c‖ ^ 2 : ℝ) : ℂ) ∂U.bochner L y := fun c => by
+    rw [Measure.toSignedMeasure_apply_measurable ht, U.measureReal_bochner_add_smul _ _ _ ht,
       integral_complex_ofReal]
   have h₁ := hm 1
   rw [one_smul] at h₁
@@ -651,19 +702,20 @@ private lemma inner_apply_op_self (v : V) {t : Set W} (ht : MeasurableSet t)
   have h₄ := hm I
   have := continuous_pairing_left (L := L) (-v)
   have hint : ∀ c : ℂ, Integrable (fun p : W => ((‖cexp (L p (-v) * I) + c‖ ^ 2 : ℝ) : ℂ))
-      ((hU.bochner L y).restrict t) := fun c => by
+      ((U.bochner L y).restrict t) := fun c => by
     refine Integrable.of_bound (by fun_prop) ((1 + ‖c‖) ^ 2) (ae_of_all _ fun p => ?_)
     rw [norm_real, Real.norm_of_nonneg (by positivity)]
     gcongr
     exact (norm_add_le _ _).trans_eq (by rw [norm_exp_ofReal_mul_I])
-  have hleft : ⟪y, (U v : H →L[ℂ] H) (hU.op L t y)⟫_ℂ = ⟪(U (-v) : H →L[ℂ] H) y, hU.op L t y⟫_ℂ := by
-    rw [U.inner_apply_unitary_left, neg_neg]
+  have hleft : ⟪y, U v (U.op L t y)⟫_ℂ =
+      ⟪U (-v) y, U.op L t y⟫_ℂ := by
+    rw [inner_apply_left U, neg_neg]
   have hA : Integrable (fun p : W => (4⁻¹ : ℂ) •
       (((‖cexp (L p (-v) * I) + 1‖ ^ 2 : ℝ) : ℂ) - ((‖cexp (L p (-v) * I) + -1‖ ^ 2 : ℝ) : ℂ)))
-      ((hU.bochner L y).restrict t) := ((hint 1).sub (hint (-1))).smul (4⁻¹ : ℂ)
+      ((U.bochner L y).restrict t) := ((hint 1).sub (hint (-1))).smul (4⁻¹ : ℂ)
   have hB : Integrable (fun p : W => (I * 4⁻¹) •
       (((‖cexp (L p (-v) * I) + -I‖ ^ 2 : ℝ) : ℂ) - ((‖cexp (L p (-v) * I) + I‖ ^ 2 : ℝ) : ℂ)))
-      ((hU.bochner L y).restrict t) := ((hint (-I)).sub (hint I)).smul (I * 4⁻¹)
+      ((U.bochner L y).restrict t) := ((hint (-I)).sub (hint I)).smul (I * 4⁻¹)
   rw [hleft, inner_op, form, linearCombination_pol, h₁, h₂, h₃, h₄,
     ← integral_sub (hint 1) (hint (-1)), ← integral_sub (hint (-I)) (hint I), ← integral_smul,
     ← integral_smul, ← integral_add hA hB]
@@ -675,38 +727,38 @@ private lemma inner_apply_op_self (v : V) {t : Set W} (ht : MeasurableSet t)
 /-- The polarized key identity: `⟪x, U v E(t) y⟫` is the Fourier transform of the polarization of
 the measures `μ_u` restricted to `t`. -/
 private lemma ft_restrict_pol {t : Set W} (ht : MeasurableSet t) (x y : H) :
-    ft L (fun u => (hU.bochner L u).restrict t) (pol x y) =
-      fun v => ⟪x, (U v : H →L[ℂ] H) (hU.op L t y)⟫_ℂ := by
+    ft L (fun u => (U.bochner L u).restrict t) (pol x y) =
+      fun v => ⟪x, U v (U.op L t y)⟫_ℂ := by
   funext v
   rw [linearCombination_apply_apply]
-  simp_rw [← hU.inner_apply_op_self v ht]
-  exact (inner_apply_eq_linearCombination_pol ((U v : H →L[ℂ] H).comp (hU.op L t)) x y).symm
+  simp_rw [← U.inner_apply_op_self v ht]
+  exact (inner_apply_eq_linearCombination_pol ((U v : H →L[ℂ] H).comp (U.op L t)) x y).symm
 
 /-- **Multiplicativity**: `E(s) E(t) = E(s ∩ t)` for measurable `s` and `t`. The polarized measures
 satisfy `μ_{x, E(t) y} = μ_{x,y}|_t`, since both have Fourier transform `v ↦ ⟪x, U v E(t) y⟫`. -/
 private lemma op_mul_op {s t : Set W} (hs : MeasurableSet s) (ht : MeasurableSet t) :
-    hU.op L s * hU.op L t = hU.op L (s ∩ t) :=
+    U.op L s * U.op L t = U.op L (s ∩ t) :=
   ContinuousLinearMap.ext fun y => ext_inner_left ℂ fun x => by
-    have hr : ev (fun u => (hU.bochner L u).restrict t) s (pol x y) =
-        ev (hU.bochner L) (s ∩ t) (pol x y) := by
+    have hr : ev (fun u => (U.bochner L u).restrict t) s (pol x y) =
+        ev (U.bochner L) (s ∩ t) (pol x y) := by
       refine congrArg (fun g => Finsupp.linearCombination ℂ g (pol x y)) (funext fun u => ?_)
       rw [Measure.toSignedMeasure_apply_measurable hs,
         Measure.toSignedMeasure_apply_measurable (hs.inter ht), measureReal_restrict_apply hs]
     rw [mul_apply_eq_comp, inner_op, inner_op, form, form, ← hr]
-    exact ev_eq_of_ft_eq (L := L) (by rw [hU.ft_pol (L := L), hU.ft_restrict_pol ht]) s
+    exact ev_eq_of_ft_eq (L := L) (by rw [U.ft_pol (L := L), U.ft_restrict_pol ht]) s
 
 /-- `E(s)` is an orthogonal projection. -/
-private lemma isStarProjection_op (s : Set W) : IsStarProjection (hU.op L s) := by
+private lemma isStarProjection_op (s : Set W) : IsStarProjection (U.op L s) := by
   by_cases hs : MeasurableSet s
-  · refine ⟨?_, hU.isSelfAdjoint_op s⟩
-    rw [IsIdempotentElem, hU.op_mul_op hs hs, inter_self]
-  · rw [hU.op_of_not_measurableSet hs]
+  · refine ⟨?_, U.isSelfAdjoint_op s⟩
+    rw [IsIdempotentElem, U.op_mul_op hs hs, inter_self]
+  · rw [U.op_of_not_measurableSet hs]
     exact .zero _
 
 /-- `μ_y(s) = ‖E(s) y‖²`. -/
 private lemma bochner_apply (y : H) {s : Set W} (hs : MeasurableSet s) :
-    hU.bochner L y s = ‖hU.op L s y‖ₑ ^ 2 := by
-  have h := (hU.isStarProjection_op (L := L) s).inner_apply_self y
+    U.bochner L y s = ‖U.op L s y‖ₑ ^ 2 := by
+  have h := (U.isStarProjection_op (L := L) s).inner_apply_self y
   rw [inner_op, form_self, Measure.toSignedMeasure_apply_measurable hs] at h
   rw [← ofReal_measureReal, Complex.ofReal_injective h, ENNReal.ofReal_pow (norm_nonneg _),
     ofReal_norm]
@@ -716,88 +768,90 @@ private lemma bochner_apply (y : H) {s : Set W} (hs : MeasurableSet s) :
 variable (L) in
 /-- The **projection-valued measure** `E_U` on `W` of a strongly continuous unitary representation
 `U` of `V`: the unique projection-valued measure with `U v = ∫ exp (i L(p, v)) dE_U(p)`
-(`AddChar.IsStronglyContinuous.fourier_pvm`, `AddChar.IsStronglyContinuous.eq_pvm_of_fourier_eq`).
+(`UnitaryAddRepresentation.fourier_pvm`, `UnitaryAddRepresentation.eq_pvm_of_fourier_eq`).
 For `L = topDualPairing ℝ V` it is a projection-valued measure on the dual `StrongDual ℝ V`. -/
 @[no_expose] noncomputable def pvm : ProjectionValuedMeasure W H :=
-  ProjectionValuedMeasure.ofMeasure (hU.op L) (hU.bochner L)
-    (fun _ hs => hU.op_of_not_measurableSet hs) hU.isStarProjection_op hU.op_univ
-    fun y _ hs => hU.bochner_apply y hs
+  ProjectionValuedMeasure.ofMeasure (U.op L) (U.bochner L)
+    (fun _ hs => U.op_of_not_measurableSet hs) U.isStarProjection_op U.op_univ
+    fun y _ hs => U.bochner_apply y hs
 
 /-- The diagonal measures of `E_U` are the Bochner measures `μ_y`. -/
-private lemma measure_pvm (y : H) : (hU.pvm L).measure y = hU.bochner L y :=
+private lemma measure_pvm (y : H) : (U.pvm L).measure y = U.bochner L y :=
   ProjectionValuedMeasure.measure_ofMeasure _ _ _ _ _ _ y
 
 variable (L) in
 /-- **Diagonal measures**: the matrix coefficient `⟪y, U v y⟫` is the Fourier transform
 `∫ exp (i L(p, v)) dE_y(p)` of the diagonal measure `E_y` of `E_U`. -/
 lemma inner_apply_eq_integral_measure_pvm (v : V) (y : H) :
-    ⟪y, (U v : H →L[ℂ] H) y⟫_ℂ = ∫ p, cexp (L p v * I) ∂((hU.pvm L).measure y) := by
-  rw [hU.measure_pvm, hU.integral_bochner]
+    ⟪y, U v y⟫_ℂ = ∫ p, cexp (L p v * I) ∂((U.pvm L).measure y) := by
+  rw [U.measure_pvm, U.integral_bochner]
 
 variable (L) in
 /-- **SNAG theorem**, existence: a strongly continuous unitary representation is the Fourier
 transform of its projection-valued measure, `U v = ∫ exp (i L(p, v)) dE_U(p)`. -/
-lemma fourier_pvm : (hU.pvm L).fourier L L.measurable_flip_apply_of_isContPerfPair = U :=
-  AddChar.ext _ _ fun v => Subtype.ext <| ContinuousLinearMap.ext_inner_self fun y => by
-    rw [ProjectionValuedMeasure.inner_fourier_apply_self, hU.inner_apply_eq_integral_measure_pvm L]
+lemma fourier_pvm : (U.pvm L).fourierOfIsContPerfPair L = U := by
+  refine ContinuousAddChar.ext fun v => UnitarySOT.ext <| ContinuousLinearMap.ext_inner_self
+    fun y => ?_
+  rw [ProjectionValuedMeasure.fourierOfIsContPerfPair_apply,
+    ProjectionValuedMeasure.inner_fourier_apply_self,
+    U.inner_apply_eq_integral_measure_pvm L]
 
 /-- **SNAG theorem**, uniqueness: `E_U` is the only projection-valued measure on `W` whose Fourier
 transform along `L` is `U`. The diagonal measures of such a measure have the Fourier transforms
 `v ↦ ⟪y, U v y⟫`, hence are those of `E_U`. -/
 lemma eq_pvm_of_fourier_eq {E : ProjectionValuedMeasure W H}
-    (hE : E.fourier L L.measurable_flip_apply_of_isContPerfPair = U) : E = hU.pvm L :=
-  E.ext_of_measure fun y => Measure.ext_of_integral_cexp_eq (L := L) fun v => by
-    rw [← E.inner_fourier_apply_self L L.measurable_flip_apply_of_isContPerfPair v y, hE]
-    exact hU.inner_apply_eq_integral_measure_pvm L v y
+    (hE : E.fourierOfIsContPerfPair L = U) : E = U.pvm L := by
+  refine E.ext_of_measure fun y => Measure.ext_of_integral_cexp_eq (L := L) fun v => ?_
+  rw [← E.inner_fourier_apply_self L L.measurable_flip_apply_of_isContPerfPair v y,
+    ← E.fourierOfIsContPerfPair_apply L, hE]
+  exact U.inner_apply_eq_integral_measure_pvm L v y
 
 variable (L) in
-include hU in
 /-- **SNAG theorem** (Stone–Naimark–Ambrose–Godement): a strongly continuous unitary representation
 `U` of a finite-dimensional real vector space `V` is the Fourier transform
 `U v = ∫ exp (i L(p, v)) dE(p)` of a unique projection-valued measure `E` on `W`, for a continuous
 perfect pairing `L` of `W` with `V`. -/
 theorem existsUnique_fourier_eq :
-    ∃! E : ProjectionValuedMeasure W H, E.fourier L L.measurable_flip_apply_of_isContPerfPair = U :=
-  ⟨hU.pvm L, hU.fourier_pvm L, fun _ hE => hU.eq_pvm_of_fourier_eq hE⟩
+    ∃! E : ProjectionValuedMeasure W H, E.fourierOfIsContPerfPair L = U :=
+  ⟨U.pvm L, U.fourier_pvm L, fun _ hE => U.eq_pvm_of_fourier_eq hE⟩
 
 variable (L) in
 /-- The projection-valued measure of the trivial representation is the Dirac measure at `0`. -/
-lemma pvm_one (hU₁ : (1 : AddChar V (unitary (H →L[ℂ] H))).IsStronglyContinuous) :
-    hU₁.pvm L = ProjectionValuedMeasure.dirac H 0 := by
-  refine (hU₁.eq_pvm_of_fourier_eq (AddChar.ext _ _ fun v => Subtype.ext ?_)).symm
-  rw [ProjectionValuedMeasure.coe_fourier_apply, ProjectionValuedMeasure.integral_dirac
-    (ProjectionValuedMeasure.measurable_exp_pairing L L.measurable_flip_apply_of_isContPerfPair v)
-    ⟨1, fun _ => (norm_exp_ofReal_mul_I _).le⟩]
+lemma pvm_one :
+    (1 : UnitaryAddRepresentation V H).pvm L = ProjectionValuedMeasure.dirac H 0 := by
+  refine ((1 : UnitaryAddRepresentation V H).eq_pvm_of_fourier_eq
+    (ContinuousAddChar.ext fun v => UnitarySOT.ext ?_)).symm
+  rw [ProjectionValuedMeasure.fourierOfIsContPerfPair_apply,
+    ProjectionValuedMeasure.coe_fourier_apply,
+    ProjectionValuedMeasure.integral_dirac (ProjectionValuedMeasure.measurable_exp_pairing L
+      L.measurable_flip_apply_of_isContPerfPair v) ⟨1, fun _ => (norm_exp_ofReal_mul_I _).le⟩]
   simp
 
-end IsStronglyContinuous
-
-end AddChar
+end UnitaryAddRepresentation
 
 /-! ### The dual space -/
 
-namespace AddChar.IsStronglyContinuous
+namespace UnitaryAddRepresentation
 
 variable {V : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V] [IsTopologicalAddGroup V]
   [ContinuousSMul ℝ V] [T2Space V] [FiniteDimensional ℝ V] [MeasurableSpace (StrongDual ℝ V)]
   [BorelSpace (StrongDual ℝ V)] {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
-  [CompleteSpace H] {U : AddChar V (unitary (H →L[ℂ] H))}
+  [CompleteSpace H]
 
 /-- **SNAG theorem** with the projection-valued measure on the dual space: a strongly continuous
 unitary representation `U` of a finite-dimensional real vector space `V` is
 `U v = ∫ exp (i L(p, v)) dE(p)` for a unique projection-valued measure `E` on `StrongDual ℝ V`. This is
-the case `L = topDualPairing ℝ V` of `AddChar.IsStronglyContinuous.existsUnique_fourier_eq`. -/
-theorem existsUnique_fourier_eq_strongDual (hU : U.IsStronglyContinuous) :
+the case `L = topDualPairing ℝ V` of `UnitaryAddRepresentation.existsUnique_fourier_eq`. -/
+theorem existsUnique_fourier_eq_strongDual (U : UnitaryAddRepresentation V H) :
     ∃! E : ProjectionValuedMeasure (StrongDual ℝ V) H,
-      E.fourier (topDualPairing ℝ V) (topDualPairing ℝ V).measurable_flip_apply_of_isContPerfPair =
-        U :=
-  hU.existsUnique_fourier_eq (topDualPairing ℝ V)
+      E.fourierOfIsContPerfPair (topDualPairing ℝ V) = U :=
+  U.existsUnique_fourier_eq (topDualPairing ℝ V)
 
-end AddChar.IsStronglyContinuous
+end UnitaryAddRepresentation
 
 /-! ### Functoriality -/
 
-namespace AddChar.IsStronglyContinuous
+namespace UnitaryAddRepresentation
 
 variable {V W V' W' : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V]
   [IsTopologicalAddGroup V] [ContinuousSMul ℝ V] [FiniteDimensional ℝ V]
@@ -808,26 +862,28 @@ variable {V W V' W' : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V
   [AddCommGroup W'] [Module ℝ W'] [TopologicalSpace W'] [IsTopologicalAddGroup W']
   [ContinuousSMul ℝ W'] [MeasurableSpace W'] [BorelSpace W'] {L' : W' →ₗ[ℝ] V' →ₗ[ℝ] ℝ}
   [L'.IsContPerfPair] {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
-  [CompleteSpace H] {U : AddChar V (unitary (H →L[ℂ] H))} (hU : U.IsStronglyContinuous)
+  [CompleteSpace H] (U : UnitaryAddRepresentation V H)
 
 /-- **Functoriality** of the projection-valued measure: if `φ : V' → V` and `ψ : W → W'` are
 adjoint for the pairings, `L'(ψ w, v') = L(w, φ v')`, then the projection-valued measure of the
 pullback `U ∘ φ` is the image `ψ_* E_U` of that of `U`. (The adjoint `ψ` of `φ` is unique, the
 transpose of `φ`.) -/
-lemma pvm_compAddMonoidHom (φ : V' →L[ℝ] V) (ψ : W →L[ℝ] W')
+lemma pvm_compContinuousAddMonoidHom (φ : V' →L[ℝ] V) (ψ : W →L[ℝ] W')
     (hφψ : ∀ w v', L' (ψ w) v' = L w (φ v')) :
-    (hU.compAddMonoidHom (φ : V' →+ V) φ.continuous).pvm L' =
-      (hU.pvm L).map ψ ψ.continuous.measurable := by
-  refine ((hU.compAddMonoidHom _ φ.continuous).eq_pvm_of_fourier_eq ?_).symm
-  refine AddChar.ext _ _ fun v' => Subtype.ext ?_
-  rw [ProjectionValuedMeasure.coe_fourier_apply, ProjectionValuedMeasure.integral_map
-    (ProjectionValuedMeasure.measurable_exp_pairing L' L'.measurable_flip_apply_of_isContPerfPair
-      v') ⟨1, fun _ => (norm_exp_ofReal_mul_I _).le⟩ ψ.continuous.measurable]
+    pvm L' (U.compContinuousAddMonoidHom (φ : V' →ₜ+ V)) =
+      (U.pvm L).map ψ ψ.continuous.measurable := by
+  refine (eq_pvm_of_fourier_eq (U.compContinuousAddMonoidHom (φ : V' →ₜ+ V)) ?_).symm
+  refine ContinuousAddChar.ext fun v' => UnitarySOT.ext ?_
+  rw [ProjectionValuedMeasure.fourierOfIsContPerfPair_apply,
+    ProjectionValuedMeasure.coe_fourier_apply,
+    ProjectionValuedMeasure.integral_map (ProjectionValuedMeasure.measurable_exp_pairing L'
+      L'.measurable_flip_apply_of_isContPerfPair v') ⟨1, fun _ => (norm_exp_ofReal_mul_I _).le⟩
+      ψ.continuous.measurable]
   have h : ((fun w' => cexp (L' w' v' * I)) ∘ ψ) = fun w => cexp (L w (φ v') * I) := by
     ext w
     simp [hφψ]
   rw [h, ← ProjectionValuedMeasure.coe_fourier_apply _ _ L.measurable_flip_apply_of_isContPerfPair,
-    hU.fourier_pvm L]
+    ← ProjectionValuedMeasure.fourierOfIsContPerfPair_apply, U.fourier_pvm L]
   rfl
 
 variable [T2Space V] [T2Space V'] [MeasurableSpace (StrongDual ℝ V)]
@@ -835,13 +891,13 @@ variable [T2Space V] [T2Space V'] [MeasurableSpace (StrongDual ℝ V)]
 
 /-- **Functoriality** on the dual spaces: the projection-valued measure of `U ∘ φ` on
 `StrongDual ℝ V'` is the image of that of `U` under the transpose `p ↦ p ∘ φ`. -/
-lemma pvm_compAddMonoidHom_strongDual (φ : V' →L[ℝ] V) :
-    (hU.compAddMonoidHom (φ : V' →+ V) φ.continuous).pvm (topDualPairing ℝ V') =
-      (hU.pvm (topDualPairing ℝ V)).map (fun p => p.comp φ)
+lemma pvm_compContinuousAddMonoidHom_strongDual (φ : V' →L[ℝ] V) :
+    pvm (topDualPairing ℝ V') (U.compContinuousAddMonoidHom (φ : V' →ₜ+ V)) =
+      (U.pvm (topDualPairing ℝ V)).map (fun p => p.comp φ)
         (ContinuousLinearMap.precomp ℝ φ).continuous.measurable :=
-  hU.pvm_compAddMonoidHom φ (ContinuousLinearMap.precomp ℝ φ) fun _ _ => rfl
+  U.pvm_compContinuousAddMonoidHom φ (ContinuousLinearMap.precomp ℝ φ) fun _ _ => rfl
 
-end AddChar.IsStronglyContinuous
+end UnitaryAddRepresentation
 
 /-! ### The converse -/
 
@@ -854,19 +910,11 @@ variable {V W : Type*} [AddCommGroup V] [Module ℝ V] [TopologicalSpace V]
   [L.IsContPerfPair] {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
   (E : ProjectionValuedMeasure W H)
 
-/-- The Fourier transform `v ↦ ∫ exp (i L(w, v)) dE(w)` of a projection-valued measure along a
-continuous perfect pairing `L` is a strongly continuous unitary representation of `V`. -/
-lemma isStronglyContinuous_fourier_of_isContPerfPair :
-    (E.fourier L L.measurable_flip_apply_of_isContPerfPair).IsStronglyContinuous := by
-  have := L.firstCountableTopology_of_isContPerfPair
-  exact E.isStronglyContinuous_fourier L _ fun _ => L.continuous_of_isContPerfPair
-
 /-- **SNAG theorem**, converse: a projection-valued measure `E` on `W` is the projection-valued
-measure of its Fourier transform along `L`. With `AddChar.IsStronglyContinuous.fourier_pvm`,
-`E ↦ E.fourier L _` is a bijection from the projection-valued measures on `W` onto the strongly
-continuous unitary representations of `V`. -/
-lemma pvm_isStronglyContinuous_fourier :
-    (E.isStronglyContinuous_fourier_of_isContPerfPair L).pvm L = E :=
-  ((E.isStronglyContinuous_fourier_of_isContPerfPair L).eq_pvm_of_fourier_eq rfl).symm
+measure of its Fourier transform along `L`. With `UnitaryAddRepresentation.fourier_pvm`,
+`E ↦ E.fourierOfIsContPerfPair L` is a bijection from the projection-valued measures on `W` onto
+the strongly continuous unitary representations of `V`. -/
+lemma pvm_fourier : (E.fourierOfIsContPerfPair L).pvm L = E :=
+  ((E.fourierOfIsContPerfPair L).eq_pvm_of_fourier_eq rfl).symm
 
 end MeasureTheory.ProjectionValuedMeasure

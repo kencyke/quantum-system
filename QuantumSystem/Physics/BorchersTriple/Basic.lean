@@ -20,6 +20,8 @@ strongly continuous unitary representation `T` of `V` and a vector `Ω` such tha
 * `T(x) M T(x)⋆ ⊆ M` for `x ∈ W`;
 * `T(x) Ω = Ω`, and `Ω` is cyclic and separating for `M`.
 
+Units with ℏ = 1 are in force: `T(x) = e^{i x · P}` for the energy-momentum operator `P`.
+
 **Borchers' theorem** for Borchers triples (`BorchersTriple.modularGroup_mul_mul_eq_boost`,
 `BorchersTriple.modularConj_apply_eq_reflection`): for `a ∈ W ∩ C`, `b ∈ W ∩ -C` and
 `z ∈ W ∩ -W`, the modular group `Δ^{it}` and the modular conjugation `J` of `(M, Ω)` satisfy
@@ -75,20 +77,19 @@ structure BorchersTriple (V : Type*) [NormedAddCommGroup V] [NormedSpace ℝ V]
     [InnerProductSpace ℂ H] [CompleteSpace H] where
   /-- The von Neumann algebra (of the wedge `W`). -/
   M : VonNeumannAlgebra H
-  /-- The unitary representation of the translations. -/
-  T : AddChar V (unitary (H →L[ℂ] H))
+  /-- The strongly continuous unitary representation of the translations. -/
+  T : UnitaryAddRepresentation V H
   /-- The vacuum vector. -/
   Ω : H
-  /-- The translations are strongly continuous. -/
-  isStronglyContinuous : T.IsStronglyContinuous
   /-- **Spectrum condition**: the projection-valued measure of `T` on the dual space vanishes off
   the dual cone `{p | ∀ a ∈ C, 0 ≤ p a}`. -/
-  pvm_compl_dual_eq_zero : isStronglyContinuous.pvm (topDualPairing ℝ V)
+  pvm_compl_dual_eq_zero : T.pvm (topDualPairing ℝ V)
     (ProperCone.dual (topDualPairing ℝ V).flip (C : Set V) : Set (StrongDual ℝ V))ᶜ = 0
   /-- Translations into the wedge map `M` into itself. -/
-  mul_mul_star_mem : ∀ x ∈ W, ∀ y ∈ M, (T x : H →L[ℂ] H) * y * star (T x : H →L[ℂ] H) ∈ M
+  mul_mul_star_mem : ∀ x ∈ W, ∀ y ∈ M,
+    (T x : H →L[ℂ] H) * y * star (T x : H →L[ℂ] H) ∈ M
   /-- The vacuum is invariant under translations. -/
-  apply_vacuum : ∀ x, (T x : H →L[ℂ] H) Ω = Ω
+  apply_vacuum : ∀ x, T x Ω = Ω
   /-- The vacuum is cyclic and separating for `M`. -/
   isCyclicSeparating : VonNeumannAlgebra.IsCyclicSeparating M Ω
 
@@ -111,9 +112,8 @@ noncomputable abbrev standardSubspace : StandardSubspace H :=
 
 /-- The spectrum condition: every `a ∈ C` generates translations `s ↦ T(s a)` with positive
 generator. -/
-lemma subset_spectralCone : (C : Set V) ⊆ B.isStronglyContinuous.spectralCone :=
-  (B.isStronglyContinuous.subset_spectralCone_iff (topDualPairing ℝ V) C).mpr
-    B.pvm_compl_dual_eq_zero
+lemma subset_spectralCone : (C : Set V) ⊆ B.T.spectralCone :=
+  (B.T.subset_spectralCone_iff (topDualPairing ℝ V) C).mpr B.pvm_compl_dual_eq_zero
 
 variable {a b z : V}
 
@@ -121,19 +121,18 @@ variable {a b z : V}
 `z ∈ W ∩ -W`, `Δ^{it} T(r a + s b + z) Δ^{-it} = T(e^{-2πt} r a + e^{2πt} s b + z)`. -/
 theorem modularGroup_mul_mul_eq_boost (ha : a ∈ W) (haC : a ∈ C) (hb : b ∈ W) (hbC : -b ∈ C)
     (hz : z ∈ W) (hz' : -z ∈ W) (r s t : ℝ) :
-    B.standardSubspace.modularGroup t * B.T (r • a + s • b + z) *
-      B.standardSubspace.modularGroup (-t) =
-        B.T ((Real.exp (-2 * π * t) * r) • a + (Real.exp (2 * π * t) * s) • b + z) :=
-  VonNeumannAlgebra.modularGroup_mul_mul_eq_boost B.isStronglyContinuous (fun v _ => B.apply_vacuum v)
+    Δ[B.standardSubspace]^{i t} * B.T (r • a + s • b + z) * Δ[B.standardSubspace]^{-i t} =
+      B.T ((Real.exp (-2 * π * t) * r) • a + (Real.exp (2 * π * t) * s) • b + z) :=
+  VonNeumannAlgebra.modularGroup_mul_mul_eq_boost B.T (fun v _ => B.apply_vacuum v)
     B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb (B.subset_spectralCone hbC) hz hz' r s t
 
 /-- **Borchers' theorem** for Borchers triples, modular conjugation: for `a ∈ W ∩ C`,
 `b ∈ W ∩ -C` and `z ∈ W ∩ -W`, `J T(r a + s b + z) J = T(-r a - s b + z)`. -/
 theorem modularConj_apply_eq_reflection (ha : a ∈ W) (haC : a ∈ C) (hb : b ∈ W) (hbC : -b ∈ C)
     (hz : z ∈ W) (hz' : -z ∈ W) (r s : ℝ) (x : H) :
-    J[B.standardSubspace] ((B.T (r • a + s • b + z) : H →L[ℂ] H) (J[B.standardSubspace] x)) =
-      (B.T (-(r • a) - s • b + z) : H →L[ℂ] H) x :=
-  VonNeumannAlgebra.modularConj_apply_eq_reflection B.isStronglyContinuous (fun v _ => B.apply_vacuum v)
+    J[B.standardSubspace] (B.T (r • a + s • b + z) (J[B.standardSubspace] x)) =
+      B.T (-(r • a) - s • b + z) x :=
+  VonNeumannAlgebra.modularConj_apply_eq_reflection B.T (fun v _ => B.apply_vacuum v)
     B.mul_mul_star_mem ha (B.subset_spectralCone haC) hb (B.subset_spectralCone hbC) hz hz' r s x
 
 end BorchersTriple
@@ -145,16 +144,14 @@ namespace BorchersTriple
 /-- **The trivial Borchers triple** on `ℂ`, relative to any cones `C` and `W`: `M = 𝓑(ℂ)`,
 trivial translations and `Ω = 1`. The spectrum condition holds because the projection-valued
 measure of the trivial representation is the Dirac measure at `0`
-(`AddChar.IsStronglyContinuous.pvm_one`), and `0` lies in every dual cone. -/
+(`UnitaryAddRepresentation.pvm_one`), and `0` lies in every dual cone. -/
 noncomputable def trivial (V : Type*) [NormedAddCommGroup V] [NormedSpace ℝ V]
     [FiniteDimensional ℝ V] (C W : ProperCone ℝ V) : BorchersTriple V C W ℂ where
   M := 𝓑(ℂ)
   T := 1
   Ω := 1
-  isStronglyContinuous := AddChar.isStronglyContinuous_iff.mpr fun y => by
-    simpa using continuous_const
   pvm_compl_dual_eq_zero := by
-    rw [AddChar.IsStronglyContinuous.pvm_one, MeasureTheory.ProjectionValuedMeasure.dirac_apply _
+    rw [UnitaryAddRepresentation.pvm_one, MeasureTheory.ProjectionValuedMeasure.dirac_apply _
       (ProperCone.isClosed _).measurableSet.compl]
     simp
   mul_mul_star_mem _ _ _ _ := VonNeumannAlgebra.mem_boundedLinearOperators _
