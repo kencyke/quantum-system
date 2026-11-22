@@ -99,6 +99,26 @@ theorem IsSplitPairAt.of_splitProperty [ProperContainment (Set α)]
     {S₁ S₂ S₃ : Set α} (h : S₁ ⋐ S₂) (hd : Disjoint S₂ S₃) : N.IsSplitPairAt ω S₁ S₃ :=
   VonNeumannNet.SplitProperty.isSplitPair hs h hd
 
+/-- For a multiplicative state, the local von Neumann algebras of the GNS representation consist
+    of scalars: they lie in `𝓑(H)′`. -/
+private lemma localVonNeumannAlgebra_le_commutant_of_map_mul {ω : State N.quasiLocalCStarAlgebra}
+    (hω : ∀ a b, ω (a * b) = ω a * ω b) (Λ : Finset α) :
+    N.localVonNeumannAlgebra GNS[ω].toCStarRep Λ ≤ (𝓑(GNS[ω].H))′ := by
+  rw [LocalNet.localVonNeumannAlgebra]
+  refine VonNeumannAlgebra.generated_le (M := (𝓑(GNS[ω].H))′) ?_
+  rintro _ ⟨a, rfl⟩
+  exact VonNeumannAlgebra.mem_commutant_boundedLinearOperators_iff.mpr
+    ⟨_, GNS[ω].π_eq_smul_one_of_map_mul hω _⟩
+
+/-- For a multiplicative state, the operators localised in the finite regions inside `S` are
+    scalars in the GNS representation. -/
+private lemma finiteLocalOperators_subset_commutant_of_map_mul
+    {ω : State N.quasiLocalCStarAlgebra} (hω : ∀ a b, ω (a * b) = ω a * ω b) (S : Set α) :
+    (N.vonNeumannNet GNS[ω].toCStarRep).finiteLocalOperators S ⊆
+      ((𝓑(GNS[ω].H))′ : Set (GNS[ω].H →L[ℂ] GNS[ω].H)) := fun x hx => by
+  obtain ⟨Λ, -, hx⟩ := VonNeumannNet.mem_finiteLocalOperators.1 hx
+  exact N.localVonNeumannAlgebra_le_commutant_of_map_mul hω Λ hx
+
 /-- **Every multiplicative state splits every pair of regions**, trivially: its GNS
     representation acts by scalars (`GNS.Representation.π_eq_smul_one_of_map_mul`), so every local
     algebra lies in the scalar algebra `ℂ1 = 𝓑(H)′`, which is a type I factor
@@ -107,15 +127,8 @@ theorem IsSplitPairAt.of_splitProperty [ProperContainment (Set α)]
 theorem IsSplitPairAt.of_map_mul {ω : State N.quasiLocalCStarAlgebra}
     (hω : ∀ a b, ω (a * b) = ω a * ω b) (S₁ S₂ : Set α) : N.IsSplitPairAt ω S₁ S₂ := by
   refine ⟨_, VonNeumannAlgebra.isTypeIFactor_commutant_boundedLinearOperators, ?_, ?_⟩
-  · refine VonNeumannAlgebra.generated_le fun x hx => ?_
-    obtain ⟨Λ, -, hx⟩ := VonNeumannNet.mem_finiteLocalOperators.1 hx
-    rw [LocalNet.vonNeumannNet_algebra, LocalNet.localVonNeumannAlgebra] at hx
-    refine VonNeumannAlgebra.generated_le
-      (M := (𝓑(GNS[ω].H))′) ?_ hx
-    rintro _ ⟨a, rfl⟩
-    simp only
-    rw [GNS[ω].π_eq_smul_one_of_map_mul hω]
-    exact SetLike.mem_coe.2 (SMulMemClass.smul_mem _ (one_mem _))
+  · exact VonNeumannAlgebra.generated_le
+      (N.finiteLocalOperators_subset_commutant_of_map_mul hω S₁)
   · exact VonNeumannAlgebra.commutant_le fun x _ => VonNeumannAlgebra.mem_boundedLinearOperators x
 
 end State

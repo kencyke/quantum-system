@@ -24,6 +24,12 @@ permutation via `Covariance.ofSitePerm`, and conversely every covariance of a la
 this way (`Covariance.exists_eq_ofSitePerm`), since an order automorphism of `Finset sites` maps
 atoms to atoms and the atoms are the singletons.
 
+Covariances are defined for graded-local nets (`GradedLocalNet`), of which the local nets are the
+case of the trivial parity: the `*`-isomorphisms `β_O` preserve the parity (`β_parity`), which is no
+condition for a `LocalNet`, whose covariances are built without it (`Covariance.mk'`,
+`Covariance.ofSitePerm'`). The parity itself is a covariance leaving every region in place
+(`GradedLocalNet.parityCovariance`).
+
 This file isolates the abstract covariance *data* and its group structure. Its *action* on the
 quasi-local algebra — assembling the per-region `*`-isomorphisms into a `*`-automorphism
 `localObservableCovarianceEquiv` and (for a `Faithful` net) its continuous extension to the
@@ -31,7 +37,10 @@ quasi-local C⋆-algebra — is built in `QuantumSystem.Physics.LocalNet.QuasiLo
 group `G` acts on the net by supplying a group homomorphism `G →* N.Covariance` (whose `σ`-component
 is the geometric action `G → K ≃o K`); composing it with `localObservableCovarianceHom` — or, for a
 `Faithful` net, `quasiLocalCStarCovarianceHom` — yields the automorphic action of `G` on the
-(quasi-local) algebra.
+(quasi-local) algebra. The covariances themselves carry no topology: continuity is a property of the
+action of a symmetry group `G` whose topology is given. When `g ↦ β_{φ g} z` is norm-continuous for
+every `z` in the quasi-local C⋆-algebra — it suffices to check local observables, and it holds for
+every discrete `G` — the action is a C⋆-dynamical system (`quasiLocalCStarDynamicalSystem`).
 
 ## Notation
 
@@ -42,11 +51,11 @@ and why neither is a Lean notation — is stated in full in `QuantumSystem.Physi
 
 @[expose] public section
 
-namespace LocalNet
+namespace GradedLocalNet
 
 open scoped CausalOrthogonality
 
-variable {K : Type*} [Preorder K] [CausalOrthogonality K] (N : LocalNet K)
+variable {K : Type*} [Preorder K] [CausalOrthogonality K] (N : GradedLocalNet K)
 
 /-! ### Covariances of the net
 
@@ -73,6 +82,10 @@ structure Covariance where
       itself compatibly with inclusions — the AQFT covariance axiom `β(𝔄(O)) = 𝔄(σO)`. -/
   β_incl : ∀ {O O' : K} (h : O ≤ O') (x : N.algebra O),
       β O' (N.incl h x) = N.incl (σ.monotone h) (β O x)
+  /-- The covariance `*`-isomorphisms preserve the parity, so a covariance is a symmetry of the
+      graded net. For a `LocalNet`, whose parity is trivial, this holds for every `β`
+      (`GradedLocalNet.Covariance.mk'`). -/
+  β_parity : ∀ (O : K) (x : N.algebra O), β O (N.parity O x) = N.parity (σ O) (β O x)
 
 namespace Covariance
 
@@ -85,8 +98,8 @@ variable {N} (a : N.Covariance)
     (hβ : ∀ (O : K) (x : N.algebra O) (e : s.σ O = t.σ O),
       N.algebraCongr e (s.β O x) = t.β O x) : s = t := by
   revert hσ hβ
-  obtain ⟨sσ, -, sβ, -⟩ := s
-  obtain ⟨tσ, -, tβ, -⟩ := t
+  obtain ⟨sσ, -, sβ, -, -⟩ := s
+  obtain ⟨tσ, -, tβ, -, -⟩ := t
   rintro rfl hβ
   have hβ' : sβ = tβ := by
     funext O
@@ -99,6 +112,13 @@ variable {N} (a : N.Covariance)
 lemma β_symm_incl {O O' : K} (h : O ≤ O') (y : N.algebra (a.σ O)) :
     (a.β O').symm (N.incl (a.σ.monotone h) y) = N.incl h ((a.β O).symm y) := by
   have key := a.β_incl h ((a.β O).symm y)
+  rw [StarAlgEquiv.apply_symm_apply] at key
+  rw [← key, StarAlgEquiv.symm_apply_apply]
+
+/-- The inverse local `*`-isomorphisms preserve the parity. -/
+lemma β_symm_parity (O : K) (y : N.algebra (a.σ O)) :
+    (a.β O).symm (N.parity (a.σ O) y) = N.parity O ((a.β O).symm y) := by
+  have key := a.β_parity O ((a.β O).symm y)
   rw [StarAlgEquiv.apply_symm_apply] at key
   rw [← key, StarAlgEquiv.symm_apply_apply]
 
@@ -115,6 +135,7 @@ def id : N.Covariance where
   map_orthogonal_iff _ _ := Iff.rfl
   β _ := StarAlgEquiv.refl ℂ _
   β_incl _ _ := rfl
+  β_parity _ _ := rfl
 
 /-- **Composition of covariances**: apply `b`, then `a`. The region automorphisms compose, and
     the local `*`-isomorphisms compose along them. -/
@@ -128,6 +149,9 @@ def comp (a b : N.Covariance) : N.Covariance where
     change a.β (b.σ _) (b.β _ (N.incl h x)) = N.incl _ (a.β (b.σ _) (b.β _ x))
     rw [b.β_incl h]
     exact a.β_incl (b.σ.monotone h) ((b.β _) x)
+  β_parity O x := by
+    change a.β (b.σ O) (b.β O (N.parity O x)) = N.parity _ (a.β (b.σ O) (b.β O x))
+    rw [b.β_parity, a.β_parity]
 
 /-- The **inverse covariance**: the inverse region automorphism with the inverse local
     `*`-isomorphisms, transported along `σ(σ⁻¹O) = O`. -/
@@ -139,6 +163,9 @@ def inv (a : N.Covariance) : N.Covariance where
   β_incl h x := by
     simp only [StarAlgEquiv.trans_apply]
     rw [N.incl_algebraCongr _ _ h (a.σ.monotone (a.σ.symm.monotone h)), a.β_symm_incl]
+  β_parity O x := by
+    simp only [StarAlgEquiv.trans_apply]
+    rw [N.parity_algebraCongr, a.β_symm_parity]
 
 /-- The identity covariance acts as the identity on every local algebra. Not a simp lemma: the
     codomain type of `β O` depends on `σ O`, which `simp` rewrites first (`id_σ_apply`), after which
@@ -216,6 +243,36 @@ lemma one_def : (1 : N.Covariance) = Covariance.id N := rfl
 /-- The group inverse is the inverse covariance. -/
 lemma inv_def (a : N.Covariance) : a⁻¹ = a.inv := rfl
 
+end Covariance
+
+/-! ### The parity as a covariance -/
+
+/-- The **parity covariance**: the parity automorphisms of the local algebras, as a covariance
+    leaving every region in place. Its action on the quasi-local C⋆-algebra is the parity
+    automorphism `GradedLocalNet.quasiLocalParity`. For a `LocalNet` it is the unit
+    (`GradedLocalNet.parityCovariance_toGradedLocalNet`). -/
+def parityCovariance : N.Covariance where
+  σ := OrderIso.refl K
+  map_orthogonal_iff _ _ := Iff.rfl
+  β := N.parity
+  β_incl h x := N.parity_incl h x
+  β_parity _ _ := rfl
+
+/-- The parity covariance is an involution. -/
+lemma parityCovariance_mul_self : parityCovariance N * parityCovariance N = 1 := by
+  refine Covariance.ext rfl fun O x e => ?_
+  exact (N.algebraCongr_self (O := O) e _).trans (N.parity_parity x)
+
+/-- For a `LocalNet` the parity covariance is the unit. -/
+lemma parityCovariance_toGradedLocalNet (L : LocalNet K) :
+    parityCovariance L.toGradedLocalNet = 1 := by
+  refine Covariance.ext rfl fun O x e => ?_
+  exact (L.algebraCongr_self (O := O) e _).trans (L.parity_apply x)
+
+namespace Covariance
+
+variable {N}
+
 /-! ### Lattice covariances from site permutations -/
 
 /-- Build a covariance of a lattice net (`K = Finset sites`) from a **site permutation**: the
@@ -224,15 +281,18 @@ lemma inv_def (a : N.Covariance) : a⁻¹ = a.inv := rfl
     covariance of a lattice net arises this way — that is `exists_eq_ofSitePerm`, proved below via
     the fact that an order automorphism of `Finset sites` preserves atoms (singletons) and is
     therefore induced by a permutation of the sites. -/
-def ofSitePerm {sites : Type*} {N : LocalNet (Finset sites)} (σ : sites ≃ sites)
+def ofSitePerm {sites : Type*} {N : GradedLocalNet (Finset sites)} (σ : sites ≃ sites)
     (β : ∀ Λ : Finset sites, N.algebra Λ ≃⋆ₐ[ℂ] N.algebra (Λ.map σ.toEmbedding))
     (β_incl : ∀ {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (x : N.algebra Λ),
-      β Λ' (N.incl h x) = N.incl (Finset.map_subset_map.mpr h) (β Λ x)) :
+      β Λ' (N.incl h x) = N.incl (Finset.map_subset_map.mpr h) (β Λ x))
+    (β_parity : ∀ (Λ : Finset sites) (x : N.algebra Λ),
+      β Λ (N.parity Λ x) = N.parity (Λ.map σ.toEmbedding) (β Λ x)) :
     N.Covariance where
   σ := { toEquiv := σ.finsetCongr, map_rel_iff' := Finset.map_subset_map }
   map_orthogonal_iff _ _ := Finset.disjoint_map _
   β := β
   β_incl h x := β_incl h x
+  β_parity := β_parity
 
 /-! #### Every lattice covariance comes from a site permutation
 
@@ -291,7 +351,7 @@ lemma map_sitePerm {sites : Type*} (e : Finset sites ≃o Finset sites) (Λ : Fi
   · rintro ⟨x, hx, rfl⟩
     rwa [show sitePermFun e.symm ((sitePerm e).toEmbedding x) = x from (sitePerm e).left_inv x]
 
-variable {sites : Type*} {N : LocalNet (Finset sites)}
+variable {sites : Type*} {N : GradedLocalNet (Finset sites)}
 
 /-- **The region automorphism of a lattice covariance is induced by a site permutation.** -/
 lemma exists_sitePerm (a : N.Covariance) :
@@ -307,16 +367,65 @@ theorem exists_eq_ofSitePerm (a : N.Covariance) :
     ∃ (σ : sites ≃ sites)
       (β : ∀ Λ : Finset sites, N.algebra Λ ≃⋆ₐ[ℂ] N.algebra (Λ.map σ.toEmbedding))
       (β_incl : ∀ {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (x : N.algebra Λ),
-        β Λ' (N.incl h x) = N.incl (Finset.map_subset_map.mpr h) (β Λ x)),
-      a = Covariance.ofSitePerm σ β β_incl := by
+        β Λ' (N.incl h x) = N.incl (Finset.map_subset_map.mpr h) (β Λ x))
+      (β_parity : ∀ (Λ : Finset sites) (x : N.algebra Λ),
+        β Λ (N.parity Λ x) = N.parity (Λ.map σ.toEmbedding) (β Λ x)),
+      a = Covariance.ofSitePerm σ β β_incl β_parity := by
   obtain ⟨σ, hσ⟩ := a.exists_sitePerm
-  refine ⟨σ, fun Λ => (a.β Λ).trans (N.algebraCongr (hσ Λ)), ?_, ?_⟩
+  refine ⟨σ, fun Λ => (a.β Λ).trans (N.algebraCongr (hσ Λ)), ?_, ?_, ?_⟩
   · intro Λ Λ' h x
     simp only [StarAlgEquiv.trans_apply]
     rw [a.β_incl h]
     exact N.incl_algebraCongr (hσ Λ) (hσ Λ') (a.σ.monotone h) (Finset.map_subset_map.mpr h) _
+  · intro Λ x
+    simp only [StarAlgEquiv.trans_apply]
+    rw [a.β_parity, N.parity_algebraCongr]
   · exact Covariance.ext (OrderIso.ext (funext hσ)) fun Λ x e => rfl
 
 end Covariance
 
-end LocalNet
+end GradedLocalNet
+
+namespace GradedLocalNet.Covariance
+
+open scoped CausalOrthogonality
+
+variable {K : Type*} [Preorder K] [CausalOrthogonality K]
+
+/-- A covariance of a `LocalNet` from its region automorphism and local `*`-isomorphisms alone: the
+    parity being trivial, every `β` preserves it. -/
+def mk' (N : LocalNet K) (σ : K ≃o K)
+    (map_orthogonal_iff : ∀ ⦃O₁ O₂ : K⦄, σ O₁ ⟂ σ O₂ ↔ O₁ ⟂ O₂)
+    (β : ∀ O : K, N.algebra O ≃⋆ₐ[ℂ] N.algebra (σ O))
+    (β_incl : ∀ {O O' : K} (h : O ≤ O') (x : N.algebra O),
+      β O' (N.incl h x) = N.incl (σ.monotone h) (β O x)) :
+    N.Covariance where
+  σ := σ
+  map_orthogonal_iff := map_orthogonal_iff
+  β := β
+  β_incl := β_incl
+  β_parity O x := by rw [N.parity_apply, N.parity_apply]
+
+variable {sites : Type*}
+
+/-- `ofSitePerm` for a lattice `LocalNet`: a covariance from a site permutation and local
+`*`-isomorphisms alone, the parity being trivial. -/
+def ofSitePerm' (N : LocalNet (Finset sites)) (σ : sites ≃ sites)
+    (β : ∀ Λ : Finset sites, N.algebra Λ ≃⋆ₐ[ℂ] N.algebra (Λ.map σ.toEmbedding))
+    (β_incl : ∀ {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (x : N.algebra Λ),
+      β Λ' (N.incl h x) = N.incl (Finset.map_subset_map.mpr h) (β Λ x)) :
+    N.Covariance :=
+  ofSitePerm σ β β_incl fun _ x => by rw [N.parity_apply, N.parity_apply]
+
+/-- **Every covariance of a lattice `LocalNet` arises from a site permutation**:
+`exists_eq_ofSitePerm` without the parity condition, which a local net satisfies trivially. -/
+theorem exists_eq_ofSitePerm' {N : LocalNet (Finset sites)} (a : N.Covariance) :
+    ∃ (σ : sites ≃ sites)
+      (β : ∀ Λ : Finset sites, N.algebra Λ ≃⋆ₐ[ℂ] N.algebra (Λ.map σ.toEmbedding))
+      (β_incl : ∀ {Λ Λ' : Finset sites} (h : Λ ⊆ Λ') (x : N.algebra Λ),
+        β Λ' (N.incl h x) = N.incl (Finset.map_subset_map.mpr h) (β Λ x)),
+      a = ofSitePerm' N σ β β_incl :=
+  let ⟨σ, β, β_incl, _, h⟩ := exists_eq_ofSitePerm a
+  ⟨σ, β, β_incl, h⟩
+
+end GradedLocalNet.Covariance

@@ -16,7 +16,7 @@ it is nuclear when they are.
 
 ## Main results
 
-* `LocalNet.isNuclear_quasiLocalCStarAlgebra` — the quasi-local C⋆-algebra of a faithful local net
+* `GradedLocalNet.isNuclear_quasiLocalCStarAlgebra` — the quasi-local C⋆-algebra of a faithful local net
   with nuclear local algebras is nuclear.
 -/
 
@@ -24,10 +24,10 @@ it is nuclear when they are.
 
 universe v w
 
-namespace LocalNet
+namespace GradedLocalNet
 
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
-  (N : LocalNet K) [N.Faithful]
+  (N : GradedLocalNet K) [N.Faithful]
 
 /-- **The quasi-local C⋆-algebra of a faithful local net with nuclear local algebras is nuclear**:
 the local algebras embed isometrically, increasingly along the directed set of regions, with dense
@@ -43,4 +43,4 @@ theorem isNuclear_quasiLocalCStarAlgebra [∀ O, CStarAlgebra.IsNuclear.{v, w} (
       · exact ⟨N.incl h₂ X, N.ιLocalCStar_incl h₂ X⟩)
     N.denseRange_iUnion_ιLocalCStar
 
-end LocalNet
+end GradedLocalNet

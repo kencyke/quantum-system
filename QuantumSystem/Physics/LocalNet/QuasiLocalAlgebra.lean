@@ -7,6 +7,7 @@ module
 
 public import QuantumSystem.ForMathlib.Analysis.Normed.Group.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Completion
+public import QuantumSystem.Analysis.CStarAlgebra.StarAlgEquiv
 public import QuantumSystem.Physics.LocalNet.Covariance
 
 /-!
@@ -18,24 +19,38 @@ The **algebra of local observables** and the **quasi-local C⋆-algebra** of an 
 union of the local algebras an algebra. Lattice nets (`K = Finset sites`) are directed by unions
 with the empty region as base point.
 
-* `LocalNet.localObservables` is the algebraic inductive limit `⋃_O 𝔄(O)` of the local algebras
+* `GradedLocalNet.localObservables` is the algebraic inductive limit `⋃_O 𝔄(O)` of the local algebras
   along the isotony embeddings, with cocone `ιLocal`, exhaustion (`exists_ιLocal`) and locality
   (`ιLocal_commute_of_orthogonal`); the cocone is injective for a `Faithful` net
   (`ιLocal_injective`).
 * For a `Faithful` net the connecting maps are isometric, so the algebra of local observables
-  carries a C⋆-norm whose completion `LocalNet.quasiLocalCStarAlgebra` is the AQFT quasi-local
+  carries a C⋆-norm whose completion `GradedLocalNet.quasiLocalCStarAlgebra` is the AQFT quasi-local
   algebra `𝔄 = ‾⋃_O 𝔄(O)` (Naaijkens, *Anyons in Infinite Quantum Systems*, 2012, §1.3), with
   isometric local embeddings `ιLocalCStar` — unital `*`-homomorphisms `𝔄(O) →⋆ₐ[ℂ] 𝔄`, injective
   and with *closed* range, whose ranges are dense
   in `𝔄` only taken together (`denseRange_iUnion_ιLocalCStar`).
 
-A `LocalNet.Covariance` (defined in `QuantumSystem.Physics.LocalNet.Covariance`) acts on these
+A `GradedLocalNet.Covariance` (defined in `QuantumSystem.Physics.LocalNet.Covariance`) acts on these
 algebras: its per-region `*`-isomorphisms assemble into a ring endomorphism
 `localObservableCovariance` of the algebra of local observables, which is functorial and is shown
 `ℂ`-linear and `*`-preserving — hence bundled as a `*`-automorphism
 `localObservableCovarianceEquiv`, assembled into a group homomorphism
 `localObservableCovarianceHom`. For a `Faithful` net it is isometric and extends to a
-`*`-automorphism `quasiLocalCStarCovarianceEquiv` of the quasi-local C⋆-algebra.
+`*`-automorphism `quasiLocalCStarCovarianceEquiv` of the quasi-local C⋆-algebra, assembled into
+`quasiLocalCStarCovarianceHom`. A monoid `G` with a topology acting through `φ : G →* N.Covariance`
+acts on the quasi-local C⋆-algebra as a C⋆-dynamical system `G →ₜ* (𝔄 ≃⋆ₐ[ℂ] 𝔄)`
+(`quasiLocalCStarDynamicalSystem`) when the action is continuous in the point-norm topology, which
+is checked on local observables (`continuous_quasiLocalCStarCovarianceHom_comp_iff`) and holds for
+every `φ` when `G` is discrete. The covariances carry no topology of their own.
+
+Everything here is stated for graded-local nets (`GradedLocalNet`), whose isotony embeddings are
+all the construction uses. Graded locality passes to the quasi-local algebra: even local observables
+of causally orthogonal regions commute with everything
+(`ιLocalCStar_commute_of_orthogonal_of_even`), odd ones anticommute
+(`ιLocalCStar_mul_eq_neg_of_orthogonal_of_odd`); for a `LocalNet` this is commutation
+(`LocalNet.ιLocalCStar_commute_of_orthogonal`). The parities of the local algebras assemble into the
+parity automorphism `GradedLocalNet.quasiLocalParity` of the quasi-local C⋆-algebra, an involution;
+its fixed points, the even part, are in `QuantumSystem.Physics.LocalNet.Graded`.
 
 ## Notation
 
@@ -46,12 +61,12 @@ and why neither is a Lean notation — is stated in full in `QuantumSystem.Physi
 
 @[expose] public section
 
-namespace LocalNet
+namespace GradedLocalNet
 
 open scoped CausalOrthogonality
 
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
-variable (N : LocalNet K)
+variable (N : GradedLocalNet K)
 
 /-! ### Algebra of local observables
 
@@ -112,15 +127,24 @@ lemma exists_ιLocal (z : N.localObservables) :
   induction z using NormedDirectLimit.induction with
   | _ O X => exact ⟨O, X, rfl⟩
 
-/-- **Locality in the algebra of local observables**: observables localised in causally orthogonal
-    regions commute inside `𝔄_loc`. Pushes both observables into a directed upper bound of the two
-    regions and lifts the net's `locality` along the ring-hom cocone. -/
-lemma ιLocal_commute_of_orthogonal {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
-    (X : N.algebra O₁) (Y : N.algebra O₂) :
+/-- **Graded locality in the algebra of local observables**, even elements: an even observable
+    localised in a region commutes inside `𝔄_loc` with every observable localised in a causally
+    orthogonal region. -/
+lemma ιLocal_commute_of_orthogonal_of_even {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) (hX : N.parity O₁ X = X) :
     Commute (N.ιLocal O₁ X) (N.ιLocal O₂ Y) := by
   obtain ⟨O, h₁, h₂⟩ := directed_of (· ≤ ·) O₁ O₂
   rw [← N.ιLocal_incl h₁ X, ← N.ιLocal_incl h₂ Y]
-  exact (N.locality h₁ h₂ hd X Y).map (N.ιLocal O)
+  exact (N.locality_even h₁ h₂ hd X Y hX).map (N.ιLocal O)
+
+/-- **Graded locality in the algebra of local observables**, odd elements: odd observables
+    localised in causally orthogonal regions anticommute inside `𝔄_loc`. -/
+lemma ιLocal_mul_eq_neg_of_orthogonal_of_odd {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) (hX : N.parity O₁ X = -X) (hY : N.parity O₂ Y = -Y) :
+    N.ιLocal O₁ X * N.ιLocal O₂ Y = -(N.ιLocal O₂ Y * N.ιLocal O₁ X) := by
+  obtain ⟨O, h₁, h₂⟩ := directed_of (· ≤ ·) O₁ O₂
+  rw [← N.ιLocal_incl h₁ X, ← N.ιLocal_incl h₂ Y, ← map_mul, ← map_mul, ← map_neg,
+    N.locality_odd h₁ h₂ hd X Y hX hY]
 
 /-! ### Faithful nets and the quasi-local C⋆-algebra
 
@@ -221,13 +245,23 @@ theorem denseRange_iUnion_ιLocalCStar :
     Dense (⋃ O : K, Set.range (N.ιLocalCStar O)) :=
   NormedDirectLimit.dense_iUnion_range_coe_mk (G := N.algebra) (f := fun _ _ h => N.incl h)
 
-/-- **Locality in the quasi-local C⋆-algebra**: observables localised in causally orthogonal
-    regions commute inside `𝔄`. Transports `ιLocal_commute_of_orthogonal` along the completion
-    coercion. -/
-theorem ιLocalCStar_commute_of_orthogonal {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
-    (X : N.algebra O₁) (Y : N.algebra O₂) :
+/-- **Graded locality in the quasi-local C⋆-algebra**, even elements: an even observable
+    localised in a region commutes inside `𝔄` with every observable localised in a causally
+    orthogonal region. -/
+theorem ιLocalCStar_commute_of_orthogonal_of_even {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) (hX : N.parity O₁ X = X) :
     Commute (N.ιLocalCStar O₁ X) (N.ιLocalCStar O₂ Y) :=
-  (N.ιLocal_commute_of_orthogonal hd X Y).map UniformSpace.Completion.coeRingHom
+  (N.ιLocal_commute_of_orthogonal_of_even hd X Y hX).map UniformSpace.Completion.coeRingHom
+
+/-- **Graded locality in the quasi-local C⋆-algebra**, odd elements: odd observables localised in
+    causally orthogonal regions anticommute inside `𝔄`. -/
+theorem ιLocalCStar_mul_eq_neg_of_orthogonal_of_odd {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) (hX : N.parity O₁ X = -X) (hY : N.parity O₂ Y = -Y) :
+    N.ιLocalCStar O₁ X * N.ιLocalCStar O₂ Y = -(N.ιLocalCStar O₂ Y * N.ιLocalCStar O₁ X) := by
+  have h := congrArg (UniformSpace.Completion.coeRingHom (α := N.localObservables))
+    (N.ιLocal_mul_eq_neg_of_orthogonal_of_odd hd X Y hX hY)
+  rw [map_mul, map_neg, map_mul] at h
+  exact h
 
 end CStar
 
@@ -421,8 +455,108 @@ noncomputable def quasiLocalCStarCovarianceHom :
     (z : N.quasiLocalCStarAlgebra) :
   quasiLocalCStarCovarianceHom a z = a.quasiLocalCStarCovarianceEquiv z := rfl
 
+/-- The covariance automorphism of the quasi-local C⋆-algebra on a local observable:
+    `β_a (ι_O X) = ι_{σO} (β_O X)`. -/
+@[simp] lemma quasiLocalCStarCovarianceEquiv_ιLocalCStar (O : K) (X : N.algebra O) :
+    a.quasiLocalCStarCovarianceEquiv (N.ιLocalCStar O X) = N.ιLocalCStar (a.σ O) (a.β O X) :=
+  a.quasiLocalCStarCovarianceEquiv_coe (N.ιLocal O X)
+
+/-- **Continuity of a family of covariances is checked on local observables**: a map `f` into the
+    covariances acts continuously on the quasi-local C⋆-algebra in the point-norm topology iff
+    `y ↦ ι_{σ_y O} (β_{y,O} X)` is continuous for every region `O` and every local observable
+    `X ∈ 𝔄(O)`. The local algebras are dense (`denseRange_iUnion_ιLocalCStar`) and the covariance
+    automorphisms are isometric, so `StarAlgEquiv.continuous_of_dense` applies. -/
+theorem continuous_quasiLocalCStarCovarianceHom_comp_iff {X : Type*} [TopologicalSpace X]
+    {f : X → N.Covariance} :
+    Continuous (fun y => quasiLocalCStarCovarianceHom (f y)) ↔
+      ∀ (O : K) (x : N.algebra O), Continuous fun y => N.ιLocalCStar ((f y).σ O) ((f y).β O x) := by
+  refine ⟨fun h O x => ?_, fun h => ?_⟩
+  · simpa using StarAlgEquiv.continuous_iff.mp h (N.ιLocalCStar O x)
+  · refine StarAlgEquiv.continuous_of_dense N.denseRange_iUnion_ιLocalCStar fun z hz => ?_
+    obtain ⟨O, x, rfl⟩ := Set.mem_iUnion.mp hz
+    simpa using h O x
+
+variable {G : Type*} [Monoid G] [TopologicalSpace G]
+
+/-- A symmetry group (or monoid) `G` of a faithful net, acting through `φ : G →* N.Covariance`
+    **continuously** — `g ↦ β_{φ g} z` is norm-continuous for every `z` in the quasi-local
+    C⋆-algebra, the hypothesis `hφ` — acts on the quasi-local C⋆-algebra as a C⋆-dynamical system:
+    the composite of `φ` with `quasiLocalCStarCovarianceHom`. The continuity is a property of the
+    action of `G`, whose topology is given; the covariances themselves carry no topology. It is
+    checked on local observables (`continuous_quasiLocalCStarCovarianceHom_comp_iff`), and holds
+    for every `φ` when `G` is discrete (`continuous_of_discreteTopology`). -/
+noncomputable def quasiLocalCStarDynamicalSystem (φ : G →* N.Covariance)
+    (hφ : Continuous fun g => quasiLocalCStarCovarianceHom (φ g)) :
+    G →ₜ* (N.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] N.quasiLocalCStarAlgebra) :=
+  ⟨quasiLocalCStarCovarianceHom.comp φ, hφ⟩
+
+/-- The C⋆-dynamical system of a symmetry group acts by the covariance automorphisms. -/
+@[simp] lemma quasiLocalCStarDynamicalSystem_apply (φ : G →* N.Covariance)
+    (hφ : Continuous fun g => quasiLocalCStarCovarianceHom (φ g)) (g : G)
+    (z : N.quasiLocalCStarAlgebra) :
+    quasiLocalCStarDynamicalSystem φ hφ g z = (φ g).quasiLocalCStarCovarianceEquiv z :=
+  rfl
+
 end CStarCovariance
 
 end Covariance
+
+/-! ### The parity automorphism of the quasi-local algebra -/
+
+section Parity
+
+variable [N.Faithful]
+
+/-- The **parity automorphism** `Θ` of the quasi-local C⋆-algebra of a faithful graded-local net:
+    the automorphism restricting to the parity of every local algebra, obtained as the action of
+    the parity covariance (`GradedLocalNet.parityCovariance`). For a `LocalNet` it is the
+    identity (`GradedLocalNet.quasiLocalParity_toGradedLocalNet`). -/
+noncomputable def quasiLocalParity : N.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] N.quasiLocalCStarAlgebra :=
+  (parityCovariance N).quasiLocalCStarCovarianceEquiv
+
+/-- The quasi-local parity restricts to the parity of each local algebra. -/
+@[simp] lemma quasiLocalParity_ιLocalCStar (O : K) (X : N.algebra O) :
+    N.quasiLocalParity (N.ιLocalCStar O X) = N.ιLocalCStar O (N.parity O X) :=
+  (parityCovariance N).quasiLocalCStarCovarianceEquiv_ιLocalCStar O X
+
+/-- The quasi-local parity is an involution. -/
+@[simp] lemma quasiLocalParity_quasiLocalParity (z : N.quasiLocalCStarAlgebra) :
+    N.quasiLocalParity (N.quasiLocalParity z) = z := by
+  have h := congrArg (fun e : N.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] N.quasiLocalCStarAlgebra => e z)
+    ((map_mul Covariance.quasiLocalCStarCovarianceHom (parityCovariance N)
+      (parityCovariance N)).symm.trans (congrArg _ (parityCovariance_mul_self N)))
+  rwa [map_one] at h
+
+/-- For a `LocalNet` the quasi-local parity is the identity. -/
+lemma quasiLocalParity_toGradedLocalNet (L : LocalNet K) [L.Faithful]
+    (z : L.quasiLocalCStarAlgebra) : L.quasiLocalParity z = z := by
+  have h := congrArg (fun e : L.quasiLocalCStarAlgebra ≃⋆ₐ[ℂ] L.quasiLocalCStarAlgebra => e z)
+    (congrArg Covariance.quasiLocalCStarCovarianceHom (parityCovariance_toGradedLocalNet L))
+  rwa [map_one] at h
+
+end Parity
+
+end GradedLocalNet
+
+namespace LocalNet
+
+open scoped CausalOrthogonality
+
+variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
+variable (N : LocalNet K)
+
+/-- **Locality in the algebra of local observables**: observables localised in causally orthogonal
+    regions commute inside `𝔄_loc`: graded locality for the trivial parity of a local net. -/
+lemma ιLocal_commute_of_orthogonal {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) :
+    Commute (N.ιLocal O₁ X) (N.ιLocal O₂ Y) :=
+  N.ιLocal_commute_of_orthogonal_of_even hd X Y (N.parity_apply X)
+
+/-- **Locality in the quasi-local C⋆-algebra**: observables localised in causally orthogonal
+    regions commute inside `𝔄`: graded locality for the trivial parity of a local net. -/
+theorem ιLocalCStar_commute_of_orthogonal [N.Faithful] {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+    (X : N.algebra O₁) (Y : N.algebra O₂) :
+    Commute (N.ιLocalCStar O₁ X) (N.ιLocalCStar O₂ Y) :=
+  N.ιLocalCStar_commute_of_orthogonal_of_even hd X Y (N.parity_apply X)
 
 end LocalNet

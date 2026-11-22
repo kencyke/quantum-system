@@ -20,6 +20,16 @@ nets are the instance `K = Finset sites` with `⟂ = Disjoint`. The literature's
 index set — every region admits a causally disjoint one — is the mixin `CausalIndexSet`, kept
 separate because not every index family of the corpus satisfies it.
 
+**Fermions: graded locality.** The general structure is the **graded-local net**
+`GradedLocalNet`: every local algebra carries a parity automorphism, involutive and preserved by the
+isotony embeddings, and locality is graded — for causally orthogonal regions, even elements commute
+with everything and odd elements anticommute. This is the net of a system with fermions, where the
+algebras of disjoint regions do not commute. A `LocalNet` is a graded-local net whose parity is
+trivial (`LocalNet.parity_apply`); its locality is then commutation (`LocalNet.locality`), and
+`LocalNet.ofLocality` builds one from the commutation. What uses only the isotony embeddings —
+faithfulness, the quasi-local algebra, covariances — is stated for `GradedLocalNet` and applies to
+both; the even subnet and nets of subalgebras are in `QuantumSystem.Physics.LocalNet.Graded`.
+
 The order is carried as a `Preorder` throughout, not a `PartialOrder`: the literature's index sets
 are ordered by inclusion and so are partial orders, but antisymmetry is used nowhere in this
 development — not by the net axioms, not by the quasi-local algebra, not by the split property — so
@@ -292,19 +302,27 @@ instance {α : Type*} : CausalOrthogonality (Set α) where
 instance {α : Type*} : CausalIndexSet (Set α) :=
   ⟨fun S => ⟨∅, disjoint_bot_right (a := S)⟩⟩
 
-/-- A **local net of C⋆-algebras** over a causal index set `K` — an ordered set of
-    regions with a causal orthogonality relation `⟂` (`CausalOrthogonality`): the assignment
-    `O ↦ 𝔄(O)` together with isotony embeddings `incl : 𝔄(O) →⋆ₐ[ℂ] 𝔄(O')` for `O ≤ O'`,
-    functorial (`incl_refl`/`incl_trans`) and local (`locality`). This is the Haag–Kastler net
-    structure over an abstract index set, *without* the injectivity requirement on the isotony
-    embeddings; the literature's net
-    is `LocalNet` together with the `Faithful` class, which carries that requirement. Lattice nets are the instance
-    `K = Finset sites` with `⟂ = Disjoint`. -/
-structure LocalNet (K : Type*) [Preorder K] [CausalOrthogonality K] where
-  /-- The local C⋆-algebra `𝔄(O)` assigned to a region. For any self-orthogonal region `O ⟂ O`
-      (e.g. the empty lattice region) the axioms force `𝔄(O)` to be commutative (instantiate
-      `locality` at `O₁ = O₂ = O`) but do *not* force it to be trivial: the literature's
-      `𝔄(∅) = ℂ·1` is not required and must be imposed by a concrete instantiation when needed. -/
+/-- A **graded-local net of C⋆-algebras** over a causal index set `K`: the assignment `O ↦ 𝔄(O)`
+    with functorial isotony embeddings `incl`, a **parity** automorphism of every local algebra,
+    involutive and natural for the isotony embeddings, and **graded locality**: for causally
+    orthogonal regions, an even element commutes with every element of the other region
+    (`locality_even`) and two odd elements anticommute (`locality_odd`). An element `x` is *even* if
+    `parity O x = x` and *odd* if `parity O x = -x`; every element is the sum of its even part
+    `(x + parity O x) / 2` and its odd part `(x - parity O x) / 2`.
+
+    This is the net of a system with fermions (a Fermi net): the algebras of disjoint regions do
+    not commute, the fermionic operators of different regions anticommuting. A `LocalNet` is the
+    case of the trivial parity, where graded locality is commutation; the even parts form a local
+    net (`GradedLocalNet.even`). The parity is carried region by region because the net is given by
+    its local algebras and embeddings, not as subalgebras of one algebra; in a net of subalgebras it
+    is the restriction of one automorphism of the ambient algebra
+    (`GradedLocalNet.ofStarSubalgebras`).
+
+    As for `LocalNet`, the common region `O` of the locality fields is bound before the
+    orthogonality hypothesis, so they constrain the causally orthogonal pairs with a common upper
+    bound (`CausalOrthogonality.OrthogonalHat`). -/
+structure GradedLocalNet (K : Type*) [Preorder K] [CausalOrthogonality K] where
+  /-- The local C⋆-algebra `𝔄(O)` assigned to a region. -/
   algebra : K → Type*
   /-- Each local algebra is a (complex) C⋆-algebra. -/
   [algebraCStar : ∀ O, CStarAlgebra (algebra O)]
@@ -315,29 +333,96 @@ structure LocalNet (K : Type*) [Preorder K] [CausalOrthogonality K] where
   /-- **Functoriality**: the inclusions compose, so the net is a directed system. -/
   incl_trans : ∀ {O₁ O₂ O₃ : K} (h₁₂ : O₁ ≤ O₂) (h₂₃ : O₂ ≤ O₃) (x : algebra O₁),
       incl h₂₃ (incl h₁₂ x) = incl (h₁₂.trans h₂₃) x
-  /-- **Locality** (microcausality, Einstein causality): observables localised in causally
-      orthogonal regions commute inside any common larger region.
+  /-- The **parity** automorphism of a local algebra: `+1` on the even (bosonic) elements and `-1`
+      on the odd (fermionic) ones. -/
+  parity : ∀ O : K, algebra O ≃⋆ₐ[ℂ] algebra O
+  /-- The parity is an involution. -/
+  parity_parity : ∀ {O : K} (x : algebra O), parity O (parity O x) = x
+  /-- The isotony embeddings preserve the parity. -/
+  parity_incl : ∀ {O O' : K} (h : O ≤ O') (x : algebra O),
+      parity O' (incl h x) = incl h (parity O x)
+  /-- **Graded locality**, even elements: an even element localised in a region commutes with
+      every element localised in a causally orthogonal region, inside any common larger region. -/
+  locality_even : ∀ {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O), O₁ ⟂ O₂ →
+      ∀ (x : algebra O₁) (y : algebra O₂), parity O₁ x = x → Commute (incl h₁ x) (incl h₂ y)
+  /-- **Graded locality**, odd elements: odd elements localised in causally orthogonal regions
+      anticommute inside any common larger region. -/
+  locality_odd : ∀ {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O), O₁ ⟂ O₂ →
+      ∀ (x : algebra O₁) (y : algebra O₂), parity O₁ x = -x → parity O₂ y = -y →
+        incl h₁ x * incl h₂ y = -(incl h₂ y * incl h₁ x)
 
-      The common region `O` is bound *before* the orthogonality hypothesis, and that is not an
-      accident of phrasing: `Commute x y` for `x : 𝔄(O₁)` and `y : 𝔄(O₂)` is not even typeable
-      without an algebra containing both, and over a non-directed index set there need be no such
-      region — nor any quasi-local algebra to fall back on. So the pairs this field constrains are
-      exactly those causally orthogonal pairs that admit a common upper bound, which is the derived
-      relation `CausalOrthogonality.OrthogonalHat` (`⊥̂`) rather than `⟂` itself. The two coincide
-      on directed index sets (`CausalOrthogonality.orthogonalHat_iff`) — and, once the orthogonality
-      relation is quantified over, only there
-      (`CausalOrthogonality.isDirectedOrder_iff_forall_orthogonalHat_iff`) — which is where every
-      consumer of this field lives.
+attribute [instance] GradedLocalNet.algebraCStar
 
-      A net over a genuinely non-directed index set that needs locality for `⟂` itself must be
-      taken as a `VonNeumannNet` (`QuantumSystem.Physics.LocalNet.VonNeumannNet`), whose ambient
-      `𝓑(H)` lets `algebra_le_commutant_of_orthogonal` state locality with no upper bound. -/
-  locality : ∀ {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O), O₁ ⟂ O₂ →
-      ∀ (x : algebra O₁) (y : algebra O₂), Commute (incl h₁ x) (incl h₂ y)
+/-- A **local net of C⋆-algebras** over a causal index set `K` — an ordered set of
+    regions with a causal orthogonality relation `⟂` (`CausalOrthogonality`): the assignment
+    `O ↦ 𝔄(O)` together with isotony embeddings `incl : 𝔄(O) →⋆ₐ[ℂ] 𝔄(O')` for `O ≤ O'`,
+    functorial (`incl_refl`/`incl_trans`) and local (`locality`). This is the Haag–Kastler net
+    structure over an abstract index set, *without* the injectivity requirement on the isotony
+    embeddings; the literature's net
+    is `LocalNet` together with the `Faithful` class, which carries that requirement. Lattice nets are the instance
+    `K = Finset sites` with `⟂ = Disjoint`.
+
+    It is the `GradedLocalNet` with the trivial parity (`parity_apply`), for which graded locality
+    is commutation (`LocalNet.locality`); `LocalNet.ofLocality` builds one from the commutation. -/
+structure LocalNet (K : Type*) [Preorder K] [CausalOrthogonality K] extends GradedLocalNet K where
+  /-- The parity of a local net is trivial: every element is even. -/
+  parity_apply : ∀ {O : K} (x : algebra O), parity O x = x
 
 namespace LocalNet
 
-attribute [instance] algebraCStar
+section Locality
+
+variable {K : Type*} [Preorder K] [CausalOrthogonality K]
+
+/-- **Locality** (microcausality, Einstein causality): observables localised in causally
+    orthogonal regions commute inside any common larger region.
+
+    The common region `O` is bound *before* the orthogonality hypothesis, and that is not an
+    accident of phrasing: `Commute x y` for `x : 𝔄(O₁)` and `y : 𝔄(O₂)` is not even typeable
+    without an algebra containing both, and over a non-directed index set there need be no such
+    region — nor any quasi-local algebra to fall back on. So the pairs this statement constrains are
+    exactly those causally orthogonal pairs that admit a common upper bound, which is the derived
+    relation `CausalOrthogonality.OrthogonalHat` (`⊥̂`) rather than `⟂` itself. The two coincide
+    on directed index sets (`CausalOrthogonality.orthogonalHat_iff`) — and, once the orthogonality
+    relation is quantified over, only there
+    (`CausalOrthogonality.isDirectedOrder_iff_forall_orthogonalHat_iff`) — which is where every
+    consumer of this statement lives.
+
+    A net over a genuinely non-directed index set that needs locality for `⟂` itself must be
+    taken as a `VonNeumannNet` (`QuantumSystem.Physics.LocalNet.VonNeumannNet`), whose ambient
+    `𝓑(H)` lets `algebra_le_commutant_of_orthogonal` state locality with no upper bound. -/
+theorem locality (N : LocalNet K) {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O) (hd : O₁ ⟂ O₂)
+    (x : N.algebra O₁) (y : N.algebra O₂) : Commute (N.incl h₁ x) (N.incl h₂ y) :=
+  N.locality_even h₁ h₂ hd x y (N.parity_apply x)
+
+/-- A **local net from commutation**: the isotony data together with the commutation of the
+    algebras of causally orthogonal regions inside any common larger region. The parity is the
+    identity, every element is even, and graded locality is the given commutation. -/
+def ofLocality (algebra : K → Type*) [algebraCStar : ∀ O, CStarAlgebra (algebra O)]
+    (incl : ∀ {O O' : K}, O ≤ O' → (algebra O →⋆ₐ[ℂ] algebra O'))
+    (incl_refl : ∀ {O : K} (x : algebra O), incl (le_refl O) x = x)
+    (incl_trans : ∀ {O₁ O₂ O₃ : K} (h₁₂ : O₁ ≤ O₂) (h₂₃ : O₂ ≤ O₃) (x : algebra O₁),
+      incl h₂₃ (incl h₁₂ x) = incl (h₁₂.trans h₂₃) x)
+    (locality : ∀ {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O), O₁ ⟂ O₂ →
+      ∀ (x : algebra O₁) (y : algebra O₂), Commute (incl h₁ x) (incl h₂ y)) :
+    LocalNet K where
+  algebra := algebra
+  incl := incl
+  incl_refl := incl_refl
+  incl_trans := incl_trans
+  parity _ := StarAlgEquiv.refl ℂ _
+  parity_parity _ := rfl
+  parity_incl _ _ := rfl
+  locality_even h₁ h₂ hd x y _ := locality h₁ h₂ hd x y
+  locality_odd h₁ h₂ hd x y hx _ := by
+    have h2 : (2 : ℂ) • x = 0 := by
+      rw [two_smul]
+      exact eq_neg_iff_add_eq_zero.mp hx
+    have hx0 : x = 0 := (smul_eq_zero.mp h2).resolve_left two_ne_zero
+    simp [hx0]
+  parity_apply _ := rfl
+
+end Locality
 
 section SemilatticeSup
 
@@ -346,7 +431,7 @@ variable {K : Type*} [SemilatticeSup K] [CausalOrthogonality K]
 /-- Smart constructor for `LocalNet` over a join-semilattice of regions, taking locality only
     inside the canonical join region `O₁ ⊔ O₂`: given `incl_trans`, commutation there pushes
     forward along `incl : 𝔄(O₁ ⊔ O₂) →⋆ₐ[ℂ] 𝔄(O)` to any common superregion `O`, so the join case
-    is equivalent to the general `locality` field. For lattice nets (`K = Finset sites`) the join
+    is equivalent to the general locality. For lattice nets (`K = Finset sites`) the join
     is the union of regions. -/
 def mk' (algebra : K → Type*) [algebraCStar : ∀ O, CStarAlgebra (algebra O)]
     (incl : ∀ {O O' : K}, O ≤ O' → (algebra O →⋆ₐ[ℂ] algebra O'))
@@ -356,18 +441,18 @@ def mk' (algebra : K → Type*) [algebraCStar : ∀ O, CStarAlgebra (algebra O)]
     (locality_sup : ∀ {O₁ O₂ : K}, O₁ ⟂ O₂ →
       ∀ (x : algebra O₁) (y : algebra O₂),
         Commute (incl le_sup_left x) (incl le_sup_right y)) :
-    LocalNet K where
-  algebra := algebra
-  incl := incl
-  incl_refl := incl_refl
-  incl_trans := incl_trans
-  locality h₁ h₂ hortho x y := by
+    LocalNet K :=
+  ofLocality algebra incl incl_refl incl_trans fun h₁ h₂ hortho x y => by
     have h := (locality_sup hortho x y).map (incl (sup_le h₁ h₂))
     rwa [incl_trans, incl_trans] at h
 
 end SemilatticeSup
 
-variable {K : Type*} [Preorder K] [CausalOrthogonality K] (N : LocalNet K)
+end LocalNet
+
+namespace GradedLocalNet
+
+variable {K : Type*} [Preorder K] [CausalOrthogonality K] (N : GradedLocalNet K)
 
 /-- The net forms a directed system of `*`-algebras: the isotony embeddings compose and the
     identity inclusion is the identity. -/
@@ -376,9 +461,15 @@ instance directedSystem :
   map_self _ x := N.incl_refl x
   map_map _ _ _ hij hjk x := N.incl_trans hij hjk x
 
+end GradedLocalNet
+
+namespace LocalNet
+
+variable {K : Type*} [Preorder K] [CausalOrthogonality K] (N : LocalNet K)
+
 /-! ### What locality constrains
 
-The `locality` field quantifies over a common upper bound of the two regions, so the pairs it
+`LocalNet.locality` quantifies over a common upper bound of the two regions, so the pairs it
 constrains are exactly those related by the derived relation `⊥̂` of
 `CausalOrthogonality.OrthogonalHat`. The two lemmas below say this in both directions of the
 directedness dichotomy: `⊥̂`-related pairs always get commutation somewhere, and on a directed
@@ -386,8 +477,8 @@ index set that is every causally orthogonal pair.
 -/
 
 /-- **Locality is locality for the derived relation `⊥̂`**: a causally orthogonal pair admitting a
-    common upper bound commutes inside one. This is the whole content of the `locality` field —
-    for a causally orthogonal pair with *no* common upper bound the field says nothing, and cannot,
+    common upper bound commutes inside one. This is the whole content of `LocalNet.locality` —
+    for a causally orthogonal pair with *no* common upper bound it says nothing, and cannot,
     since the commutation has nowhere to be stated. -/
 theorem exists_locality_of_orthogonalHat {O₁ O₂ : K}
     (h : CausalOrthogonality.OrthogonalHat O₁ O₂) :
@@ -398,13 +489,19 @@ theorem exists_locality_of_orthogonalHat {O₁ O₂ : K}
 
 /-- **On a directed index set locality is locality for `⟂` itself**: directedness supplies the
     common upper bound, so every causally orthogonal pair commutes inside some region. This is the
-    setting of every consumer of the `locality` field — in particular of
+    setting of every consumer of `LocalNet.locality` — in particular of
     `LocalNet.ιLocal_commute_of_orthogonal`, where the quasi-local algebra provides the ambient
     algebra in which the commutation is finally stated for all pairs at once. -/
 theorem exists_locality_of_orthogonal [IsDirectedOrder K] {O₁ O₂ : K} (h : O₁ ⟂ O₂) :
     ∃ (O : K) (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O),
       ∀ (x : N.algebra O₁) (y : N.algebra O₂), Commute (N.incl h₁ x) (N.incl h₂ y) :=
   N.exists_locality_of_orthogonalHat (CausalOrthogonality.orthogonalHat_iff.2 h)
+
+end LocalNet
+
+namespace GradedLocalNet
+
+variable {K : Type*} [Preorder K] [CausalOrthogonality K] (N : GradedLocalNet K)
 
 /-! ### Faithful nets
 
@@ -413,12 +510,12 @@ non-degeneracy condition). The quasi-local C⋆-norm built from this hypothesis 
 `QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra`.
 -/
 
-/-- A local net is **faithful** when all its isotony embeddings are injective. In the standard
+/-- A graded-local net is **faithful** when all its isotony embeddings are injective. In the standard
     AQFT definition the isotony embeddings are *injective* unital `*`-homomorphisms, so a faithful local
     net — `LocalNet` together with `Faithful` — is the literature's net.
     Carried as a typeclass rather than a structure field so algebraic constructions can state the
     non-degeneracy hypothesis only where they need it. -/
-class Faithful {K : Type*} [Preorder K] [CausalOrthogonality K] (N : LocalNet K) : Prop where
+class Faithful {K : Type*} [Preorder K] [CausalOrthogonality K] (N : GradedLocalNet K) : Prop where
   /-- Every isotony embedding of the net is injective. -/
   incl_injective : ∀ {O O' : K} (h : O ≤ O'), Function.Injective (N.incl h)
 
@@ -434,6 +531,11 @@ lemma incl_algebraCongr {O₁ O₂ O₁' O₂' : K} (e₁ : O₁ = O₁') (e₂ 
     (h : O₁ ≤ O₂) (h' : O₁' ≤ O₂') (x : N.algebra O₁) :
     N.algebraCongr e₂ (N.incl h x) = N.incl h' (N.algebraCongr e₁ x) := by
   subst e₁; subst e₂; rfl
+
+/-- The parity is natural with respect to the region-equality transport. -/
+lemma parity_algebraCongr {O O' : K} (e : O = O') (x : N.algebra O) :
+    N.algebraCongr e (N.parity O x) = N.parity O' (N.algebraCongr e x) := by
+  subst e; rfl
 
 /-- Transports along composable region equalities compose. -/
 @[simp] lemma algebraCongr_trans {O₁ O₂ O₃ : K} (h₁ : O₁ = O₂) (h₂ : O₂ = O₃)
@@ -451,4 +553,4 @@ lemma algebraCongr_eq_iff {O O' : K} (h : O = O') (x : N.algebra O)
     (y : N.algebra O') : N.algebraCongr h x = y ↔ x = N.algebraCongr h.symm y := by
   subst h; simp
 
-end LocalNet
+end GradedLocalNet
