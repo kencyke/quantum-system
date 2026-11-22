@@ -219,6 +219,7 @@ public import QuantumSystem.ForMathlib.RepresentationTheory.AlgebraRepresentatio
 public import QuantumSystem.ForMathlib.RingTheory.Ideal.Pi
 public import QuantumSystem.ForMathlib.RingTheory.PiTensorProduct.NonUnital
 public import QuantumSystem.ForMathlib.RingTheory.SimpleModule.Central
+public import QuantumSystem.ForMathlib.Topology.Algebra.ContinuousAddChar
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.ContinuousLinearMap.Nontrivial
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
