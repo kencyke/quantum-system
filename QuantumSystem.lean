@@ -257,4 +257,5 @@ public import QuantumSystem.Physics.LocalNet.InfiniteRegion
 public import QuantumSystem.Physics.LocalNet.Nuclear
 public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Physics.LocalNet.SplitProperty
+public import QuantumSystem.Physics.LocalNet.TensorNet
 public import QuantumSystem.Physics.LocalNet.VonNeumannNet
