@@ -223,6 +223,7 @@ public import QuantumSystem.ForMathlib.Topology.Algebra.Module.ContinuousLinearM
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
+public import QuantumSystem.ForMathlib.Topology.MetricSpace.PointwiseIsometry
 public import QuantumSystem.ForMathlib.Topology.PartitionOfUnity.Approximation
 public import QuantumSystem.Geometry.Minkowski
 public import QuantumSystem.InformationTheory.Entropy.Araki.BoundedOperators
