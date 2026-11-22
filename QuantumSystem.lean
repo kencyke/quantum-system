@@ -31,6 +31,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.Representation.Hom
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Irreducible
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.UnitaryEquiv
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctional
+public import QuantumSystem.Analysis.CStarAlgebra.StarAlgEquiv
 public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
 public import QuantumSystem.Analysis.CStarAlgebra.State.Faithful
 public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
