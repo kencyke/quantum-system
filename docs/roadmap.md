@@ -5,13 +5,6 @@ README name, the design questions that are open before the item can be stated at
 asks for. What the repository already has is in the module docs, not here. No citations here: those belong in the README
 and the module docs, where `/citation-check` checks them.
 
-## Dynamical systems
-
-`LocalNet.Covariance` carries no topology, so the covariance action states no continuity; the modular
-groups are unitary groups on `H`, not actions on an algebra. The action interface is stated so that both
-are instances: a group homomorphism into the ⋆-automorphisms, continuous for the point-norm (C⋆) or
-point-σ-weak (W⋆) topology.
-
 ## Tensor C⋆-categories
 
 Mathlib has monoidal, braided and symmetric categories, but no dagger or C⋆-category. `CStarRep.Hom` has
@@ -35,8 +28,11 @@ notion every result is stated in.
 ## Tomita–Takesaki theory
 
 The module doc of `Analysis/VonNeumannAlgebra/Modular/RelativeModular.lean` lists what is not formalized.
-The modular automorphism group σ^φ is an action of ℝ on the algebra, so it is stated with the action
-interface of *Dynamical systems*.
+The modular automorphism group σ^φ is a W⋆-dynamical system of `ℝ`, a
+`ContinuousAddChar ℝ (M.sigmaWeak ≃⋆ₐ[ℂ] M.sigmaWeak)`: `UnitaryRepresentation.conjSigmaWeakAut` of the
+modular unitary group, taken as a representation of `Multiplicative ℝ` by
+`ContinuousAddChar.toContinuousMonoidHom`; its hypothesis that the unitaries normalize `M` is
+`Δ^{it} M Δ^{-it} = M`.
 
 ## Standard form
 
@@ -47,12 +43,6 @@ The natural cone is not defined.
 `VonNeumannAlgebra.arakiEntropy` is defined through the amplification of the algebra to
 `Completion (ℓ²(ℕ) ⊗[ℂ] H)`, in place of the missing standard form. Once *Standard form* lands, the
 natural-cone formula is proved as a theorem about this definition, not given as a second one.
-
-## Averaging
-
-Unitary representations exist only as `AddChar G (unitary (H →L[ℂ] H))`, for additive groups. A compact
-group need not be commutative, so its unitary representations need a spelling of which the additive case
-is an instance, not a second spelling beside it.
 
 ## Duality
 

@@ -87,36 +87,32 @@ before it can be stated is kept in `docs/roadmap.md`.
 
 **Phase I — Foundations**
 
-1. **Dynamical systems.** C⋆- and W⋆-dynamical systems: a group acting by ⋆-automorphisms,
-   continuously in the point-norm (W⋆: point-σ-weak) topology; as an example, the action of the
-   covariance group of a faithful local net by ⋆-automorphisms of its quasi-local algebra, already
-   formalized, through which a discrete symmetry group acts by a homomorphism into it (M1, M3).
-2. **Tensor C⋆-categories.** Symmetric tensor C⋆-categories with conjugates, direct sums, subobjects
+1. **Tensor C⋆-categories.** Symmetric tensor C⋆-categories with conjugates, direct sums, subobjects
    and simple unit; fiber functors and their unitary tensor automorphisms (M3).
 
 **Phase II — Exact theory**
 
-3. **Von Neumann algebras.** Beyond Kaplansky density for the unit ball and finite-dimensional
+2. **Von Neumann algebras.** Beyond Kaplansky density for the unit ball and finite-dimensional
    factors as matrix algebras, already formalized: Kaplansky density for unitaries and in the strong*
    form, normal ⋆-homomorphisms, the predual; Sakai's characterization of von Neumann algebras as the
    C⋆-algebras with a predual; the permanence of nuclearity under quotients, through the bidual of
    a C⋆-algebra, and with it under inductive limits along ⋆-homomorphisms that need not be
    injective; and the uniqueness up to order of the matrix sizes in the structure theorem of
    finite-dimensional C⋆-algebras (M1, M2).
-4. **Tomita–Takesaki theory.** Beyond the relative modular operators already formalized:
+3. **Tomita–Takesaki theory.** Beyond the relative modular operators already formalized:
    JMJ = M′ and Δ^{it}MΔ^{-it} = M for a cyclic and separating vector, the modular automorphism
    group σ^φ of a faithful normal state, the KMS condition characterizing it (Takesaki), and the
    Connes cocycle [Dψ : Dφ] of two faithful normal states, a unitary 1-cocycle for σ^φ (M2).
-5. **Standard form.** The natural cone, the unique vector in it representing each normal positive
+4. **Standard form.** The natural cone, the unique vector in it representing each normal positive
    functional, and the unitary implementation of ⋆-automorphisms (M2).
-6. **Reversibility.** Beyond the monotonicity of the relative entropy already formalized, its
+5. **Reversibility.** Beyond the monotonicity of the relative entropy already formalized, its
    equality case — the Petz recovery of faithful normal states at finite divergence under a unital
    2-positive normal map, built on the items *Tomita–Takesaki theory* and *Standard form* (M2).
-7. **Averaging.** Peter–Weyl; for a compact group acting continuously by ⋆-automorphisms, Haar
+6. **Averaging.** Peter–Weyl; for a compact group acting continuously by ⋆-automorphisms, Haar
    averaging as the conditional expectation onto the fixed points, and the density of the
    spectral subspaces; for a finite-dimensional C⋆-algebra, the diagonal ∫ U⋆ ⊗ U dU over its
    unitary group, of projective norm one whatever the dimension (M1, M2, M3).
-8. **Duality.** Tannaka–Krein for compact groups, the group law being composition and the topology
+7. **Duality.** Tannaka–Krein for compact groups, the group law being composition and the topology
    pointwise convergence, extending Mathlib's Tannaka duality for finite groups; the
    Doplicher–Roberts duality theorem on the categories of *Tensor C⋆-categories*: existence and
    uniqueness of the fiber functor that is symmetric for the twisted symmetry, and the equivalence
