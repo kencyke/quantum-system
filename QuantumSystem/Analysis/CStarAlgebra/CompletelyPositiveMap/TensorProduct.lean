@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Choi
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CompletelyPositiveMap
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 
 /-!
@@ -14,10 +15,11 @@ public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 For completely positive maps `φ : B(H₁) → B(K₁)` and `ψ : B(H₂) → B(K₂)` between the operator
 algebras of finite-dimensional Hilbert spaces, the **tensor product**
 `φ ⊗ ψ : B(H₁ ⊗ H₂) → B(K₁ ⊗ K₂)` is determined by `(φ ⊗ ψ)(A ⊗ B) = φ(A) ⊗ ψ(B)`
-(`CompletelyPositiveMap.tensorProduct_mapL`): it is `TensorProduct.map φ ψ` transported along the
-linear equivalence `B(H₁) ⊗ B(H₂) ≃ B(H₁ ⊗ H₂)` (`TensorProduct.mapLEquiv`), with no choice of
-bases. Kraus operators `Tₐ` of `φ` and `S_b` of `ψ` give the Kraus operators `Tₐ ⊗ S_b` of
-`φ ⊗ ψ`, so it is completely positive; the tensor product of CPTP maps is a CPTP map
+(`CompletelyPositiveMap.tensorProduct_mapL`): it is the tensor product
+`CompletelyPositiveMap.minTensorProduct φ ψ` of completely positive maps on the minimal tensor
+products, read through `B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` (`MinTensorProduct.continuousLinearMapEquiv`),
+with no choice of bases. Kraus operators `Tₐ` of `φ` and `S_b` of `ψ` give the Kraus operators
+`Tₐ ⊗ S_b` of `φ ⊗ ψ`; the tensor product of CPTP maps is a CPTP map
 (`CPTPMap.tensorProduct`), since `tr(A ⊗ B) = tr A · tr B`. Tracing out the second factor
 intertwines `Φ ⊗ Ψ` with `Φ` when `Ψ` is trace preserving
 (`CPTPMap.traceRight_tensorProduct`).
@@ -27,28 +29,19 @@ introduced for `φ ⊗ ψ`, which would clash with `TensorProduct`.
 
 ## Main definitions
 
-* `CompletelyPositiveMap.tensorProduct φ ψ`: the tensor product of completely positive maps.
+* `CompletelyPositiveMap.tensorProduct φ ψ`: the tensor product of completely positive maps, the
+  case `B(H₁) ⊗ₘᵢₙ B(H₂) → B(K₁) ⊗ₘᵢₙ B(K₂)` of `CompletelyPositiveMap.minTensorProduct`.
 * `CPTPMap.tensorProduct Φ Ψ`: the tensor product of CPTP maps.
 
 ## Main statements
 
 * `CompletelyPositiveMap.tensorProduct_mapL`: `(φ ⊗ ψ)(A ⊗ B) = φ(A) ⊗ ψ(B)`.
-* `CompletelyPositiveMap.tensorProductLinearMap_apply_eq_sum_kraus`: for Kraus operators `Tₐ` of
-  `φ` and
+* `CompletelyPositiveMap.tensorProduct_continuousLinearMapEquiv`: under
+  `B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` it is `CompletelyPositiveMap.minTensorProduct φ ψ`.
+* `CompletelyPositiveMap.tensorProduct_apply_eq_sum_kraus`: for Kraus operators `Tₐ` of `φ` and
   `S_b` of `ψ`, `φ ⊗ ψ` has the Kraus operators `Tₐ ⊗ S_b`.
 * `CompletelyPositiveMap.traceRight_tensorProduct`, `CPTPMap.traceRight_tensorProduct`:
   `tr₂ ∘ (φ ⊗ Ψ) = φ ∘ tr₂` for a trace-preserving `Ψ`.
-
-## TODO
-
-* **General C⋆-algebras.** For completely positive maps `φ : A₁ → A₂` and `ψ : B₁ → B₂`, define
-  `φ ⊗ ψ : A₁ ⊗_min B₁ → A₂ ⊗_min B₂` on the minimal (spatial) C⋆-tensor product, and prove it
-  completely positive through the Stinespring dilation
-  (`QuantumSystem/ForMathlib/Analysis/CStarAlgebra/Stinespring.lean`, after representing `A₂` and
-  `B₂` faithfully on Hilbert spaces); the tensor product here is the case `A₁ = B(H₁)`,
-  `B₁ = B(H₂)`, `A₂ = B(K₁)`, `B₂ = B(K₂)` of finite-dimensional Hilbert spaces, where
-  `B(H₁) ⊗ B(H₂) = B(H₁ ⊗ H₂)` needs no completion. Mathlib gives `A ⊗[ℂ] B` only its
-  star-algebra structure; the C⋆-norm of `A ⊗_min B` is not yet available.
 -/
 
 @[expose] public section
@@ -64,35 +57,48 @@ variable {H₁ H₂ K₁ K₂ : Type*}
 
 namespace CompletelyPositiveMap
 
-/-- The linear map `TensorProduct.map φ ψ` transported along `B(H₁) ⊗ B(H₂) ≃ B(H₁ ⊗ H₂)`. -/
-noncomputable def tensorProductLinearMap (φ : (H₁ →L[ℂ] H₁) →ₗ[ℂ] (K₁ →L[ℂ] K₁))
-    (ψ : (H₂ →L[ℂ] H₂) →ₗ[ℂ] (K₂ →L[ℂ] K₂)) :
-    (H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) →ₗ[ℂ] (K₁ ⊗[ℂ] K₂ →L[ℂ] K₁ ⊗[ℂ] K₂) :=
-  (mapLEquiv ℂ K₁ K₁ K₂ K₂).toLinearMap ∘ₗ TensorProduct.map φ ψ ∘ₗ
-    (mapLEquiv ℂ H₁ H₁ H₂ H₂).symm.toLinearMap
+open scoped MinTensorProduct in
+/-- The **tensor product** `φ ⊗ ψ : B(H₁ ⊗ H₂) → B(K₁ ⊗ K₂)` of completely positive maps: the
+tensor product `CompletelyPositiveMap.minTensorProduct` on the minimal tensor products, transported
+(`CompletelyPositiveMap.arrowCongr`) along `B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)`
+(`MinTensorProduct.continuousLinearMapEquiv`) on both sides. It
+is determined by `(φ ⊗ ψ)(A ⊗ B) = φ(A) ⊗ ψ(B)` (`CompletelyPositiveMap.tensorProduct_mapL`). -/
+noncomputable def tensorProduct (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁))
+    (ψ : (H₂ →L[ℂ] H₂) →CP (K₂ →L[ℂ] K₂)) :
+    (H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) →CP (K₁ ⊗[ℂ] K₂ →L[ℂ] K₁ ⊗[ℂ] K₂) :=
+  arrowCongr (MinTensorProduct.continuousLinearMapEquiv H₁ H₂)
+    (MinTensorProduct.continuousLinearMapEquiv K₁ K₂) (minTensorProduct φ ψ)
 
-/-- `tensorProductLinearMap φ ψ (A ⊗ B) = φ(A) ⊗ ψ(B)`. -/
-lemma tensorProductLinearMap_mapL (φ : (H₁ →L[ℂ] H₁) →ₗ[ℂ] (K₁ →L[ℂ] K₁))
-    (ψ : (H₂ →L[ℂ] H₂) →ₗ[ℂ] (K₂ →L[ℂ] K₂)) (A : H₁ →L[ℂ] H₁) (B : H₂ →L[ℂ] H₂) :
-    tensorProductLinearMap φ ψ (mapL A B) = mapL (φ A) (ψ B) := by
-  rw [show mapL A B = mapLEquiv ℂ H₁ H₁ H₂ H₂ (A ⊗ₜ B) from (mapLEquiv_tmul A B).symm]
-  simp only [tensorProductLinearMap, LinearMap.comp_apply, LinearEquiv.coe_coe,
-    LinearEquiv.symm_apply_apply, map_tmul]
-  exact mapLEquiv_tmul _ _
+open scoped MinTensorProduct in
+/-- The tensor product on `B(H₁ ⊗ H₂)` is the tensor product of the minimal tensor products, under
+`B(H) ⊗ₘᵢₙ B(K) ≃ B(H ⊗ K)` (`MinTensorProduct.continuousLinearMapEquiv`). -/
+lemma tensorProduct_continuousLinearMapEquiv (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁))
+    (ψ : (H₂ →L[ℂ] H₂) →CP (K₂ →L[ℂ] K₂)) (T : (H₁ →L[ℂ] H₁) ⊗ₘᵢₙ (H₂ →L[ℂ] H₂)) :
+    tensorProduct φ ψ (MinTensorProduct.continuousLinearMapEquiv H₁ H₂ T) =
+      MinTensorProduct.continuousLinearMapEquiv K₁ K₂ (minTensorProduct φ ψ T) := by
+  rw [tensorProduct, arrowCongr_apply, StarAlgEquiv.symm_apply_apply]
+
+/-- The tensor product of completely positive maps acts on operator tensors as
+`(φ ⊗ ψ)(A ⊗ B) = φ(A) ⊗ ψ(B)`. -/
+@[simp] lemma tensorProduct_mapL (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁))
+    (ψ : (H₂ →L[ℂ] H₂) →CP (K₂ →L[ℂ] K₂)) (A : H₁ →L[ℂ] H₁) (B : H₂ →L[ℂ] H₂) :
+    tensorProduct φ ψ (mapL A B) = mapL (φ A) (ψ B) := by
+  rw [← MinTensorProduct.continuousLinearMapEquiv_of_tmul, tensorProduct_continuousLinearMapEquiv,
+    minTensorProduct_of_tmul, MinTensorProduct.continuousLinearMapEquiv_of_tmul]
 
 /-- Kraus operators `Tₐ` of `φ` and `S_b` of `ψ` give the Kraus operators `Tₐ ⊗ S_b` of the tensor
 product: `(φ ⊗ ψ)(X) = Σₐ_b (Tₐ ⊗ S_b) X (Tₐ ⊗ S_b)†`, checked on `X = A ⊗ B` by
 `(Tₐ ⊗ S_b)(A ⊗ B)(Tₐ ⊗ S_b)† = Tₐ A Tₐ† ⊗ S_b B S_b†`. -/
-lemma tensorProductLinearMap_apply_eq_sum_kraus {φ : (H₁ →L[ℂ] H₁) →ₗ[ℂ] (K₁ →L[ℂ] K₁)}
-    {ψ : (H₂ →L[ℂ] H₂) →ₗ[ℂ] (K₂ →L[ℂ] K₂)} {κ₁ κ₂ : Type*} [Fintype κ₁] [Fintype κ₂]
+lemma tensorProduct_apply_eq_sum_kraus {φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁)}
+    {ψ : (H₂ →L[ℂ] H₂) →CP (K₂ →L[ℂ] K₂)} {κ₁ κ₂ : Type*} [Fintype κ₁] [Fintype κ₂]
     {T : κ₁ → H₁ →L[ℂ] K₁} {S : κ₂ → H₂ →L[ℂ] K₂}
     (hT : ∀ A, φ A = ∑ a, T a ∘L A ∘L (T a)†)
     (hS : ∀ B, ψ B = ∑ b, S b ∘L B ∘L (S b)†) (X : H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) :
-    tensorProductLinearMap φ ψ X =
+    tensorProduct φ ψ X =
       ∑ p : κ₁ × κ₂, mapL (T p.1) (S p.2) ∘L X ∘L (mapL (T p.1) (S p.2))† := by
-  have h := TensorProduct.ext_mapL (u := tensorProductLinearMap φ ψ)
+  have h := TensorProduct.ext_mapL (u := (tensorProduct φ ψ).toLinearMap)
     (v := (ofKraus fun p : κ₁ × κ₂ => mapL (T p.1) (S p.2)).toLinearMap) fun A B => by
-      rw [tensorProductLinearMap_mapL, hT, hS]
+      rw [coe_toLinearMap, tensorProduct_mapL, hT, hS]
       change _ = ∑ p : κ₁ × κ₂, mapL (T p.1) (S p.2) ∘L mapL A B ∘L (mapL (T p.1) (S p.2))†
       simp only [adjoint_mapL, ← mapL_comp, Fintype.sum_prod_type]
       rw [← mapLEquiv_tmul, sum_tmul, ← LinearEquiv.coe_coe, map_sum]
@@ -100,34 +106,6 @@ lemma tensorProductLinearMap_apply_eq_sum_kraus {φ : (H₁ →L[ℂ] H₁) →�
       rw [tmul_sum, map_sum]
       simp only [LinearEquiv.coe_coe, mapLEquiv_tmul]
   exact LinearMap.congr_fun h X
-
-/-- The **tensor product** `φ ⊗ ψ : B(H₁ ⊗ H₂) → B(K₁ ⊗ K₂)` of completely positive maps,
-determined by `(φ ⊗ ψ)(A ⊗ B) = φ(A) ⊗ ψ(B)` (`CompletelyPositiveMap.tensorProduct_mapL`). It is
-completely positive since Kraus operators `Tₐ` of `φ` and `S_b` of `ψ` give the Kraus operators
-`Tₐ ⊗ S_b` (`CompletelyPositiveMap.tensorProductLinearMap_apply_eq_sum_kraus`). -/
-noncomputable def tensorProduct (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁))
-    (ψ : (H₂ →L[ℂ] H₂) →CP (K₂ →L[ℂ] K₂)) :
-    (H₁ ⊗[ℂ] H₂ →L[ℂ] H₁ ⊗[ℂ] H₂) →CP (K₁ ⊗[ℂ] K₂ →L[ℂ] K₁ ⊗[ℂ] K₂) where
-  toLinearMap := tensorProductLinearMap φ.toLinearMap ψ.toLinearMap
-  map_cstarMatrix_nonneg' n M hM := by
-    have h₁ :=
-      ContinuousLinearMap.exists_kraus_of_kPositive (k := Module.finrank ℂ H₁) (min_le_left _ _) φ
-    have h₂ :=
-      ContinuousLinearMap.exists_kraus_of_kPositive (k := Module.finrank ℂ H₂) (min_le_left _ _) ψ
-    obtain ⟨m₁, T, hT⟩ := h₁
-    obtain ⟨m₂, S, hS⟩ := h₂
-    have h := (ofKraus fun p : Fin m₁ × Fin m₂ => mapL (T p.1) (S p.2)).map_cstarMatrix_nonneg'
-      n M hM
-    convert h using 2
-    exact funext (tensorProductLinearMap_apply_eq_sum_kraus (φ := φ.toLinearMap)
-      (ψ := ψ.toLinearMap) hT hS)
-
-/-- The tensor product of completely positive maps acts on operator tensors as
-`(φ ⊗ ψ)(A ⊗ B) = φ(A) ⊗ ψ(B)`. -/
-@[simp] lemma tensorProduct_mapL (φ : (H₁ →L[ℂ] H₁) →CP (K₁ →L[ℂ] K₁))
-    (ψ : (H₂ →L[ℂ] H₂) →CP (K₂ →L[ℂ] K₂)) (A : H₁ →L[ℂ] H₁) (B : H₂ →L[ℂ] H₂) :
-    tensorProduct φ ψ (mapL A B) = mapL (φ A) (ψ B) :=
-  tensorProductLinearMap_mapL φ.toLinearMap ψ.toLinearMap A B
 
 /-- Tracing out the second factor intertwines `φ ⊗ ψ` with `φ` when `ψ` is trace preserving:
 `tr₂((φ ⊗ ψ)(X)) = φ(tr₂ X)`, since `tr₂(φ(A) ⊗ ψ(B)) = tr ψ(B) • φ(A) = φ(tr B • A)`. -/

@@ -37,7 +37,7 @@ is onto since `x = π(1) x = Σᵢ π(|bᵢ⟩⟨ξ₀|) π(|ξ₀⟩⟨bᵢ|) x
 
 * `StarAlgHom.multiplicityEquiv_tmul` — `U (η ⊗ e) = π(|η⟩⟨ξ₀|) ι e`.
 * `StarAlgHom.apply_multiplicityEquiv` — `π(A) (U z) = U ((A ⊗ 1) z)`: `π` is unitarily equivalent
-  to the ampliation `A ↦ A ⊗ 1` on `H ⊗ E`.
+  to the amplification `A ↦ A ⊗ 1` on `H ⊗ E`.
 
 ## Implementation notes
 
@@ -169,7 +169,7 @@ noncomputable def multiplicityEquiv : H ⊗[ℂ] E ≃ₗᵢ[ℂ] L where
   simp [multiplicityEquiv, multiplicityBilin]
 
 /-- **Multiplicity decomposition** of a unital ⋆-representation of `B(H)`: `π(A) U = U (A ⊗ 1)`,
-so `π` is unitarily equivalent to the ampliation `A ↦ A ⊗ 1` on `H ⊗ E`. On `η ⊗ e`,
+so `π` is unitarily equivalent to the amplification `A ↦ A ⊗ 1` on `H ⊗ E`. On `η ⊗ e`,
 `π(A) π(|η⟩⟨ξ₀|) = π(|A η⟩⟨ξ₀|)`. -/
 theorem apply_multiplicityEquiv (A : H →L[ℂ] H) (z : H ⊗[ℂ] E) :
     π A (multiplicityEquiv hξ₀ ι hι z) = multiplicityEquiv hξ₀ ι hι (A.rTensor E z) := by

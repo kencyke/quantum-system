@@ -1,5 +1,6 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
+public import QuantumSystem.Analysis.CStarAlgebra.CStarSeminorm
 public import QuantumSystem.Analysis.CStarAlgebra.ChoiEffros
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Kraus
@@ -18,6 +19,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.GNS.Separable
 public import QuantumSystem.Analysis.CStarAlgebra.GelfandNaimark
 public import QuantumSystem.Analysis.CStarAlgebra.KPositiveMapSchwarz
 public import QuantumSystem.Analysis.CStarAlgebra.LiebConcavity
+public import QuantumSystem.Analysis.CStarAlgebra.Multiplier
 public import QuantumSystem.Analysis.CStarAlgebra.OperatorConvexIffMatrixConvex
 public import QuantumSystem.Analysis.CStarAlgebra.Perspective
 public import QuantumSystem.Analysis.CStarAlgebra.PositiveMap
@@ -32,7 +34,23 @@ public import QuantumSystem.Analysis.CStarAlgebra.Representation.VectorFunctiona
 public import QuantumSystem.Analysis.CStarAlgebra.State.Basic
 public import QuantumSystem.Analysis.CStarAlgebra.State.Faithful
 public import QuantumSystem.Analysis.CStarAlgebra.State.Pure
+public import QuantumSystem.Analysis.CStarAlgebra.State.TensorProduct
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CStarNorm
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CompletelyPositiveMap
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.InfiniteMinimal
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Maximal
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Maximal.Associativity
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal.Associativity
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Minimal.Slice
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear.Commutative
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear.InductiveLimit
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Nuclear.TensorProduct
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.PiMinimal
+public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Spatial
 public import QuantumSystem.Analysis.CStarAlgebra.ZeroAtInfty
+public import QuantumSystem.Analysis.InnerProductSpace.InfiniteTensorProduct
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Borchers
 public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.BorchersTranslation
@@ -40,6 +58,8 @@ public import QuantumSystem.Analysis.InnerProductSpace.StandardSubspace.Tomita
 public import QuantumSystem.Analysis.InnerProductSpace.Subspace
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.Matrix.CompletelyPositiveMap.Stinespring
+public import QuantumSystem.Analysis.Normed.Algebra.InfiniteTensorProduct
+public import QuantumSystem.Analysis.Normed.Algebra.ProjectiveTensorProduct
 public import QuantumSystem.Analysis.OperatorSpace.Basic
 public import QuantumSystem.Analysis.OperatorSpace.CompletelyBounded
 public import QuantumSystem.Analysis.OperatorSpace.CompletelyPositive
@@ -110,9 +130,11 @@ public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.PartialIsometry
 public import QuantumSystem.ForMathlib.Algebra.Star.StarAlgHom
+public import QuantumSystem.ForMathlib.Algebra.Star.TensorProductMap
 public import QuantumSystem.ForMathlib.Algebra.Symmetrized
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.BoundedOperatorRepresentation
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CStarMatrix
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ClosureRange
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Completion
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Eigenvector
@@ -120,7 +142,6 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctiona
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.OperatorConvex
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContinuousFunctionalCalculus.Order
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ContractiveProjection
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.GelfandNaimarkSegal
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Hom
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.KPositiveMap
@@ -130,6 +151,7 @@ public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Quotient
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.RussoDye
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.SchwarzMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Semisimple
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Shrink
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.StateSpace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Stinespring
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Unital
@@ -151,11 +173,11 @@ public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Pos
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.LinearPMap.Smul
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.OrthogonalFamily
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Orthonormal
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.PiTensorProduct
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.RankOne
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.Semilinear
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.StandardSubspace
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TraceDual
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.l2Space
@@ -166,6 +188,7 @@ public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakDual
 public import QuantumSystem.ForMathlib.Analysis.LocallyConvex.WeakOperatorTopology
 public import QuantumSystem.ForMathlib.Analysis.Matrix.Transpose
 public import QuantumSystem.ForMathlib.Analysis.Normed.Algebra.Central
+public import QuantumSystem.ForMathlib.Analysis.Normed.Group.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.PiLp
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.Separable
 public import QuantumSystem.ForMathlib.Analysis.Normed.Lp.ZeroAtInfty
@@ -182,6 +205,8 @@ public import QuantumSystem.ForMathlib.InformationTheory.KullbackLeibler.KLFun
 public import QuantumSystem.ForMathlib.LinearAlgebra.Dimension.OrthogonalIdempotents
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.PartialTrace
 public import QuantumSystem.ForMathlib.LinearAlgebra.Matrix.Trace
+public import QuantumSystem.ForMathlib.LinearAlgebra.PiTensorProduct.Extend
+public import QuantumSystem.ForMathlib.LinearAlgebra.PiTensorProduct.Star
 public import QuantumSystem.ForMathlib.LinearAlgebra.Trace
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.LpSpace.Linfty
 public import QuantumSystem.ForMathlib.MeasureTheory.Function.MemLpMulSelf
@@ -192,11 +217,13 @@ public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.Integral
 public import QuantumSystem.ForMathlib.MeasureTheory.VectorMeasure.ProjectionValued
 public import QuantumSystem.ForMathlib.RepresentationTheory.AlgebraRepresentation.Basic
 public import QuantumSystem.ForMathlib.RingTheory.Ideal.Pi
+public import QuantumSystem.ForMathlib.RingTheory.PiTensorProduct.NonUnital
 public import QuantumSystem.ForMathlib.RingTheory.SimpleModule.Central
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.ContinuousLinearMap.Nontrivial
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.LinearPMap.Semilinear
 public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
+public import QuantumSystem.ForMathlib.Topology.PartitionOfUnity.Approximation
 public import QuantumSystem.Geometry.Minkowski
 public import QuantumSystem.InformationTheory.Entropy.Araki.BoundedOperators
 public import QuantumSystem.InformationTheory.Entropy.Araki.Monotonicity
@@ -219,6 +246,7 @@ public import QuantumSystem.Physics.LocalNet.DHRCriterion
 public import QuantumSystem.Physics.LocalNet.Examples
 public import QuantumSystem.Physics.LocalNet.HalfChainSplit
 public import QuantumSystem.Physics.LocalNet.InfiniteRegion
+public import QuantumSystem.Physics.LocalNet.Nuclear
 public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Physics.LocalNet.SplitProperty
 public import QuantumSystem.Physics.LocalNet.VonNeumannNet

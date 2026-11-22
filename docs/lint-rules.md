@@ -51,7 +51,17 @@ The following tokens are strictly prohibited in Lean sources, grouped by reason.
   `QuantumSystem/ForMathlib/Analysis/InnerProductSpace/Adjoint.lean`, which displays Mathlib's `A†`. Mathlib's `†`
   for `ContinuousLinearMap.adjoint` is never displayed, because the adjoint is a bundled equivalence and `A†`
   elaborates to its coercion applied to `A`; no definition in this repository can change that without bridging two
-  spellings of the adjoint. Any other `macro`, `meta def`, delaborator or unexpander still needs explicit approval.
+  spellings of the adjoint.
+  **Exception (approved 2026-11-15):** the three `notation3` declarations `A ⊗ 𝟙[H₂]`, `𝟙[H₁] ⊗ B` and `A ⊗ B` of
+  scope `Amplification` in `QuantumSystem/ForMathlib/Analysis/InnerProductSpace/TensorProduct.lean`.
+  `notation3` generates a delaborator that matches the term; the unexpander of `notation` matches the printed syntax,
+  in which `ContinuousLinearMap.rTensor` and `TensorProduct.mapL` are shortened inside `namespace ContinuousLinearMap`
+  and `namespace TensorProduct`, so the notations were not displayed there. Shaping the definitions instead would need
+  a local copy of Mathlib's terms.
+  **Exception (approved 2026-11-16):** the `notation3` declaration `⨂ₘᵢₙ i, A i` of scope `PiMinTensorProduct` in
+  `QuantumSystem/Analysis/CStarAlgebra/TensorProduct/PiMinimal.lean`, the minimal tensor product of a family. It
+  binds the index, as Mathlib's `⨂[R] i, A i` does for the algebraic tensor product, which an ordinary `notation`
+  cannot. Any other `macro`, `meta def`, delaborator, unexpander or `notation3` still needs explicit approval.
 
 ## Commit Style
 

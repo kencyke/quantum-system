@@ -66,9 +66,13 @@ applies to GNS triplets directly.
 * `CStarRep A` — a bundled non-unital `*`-representation
   `π : A →⋆ₙₐ[ℂ] (H →L[ℂ] H)` together with the carrier `H` and its complex Hilbert space
   structure.
-* `CStarRep.adjoint_π` — `(π a)† = π (a*)`.
 * `CStarRep.orbit R v` — the orbit map `a ↦ π a v` of a vector, as a
   continuous linear map `A →L[ℂ] H`.
+* `CStarRep.comp R φ` — the pullback of a representation along a `⋆`-homomorphism.
+
+## Main results
+
+* `CStarRep.adjoint_π` — `(π a)† = π (a*)`.
 * `CStarRep.π_one_of_actsNondegenerately` — for unital `A`, a non-degenerate representation is
   unital.
 -/
@@ -77,7 +81,7 @@ applies to GNS triplets directly.
 
 open scoped InnerProduct
 
-universe u v
+universe u v w
 
 variable {A : Type u} [NonUnitalCStarAlgebra A]
 
@@ -160,5 +164,22 @@ lemma π_one_of_actsNondegenerately {A : Type u} [CStarAlgebra A] (R : CStarRep 
     rintro _ ⟨a, rfl⟩
     rw [map_sub, ← mul_apply_eq_comp, ← map_mul, mul_one, sub_self])
   rw [one_apply_eq_self, ← sub_eq_zero.1 hx]
+
+/-- The pullback `R ∘ φ` of a representation `R` of `A` along a `⋆`-homomorphism `φ : A' → A`: the
+representation `a ↦ π (φ a)` of `A'` on the same Hilbert space. -/
+noncomputable abbrev comp {A' : Type w} [NonUnitalCStarAlgebra A'] (R : CStarRep.{u, v} A) (φ : A' →⋆ₙₐ[ℂ] A) :
+    CStarRep.{w, v} A' where
+  H := R.H
+  π := R.π.comp φ
+
+/-- `(R ∘ φ).π a = R.π (φ a)`. -/
+@[simp] lemma comp_π_apply {A' : Type w} [NonUnitalCStarAlgebra A'] (R : CStarRep.{u, v} A)
+    (φ : A' →⋆ₙₐ[ℂ] A) (a : A') : (R.comp φ).π a = R.π (φ a) := rfl
+
+/-- The pullback of a faithful representation along an injective `⋆`-homomorphism is faithful. -/
+lemma comp_π_injective {A' : Type w} [NonUnitalCStarAlgebra A'] {R : CStarRep.{u, v} A}
+    {φ : A' →⋆ₙₐ[ℂ] A} (hR : Function.Injective R.π) (hφ : Function.Injective φ) :
+    Function.Injective (R.comp φ).π :=
+  hR.comp hφ
 
 end CStarRep

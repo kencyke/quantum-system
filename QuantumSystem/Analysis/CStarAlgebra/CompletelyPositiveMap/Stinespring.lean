@@ -8,7 +8,7 @@ module
 public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.Choi
 public import QuantumSystem.Analysis.InnerProductSpace.PartialTrace
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.BoundedOperatorRepresentation
-public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProductCompletion
+public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 
 /-!
 # Stinespring's theorem for bounded operators

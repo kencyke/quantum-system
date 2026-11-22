@@ -5,14 +5,6 @@ README name, the design questions that are open before the item can be stated at
 asks for. What the repository already has is in the module docs, not here. No citations here: those belong in the README
 and the module docs, where `/citation-check` checks them.
 
-## Tensor products
-
-Hilbert spaces are tensored with Mathlib's algebraic `H ⊗[ℂ] K` (the channel and entropy files) and its
-completion `UniformSpace.Completion (H ⊗[ℂ] K)` (the von Neumann algebra files), on which operators act by
-`ContinuousLinearMap.rTensor`/`lTensor` and `ContinuousLinearMap.completion`. In finite dimensions the two
-coincide; the results on the algebraic tensor product are still to be shown to be the finite-dimensional
-case of those on the completion. The minimal tensor product of C⋆-algebras is built on the completion.
-
 ## Dynamical systems
 
 `LocalNet.Covariance` carries no topology, so the covariance action states no continuity; the modular
@@ -33,6 +25,12 @@ notion every result is stated in.
   not used yet. Sakai's characterization is where the two meet.
 - Matrix algebras are spelt three ways: `Matrix n n ℂ`, `CStarMatrix` (`M_[n](ℂ)`) and operators on
   `ℂⁿ`. This item and *Averaging* settle on one.
+- The permanence of nuclearity under quotients can be stated now. Its proof passes through the bidual:
+  `A` is nuclear exactly when the von Neumann algebra `A**` is injective, and `(A/J)**` is a direct
+  summand of `A**`. The bidual of a C⋆-algebra is not defined, and the passage from an injective bidual
+  back to nuclearity is not formalized. The bidual meets the first bullet: as a `VonNeumannAlgebra` it is
+  the double commutant of the universal representation, as a `WStarAlgebra` its predual is the dual of
+  `A`.
 
 ## Tomita–Takesaki theory
 

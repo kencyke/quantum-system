@@ -11,6 +11,7 @@ public import QuantumSystem.Analysis.OperatorSystem.ChoiEffrosProduct
 public import QuantumSystem.Analysis.OperatorSystem.InjectiveEnvelope
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.CompletelyPositiveMap
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Hom
+public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Quotient
 
 /-!
 # The C⋆-envelope of an operator system
@@ -44,7 +45,7 @@ represents `A` faithfully on a Hilbert space `K`, extends in both directions bet
 injective envelope by injectivity, and uses the rigidity of the injective envelope to see that the
 extensions compose to the identity; the equality case of the Kadison–Schwarz inequality then makes
 the extension `Ψ : B(K) → I(S)` multiplicative on `A`. The range of a ⋆-homomorphism between
-C⋆-algebras is closed (`StarAlgHom.isClosed_range`), so the ⋆-homomorphism is onto. So the inclusion
+C⋆-algebras is closed (`NonUnitalStarAlgHom.isClosed_range`), so the ⋆-homomorphism is onto. So the inclusion
 of `S` is a C⋆-envelope of `S` (`OperatorSubsystem.FixingMap.isCStarEnvelope_toCStarEnvelope`), and
 an operator system `V`, embedded in `B(H)` by the Choi–Effros theorem
 (`OperatorSystem.isCompleteOrderEmbedding_directSumMap`), has the C⋆-envelope of its image. When `S`
@@ -137,12 +138,13 @@ lemma starAlgHom_ext (hκ : IsCStarEnvelope κ) {B : Type*} [CStarAlgebra B]
       exact h v
 
 /-- A ⋆-homomorphism `π : A → E` with `π ∘ j = κ` is onto: its range is closed
-(`StarAlgHom.isClosed_range`) and contains `κ(V)`, which generates `E`. -/
+(`NonUnitalStarAlgHom.isClosed_range`) and contains `κ(V)`, which generates `E`. -/
 lemma surjective (hκ : IsCStarEnvelope κ) {A : Type*} [CStarAlgebra A] {j : V →ₗ[ℂ] A}
     (π : A →⋆ₐ[ℂ] E) (hπ : ∀ v, π (j v) = κ v) : Function.Surjective π := by
   have h : (⊤ : StarSubalgebra ℂ E) ≤ π.range := by
     rw [← hκ.topologicalClosure_adjoin_range]
-    refine StarSubalgebra.topologicalClosure_minimal (StarAlgebra.adjoin_le ?_) π.isClosed_range
+    refine StarSubalgebra.topologicalClosure_minimal (StarAlgebra.adjoin_le ?_)
+      (NonUnitalStarAlgHom.isClosed_range π.toNonUnitalStarAlgHom)
     rintro _ ⟨v, rfl⟩
     exact ⟨j v, hπ v⟩
   exact fun y => h trivial
@@ -292,7 +294,7 @@ Choi–Effros C⋆-algebra on `I(S)`, whose matrix orders are those of `B(H)`
 Schwarz maps, and the values of `Γ` lie in the multiplicative domain of `Ψ`
 (`SchwarzMapClass.apply_mem_multiplicativeDomain_of_rightInverse`). This closed ⋆-subalgebra
 contains `ρ(j(S)) = Γ(S)`, hence `ρ(A)`, so `π = Ψ ∘ ρ` is a ⋆-homomorphism. Its range is closed
-(`StarAlgHom.isClosed_range`) and contains `S`, and it lies in the closure of the ⋆-algebra generated
+(`NonUnitalStarAlgHom.isClosed_range`) and contains `S`, and it lies in the closure of the ⋆-algebra generated
 by `S`. -/
 theorem exists_starAlgHom {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrderedRing A]
     (j : S →ₗ[ℂ] A) (hj : j.IsCompleteOrderEmbedding) (hj1 : j 1 = 1)
@@ -430,7 +432,7 @@ theorem exists_starAlgHom {A : Type*} [CStarAlgebra A] [PartialOrder A] [StarOrd
       · rintro _ ⟨s, rfl⟩
         exact ⟨j s, hπj s⟩
       · change IsClosed (Set.range π₀)
-        exact π₀.isClosed_range
+        exact NonUnitalStarAlgHom.isClosed_range π₀.toNonUnitalStarAlgHom
   refine ⟨π₀.codRestrict _ fun a => hrange ▸ ⟨a, rfl⟩, fun y => ?_, fun s => Subtype.ext (hπj s)⟩
   have hy : (y : ChoiEffros φ.toSchwarzMap) ∈ π₀.range := by
     rw [hrange]

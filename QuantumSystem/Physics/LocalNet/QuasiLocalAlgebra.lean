@@ -5,7 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
-public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.DirectLimit
+public import QuantumSystem.ForMathlib.Analysis.Normed.Group.DirectLimit
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Completion
 public import QuantumSystem.Physics.LocalNet.Covariance
 
@@ -61,7 +61,7 @@ These constructions apply to any abstract local net over a directed causal index
 /-- The **algebra of local observables** of the net: the algebraic inductive limit of the local
     algebras along the isotony embeddings. Its C⋆-completion is the quasi-local algebra. -/
 noncomputable abbrev localObservables : Type _ :=
-  DirectLimit N.algebra (fun _ _ h => N.incl h)
+  NormedDirectLimit N.algebra (fun _ _ h => N.incl h)
 
 omit [Nonempty K] in
 /-- Componentwise behaviour of the involution on the algebra of local observables. The
@@ -69,7 +69,8 @@ omit [Nonempty K] in
     direct-limit constructions, since each `algebra O` is a `ℂ`-`*`-algebra and `incl` is a
     `*`-algebra homomorphism. -/
 @[simp] lemma star_mk {O : K} (X : N.algebra O) :
-    star (⟦⟨O, X⟩⟧ : N.localObservables) = ⟦⟨O, star X⟩⟧ := rfl
+    star (NormedDirectLimit.mk O X : N.localObservables) = NormedDirectLimit.mk O (star X) :=
+  (NormedDirectLimit.mk_star O X).symm
 
 /-- The canonical map `𝔄(O) → 𝔄_loc` of a local algebra into the algebra of local observables, as
     a unital ring homomorphism (the cocone of the inductive limit). It need not be injective: an
@@ -77,13 +78,17 @@ omit [Nonempty K] in
     (`ιLocal_injective`). -/
 noncomputable def ιLocal (O : K) :
     N.algebra O →+* N.localObservables :=
-  DirectLimit.Ring.of N.algebra (fun _ _ h => N.incl h) O
+  (NormedDirectLimit.ofAlgHom ℂ O).toRingHom
+
+/-- The cocone takes the class of a local observable. -/
+lemma ιLocal_apply (O : K) (X : N.algebra O) : N.ιLocal O X = NormedDirectLimit.mk O X :=
+  rfl
 
 /-- Compatibility of the cocone with the isotony embeddings: including `X` from `O` into the
     larger region `O'` and then into `𝔄_loc` is the same as including `X` directly. -/
 @[simp] lemma ιLocal_incl {O O' : K} (h : O ≤ O') (X : N.algebra O) :
     N.ιLocal O' (N.incl h X) = N.ιLocal O X :=
-  DirectLimit.Ring.of_f (G := N.algebra) (f := fun _ _ h => N.incl h) h X
+  NormedDirectLimit.mk_map (G := N.algebra) (f := fun _ _ h => N.incl h) O O' h X
 
 /-- The cocone is a `*`-homomorphism: it intertwines the local and quasi-local involutions. -/
 @[simp] lemma ιLocal_star {O : K} (X : N.algebra O) :
@@ -93,7 +98,7 @@ noncomputable def ιLocal (O : K) :
 /-- The cocone is `ℂ`-linear: scalars act componentwise on the inductive limit. -/
 @[simp] lemma ιLocal_smul (c : ℂ) {O : K} (X : N.algebra O) :
     N.ιLocal O (c • X) = c • N.ιLocal O X :=
-  (DirectLimit.smul_def O X c).symm
+  NormedDirectLimit.mk_smul O c X
 
 /-- The cocone of the inductive limit absorbs the region-equality transport. -/
 @[simp] lemma ιLocal_algebraCongr {O O' : K} (h : O = O') (x : N.algebra O) :
@@ -104,7 +109,7 @@ noncomputable def ιLocal (O : K) :
     observable from some region — the union of the local algebras is the whole limit. -/
 lemma exists_ιLocal (z : N.localObservables) :
     ∃ (O : K) (X : N.algebra O), z = N.ιLocal O X := by
-  induction z using DirectLimit.induction with
+  induction z using NormedDirectLimit.induction with
   | _ O X => exact ⟨O, X, rfl⟩
 
 /-- **Locality in the algebra of local observables**: observables localised in causally orthogonal
@@ -133,34 +138,16 @@ variable [N.Faithful]
 lemma ιLocal_injective (O : K) : Function.Injective (N.ιLocal O) :=
   DirectLimit.mk_injective _ (fun _ _ h => Faithful.incl_injective h) O
 
-/-- The algebra of local observables is a normed ring under the C⋆-norm of the inductive limit
-    (the inclusions are injective, hence isometric). -/
-noncomputable instance : NormedRing N.localObservables :=
-  DirectLimit.cstarNormedRing (fun _ _ h => Faithful.incl_injective h)
+/-- The isotony embeddings of a faithful net are isometric, being injective `*`-homomorphisms of
+    C⋆-algebras. The algebra of local observables therefore carries the norm of the normed direct
+    limit — a normed `ℂ`-algebra, a normed `*`-group and a C⋆-ring. -/
+instance : DirectLimit.IsometricSystem (G := N.algebra) (fun _ _ h => N.incl h) :=
+  .of_injective fun _ _ h => Faithful.incl_injective h
 
 /-- The C⋆-norm of a local observable, viewed in the algebra of local observables, is its norm in
     its own region's algebra: the connecting maps are isometric. -/
 @[simp] lemma norm_mk {O : K} (X : N.algebra O) :
-    ‖(⟦⟨O, X⟩⟧ : N.localObservables)‖ = ‖X‖ := rfl
-
-/-- The C⋆-norm is compatible with the `ℂ`-algebra structure. -/
-noncomputable instance : NormedAlgebra ℂ N.localObservables where
-  norm_smul_le c x := by
-    induction x using DirectLimit.induction with
-    | _ O X => rw [DirectLimit.smul_def, norm_mk, norm_mk]; exact norm_smul_le c X
-
-/-- `star` is isometric on the algebra of local observables. -/
-instance : NormedStarGroup N.localObservables where
-  norm_star_le x := by
-    induction x using DirectLimit.induction with
-    | _ O X => rw [star_mk, norm_mk, norm_mk]; exact (norm_star X).le
-
-/-- The C⋆-identity holds on the algebra of local observables. -/
-instance : CStarRing N.localObservables where
-  norm_mul_self_le x := by
-    induction x using DirectLimit.induction with
-    | _ O X => rw [star_mk, DirectLimit.mul_def, norm_mk, norm_mk]
-               exact CStarRing.norm_mul_self_le X
+    ‖(NormedDirectLimit.mk O X : N.localObservables)‖ = ‖X‖ := rfl
 
 /-- The **quasi-local C⋆-algebra** of a faithful net: the completion of the algebra of local
     observables. This is the AQFT quasi-local algebra `𝔄 = ‾⋃_O 𝔄(O)`. -/
@@ -194,7 +181,8 @@ noncomputable def ιLocalCStar (O : K) :
   commutes' c := by
     simp only [Function.comp_apply, Algebra.algebraMap_eq_smul_one, N.ιLocal_smul, map_one,
       UniformSpace.Completion.coe_smul, UniformSpace.Completion.coe_one]
-  map_star' X := by simp
+  map_star' X := by
+    simp only [Function.comp_apply, ιLocal_star, UniformSpace.Completion.star_coe]
 
 /-- The local embedding is the completion coercion after the inductive-limit cocone. -/
 lemma coe_ιLocalCStar (O : K) : ⇑(N.ιLocalCStar O) = (↑) ∘ N.ιLocal O := rfl
@@ -230,11 +218,8 @@ lemma ιLocalCStar_injective (O : K) : Function.Injective (N.ιLocalCStar O) :=
     local observables. Note the union: a single local algebra has *closed*, not dense, image
     (`isometry_ιLocalCStar`). -/
 theorem denseRange_iUnion_ιLocalCStar :
-    Dense (⋃ O : K, Set.range (N.ιLocalCStar O)) := by
-  refine UniformSpace.Completion.denseRange_coe.mono ?_
-  rintro _ ⟨z, rfl⟩
-  obtain ⟨O, X, rfl⟩ := N.exists_ιLocal z
-  exact Set.mem_iUnion.2 ⟨O, X, rfl⟩
+    Dense (⋃ O : K, Set.range (N.ιLocalCStar O)) :=
+  NormedDirectLimit.dense_iUnion_range_coe_mk (G := N.algebra) (f := fun _ _ h => N.incl h)
 
 /-- **Locality in the quasi-local C⋆-algebra**: observables localised in causally orthogonal
     regions commute inside `𝔄`. Transports `ιLocal_commute_of_orthogonal` along the completion
@@ -255,7 +240,7 @@ variable {N} (a : N.Covariance)
 /-- The **covariance action** `β_a ⟦⟨O, X⟩⟧ = ⟦⟨σO, β_O X⟩⟧` of a covariance on the algebra of local
     observables, as a ring homomorphism. Well-defined by naturality (`β_incl`). -/
 noncomputable def localObservableCovariance : N.localObservables →+* N.localObservables :=
-  DirectLimit.Ring.lift N.algebra (fun _ _ h => N.incl h) N.localObservables
+  NormedDirectLimit.liftRingHom
     (fun O => (N.ιLocal (a.σ O)).comp (a.β O).toAlgEquiv.toAlgHom.toRingHom)
     (fun O O' h X => by
       change N.ιLocal (a.σ O') (a.β O' (N.incl h X)) = N.ιLocal (a.σ O) (a.β O X)
@@ -264,14 +249,15 @@ noncomputable def localObservableCovariance : N.localObservables →+* N.localOb
 
 /-- Componentwise formula for the covariance action: `β_a ⟦⟨O, X⟩⟧ = ⟦⟨σO, β_O X⟩⟧`. -/
 @[simp] lemma localObservableCovariance_mk {O : K} (X : N.algebra O) :
-  a.localObservableCovariance (⟦⟨O, X⟩⟧ : N.localObservables) = ⟦⟨a.σ O, a.β O X⟩⟧ :=
+  a.localObservableCovariance (NormedDirectLimit.mk O X : N.localObservables) =
+    NormedDirectLimit.mk (a.σ O) (a.β O X) :=
   rfl
 
 /-- The covariance action of the identity covariance is the identity: `β_{id} = id`. -/
 @[simp] lemma localObservableCovariance_id :
   (Covariance.id N).localObservableCovariance = RingHom.id N.localObservables := by
   refine RingHom.ext fun z => ?_
-  induction z using DirectLimit.induction with
+  induction z using NormedDirectLimit.induction with
   | _ O X => rw [localObservableCovariance_mk, RingHom.id_apply]; rfl
 
 /-- **Functoriality of the covariance action**: composing covariances composes their actions,
@@ -279,7 +265,7 @@ noncomputable def localObservableCovariance : N.localObservables →+* N.localOb
 @[simp] lemma localObservableCovariance_comp (a b : N.Covariance) :
   (a.comp b).localObservableCovariance = a.localObservableCovariance.comp b.localObservableCovariance := by
   refine RingHom.ext fun z => ?_
-  induction z using DirectLimit.induction with
+  induction z using NormedDirectLimit.induction with
   | _ O X =>
     simp only [RingHom.comp_apply, localObservableCovariance_mk]
     rfl
@@ -299,16 +285,16 @@ lemma localObservableCovariance_mul (a b : N.Covariance) :
 /-- The covariance action is `ℂ`-linear: `β_a (c • z) = c • β_a z`, since each `β` is. -/
 lemma localObservableCovariance_smul (c : ℂ) (z : N.localObservables) :
   a.localObservableCovariance (c • z) = c • a.localObservableCovariance z := by
-  induction z using DirectLimit.induction with
+  induction z using NormedDirectLimit.induction with
   | _ O X =>
-    rw [DirectLimit.smul_def, localObservableCovariance_mk, localObservableCovariance_mk,
-      DirectLimit.smul_def, map_smul]
+    rw [← NormedDirectLimit.mk_smul, localObservableCovariance_mk, localObservableCovariance_mk,
+      ← NormedDirectLimit.mk_smul, map_smul]
 
 /-- The covariance action preserves the involution: `β_a (star z) = star (β_a z)`, since each `β`
     is a `*`-isomorphism. -/
 lemma localObservableCovariance_star (z : N.localObservables) :
   a.localObservableCovariance (star z) = star (a.localObservableCovariance z) := by
-  induction z using DirectLimit.induction with
+  induction z using NormedDirectLimit.induction with
   | _ O X =>
     rw [star_mk, localObservableCovariance_mk, localObservableCovariance_mk, star_mk, map_star]
 
@@ -365,7 +351,7 @@ variable [N.Faithful]
     `*`-isomorphism of C⋆-algebras, hence norm-preserving. -/
 lemma localObservableCovariance_norm (z : N.localObservables) :
   ‖a.localObservableCovariance z‖ = ‖z‖ := by
-  induction z using DirectLimit.induction with
+  induction z using NormedDirectLimit.induction with
   | _ O X =>
     rw [localObservableCovariance_mk, norm_mk, norm_mk]
     exact StarAlgEquiv.norm_map _ X
