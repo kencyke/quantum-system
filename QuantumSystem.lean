@@ -130,6 +130,7 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem
 public import QuantumSystem.ForMathlib.Algebra.Algebra.Unitization
 public import QuantumSystem.ForMathlib.Algebra.Central.Basic
+public import QuantumSystem.ForMathlib.Algebra.Central.TensorProduct
 public import QuantumSystem.ForMathlib.Algebra.Order.Module.PositiveLinearMap
 public import QuantumSystem.ForMathlib.Algebra.Order.Star.Basic
 public import QuantumSystem.ForMathlib.Algebra.Star.Aut
