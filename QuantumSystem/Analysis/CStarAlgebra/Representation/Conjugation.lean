@@ -25,16 +25,10 @@ i.e. `U π(a) U†`, since the adjoint of a unitary is its inverse
 The unitary `U` itself intertwines `R` with `R.conjBy U`, so the two
 representations are canonically unitarily equivalent.
 
-This is the operator-algebraic building block of the DHR selection
-criterion (`CStarNet.SatisfiesDHR`, in `Physics/LocalNet/DHRCriterion.lean`):
-given a representation `R` of the quasi-local algebra with a DHR
-intertwiner `U : R.H ≃ₗᵢ[ℂ] H₀` for a localisation region `Λ`
-(`CStarNet.IsDHRIntertwiner`), the conjugated representation
-`R.conjBy U` lives on the Hilbert space `H₀` of the vacuum
-representation `π₀`, and the intertwining condition forces it to agree
-with `π₀` on the observables localised outside `Λ`
-(`CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`, from
-`CStarRep.conjBy_π_eq_of_intertwined`).
+The same conjugation for a representation of a net of C⋆-algebras is
+`CStarNet.Rep.conjBy`, through which the DHR selection criterion
+(`CStarNet.SatisfiesDHR`) carries a representation onto the Hilbert
+space of the reference one.
 
 ## Main definitions
 
@@ -47,10 +41,7 @@ with `π₀` on the observables localised outside `Λ`
 * `CStarRep.conjBy_π_apply` — `(R.conjBy U).π a = U ∘L R.π a ∘L U.symm`.
 * `CStarRep.conjBy_π_eq_of_intertwined` — if the intertwining identity
   `U ∘L R.π a = T ∘L U` holds at a particular operator `T`, then
-  `(R.conjBy U).π a = T`.  This is the bridge to the DHR selection
-  criterion: the conjugated representation acts as the vacuum
-  representation on the observables localised outside the region
-  (`CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`).
+  `(R.conjBy U).π a = T`.
 -/
 
 @[expose] public section
@@ -104,13 +95,7 @@ the conjugated representation.
 
 If a unitary `U : R.H ≃ₗᵢ[ℂ] K` satisfies `U ∘L R.π a = T ∘L U`
 for some `T : K →L[ℂ] K` at a particular `a : A`, then the conjugated
-action `(R.conjBy U).π a` equals `T`.
-
-This is the bridge to the DHR selection criterion: when `U` is a DHR
-intertwiner for a localisation region `Λ` (`CStarNet.IsDHRIntertwiner`) and
-`T = π₀ a` the vacuum action, the conjugated representation agrees with
-the vacuum representation on every observable `a` localised outside `Λ`
-(`CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). -/
+action `(R.conjBy U).π a` equals `T`. -/
 lemma conjBy_π_eq_of_intertwined {R : CStarRep A}
     {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K)
