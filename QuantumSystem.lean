@@ -12,6 +12,7 @@ public import QuantumSystem.Analysis.CStarAlgebra.CompletelyPositiveMap.TracePre
 public import QuantumSystem.Analysis.CStarAlgebra.ConditionalExpectation
 public import QuantumSystem.Analysis.CStarAlgebra.DynamicalSystem
 public import QuantumSystem.Analysis.CStarAlgebra.FiniteDimensional
+public import QuantumSystem.Analysis.CStarAlgebra.GNS.Automorphism
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Construction
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.DirectSum
 public import QuantumSystem.Analysis.CStarAlgebra.GNS.Irreducible
