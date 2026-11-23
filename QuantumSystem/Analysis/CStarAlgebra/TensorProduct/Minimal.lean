@@ -13,6 +13,8 @@ public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.Spatial
 public import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.ClosureRange
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.TensorProduct
 
+import QuantumSystem.ForMathlib.Algebra.Central.Basic
+import QuantumSystem.ForMathlib.Algebra.Central.TensorProduct
 import QuantumSystem.ForMathlib.Analysis.CStarAlgebra.Quotient
 
 /-!
@@ -80,6 +82,8 @@ spectral order.
 * `MinTensorProduct.of_surjective_of_finiteDimensional_left`,
   `MinTensorProduct.of_surjective_of_finiteDimensional_right` — when `A` or `B` is
   finite-dimensional, the algebraic tensor product is all of `A ⊗ₘᵢₙ B`.
+* `MinTensorProduct.isCentral` — the minimal tensor product of two central C⋆-algebras, one of them
+  finite-dimensional, is central.
 
 ## Notation
 
@@ -558,6 +562,19 @@ noncomputable def ofEquiv (h : Function.Surjective (of A B)) : A ⊗[ℂ] B ≃�
     ofEquiv h x = of A B x := rfl
 
 end FiniteDimensional
+
+section Central
+
+variable [CStarAlgebra A] [CStarAlgebra B]
+
+/-- **The minimal tensor product of central C⋆-algebras is central when one of them is
+finite-dimensional**: it is then the algebraic tensor product (`MinTensorProduct.ofEquiv`), which is
+central over the field `ℂ` (`Algebra.IsCentral.tensorProduct`). -/
+instance isCentral [FiniteDimensional ℂ A] [Algebra.IsCentral ℂ A] [Algebra.IsCentral ℂ B] :
+    Algebra.IsCentral ℂ (A ⊗ₘᵢₙ B) :=
+  .of_algEquiv' (ofEquiv of_surjective_of_finiteDimensional_left).toAlgEquiv
+
+end Central
 
 /-! ### Operator algebras -/
 

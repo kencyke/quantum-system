@@ -45,7 +45,10 @@ amplification `oneTensor ℓ²(ℕ) M = 1 ⊗ M` is `1 ⊗ s(ψ)`
 
 ## Main definitions
 
-* `VonNeumannAlgebra.sigmaWeak M` — `M` inside `H →σw[ℂ] H`.
+* `VonNeumannAlgebra.sigmaWeak M` — `M` inside `H →σw[ℂ] H`, with the ⋆-algebra structure of `M`
+  (`VonNeumannAlgebra.instRingSigmaWeak`, `instAlgebraSigmaWeak`, `instStarRingSigmaWeak`);
+  `VonNeumannAlgebra.sigmaWeakEquiv M` — the ⋆-isomorphism `M ≃⋆ₐ[ℂ] M.sigmaWeak`, continuous from
+  the norm topology (`VonNeumannAlgebra.continuous_toSigmaWeak`).
 * `VonNeumannAlgebra.IsNormal M ω` — `ω` is σ-weakly continuous on `M`.
 * `VonNeumannAlgebra.NormalFunctional M` — the normal positive functionals on `M`.
 * `VonNeumannAlgebra.IsNormal.vec` — a representing vector in `Completion (ℓ²(ℕ) ⊗[ℂ] H)`.
@@ -205,8 +208,83 @@ variable (M) in
 /-- `x ∈ M` as an element of `M.sigmaWeak`. -/
 def toSigmaWeak (x : M) : M.sigmaWeak := ⟨ContinuousLinearMapSigmaWeak.ofCLM x, x.2⟩
 
+/-- The embedding of `M` into its σ-weak copy is continuous from the norm topology. -/
+@[continuity, fun_prop]
+lemma continuous_toSigmaWeak : Continuous M.toSigmaWeak :=
+  (ContinuousLinearMapSigmaWeak.continuous_ofCLM.comp continuous_subtype_val).subtype_mk _
+
 /-- `ofSigmaWeak` inverts `toSigmaWeak`. -/
 @[simp] lemma ofSigmaWeak_toSigmaWeak (x : M) : M.ofSigmaWeak (M.toSigmaWeak x) = x := rfl
+
+/-- `toSigmaWeak` inverts `ofSigmaWeak`. -/
+@[simp] lemma toSigmaWeak_ofSigmaWeak (T : M.sigmaWeak) : M.toSigmaWeak (M.ofSigmaWeak T) = T := rfl
+
+/-- `ofSigmaWeak` is injective. -/
+lemma ofSigmaWeak_injective : Function.Injective M.ofSigmaWeak := fun S T h => by
+  rw [← toSigmaWeak_ofSigmaWeak S, h, toSigmaWeak_ofSigmaWeak]
+
+/-- The unit of `M`, on its σ-weak copy. -/
+instance instOneSigmaWeak : One M.sigmaWeak := ⟨M.toSigmaWeak 1⟩
+
+/-- The product of `M`, on its σ-weak copy. -/
+instance instMulSigmaWeak : Mul M.sigmaWeak :=
+  ⟨fun S T => M.toSigmaWeak (M.ofSigmaWeak S * M.ofSigmaWeak T)⟩
+
+/-- The powers of `M`, on its σ-weak copy. -/
+instance instPowSigmaWeak : Pow M.sigmaWeak ℕ := ⟨fun T n => M.toSigmaWeak (M.ofSigmaWeak T ^ n)⟩
+
+/-- The cast of the natural numbers into `M`, on its σ-weak copy. -/
+instance instNatCastSigmaWeak : NatCast M.sigmaWeak := ⟨fun n => M.toSigmaWeak n⟩
+
+/-- The cast of the integers into `M`, on its σ-weak copy. -/
+instance instIntCastSigmaWeak : IntCast M.sigmaWeak := ⟨fun n => M.toSigmaWeak n⟩
+
+/-- The adjoint of `M`, on its σ-weak copy. -/
+noncomputable instance instStarSigmaWeak : Star M.sigmaWeak :=
+  ⟨fun T => M.toSigmaWeak (star (M.ofSigmaWeak T))⟩
+
+/-- The σ-weak copy of `M` is a ring: the ring structure of `M` on the additive group of
+`M.sigmaWeak`. -/
+noncomputable instance instRingSigmaWeak : Ring M.sigmaWeak :=
+  ofSigmaWeak_injective.ring M.ofSigmaWeak (map_zero _) rfl (map_add _) (fun _ _ => rfl)
+    (map_neg _) (map_sub _) (fun _ _ => rfl) (fun _ _ => rfl) (fun _ _ => rfl) (fun _ => rfl)
+    (fun _ => rfl)
+
+/-- The σ-weak copy of `M` is a `ℂ`-algebra. -/
+noncomputable instance instAlgebraSigmaWeak : Algebra ℂ M.sigmaWeak :=
+  Algebra.ofModule
+    (fun c S T => ofSigmaWeak_injective (smul_mul_assoc c (M.ofSigmaWeak S) (M.ofSigmaWeak T)))
+    (fun c S T => ofSigmaWeak_injective (mul_smul_comm c (M.ofSigmaWeak S) (M.ofSigmaWeak T)))
+
+/-- The σ-weak copy of `M` is a ⋆-ring. -/
+noncomputable instance instStarRingSigmaWeak : StarRing M.sigmaWeak where
+  star_involutive T := ofSigmaWeak_injective (star_star (M.ofSigmaWeak T))
+  star_mul S T := ofSigmaWeak_injective (star_mul (M.ofSigmaWeak S) (M.ofSigmaWeak T))
+  star_add S T := ofSigmaWeak_injective (star_add (M.ofSigmaWeak S) (M.ofSigmaWeak T))
+
+/-- The adjoint of the σ-weak copy of `M` is conjugate-linear. -/
+instance instStarModuleSigmaWeak : StarModule ℂ M.sigmaWeak where
+  star_smul c T := ofSigmaWeak_injective (star_smul c (M.ofSigmaWeak T))
+
+variable (M) in
+/-- `M` and its σ-weak copy are the same ⋆-algebra: `toSigmaWeak` as a ⋆-isomorphism, with inverse
+`ofSigmaWeak`. The ⋆-automorphisms of `M.sigmaWeak` are thus those of `M`, and carry the topology of
+pointwise σ-weak convergence. -/
+noncomputable def sigmaWeakEquiv : M ≃⋆ₐ[ℂ] M.sigmaWeak where
+  toFun := M.toSigmaWeak
+  invFun := M.ofSigmaWeak
+  left_inv _ := rfl
+  right_inv _ := rfl
+  map_mul' _ _ := rfl
+  map_add' _ _ := rfl
+  map_star' _ := rfl
+  map_smul' _ _ := rfl
+
+/-- `sigmaWeakEquiv` is `toSigmaWeak`. -/
+@[simp] lemma coe_sigmaWeakEquiv : ⇑M.sigmaWeakEquiv = M.toSigmaWeak := rfl
+
+/-- The inverse of `sigmaWeakEquiv` is `ofSigmaWeak`. -/
+@[simp] lemma coe_sigmaWeakEquiv_symm : ⇑M.sigmaWeakEquiv.symm = M.ofSigmaWeak := rfl
 
 variable (M) in
 /-- A positive functional `ω` on `M` is **normal** if it is σ-weakly continuous. By
@@ -412,6 +490,11 @@ variable {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteS
 the same notion as `VonNeumannAlgebra.IsNormal` for functionals. -/
 def IsNormalMap (α : N → M) : Prop :=
   Continuous fun T : N.sigmaWeak => M.toSigmaWeak (α (N.ofSigmaWeak T))
+
+/-- Normality of a map is transported along an equality of von Neumann algebras. -/
+lemma isNormalMap_comp_of_eq {N' : VonNeumannAlgebra K} (e : N = N') {f : N' → M} :
+    IsNormalMap (fun x : N => f ⟨x, e ▸ x.2⟩) ↔ IsNormalMap f := by
+  subst e; rfl
 
 /-- The composite of a normal functional with a normal positive map is normal. -/
 lemma IsNormal.comp [FunLike F N M] [LinearMapClass F ℂ N M] [OrderHomClass F N M]

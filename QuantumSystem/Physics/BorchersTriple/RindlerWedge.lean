@@ -63,13 +63,13 @@ include he in
 the forward light cone and the Rindler wedge of a unit vector `e`, the modular group of `(M, Ω)`
 acts on the translations as the wedge boosts, `Δ^{it} T(x) Δ^{-it} = T(Λ_W(-2πt) x)`. -/
 theorem modularGroup_mul_mul_eq_wedgeBoost (t : ℝ) (x : ℝ × E) :
-    B.standardSubspace.modularGroup t * B.T x * B.standardSubspace.modularGroup (-t) =
+    Δ[B.standardSubspace]^{i t} * B.T x * Δ[B.standardSubspace]^{-i t} =
       B.T (wedgeBoost e (-(2 * π * t)) x) := by
   conv_lhs => rw [eq_lightPlus_add e x]
   rw [B.modularGroup_mul_mul_eq_boost (lightPlus_mem_wedge he) (lightPlus_mem_forwardCone he)
     (lightMinus_mem_wedge he) (neg_lightMinus_mem_forwardCone he) (edge_mem_wedge he x)
     (neg_edge_mem_wedge he x)]
-  congr 1
+  congr 3
   have hc : Real.cosh (-(2 * π * t)) = (Real.exp (-2 * π * t) + Real.exp (2 * π * t)) / 2 := by
     rw [Real.cosh_eq, neg_neg, show -(2 * π * t) = -2 * π * t by ring]
   have hs : Real.sinh (-(2 * π * t)) = (Real.exp (-2 * π * t) - Real.exp (2 * π * t)) / 2 := by
@@ -86,13 +86,12 @@ include he in
 relative to the forward light cone and the Rindler wedge of a unit vector `e`, the modular
 conjugation of `(M, Ω)` acts on the translations as the wedge reflection, `J T(x) J = T(j_W x)`. -/
 theorem modularConj_apply_eq_wedgeReflection (x : ℝ × E) (y : H) :
-    J[B.standardSubspace] ((B.T x : H →L[ℂ] H) (J[B.standardSubspace] y)) =
-      (B.T (wedgeReflection e x) : H →L[ℂ] H) y := by
+    J[B.standardSubspace] (B.T x (J[B.standardSubspace] y)) = B.T (wedgeReflection e x) y := by
   conv_lhs => rw [eq_lightPlus_add e x]
   rw [B.modularConj_apply_eq_reflection (lightPlus_mem_wedge he) (lightPlus_mem_forwardCone he)
     (lightMinus_mem_wedge he) (neg_lightMinus_mem_forwardCone he) (edge_mem_wedge he x)
     (neg_edge_mem_wedge he x)]
-  congr 3
+  congr 4
   refine Prod.ext ?_ ?_
   · simp only [Prod.smul_mk, smul_eq_mul, mul_one, Prod.neg_mk, mul_neg, Prod.mk_sub_mk,
       sub_neg_eq_add, Prod.mk_add_mk, add_zero, wedgeReflection_apply]

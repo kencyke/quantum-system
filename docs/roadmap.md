@@ -5,13 +5,6 @@ README name, the design questions that are open before the item can be stated at
 asks for. What the repository already has is in the module docs, not here. No citations here: those belong in the README
 and the module docs, where `/citation-check` checks them.
 
-## Dynamical systems
-
-`LocalNet.Covariance` carries no topology, so the covariance action states no continuity; the modular
-groups are unitary groups on `H`, not actions on an algebra. The action interface is stated so that both
-are instances: a group homomorphism into the ⋆-automorphisms, continuous for the point-norm (C⋆) or
-point-σ-weak (W⋆) topology.
-
 ## Tensor C⋆-categories
 
 Mathlib has monoidal, braided and symmetric categories, but no dagger or C⋆-category. `CStarRep.Hom` has
@@ -31,12 +24,22 @@ notion every result is stated in.
   back to nuclearity is not formalized. The bidual meets the first bullet: as a `VonNeumannAlgebra` it is
   the double commutant of the universal representation, as a `WStarAlgebra` its predual is the dual of
   `A`.
+- The inductive limit along ⋆-homomorphisms that need not be injective has no C⋆-algebra yet:
+  `NormedDirectLimit` asks isometric connecting maps, which is why the quasi-local algebra of a net
+  (`CStarNet.quasiLocalCStarAlgebra`) needs a faithful net. The C⋆-limit of an arbitrary directed
+  system — the completion of the algebraic limit in the seminorm `lim_j ‖φ_{ij} x‖` — removes that
+  hypothesis and is what the permanence of nuclearity under such limits is stated for. Settle whether
+  it generalizes `NormedDirectLimit` or stands beside it, so that one of them is the notion the
+  quasi-local algebra is built from.
 
 ## Tomita–Takesaki theory
 
 The module doc of `Analysis/VonNeumannAlgebra/Modular/RelativeModular.lean` lists what is not formalized.
-The modular automorphism group σ^φ is an action of ℝ on the algebra, so it is stated with the action
-interface of *Dynamical systems*.
+The modular automorphism group σ^φ is a W⋆-dynamical system of `ℝ`, a
+`ContinuousAddChar ℝ (M.sigmaWeak ≃⋆ₐ[ℂ] M.sigmaWeak)`: `UnitaryRepresentation.conjSigmaWeakAut` of the
+modular unitary group, taken as a representation of `Multiplicative ℝ` by
+`ContinuousAddChar.toContinuousMonoidHom`; its hypothesis that the unitaries normalize `M` is
+`Δ^{it} M Δ^{-it} = M`.
 
 ## Standard form
 
@@ -48,13 +51,17 @@ The natural cone is not defined.
 `Completion (ℓ²(ℕ) ⊗[ℂ] H)`, in place of the missing standard form. Once *Standard form* lands, the
 natural-cone formula is proved as a theorem about this definition, not given as a second one.
 
-## Averaging
-
-Unitary representations exist only as `AddChar G (unitary (H →L[ℂ] H))`, for additive groups. A compact
-group need not be commutative, so its unitary representations need a spelling of which the additive case
-is an instance, not a second spelling beside it.
-
 ## Duality
 
 Mathlib's `TannakaDuality.FiniteGroup.equiv` is for finite groups and without ⋆-structure. Rests on
 *Tensor C⋆-categories* and on the representations of *Averaging*.
+
+## Subnets of nets of von Neumann algebras
+
+The internal symmetries and the fixed-point subnet exist only for nets of C⋆-algebras
+(`GradedLocalNet.Automorphism.internal`, `GradedLocalNet.fixedPointNet`), whose locality
+binds only pairs of regions with a common upper bound; over a non-directed index set such as the
+intervals of `S¹` the fixed-point subnet has to be a `VonNeumannNet`. Before the subnet relation is
+introduced, settle whether the C⋆-level constructions become instances of the von Neumann-level ones
+(through a representation) or stay beside them, so that one of them is the notion every result is
+stated in.

@@ -8,9 +8,11 @@ module
 public import Mathlib.LinearAlgebra.PiTensorProduct.Finite
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.CStarNorm
 public import QuantumSystem.ForMathlib.Algebra.Star.TensorProductMap
+public import QuantumSystem.Analysis.CStarAlgebra.StarAlgEquiv
 public import QuantumSystem.ForMathlib.Analysis.InnerProductSpace.PiTensorProduct
 public import QuantumSystem.ForMathlib.LinearAlgebra.PiTensorProduct.Star
 public import QuantumSystem.ForMathlib.RingTheory.PiTensorProduct.NonUnital
+import QuantumSystem.ForMathlib.Algebra.Central.Basic
 
 /-!
 # The minimal tensor product of a finite family of C⋆-algebras
@@ -45,11 +47,19 @@ The algebras are not assumed unital: `⨂ₘᵢₙ i, A i` is a `NonUnitalCStarA
   `(⨂ₘᵢₙ i, A i) ≃⋆ₐ[ℂ] (⨂ₘᵢₙ i : {i // p i}, A i) ⊗ₘᵢₙ (⨂ₘᵢₙ i : {i // ¬p i}, A i)`.
 * `PiMinTensorProduct.subsingletonEquiv A i₀` — over a single index `i₀`,
   `(⨂ₘᵢₙ i, A i) ≃⋆ₐ[ℂ] A i₀`.
-* `PiTensorProduct.splitStarAlgEquiv R A p`, `PiTensorProduct.subsingletonStarAlgEquiv R A i₀` —
-  the same on the algebraic tensor products of `⋆`-algebras.
+* `PiMinTensorProduct.reindex A e` — reindexing along `e : ι ≃ κ`,
+  `(⨂ₘᵢₙ i, A i) ≃⋆ₐ[ℂ] ⨂ₘᵢₙ k, A (e.symm k)`.
+* `PiTensorProduct.splitStarAlgEquiv R A p`, `PiTensorProduct.subsingletonStarAlgEquiv R A i₀`,
+  `PiTensorProduct.reindexStarAlgEquiv R A e` — the same on the algebraic tensor products of
+  `⋆`-algebras.
 * `PiMinTensorProduct.subtype A` — the minimal tensor product as a C⋆-subalgebra of operators.
 * `CStarRep.piTensorProduct R` — the tensor product of a family of representations `πᵢ` of the
   `A i`, faithful or not, as a representation of `⨂ₘᵢₙ i, A i`.
+* `PiTensorProduct.mapStarAlgHom e` — the tensor product `⨂ eᵢ` of a family of unital
+  `⋆`-homomorphisms, on the algebraic tensor products.
+* `PiMinTensorProduct.map e` — the tensor product `⨂ eᵢ` of a family of unital `⋆`-homomorphisms of
+  unital C⋆-algebras, on the minimal tensor products; `PiMinTensorProduct.congr e` — for
+  `⋆`-isomorphisms, as a `⋆`-isomorphism.
 
 ## Main results
 
@@ -66,6 +76,12 @@ The algebras are not assumed unital: `⨂ₘᵢₙ i, A i` is a `NonUnitalCStarA
 * `PiMinTensorProduct.of_surjective_of_finiteDimensional`, `PiMinTensorProduct.finiteDimensional` —
   for finite-dimensional algebras, the algebraic tensor product is the whole minimal tensor product,
   which is finite-dimensional.
+* `PiMinTensorProduct.norm_of_tprod_le` — `‖⨂ aᵢ‖ ≤ ∏ ‖aᵢ‖`.
+* `PiMinTensorProduct.norm_of_mapStarAlgHom_le` — `⨂ eᵢ` is contractive for the minimal norms;
+  `PiMinTensorProduct.map_map` — it is functorial.
+* `PiMinTensorProduct.continuous_congr` — `e ↦ ⨂ eᵢ` is continuous for the point-norm topologies.
+* `PiMinTensorProduct.isCentral` — the minimal tensor product of finitely many finite-dimensional
+  factors is a factor.
 
 ## Notation
 
@@ -458,6 +474,41 @@ lemma splitStarAlgEquiv_apply (p : ι → Prop) [DecidablePred p] (x : ⨂[R] i,
     splitStarAlgEquiv R A p x = splitEquiv R A p x :=
   rfl
 
+section Reindex
+
+variable {κ : Type*}
+
+variable (R A) in
+/-- **Reindexing** along `e : ι ≃ κ`, `⨂ a ↦ ⨂ (a ∘ e.symm)`, as a `⋆`-algebra isomorphism. -/
+noncomputable def reindexStarAlgEquiv (e : ι ≃ κ) :
+    (⨂[R] i, A i) ≃⋆ₐ[R] (⨂[R] k, A (e.symm k)) :=
+  { reindex R A e with
+    map_mul' x y := by
+      change reindex R A e (x * y) = reindex R A e x * reindex R A e y
+      induction x using PiTensorProduct.induction_on with
+      | smul_tprod r a =>
+        induction y using PiTensorProduct.induction_on with
+        | smul_tprod r' b =>
+          rw [smul_tprod_mul_smul_tprod, map_smul, map_smul, map_smul, reindex_tprod,
+            reindex_tprod, reindex_tprod, smul_mul_smul_comm, tprod_mul_tprod]
+          rfl
+        | add y y' hy hy' => rw [mul_add, map_add, hy, hy', map_add, mul_add]
+      | add x x' hx hx' => rw [add_mul, map_add, hx, hx', map_add, add_mul]
+    map_star' x := by
+      change reindex R A e (star x) = star (reindex R A e x)
+      induction x using PiTensorProduct.induction_on with
+      | smul_tprod r a =>
+        rw [star_smul, star_tprod, map_smul, map_smul, reindex_tprod, reindex_tprod,
+          star_smul, star_tprod]
+      | add x x' hx hx' => rw [star_add, map_add, hx, hx', map_add, star_add] }
+
+/-- `PiTensorProduct.reindexStarAlgEquiv R A e` sends `⨂ a` to `⨂ (a ∘ e.symm)`. -/
+@[simp] lemma reindexStarAlgEquiv_tprod (e : ι ≃ κ) (a : Π i, A i) :
+    reindexStarAlgEquiv R A e (tprod R a) = tprod R fun k => a (e.symm k) :=
+  reindex_tprod e a
+
+end Reindex
+
 variable [Subsingleton ι] (i₀ : ι)
 
 variable (R A) in
@@ -488,6 +539,7 @@ noncomputable def subsingletonStarAlgEquiv : (⨂[R] i, A i) ≃⋆ₐ[R] A i₀
 @[simp] lemma subsingletonStarAlgEquiv_tprod (a : Π i, A i) :
     subsingletonStarAlgEquiv R A i₀ (tprod R a) = a i₀ :=
   subsingletonEquiv_apply_tprod i₀ a
+
 
 end PiTensorProduct
 
@@ -611,6 +663,31 @@ lemma norm_piSpatial_eq_norm_mapLCompletion_splitStarAlgEquiv (x : ⨂[ℂ] i, A
   (splitUnitary R p).opNorm_eq_of_intertwine (splitUnitary_piSpatial R p x)
 
 end Split
+
+section Reindex
+
+variable {κ : Type*} [Fintype κ]
+
+/-- **Reindexing preserves the norm of the tensor product of representations**: along `e : ι ≃ κ`,
+`⨂ πᵢ` and `⨂ π_{e.symm k}` are intertwined by the reindexing of the Hilbert spaces. -/
+lemma norm_piSpatial_reindexStarAlgEquiv (e : ι ≃ κ) (x : ⨂[ℂ] i, A i) :
+    ‖piSpatial (fun k => R (e.symm k)) (PiTensorProduct.reindexStarAlgEquiv ℂ A e x)‖ =
+      ‖piSpatial R x‖ := by
+  refine ((InnerPiTensorProduct.reindexLinearIsometryEquiv ℂ (fun i => (R i).H) e).completion
+    |>.opNorm_eq_of_intertwine fun v => ?_).symm
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r a =>
+    simp only [map_smul, smul_apply, piSpatial_tprod, PiTensorProduct.reindexStarAlgEquiv_tprod]
+    congr 1
+    induction v using Completion.induction_on with
+    | hp => exact isClosed_eq (by fun_prop) (by fun_prop)
+    | ih w =>
+      rw [ContinuousLinearMap.completion_apply_coe, LinearIsometryEquiv.completion_apply_coe,
+        LinearIsometryEquiv.completion_apply_coe, ContinuousLinearMap.completion_apply_coe,
+        InnerPiTensorProduct.reindexLinearIsometryEquiv_mapL]
+  | add x y hx hy => simp only [map_add, add_apply, hx, hy]
+
+end Reindex
 
 end CStarRep
 
@@ -746,6 +823,30 @@ lemma subsingletonEquiv_of (x : ⨂[ℂ] i, A i) :
 
 end Subsingleton
 
+section Reindex
+
+variable {κ : Type*} [Fintype κ]
+
+variable (A) in
+/-- **Reindexing the minimal tensor product** along `e : ι ≃ κ`: the isomorphism that is
+`⨂ a ↦ ⨂ (a ∘ e.symm)` on the algebraic tensor product, isometric since reindexing preserves the
+norm of the tensor product of representations (`CStarRep.norm_piSpatial_reindexStarAlgEquiv`). -/
+noncomputable def reindex (e : ι ≃ κ) : (⨂ₘᵢₙ i, A i) ≃⋆ₐ[ℂ] (⨂ₘᵢₙ k, A (e.symm k)) :=
+  NonUnitalStarAlgHom.equivOfDenseRange (φ := of A)
+    (ψ := (of fun k => A (e.symm k)).comp
+      (PiTensorProduct.reindexStarAlgEquiv ℂ A e).toNonUnitalStarAlgHom) denseRange_of
+    (show Dense (Set.range
+        ((of fun k => A (e.symm k)) ∘ PiTensorProduct.reindexStarAlgEquiv ℂ A e)) from
+      (PiTensorProduct.reindexStarAlgEquiv ℂ A e).surjective.range_comp _ ▸ denseRange_of)
+    fun x => (CStarRep.norm_piSpatial_reindexStarAlgEquiv _ e x).symm
+
+/-- `PiMinTensorProduct.reindex A e` is `⨂ a ↦ ⨂ (a ∘ e.symm)` on the algebraic tensor product. -/
+lemma reindex_of (e : ι ≃ κ) (x : ⨂[ℂ] i, A i) :
+    reindex A e (of A x) = of _ (PiTensorProduct.reindexStarAlgEquiv ℂ A e x) :=
+  NonUnitalStarAlgHom.equivOfDenseRange_apply _ _ _ x
+
+end Reindex
+
 section Split
 
 variable (p : ι → Prop) [DecidablePred p]
@@ -865,3 +966,249 @@ noncomputable abbrev piTensorProduct (R : Π i, CStarRep.{u, w} (A i)) : CStarRe
     (PiMinTensorProduct.norm_piSpatial_le_norm_of R) x)
 
 end CStarRep
+
+/-! ### The tensor product of a family of `⋆`-isomorphisms -/
+
+namespace PiTensorProduct
+
+variable {ι R : Type*} [CommSemiring R] [StarRing R] {A B C : ι → Type*}
+  [∀ i, Semiring (A i)] [∀ i, Algebra R (A i)] [∀ i, StarRing (A i)] [∀ i, StarModule R (A i)]
+  [∀ i, Semiring (B i)] [∀ i, Algebra R (B i)] [∀ i, StarRing (B i)] [∀ i, StarModule R (B i)]
+  [∀ i, Semiring (C i)] [∀ i, Algebra R (C i)] [∀ i, StarRing (C i)] [∀ i, StarModule R (C i)]
+
+/-- The tensor product `⨂ a ↦ ⨂ e i (a i)` of a family of `⋆`-algebra homomorphisms, on the
+algebraic tensor products. -/
+noncomputable def mapStarAlgHom (e : Π i, A i →⋆ₐ[R] B i) : (⨂[R] i, A i) →⋆ₐ[R] ⨂[R] i, B i :=
+  { liftAlgHom ((tprod R).compLinearMap fun i => (e i).toLinearMap)
+      (by simp [PiTensorProduct.one_def]; rfl)
+      (fun x y => by simp [PiTensorProduct.tprod_mul_tprod]; rfl) with
+    map_star' x := by
+      induction x using PiTensorProduct.induction_on with
+      | smul_tprod r a => simp [star_tprod, map_star]
+      | add x y hx hy => simp_all [star_add] }
+
+/-- `PiTensorProduct.mapStarAlgHom e` sends `⨂ a` to `⨂ e i (a i)`. -/
+@[simp] lemma mapStarAlgHom_tprod (e : Π i, A i →⋆ₐ[R] B i) (a : Π i, A i) :
+    mapStarAlgHom e (⨂ₜ[R] i, a i) = ⨂ₜ[R] i, e i (a i) := by
+  simp [mapStarAlgHom]
+
+/-- The tensor product of homomorphisms is functorial. -/
+lemma mapStarAlgHom_mapStarAlgHom (f : Π i, B i →⋆ₐ[R] C i) (e : Π i, A i →⋆ₐ[R] B i)
+    (x : ⨂[R] i, A i) :
+    mapStarAlgHom f (mapStarAlgHom e x) = mapStarAlgHom (fun i => (f i).comp (e i)) x := by
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r a => simp
+  | add x y hx hy => rw [map_add, map_add, hx, hy, map_add]
+
+/-- The tensor product of the identities is the identity. -/
+lemma mapStarAlgHom_id (x : ⨂[R] i, A i) : mapStarAlgHom (fun i => StarAlgHom.id R (A i)) x = x := by
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r a => simp
+  | add x y hx hy => rw [map_add, hx, hy]
+
+end PiTensorProduct
+
+namespace PiMinTensorProduct
+
+variable {ι : Type*} [Fintype ι] {A B : ι → Type u} [∀ i, CStarAlgebra (A i)]
+  [∀ i, CStarAlgebra (B i)]
+
+/-- **The minimal norm is a cross norm on elementary tensors**: `‖⨂ aᵢ‖ ≤ ∏ ‖aᵢ‖`. -/
+lemma norm_of_tprod_le (a : Π i, A i) : ‖of A (⨂ₜ[ℂ] i, a i)‖ ≤ ∏ i, ‖a i‖ := by
+  rw [norm_of, CStarRep.piSpatial_tprod, ContinuousLinearMap.norm_completion]
+  refine (InnerPiTensorProduct.norm_mapL_le _).trans ?_
+  gcongr with i
+  exact NonUnitalStarAlgHom.norm_apply_le _ _
+
+/-- The tensor product of the representations `πᵢ ∘ eᵢ` is that of the `πᵢ` after `⨂ eᵢ`. -/
+lemma piSpatial_comp_mapStarAlgHom (R : Π i, CStarRep (B i)) (e : Π i, A i →⋆ₐ[ℂ] B i)
+    (x : ⨂[ℂ] i, A i) :
+    CStarRep.piSpatial (fun i => (R i).comp (e i).toNonUnitalStarAlgHom) x =
+      CStarRep.piSpatial R (PiTensorProduct.mapStarAlgHom e x) := by
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r a =>
+    rw [map_smul, map_smul, map_smul, CStarRep.piSpatial_tprod,
+      PiTensorProduct.mapStarAlgHom_tprod, CStarRep.piSpatial_tprod]
+    rfl
+  | add x y hx hy => rw [map_add, map_add, map_add, hx, hy]
+
+/-- **The tensor product of `⋆`-homomorphisms is contractive** for the minimal norms: the norm of
+`⨂ eᵢ (x)` is that of `x` in the representations `πᵢ ∘ eᵢ` of the `A i`, which the minimal norm
+dominates (`PiMinTensorProduct.norm_piSpatial_le_norm_of`). -/
+lemma norm_of_mapStarAlgHom_le (e : Π i, A i →⋆ₐ[ℂ] B i) (x : ⨂[ℂ] i, A i) :
+    ‖of B (PiTensorProduct.mapStarAlgHom e x)‖ ≤ ‖of A x‖ := by
+  calc ‖of B (PiTensorProduct.mapStarAlgHom e x)‖
+      = ‖CStarRep.piSpatial (fun i => CStarRep.gelfandNaimark (B i))
+          (PiTensorProduct.mapStarAlgHom e x)‖ := norm_of _
+    _ = ‖CStarRep.piSpatial (fun i => (CStarRep.gelfandNaimark (B i)).comp
+          (e i).toNonUnitalStarAlgHom) x‖ := by rw [piSpatial_comp_mapStarAlgHom]
+    _ ≤ ‖of A x‖ := norm_piSpatial_le_norm_of _ x
+
+/-- The `⋆`-homomorphism `x ↦ of (⨂ eᵢ (x))` of the algebraic tensor product of the `A i` into the
+minimal tensor product of the `B i`, whose extension is `PiMinTensorProduct.map`. -/
+noncomputable abbrev ofMap (e : Π i, A i →⋆ₐ[ℂ] B i) : (⨂[ℂ] i, A i) →⋆ₙₐ[ℂ] (⨂ₘᵢₙ i, B i) :=
+  (of B).comp (PiTensorProduct.mapStarAlgHom e).toNonUnitalStarAlgHom
+
+/-- **The tensor product of a family of unital `⋆`-homomorphisms** `eᵢ : A i →⋆ₐ[ℂ] B i`, on the
+minimal tensor products: the extension of `⨂ eᵢ` from the algebraic tensor product
+(`PiMinTensorProduct.map_of`), which is contractive (`PiMinTensorProduct.norm_of_mapStarAlgHom_le`).
+For two factors the non-unital version is `MinTensorProduct.map`. -/
+noncomputable def map (e : Π i, A i →⋆ₐ[ℂ] B i) : (⨂ₘᵢₙ i, A i) →⋆ₐ[ℂ] (⨂ₘᵢₙ i, B i) :=
+  let f : (⨂ₘᵢₙ i, A i) →⋆ₙₐ[ℂ] (⨂ₘᵢₙ i, B i) :=
+    (NonUnitalStarSubalgebraClass.subtype (ofMap e).closureRange).comp
+      (NonUnitalStarAlgHom.closureRangeMap
+        (φ := CStarRep.piSpatial fun i => CStarRep.gelfandNaimark (A i)) (ψ := ofMap e)
+        fun x => norm_of_mapStarAlgHom_le e x)
+  have hf (x : ⨂[ℂ] i, A i) : f (of A x) = of B (PiTensorProduct.mapStarAlgHom e x) :=
+    congrArg Subtype.val (NonUnitalStarAlgHom.closureRangeMap_closureRangeRestrict
+      (φ := CStarRep.piSpatial fun i => CStarRep.gelfandNaimark (A i)) (ψ := ofMap e)
+      (fun x => norm_of_mapStarAlgHom_le e x) x)
+  have h1 : f 1 = 1 := by rw [← of_one, hf, map_one, of_one]
+  { f with
+    map_one' := h1
+    commutes' := fun r => by
+      simp only [Algebra.algebraMap_eq_smul_one]
+      exact (map_smul f r 1).trans (congrArg (r • ·) h1) }
+
+/-- `PiMinTensorProduct.map e` is `⨂ eᵢ` on the algebraic tensor product. -/
+@[simp] lemma map_of (e : Π i, A i →⋆ₐ[ℂ] B i) (x : ⨂[ℂ] i, A i) :
+    map e (of A x) = of B (PiTensorProduct.mapStarAlgHom e x) :=
+  congrArg Subtype.val (NonUnitalStarAlgHom.closureRangeMap_closureRangeRestrict
+    (φ := CStarRep.piSpatial fun i => CStarRep.gelfandNaimark (A i)) (ψ := ofMap e)
+    (fun x => norm_of_mapStarAlgHom_le e x) x)
+
+/-- The tensor product of the identities is the identity. -/
+@[simp] lemma map_id_apply (z : ⨂ₘᵢₙ i, A i) : map (fun i => StarAlgHom.id ℂ (A i)) z = z := by
+  induction z using denseRange_of.induction_on with
+  | hp => exact isClosed_eq (map_continuous _) continuous_id
+  | ih x =>
+    rw [map_of]
+    exact congrArg (of A) (PiTensorProduct.mapStarAlgHom_id x)
+
+/-- **The tensor product of `⋆`-homomorphisms is functorial**: `(⨂ fᵢ) ∘ (⨂ eᵢ) = ⨂ (fᵢ ∘ eᵢ)`. -/
+lemma map_map {C : ι → Type u} [∀ i, CStarAlgebra (C i)] (f : Π i, B i →⋆ₐ[ℂ] C i)
+    (e : Π i, A i →⋆ₐ[ℂ] B i) (z : ⨂ₘᵢₙ i, A i) :
+    map f (map e z) = map (fun i => (f i).comp (e i)) z := by
+  induction z using denseRange_of.induction_on with
+  | hp => exact isClosed_eq ((map_continuous _).comp (map_continuous _)) (map_continuous _)
+  | ih x => rw [map_of, map_of, map_of, PiTensorProduct.mapStarAlgHom_mapStarAlgHom]
+
+/-- **The tensor product of a family of `⋆`-isomorphisms** `eᵢ : A i ≃⋆ₐ[ℂ] B i`, on the minimal
+tensor products: `PiMinTensorProduct.map` of the `eᵢ`, with inverse that of the `eᵢ⁻¹`. -/
+noncomputable def congr (e : Π i, A i ≃⋆ₐ[ℂ] B i) : (⨂ₘᵢₙ i, A i) ≃⋆ₐ[ℂ] (⨂ₘᵢₙ i, B i) :=
+  StarAlgEquiv.ofStarAlgHom (map fun i => (e i).toStarAlgHom)
+    (map fun i => (e i).symm.toStarAlgHom)
+    (StarAlgHom.ext fun z => by
+      rw [StarAlgHom.comp_apply, map_map]
+      change _ = z
+      convert map_id_apply (A := A) z using 3
+      funext i
+      ext a
+      exact (e i).symm_apply_apply a)
+    (StarAlgHom.ext fun z => by
+      rw [StarAlgHom.comp_apply, map_map]
+      change _ = z
+      convert map_id_apply (A := B) z using 3
+      funext i
+      ext a
+      exact (e i).apply_symm_apply a)
+
+/-- `PiMinTensorProduct.congr e` is `PiMinTensorProduct.map` of the `eᵢ`. -/
+lemma congr_apply (e : Π i, A i ≃⋆ₐ[ℂ] B i) (z : ⨂ₘᵢₙ i, A i) :
+    congr e z = map (fun i => (e i).toStarAlgHom) z :=
+  rfl
+
+/-- `PiMinTensorProduct.congr e` is `⨂ eᵢ` on the algebraic tensor product. -/
+@[simp] lemma congr_of (e : Π i, A i ≃⋆ₐ[ℂ] B i) (x : ⨂[ℂ] i, A i) :
+    congr e (of A x) = of B (PiTensorProduct.mapStarAlgHom (fun i => (e i).toStarAlgHom) x) :=
+  map_of _ x
+
+/-- The tensor product of the identities is the identity. -/
+@[simp] lemma congr_refl_apply (z : ⨂ₘᵢₙ i, A i) :
+    congr (fun i => StarAlgEquiv.refl ℂ (A i)) z = z :=
+  map_id_apply z
+
+/-- **The tensor product of `⋆`-isomorphisms is functorial**: `(⨂ fᵢ) ∘ (⨂ eᵢ) = ⨂ (fᵢ ∘ eᵢ)`. -/
+lemma congr_congr {C : ι → Type u} [∀ i, CStarAlgebra (C i)] (f : Π i, B i ≃⋆ₐ[ℂ] C i)
+    (e : Π i, A i ≃⋆ₐ[ℂ] B i) (z : ⨂ₘᵢₙ i, A i) :
+    congr f (congr e z) = congr (fun i => (e i).trans (f i)) z :=
+  map_map _ _ z
+
+/-- **`e ↦ ⨂ eᵢ` is continuous for the point-norm topologies**: on an elementary tensor it is
+`e ↦ ⨂ eᵢ aᵢ`, continuous as `‖⨂ aᵢ‖ ≤ ∏ ‖aᵢ‖` (`PiMinTensorProduct.norm_of_tprod_le`), and the
+algebraic tensor product is dense, the `⨂ eᵢ` being isometric. -/
+theorem continuous_congr :
+    Continuous (congr : (Π i, A i ≃⋆ₐ[ℂ] B i) → (⨂ₘᵢₙ i, A i) ≃⋆ₐ[ℂ] (⨂ₘᵢₙ i, B i)) := by
+  refine StarAlgEquiv.continuous_of_dense denseRange_of fun a ha => ?_
+  obtain ⟨x, rfl⟩ := ha
+  simp only [congr_of]
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r m =>
+    simp only [map_smul, PiTensorProduct.mapStarAlgHom_tprod, StarAlgEquiv.toStarAlgHom_apply]
+    have hT : Continuous fun a : Π i, B i => of B (⨂ₜ[ℂ] i, a i) :=
+      ((of B : (⨂[ℂ] i, B i) →ₗ[ℂ] (⨂ₘᵢₙ i, B i)).compMultilinearMap
+        (PiTensorProduct.tprod ℂ)).continuous_of_bound 1 fun a => by
+          simpa using norm_of_tprod_le a
+    exact (hT.comp (continuous_pi fun i =>
+      (continuous_eval_const (m i)).comp (continuous_apply i))).const_smul r
+  | add x y hx hy =>
+    simp only [map_add]
+    exact hx.add hy
+
+end PiMinTensorProduct
+
+/-! ### Finite families of finite-dimensional factors -/
+
+namespace PiMinTensorProduct
+
+variable {ι : Type*} [Fintype ι] {A : ι → Type u} [∀ i, CStarAlgebra (A i)]
+
+/-- **Over an empty index set the minimal tensor product is central**: every element is a scalar,
+the algebraic tensor product over no factor being `ℂ`. -/
+lemma isCentral_of_isEmpty [IsEmpty ι] : Algebra.IsCentral ℂ (⨂ₘᵢₙ i, A i) where
+  out x _ := by
+    have : ∀ i, FiniteDimensional ℂ (A i) := fun i => isEmptyElim i
+    have key (y : ⨂[ℂ] i, A i) :
+        of A y = algebraMap ℂ (⨂ₘᵢₙ i, A i) (PiTensorProduct.isEmptyEquiv ι y) := by
+      induction y using PiTensorProduct.induction_on with
+      | smul_tprod r a =>
+        rw [Subsingleton.elim a 1, ← PiTensorProduct.one_def, map_smul, of_one, map_smul,
+          PiTensorProduct.one_def, PiTensorProduct.isEmptyEquiv_apply_tprod, smul_eq_mul, mul_one,
+          Algebra.algebraMap_eq_smul_one]
+      | add y z hy hz => rw [map_add, map_add, map_add, hy, hz]
+    obtain ⟨y, rfl⟩ := of_surjective_of_finiteDimensional (A := A) x
+    exact ⟨PiTensorProduct.isEmptyEquiv ι y, (key y).symm⟩
+
+/-- The statement of `PiMinTensorProduct.isCentral`, by induction on the number of factors. -/
+private lemma isCentral_of_card_eq (n : ℕ) : ∀ (κ : Type w) [Fintype κ] (B : κ → Type u)
+    [∀ k, CStarAlgebra (B k)] [∀ k, FiniteDimensional ℂ (B k)] [∀ k, Algebra.IsCentral ℂ (B k)],
+    Fintype.card κ = n → Algebra.IsCentral ℂ (⨂ₘᵢₙ k, B k) := by
+  induction n with
+  | zero =>
+    intro κ _ B _ _ _ h
+    have := Fintype.card_eq_zero_iff.mp h
+    exact isCentral_of_isEmpty
+  | succ n ih =>
+    intro κ _ B _ _ _ h
+    classical
+    obtain ⟨k₀⟩ : Nonempty κ := Fintype.card_pos_iff.mp (h ▸ Nat.succ_pos n)
+    let : Fintype {k // k = k₀} := Subtype.fintype _
+    let : Fintype {k // ¬k = k₀} := Subtype.fintype _
+    have : Subsingleton {k // k = k₀} := ⟨fun a b => Subtype.ext (a.2.trans b.2.symm)⟩
+    have : Algebra.IsCentral ℂ (⨂ₘᵢₙ k : {k // k = k₀}, B k) :=
+      .of_algEquiv' (subsingletonEquiv (fun k : {k // k = k₀} => B k) ⟨k₀, rfl⟩).symm.toAlgEquiv
+    have : Algebra.IsCentral ℂ (⨂ₘᵢₙ k : {k // ¬k = k₀}, B k) :=
+      ih _ _ (by
+        rw [Fintype.card_subtype_compl, Fintype.card_subtype_eq, h, Nat.add_sub_cancel])
+    exact .of_algEquiv' (D := (⨂ₘᵢₙ k : {k // k = k₀}, B k) ⊗ₘᵢₙ (⨂ₘᵢₙ k : {k // ¬k = k₀}, B k))
+      (splitEquiv B (· = k₀)).symm.toAlgEquiv
+
+/-- **The minimal tensor product of finitely many finite-dimensional factors is a factor**: by
+induction on the number of factors, splitting off one (`PiMinTensorProduct.splitEquiv`) and using
+that the minimal tensor product of two central C⋆-algebras, one finite-dimensional, is central
+(`MinTensorProduct.isCentral`). -/
+instance isCentral [∀ i, FiniteDimensional ℂ (A i)] [∀ i, Algebra.IsCentral ℂ (A i)] :
+    Algebra.IsCentral ℂ (⨂ₘᵢₙ i, A i) :=
+  isCentral_of_card_eq _ ι A rfl
+
+end PiMinTensorProduct

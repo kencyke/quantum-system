@@ -101,6 +101,37 @@ sources:
       url: https://arxiv.org/pdf/1401.2652v1
       locators:
         §5.1, (38)–(39): {page: '16', date: '2026-11-10', version: arXiv:1401.2652v1}
+  - title: Structure and Classification of Superconformal Nets
+    authors: [Sebastiano Carpi, Yasuyuki Kawahigashi, Roberto Longo]
+    id: doi:10.1007/s00023-008-0381-9
+    type: article
+    relationship: adapts
+    note: Ann. Henri Poincaré 9 (2008), 1069–1121; arXiv:0705.3609. Locators and pages are those of
+      arXiv v2. The definitions of §2.1 and §2.4, stated there for nets on the intervals of S¹ (the
+      grading as a vacuum-preserving gauge automorphism), are taken here over an arbitrary ordered
+      set of regions.
+    checked:
+      url: https://arxiv.org/pdf/0705.3609
+      locators:
+        Section 2.1, net of von Neumann algebras: {page: '5', date: '2026-11-23', version:
+            arXiv:0705.3609v2}
+        Section 2.1, Z2-grading and graded locality: {page: '6', date: '2026-11-23', version:
+            arXiv:0705.3609v2}
+        Section 2.1, twisted locality: {page: '6', date: '2026-11-23', version: arXiv:0705.3609v2}
+        Section 2.4, representation: {page: '10', date: '2026-11-23', version: arXiv:0705.3609v2}
+        Section 2.4, graded representation: {page: '10', date: '2026-11-23', version:
+            arXiv:0705.3609v2}
+  - title: From vertex operator algebras to conformal nets and back
+    authors: [Sebastiano Carpi, Yasuyuki Kawahigashi, Roberto Longo, Mihály Weiner]
+    id: arXiv:1503.01260
+    type: article
+    relationship: background
+    note: Mem. Amer. Math. Soc. 254 (2018), no. 1213. Locators and pages are those of arXiv v4.
+    checked:
+      url: https://arxiv.org/pdf/1503.01260v4
+      locators:
+        §3.3, (41): {page: '21', date: '2026-11-23', version: arXiv:1503.01260v4}
+        §3.4: {page: 22–24, date: '2026-11-23', version: arXiv:1503.01260v4}
 automation:
   methods:
     - {method: agent, framework: Claude Code}

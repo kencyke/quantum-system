@@ -34,6 +34,10 @@ dense.
 ## Main results
 
 * `PiMinTensorProduct.norm_extend` — `x ↦ x ⊗ 1` is isometric on the minimal tensor products.
+* `PiMinTensorProduct.commute_extend_of_disjoint` — elements over disjoint sets of indices commute
+  once extended to a common one.
+* `PiMinTensorProduct.extend_map` — `x ↦ x ⊗ 1` commutes with the tensor product of unital
+  `⋆`-homomorphisms.
 * `InfiniteMinTensorProduct.norm_of` — the embeddings of the finite minimal tensor products are
   isometric.
 * `InfiniteMinTensorProduct.dense_iUnion_range_of` — the union of their images is dense.
@@ -83,6 +87,50 @@ noncomputable def extendStarAlgHom {s t : Finset ι} (hst : s ⊆ t) :
 @[simp] lemma extendStarAlgHom_apply {s t : Finset ι} (hst : s ⊆ t) (x : ⨂[R] i : s, A i) :
     extendStarAlgHom R hst x = extendAlgHom R hst x :=
   rfl
+
+omit [StarRing R] [∀ i, StarRing (A i)] [∀ i, StarModule R (A i)] in
+/-- **Elements extended from disjoint sets of indices commute**: `x ⊗ 1` and `1 ⊗ y` commute, the
+factors of the two elementary tensors being `1` wherever the other is not. -/
+lemma commute_extendAlgHom_of_disjoint {s₁ s₂ t : Finset ι} (h₁ : s₁ ⊆ t) (h₂ : s₂ ⊆ t)
+    (hd : Disjoint s₁ s₂) (x : ⨂[R] i : s₁, A i) (y : ⨂[R] i : s₂, A i) :
+    Commute (extendAlgHom R h₁ x) (extendAlgHom R h₂ y) := by
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r m =>
+    induction y using PiTensorProduct.induction_on with
+    | smul_tprod r' n =>
+      rw [map_smul, map_smul, extendAlgHom_tprod, extendAlgHom_tprod]
+      refine Commute.smul_left (Commute.smul_right ?_ _) _
+      rw [Commute, SemiconjBy, tprod_mul_tprod, tprod_mul_tprod]
+      congr 1
+      funext j
+      by_cases hj₁ : (j : ι) ∈ s₁
+      · have hj₂ : (j : ι) ∉ s₂ := Finset.disjoint_left.mp hd hj₁
+        simp [extendFun, hj₁, hj₂]
+      · simp [extendFun, hj₁]
+    | add y y' hy hy' =>
+      rw [map_add]
+      exact hy.add_right hy'
+  | add x x' hx hx' =>
+    rw [map_add]
+    exact hx.add_left hx'
+
+variable {B : ι → Type*} [∀ i, Semiring (B i)] [∀ i, Algebra R (B i)] [∀ i, StarRing (B i)]
+  [∀ i, StarModule R (B i)]
+
+/-- The extension by `1` commutes with the tensor product of unital `⋆`-homomorphisms:
+`(⨂ eᵢ)(x) ⊗ 1 = (⨂ eᵢ)(x ⊗ 1)`. -/
+lemma extendAlgHom_mapStarAlgHom {s t : Finset ι} (hst : s ⊆ t) (e : Π i, A i →⋆ₐ[R] B i)
+    (x : ⨂[R] i : s, A i) :
+    extendAlgHom R hst (mapStarAlgHom (fun i : s => e i) x) =
+      mapStarAlgHom (fun i : t => e i) (extendAlgHom R hst x) := by
+  induction x using PiTensorProduct.induction_on with
+  | smul_tprod r m =>
+    rw [map_smul, map_smul, map_smul, map_smul, mapStarAlgHom_tprod, extendAlgHom_tprod,
+      extendAlgHom_tprod, mapStarAlgHom_tprod]
+    congr 2
+    funext j
+    by_cases hj : (j : ι) ∈ s <;> simp [extendFun, hj]
+  | add x y hx hy => rw [map_add, map_add, hx, hy, map_add, map_add]
 
 end PiTensorProduct
 
@@ -204,6 +252,50 @@ instance directedSystem :
       rw [extend_of, extend_of, extend_of]
       exact congrArg (of _)
         ((PiTensorProduct.directedSystemAlgHom (R := ℂ) (A := A)).map_map hst htu x)
+
+/-- **Elements of the minimal tensor products over disjoint sets of indices commute** once
+extended to a common larger set: `x ⊗ 1` and `1 ⊗ y` commute, as they do on the algebraic tensor
+products (`PiTensorProduct.commute_extendAlgHom_of_disjoint`), which are dense. -/
+theorem commute_extend_of_disjoint {s₁ s₂ t : Finset ι} (h₁ : s₁ ⊆ t) (h₂ : s₂ ⊆ t)
+    (hd : Disjoint s₁ s₂) (x : ⨂ₘᵢₙ i : s₁, A i) (y : ⨂ₘᵢₙ i : s₂, A i) :
+    Commute (extend h₁ x) (extend h₂ y) := by
+  induction x using denseRange_of.induction_on with
+  | hp =>
+    exact isClosed_eq ((map_continuous _).mul continuous_const)
+      (continuous_const.mul (map_continuous _))
+  | ih x =>
+    induction y using denseRange_of.induction_on with
+    | hp =>
+      exact isClosed_eq (continuous_const.mul (map_continuous _))
+        ((map_continuous _).mul continuous_const)
+    | ih y =>
+      rw [extend_of, extend_of]
+      exact (PiTensorProduct.commute_extendAlgHom_of_disjoint h₁ h₂ hd x y).map (of _)
+
+section Congr
+
+variable {B : ι → Type u} [∀ i, CStarAlgebra (B i)]
+
+/-- **The extension by `1` commutes with the tensor product of unital `⋆`-homomorphisms** on the
+minimal tensor products: `(⨂ eᵢ)(z) ⊗ 1 = (⨂ eᵢ)(z ⊗ 1)`. -/
+theorem extend_map {s t : Finset ι} (hst : s ⊆ t) (e : Π i, A i →⋆ₐ[ℂ] B i)
+    (z : ⨂ₘᵢₙ i : s, A i) :
+    extend hst (map (fun i : s => e i) z) = map (fun i : t => e i) (extend hst z) := by
+  induction z using denseRange_of.induction_on with
+  | hp =>
+    exact isClosed_eq ((map_continuous _).comp (map_continuous _))
+      ((map_continuous _).comp (map_continuous _))
+  | ih x =>
+    rw [map_of, extend_of, extend_of, map_of]
+    exact congrArg (of _) (PiTensorProduct.extendAlgHom_mapStarAlgHom hst e x)
+
+/-- The extension by `1` commutes with the tensor product of `⋆`-isomorphisms. -/
+theorem extend_congr {s t : Finset ι} (hst : s ⊆ t) (e : Π i, A i ≃⋆ₐ[ℂ] B i)
+    (z : ⨂ₘᵢₙ i : s, A i) :
+    extend hst (congr (fun i : s => e i) z) = congr (fun i : t => e i) (extend hst z) :=
+  extend_map hst (fun i => (e i).toStarAlgHom) z
+
+end Congr
 
 variable [∀ i, Nontrivial (A i)]
 

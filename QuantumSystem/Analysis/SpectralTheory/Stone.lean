@@ -13,15 +13,16 @@ public import QuantumSystem.ForMathlib.Topology.Algebra.Module.PerfectPairing
 /-!
 # Stone's theorem
 
-The **infinitesimal generator** of a one-parameter group `U : AddChar ℝ (E →L[R] E)` of bounded
-operators on a normed space is the operator `G y = d/dt U(t) y |_{t = 0}`, defined on the vectors
-`y` for which the derivative exists (`AddChar.generator`). For a
-one-parameter unitary group `U : AddChar ℝ (unitary _)` the generator is `G = i A`, and
-`A = -i G` is the **self-adjoint generator** (`AddChar.selfAdjointGenerator`):
+The **infinitesimal generator** of a one-parameter group `π : AddChar ℝ (E →L[R] E)` of bounded
+operators on a normed space, with `π t` the operator at time `t` and `π (s + t) = π s * π t`, is the
+operator `G y = d/dt π(t) y |_{t = 0}`, defined on the vectors `y` for which the derivative exists
+(`AddChar.generator`). For a strongly continuous one-parameter unitary group
+`U : UnitaryAddRepresentation ℝ H` the generator of its unitaries is `G = i A`, and
+`A = -i G` is the **self-adjoint generator** (`UnitaryAddRepresentation.selfAdjointGenerator`):
 `i A y = d/dt U(t) y |_{t = 0}`. **Stone's theorem** states that
 the self-adjoint generator of a strongly continuous one-parameter unitary group is self-adjoint and
 generates it, `U(t) = e^{itA}`
-(`AddChar.IsStronglyContinuous.unitaryGroup_selfAdjointGenerator`), and that conversely the
+(`UnitaryAddRepresentation.unitaryGroup_selfAdjointGenerator`), and that conversely the
 self-adjoint generator of the unitary group `e^{itB}` of a self-adjoint `B` is `B`
 (`IsSelfAdjoint.selfAdjointGenerator_unitaryGroup`). Hence `A ↦ (t ↦ e^{itA})` is a bijection from
 the self-adjoint operators onto the strongly continuous one-parameter unitary groups
@@ -29,8 +30,8 @@ the self-adjoint operators onto the strongly continuous one-parameter unitary gr
 
 Stone's theorem is the case `V = ℝ` of the SNAG theorem, for the multiplication pairing of `ℝ`
 with itself (`LinearMap.mul_isContPerfPair`): `U(t) = ∫ e^{itλ} dE(λ)` for the projection-valued
-measure `E = hU.pvm (LinearMap.mul ℝ ℝ)`, and the self-adjoint generator is `∫ λ dE(λ)`
-(`AddChar.IsStronglyContinuous.selfAdjointGenerator_eq_integralPMap`). The identification rests on
+measure `E = U.pvm (LinearMap.mul ℝ ℝ)`, and the self-adjoint generator is `∫ λ dE(λ)`
+(`UnitaryAddRepresentation.selfAdjointGenerator_eq_integralPMap`). The identification rests on
 a computation for an arbitrary projection-valued measure `E` and measurable real `φ`
 (`ProjectionValuedMeasure.hasDerivAt_integral_cexp_apply_iff`): `t ↦ (∫ e^{itφ} dE) y` is
 differentiable at `0` iff `φ ∈ L²(E_y)`, with derivative `i (∫ φ dE) y`. The difference quotients
@@ -40,43 +41,45 @@ convergence gives the derivative, and Fatou's lemma, through the lower semiconti
 
 ## Main definitions
 
-* `AddChar.generator U` — the infinitesimal generator `G` of a one-parameter group of bounded
-  operators, `G y = d/dt U(t) y |_{t = 0}`.
-* `AddChar.selfAdjointGenerator U` — the self-adjoint generator `A = -i G` of a one-parameter
-  unitary group.
+* `AddChar.generator π` — the infinitesimal generator `G` of a one-parameter group of
+  bounded operators, `G y = d/dt π(t) y |_{t = 0}`.
+* `UnitaryAddRepresentation.selfAdjointGenerator U` — the self-adjoint generator `A = -i G` of a
+  one-parameter unitary group.
 * `IsSelfAdjoint.unitaryGroupEquiv H` — **Stone's theorem** as a bijection
   `A ↦ (t ↦ e^{itA})` from the self-adjoint operators onto the strongly continuous one-parameter
   unitary groups.
 
 ## Main results
 
-* `AddChar.mem_graph_generator_iff`, `AddChar.mem_graph_selfAdjointGenerator_iff` — `G y = z` iff
-  `t ↦ U(t) y` has derivative `z` at `0`, and `A y = z` iff it has derivative `i z`.
-* `AddChar.compPMap_generator_le`, `AddChar.hasDerivAt_apply_of_mem_graph_generator` —
-  `U(t) G ⊆ G U(t)`, and `d/dt U(t) y = U(t) G y` at every `t`.
+* `AddChar.mem_graph_generator_iff`,
+  `UnitaryAddRepresentation.mem_graph_selfAdjointGenerator_iff` — `G y = z` iff
+  `t ↦ π(t) y` has derivative `z` at `0`, and `A y = z` iff `t ↦ U(t) y` has derivative `i z`.
+* `AddChar.compPMap_generator_le`,
+  `AddChar.hasDerivAt_apply_of_mem_graph_generator` —
+  `π(t) G ⊆ G π(t)`, and `d/dt π(t) y = π(t) G y` at every `t`.
 * `ProjectionValuedMeasure.hasDerivAt_integral_cexp_apply`,
   `ProjectionValuedMeasure.memLp_of_differentiableAt_integral_cexp_apply`,
   `ProjectionValuedMeasure.hasDerivAt_integral_cexp_apply_iff` — differentiating
   `t ↦ (∫ e^{itφ} dE) y`.
 * `IsSelfAdjoint.selfAdjointGenerator_unitaryGroup` — **Stone's theorem**, converse: the
   self-adjoint generator of `t ↦ e^{itB}` is `B`.
-* `AddChar.IsStronglyContinuous.selfAdjointGenerator_eq_integralPMap` — the self-adjoint generator
+* `UnitaryAddRepresentation.selfAdjointGenerator_eq_integralPMap` — the self-adjoint generator
   of a strongly continuous `U` is `∫ λ dE(λ)` for the projection-valued measure `E` of the SNAG
   theorem.
-* `AddChar.IsStronglyContinuous.isSelfAdjoint_selfAdjointGenerator`,
-  `AddChar.IsStronglyContinuous.pvm_selfAdjointGenerator`,
-  `AddChar.IsStronglyContinuous.unitaryGroup_selfAdjointGenerator` — **Stone's theorem**: the
+* `UnitaryAddRepresentation.isSelfAdjoint_selfAdjointGenerator`,
+  `UnitaryAddRepresentation.pvm_selfAdjointGenerator`,
+  `UnitaryAddRepresentation.unitaryGroup_selfAdjointGenerator` — **Stone's theorem**: the
   self-adjoint generator is self-adjoint, its projection-valued measure is that of the SNAG
   theorem, and `U(t) = e^{itA}`.
-* `AddChar.IsStronglyContinuous.existsUnique_unitaryGroup_eq` — **Stone's theorem**: `U` is
+* `UnitaryAddRepresentation.existsUnique_unitaryGroup_eq` — **Stone's theorem**: `U` is
   `t ↦ e^{itA}` for a unique self-adjoint `A`.
 
 ## TODO
 
 * Strongly continuous one-parameter groups and semigroups of bounded operators on Banach spaces:
-  closedness and density of the domain of `AddChar.generator`, and the Hille–Yosida theorem. Only
-  unitary groups on Hilbert spaces are analysed here, through the SNAG theorem; semigroups need a
-  one-sided derivative and a parameter monoid `ℝ≥0`.
+  closedness and density of the domain of `AddChar.generator`, and the Hille–Yosida
+  theorem. Only unitary groups on Hilbert spaces are analysed here, through the SNAG theorem;
+  semigroups need a one-sided derivative and a parameter monoid `ℝ≥0`.
 * Weakly measurable one-parameter unitary groups on separable Hilbert spaces, which are strongly
   continuous by von Neumann's theorem (see the TODO of
   `QuantumSystem.Analysis.SpectralTheory.SNAG`).
@@ -100,30 +103,30 @@ open scoped ENNReal InnerProductSpace LinearPMap
 namespace AddChar
 
 variable {R E : Type*} [Ring R] [NormedAddCommGroup E] [NormedSpace ℝ E] [Module R E]
-  [SMulCommClass ℝ R E] [ContinuousConstSMul R E] (U : AddChar ℝ (E →L[R] E))
+  [SMulCommClass ℝ R E] [ContinuousConstSMul R E] (π : AddChar ℝ (E →L[R] E))
 
-/-- The domain of the infinitesimal generator of a one-parameter group `U` of bounded operators:
-the vectors `y` for which `t ↦ U(t) y` is differentiable at `0`. -/
+/-- The domain of the infinitesimal generator of a one-parameter group `π` of bounded operators:
+the vectors `y` for which `t ↦ π(t) y` is differentiable at `0`. -/
 def generatorDomain : Submodule R E where
-  carrier := {y | DifferentiableAt ℝ (fun t => U t y) 0}
+  carrier := {y | DifferentiableAt ℝ (fun t : ℝ => π t y) 0}
   add_mem' {x y} hx hy := by
-    change DifferentiableAt ℝ (fun t => U t (x + y)) 0
+    change DifferentiableAt ℝ (fun t : ℝ => π t (x + y)) 0
     simp only [map_add]
     exact hx.add hy
   zero_mem' := by simp
   smul_mem' c y hy := by
-    change DifferentiableAt ℝ (fun t => U t (c • y)) 0
+    change DifferentiableAt ℝ (fun t : ℝ => π t (c • y)) 0
     simp only [map_smul]
     exact hy.const_smul c
 
-/-- The **infinitesimal generator** `G` of a one-parameter group `U` of bounded operators:
-`G y = d/dt U(t) y |_{t = 0}`, on the vectors `y` for which the derivative exists. For a
+/-- The **infinitesimal generator** `G` of a one-parameter group `π` of bounded operators:
+`G y = d/dt π(t) y |_{t = 0}`, on the vectors `y` for which the derivative exists. For a
 one-parameter unitary group, `G = i A` for the self-adjoint operator `A`
-with `U(t) = e^{itA}` (`AddChar.selfAdjointGenerator`, Stone's theorem). -/
+with `U(t) = e^{itA}` (`UnitaryAddRepresentation.selfAdjointGenerator`, Stone's theorem). -/
 noncomputable def generator : E →ₗ.[R] E where
-  domain := U.generatorDomain
+  domain := π.generatorDomain
   toFun :=
-    { toFun := fun y => deriv (fun t => U t y) 0
+    { toFun := fun y => deriv (fun t : ℝ => π t y) 0
       map_add' := fun x y => by
         simp only [Submodule.coe_add, map_add]
         exact deriv_fun_add x.2 y.2
@@ -131,70 +134,74 @@ noncomputable def generator : E →ₗ.[R] E where
         simp only [SetLike.val_smul, map_smul, RingHom.id_apply]
         exact deriv_fun_const_smul c y.2 }
 
-variable {U}
+variable {π}
 
-/-- `G y = z` iff `t ↦ U(t) y` has derivative `z` at `0`. -/
+/-- `G y = z` iff `t ↦ π(t) y` has derivative `z` at `0`. -/
 lemma mem_graph_generator_iff {y z : E} :
-    (y, z) ∈ U.generator.graph ↔ HasDerivAt (fun t => U t y) z 0 := by
+    (y, z) ∈ π.generator.graph ↔ HasDerivAt (fun t : ℝ => π t y) z 0 := by
   refine ⟨fun h => ?_, fun h => ?_⟩
   · obtain ⟨⟨y', hy'⟩, rfl, rfl⟩ := (LinearPMap.mem_graph_iff _).mp h
     exact hy'.hasDerivAt
   · exact (LinearPMap.mem_graph_iff _).mpr ⟨⟨y, h.differentiableAt⟩, rfl, h.deriv⟩
 
 omit [NormedSpace ℝ E] [SMulCommClass ℝ R E] [ContinuousConstSMul R E] in
-/-- `U(s) U(t) = U(t) U(s)`. -/
-private lemma apply_apply_comm (s t : ℝ) (y : E) : U s (U t y) = U t (U s y) := by
-  rw [← mul_apply_eq_comp, ← mul_apply_eq_comp, ← AddChar.map_add_eq_mul, ← AddChar.map_add_eq_mul,
-    add_comm]
+/-- `π(s) π(t) = π(t) π(s)`. -/
+private lemma apply_apply_comm (s t : ℝ) (y : E) :
+    π s (π t y) = π t (π s y) := by
+  rw [← mul_apply_eq_comp, ← mul_apply_eq_comp, ← map_add_eq_mul, ← map_add_eq_mul, add_comm]
 
-/-- **`U(t)` commutes with the generator**: `U(t) G ⊆ G U(t)`. -/
+/-- **`π(t)` commutes with the generator**: `π(t) G ⊆ G π(t)`. -/
 lemma compPMap_generator_le (t : ℝ) :
-    ((U t : E →L[R] E) : E →ₗ[R] E).compPMap U.generator ≤
-      U.generator.compNat (((U t : E →L[R] E) : E →ₗ[R] E).toPMap ⊤) := by
-  -- the derivative of `s ↦ U(s) U(t) y` is computed at each vector `y`
+    ((π t : E →L[R] E) : E →ₗ[R] E).compPMap π.generator ≤
+      π.generator.compNat (((π t : E →L[R] E) : E →ₗ[R] E).toPMap ⊤) := by
+  -- the derivative of `s ↦ π(s) π(t) y` is computed at each vector `y`
   refine LinearPMap.compPMap_le_compNat_toPMap_iff.mpr fun y z h => ?_
   simp only [ContinuousLinearMap.coe_coe]
   rw [mem_graph_generator_iff] at h ⊢
   simp_rw [apply_apply_comm _ t]
-  exact ((U t).toLinearMap.toAddMonoidHom.toRealLinearMap (U t).continuous).hasFDerivAt.comp_hasDerivAt
-    0 h
+  exact ((π t).toLinearMap.toAddMonoidHom.toRealLinearMap
+    (π t).continuous).hasFDerivAt.comp_hasDerivAt 0 h
 
-/-- `d/dt U(t) y = U(t) G y` at every `t`, for `y` in the domain of the generator. -/
-lemma hasDerivAt_apply_of_mem_graph_generator {y z : E} (h : (y, z) ∈ U.generator.graph)
-    (t : ℝ) : HasDerivAt (fun s => U s y) (U t z) t := by
+/-- `d/dt π(t) y = π(t) G y` at every `t`, for `y` in the domain of the generator. -/
+lemma hasDerivAt_apply_of_mem_graph_generator {y z : E} (h : (y, z) ∈ π.generator.graph)
+    (t : ℝ) : HasDerivAt (fun s : ℝ => π s y) (π t z) t := by
   have h' := mem_graph_generator_iff.mp
-    (LinearPMap.compPMap_le_compNat_toPMap_iff.mp (U.compPMap_generator_le t) h)
+    (LinearPMap.compPMap_le_compNat_toPMap_iff.mp (π.compPMap_generator_le t) h)
   simp only [ContinuousLinearMap.coe_coe] at h'
   rw [← sub_self t] at h'
   convert h'.comp_sub_const t t using 1
   funext s
-  rw [← mul_apply_eq_comp, ← AddChar.map_add_eq_mul, sub_add_cancel]
+  rw [← mul_apply_eq_comp, ← map_add_eq_mul, sub_add_cancel]
 
 end AddChar
 
 /-! ### The self-adjoint generator of a one-parameter unitary group -/
 
-namespace AddChar
+namespace UnitaryAddRepresentation
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
 
+variable {F : Type*} [FunLike F ℝ (UnitarySOT ℂ H)]
+  [AddCharClass F ℝ (UnitarySOT ℂ H)]
+
 /-- The **self-adjoint generator** `A = -i G` of a one-parameter unitary group `U`, for the
 infinitesimal generator `G` of `U` as a group of bounded operators: `i A y = d/dt U(t) y |_{t = 0}`.
-For a strongly continuous `U` it is self-adjoint and `U(t) = e^{itA}`
-(`AddChar.IsStronglyContinuous.unitaryGroup_selfAdjointGenerator`). -/
-noncomputable def selfAdjointGenerator (U : AddChar ℝ (unitary (H →L[ℂ] H))) : H →ₗ.[ℂ] H :=
-  -I • ((unitary (H →L[ℂ] H)).subtype.compAddChar U).generator
+It is defined for every additive character `U` of `ℝ` into the unitary group, on which no
+continuity is imposed. For a strongly continuous `U` it is self-adjoint and `U(t) = e^{itA}`
+(`UnitaryAddRepresentation.unitaryGroup_selfAdjointGenerator`). -/
+noncomputable def selfAdjointGenerator (U : F) : H →ₗ.[ℂ] H :=
+  -I • ((UnitarySOT.coeHom ℂ H).compAddChar (U : AddChar ℝ (UnitarySOT ℂ H))).generator
 
-variable {U : AddChar ℝ (unitary (H →L[ℂ] H))}
+variable {U : F}
 
 /-- `A y = z` iff `t ↦ U(t) y` has derivative `i z` at `0`. -/
 lemma mem_graph_selfAdjointGenerator_iff {y z : H} :
-    (y, z) ∈ U.selfAdjointGenerator.graph ↔
-      HasDerivAt (fun t => (U t : H →L[ℂ] H) y) (I • z) 0 := by
-  set G := ((unitary (H →L[ℂ] H)).subtype.compAddChar U).generator
-  have hG : ∀ y z, (y, z) ∈ G.graph ↔ HasDerivAt (fun t => (U t : H →L[ℂ] H) y) z 0 :=
-    fun y z => mem_graph_generator_iff
-  have hA : ∀ y : G.domain, U.selfAdjointGenerator ⟨y, y.2⟩ = -I • G y := fun y => rfl
+    (y, z) ∈ (selfAdjointGenerator U).graph ↔
+      HasDerivAt (fun t : ℝ => U t y) (I • z) 0 := by
+  set G := ((UnitarySOT.coeHom ℂ H).compAddChar (U : AddChar ℝ (UnitarySOT ℂ H))).generator
+  have hG : ∀ y z, (y, z) ∈ G.graph ↔ HasDerivAt (fun t : ℝ => U t y) z 0 :=
+    fun y z => AddChar.mem_graph_generator_iff
+  have hA : ∀ y : G.domain, selfAdjointGenerator U ⟨y, y.2⟩ = -I • G y := fun y => rfl
   refine ⟨fun h => ?_, fun h => ?_⟩
   · obtain ⟨⟨y', hy'⟩, rfl, rfl⟩ := (LinearPMap.mem_graph_iff _).mp h
     rw [hA ⟨y', hy'⟩, smul_smul, mul_neg, I_mul_I, neg_neg, one_smul]
@@ -203,7 +210,7 @@ lemma mem_graph_selfAdjointGenerator_iff {y z : H} :
     refine (LinearPMap.mem_graph_iff _).mpr ⟨⟨y', y'.2⟩, rfl, ?_⟩
     rw [hA y', hy', smul_smul, neg_mul, I_mul_I, neg_neg, one_smul]
 
-end AddChar
+end UnitaryAddRepresentation
 
 /-! ### Differentiating the Fourier transform of a projection-valued measure -/
 
@@ -353,75 +360,73 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-- **Stone's theorem**, the generator of `e^{itB}`: the self-adjoint generator of the unitary
 group `t ↦ e^{itB}` of a self-adjoint operator `B` is `B`. -/
 theorem selfAdjointGenerator_unitaryGroup (hB : IsSelfAdjoint B) :
-    hB.unitaryGroup.selfAdjointGenerator = B := by
+    UnitaryAddRepresentation.selfAdjointGenerator hB.unitaryGroup = B := by
   refine LinearPMap.eq_of_eq_graph (Submodule.ext fun ⟨y, z⟩ => ?_)
-  rw [AddChar.mem_graph_selfAdjointGenerator_iff]
+  rw [UnitaryAddRepresentation.mem_graph_selfAdjointGenerator_iff]
   simp_rw [coe_unitaryGroup_apply]
   conv_rhs => rw [hB.eq_integralPMap_pvm]
   exact hB.pvm.hasDerivAt_integral_cexp_apply_iff (φ := fun s => s) measurable_id
 
 end IsSelfAdjoint
 
-namespace AddChar.IsStronglyContinuous
+namespace UnitaryAddRepresentation
 
 variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
-  {U : AddChar ℝ (unitary (H →L[ℂ] H))} (hU : U.IsStronglyContinuous)
+  (U : UnitaryAddRepresentation ℝ H)
 
 /-- The operator `∫ λ dE(λ)` of the projection-valued measure `E` of a strongly continuous
 one-parameter unitary group is self-adjoint, with projection-valued measure `E` and unitary group
 `U`. -/
 private lemma unitaryGroup_integralPMap :
-    ∃ hB : IsSelfAdjoint ((hU.pvm (LinearMap.mul ℝ ℝ)).integralPMap fun s => (s : ℂ)),
-      hB.pvm = hU.pvm (LinearMap.mul ℝ ℝ) ∧ hB.unitaryGroup = U := by
-  set E := hU.pvm (LinearMap.mul ℝ ℝ)
+    ∃ hB : IsSelfAdjoint ((U.pvm (LinearMap.mul ℝ ℝ)).integralPMap fun s => (s : ℂ)),
+      hB.pvm = U.pvm (LinearMap.mul ℝ ℝ) ∧ hB.unitaryGroup = U := by
+  set E := U.pvm (LinearMap.mul ℝ ℝ)
   have hB : IsSelfAdjoint (E.integralPMap fun s => (s : ℂ)) :=
     E.isSelfAdjoint_integralPMap_ofReal (φ := fun s => s) measurable_id
   have hpvm : hB.pvm = E := (E.pvm_integralPMap_ofReal measurable_id).trans E.map_id
   refine ⟨hB, hpvm, ?_⟩
   rw [IsSelfAdjoint.unitaryGroup, hpvm]
-  exact hU.fourier_pvm _
+  exact U.fourier_pvm _
 
 /-- The self-adjoint generator of a strongly continuous one-parameter unitary group `U` is
 `∫ λ dE(λ)` for the projection-valued measure `E` of `U` given by the SNAG theorem,
 `U(t) = ∫ e^{itλ} dE(λ)`. -/
 lemma selfAdjointGenerator_eq_integralPMap :
-    U.selfAdjointGenerator = (hU.pvm (LinearMap.mul ℝ ℝ)).integralPMap fun s => (s : ℂ) := by
-  obtain ⟨hB, -, hU'⟩ := hU.unitaryGroup_integralPMap
-  calc U.selfAdjointGenerator = hB.unitaryGroup.selfAdjointGenerator := by rw [hU']
+    selfAdjointGenerator U = (U.pvm (LinearMap.mul ℝ ℝ)).integralPMap fun s => (s : ℂ) := by
+  obtain ⟨hB, -, hU'⟩ := U.unitaryGroup_integralPMap
+  calc selfAdjointGenerator U = selfAdjointGenerator hB.unitaryGroup := by rw [hU']
     _ = _ := hB.selfAdjointGenerator_unitaryGroup
 
-include hU in
 /-- **Stone's theorem**: the self-adjoint generator `A = -i G` of a strongly continuous
 one-parameter unitary group, for the infinitesimal generator `G`, is self-adjoint. -/
-theorem isSelfAdjoint_selfAdjointGenerator : IsSelfAdjoint U.selfAdjointGenerator := by
-  rw [hU.selfAdjointGenerator_eq_integralPMap]
-  exact (hU.pvm (LinearMap.mul ℝ ℝ)).isSelfAdjoint_integralPMap_ofReal (φ := fun s => s)
+theorem isSelfAdjoint_selfAdjointGenerator : IsSelfAdjoint (selfAdjointGenerator U) := by
+  rw [U.selfAdjointGenerator_eq_integralPMap]
+  exact (U.pvm (LinearMap.mul ℝ ℝ)).isSelfAdjoint_integralPMap_ofReal (φ := fun s => s)
     measurable_id
 
 /-- The projection-valued measure of the self-adjoint generator of `U` is the projection-valued
 measure of `U` given by the SNAG theorem. -/
 lemma pvm_selfAdjointGenerator :
-    hU.isSelfAdjoint_selfAdjointGenerator.pvm = hU.pvm (LinearMap.mul ℝ ℝ) := by
-  obtain ⟨hB, hpvm, -⟩ := hU.unitaryGroup_integralPMap
-  rw [IsSelfAdjoint.pvm_congr _ hB hU.selfAdjointGenerator_eq_integralPMap, hpvm]
+    U.isSelfAdjoint_selfAdjointGenerator.pvm = U.pvm (LinearMap.mul ℝ ℝ) := by
+  obtain ⟨hB, hpvm, -⟩ := U.unitaryGroup_integralPMap
+  rw [IsSelfAdjoint.pvm_congr _ hB U.selfAdjointGenerator_eq_integralPMap, hpvm]
 
 /-- **Stone's theorem**: a strongly continuous one-parameter unitary group is generated by its
 self-adjoint generator `A`, `U(t) = e^{itA}`. -/
 theorem unitaryGroup_selfAdjointGenerator :
-    hU.isSelfAdjoint_selfAdjointGenerator.unitaryGroup = U := by
-  rw [IsSelfAdjoint.unitaryGroup, hU.pvm_selfAdjointGenerator]
-  exact hU.fourier_pvm _
+    U.isSelfAdjoint_selfAdjointGenerator.unitaryGroup = U := by
+  rw [IsSelfAdjoint.unitaryGroup, U.pvm_selfAdjointGenerator]
+  exact U.fourier_pvm _
 
-include hU in
 /-- **Stone's theorem**: a strongly continuous one-parameter unitary group is `t ↦ e^{itA}` for a
 unique self-adjoint operator `A`, its self-adjoint generator. -/
 theorem existsUnique_unitaryGroup_eq :
     ∃! A : H →ₗ.[ℂ] H, ∃ hA : IsSelfAdjoint A, hA.unitaryGroup = U :=
-  ⟨U.selfAdjointGenerator,
-    ⟨hU.isSelfAdjoint_selfAdjointGenerator, hU.unitaryGroup_selfAdjointGenerator⟩,
+  ⟨selfAdjointGenerator U,
+    ⟨U.isSelfAdjoint_selfAdjointGenerator, U.unitaryGroup_selfAdjointGenerator⟩,
     fun A ⟨hA, h⟩ => by rw [← h, hA.selfAdjointGenerator_unitaryGroup]⟩
 
-end AddChar.IsStronglyContinuous
+end UnitaryAddRepresentation
 
 namespace IsSelfAdjoint
 
@@ -430,10 +435,10 @@ variable (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
 /-- **Stone's theorem** as a bijection: `A ↦ (t ↦ e^{itA})` maps the self-adjoint operators onto the
 strongly continuous one-parameter unitary groups, with inverse the self-adjoint generator. -/
 noncomputable def unitaryGroupEquiv : {A : H →ₗ.[ℂ] H // IsSelfAdjoint A} ≃
-    {U : AddChar ℝ (unitary (H →L[ℂ] H)) // U.IsStronglyContinuous} where
-  toFun A := ⟨A.2.unitaryGroup, A.2.isStronglyContinuous_unitaryGroup⟩
-  invFun U := ⟨U.1.selfAdjointGenerator, U.2.isSelfAdjoint_selfAdjointGenerator⟩
+    UnitaryAddRepresentation ℝ H where
+  toFun A := A.2.unitaryGroup
+  invFun U := ⟨UnitaryAddRepresentation.selfAdjointGenerator U, U.isSelfAdjoint_selfAdjointGenerator⟩
   left_inv A := Subtype.ext A.2.selfAdjointGenerator_unitaryGroup
-  right_inv U := Subtype.ext U.2.unitaryGroup_selfAdjointGenerator
+  right_inv U := U.unitaryGroup_selfAdjointGenerator
 
 end IsSelfAdjoint
