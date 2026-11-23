@@ -125,6 +125,7 @@ public import QuantumSystem.Analysis.VonNeumannAlgebra.SupportProjection
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Classification
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.Defs
+public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.FiniteDimensional
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.MatrixUnits
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.StructureTheorem
