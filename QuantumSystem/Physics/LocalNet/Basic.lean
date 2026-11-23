@@ -68,10 +68,10 @@ open scoped CausalOrthogonality
     for causally orthogonal regions, an even element commutes with every element of the other
     region (`locality_even`) and two odd elements anticommute (`locality_odd`).
 
-    This is the net of a system with fermions (a Fermi net): the algebras of disjoint regions do
-    not commute, the fermionic operators of different regions anticommuting. A local net is the
-    case of the trivial parity (`GradedLocalNet.IsLocal`), where graded locality is commutation;
-    the even parts form a local net (`GradedLocalNet.even`).
+    This is the locality of a system with fermions: the odd (fermionic) elements of causally
+    orthogonal regions anticommute rather than commute. A local net is the case of the trivial
+    parity (`GradedLocalNet.IsLocal`), where graded locality is commutation; the even parts form a
+    local net (`GradedLocalNet.even`).
 
     The local case is the Haag–Kastler net structure over an abstract index set, *without* the
     injectivity requirement on the isotony embeddings, which is the class `CStarNet.Faithful`. The
@@ -112,9 +112,10 @@ lemma parity_apply {O : K} (x : N.algebra O) : N.parity O x = x :=
     bound — the derived relation `CausalOrthogonality.OrthogonalHat` (`⊥̂`) rather than `⟂` itself
     (see `CStarNet.Grading.IsGradedLocal`). The two coincide on directed index sets, which is where
     every consumer of this statement lives. A net over a genuinely non-directed index set that
-    needs locality for `⟂` itself must be taken as a `VonNeumannNet`
-    (`QuantumSystem.Physics.LocalNet.VonNeumannNet`), whose ambient `𝓑(H)` lets
-    `algebra_le_commutant_of_orthogonal` state locality with no upper bound. -/
+    needs locality for `⟂` itself must be taken as a net of von Neumann algebras
+    (`QuantumSystem.Physics.LocalNet.VonNeumannNet`), whose ambient `𝓑(H)` states locality
+    (`VonNeumannNet.IsLocal`) and graded locality (`VonNeumannNet.Grading.IsGradedLocal`) with no
+    upper bound. -/
 theorem locality {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O) (hd : O₁ ⟂ O₂)
     (x : N.algebra O₁) (y : N.algebra O₂) : Commute (N.incl h₁ x) (N.incl h₂ y) :=
   N.locality_even h₁ h₂ hd x y (N.parity_apply x)

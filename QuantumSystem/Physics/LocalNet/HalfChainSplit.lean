@@ -70,7 +70,7 @@ open scoped ProperContainment VonNeumannAlgebra ComplexOrder GNS
 
 namespace GradedLocalNet
 
-variable {α : Type*} (N : GradedLocalNet (Finset α)) [N.IsLocal] [N.Faithful]
+variable {α : Type*} (N : GradedLocalNet (Finset α)) [N.Faithful]
 
 /-! ### The split property of a state -/
 
@@ -90,17 +90,16 @@ variable [PartialOrder N.quasiLocalCStarAlgebra] [StarOrderedRing N.quasiLocalCS
 def IsSplitPairAt (ω : State N.quasiLocalCStarAlgebra) (S₁ S₂ : Set α) : Prop :=
   (N.vonNeumannNetSet GNS[ω].toCStarRep).IsSplitPair S₁ S₂
 
-/-- **The nested split property yields split pairs with a gap**: if the GNS net of `ω` has the
-    split property and `S₁ ⋐ S₂` with `S₃` disjoint from `S₂`, then `(S₁, S₃)` is a split pair
-    of `ω`. On the integer chain with `ofCThickening ℤ 1` this gives the gapped half-chain pair
+/-- **The nested split property yields split pairs with a gap** for a local net: if the GNS net
+    of `ω` has the split property and `S₁ ⋐ S₂` with `S₃` disjoint from `S₂`, then `(S₁, S₃)` is a
+    split pair of `ω`. On the integer chain with `ofCThickening ℤ 1` this gives the gapped half-chain pair
     `(Iic 0, Ici 3)` from `Iic 0 ⋐ Iic 2`; the gap-free pair `(Iic 0, Ici 1)` is not reachable. -/
-theorem IsSplitPairAt.of_splitProperty [ProperContainment (Set α)]
+theorem IsSplitPairAt.of_splitProperty [N.IsLocal] [ProperContainment (Set α)]
     {ω : State N.quasiLocalCStarAlgebra}
     (hs : (N.vonNeumannNetSet GNS[ω].toCStarRep).SplitProperty)
     {S₁ S₂ S₃ : Set α} (h : S₁ ⋐ S₂) (hd : Disjoint S₂ S₃) : N.IsSplitPairAt ω S₁ S₃ :=
   VonNeumannNet.SplitProperty.isSplitPair hs h hd
 
-omit [N.IsLocal] in
 /-- For a multiplicative state, the local von Neumann algebras of the GNS representation consist
     of scalars: they lie in `𝓑(H)′`. -/
 private lemma localVonNeumannAlgebra_le_commutant_of_map_mul {ω : State N.quasiLocalCStarAlgebra}
@@ -137,7 +136,7 @@ end State
 
 section HalfChain
 
-variable (N : GradedLocalNet (Finset ℤ)) [N.IsLocal] [N.Faithful]
+variable (N : GradedLocalNet (Finset ℤ)) [N.Faithful]
 variable [PartialOrder N.quasiLocalCStarAlgebra] [StarOrderedRing N.quasiLocalCStarAlgebra]
 
 /-- The **half-chain split property** of a state `ω` on the quasi-local algebra of a chain, in

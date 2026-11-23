@@ -14,8 +14,8 @@ A **grading** `CStarNet.Grading` of a net of C⋆-algebras (`QuantumSystem.Physi
 is a **parity** automorphism of every local algebra, involutive and preserved by the isotony
 embeddings. An element `x` of `𝔄(O)` is *even* if the parity fixes it and *odd* if the parity sends
 it to `-x`; every element is the sum of its even part `(x + parity O x) / 2` and its odd part
-`(x - parity O x) / 2`. In a system with fermions the even elements are the bosonic ones and the
-odd elements the fermionic ones.
+`(x - parity O x) / 2` (`CStarNet.Grading.exists_even_add_odd`). In a system with fermions the
+even elements are the bosonic ones and the odd elements the fermionic ones.
 
 The parity is carried region by region because the net is given by its local algebras and
 embeddings, not as subalgebras of one algebra. A grading needs the order of the index set alone;
@@ -56,6 +56,16 @@ variable {N : CStarNet K} (Γ : N.Grading)
 lemma parity_algebraCongr {O O' : K} (e : O = O') (x : N.algebra O) :
     N.algebraCongr e (Γ.parity O x) = Γ.parity O' (N.algebraCongr e x) := by
   subst e; rfl
+
+/-- **Every element is the sum of an even and an odd one**:
+    `x = (x + parity O x) / 2 + (x - parity O x) / 2`. -/
+lemma exists_even_add_odd {O : K} (x : N.algebra O) :
+    ∃ x₀ x₁ : N.algebra O, Γ.parity O x₀ = x₀ ∧ Γ.parity O x₁ = -x₁ ∧ x₀ + x₁ = x := by
+  refine ⟨(2⁻¹ : ℂ) • (x + Γ.parity O x), (2⁻¹ : ℂ) • (x - Γ.parity O x), ?_, ?_, ?_⟩
+  · rw [map_smul, map_add, Γ.parity_parity, add_comm]
+  · rw [map_smul, map_sub, Γ.parity_parity, ← smul_neg, neg_sub]
+  · rw [← smul_add, add_add_sub_cancel, ← two_smul ℂ x, smul_smul, inv_mul_cancel₀ two_ne_zero,
+      one_smul]
 
 variable (N) in
 /-- The **trivial grading** of a net: the parity is the identity, so every element is even. -/

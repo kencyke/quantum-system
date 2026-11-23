@@ -31,8 +31,9 @@ spelled out at `CStarNet.Grading.IsGradedLocal.exists_commute_of_orthogonalHat` 
 interesting statements are precisely the ones it bites on: a region and its causal complement
 typically have no common upper bound in the index set — on the circle their union misses only two
 points and so is neither connected nor non-dense, hence not a region. A net over such an index set
-needing locality for `⟂` itself must be taken as a `VonNeumannNet`
-(`QuantumSystem.Physics.LocalNet.VonNeumannNet`), where the ambient `𝓑(H)` removes the obstruction.
+needing graded locality for `⟂` itself must be taken as a net of von Neumann algebras with a grading
+(`VonNeumannNet.Grading.IsGradedLocal`, in `QuantumSystem.Physics.LocalNet.VonNeumannNet`), where
+the ambient `𝓑(H)` removes the obstruction.
 
 ## Main definitions and results
 

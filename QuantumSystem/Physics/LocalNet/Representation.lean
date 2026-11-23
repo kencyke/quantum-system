@@ -1,0 +1,411 @@
+/-
+Copyright (c) 2026 Keisuke Suzuki. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Keisuke Suzuki
+-/
+module
+
+public import QuantumSystem.Analysis.CStarAlgebra.Representation.Basic
+public import QuantumSystem.Analysis.VonNeumannAlgebra.BoundedOperators
+public import QuantumSystem.Analysis.VonNeumannAlgebra.NormalFunctional
+public import QuantumSystem.Physics.LocalNet.Basic
+public import QuantumSystem.Physics.LocalNet.VonNeumannNet
+
+/-!
+# Representations of a net
+
+A **representation of a net** of C⋆-algebras (`CStarNet.Rep`) on a Hilbert space `H` is a
+representation `π O` of every local algebra on `H`, compatible with the isotony embeddings. This is
+the definition of Carpi–Kawahigashi–Longo (*Structure and Classification of Superconformal Nets*,
+Ann. Henri Poincaré 9 (2008), §2.4), there for a net of von Neumann algebras on the intervals of
+`S¹` with normal `π O`; its local von Neumann algebras `π(𝔄(O))″` form a net of von Neumann
+algebras (`CStarNet.Rep.vonNeumannNet`). It needs neither a directed index set nor a quasi-local
+algebra, and a representation of the quasi-local algebra restricts to one
+(`CStarNet.Rep.ofQuasiLocal`).
+
+* **Graded representations.** A representation of a graded-local net is graded when a unitary
+  implements the parity (*ibid.*, §2.4); it can be chosen selfadjoint, `π(γ a) = Γ π(a) Γ`. Then
+  `Γ` grades the net of local von Neumann algebras (`CStarNet.Rep.vonNeumannGrading`), and that
+  net is graded-local when causally orthogonal regions have a common upper bound, as on a directed
+  index set (`CStarNet.Rep.isGradedLocal_vonNeumannGrading`). A representation of a local net gives
+  a local net of von Neumann algebras, the case `Γ = 1`.
+* **Representations of a net of von Neumann algebras.** Its local algebras form a net of
+  C⋆-algebras (`VonNeumannNet.toCStarNet`), graded by a grading of the net and graded-local with it
+  (`VonNeumannNet.Grading.toCStarGrading`, `VonNeumannNet.Grading.IsGradedLocal.toCStar`), and a
+  representation of that net is normal (`CStarNet.Rep.IsNormal`) when every `π O` is σ-weakly
+  continuous; a normal representation pulls normal functionals back to normal functionals
+  (`CStarNet.Rep.IsNormal.isNormal_comp`). The defining representation (`VonNeumannNet.idRep`) is
+  normal and gives back the net (`VonNeumannNet.idRep_vonNeumannNet`).
+
+## Main definitions
+
+* `CStarNet.Rep N H` — a representation of the net `N` on `H`.
+* `CStarNet.Rep.vonNeumannNet π` — the net `O ↦ π(𝔄(O))″` of local von Neumann algebras.
+* `CStarNet.Rep.ofQuasiLocal N R` — the restriction of a representation `R` of the quasi-local
+  algebra; `CStarNet.vonNeumannNet N R`, `CStarNet.localVonNeumannAlgebra N R O` — its net of local
+  von Neumann algebras and their algebras.
+* `CStarNet.Rep.vonNeumannGrading π Γ` — the grading of the local von Neumann algebras of a graded
+  representation.
+* `VonNeumannNet.toCStarNet N`, `VonNeumannNet.Grading.toCStarGrading G`, `VonNeumannNet.idRep N`,
+  `CStarNet.Rep.IsNormal π`.
+
+## Main results
+
+* **`CStarNet.Rep.isGradedLocal_vonNeumannGrading`** — the local von Neumann algebras of a graded
+  representation of a graded-local net are graded-local, when causally orthogonal regions have a
+  common upper bound.
+* `CStarNet.Rep.instIsLocalVonNeumannNet` — for a local net over a directed index set they are
+  local.
+* `VonNeumannNet.Grading.IsGradedLocal.toCStar` — a graded-local net of von Neumann algebras is a
+  graded-local net of C⋆-algebras.
+* `CStarNet.Rep.IsNormal.isNormal_comp` — normal representations pull normal functionals back.
+* `VonNeumannNet.idRep_isNormal`, `VonNeumannNet.idRep_vonNeumannNet` — the defining
+  representation of a net of von Neumann algebras is normal and gives back the net.
+
+## Notation
+
+`𝔄(O)` and `𝓡(O)` in the prose are documentation shorthand for the local C⋆-algebra `N.algebra O`
+and the local von Neumann algebra; the convention is stated in
+`QuantumSystem.Physics.LocalNet.Isotony`.
+-/
+
+@[expose] public section
+
+open scoped CausalOrthogonality VonNeumannAlgebra ComplexOrder
+
+namespace CStarNet
+
+variable {K : Type*} [Preorder K]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+/-- A **representation of a net** of C⋆-algebras on a Hilbert space `H`: a representation
+    `π O : 𝔄(O) → B(H)` of every local algebra, compatible with the isotony embeddings,
+    `π O' ∘ incl = π O` (Carpi–Kawahigashi–Longo, 2008, §2.4, there for a net of von Neumann
+    algebras with normal `π O`, `CStarNet.Rep.IsNormal`). The representations are not assumed
+    unital. -/
+structure Rep (N : CStarNet K) (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℂ H]
+    [CompleteSpace H] where
+  /-- The representation of the local algebra of a region. -/
+  π : ∀ O : K, N.algebra O →⋆ₙₐ[ℂ] (H →L[ℂ] H)
+  /-- The representations are compatible with the isotony embeddings. -/
+  π_incl : ∀ {O O' : K} (h : O ≤ O') (x : N.algebra O), π O' (N.incl h x) = π O x
+
+namespace Rep
+
+variable {N : CStarNet K} (π : N.Rep H)
+
+/-- The **net of local von Neumann algebras** of a representation: `𝓡(O) = π(𝔄(O))″`, isotone by
+    the compatibility of the representations with the isotony embeddings. -/
+noncomputable def vonNeumannNet : VonNeumannNet K H where
+  algebra O := VonNeumannAlgebra.generated (Set.range (π.π O))
+  algebra_mono _ _ h := VonNeumannAlgebra.generated_mono <| by
+    rintro _ ⟨a, rfl⟩
+    exact ⟨N.incl h a, π.π_incl h a⟩
+
+/-- The local von Neumann algebra of a region is generated by the represented local algebra. -/
+lemma vonNeumannNet_algebra (O : K) :
+    π.vonNeumannNet.algebra O = VonNeumannAlgebra.generated (Set.range (π.π O)) :=
+  rfl
+
+/-- A represented local observable lies in the local von Neumann algebra of its region. -/
+lemma π_mem_vonNeumannNet_algebra {O : K} (a : N.algebra O) :
+    π.π O a ∈ π.vonNeumannNet.algebra O :=
+  VonNeumannAlgebra.mem_generated_of_mem ⟨a, rfl⟩
+
+/-- **`𝓡(O)` is literally the double commutant `π(𝔄(O))″`**: the generating set is star-closed,
+    so `VonNeumannAlgebra.generated` does not symmetrize it. -/
+lemma coe_vonNeumannNet_algebra (O : K) :
+    (π.vonNeumannNet.algebra O : Set (H →L[ℂ] H)) =
+      (Set.range (π.π O)).centralizer.centralizer :=
+  VonNeumannAlgebra.coe_generated_of_star_eq (Set.star_range fun a => map_star (π.π O) a)
+
+/-- The **conjugate of a representation by a unitary** `U : H ≃ₗᵢ H'`: every local algebra acts on
+    `H'` by `x ↦ U π(x) U⋆`. -/
+noncomputable def conjBy {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H']
+    [CompleteSpace H'] (U : H ≃ₗᵢ[ℂ] H') : N.Rep H' where
+  π O := U.conjStarAlgEquiv.toNonUnitalStarAlgHom.comp (π.π O)
+  π_incl h x := by
+    change U.conjStarAlgEquiv (π.π _ (N.incl h x)) = U.conjStarAlgEquiv (π.π _ x)
+    rw [π.π_incl]
+
+/-- The conjugate representation acts by `U π(x) U⋆`. -/
+@[simp] lemma conjBy_π_apply {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H']
+    [CompleteSpace H'] (U : H ≃ₗᵢ[ℂ] H') {O : K} (x : N.algebra O) :
+    (π.conjBy U).π O x = U.conjStarAlgEquiv (π.π O x) :=
+  rfl
+
+/-! ### Representations of the quasi-local algebra -/
+
+section QuasiLocal
+
+variable [IsDirectedOrder K] [Nonempty K] (N : CStarNet K) [N.Faithful]
+
+/-- The **restriction of a representation of the quasi-local algebra** to the local algebras:
+    `π O = R.π ∘ ι_O`. -/
+noncomputable def ofQuasiLocal (R : CStarRep N.quasiLocalCStarAlgebra) : N.Rep R.H where
+  π O := R.π.comp (N.ιLocalCStar O).toNonUnitalStarAlgHom
+  π_incl h x := by
+    change R.π (N.ιLocalCStar _ (N.incl h x)) = R.π (N.ιLocalCStar _ x)
+    rw [N.ιLocalCStar_incl]
+
+/-- The restriction acts through the embedding into the quasi-local algebra. -/
+@[simp] lemma ofQuasiLocal_π_apply (R : CStarRep N.quasiLocalCStarAlgebra) (O : K)
+    (a : N.algebra O) : (ofQuasiLocal N R).π O a = R.π (N.ιLocalCStar O a) :=
+  rfl
+
+end QuasiLocal
+
+end Rep
+
+section QuasiLocal
+
+variable [IsDirectedOrder K] [Nonempty K] (N : CStarNet K) [N.Faithful]
+
+/-- The **net of local von Neumann algebras of a representation `R` of the quasi-local algebra**,
+    `𝓡(O) = R.π(𝔄(O))″`: the net of the restriction of `R` to the local algebras. -/
+noncomputable abbrev vonNeumannNet (R : CStarRep N.quasiLocalCStarAlgebra) : VonNeumannNet K R.H :=
+  (Rep.ofQuasiLocal N R).vonNeumannNet
+
+/-- The **local von Neumann algebra** `𝓡(O) = R.π(𝔄(O))″` of a region in a representation `R` of
+    the quasi-local algebra. Since `R.π` is a possibly non-unital `*`-homomorphism, `𝓡(O)` always
+    contains `1` even when `R.π(𝔄(O))` does not, matching the `″` convention. -/
+noncomputable abbrev localVonNeumannAlgebra (R : CStarRep N.quasiLocalCStarAlgebra) (O : K) :
+    VonNeumannAlgebra R.H :=
+  (N.vonNeumannNet R).algebra O
+
+/-- Local observables are represented inside the local von Neumann algebra of their region. -/
+lemma π_ιLocalCStar_mem_localVonNeumannAlgebra (R : CStarRep N.quasiLocalCStarAlgebra) (O : K)
+    (a : N.algebra O) : R.π (N.ιLocalCStar O a) ∈ N.localVonNeumannAlgebra R O :=
+  (Rep.ofQuasiLocal N R).π_mem_vonNeumannNet_algebra a
+
+end QuasiLocal
+
+/-! ### Graded representations -/
+
+namespace Rep
+
+section Graded
+
+variable {N : CStarNet K} (π : N.Rep H) (γ : N.Grading)
+
+/-- The **grading of the local von Neumann algebras of a graded representation**: a selfadjoint
+    unitary `Γ` on `H` implementing the parity `γ`, `π(γ a) = Γ π(a) Γ` — a graded representation
+    in the sense of Carpi–Kawahigashi–Longo (2008, §2.4) — grades the net `π.vonNeumannNet`. -/
+noncomputable def vonNeumannGrading (Γ : H →L[ℂ] H) (hΓ : IsSelfAdjoint Γ) (hΓΓ : Γ * Γ = 1)
+    (hπ : ∀ (O : K) (a : N.algebra O), π.π O (γ.parity O a) = Γ * π.π O a * Γ) :
+    π.vonNeumannNet.Grading where
+  Γ := Γ
+  isSelfAdjoint_Γ := hΓ
+  Γ_mul_Γ := hΓΓ
+  Γ_mul_mul_Γ_mem O _ hx := by
+    rw [vonNeumannNet_algebra] at hx ⊢
+    refine VonNeumannAlgebra.mul_mul_mem_generated_of_isSelfAdjoint hΓ hΓΓ ?_ hx
+    rintro _ ⟨a, rfl⟩
+    rw [← hπ]
+    exact VonNeumannAlgebra.mem_generated_of_mem ⟨_, rfl⟩
+
+/-- The grading unitary of `π.vonNeumannGrading γ Γ` is `Γ`. -/
+@[simp] lemma vonNeumannGrading_Γ (Γ : H →L[ℂ] H) (hΓ : IsSelfAdjoint Γ) (hΓΓ : Γ * Γ = 1)
+    (hπ : ∀ (O : K) (a : N.algebra O), π.π O (γ.parity O a) = Γ * π.π O a * Γ) :
+    (π.vonNeumannGrading γ Γ hΓ hΓΓ hπ).Γ = Γ :=
+  rfl
+
+variable [CausalOrthogonality K] in
+/-- **The local von Neumann algebras of a graded representation are graded-local**: when every
+    causally orthogonal pair of regions has a common upper bound (`⟂` is the derived relation `⊥̂`,
+    as on a directed index set), graded locality of the net of C⋆-algebras passes to the net
+    `O ↦ π(𝔄(O))″` graded by a unitary `Γ` implementing the parity. The common upper bound is where
+    graded locality of the C⋆-algebras is stated; without it a causally orthogonal pair is not
+    constrained at the C⋆ level at all. -/
+theorem isGradedLocal_vonNeumannGrading (hγ : γ.IsGradedLocal)
+    (hK : ∀ ⦃O₁ O₂ : K⦄, O₁ ⟂ O₂ → CausalOrthogonality.OrthogonalHat O₁ O₂) (Γ : H →L[ℂ] H)
+    (hΓ : IsSelfAdjoint Γ) (hΓΓ : Γ * Γ = 1)
+    (hπ : ∀ (O : K) (a : N.algebra O), π.π O (γ.parity O a) = Γ * π.π O a * Γ) :
+    (π.vonNeumannGrading γ Γ hΓ hΓΓ hπ).IsGradedLocal := by
+  set G := π.vonNeumannGrading γ Γ hΓ hΓΓ hπ
+  have even {O : K} {c : N.algebra O} (hc : γ.parity O c = c) : Commute G.Γ (π.π O c) :=
+    G.Γ_mul_mul_Γ_eq_self_iff.1 (by rw [vonNeumannGrading_Γ, ← hπ, hc])
+  have odd {O : K} {c : N.algebra O} (hc : γ.parity O c = -c) :
+      G.Γ * π.π O c = -(π.π O c * G.Γ) :=
+    G.Γ_mul_mul_Γ_eq_neg_iff.1 (by rw [vonNeumannGrading_Γ, ← hπ, hc, map_neg])
+  have key {O₁ O₂ : K} (hd : O₁ ⟂ O₂) (a : N.algebra O₁) (b : N.algebra O₂) :
+      Commute (π.π O₁ a) ((G.twist : H →L[ℂ] H) * π.π O₂ b * star (G.twist : H →L[ℂ] H)) := by
+    obtain ⟨O, h₁, h₂⟩ := (hK hd).exists_upperBound
+    have comm {O₁' O₂' : K} (h₁' : O₁' ≤ O) (h₂' : O₂' ≤ O) {c : N.algebra O₁'}
+        {d : N.algebra O₂'} (h : Commute (N.incl h₁' c) (N.incl h₂' d)) :
+        Commute (π.π O₁' c) (π.π O₂' d) := by
+      simpa only [π.π_incl] using h.map (π.π O)
+    obtain ⟨a₀, a₁, ha₀, ha₁, rfl⟩ := γ.exists_even_add_odd a
+    obtain ⟨b₀, b₁, hb₀, hb₁, rfl⟩ := γ.exists_even_add_odd b
+    have h₁₁ : π.π O₁ a₁ * π.π O₂ b₁ = -(π.π O₂ b₁ * π.π O₁ a₁) := by
+      have := congrArg (π.π O) (hγ.locality_odd h₁ h₂ hd a₁ b₁ ha₁ hb₁)
+      rwa [map_mul, map_neg, map_mul, π.π_incl, π.π_incl] at this
+    rw [map_add, map_add]
+    exact G.commute_twist_mul_mul_star (even ha₀) (odd ha₁) (even hb₀) (odd hb₁)
+      (comm h₁ h₂ (hγ.locality_even h₁ h₂ hd a₀ b₀ ha₀))
+      (comm h₁ h₂ (hγ.locality_even h₁ h₂ hd a₀ b₁ ha₀))
+      (comm h₂ h₁ (hγ.locality_even h₂ h₁ hd.symm b₀ a₁ hb₀)).symm h₁₁
+  refine G.isGradedLocal_of_generated (fun O => Set.range (π.π O)) (fun O => rfl) ?_
+  rintro O₁ O₂ hd _ ⟨a, rfl⟩ _ ⟨b, rfl⟩
+  exact ⟨key hd a b, by rw [← map_star]; exact key hd a (star b)⟩
+
+end Graded
+
+/-- **The local von Neumann algebras of a representation of a local net are local**, over a
+    directed index set: the case `Γ = 1` of `isGradedLocal_vonNeumannGrading`. -/
+instance instIsLocalVonNeumannNet [CausalOrthogonality K] [IsDirectedOrder K]
+    {N : GradedLocalNet K} [N.IsLocal] (π : N.Rep H) : π.vonNeumannNet.IsLocal :=
+  VonNeumannNet.Grading.isGradedLocal_trivial_iff.1
+    (π.isGradedLocal_vonNeumannGrading N.toGrading N.toIsGradedLocal
+      (fun _ _ hd => CausalOrthogonality.orthogonalHat_iff.2 hd) 1 (IsSelfAdjoint.one _)
+      (one_mul 1) fun O a => by rw [N.parity_apply, one_mul, mul_one])
+
+end Rep
+
+end CStarNet
+
+/-! ### Representations of a net of von Neumann algebras -/
+
+namespace VonNeumannNet
+
+variable {K : Type*} [Preorder K]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable (N : VonNeumannNet K H)
+
+/-- The **local algebras of a net of von Neumann algebras, as a net of C⋆-algebras**: every
+    `𝓡(O)` is a C⋆-algebra, and the isotony embeddings are the inclusions. -/
+noncomputable def toCStarNet : CStarNet K where
+  algebra O := N.algebra O
+  incl h :=
+    { toFun := fun x => ⟨x, N.algebra_mono h x.2⟩
+      map_one' := rfl
+      map_mul' := fun _ _ => rfl
+      map_zero' := rfl
+      map_add' := fun _ _ => rfl
+      commutes' := fun _ => rfl
+      map_star' := fun _ => rfl }
+  incl_refl _ := rfl
+  incl_trans _ _ _ := rfl
+
+/-- The isotony embeddings of a net of von Neumann algebras are injective. -/
+instance : N.toCStarNet.Faithful :=
+  ⟨fun {_ O'} _ x y hxy => by
+    have := congrArg (fun z : N.algebra O' => (z : H →L[ℂ] H)) hxy
+    exact Subtype.ext (p := (· ∈ N.algebra _)) (a1 := x) (a2 := y) this⟩
+
+namespace Grading
+
+variable {N} (G : N.Grading)
+
+/-- A grading of a net of von Neumann algebras **as a grading of its local algebras**: the parity of
+    `𝓡(O)` is `x ↦ Γ x Γ`. -/
+noncomputable def toCStarGrading : N.toCStarNet.Grading where
+  parity O :=
+    { toFun := fun x : N.algebra O => (⟨G.Γ * x * G.Γ, G.Γ_mul_mul_Γ_mem x.2⟩ : N.algebra O)
+      invFun := fun x : N.algebra O => (⟨G.Γ * x * G.Γ, G.Γ_mul_mul_Γ_mem x.2⟩ : N.algebra O)
+      left_inv := fun x : N.algebra O => Subtype.ext (by simp [mul_assoc, G.Γ_mul_Γ])
+      right_inv := fun x : N.algebra O => Subtype.ext (by simp [mul_assoc, G.Γ_mul_Γ])
+      map_mul' := fun (x y : N.algebra O) => Subtype.ext (by
+        change G.Γ * ((x : H →L[ℂ] H) * y) * G.Γ = G.Γ * x * G.Γ * (G.Γ * y * G.Γ)
+        simp [mul_assoc])
+      map_add' := fun (x y : N.algebra O) => Subtype.ext (by
+        change G.Γ * ((x : H →L[ℂ] H) + y) * G.Γ = G.Γ * x * G.Γ + G.Γ * y * G.Γ
+        rw [mul_add, add_mul])
+      map_star' := fun x : N.algebra O => Subtype.ext (by
+        change G.Γ * star (x : H →L[ℂ] H) * G.Γ = star (G.Γ * x * G.Γ)
+        rw [star_mul, star_mul, G.star_Γ, mul_assoc])
+      map_smul' := fun c (x : N.algebra O) => Subtype.ext (by
+        change G.Γ * (c • (x : H →L[ℂ] H)) * G.Γ = c • (G.Γ * x * G.Γ)
+        rw [mul_smul_comm, smul_mul_assoc]) }
+  parity_parity := fun {O} (x : N.algebra O) => Subtype.ext (by
+    change G.Γ * (G.Γ * x * G.Γ) * G.Γ = x
+    simp [mul_assoc, G.Γ_mul_Γ])
+  parity_incl _ _ := rfl
+
+/-- **Graded locality of a net of von Neumann algebras is graded locality of its local algebras**:
+    the relations hold in `𝓑(H)`, hence inside every common larger region. -/
+theorem IsGradedLocal.toCStar [CausalOrthogonality K] {G : N.Grading} (hG : G.IsGradedLocal) :
+    G.toCStarGrading.IsGradedLocal where
+  locality_even := fun {O₁ O₂ O} _ _ hd (x : N.algebra O₁) (y : N.algebra O₂) hx => by
+    have hx' := congrArg (fun z : N.algebra O₁ => (z : H →L[ℂ] H)) hx
+    exact Subtype.ext (p := (· ∈ N.algebra O)) (hG.locality_even hd x.2 y.2 hx').eq
+  locality_odd := fun {O₁ O₂ O} _ _ hd (x : N.algebra O₁) (y : N.algebra O₂) hx hy => by
+    have hx' := congrArg (fun z : N.algebra O₁ => (z : H →L[ℂ] H)) hx
+    have hy' := congrArg (fun z : N.algebra O₂ => (z : H →L[ℂ] H)) hy
+    exact Subtype.ext (p := (· ∈ N.algebra O)) (hG.locality_odd hd x.2 y.2 hx' hy')
+
+end Grading
+
+/-- The **defining representation** of a net of von Neumann algebras: every `𝓡(O)` acting on `H`
+    by inclusion. -/
+noncomputable def idRep : N.toCStarNet.Rep H where
+  π O := (N.algebra O).toStarSubalgebra.subtype.toNonUnitalStarAlgHom
+  π_incl _ _ := rfl
+
+/-- The defining representation acts by inclusion. -/
+@[simp] lemma idRep_π_apply {O : K} (x : N.algebra O) : N.idRep.π O x = (x : H →L[ℂ] H) :=
+  rfl
+
+/-- **The defining representation gives back the net**: `𝓡(O)″ = 𝓡(O)`. -/
+theorem idRep_vonNeumannNet : N.idRep.vonNeumannNet = N := by
+  have h (O : K) : N.idRep.vonNeumannNet.algebra O = N.algebra O := by
+    rw [CStarNet.Rep.vonNeumannNet_algebra]
+    refine le_antisymm (VonNeumannAlgebra.generated_le ?_) fun x hx =>
+      VonNeumannAlgebra.mem_generated_of_mem ⟨(⟨x, hx⟩ : N.algebra O), rfl⟩
+    rintro _ ⟨x, rfl⟩
+    exact (x : N.algebra O).2
+  exact VonNeumannNet.ext (funext h)
+
+end VonNeumannNet
+
+namespace CStarNet.Rep
+
+variable {K : Type*} [Preorder K]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+variable {H' : Type*} [NormedAddCommGroup H'] [InnerProductSpace ℂ H'] [CompleteSpace H']
+
+variable {N : VonNeumannNet K H} (π : N.toCStarNet.Rep H')
+
+/-- The representation `π O` of a local algebra of a net of von Neumann algebras, as a
+    `⋆`-homomorphism `𝓡(O) → 𝓑(H')` of von Neumann algebras. -/
+noncomputable def toBoundedOperators (O : K) : N.algebra O →⋆ₙₐ[ℂ] 𝓑(H') where
+  toFun x := ⟨π.π O x, VonNeumannAlgebra.mem_boundedLinearOperators _⟩
+  map_mul' x y := Subtype.ext (map_mul (π.π O) x y)
+  map_add' x y := Subtype.ext (map_add (π.π O) x y)
+  map_zero' := Subtype.ext (map_zero (π.π O))
+  map_smul' c x := Subtype.ext (map_smul (π.π O) c x)
+  map_star' x := Subtype.ext (map_star (π.π O) x)
+
+/-- `π.toBoundedOperators O` acts as `π O`. -/
+@[simp] lemma coe_toBoundedOperators_apply {O : K} (x : N.algebra O) :
+    (π.toBoundedOperators O x : H' →L[ℂ] H') = π.π O x :=
+  rfl
+
+/-- A representation of a net of von Neumann algebras is **normal** when every `π O : 𝓡(O) → 𝓑(H')`
+    is σ-weakly continuous (`VonNeumannAlgebra.IsNormalMap`), as Carpi–Kawahigashi–Longo (2008,
+    §2.4) ask of the representations of a net. -/
+def IsNormal : Prop :=
+  ∀ O : K, VonNeumannAlgebra.IsNormalMap (π.toBoundedOperators O)
+
+/-- **A normal representation pulls normal functionals back to normal functionals** on every local
+    algebra: for a normal positive functional `ω` on `𝓑(H')`, `ω ∘ π_O` is normal on `𝓡(O)`. In
+    particular the vector states `x ↦ ⟪ξ, π_O(x) ξ⟫` of a normal representation are normal on every
+    local algebra. -/
+theorem IsNormal.isNormal_comp {π : N.toCStarNet.Rep H'} (hπ : π.IsNormal) (O : K)
+    {ω : 𝓑(H') →ₚ[ℂ] ℂ} (hω : (𝓑(H')).IsNormal ω) :
+    (N.algebra O).IsNormal (ω.comp (PositiveLinearMap.ofClass (π.toBoundedOperators O))) :=
+  hω.comp (hπ O)
+
+end CStarNet.Rep
+
+namespace VonNeumannNet
+
+variable {K : Type*} [Preorder K]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteSpace H]
+
+/-- **The defining representation of a net of von Neumann algebras is normal**: the inclusion
+    `𝓡(O) → 𝓑(H)` is σ-weakly continuous. -/
+theorem idRep_isNormal (N : VonNeumannNet K H) : N.idRep.IsNormal :=
+  fun _ => continuous_subtype_val.subtype_mk _
+
+end VonNeumannNet
