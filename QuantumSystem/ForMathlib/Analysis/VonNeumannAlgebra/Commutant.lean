@@ -35,7 +35,11 @@ isometric equivalence:
   `H` by a linear isometric equivalence `U : H ≃ₗᵢ H'`, a von Neumann algebra on `H'`. Conjugation
   by the induced `*`-isomorphism `U.conjStarAlgEquiv` commutes with taking commutants
   (`conj_commutant`), hence with the generated-algebra construction (`conj_generated`): this is the
-  statement that a unitary equivalence of representations carries `s''` to `(U s U⋆)''`.
+  statement that a unitary equivalence of representations carries `s''` to `(U s U⋆)''`. The
+  conjugate of a commutant is described elementwise (`mem_conj_commutant_iff`) and reached from
+  generators (`generated_le_conj_commutant_generated`), and a unitary normalising a generating set
+  normalises the algebra it generates (`conjStarAlgEquiv_mem_generated`,
+  `mul_mul_star_mem_generated`, `mul_mul_mem_generated_of_isSelfAdjoint`).
 
 The instances `VonNeumannAlgebra.isClosed_coe` and `VonNeumannAlgebra.instStarOrderedRing` make
 `↥N` a C⋆-algebra ordered by the Loewner order of `B(H)`; in particular `N` is spanned by its
@@ -359,6 +363,60 @@ lemma conj_commutantSet (U : H ≃ₗᵢ[ℂ] H') (s : Set (H →L[ℂ] H)) :
 lemma conj_generated (U : H ≃ₗᵢ[ℂ] H') (s : Set (H →L[ℂ] H)) :
     conj U (generated s) = generated (⇑U.conjStarAlgEquiv '' s) := by
   rw [generated, ← conj_commutant, conj_commutantSet, generated]
+
+/-- **Membership in a conjugate commutant.** `y ∈ U M′ U⋆` exactly when `y` commutes with
+`U x U⋆` for every `x ∈ M`. -/
+lemma mem_conj_commutant_iff (U : H ≃ₗᵢ[ℂ] H') (M : VonNeumannAlgebra H) {y : H' →L[ℂ] H'} :
+    y ∈ conj U M′ ↔ ∀ x ∈ M, Commute y (U.conjStarAlgEquiv x) := by
+  rw [mem_conj_iff, mem_commutant_iff]
+  refine forall₂_congr fun x _ => ?_
+  rw [← (EquivLike.injective U.conjStarAlgEquiv).eq_iff, map_mul, map_mul,
+    StarAlgEquiv.apply_symm_apply]
+  exact eq_comm
+
+/-- **Generators commuting with a conjugate generate into the conjugate commutant**: if every
+`x ∈ s₁` commutes with `U y U⋆` and `U y⋆ U⋆` for every `y ∈ s₂`, then `s₁″ ≤ U (s₂″)′ U⋆`. -/
+lemma generated_le_conj_commutant_generated (U : H ≃ₗᵢ[ℂ] H') {s₁ : Set (H' →L[ℂ] H')}
+    {s₂ : Set (H →L[ℂ] H)}
+    (h : ∀ x ∈ s₁, ∀ y ∈ s₂,
+      Commute x (U.conjStarAlgEquiv y) ∧ Commute x (U.conjStarAlgEquiv (star y))) :
+    generated s₁ ≤ conj U (generated s₂)′ := by
+  rw [commutant_generated, conj_commutantSet]
+  refine generated_le fun x hx => ?_
+  rw [SetLike.mem_coe, mem_commutantSet_iff]
+  rintro _ ⟨y, hy, rfl⟩
+  exact ⟨(h x hx y hy).1.eq.symm, by rw [← map_star]; exact (h x hx y hy).2.eq.symm⟩
+
+/-- **A unitary normalising the generators normalises the generated algebra**: if `U x U⋆ ∈ s″`
+for every `x ∈ s`, then `U x U⋆ ∈ s″` for every `x ∈ s″`. -/
+lemma conjStarAlgEquiv_mem_generated (U : H ≃ₗᵢ[ℂ] H) {s : Set (H →L[ℂ] H)}
+    (h : ∀ x ∈ s, U.conjStarAlgEquiv x ∈ generated s) {x : H →L[ℂ] H} (hx : x ∈ generated s) :
+    U.conjStarAlgEquiv x ∈ generated s := by
+  have hle : conj U (generated s) ≤ generated s := by
+    rw [conj_generated]
+    exact generated_le (by rintro _ ⟨y, hy, rfl⟩; exact h y hy)
+  exact hle ((conjStarAlgEquiv_mem_conj_iff U _).2 hx)
+
+/-- **A unitary normalising the generators normalises the generated algebra**, in operator form: if
+`u x u⋆ ∈ s″` for every `x ∈ s`, then `u x u⋆ ∈ s″` for every `x ∈ s″`. -/
+lemma mul_mul_star_mem_generated {u : H →L[ℂ] H} (hu : u ∈ unitary (H →L[ℂ] H))
+    {s : Set (H →L[ℂ] H)} (h : ∀ x ∈ s, u * x * star u ∈ generated s) {x : H →L[ℂ] H}
+    (hx : x ∈ generated s) : u * x * star u ∈ generated s := by
+  have key (y : H →L[ℂ] H) :
+      (Unitary.linearIsometryEquiv ⟨u, hu⟩).conjStarAlgEquiv y = u * y * star u := by
+    rw [Unitary.conjStarAlgEquiv_unitaryLinearIsometryEquiv, Unitary.conjStarAlgAut_apply]
+  rw [← key]
+  exact conjStarAlgEquiv_mem_generated _ (fun y hy => by rw [key]; exact h y hy) hx
+
+/-- **A selfadjoint involution normalising the generators normalises the generated algebra**: if
+`Γ⋆ = Γ`, `Γ² = 1` and `Γ x Γ ∈ s″` for every `x ∈ s`, then `Γ x Γ ∈ s″` for every `x ∈ s″`. -/
+lemma mul_mul_mem_generated_of_isSelfAdjoint {Γ : H →L[ℂ] H} (hΓ : IsSelfAdjoint Γ)
+    (hΓΓ : Γ * Γ = 1) {s : Set (H →L[ℂ] H)} (h : ∀ x ∈ s, Γ * x * Γ ∈ generated s)
+    {x : H →L[ℂ] H} (hx : x ∈ generated s) : Γ * x * Γ ∈ generated s := by
+  have hu : Γ ∈ unitary (H →L[ℂ] H) :=
+    Unitary.mem_iff.2 ⟨by rw [hΓ.star_eq, hΓΓ], by rw [hΓ.star_eq, hΓΓ]⟩
+  have := mul_mul_star_mem_generated hu (fun y hy => by rw [hΓ.star_eq]; exact h y hy) hx
+  rwa [hΓ.star_eq] at this
 
 /-! ### Transport of a von Neumann algebra as a `*`-algebra -/
 
