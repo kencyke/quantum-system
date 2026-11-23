@@ -10,10 +10,10 @@ public import QuantumSystem.Physics.LocalNet.Covariance.SitePerm
 public import QuantumSystem.Physics.LocalNet.Subnet
 
 /-!
-# The tensor product net of a family of C⋆-algebras
+# The net of minimal tensor products of a family of C⋆-algebras
 
-For a family `A` of unital C⋆-algebras indexed by a type of sites, the **tensor product net**
-`GradedLocalNet.tensorNet` assigns to a finite region `Λ` the minimal tensor product `⨂ₘᵢₙ x : Λ, A x` of
+For a family `A` of unital C⋆-algebras indexed by a type of sites, the net
+`GradedLocalNet.piMinTensorProduct` assigns to a finite region `Λ` the minimal tensor product `⨂ₘᵢₙ x : Λ, A x` of
 the algebras over its sites, with the isotony embeddings `z ↦ z ⊗ 1` (`PiMinTensorProduct.extend`).
 It is a local net: elements over disjoint regions commute once embedded in a common one
 (`PiMinTensorProduct.commute_extend_of_disjoint`). When every `A x` is nontrivial its embeddings are
@@ -37,11 +37,12 @@ covariance that moves the regions, `Λ ↦ σ Λ`, and the local algebras along 
 
 ## Main definitions
 
-* `GradedLocalNet.tensorNet sites A` — the tensor product net of `A` over the finite regions of `sites`.
+* `GradedLocalNet.piMinTensorProduct sites A` — the net of minimal tensor products of `A` over the
+  finite regions of `sites`.
 * `GradedLocalNet.onSiteCovariance g` — the on-site action of a family `g` of ⋆-automorphisms, as a
   covariance; `GradedLocalNet.onSiteCovarianceHom sites A` — as a homomorphism into the covariances.
 * `GradedLocalNet.sitePermCovariance B σ` — the covariance of a permutation `σ` of the sites on the
-  tensor product net of copies of `B`, moving the regions.
+  net of minimal tensor products of copies of `B`, moving the regions.
 * `GradedLocalNet.onSiteDynamicalSystem sites ψ` — the C⋆-dynamical system on the quasi-local C⋆-algebra of
   a C⋆-dynamical system `ψ` acting site by site.
 
@@ -49,8 +50,9 @@ covariance that moves the regions, `Λ ↦ σ Λ`, and the local algebras along 
 
 * `GradedLocalNet.continuous_quasiLocalCStarCovarianceHom_onSiteCovariance` — the on-site action is
   continuous on the quasi-local C⋆-algebra.
-* The local algebras of the tensor product net of finite-dimensional factors are finite-dimensional
-  factors (the `Algebra.IsCentral` instance on `(tensorNet sites A).algebra Λ`).
+* The local algebras of the net of minimal tensor products of finite-dimensional factors are
+  finite-dimensional factors (the `Algebra.IsCentral` instance on
+  `(piMinTensorProduct sites A).algebra Λ`).
 -/
 
 @[expose] public section
@@ -63,10 +65,10 @@ namespace GradedLocalNet
 
 variable (sites : Type*) [DecidableEq sites] (A : sites → Type u) [∀ x, CStarAlgebra (A x)]
 
-/-- The **tensor product net** of a family `A` of unital C⋆-algebras over the finite regions of
-`sites`: the local algebra of `Λ` is the minimal tensor product `⨂ₘᵢₙ x : Λ, A x`, the isotony
+/-- The **net of minimal tensor products** of a family `A` of unital C⋆-algebras over the finite
+regions of `sites`: the local algebra of `Λ` is the minimal tensor product `⨂ₘᵢₙ x : Λ, A x`, the isotony
 embeddings are `z ↦ z ⊗ 1`, and elements over disjoint regions commute. -/
-noncomputable def tensorNet : GradedLocalNet (Finset sites) :=
+noncomputable def piMinTensorProduct : GradedLocalNet (Finset sites) :=
   ofLocality
     { algebra := fun Λ => ⨂ₘᵢₙ x : Λ, A x
       incl := fun h => PiMinTensorProduct.extend (A := A) h
@@ -75,43 +77,43 @@ noncomputable def tensorNet : GradedLocalNet (Finset sites) :=
         (PiMinTensorProduct.directedSystem (A := A)).map_map h₁₂ h₂₃ x }
     fun _ _ _ h₁ h₂ hd x y => PiMinTensorProduct.commute_extend_of_disjoint (A := A) h₁ h₂ hd x y
 
-/-- The tensor product net is local: elements over disjoint regions commute. -/
-instance : (tensorNet sites A).IsLocal :=
+/-- The net of minimal tensor products is local: elements over disjoint regions commute. -/
+instance : (piMinTensorProduct sites A).IsLocal :=
   instIsLocalOfLocality _ _
 
 /-- The local algebra of a region `Λ` is the minimal tensor product of the `A x` over `Λ`. -/
-lemma tensorNet_algebra (Λ : Finset sites) : (tensorNet sites A).algebra Λ = ⨂ₘᵢₙ x : Λ, A x :=
+lemma piMinTensorProduct_algebra (Λ : Finset sites) : (piMinTensorProduct sites A).algebra Λ = ⨂ₘᵢₙ x : Λ, A x :=
   rfl
 
-/-- The tensor product net of nontrivial algebras is faithful: its embeddings `z ↦ z ⊗ 1` are
-isometric. -/
-instance [∀ x, Nontrivial (A x)] : (tensorNet sites A).Faithful where
+/-- The net of minimal tensor products of nontrivial algebras is faithful: its embeddings
+`z ↦ z ⊗ 1` are isometric. -/
+instance [∀ x, Nontrivial (A x)] : (piMinTensorProduct sites A).Faithful where
   incl_injective h := (AddMonoidHomClass.isometry_of_norm (PiMinTensorProduct.extend (A := A) h)
     (PiMinTensorProduct.norm_extend (A := A) h)).injective
 
-/-- The local algebras of the tensor product net of nontrivial algebras are nontrivial. -/
-instance [∀ x, Nontrivial (A x)] (Λ : Finset sites) : Nontrivial ((tensorNet sites A).algebra Λ) :=
+/-- The local algebras of the net of minimal tensor products of nontrivial algebras are nontrivial. -/
+instance [∀ x, Nontrivial (A x)] (Λ : Finset sites) : Nontrivial ((piMinTensorProduct sites A).algebra Λ) :=
   inferInstanceAs (Nontrivial (⨂ₘᵢₙ x : Λ, A x))
 
-/-- The local algebras of the tensor product net of finite-dimensional algebras are
+/-- The local algebras of the net of minimal tensor products of finite-dimensional algebras are
 finite-dimensional. -/
 instance [∀ x, FiniteDimensional ℂ (A x)] (Λ : Finset sites) :
-    FiniteDimensional ℂ ((tensorNet sites A).algebra Λ) :=
+    FiniteDimensional ℂ ((piMinTensorProduct sites A).algebra Λ) :=
   inferInstanceAs (FiniteDimensional ℂ (⨂ₘᵢₙ x : Λ, A x))
 
-/-- The local algebras of the tensor product net of finite-dimensional factors are factors
-(`PiMinTensorProduct.isCentral`). -/
+/-- The local algebras of the net of minimal tensor products of finite-dimensional factors are
+factors (`PiMinTensorProduct.isCentral`). -/
 instance [∀ x, FiniteDimensional ℂ (A x)] [∀ x, Algebra.IsCentral ℂ (A x)] (Λ : Finset sites) :
-    Algebra.IsCentral ℂ ((tensorNet sites A).algebra Λ) :=
+    Algebra.IsCentral ℂ ((piMinTensorProduct sites A).algebra Λ) :=
   inferInstanceAs (Algebra.IsCentral ℂ (⨂ₘᵢₙ x : Λ, A x))
 
 variable {sites A}
 
 variable (sites A) in
-/-- The families of ⋆-automorphisms of the `A x` act on the tensor product net site by site, by
-`⨂ g x` on each local algebra: an internal symmetry. -/
+/-- The families of ⋆-automorphisms of the `A x` act on the net of minimal tensor products site by
+site, by `⨂ g x` on each local algebra: an internal symmetry. -/
 noncomputable def onSiteSymmetry :
-    (tensorNet sites A).InternalSymmetry (Π x, A x ≃⋆ₐ[ℂ] A x) where
+    (piMinTensorProduct sites A).InternalSymmetry (Π x, A x ≃⋆ₐ[ℂ] A x) where
   act Λ :=
     { toFun g := PiMinTensorProduct.congr fun x : Λ => g x
       map_one' := StarAlgEquiv.ext fun z => PiMinTensorProduct.congr_refl_apply (A := fun x : Λ => A x) z
@@ -120,20 +122,21 @@ noncomputable def onSiteSymmetry :
   act_incl h g z := (PiMinTensorProduct.extend_congr h g z).symm
 
 /-- The **on-site action** of a family `g` of ⋆-automorphisms of the `A x`: the covariance of the
-tensor product net that leaves every region in place and acts by `⨂ g x` on each local algebra. -/
-noncomputable def onSiteCovariance (g : Π x, A x ≃⋆ₐ[ℂ] A x) : (tensorNet sites A).Covariance :=
-  (onSiteSymmetry sites A).toCovariance (fun _ _ x => (tensorNet sites A).map_parity _ x) g
+net of minimal tensor products that leaves every region in place and acts by `⨂ g x` on each local algebra. -/
+noncomputable def onSiteCovariance (g : Π x, A x ≃⋆ₐ[ℂ] A x) : (piMinTensorProduct sites A).Covariance :=
+  (onSiteSymmetry sites A).toCovariance (fun _ _ x => (piMinTensorProduct sites A).map_parity _ x) g
 
 /-- The on-site action of `g` is `⨂ g x` on each local algebra. -/
 lemma onSiteCovariance_β (g : Π x, A x ≃⋆ₐ[ℂ] A x) (Λ : Finset sites)
-    (z : (tensorNet sites A).algebra Λ) :
+    (z : (piMinTensorProduct sites A).algebra Λ) :
     (onSiteCovariance g).β Λ z = PiMinTensorProduct.congr (fun x : Λ => g x) z :=
   rfl
 
 variable (sites A) in
-/-- The families of ⋆-automorphisms act on the tensor product net by their on-site actions. -/
-noncomputable def onSiteCovarianceHom : (Π x, A x ≃⋆ₐ[ℂ] A x) →* (tensorNet sites A).Covariance :=
-  (onSiteSymmetry sites A).toCovarianceHom fun _ _ x => (tensorNet sites A).map_parity _ x
+/-- The families of ⋆-automorphisms act on the net of minimal tensor products by their on-site
+actions. -/
+noncomputable def onSiteCovarianceHom : (Π x, A x ≃⋆ₐ[ℂ] A x) →* (piMinTensorProduct sites A).Covariance :=
+  (onSiteSymmetry sites A).toCovarianceHom fun _ _ x => (piMinTensorProduct sites A).map_parity _ x
 
 variable [∀ x, Nontrivial (A x)]
 
@@ -145,7 +148,7 @@ theorem continuous_quasiLocalCStarCovarianceHom_onSiteCovariance :
     Continuous fun g : Π x, A x ≃⋆ₐ[ℂ] A x =>
       GradedLocalNet.Covariance.quasiLocalCStarCovarianceHom (onSiteCovariance (sites := sites) g) :=
   GradedLocalNet.Covariance.continuous_quasiLocalCStarCovarianceHom_comp_iff.mpr fun Λ z =>
-    ((tensorNet sites A).isometry_ιLocalCStar Λ).continuous.comp
+    ((piMinTensorProduct sites A).isometry_ιLocalCStar Λ).continuous.comp
       ((continuous_eval_const z).comp
         ((PiMinTensorProduct.continuous_congr (A := fun x : Λ => A x) (B := fun x : Λ => A x)).comp
           (continuous_pi fun x => continuous_apply (x : sites))))
@@ -165,11 +168,11 @@ omit [DecidableEq sites] in
   rfl
 
 variable (sites) in
-/-- **A C⋆-dynamical system acting site by site acts on the quasi-local C⋆-algebra of the tensor
-product net** of nontrivial algebras as a C⋆-dynamical system, by its on-site actions. -/
+/-- **A C⋆-dynamical system acting site by site acts on the quasi-local C⋆-algebra of the net of
+minimal tensor products** of nontrivial algebras as a C⋆-dynamical system, by its on-site actions. -/
 noncomputable def onSiteDynamicalSystem (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ] A x)) :
-    G →ₜ* ((tensorNet sites A).quasiLocalCStarAlgebra ≃⋆ₐ[ℂ]
-      (tensorNet sites A).quasiLocalCStarAlgebra) :=
+    G →ₜ* ((piMinTensorProduct sites A).quasiLocalCStarAlgebra ≃⋆ₐ[ℂ]
+      (piMinTensorProduct sites A).quasiLocalCStarAlgebra) :=
   GradedLocalNet.Covariance.quasiLocalCStarDynamicalSystem
     ((onSiteCovarianceHom sites A).comp ψ.toMonoidHom)
     ((continuous_quasiLocalCStarCovarianceHom_onSiteCovariance (sites := sites) (A := A)).comp
@@ -177,9 +180,9 @@ noncomputable def onSiteDynamicalSystem (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ
 
 /-- On a local observable the on-site dynamical system acts by `⨂ ψ g x`. -/
 @[simp] lemma onSiteDynamicalSystem_ιLocalCStar (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ] A x)) (g : G)
-    (Λ : Finset sites) (z : (tensorNet sites A).algebra Λ) :
-    onSiteDynamicalSystem sites ψ g ((tensorNet sites A).ιLocalCStar Λ z) =
-      (tensorNet sites A).ιLocalCStar Λ (PiMinTensorProduct.congr (fun x : Λ => ψ g x) z) := by
+    (Λ : Finset sites) (z : (piMinTensorProduct sites A).algebra Λ) :
+    onSiteDynamicalSystem sites ψ g ((piMinTensorProduct sites A).ιLocalCStar Λ z) =
+      (piMinTensorProduct sites A).ιLocalCStar Λ (PiMinTensorProduct.congr (fun x : Λ => ψ g x) z) := by
   exact GradedLocalNet.Covariance.quasiLocalCStarCovarianceEquiv_ιLocalCStar
     (onSiteCovariance (ψ g)) Λ z
 
@@ -188,8 +191,8 @@ noncomputable def onSiteDynamicalSystem (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ
 lemma onSiteDynamicalSystem_ιLocalCStar_of_tprod (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ] A x)) (g : G)
     (Λ : Finset sites) (a : Π x : Λ, A x) :
     onSiteDynamicalSystem sites ψ g
-        ((tensorNet sites A).ιLocalCStar Λ (PiMinTensorProduct.of (fun x : Λ => A x) (⨂ₜ[ℂ] x, a x))) =
-      (tensorNet sites A).ιLocalCStar Λ
+        ((piMinTensorProduct sites A).ιLocalCStar Λ (PiMinTensorProduct.of (fun x : Λ => A x) (⨂ₜ[ℂ] x, a x))) =
+      (piMinTensorProduct sites A).ιLocalCStar Λ
         (PiMinTensorProduct.of (fun x : Λ => A x) (⨂ₜ[ℂ] x, ψ g x (a x))) := by
   refine (onSiteDynamicalSystem_ιLocalCStar ψ g Λ _).trans (congrArg _ ?_)
   rw [PiMinTensorProduct.congr_of, PiTensorProduct.mapStarAlgHom_tprod]
@@ -199,12 +202,12 @@ lemma onSiteDynamicalSystem_ιLocalCStar_of_tprod (ψ : G →ₜ* (Π x, A x ≃
 `⨂ ψ g x`. -/
 lemma onSiteDynamicalSystem_ιLocalCStar_eq_iff (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ] A x)) (g : G)
     (Λ : Finset sites) (z : ⨂ₘᵢₙ x : Λ, A x) :
-    onSiteDynamicalSystem sites ψ g ((tensorNet sites A).ιLocalCStar Λ z) =
-        (tensorNet sites A).ιLocalCStar Λ z ↔
+    onSiteDynamicalSystem sites ψ g ((piMinTensorProduct sites A).ιLocalCStar Λ z) =
+        (piMinTensorProduct sites A).ιLocalCStar Λ z ↔
       PiMinTensorProduct.congr (A := fun x : Λ => A x) (B := fun x : Λ => A x)
         (fun x => ψ g x) z = z := by
   exact (Eq.congr_left (onSiteDynamicalSystem_ιLocalCStar ψ g Λ z)).trans
-    ((tensorNet sites A).ιLocalCStar_injective Λ).eq_iff
+    ((piMinTensorProduct sites A).ιLocalCStar_injective Λ).eq_iff
 
 /-! ### Covariance under permutations of the sites -/
 
@@ -244,14 +247,14 @@ lemma reindex_extend_sitePermEquiv (σ : sites ≃ sites) {Λ Λ' : Finset sites
     | add x y hx hy => rw [map_add, map_add, hx, hy, map_add, map_add]
 
 variable (B) in
-/-- **The covariance of a permutation of the sites** on the tensor product net of copies of `B`
-(a translation or a reflection of a lattice): it moves every region `Λ` to `σ Λ` and its local
+/-- **The covariance of a permutation of the sites** on the net of minimal tensor products of
+copies of `B` (a translation or a reflection of a lattice): it moves every region `Λ` to `σ Λ` and its local
 algebra along `σ` (`PiMinTensorProduct.reindex`). -/
 noncomputable def sitePermCovariance (σ : sites ≃ sites) :
-    (tensorNet sites fun _ => B).Covariance :=
+    (piMinTensorProduct sites fun _ => B).Covariance :=
   GradedLocalNet.Covariance.ofSitePerm σ
     (fun Λ => PiMinTensorProduct.reindex (fun _ : Λ => B) (sitePermEquiv σ Λ))
-    (fun h z => reindex_extend_sitePermEquiv σ h z) fun _ _ => (tensorNet sites _).map_parity _ _
+    (fun h z => reindex_extend_sitePermEquiv σ h z) fun _ _ => (piMinTensorProduct sites _).map_parity _ _
 
 /-- The covariance of `σ` moves the elementary tensor `⨂ aₓ` over `Λ` to `⨂ a_{σ⁻¹ y}` over
 `σ Λ`. -/

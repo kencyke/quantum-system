@@ -263,9 +263,9 @@ public import QuantumSystem.Physics.LocalNet.Isotony
 public import QuantumSystem.Physics.LocalNet.Locality
 public import QuantumSystem.Physics.LocalNet.Nuclear
 public import QuantumSystem.Physics.LocalNet.Orthogonality
+public import QuantumSystem.Physics.LocalNet.PiMinTensorProduct
 public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 public import QuantumSystem.Physics.LocalNet.Representation
 public import QuantumSystem.Physics.LocalNet.SplitProperty
 public import QuantumSystem.Physics.LocalNet.Subnet
-public import QuantumSystem.Physics.LocalNet.TensorNet
 public import QuantumSystem.Physics.LocalNet.VonNeumannNet

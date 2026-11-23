@@ -7,14 +7,14 @@ module
 
 public import Mathlib.Analysis.Complex.Circle
 public import QuantumSystem.Physics.LocalNet.InfiniteRegion
-public import QuantumSystem.Physics.LocalNet.TensorNet
+public import QuantumSystem.Physics.LocalNet.PiMinTensorProduct
 
 /-!
 # Examples of nets
 
 The local-net interfaces are inhabited here by the quantum spin system: spins with `n` levels on
 the sites of a lattice, the local algebra of a finite region `Λ` being `⨂_{x ∈ Λ} B(ℂⁿ)`
-(`GradedLocalNet.Examples.quantumSpinSystem`, the tensor product net `GradedLocalNet.tensorNet`).
+(`GradedLocalNet.Examples.quantumSpinSystem`, the net of minimal tensor products `GradedLocalNet.piMinTensorProduct`).
 The graded locality of nets of von Neumann algebras is inhabited by a net that is graded-local
 but not local, that of two Majorana modes.
 
@@ -130,10 +130,10 @@ theorem not_Iic_properlyContained_Iic_one :
 
 variable (sites : Type*) [DecidableEq sites] (n : ℕ)
 
-/-- The **quantum spin system** of `n`-level spins on `sites`: the tensor product net whose local
+/-- The **quantum spin system** of `n`-level spins on `sites`: the net of minimal tensor products whose local
 algebra of a finite region `Λ` is `⨂_{x ∈ Λ} B(ℂⁿ)`, the isotony embeddings being `z ↦ z ⊗ 1`. -/
 noncomputable abbrev quantumSpinSystem : GradedLocalNet (Finset sites) :=
-  tensorNet sites fun _ => EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n)
+  piMinTensorProduct sites fun _ => EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n)
 
 /-- **The quantum spin system has the split property** in its universal representation (the
 Gelfand–Naimark representation of the quasi-local algebra, faithful and unital), under any proper

@@ -42,7 +42,7 @@ available — the GNS representation of a pure state is irreducible
 (`GNS.Representation.isPure_iff_isIrreducible`) and so has commutant `ℂ1`
 (`CStarRep.isIrreducible_iff_centralizer`) — but the argument also needs
 joins of von Neumann algebras, which the development does not have yet. Cones need a cone region
-type and are not built here. The split property of the spin chain (`GradedLocalNet.tensorNet`) on
+type and are not built here. The split property of the spin chain (`GradedLocalNet.piMinTensorProduct`) on
 infinite regions is not proved either: `QuantumSystem.Physics.LocalNet.Examples` proves it on finite
 regions, where it is automatic, and for a single site against a half-chain. So no state is known
 here to have, or to lack, the half-chain split property.
