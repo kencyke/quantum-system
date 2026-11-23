@@ -5,6 +5,7 @@ Authors: Keisuke Suzuki
 -/
 module
 
+public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.FiniteDimensional
 public import QuantumSystem.Analysis.VonNeumannAlgebra.TypeI.SplitInclusion
 public import QuantumSystem.Physics.LocalNet.VonNeumannNet
 
@@ -17,7 +18,7 @@ representation `R` of the quasi-local
 C⋆-algebra on a Hilbert space, with representing map `R.π`, and form the **local von Neumann
 algebras**
 
-  `𝓡(O) = R.π(𝔄(O))″`  (`LocalNet.localVonNeumannAlgebra`);
+  `𝓡(O) = R.π(𝔄(O))″`  (`CStarNet.localVonNeumannAlgebra`);
 
 the net has the split property when, for every properly contained pair of regions `O₁ ⋐ O₂`, the
 inclusion `𝓡(O₁) ≤ 𝓡(O₂)` is a split inclusion — some type I factor interpolates
@@ -45,8 +46,8 @@ property's own literature becomes expressible: the proper intervals of `S¹` are
 non-directed examples from the wider AQFT literature (Doplicher–Longo 1984 treats
 the split property itself; the non-directed index sets come from the surrounding literature).
 
-The representation-theoretic net above is one instance of that (`LocalNet.vonNeumannNet`), and
-`LocalNet.SplitProperty` is `VonNeumannNet.SplitProperty` at it. The hypotheses
+The representation-theoretic net above is one instance of that (`GradedLocalNet.vonNeumannNet`), and
+`GradedLocalNet.SplitProperty` is `VonNeumannNet.SplitProperty` at it. The hypotheses
 `[IsDirectedOrder K]`, `[Nonempty K]` and `[N.Faithful]` belong to *that instance*, not to the
 property: the quasi-local algebra's direct limit needs a directed index set with a base point, and
 its C⋆-norm needs injective isotony embeddings. The representation
@@ -69,7 +70,7 @@ theorems impose nondegeneracy or cyclicity where they need it.
   `ProperContainment.ofCThickening`, and the extension of a finite-region net to infinite regions
   live in `QuantumSystem.Physics.LocalNet.InfiniteRegion`.
 * `VonNeumannNet.SplitProperty` — **the split property** of a net of von Neumann algebras
-  (`VonNeumannNet`, `LocalNet.localVonNeumannAlgebra` and `LocalNet.vonNeumannNet` are in
+  (`VonNeumannNet`, `CStarNet.localVonNeumannAlgebra` and `GradedLocalNet.vonNeumannNet` are in
   `QuantumSystem.Physics.LocalNet.VonNeumannNet`). Its consequences:
   `SplitProperty.isSplitInclusion` (the split inclusion of a properly contained pair; its tensor
   splitting follows by applying `VonNeumannAlgebra.IsSplitInclusion.exists_tensor_decomposition`
@@ -78,12 +79,16 @@ theorems impose nondegeneracy or cyclicity where they need it.
   `𝓡(O₁) ≤ 𝔑 ≤ 𝓡(O_B)′`, obtained from the nested form via locality).
   The commutant form on its own, with no gap between the regions, is `VonNeumannNet.IsSplitPair`,
   a symmetric relation (`VonNeumannNet.IsSplitPair.symm`); the half-chain split property of a
-  chain state (`LocalNet.HasHalfChainSplit`) is of that form, in the split-inclusion form, which
+  chain state (`GradedLocalNet.HasHalfChainSplit`) is of that form, in the split-inclusion form, which
   implies the quasi-equivalence form and agrees with it for pure states.
   Its degenerate side is `VonNeumannNet.splitProperty_of_complex`: on a one-dimensional Hilbert
   space *every* net has the property, so no one-dimensional model is evidence about anything else.
-* `LocalNet.SplitProperty` — the split property at the net `LocalNet.vonNeumannNet` of a
+* `GradedLocalNet.SplitProperty` — the split property at the net `GradedLocalNet.vonNeumannNet` of a
   representation, an `abbrev` to which the three consequences above apply directly.
+* `VonNeumannNet.splitProperty_of_isTypeIFactor`, `VonNeumannNet.isSplitPair_of_isTypeIFactor` — a
+  local algebra that is a type I factor interpolates itself; and
+  `GradedLocalNet.splitProperty_of_finiteDimensional` — a net whose local algebras are finite-dimensional
+  factors has the split property in every unital representation, under every `⋐`.
 
 ## Notation
 
@@ -92,7 +97,7 @@ theorems impose nondegeneracy or cyclicity where they need it.
 
 `𝔄(O)` and `𝓡(O)` in the prose above are documentation shorthand for the local C⋆-algebra
 `N.algebra O` and the local von Neumann algebra `N.localVonNeumannAlgebra R O`; the convention —
-and why neither is a Lean notation — is stated in full in `QuantumSystem.Physics.LocalNet.Basic`.
+and why neither is a Lean notation — is stated in full in `QuantumSystem.Physics.LocalNet.Isotony`.
 
 `⊗̄` is documentation shorthand for the von Neumann (spatial) tensor product of algebras; that
 convention is stated in full in `QuantumSystem.Analysis.VonNeumannAlgebra.TensorFactor`, where the
@@ -130,9 +135,9 @@ open scoped CausalOrthogonality
     `Disjoint` and differences are regions, the collar clause is equivalent to plain `¬ O₂ ≤ O₁`
     (`exists_disjoint_iff_not_le`), so strict containment satisfies the axioms (`ofLT`) and admits
     `{0} ⋐ {0, 1}`. A model that wants genuine separation must build it in, which is what
-    `ofThicken` with a two-sided neighbourhood operator does: the integer-chain model of
-    `QuantumSystem.Physics.LocalNet.Examples` on finite regions, and the metric model
-    `ofCThickening` of `QuantumSystem.Physics.LocalNet.InfiniteRegion` on infinite ones. Nor do
+    `ofThicken` with a two-sided neighbourhood operator does, and the metric models
+    `ofCThickeningFinset` and `ofCThickening` of `QuantumSystem.Physics.LocalNet.InfiniteRegion` do on
+    finite and on infinite regions. Nor do
     the axioms force `⋐` to relate any genuine pair; see `VonNeumannNet.SplitProperty` for what
     that means for the property. -/
 class ProperContainment (K : Type*) [Preorder K] [CausalOrthogonality K] where
@@ -226,9 +231,8 @@ lemma exists_disjoint_iff_not_le {I : Type*} [GeneralizedBooleanAlgebra I] {O₁
     of the two hypotheses. The one-sided `thicken Λ = Λ ∪ Λ.image (· + 1)` on `Finset ℤ` is monotone
     and enlarging, yet `{0} ⋐ {-1, 0, 1, 2}` has collar `{-1, 2}`, which touches `{0}` from below. A
     thickening that is a genuine neighbourhood operator — enlarging in *every* direction of
-    adjacency, as the 1-neighbourhood `ProperContainment.nbhd` of the integer chain is in
-    `QuantumSystem.Physics.LocalNet.Examples`, or the metric `Metric.cthickening` of
-    `ProperContainment.ofCThickening` in `QuantumSystem.Physics.LocalNet.InfiniteRegion` — does
+    adjacency, as the metric `Metric.cthickening` of `ProperContainment.ofCThickening` in
+    `QuantumSystem.Physics.LocalNet.InfiniteRegion` is — does
     exclude *touching* pairs, which is the exclusion the literature's `Ī₁ ⊂ I₂` typography performs
     and one the class axioms alone cannot perform on a lattice (`exists_disjoint_iff_not_le`). The
     identity thickening gives back exactly the degenerate model `ofLT`. -/
@@ -274,8 +278,8 @@ The split property is a statement about a net of *von Neumann* algebras, and it 
 that level, for a `VonNeumannNet` over a bare causal index set (the definition, and why
 non-directed index sets such as the proper intervals of `S¹` must be in scope, are in
 `QuantumSystem.Physics.LocalNet.VonNeumannNet`). The net of local von Neumann algebras of a
-representation of the quasi-local C⋆-algebra is one instance (`LocalNet.vonNeumannNet`), and
-`LocalNet.SplitProperty` is this property at that instance.
+representation of the quasi-local C⋆-algebra is one instance (`GradedLocalNet.vonNeumannNet`), and
+`GradedLocalNet.SplitProperty` is this property at that instance.
 -/
 
 open scoped ProperContainment VonNeumannAlgebra
@@ -296,8 +300,10 @@ variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H] [CompleteS
     `ProperContainment` and relates the pair `∅ ⋐ {0}`, yet under it the property only ever asks
     `𝓡(∅) ≤ 𝓡(Λ)` to split. The property says something about a net only through the genuine
     pairs the model's `⋐` relates. On the integer chain these include
-    `ProperContainment.properlyContained_singleton`, and there the property is not automatic:
-    `LocalNet.Examples.not_splitProperty_diagonalNet` refutes it for a constant net.
+    `GradedLocalNet.Examples.properlyContained_singleton`. On finite regions a net of finite-dimensional
+    factors has the property under every `⋐` (`GradedLocalNet.splitProperty_of_finiteDimensional`); no
+    net here refutes it, the refuter `VonNeumannAlgebra.not_isSplitInclusion_multiplicationAlgebra_count`
+    being at the level of a single inclusion.
 
     This is the *nested* form. The *commutant* form is
     `SplitProperty.isSplitPair`, which follows from this one through locality; the converse needs
@@ -402,16 +408,55 @@ theorem SplitProperty.isSplitPair (hs : vnNet.SplitProperty) {O₁ O₂ O_B : K}
     (h : O₁ ⋐ O₂) (hd : O₂ ⟂ O_B) : vnNet.IsSplitPair O₁ O_B :=
   (hs h).mono le_rfl (vnNet.algebra_le_commutant_of_orthogonal hd)
 
+omit [ProperContainment K] in
+/-- **A type I factor splits from every causally orthogonal region**: if `𝓡(O₁)` is a type I
+    factor and `O₁ ⟂ O₂`, then `𝓡(O₁)` itself interpolates, `𝓡(O₁) ≤ 𝓡(O₁) ≤ 𝓡(O₂)′`. -/
+lemma isSplitPair_of_isTypeIFactor {O₁ O₂ : K}
+    (h : VonNeumannAlgebra.IsTypeIFactor (vnNet.algebra O₁)) (hd : O₁ ⟂ O₂) :
+    vnNet.IsSplitPair O₁ O₂ :=
+  h.isSplitInclusion_of_le_of_le le_rfl (vnNet.algebra_le_commutant_of_orthogonal hd)
+
+/-- **A net of type I factors has the split property**, under any proper containment: for
+    `O₁ ⋐ O₂` the factor `𝓡(O₁)` itself interpolates. -/
+theorem splitProperty_of_isTypeIFactor
+    (h : ∀ O, VonNeumannAlgebra.IsTypeIFactor (vnNet.algebra O)) : vnNet.SplitProperty :=
+  fun O₁ _ hp => (h O₁).isSplitInclusion_of_le_of_le le_rfl (vnNet.algebra_mono hp.le)
+
 end VonNeumannNet
 
-namespace LocalNet
+namespace CStarNet
+
+open scoped VonNeumannAlgebra
+
+variable {K : Type*} [Preorder K] [IsDirectedOrder K] [Nonempty K]
+variable (N : CStarNet K) [N.Faithful]
+
+/-- **A local algebra that is a finite-dimensional factor generates a type I factor** in a unital
+    representation: `R.π ∘ ιLocalCStar O` is then a unital `⋆`-homomorphism from a
+    finite-dimensional factor, whose image generates a type I factor
+    (`VonNeumannAlgebra.isTypeIFactor_generated_range`). -/
+theorem isTypeIFactor_localVonNeumannAlgebra (R : CStarRep N.quasiLocalCStarAlgebra)
+    (hR : R.π 1 = 1) (O : K) [FiniteDimensional ℂ (N.algebra O)] [Nontrivial (N.algebra O)]
+    [Algebra.IsCentral ℂ (N.algebra O)] :
+    VonNeumannAlgebra.IsTypeIFactor (N.localVonNeumannAlgebra R O) := by
+  let π₁ : N.quasiLocalCStarAlgebra →⋆ₐ[ℂ] (R.H →L[ℂ] R.H) :=
+    { R.π with
+      map_one' := hR
+      commutes' := fun c => by
+        change R.π (algebraMap ℂ _ c) = algebraMap ℂ _ c
+        rw [Algebra.algebraMap_eq_smul_one, Algebra.algebraMap_eq_smul_one, map_smul, hR] }
+  exact VonNeumannAlgebra.isTypeIFactor_generated_range (π₁.comp (N.ιLocalCStar O))
+
+end CStarNet
+
+namespace GradedLocalNet
 
 open scoped ProperContainment VonNeumannAlgebra
 
 section LocalAlgebras
 
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
-variable (N : LocalNet K) [N.Faithful]
+variable (N : GradedLocalNet K) [N.IsLocal] [N.Faithful]
 
 /-- **The split property** of a local net in a representation `π` of the quasi-local C⋆-algebra
     (Doplicher–Longo): the split property of the associated net of local von Neumann
@@ -433,6 +478,21 @@ variable (N : LocalNet K) [N.Faithful]
 abbrev SplitProperty [ProperContainment K] (R : CStarRep N.quasiLocalCStarAlgebra) : Prop :=
   (N.vonNeumannNet R).SplitProperty
 
+/-- **A net whose local algebras are finite-dimensional factors has the split property** in every
+    unital representation, under any proper containment: each `𝓡(O)` is itself a type I factor
+    (`isTypeIFactor_localVonNeumannAlgebra`). This is the situation of a quantum spin system over
+    finite regions, where the property therefore carries no information.
+
+    Unitality cannot be dropped: if `R.π 1` is a projection other than `0` and `1`, it lies in
+    every `𝓡(O)` and commutes with it, so it is a nontrivial central projection of any factor
+    squeezed between two local algebras, and no such factor exists. -/
+theorem splitProperty_of_finiteDimensional [ProperContainment K]
+    (R : CStarRep N.quasiLocalCStarAlgebra) (hR : R.π 1 = 1)
+    [∀ O, FiniteDimensional ℂ (N.algebra O)] [∀ O, Nontrivial (N.algebra O)]
+    [∀ O, Algebra.IsCentral ℂ (N.algebra O)] : N.SplitProperty R :=
+  VonNeumannNet.splitProperty_of_isTypeIFactor fun O =>
+    N.isTypeIFactor_localVonNeumannAlgebra R hR O
+
 end LocalAlgebras
 
-end LocalNet
+end GradedLocalNet

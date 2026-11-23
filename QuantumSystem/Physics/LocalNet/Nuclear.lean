@@ -11,25 +11,25 @@ public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 /-!
 # Nuclearity of the quasi-local algebra
 
-The quasi-local C⋆-algebra of a faithful local net is the inductive limit of its local algebras, so
-it is nuclear when they are.
+The quasi-local C⋆-algebra of a faithful net of C⋆-algebras (`CStarNet`) is the inductive limit of
+its local algebras, so it is nuclear when they are.
 
 ## Main results
 
-* `GradedLocalNet.isNuclear_quasiLocalCStarAlgebra` — the quasi-local C⋆-algebra of a faithful local net
-  with nuclear local algebras is nuclear.
+* `CStarNet.isNuclear_quasiLocalCStarAlgebra` — the quasi-local C⋆-algebra of a faithful net with
+  nuclear local algebras is nuclear.
 -/
 
 @[expose] public section
 
 universe v w
 
-namespace GradedLocalNet
+namespace CStarNet
 
-variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
-  (N : GradedLocalNet K) [N.Faithful]
+variable {K : Type*} [Preorder K] [IsDirectedOrder K] [Nonempty K]
+  (N : CStarNet K) [N.Faithful]
 
-/-- **The quasi-local C⋆-algebra of a faithful local net with nuclear local algebras is nuclear**:
+/-- **The quasi-local C⋆-algebra of a faithful net with nuclear local algebras is nuclear**:
 the local algebras embed isometrically, increasingly along the directed set of regions, with dense
 union (`CStarAlgebra.IsNuclear.of_dense_iUnion`). -/
 theorem isNuclear_quasiLocalCStarAlgebra [∀ O, CStarAlgebra.IsNuclear.{v, w} (N.algebra O)] :
@@ -43,4 +43,4 @@ theorem isNuclear_quasiLocalCStarAlgebra [∀ O, CStarAlgebra.IsNuclear.{v, w} (
       · exact ⟨N.incl h₂ X, N.ιLocalCStar_incl h₂ X⟩)
     N.denseRange_iUnion_ιLocalCStar
 
-end GradedLocalNet
+end CStarNet

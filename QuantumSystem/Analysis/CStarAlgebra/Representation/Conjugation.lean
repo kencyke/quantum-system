@@ -26,14 +26,14 @@ The unitary `U` itself intertwines `R` with `R.conjBy U`, so the two
 representations are canonically unitarily equivalent.
 
 This is the operator-algebraic building block of the DHR selection
-criterion (`LocalNet.SatisfiesDHR`, in `Physics/LocalNet/DHRCriterion.lean`):
+criterion (`CStarNet.SatisfiesDHR`, in `Physics/LocalNet/DHRCriterion.lean`):
 given a representation `R` of the quasi-local algebra with a DHR
 intertwiner `U : R.H ≃ₗᵢ[ℂ] H₀` for a localisation region `Λ`
-(`LocalNet.IsDHRIntertwiner`), the conjugated representation
+(`CStarNet.IsDHRIntertwiner`), the conjugated representation
 `R.conjBy U` lives on the Hilbert space `H₀` of the vacuum
 representation `π₀`, and the intertwining condition forces it to agree
 with `π₀` on the observables localised outside `Λ`
-(`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`, from
+(`CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`, from
 `CStarRep.conjBy_π_eq_of_intertwined`).
 
 ## Main definitions
@@ -50,7 +50,7 @@ with `π₀` on the observables localised outside `Λ`
   `(R.conjBy U).π a = T`.  This is the bridge to the DHR selection
   criterion: the conjugated representation acts as the vacuum
   representation on the observables localised outside the region
-  (`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`).
+  (`CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`).
 -/
 
 @[expose] public section
@@ -107,10 +107,10 @@ for some `T : K →L[ℂ] K` at a particular `a : A`, then the conjugated
 action `(R.conjBy U).π a` equals `T`.
 
 This is the bridge to the DHR selection criterion: when `U` is a DHR
-intertwiner for a localisation region `Λ` (`LocalNet.IsDHRIntertwiner`) and
+intertwiner for a localisation region `Λ` (`CStarNet.IsDHRIntertwiner`) and
 `T = π₀ a` the vacuum action, the conjugated representation agrees with
 the vacuum representation on every observable `a` localised outside `Λ`
-(`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). -/
+(`CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). -/
 lemma conjBy_π_eq_of_intertwined {R : CStarRep A}
     {K : Type*} [NormedAddCommGroup K] [InnerProductSpace ℂ K] [CompleteSpace K]
     (U : R.H ≃ₗᵢ[ℂ] K)

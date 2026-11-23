@@ -14,9 +14,9 @@ public import QuantumSystem.Physics.LocalNet.InfiniteRegion
 The lattice literature's split property is a statement about a *state* on the quasi-local algebra
 and about **infinite** regions (`QuantumSystem.Physics.LocalNet.InfiniteRegion`):
 
-* `LocalNet.IsSplitPairAt ω S₁ S₂` is the split property of a *state* `ω` on the quasi-local
+* `GradedLocalNet.IsSplitPairAt ω S₁ S₂` is the split property of a *state* `ω` on the quasi-local
   algebra for a pair of regions, in the GNS representation of `ω`, and
-  `LocalNet.HasHalfChainSplit ω` is the **half-chain split property** in its split-inclusion
+  `GradedLocalNet.HasHalfChainSplit ω` is the **half-chain split property** in its split-inclusion
   form, the pair `(-∞, 0]`, `[1, ∞)` of the integer chain. Another form is the
   quasi-equivalence of `ω` with the product `ω_L ⊗ ω_R` of its half-chain restrictions. The
   split-inclusion form implies it for every state, and the two agree for pure (more generally
@@ -27,9 +27,9 @@ and about **infinite** regions (`QuantumSystem.Physics.LocalNet.InfiniteRegion`)
 Both half-chain forms are expressible. The *gapped* form follows from the nested split property:
 on the integer chain with `ofCThickening ℤ 1`, `Set.Iic 0 ⋐ Set.Iic 2`, and
 `VonNeumannNet.SplitProperty.isSplitPair` against `Set.Ici 3` gives `𝓡(Iic 0) ≤ 𝔑 ≤ 𝓡(Ici 3)′`
-(`LocalNet.IsSplitPairAt.of_splitProperty`). The *gap-free* form, between `𝓡(Iic 0)` and
+(`GradedLocalNet.IsSplitPairAt.of_splitProperty`). The *gap-free* form, between `𝓡(Iic 0)` and
 `𝓡(Ici 1)′`, cannot come from `⋐`, since `⋐` is irreflexive; it is stated directly as a split pair
-(`VonNeumannNet.IsSplitPair`, `LocalNet.HasHalfChainSplit`).
+(`VonNeumannNet.IsSplitPair`, `GradedLocalNet.HasHalfChainSplit`).
 
 The quasi-equivalence form — `ω` quasi-equivalent to `ω_L ⊗ ω_R` — is not expressible yet: it needs
 the identification of the chain's quasi-local algebra with `𝔄_L ⊗ 𝔄_R` and product states on it,
@@ -42,14 +42,15 @@ available — the GNS representation of a pure state is irreducible
 (`GNS.Representation.isPure_iff_isIrreducible`) and so has commutant `ℂ1`
 (`CStarRep.isIrreducible_iff_centralizer`) — but the argument also needs
 joins of von Neumann algebras, which the development does not have yet. Cones need a cone region
-type and are not built here. No spin net is built either, so no non-trivial positive model of the
-infinite-region split property exists yet;
-`QuantumSystem.Physics.LocalNet.Examples` has refuters and one-dimensional witnesses.
+type and are not built here. The split property of the spin chain (`GradedLocalNet.tensorNet`) on
+infinite regions is not proved either: `QuantumSystem.Physics.LocalNet.Examples` proves it on finite
+regions, where it is automatic, and for a single site against a half-chain. So no state is known
+here to have, or to lack, the half-chain split property.
 
 ## TODO
 
 * The quasi-equivalence form of the half-chain split property, once `𝔄 ≅ 𝔄_L ⊗ 𝔄_R` and
-  product states are available, with the implication from `LocalNet.HasHalfChainSplit` (valid for
+  product states are available, with the implication from `GradedLocalNet.HasHalfChainSplit` (valid for
   every state) and the converse for pure, more generally factor, states.
 * Settle the converse for an arbitrary, possibly mixed, state: whether quasi-equivalence of `ω`
   with `ω_L ⊗ ω_R` yields a type I factor `𝔑` with `𝓡_ω((-∞, 0]) ≤ 𝔑 ≤ 𝓡_ω([1, ∞))′` in the GNS
@@ -60,16 +61,16 @@ infinite-region split property exists yet;
 ## Notation
 
 `𝓡(S)` in the prose above is documentation shorthand for `vnNet.extend.algebra S`, following the
-convention stated in `QuantumSystem.Physics.LocalNet.Basic`.
+convention stated in `QuantumSystem.Physics.LocalNet.Isotony`.
 -/
 
 @[expose] public section
 
 open scoped ProperContainment VonNeumannAlgebra ComplexOrder GNS
 
-namespace LocalNet
+namespace GradedLocalNet
 
-variable {α : Type*} (N : LocalNet (Finset α)) [N.Faithful]
+variable {α : Type*} (N : GradedLocalNet (Finset α)) [N.IsLocal] [N.Faithful]
 
 /-! ### The split property of a state -/
 
@@ -99,12 +100,13 @@ theorem IsSplitPairAt.of_splitProperty [ProperContainment (Set α)]
     {S₁ S₂ S₃ : Set α} (h : S₁ ⋐ S₂) (hd : Disjoint S₂ S₃) : N.IsSplitPairAt ω S₁ S₃ :=
   VonNeumannNet.SplitProperty.isSplitPair hs h hd
 
+omit [N.IsLocal] in
 /-- For a multiplicative state, the local von Neumann algebras of the GNS representation consist
     of scalars: they lie in `𝓑(H)′`. -/
 private lemma localVonNeumannAlgebra_le_commutant_of_map_mul {ω : State N.quasiLocalCStarAlgebra}
     (hω : ∀ a b, ω (a * b) = ω a * ω b) (Λ : Finset α) :
     N.localVonNeumannAlgebra GNS[ω].toCStarRep Λ ≤ (𝓑(GNS[ω].H))′ := by
-  rw [LocalNet.localVonNeumannAlgebra]
+  rw [CStarNet.localVonNeumannAlgebra]
   refine VonNeumannAlgebra.generated_le (M := (𝓑(GNS[ω].H))′) ?_
   rintro _ ⟨a, rfl⟩
   exact VonNeumannAlgebra.mem_commutant_boundedLinearOperators_iff.mpr
@@ -135,7 +137,7 @@ end State
 
 section HalfChain
 
-variable (N : LocalNet (Finset ℤ)) [N.Faithful]
+variable (N : GradedLocalNet (Finset ℤ)) [N.IsLocal] [N.Faithful]
 variable [PartialOrder N.quasiLocalCStarAlgebra] [StarOrderedRing N.quasiLocalCStarAlgebra]
 
 /-- The **half-chain split property** of a state `ω` on the quasi-local algebra of a chain, in
@@ -157,4 +159,4 @@ def HasHalfChainSplit (ω : State N.quasiLocalCStarAlgebra) : Prop :=
 
 end HalfChain
 
-end LocalNet
+end GradedLocalNet

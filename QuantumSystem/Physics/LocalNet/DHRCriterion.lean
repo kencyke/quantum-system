@@ -6,6 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.Representation.Conjugation
+public import QuantumSystem.Physics.LocalNet.Causality
 public import QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra
 
 /-!
@@ -44,11 +45,13 @@ still give only the trivial irreducible sector (see the TODO below), which is wh
 localises in cones.
 
 The reference representation is an arbitrary `CStarRep` of `𝔄`: the vacuum representation is the
-case the literature treats, but the criterion uses nothing about it.
+case the literature treats, but the criterion uses nothing about it. Nor does it use the locality
+of the net: it is stated for a net of C⋆-algebras `CStarNet` over an index set with a causal
+orthogonality relation, through the isotony embeddings and the localisation regions alone.
 
 Conjugating `R` by a unitary `U` witnessing the criterion at `Λ` gives a representation
 `R.conjBy U` on the Hilbert space of `π₀` itself, and it *coincides* with `π₀` on every observable
-localised outside `Λ` (`LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). This is the step
+localised outside `Λ` (`CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner`). This is the step
 from which, in the presence of Haag duality, one reads off an endomorphism of `𝔄` localised in `Λ`;
 Haag duality and the localised endomorphisms are not formalised here.
 
@@ -60,15 +63,15 @@ Haag duality and the localised endomorphisms are not formalised here.
   causal index set with no self-orthogonal region, and `LocalizationRegions.ofNonempty` takes the
   nonempty sets of an infinite set of sites for a lattice net over `Finset α`, with disjointness
   and inclusion, the ambient family of the lattice's cones.
-* `LocalNet.IsDHRIntertwiner` — `U : R.H ≃ₗᵢ[ℂ] π₀.H` intertwines `R` and `π₀` on every
+* `CStarNet.IsDHRIntertwiner` — `U : R.H ≃ₗᵢ[ℂ] π₀.H` intertwines `R` and `π₀` on every
   observable localised outside a localisation region `Λ`.
-* `LocalNet.SatisfiesDHR` — the DHR selection criterion: such a `U` exists for every `Λ`.
+* `CStarNet.SatisfiesDHR` — the DHR selection criterion: such a `U` exists for every `Λ`.
 
 ## Main results
 
-* `LocalNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner` — **the conjugated representation acts
+* `CStarNet.conjBy_π_ιLocalCStar_eq_of_isDHRIntertwiner` — **the conjugated representation acts
   as `π₀` outside the localisation region**.
-* `LocalNet.satisfiesDHR_refl` — the reference representation satisfies the criterion.
+* `CStarNet.satisfiesDHR_refl` — the reference representation satisfies the criterion.
 * `LocalizationRegions.exists_not_outside` — the causal complement of a localisation region is a
   proper part of the net.
 
@@ -153,7 +156,7 @@ lemma exists_not_outside (Λ : C) : ∃ O : K, ¬ Outside O Λ :=
     order of `K`. `Λ` itself is inside `Λ`, and the causal complements of `CausalIndexSet` supply
     the localisation regions a region lies outside of. A `def` rather than an instance, since the
     lattice index set has the self-orthogonal empty region; the nonempty finite sets of sites
-    are an index set it applies to (`LocalNet.Examples.nonemptyFinsetLocalizationRegions`). -/
+    are an index set it applies to (`LocalizationRegions.ofNonemptyFinset`). -/
 @[reducible] def ofOrthogonal (K : Type*) [Preorder K] [CausalOrthogonality K] [CausalIndexSet K]
     (h : ∀ O : K, ¬ O ⟂ O) : LocalizationRegions K K where
   Outside O₁ Λ := O₁ ⟂ Λ
@@ -163,6 +166,13 @@ lemma exists_not_outside (Λ : C) : ∃ O : K, ¬ Outside O Λ :=
   orthogonal_of_outside_of_inside _ _ _ hout hin := hout.mono_right hin
   exists_inside_not_orthogonal Λ := ⟨Λ, le_rfl, h Λ⟩
   exists_outside O := CausalIndexSet.exists_orthogonal O
+
+/-- **The nonempty finite regions of an infinite lattice are their own localisation regions**
+    (`ofOrthogonal`): `Outside` is disjointness and `Inside` is inclusion. No nonempty region is
+    disjoint from itself (`CausalOrthogonality.not_orthogonal_self_nonemptyFinset`). -/
+@[reducible] def ofNonemptyFinset (α : Type*) [Infinite α] :
+    LocalizationRegions {s : Finset α // s.Nonempty} {s : Finset α // s.Nonempty} :=
+  ofOrthogonal _ CausalOrthogonality.not_orthogonal_self_nonemptyFinset
 
 /-- **The ambient lattice localisation regions**: the nonempty sets of sites `Λ`, possibly
     infinite, for a lattice net over the finite sets of an infinite set of sites; a finite region
@@ -192,13 +202,13 @@ lemma exists_not_outside (Λ : C) : ∃ O : K, ¬ Outside O Λ :=
 
 end LocalizationRegions
 
-namespace LocalNet
+namespace CStarNet
 
 open LocalizationRegions (Outside)
 
 variable {K : Type*} [Preorder K] [CausalOrthogonality K] [IsDirectedOrder K] [Nonempty K]
 variable {C : Type*} [LocalizationRegions K C]
-variable (N : LocalNet K) [N.Faithful]
+variable (N : CStarNet K) [N.Faithful]
 
 /-- `U : R.H ≃ₗᵢ[ℂ] π₀.H` is a **DHR intertwiner for the localisation region `Λ`**: it intertwines
     `R` with the reference representation `π₀` on every observable localised in a region `O₁`
@@ -249,4 +259,4 @@ variable (N C) in
 lemma satisfiesDHR_refl (π₀ : CStarRep N.quasiLocalCStarAlgebra) : N.SatisfiesDHR C π₀ π₀ :=
   fun Λ => ⟨_, N.isDHRIntertwiner_refl π₀ Λ⟩
 
-end LocalNet
+end CStarNet
