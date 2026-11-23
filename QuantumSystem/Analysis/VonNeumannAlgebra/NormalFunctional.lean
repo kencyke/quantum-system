@@ -491,6 +491,11 @@ the same notion as `VonNeumannAlgebra.IsNormal` for functionals. -/
 def IsNormalMap (α : N → M) : Prop :=
   Continuous fun T : N.sigmaWeak => M.toSigmaWeak (α (N.ofSigmaWeak T))
 
+/-- Normality of a map is transported along an equality of von Neumann algebras. -/
+lemma isNormalMap_comp_of_eq {N' : VonNeumannAlgebra K} (e : N = N') {f : N' → M} :
+    IsNormalMap (fun x : N => f ⟨x, e ▸ x.2⟩) ↔ IsNormalMap f := by
+  subst e; rfl
+
 /-- The composite of a normal functional with a normal positive map is normal. -/
 lemma IsNormal.comp [FunLike F N M] [LinearMapClass F ℂ N M] [OrderHomClass F N M]
     {ω : M →ₚ[ℂ] ℂ} (hω : M.IsNormal ω) {α : F} (hα : IsNormalMap α) :
