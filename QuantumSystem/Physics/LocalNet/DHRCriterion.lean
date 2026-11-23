@@ -48,7 +48,11 @@ region — rules out the opposite one, an `Outside` relating nothing, under whic
 would only compare Hilbert dimensions. These are necessary conditions, not a characterisation of
 the physically right family: on a quantum spin system the finite sets of sites satisfy both and
 still give only the trivial irreducible sector (see the TODO below), which is why the literature
-localises in cones.
+localises in cones. Nor do they exclude the opposite end in a milder form: the cofinite regions
+`Fᶜ` of an infinite set of sites (`Outside O F` for `O ⊆ F`, `Inside O F` for `O` disjoint from
+`F`) satisfy every axiom, and there the criterion asks only for equivalence on each finite
+`𝔄(F)`, which on a quantum spin system any two unital representations on separable
+infinite-dimensional spaces meet.
 
 The reference representation is an arbitrary representation of the net: the vacuum representation
 is the case the literature treats, but the criterion uses nothing about it. Nor does it use the
@@ -89,6 +93,11 @@ localised endomorphisms are not formalised here.
   system (site algebras `M_d`): there `𝔄 = 𝔄(Λ) ⊗ 𝔄(Λᶜ)` with `𝔄(Λ)` a full matrix algebra, and
   counting multiplicities shows that an irreducible `R` meeting the criterion at a finite `Λ` is
   equivalent to `π₀`.
+
+## Notation
+
+`𝔄(O)` in the prose is documentation shorthand for the local C⋆-algebra `N.algebra O`; the
+convention is stated in full in `QuantumSystem.Physics.LocalNet.Isotony`.
 
 ## References
 
@@ -239,7 +248,7 @@ variable {N}
 /-- **The conjugated representation acts as `π₀` outside the localisation region**: if `U` is a
     DHR intertwiner for `Λ`, then `R.conjBy U`, a representation on the Hilbert space of `π₀`,
     agrees with `π₀` on the local algebra of every region `O₁` outside `Λ`. -/
-theorem conjBy_π_eq_of_isDHRIntertwiner {π₀ : N.Rep H₀} {R : N.Rep H} {Λ : C}
+lemma conjBy_π_eq_of_isDHRIntertwiner {π₀ : N.Rep H₀} {R : N.Rep H} {Λ : C}
     {U : H ≃ₗᵢ[ℂ] H₀} (hU : N.IsDHRIntertwiner π₀ R Λ U) {O₁ : K} (hO₁ : Outside O₁ Λ)
     (X : N.algebra O₁) : (R.conjBy U).π O₁ X = π₀.π O₁ X := by
   refine ContinuousLinearMap.ext fun y => ?_

@@ -25,15 +25,15 @@ properties, each stated in its own file:
 A **graded-local net** `GradedLocalNet` is a net with a grading that is graded-local: for causally
 orthogonal regions, even elements commute with everything and odd elements anticommute. This is the
 net of a system with fermions. A **local net** is a graded-local net whose parity is trivial
-(`GradedLocalNet.IsLocal`); its locality is commutation (`GradedLocalNet.locality`), and
+(`GradedLocalNet.IsTriviallyGraded`); its locality is commutation (`GradedLocalNet.locality`), and
 `GradedLocalNet.ofLocality` builds one from a net and the commutation. Lattice (quantum spin system)
 nets are the instance `K = Finset sites` with `⟂ = Disjoint`.
 
 There is one structure, the graded one: a local net is not a second structure but the property
-`IsLocal` of this one. What uses only the isotony embeddings — faithfulness (`CStarNet.Faithful`),
+`IsTriviallyGraded` of this one. What uses only the isotony embeddings — faithfulness (`CStarNet.Faithful`),
 the quasi-local algebra (`QuantumSystem.Physics.LocalNet.QuasiLocalAlgebra`) — is stated for
 `CStarNet` and applies through `GradedLocalNet.toCStarNet`. The symmetries of a graded-local net are
-its covariances (`QuantumSystem.Physics.LocalNet.Covariance.Basic`), and its subnets — the fixed
+its automorphisms (`QuantumSystem.Physics.LocalNet.Automorphism.Basic`), and its subnets — the fixed
 points of an internal symmetry and the even (Bose) subnet — are in
 `QuantumSystem.Physics.LocalNet.Subnet`.
 
@@ -46,15 +46,18 @@ of causally orthogonal regions commute with everything
 ## Main definitions
 
 * `GradedLocalNet K` — a graded-local net over the causal index set `K`.
-* `GradedLocalNet.IsLocal N` — the net `N` is local: its parity is trivial.
+* `GradedLocalNet.IsTriviallyGraded N` — the net `N` is local: its parity is trivial.
 * `GradedLocalNet.ofLocality N h`, `GradedLocalNet.ofLocalitySup N h` — the local net of a net of
   C⋆-algebras whose algebras of causally orthogonal regions commute.
 
 ## Notation
 
-`𝔄(O)` and `𝓡(O)` in the prose are documentation shorthand for the local C⋆-algebra `N.algebra O`
-and the local von Neumann algebra `N.localVonNeumannAlgebra R O`; the convention — and why neither
-is a Lean notation — is stated in full in `QuantumSystem.Physics.LocalNet.Isotony`.
+`𝔄(O)` in the prose is documentation shorthand for the local C⋆-algebra `N.algebra O`; the
+convention — and why it is not a Lean notation — is stated in full in
+`QuantumSystem.Physics.LocalNet.Isotony`.
+
+`𝔄_loc` is shorthand for the algebra of local observables `N.localObservables` and `𝔄` for the
+quasi-local C⋆-algebra `N.quasiLocalCStarAlgebra`.
 -/
 
 @[expose] public section
@@ -70,7 +73,7 @@ open scoped CausalOrthogonality
 
     This is the locality of a system with fermions: the odd (fermionic) elements of causally
     orthogonal regions anticommute rather than commute. A local net is the case of the trivial
-    parity (`GradedLocalNet.IsLocal`), where graded locality is commutation; the even parts form a
+    parity (`GradedLocalNet.IsTriviallyGraded`), where graded locality is commutation; the even parts form a
     local net (`GradedLocalNet.even`).
 
     The local case is the Haag–Kastler net structure over an abstract index set, *without* the
@@ -89,39 +92,39 @@ variable {K : Type*} [Preorder K] [CausalOrthogonality K]
 /-! ### Local nets -/
 
 /-- A graded-local net is **local** when its parity is trivial: every element is even, and graded
-    locality is commutation (`GradedLocalNet.locality`). A local net together with
-    `CStarNet.Faithful` is the literature's net of C⋆-algebras.
+    locality is commutation (`GradedLocalNet.locality`). Over a directed index set, a local net
+    together with `CStarNet.Faithful` is the literature's net of C⋆-algebras.
 
     This is a property of the grading, and stronger than the commutation it implies: where `⟂`
     relates no two regions, every grading is graded-local and the commutation holds for want of
     pairs, whatever the parity. -/
-class IsLocal (N : GradedLocalNet K) : Prop where
+class IsTriviallyGraded (N : GradedLocalNet K) : Prop where
   /-- The parity of a local net is trivial: every element is even. -/
   parity_apply : ∀ {O : K} (x : N.algebra O), N.parity O x = x
 
-variable (N : GradedLocalNet K) [N.IsLocal]
+variable (N : GradedLocalNet K) [N.IsTriviallyGraded]
 
 /-- The parity of a local net fixes every element. -/
 lemma parity_apply {O : K} (x : N.algebra O) : N.parity O x = x :=
-  IsLocal.parity_apply x
+  IsTriviallyGraded.parity_apply x
 
 /-- **Locality** (microcausality, Einstein causality) of a local net: observables localised in
     causally orthogonal regions commute inside any common larger region.
 
     The pairs this statement constrains are the causally orthogonal pairs that admit a common upper
     bound — the derived relation `CausalOrthogonality.OrthogonalHat` (`⊥̂`) rather than `⟂` itself
-    (see `CStarNet.Grading.IsGradedLocal`). The two coincide on directed index sets, which is where
-    every consumer of this statement lives. A net over a genuinely non-directed index set that
+    (see `CStarNet.Grading.IsGradedLocal`). The two coincide on directed index sets
+    (`GradedLocalNet.exists_locality_of_orthogonal`). A net over a genuinely non-directed index set that
     needs locality for `⟂` itself must be taken as a net of von Neumann algebras
     (`QuantumSystem.Physics.LocalNet.VonNeumannNet`), whose ambient `𝓑(H)` states locality
     (`VonNeumannNet.IsLocal`) and graded locality (`VonNeumannNet.Grading.IsGradedLocal`) with no
     upper bound. -/
-theorem locality {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O) (hd : O₁ ⟂ O₂)
+lemma locality {O₁ O₂ O : K} (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O) (hd : O₁ ⟂ O₂)
     (x : N.algebra O₁) (y : N.algebra O₂) : Commute (N.incl h₁ x) (N.incl h₂ y) :=
   N.locality_even h₁ h₂ hd x y (N.parity_apply x)
 
 /-- **Every map commutes with the parity of a local net**, the parity being trivial: in particular
-the parity condition `β_parity` of a covariance (`GradedLocalNet.Covariance`) holds for any `β`. -/
+the parity condition `β_parity` of an automorphism (`GradedLocalNet.Automorphism`) holds for any `β`. -/
 lemma map_parity {O O' : K} (f : N.algebra O → N.algebra O') (x : N.algebra O) :
     f (N.parity O x) = N.parity O' (f x) := by
   rw [N.parity_apply, N.parity_apply]
@@ -131,7 +134,7 @@ lemma map_parity {O O' : K} (f : N.algebra O → N.algebra O') (x : N.algebra O)
     constrains (`CStarNet.Grading.isGradedLocal_iff_orthogonalHat`): for a causally orthogonal
     pair with *no* common upper bound it says nothing, and cannot, since the commutation has
     nowhere to be stated. -/
-theorem exists_locality_of_orthogonalHat {O₁ O₂ : K}
+lemma exists_locality_of_orthogonalHat {O₁ O₂ : K}
     (h : CausalOrthogonality.OrthogonalHat O₁ O₂) :
     ∃ (O : K) (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O),
       ∀ (x : N.algebra O₁) (y : N.algebra O₂), Commute (N.incl h₁ x) (N.incl h₂ y) :=
@@ -139,11 +142,10 @@ theorem exists_locality_of_orthogonalHat {O₁ O₂ : K}
   ⟨O, h₁, h₂, fun x y => hc x y (N.parity_apply x)⟩
 
 /-- **On a directed index set locality is locality for `⟂` itself**: directedness supplies the
-    common upper bound, so every causally orthogonal pair commutes inside some region. This is the
-    setting of every consumer of `GradedLocalNet.locality` — in particular of
-    `GradedLocalNet.ιLocal_commute_of_orthogonal`, where the quasi-local algebra provides the
-    ambient algebra in which the commutation is finally stated for all pairs at once. -/
-theorem exists_locality_of_orthogonal [IsDirectedOrder K] {O₁ O₂ : K} (h : O₁ ⟂ O₂) :
+    common upper bound, so every causally orthogonal pair commutes inside some region. On such an
+    index set the quasi-local algebra provides the ambient algebra in which the commutation is
+    stated for all pairs at once (`GradedLocalNet.ιLocal_commute_of_orthogonal`). -/
+lemma exists_locality_of_orthogonal [IsDirectedOrder K] {O₁ O₂ : K} (h : O₁ ⟂ O₂) :
     ∃ (O : K) (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O),
       ∀ (x : N.algebra O₁) (y : N.algebra O₂), Commute (N.incl h₁ x) (N.incl h₂ y) :=
   N.exists_locality_of_orthogonalHat (CausalOrthogonality.orthogonalHat_iff.2 h)
@@ -160,10 +162,10 @@ def ofLocality (N : CStarNet K)
   toIsGradedLocal := CStarNet.Grading.isGradedLocal_trivial_iff.mpr locality
 
 /-- The net built from commutation is local. -/
-instance instIsLocalOfLocality (N : CStarNet K)
+instance instIsTriviallyGradedOfLocality (N : CStarNet K)
     (locality : ∀ ⦃O₁ O₂ O : K⦄ (h₁ : O₁ ≤ O) (h₂ : O₂ ≤ O), O₁ ⟂ O₂ →
       ∀ (x : N.algebra O₁) (y : N.algebra O₂), Commute (N.incl h₁ x) (N.incl h₂ y)) :
-    (ofLocality N locality).IsLocal where
+    (ofLocality N locality).IsTriviallyGraded where
   parity_apply _ := rfl
 
 end Local
@@ -185,10 +187,10 @@ def ofLocalitySup (N : CStarNet K)
   toIsGradedLocal := CStarNet.Grading.isGradedLocal_trivial_of_sup locality_sup
 
 /-- The net built from commutation inside the joins is local. -/
-instance instIsLocalOfLocalitySup (N : CStarNet K)
+instance instIsTriviallyGradedOfLocalitySup (N : CStarNet K)
     (locality_sup : ∀ ⦃O₁ O₂ : K⦄, O₁ ⟂ O₂ → ∀ (x : N.algebra O₁) (y : N.algebra O₂),
       Commute (N.incl le_sup_left x) (N.incl le_sup_right y)) :
-    (ofLocalitySup N locality_sup).IsLocal where
+    (ofLocalitySup N locality_sup).IsTriviallyGraded where
   parity_apply _ := rfl
 
 end SemilatticeSup
@@ -226,7 +228,7 @@ lemma ιLocal_mul_eq_neg_of_orthogonal_of_odd {O₁ O₂ : K} (hd : O₁ ⟂ O�
 
 /-- **Locality in the algebra of local observables**: observables localised in causally orthogonal
     regions commute inside `𝔄_loc`: graded locality for the trivial parity of a local net. -/
-lemma ιLocal_commute_of_orthogonal [N.IsLocal] {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+lemma ιLocal_commute_of_orthogonal [N.IsTriviallyGraded] {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
     (X : N.algebra O₁) (Y : N.algebra O₂) :
     Commute (N.ιLocal O₁ X) (N.ιLocal O₂ Y) :=
   N.ιLocal_commute_of_orthogonal_of_even hd X Y (N.parity_apply X)
@@ -236,14 +238,14 @@ variable [N.Faithful]
 /-- **Graded locality in the quasi-local C⋆-algebra**, even elements: an even observable
     localised in a region commutes inside `𝔄` with every observable localised in a causally
     orthogonal region. -/
-theorem ιLocalCStar_commute_of_orthogonal_of_even {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+lemma ιLocalCStar_commute_of_orthogonal_of_even {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
     (X : N.algebra O₁) (Y : N.algebra O₂) (hX : N.parity O₁ X = X) :
     Commute (N.ιLocalCStar O₁ X) (N.ιLocalCStar O₂ Y) :=
   (N.ιLocal_commute_of_orthogonal_of_even hd X Y hX).map UniformSpace.Completion.coeRingHom
 
 /-- **Graded locality in the quasi-local C⋆-algebra**, odd elements: odd observables localised in
     causally orthogonal regions anticommute inside `𝔄`. -/
-theorem ιLocalCStar_mul_eq_neg_of_orthogonal_of_odd {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+lemma ιLocalCStar_mul_eq_neg_of_orthogonal_of_odd {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
     (X : N.algebra O₁) (Y : N.algebra O₂) (hX : N.parity O₁ X = -X) (hY : N.parity O₂ Y = -Y) :
     N.ιLocalCStar O₁ X * N.ιLocalCStar O₂ Y = -(N.ιLocalCStar O₂ Y * N.ιLocalCStar O₁ X) := by
   have h := congrArg (UniformSpace.Completion.coeRingHom (α := N.localObservables))
@@ -253,7 +255,7 @@ theorem ιLocalCStar_mul_eq_neg_of_orthogonal_of_odd {O₁ O₂ : K} (hd : O₁ 
 
 /-- **Locality in the quasi-local C⋆-algebra**: observables localised in causally orthogonal
     regions commute inside `𝔄`: graded locality for the trivial parity of a local net. -/
-theorem ιLocalCStar_commute_of_orthogonal [N.IsLocal] {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
+lemma ιLocalCStar_commute_of_orthogonal [N.IsTriviallyGraded] {O₁ O₂ : K} (hd : O₁ ⟂ O₂)
     (X : N.algebra O₁) (Y : N.algebra O₂) :
     Commute (N.ιLocalCStar O₁ X) (N.ιLocalCStar O₂ Y) :=
   N.ιLocalCStar_commute_of_orthogonal_of_even hd X Y (N.parity_apply X)

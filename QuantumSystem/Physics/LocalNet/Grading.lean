@@ -27,6 +27,11 @@ what it demands of causally orthogonal regions is graded locality, in
 
 * `CStarNet.Grading N` — a grading of the net `N`.
 * `CStarNet.Grading.trivial N` — the grading by the identity.
+
+## Notation
+
+`𝔄(O)` in the prose is documentation shorthand for the local C⋆-algebra `N.algebra O`; the
+convention is stated in full in `QuantumSystem.Physics.LocalNet.Isotony`.
 -/
 
 @[expose] public section
@@ -50,20 +55,20 @@ structure Grading (N : CStarNet K) where
 
 namespace Grading
 
-variable {N : CStarNet K} (Γ : N.Grading)
+variable {N : CStarNet K} (γ : N.Grading)
 
 /-- The parity is natural with respect to the region-equality transport. -/
 lemma parity_algebraCongr {O O' : K} (e : O = O') (x : N.algebra O) :
-    N.algebraCongr e (Γ.parity O x) = Γ.parity O' (N.algebraCongr e x) := by
+    N.algebraCongr e (γ.parity O x) = γ.parity O' (N.algebraCongr e x) := by
   subst e; rfl
 
 /-- **Every element is the sum of an even and an odd one**:
     `x = (x + parity O x) / 2 + (x - parity O x) / 2`. -/
 lemma exists_even_add_odd {O : K} (x : N.algebra O) :
-    ∃ x₀ x₁ : N.algebra O, Γ.parity O x₀ = x₀ ∧ Γ.parity O x₁ = -x₁ ∧ x₀ + x₁ = x := by
-  refine ⟨(2⁻¹ : ℂ) • (x + Γ.parity O x), (2⁻¹ : ℂ) • (x - Γ.parity O x), ?_, ?_, ?_⟩
-  · rw [map_smul, map_add, Γ.parity_parity, add_comm]
-  · rw [map_smul, map_sub, Γ.parity_parity, ← smul_neg, neg_sub]
+    ∃ x₀ x₁ : N.algebra O, γ.parity O x₀ = x₀ ∧ γ.parity O x₁ = -x₁ ∧ x₀ + x₁ = x := by
+  refine ⟨(2⁻¹ : ℂ) • (x + γ.parity O x), (2⁻¹ : ℂ) • (x - γ.parity O x), ?_, ?_, ?_⟩
+  · rw [map_smul, map_add, γ.parity_parity, add_comm]
+  · rw [map_smul, map_sub, γ.parity_parity, ← smul_neg, neg_sub]
   · rw [← smul_add, add_add_sub_cancel, ← two_smul ℂ x, smul_smul, inv_mul_cancel₀ two_ne_zero,
       one_smul]
 

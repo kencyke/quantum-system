@@ -250,11 +250,11 @@ public import QuantumSystem.InformationTheory.Entropy.VonNeumann.StrongSubadditi
 public import QuantumSystem.InformationTheory.KullbackLeibler.EReal
 public import QuantumSystem.Physics.BorchersTriple.Basic
 public import QuantumSystem.Physics.BorchersTriple.RindlerWedge
+public import QuantumSystem.Physics.LocalNet.Automorphism.Basic
+public import QuantumSystem.Physics.LocalNet.Automorphism.QuasiLocal
+public import QuantumSystem.Physics.LocalNet.Automorphism.SitePerm
 public import QuantumSystem.Physics.LocalNet.Basic
 public import QuantumSystem.Physics.LocalNet.Causality
-public import QuantumSystem.Physics.LocalNet.Covariance.Basic
-public import QuantumSystem.Physics.LocalNet.Covariance.QuasiLocal
-public import QuantumSystem.Physics.LocalNet.Covariance.SitePerm
 public import QuantumSystem.Physics.LocalNet.DHRCriterion
 public import QuantumSystem.Physics.LocalNet.Examples
 public import QuantumSystem.Physics.LocalNet.Grading

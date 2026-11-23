@@ -23,8 +23,9 @@ The order is carried as a `Preorder` throughout, not a `PartialOrder`: the liter
 are ordered by inclusion and so are partial orders, but antisymmetry is used nowhere in this
 development, so demanding it would restrict the interface without buying anything.
 
-**Directedness.** Nothing here assumes the index set directed — the proper intervals of the circle,
-the index set of a conformal net, are not. Without directedness, two causally orthogonal regions
+**Directedness.** Nothing here assumes the index set directed — the intervals of the circle, its
+open, connected, nonempty and non-dense subsets, are not: two intervals covering the circle have no
+interval above both. Without directedness, two causally orthogonal regions
 need not have a common upper bound; the derived relation `⊥̂` (`CausalOrthogonality.OrthogonalHat`)
 adds that demand. It collapses onto `⟂` whenever `K` is directed
 (`CausalOrthogonality.orthogonalHat_iff`), and directedness of `K` is equivalent to the collapse for
@@ -38,6 +39,9 @@ infinite ones `Set α` carry causal orthogonality `Disjoint`.
 
 `O₁ ⟂ O₂` is `CausalOrthogonality.Orthogonal O₁ O₂`, causal orthogonality of regions; activate it
 with `open scoped CausalOrthogonality`.
+
+`𝔄(O)` in the prose is documentation shorthand for the local C⋆-algebra `N.algebra O`; the
+convention is stated in full in `QuantumSystem.Physics.LocalNet.Isotony`.
 -/
 
 @[expose] public section
@@ -182,7 +186,7 @@ lemma orthogonalHat_and_exists_upperBound_iff {O₁ O₂ : K} :
     differ it is `⊥̂` that the locality axiom of a net constrains: on the two-element
     antichain `{O₁, O₂}` with `O₁ ⟂ O₂` there is no common upper bound at all, so `⊥̂` is empty
     there while `⟂` is not. -/
-theorem orthogonalHat_iff [IsDirectedOrder K] {O₁ O₂ : K} :
+lemma orthogonalHat_iff [IsDirectedOrder K] {O₁ O₂ : K} :
     OrthogonalHat O₁ O₂ ↔ O₁ ⟂ O₂ :=
   ⟨OrthogonalHat.orthogonal, fun h => ⟨h, directed_of (· ≤ ·) O₁ O₂⟩⟩
 
@@ -191,7 +195,7 @@ theorem orthogonalHat_iff [IsDirectedOrder K] {O₁ O₂ : K} :
     the empty relation collapses on every preorder. The forward direction is `orthogonalHat_iff`, and the
     converse tests directedness against the *total* relation, in which every pair is causally
     orthogonal and `⊥̂` therefore records nothing but the existence of a common upper bound. -/
-theorem isDirectedOrder_iff_forall_orthogonalHat_iff (K : Type*) [Preorder K] :
+lemma isDirectedOrder_iff_forall_orthogonalHat_iff (K : Type*) [Preorder K] :
     IsDirectedOrder K ↔
       ∀ [CausalOrthogonality K] (O₁ O₂ : K), OrthogonalHat O₁ O₂ ↔ O₁ ⟂ O₂ := by
   constructor

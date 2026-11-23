@@ -16,7 +16,7 @@ its local algebras, so it is nuclear when they are.
 
 ## Main results
 
-* `CStarNet.isNuclear_quasiLocalCStarAlgebra` — the quasi-local C⋆-algebra of a faithful net with
+* **`CStarNet.isNuclear_quasiLocalCStarAlgebra`** — the quasi-local C⋆-algebra of a faithful net with
   nuclear local algebras is nuclear.
 -/
 
@@ -41,6 +41,6 @@ theorem isNuclear_quasiLocalCStarAlgebra [∀ O, CStarAlgebra.IsNuclear.{v, w} (
       refine ⟨O, ?_, ?_⟩ <;> rintro _ ⟨X, rfl⟩
       · exact ⟨N.incl h₁ X, N.ιLocalCStar_incl h₁ X⟩
       · exact ⟨N.incl h₂ X, N.ιLocalCStar_incl h₂ X⟩)
-    N.denseRange_iUnion_ιLocalCStar
+    N.dense_iUnion_range_ιLocalCStar
 
 end CStarNet

@@ -26,17 +26,21 @@ directed by unions with the empty region as base point.
   algebra `𝔄 = ‾⋃_O 𝔄(O)` (Naaijkens, *Anyons in Infinite Quantum Systems*, 2012, §1.3), with
   isometric local embeddings `ιLocalCStar` — unital `*`-homomorphisms `𝔄(O) →⋆ₐ[ℂ] 𝔄`, injective
   and with *closed* range, whose ranges are dense
-  in `𝔄` only taken together (`denseRange_iUnion_ιLocalCStar`).
+  in `𝔄` only taken together (`dense_iUnion_range_ιLocalCStar`).
 
 What the further structure of a net does to these algebras is with that structure: graded locality
-passes to the quasi-local algebra in `QuantumSystem.Physics.LocalNet.Basic`, and the covariances of
-a net act on it in `QuantumSystem.Physics.LocalNet.Covariance.QuasiLocal`.
+passes to the quasi-local algebra in `QuantumSystem.Physics.LocalNet.Basic`, and the automorphisms of
+a net act on it in `QuantumSystem.Physics.LocalNet.Automorphism.QuasiLocal`.
 
 ## Notation
 
-`𝔄(O)` and `𝓡(O)` in the prose above are documentation shorthand for the local C⋆-algebra
-`N.algebra O` and the local von Neumann algebra `N.localVonNeumannAlgebra R O`; the convention —
-and why neither is a Lean notation — is stated in full in `QuantumSystem.Physics.LocalNet.Isotony`.
+`𝔄(O)` in the prose above is documentation shorthand for the local C⋆-algebra `N.algebra O`; the
+convention — and why it is not a Lean notation — is stated in full in
+`QuantumSystem.Physics.LocalNet.Isotony`.
+
+`𝔄_loc` is shorthand for the algebra of local observables `N.localObservables` and `𝔄` for the
+quasi-local C⋆-algebra `N.quasiLocalCStarAlgebra`. `ι_O` is the local embedding `N.ιLocal O` into
+`𝔄_loc`, or `N.ιLocalCStar O` into `𝔄`.
 -/
 
 @[expose] public section
@@ -66,12 +70,12 @@ omit [Nonempty K] in
   (NormedDirectLimit.mk_star O X).symm
 
 /-- The canonical map `𝔄(O) → 𝔄_loc` of a local algebra into the algebra of local observables, as
-    a unital ring homomorphism (the cocone of the inductive limit). It need not be injective: an
-    isotony map that kills `X` makes `X` vanish in the limit. For a `Faithful` net it is
-    (`ιLocal_injective`). -/
+    a unital `*`-algebra homomorphism (the cocone of the inductive limit). It need not be
+    injective: an isotony map that kills `X` makes `X` vanish in the limit. For a `Faithful` net it
+    is (`ιLocal_injective`). -/
 noncomputable def ιLocal (O : K) :
-    N.algebra O →+* N.localObservables :=
-  (NormedDirectLimit.ofAlgHom ℂ O).toRingHom
+    N.algebra O →⋆ₐ[ℂ] N.localObservables :=
+  { NormedDirectLimit.ofAlgHom ℂ O with map_star' := fun X => (star_mk (N := N) X).symm }
 
 /-- The cocone takes the class of a local observable. -/
 lemma ιLocal_apply (O : K) (X : N.algebra O) : N.ιLocal O X = NormedDirectLimit.mk O X :=
@@ -89,7 +93,7 @@ lemma ιLocal_apply (O : K) (X : N.algebra O) : N.ιLocal O X = NormedDirectLimi
   (star_mk (N := N) X).symm
 
 /-- The cocone is `ℂ`-linear: scalars act componentwise on the inductive limit. -/
-@[simp] lemma ιLocal_smul (c : ℂ) {O : K} (X : N.algebra O) :
+lemma ιLocal_smul (c : ℂ) {O : K} (X : N.algebra O) :
     N.ιLocal O (c • X) = c • N.ιLocal O X :=
   NormedDirectLimit.mk_smul O c X
 
@@ -151,7 +155,7 @@ noncomputable instance : CStarAlgebra N.quasiLocalCStarAlgebra := inferInstance
 
     A *single* such range is not dense: an isometric image of a complete space is complete, hence
     closed, so it is dense only when it is all of `𝔄`. What is dense is the union over all regions
-    (`denseRange_iUnion_ιLocalCStar`), which is the `‾⋃_O 𝔄(O)` of the literature. -/
+    (`dense_iUnion_range_ιLocalCStar`), which is the `‾⋃_O 𝔄(O)` of the literature. -/
 noncomputable def ιLocalCStar (O : K) :
     N.algebra O →⋆ₐ[ℂ] N.quasiLocalCStarAlgebra where
   toFun := (↑) ∘ N.ιLocal O
@@ -200,7 +204,7 @@ lemma ιLocalCStar_injective (O : K) : Function.Injective (N.ιLocalCStar O) :=
 /-- The local algebras are dense in the quasi-local C⋆-algebra: every element is a norm-limit of
     local observables. Note the union: a single local algebra has *closed*, not dense, image
     (`isometry_ιLocalCStar`). -/
-theorem denseRange_iUnion_ιLocalCStar :
+lemma dense_iUnion_range_ιLocalCStar :
     Dense (⋃ O : K, Set.range (N.ιLocalCStar O)) :=
   NormedDirectLimit.dense_iUnion_range_coe_mk (G := N.algebra) (f := fun _ _ h => N.incl h)
 

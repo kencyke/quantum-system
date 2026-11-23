@@ -56,8 +56,8 @@ net that is not local is in `QuantumSystem.Physics.LocalNet.Examples`.
 
 ## Notation
 
-`𝓡(O)` in the prose is documentation shorthand for `N.algebra O`, following the convention stated
-in `QuantumSystem.Physics.LocalNet.Isotony`.
+`𝓡(O)` in the prose is documentation shorthand for `N.algebra O` of the net
+`N : VonNeumannNet K H`, following the convention stated in `QuantumSystem.Physics.LocalNet.Isotony`.
 -/
 
 @[expose] public section
@@ -162,7 +162,7 @@ lemma exists_even_add_odd {O : K} {x : H →L[ℂ] H} (hx : x ∈ N.algebra O) :
   · rw [← smul_add, add_add_sub_cancel, ← two_smul ℂ x, smul_smul, inv_mul_cancel₀ two_ne_zero,
       one_smul]
 
-/-- The grading unitary, as a unitary. -/
+/-- The grading unitary is a unitary: `Γ ∈ unitary (H →L[ℂ] H)`. -/
 lemma Γ_mem_unitary : G.Γ ∈ unitary (H →L[ℂ] H) :=
   Unitary.mem_iff.2 ⟨by rw [G.star_Γ, G.Γ_mul_Γ], by rw [G.star_Γ, G.Γ_mul_Γ]⟩
 
@@ -217,9 +217,31 @@ lemma coe_twist_eq :
     (G.twist : H →L[ℂ] H) = ((1 + I) / 2) • (1 : H →L[ℂ] H) + ((1 - I) / 2) • G.Γ :=
   G.inv_one_sub_I_smul
 
+/-- **The twist is a square root of the grading unitary**: `Z² = Γ`. -/
+lemma twist_mul_twist : (G.twist : H →L[ℂ] H) * G.twist = G.Γ := by
+  rw [G.coe_twist_eq, G.smul_one_add_smul_mul,
+    show (1 + I) / 2 * ((1 + I) / 2) + (1 - I) / 2 * ((1 - I) / 2) = 0 by
+      linear_combination (1 / 2 : ℂ) * I_sq,
+    show (1 + I) / 2 * ((1 - I) / 2) + (1 - I) / 2 * ((1 + I) / 2) = 1 by
+      linear_combination (-1 / 2 : ℂ) * I_sq, zero_smul, zero_add, one_smul]
+
+/-- The twist of a grading with `Γ = 1` is `1`. -/
+lemma twist_eq_one_of_Γ_eq_one (h : G.Γ = 1) : G.twist = 1 := by
+  ext1
+  have h' : (1 : H →L[ℂ] H) - I • 1 = (1 - I) • 1 := by rw [sub_smul, one_smul]
+  have hI : (1 : ℂ) - I ≠ 0 := sub_ne_zero.2 fun h => by simpa using congrArg Complex.im h
+  rw [coe_twist, h, OneMemClass.coe_one, h', smul_smul, inv_mul_cancel₀ hI, one_smul]
+
+/-- Conjugation by the twist of a grading with `Γ = 1` is the identity. -/
+lemma conj_twist_of_Γ_eq_one (h : G.Γ = 1) (M : VonNeumannAlgebra H) :
+    VonNeumannAlgebra.conj (Unitary.linearIsometryEquiv G.twist) M = M := by
+  ext y
+  rw [VonNeumannAlgebra.mem_conj_iff, G.twist_eq_one_of_Γ_eq_one h, map_one]
+  rfl
+
 /-- **The twist fixes the even operators**: `Z y Z⋆ = y` when `y` commutes with `Γ`. -/
 lemma twist_mul_mul_star_of_commute {y : H →L[ℂ] H} (hy : Commute G.Γ y) :
-    (G.twist : H →L[ℂ] H) * y * star (G.twist : H →L[ℂ] H) = y := by
+    ↑G.twist * y * star ↑G.twist = y := by
   have hZ : Commute (G.twist : H →L[ℂ] H) y := by
     rw [G.coe_twist_eq]
     exact ((Commute.one_left y).smul_left _).add_left (hy.smul_left _)
@@ -228,7 +250,7 @@ lemma twist_mul_mul_star_of_commute {y : H →L[ℂ] H} (hy : Commute G.Γ y) :
 /-- **The twist multiplies the odd operators by `iΓ`**: `Z y Z⋆ = i y Γ` when `y` anticommutes with
     `Γ`. -/
 lemma twist_mul_mul_star_of_anticommute {y : H →L[ℂ] H} (hy : G.Γ * y = -(y * G.Γ)) :
-    (G.twist : H →L[ℂ] H) * y * star (G.twist : H →L[ℂ] H) = I • (y * G.Γ) := by
+    ↑G.twist * y * star ↑G.twist = I • (y * G.Γ) := by
   have h₁ : (G.twist : H →L[ℂ] H) * y = y * (((1 + I) / 2) • 1 + (-((1 - I) / 2)) • G.Γ) := by
     rw [G.coe_twist_eq, add_mul, mul_add, smul_mul_assoc, smul_mul_assoc, one_mul, hy,
       mul_smul_comm, mul_smul_comm, mul_one, neg_smul, smul_neg]
@@ -243,7 +265,7 @@ lemma twist_mul_mul_star_of_anticommute {y : H →L[ℂ] H} (hy : G.Γ * y = -(y
 /-- The adjoint action of the twist is conjugation by the twist: `Z y Z⋆`. -/
 lemma conjStarAlgEquiv_twist (y : H →L[ℂ] H) :
     (Unitary.linearIsometryEquiv G.twist).conjStarAlgEquiv y =
-      (G.twist : H →L[ℂ] H) * y * star (G.twist : H →L[ℂ] H) := by
+      ↑G.twist * y * star ↑G.twist := by
   rw [Unitary.conjStarAlgEquiv_unitaryLinearIsometryEquiv, Unitary.conjStarAlgAut_apply]
 
 /-- **The graded commutation relations give twisted commutation**: if `x₀ + x₁` and `y₀ + y₁` are
@@ -253,7 +275,7 @@ lemma commute_twist_mul_mul_star {x₀ x₁ y₀ y₁ : H →L[ℂ] H} (hx₀ : 
     (hx₁ : G.Γ * x₁ = -(x₁ * G.Γ)) (hy₀ : Commute G.Γ y₀) (hy₁ : G.Γ * y₁ = -(y₁ * G.Γ))
     (h₀₀ : Commute x₀ y₀) (h₀₁ : Commute x₀ y₁) (h₁₀ : Commute x₁ y₀)
     (h₁₁ : x₁ * y₁ = -(y₁ * x₁)) :
-    Commute (x₀ + x₁) ((G.twist : H →L[ℂ] H) * (y₀ + y₁) * star (G.twist : H →L[ℂ] H)) := by
+    Commute (x₀ + x₁) (↑G.twist * (y₀ + y₁) * star ↑G.twist) := by
   rw [mul_add, add_mul, G.twist_mul_mul_star_of_commute hy₀,
     G.twist_mul_mul_star_of_anticommute hy₁]
   have hx₁' : x₁ * G.Γ = -(G.Γ * x₁) := by rw [hx₁, neg_neg]
@@ -287,7 +309,7 @@ structure IsGradedLocal : Prop where
 lemma isGradedLocal_iff_commute_twist :
     G.IsGradedLocal ↔ ∀ ⦃O₁ O₂ : K⦄, O₁ ⟂ O₂ → ∀ ⦃x y : H →L[ℂ] H⦄, x ∈ N.algebra O₁ →
       y ∈ N.algebra O₂ →
-        Commute x ((G.twist : H →L[ℂ] H) * y * star (G.twist : H →L[ℂ] H)) := by
+        Commute x (↑G.twist * y * star ↑G.twist) := by
   constructor
   · intro hG O₁ O₂ hd x y hx hy
     obtain ⟨x₀, hx₀, x₁, hx₁, hx₀e, hx₁o, rfl⟩ := G.exists_even_add_odd hx
@@ -301,7 +323,7 @@ lemma isGradedLocal_iff_commute_twist :
         (G.Γ_mul_mul_Γ_eq_neg_iff.2 hy₁o))
   · intro h
     have odd_part {x y : H →L[ℂ] H} (hy : G.Γ * y = -(y * G.Γ))
-        (hxy : Commute x ((G.twist : H →L[ℂ] H) * y * star (G.twist : H →L[ℂ] H))) :
+        (hxy : Commute x (↑G.twist * y * star ↑G.twist)) :
         x * y * G.Γ = y * G.Γ * x := by
       rw [G.twist_mul_mul_star_of_anticommute hy] at hxy
       have := (hxy.smul_right (-I)).eq
@@ -339,8 +361,8 @@ theorem isGradedLocal_iff_le_conj_commutant :
 lemma isGradedLocal_of_generated (s : K → Set (H →L[ℂ] H))
     (hs : ∀ O, N.algebra O = VonNeumannAlgebra.generated (s O))
     (h : ∀ ⦃O₁ O₂ : K⦄, O₁ ⟂ O₂ → ∀ x ∈ s O₁, ∀ y ∈ s O₂,
-      Commute x ((G.twist : H →L[ℂ] H) * y * star (G.twist : H →L[ℂ] H)) ∧
-        Commute x ((G.twist : H →L[ℂ] H) * star y * star (G.twist : H →L[ℂ] H))) :
+      Commute x (↑G.twist * y * star ↑G.twist) ∧
+        Commute x (↑G.twist * star y * star ↑G.twist)) :
     G.IsGradedLocal := by
   refine G.isGradedLocal_iff_le_conj_commutant.2 fun O₁ O₂ hd => ?_
   rw [hs, hs]
@@ -357,7 +379,7 @@ variable [CausalOrthogonality K]
 /-- A net of von Neumann algebras is **local** when causally orthogonal regions carry commuting
     algebras: `𝓡(O₁) ≤ 𝓡(O₂)′` for `O₁ ⟂ O₂` (Einstein causality). This is graded locality for the
     trivial grading (`VonNeumannNet.Grading.isGradedLocal_trivial_iff`). It is the commutation
-    itself, unlike `GradedLocalNet.IsLocal`, which asks the parity of a graded-local net of
+    itself, unlike `GradedLocalNet.IsTriviallyGraded`, which asks the parity of a graded-local net of
     C⋆-algebras to be trivial. -/
 class IsLocal (N : VonNeumannNet K H) : Prop where
   /-- **Locality**: causally orthogonal regions carry commuting algebras. -/
@@ -371,7 +393,7 @@ lemma algebra_le_commutant_of_orthogonal (N : VonNeumannNet K H) [N.IsLocal] {O�
 /-- **For the trivial grading, graded locality is locality**: every operator is even, so graded
     locality asks the algebras of causally orthogonal regions to commute, and no operator other
     than `0` is odd. -/
-theorem Grading.isGradedLocal_trivial_iff {N : VonNeumannNet K H} :
+lemma Grading.isGradedLocal_trivial_iff {N : VonNeumannNet K H} :
     (Grading.trivial N).IsGradedLocal ↔ N.IsLocal := by
   refine ⟨fun h => ⟨fun O₁ O₂ hd x hx => VonNeumannAlgebra.mem_commutant_iff.2 fun y hy =>
     (h.locality_even hd hx hy (by simp)).eq.symm⟩, fun h => ⟨?_, ?_⟩⟩

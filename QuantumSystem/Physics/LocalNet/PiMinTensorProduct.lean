@@ -6,7 +6,7 @@ Authors: Keisuke Suzuki
 module
 
 public import QuantumSystem.Analysis.CStarAlgebra.TensorProduct.InfiniteMinimal
-public import QuantumSystem.Physics.LocalNet.Covariance.SitePerm
+public import QuantumSystem.Physics.LocalNet.Automorphism.SitePerm
 public import QuantumSystem.Physics.LocalNet.Subnet
 
 /-!
@@ -20,35 +20,35 @@ It is a local net: elements over disjoint regions commute once embedded in a com
 isometric (`PiMinTensorProduct.norm_extend`), so it is faithful. For `A x` the algebra of a single
 spin at every site it is the net of a quantum spin system on the sites.
 
-A family `g` of ⋆-automorphisms `g x` of the `A x` acts site by site, by `⨂ g x` on each local
-algebra (`PiMinTensorProduct.congr`): the **on-site action** of `g`, a covariance leaving every
+A family `g` of `*`-automorphisms `g x` of the `A x` acts site by site, by `⨂ g x` on each local
+algebra (`PiMinTensorProduct.congr`): the **on-site action** of `g`, an automorphism leaving every
 region in place. The family may depend on the site; a C⋆-dynamical system on a single algebra acts
-at every site through `GradedLocalNet.constOnSite`. The on-site action is continuous from the product of the
-point-norm topologies (`GradedLocalNet.continuous_quasiLocalCStarCovarianceHom_onSiteCovariance`): on a
+at every site through `ContinuousMonoidHom.constOnSite`. The on-site action is continuous from the product of the
+point-norm topologies (`GradedLocalNet.continuous_quasiLocalCStarAutomorphismHom_onSiteAutomorphism`): on a
 local observable of `Λ` it depends only on the `g x` for `x ∈ Λ`, through
 `PiMinTensorProduct.continuous_congr`. So a C⋆-dynamical system `ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ] A x)`
 acts on the quasi-local C⋆-algebra of nontrivial algebras as a C⋆-dynamical system
 (`GradedLocalNet.onSiteDynamicalSystem`).
 
-On copies of one algebra `B`, a permutation `σ` of the sites (a translation, a reflection) is a
-covariance that moves the regions, `Λ ↦ σ Λ`, and the local algebras along `σ`
+On copies of one algebra `B`, a permutation `σ` of the sites (a translation, a reflection) is an
+automorphism that moves the regions, `Λ ↦ σ Λ`, and the local algebras along `σ`
 (`PiMinTensorProduct.reindex`), compatibly with the isotony embeddings
-(`GradedLocalNet.sitePermCovariance`).
+(`GradedLocalNet.sitePermAutomorphism`).
 
 ## Main definitions
 
 * `GradedLocalNet.piMinTensorProduct sites A` — the net of minimal tensor products of `A` over the
   finite regions of `sites`.
-* `GradedLocalNet.onSiteCovariance g` — the on-site action of a family `g` of ⋆-automorphisms, as a
-  covariance; `GradedLocalNet.onSiteCovarianceHom sites A` — as a homomorphism into the covariances.
-* `GradedLocalNet.sitePermCovariance B σ` — the covariance of a permutation `σ` of the sites on the
+* `GradedLocalNet.onSiteAutomorphism g` — the on-site action of a family `g` of `*`-automorphisms, as an
+  automorphism; `GradedLocalNet.onSiteAutomorphismHom sites A` — as a homomorphism into the automorphisms.
+* `GradedLocalNet.sitePermAutomorphism B σ` — the automorphism of a permutation `σ` of the sites on the
   net of minimal tensor products of copies of `B`, moving the regions.
 * `GradedLocalNet.onSiteDynamicalSystem sites ψ` — the C⋆-dynamical system on the quasi-local C⋆-algebra of
   a C⋆-dynamical system `ψ` acting site by site.
 
 ## Main results
 
-* `GradedLocalNet.continuous_quasiLocalCStarCovarianceHom_onSiteCovariance` — the on-site action is
+* **`GradedLocalNet.continuous_quasiLocalCStarAutomorphismHom_onSiteAutomorphism`** — the on-site action is
   continuous on the quasi-local C⋆-algebra.
 * The local algebras of the net of minimal tensor products of finite-dimensional factors are
   finite-dimensional factors (the `Algebra.IsCentral` instance on
@@ -60,6 +60,69 @@ covariance that moves the regions, `Λ ↦ σ Λ`, and the local algebras along 
 open scoped TensorProduct PiMinTensorProduct
 
 universe u
+
+/-! The constant family of a C⋆-dynamical system and the restriction of a permutation to a finite
+set involve no net; they are stated in the namespaces of their types. -/
+
+namespace ContinuousMonoidHom
+
+variable {G : Type*} [Monoid G] [TopologicalSpace G]
+
+variable (sites : Type*) in
+/-- A C⋆-dynamical system on one C⋆-algebra `B`, as the constant family over `sites`: the same
+`*`-automorphism at every site. -/
+noncomputable def constOnSite {B : Type*} [CStarAlgebra B] (ψ : G →ₜ* (B ≃⋆ₐ[ℂ] B)) :
+    G →ₜ* (sites → B ≃⋆ₐ[ℂ] B) :=
+  ⟨(Pi.constMonoidHom sites _).comp ψ.toMonoidHom, continuous_pi fun _ => ψ.continuous⟩
+
+/-- The constant on-site system acts by `ψ g` at every site. -/
+@[simp] lemma constOnSite_apply {sites B : Type*} [CStarAlgebra B] (ψ : G →ₜ* (B ≃⋆ₐ[ℂ] B))
+    (g : G) (x : sites) : constOnSite sites ψ g x = ψ g :=
+  rfl
+
+end ContinuousMonoidHom
+
+namespace Equiv
+
+/-- A permutation `σ` of the sites, restricted to a finite set `Λ`: the bijection of `Λ` onto its
+image `Λ.map σ`. -/
+def restrictFinsetMap {sites : Type*} (σ : sites ≃ sites) (Λ : Finset sites) :
+    Λ ≃ Λ.map σ.toEmbedding :=
+  σ.subtypeEquiv fun _ => (Finset.mem_map' σ.toEmbedding).symm
+
+end Equiv
+
+namespace PiMinTensorProduct
+
+/-- Moving the sites along `σ` commutes with the isotony embeddings `z ↦ z ⊗ 1`. -/
+lemma reindex_extend_restrictFinsetMap {sites : Type*} [DecidableEq sites] {B : Type u}
+    [CStarAlgebra B] (σ : sites ≃ sites) {Λ Λ' : Finset sites} (h : Λ ⊆ Λ')
+    (z : ⨂ₘᵢₙ _ : Λ, B) :
+    PiMinTensorProduct.reindex (fun _ : Λ' => B) (Equiv.restrictFinsetMap σ Λ')
+        (PiMinTensorProduct.extend (A := fun _ : sites => B) h z) =
+      PiMinTensorProduct.extend (A := fun _ : sites => B) (Finset.map_subset_map.mpr h)
+        (PiMinTensorProduct.reindex (fun _ : Λ => B) (Equiv.restrictFinsetMap σ Λ) z) := by
+  induction z using PiMinTensorProduct.denseRange_of.induction_on with
+  | hp =>
+    exact isClosed_eq ((map_continuous _).comp (map_continuous _))
+      ((map_continuous _).comp (map_continuous _))
+  | ih x =>
+    rw [PiMinTensorProduct.extend_of, PiMinTensorProduct.reindex_of,
+      PiMinTensorProduct.reindex_of, PiMinTensorProduct.extend_of]
+    congr 1
+    induction x using PiTensorProduct.induction_on with
+    | smul_tprod r a =>
+      simp only [map_smul, PiTensorProduct.extendAlgHom_tprod,
+        PiTensorProduct.reindexStarAlgEquiv_tprod]
+      congr 2
+      funext k
+      by_cases hk : σ.symm k ∈ Λ
+      · simp [PiTensorProduct.extendFun, Equiv.restrictFinsetMap, hk]
+        rfl
+      · simp [PiTensorProduct.extendFun, Equiv.restrictFinsetMap, hk]
+    | add x y hx hy => rw [map_add, map_add, hx, hy, map_add, map_add]
+
+end PiMinTensorProduct
 
 namespace GradedLocalNet
 
@@ -78,8 +141,8 @@ noncomputable def piMinTensorProduct : GradedLocalNet (Finset sites) :=
     fun _ _ _ h₁ h₂ hd x y => PiMinTensorProduct.commute_extend_of_disjoint (A := A) h₁ h₂ hd x y
 
 /-- The net of minimal tensor products is local: elements over disjoint regions commute. -/
-instance : (piMinTensorProduct sites A).IsLocal :=
-  instIsLocalOfLocality _ _
+instance : (piMinTensorProduct sites A).IsTriviallyGraded :=
+  instIsTriviallyGradedOfLocality _ _
 
 /-- The local algebra of a region `Λ` is the minimal tensor product of the `A x` over `Λ`. -/
 lemma piMinTensorProduct_algebra (Λ : Finset sites) : (piMinTensorProduct sites A).algebra Λ = ⨂ₘᵢₙ x : Λ, A x :=
@@ -109,45 +172,53 @@ instance [∀ x, FiniteDimensional ℂ (A x)] [∀ x, Algebra.IsCentral ℂ (A x
 
 variable {sites A}
 
-variable (sites A) in
-/-- The families of ⋆-automorphisms of the `A x` act on the net of minimal tensor products site by
-site, by `⨂ g x` on each local algebra: an internal symmetry. -/
-noncomputable def onSiteSymmetry :
-    (piMinTensorProduct sites A).InternalSymmetry (Π x, A x ≃⋆ₐ[ℂ] A x) where
-  act Λ :=
-    { toFun g := PiMinTensorProduct.congr fun x : Λ => g x
-      map_one' := StarAlgEquiv.ext fun z => PiMinTensorProduct.congr_refl_apply (A := fun x : Λ => A x) z
-      map_mul' g f := StarAlgEquiv.ext fun z =>
-        (PiMinTensorProduct.congr_congr (fun x : Λ => g x) (fun x : Λ => f x) z).symm }
-  act_incl h g z := (PiMinTensorProduct.extend_congr h g z).symm
-
-/-- The **on-site action** of a family `g` of ⋆-automorphisms of the `A x`: the covariance of the
-net of minimal tensor products that leaves every region in place and acts by `⨂ g x` on each local algebra. -/
-noncomputable def onSiteCovariance (g : Π x, A x ≃⋆ₐ[ℂ] A x) : (piMinTensorProduct sites A).Covariance :=
-  (onSiteSymmetry sites A).toCovariance (fun _ _ x => (piMinTensorProduct sites A).map_parity _ x) g
+/-- The **on-site action** of a family `g` of `*`-automorphisms of the `A x`: the automorphism of the
+net of minimal tensor products that leaves every region in place and acts by `⨂ g x` on each local
+algebra. -/
+noncomputable def onSiteAutomorphism (g : Π x, A x ≃⋆ₐ[ℂ] A x) :
+    (piMinTensorProduct sites A).Automorphism where
+  σ := OrderIso.refl _
+  map_orthogonal_iff _ _ := Iff.rfl
+  β Λ := PiMinTensorProduct.congr fun x : Λ => g x
+  β_incl h z := (PiMinTensorProduct.extend_congr h g z).symm
+  β_parity _ x := (piMinTensorProduct sites A).map_parity _ x
 
 /-- The on-site action of `g` is `⨂ g x` on each local algebra. -/
-lemma onSiteCovariance_β (g : Π x, A x ≃⋆ₐ[ℂ] A x) (Λ : Finset sites)
+lemma onSiteAutomorphism_β (g : Π x, A x ≃⋆ₐ[ℂ] A x) (Λ : Finset sites)
     (z : (piMinTensorProduct sites A).algebra Λ) :
-    (onSiteCovariance g).β Λ z = PiMinTensorProduct.congr (fun x : Λ => g x) z :=
+    (onSiteAutomorphism g).β Λ z = PiMinTensorProduct.congr (fun x : Λ => g x) z :=
   rfl
 
 variable (sites A) in
-/-- The families of ⋆-automorphisms act on the net of minimal tensor products by their on-site
+/-- The families of `*`-automorphisms of the `A x` act on the net of minimal tensor products site by
+site, by internal automorphisms: a group of internal symmetries. -/
+noncomputable def onSiteSymmetry :
+    (Π x, A x ≃⋆ₐ[ℂ] A x) →* Automorphism.internal (piMinTensorProduct sites A) where
+  toFun g := ⟨onSiteAutomorphism g, rfl⟩
+  map_one' := Subtype.ext <| Automorphism.ext rfl fun Λ z e =>
+    ((piMinTensorProduct sites A).algebraCongr_self e _).trans
+      (PiMinTensorProduct.congr_refl_apply (A := fun x : Λ => A x) z)
+  map_mul' g f := Subtype.ext <| Automorphism.ext rfl fun Λ z e =>
+    ((piMinTensorProduct sites A).algebraCongr_self e _).trans
+      (PiMinTensorProduct.congr_congr (fun x : Λ => g x) (fun x : Λ => f x) z).symm
+
+variable (sites A) in
+/-- The families of `*`-automorphisms act on the net of minimal tensor products by their on-site
 actions. -/
-noncomputable def onSiteCovarianceHom : (Π x, A x ≃⋆ₐ[ℂ] A x) →* (piMinTensorProduct sites A).Covariance :=
-  (onSiteSymmetry sites A).toCovarianceHom fun _ _ x => (piMinTensorProduct sites A).map_parity _ x
+noncomputable def onSiteAutomorphismHom :
+    (Π x, A x ≃⋆ₐ[ℂ] A x) →* (piMinTensorProduct sites A).Automorphism :=
+  (Automorphism.internal _).subtype.comp (onSiteSymmetry sites A)
 
 variable [∀ x, Nontrivial (A x)]
 
 /-- **The on-site action is continuous**, for nontrivial `A x`, from the product of the point-norm
-topologies of the `A x ≃⋆ₐ[ℂ] A x` to the point-norm topology of the ⋆-automorphisms of the
+topologies of the `A x ≃⋆ₐ[ℂ] A x` to the point-norm topology of the `*`-automorphisms of the
 quasi-local C⋆-algebra: on a local observable `z` of `Λ` it is `g ↦ ι_Λ ((⨂ g x) z)`, continuous by
 `PiMinTensorProduct.continuous_congr`. -/
-theorem continuous_quasiLocalCStarCovarianceHom_onSiteCovariance :
+theorem continuous_quasiLocalCStarAutomorphismHom_onSiteAutomorphism :
     Continuous fun g : Π x, A x ≃⋆ₐ[ℂ] A x =>
-      GradedLocalNet.Covariance.quasiLocalCStarCovarianceHom (onSiteCovariance (sites := sites) g) :=
-  GradedLocalNet.Covariance.continuous_quasiLocalCStarCovarianceHom_comp_iff.mpr fun Λ z =>
+      GradedLocalNet.Automorphism.quasiLocalCStarAutomorphismHom (onSiteAutomorphism (sites := sites) g) :=
+  GradedLocalNet.Automorphism.continuous_quasiLocalCStarAutomorphismHom_comp_iff.mpr fun Λ z =>
     ((piMinTensorProduct sites A).isometry_ιLocalCStar Λ).continuous.comp
       ((continuous_eval_const z).comp
         ((PiMinTensorProduct.continuous_congr (A := fun x : Λ => A x) (B := fun x : Λ => A x)).comp
@@ -155,27 +226,15 @@ theorem continuous_quasiLocalCStarCovarianceHom_onSiteCovariance :
 
 variable {G : Type*} [Monoid G] [TopologicalSpace G]
 
-omit [DecidableEq sites] in
-variable (sites) in
-/-- A C⋆-dynamical system on one C⋆-algebra `B`, acting by the same ⋆-automorphism at every site. -/
-noncomputable def constOnSite {B : Type u} [CStarAlgebra B] (ψ : G →ₜ* (B ≃⋆ₐ[ℂ] B)) :
-    G →ₜ* (sites → B ≃⋆ₐ[ℂ] B) :=
-  ⟨(Pi.constMonoidHom sites _).comp ψ.toMonoidHom, continuous_pi fun _ => ψ.continuous⟩
-
-omit [DecidableEq sites] in
-@[simp] lemma constOnSite_apply {B : Type u} [CStarAlgebra B] (ψ : G →ₜ* (B ≃⋆ₐ[ℂ] B)) (g : G)
-    (x : sites) : constOnSite sites ψ g x = ψ g :=
-  rfl
-
 variable (sites) in
 /-- **A C⋆-dynamical system acting site by site acts on the quasi-local C⋆-algebra of the net of
 minimal tensor products** of nontrivial algebras as a C⋆-dynamical system, by its on-site actions. -/
 noncomputable def onSiteDynamicalSystem (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ] A x)) :
     G →ₜ* ((piMinTensorProduct sites A).quasiLocalCStarAlgebra ≃⋆ₐ[ℂ]
       (piMinTensorProduct sites A).quasiLocalCStarAlgebra) :=
-  GradedLocalNet.Covariance.quasiLocalCStarDynamicalSystem
-    ((onSiteCovarianceHom sites A).comp ψ.toMonoidHom)
-    ((continuous_quasiLocalCStarCovarianceHom_onSiteCovariance (sites := sites) (A := A)).comp
+  GradedLocalNet.Automorphism.quasiLocalCStarDynamicalSystem
+    ((onSiteAutomorphismHom sites A).comp ψ.toMonoidHom)
+    ((continuous_quasiLocalCStarAutomorphismHom_onSiteAutomorphism (sites := sites) (A := A)).comp
       ψ.continuous :)
 
 /-- On a local observable the on-site dynamical system acts by `⨂ ψ g x`. -/
@@ -183,8 +242,8 @@ noncomputable def onSiteDynamicalSystem (ψ : G →ₜ* (Π x, A x ≃⋆ₐ[ℂ
     (Λ : Finset sites) (z : (piMinTensorProduct sites A).algebra Λ) :
     onSiteDynamicalSystem sites ψ g ((piMinTensorProduct sites A).ιLocalCStar Λ z) =
       (piMinTensorProduct sites A).ιLocalCStar Λ (PiMinTensorProduct.congr (fun x : Λ => ψ g x) z) := by
-  exact GradedLocalNet.Covariance.quasiLocalCStarCovarianceEquiv_ιLocalCStar
-    (onSiteCovariance (ψ g)) Λ z
+  exact GradedLocalNet.Automorphism.quasiLocalCStarAutomorphismEquiv_ιLocalCStar
+    (onSiteAutomorphism (ψ g)) Λ z
 
 /-- On an elementary tensor `⨂ aₓ` the on-site dynamical system acts site by site:
 `⨂ aₓ ↦ ⨂ ψ g x aₓ`. -/
@@ -209,59 +268,29 @@ lemma onSiteDynamicalSystem_ιLocalCStar_eq_iff (ψ : G →ₜ* (Π x, A x ≃�
   exact (Eq.congr_left (onSiteDynamicalSystem_ιLocalCStar ψ g Λ z)).trans
     ((piMinTensorProduct sites A).ιLocalCStar_injective Λ).eq_iff
 
-/-! ### Covariance under permutations of the sites -/
+/-! ### Automorphism under permutations of the sites -/
 
 section SitePerm
 
 variable {B : Type u} [CStarAlgebra B]
 
-/-- A permutation `σ` of the sites, restricted to a region `Λ`: the bijection of `Λ` onto `σ Λ`. -/
-def sitePermEquiv (σ : sites ≃ sites) (Λ : Finset sites) : Λ ≃ Λ.map σ.toEmbedding :=
-  σ.subtypeEquiv fun _ => (Finset.mem_map' σ.toEmbedding).symm
-
-/-- Moving the sites along `σ` commutes with the isotony embeddings `z ↦ z ⊗ 1`. -/
-lemma reindex_extend_sitePermEquiv (σ : sites ≃ sites) {Λ Λ' : Finset sites} (h : Λ ⊆ Λ')
-    (z : ⨂ₘᵢₙ _ : Λ, B) :
-    PiMinTensorProduct.reindex (fun _ : Λ' => B) (sitePermEquiv σ Λ')
-        (PiMinTensorProduct.extend (A := fun _ : sites => B) h z) =
-      PiMinTensorProduct.extend (A := fun _ : sites => B) (Finset.map_subset_map.mpr h)
-        (PiMinTensorProduct.reindex (fun _ : Λ => B) (sitePermEquiv σ Λ) z) := by
-  induction z using PiMinTensorProduct.denseRange_of.induction_on with
-  | hp =>
-    exact isClosed_eq ((map_continuous _).comp (map_continuous _))
-      ((map_continuous _).comp (map_continuous _))
-  | ih x =>
-    rw [PiMinTensorProduct.extend_of, PiMinTensorProduct.reindex_of,
-      PiMinTensorProduct.reindex_of, PiMinTensorProduct.extend_of]
-    congr 1
-    induction x using PiTensorProduct.induction_on with
-    | smul_tprod r a =>
-      simp only [map_smul, PiTensorProduct.extendAlgHom_tprod,
-        PiTensorProduct.reindexStarAlgEquiv_tprod]
-      congr 2
-      funext k
-      by_cases hk : σ.symm k ∈ Λ
-      · simp [PiTensorProduct.extendFun, sitePermEquiv, hk]
-        rfl
-      · simp [PiTensorProduct.extendFun, sitePermEquiv, hk]
-    | add x y hx hy => rw [map_add, map_add, hx, hy, map_add, map_add]
-
 variable (B) in
-/-- **The covariance of a permutation of the sites** on the net of minimal tensor products of
+/-- **The automorphism of a permutation of the sites** on the net of minimal tensor products of
 copies of `B` (a translation or a reflection of a lattice): it moves every region `Λ` to `σ Λ` and its local
 algebra along `σ` (`PiMinTensorProduct.reindex`). -/
-noncomputable def sitePermCovariance (σ : sites ≃ sites) :
-    (piMinTensorProduct sites fun _ => B).Covariance :=
-  GradedLocalNet.Covariance.ofSitePerm σ
-    (fun Λ => PiMinTensorProduct.reindex (fun _ : Λ => B) (sitePermEquiv σ Λ))
-    (fun h z => reindex_extend_sitePermEquiv σ h z) fun _ _ => (piMinTensorProduct sites _).map_parity _ _
+noncomputable def sitePermAutomorphism (σ : sites ≃ sites) :
+    (piMinTensorProduct sites fun _ => B).Automorphism :=
+  GradedLocalNet.Automorphism.ofSitePerm σ
+    (fun Λ => PiMinTensorProduct.reindex (fun _ : Λ => B) (Equiv.restrictFinsetMap σ Λ))
+    (fun h z => PiMinTensorProduct.reindex_extend_restrictFinsetMap σ h z)
+    fun _ _ => (piMinTensorProduct sites _).map_parity _ _
 
-/-- The covariance of `σ` moves the elementary tensor `⨂ aₓ` over `Λ` to `⨂ a_{σ⁻¹ y}` over
+/-- The automorphism of `σ` moves the elementary tensor `⨂ aₓ` over `Λ` to `⨂ a_{σ⁻¹ y}` over
 `σ Λ`. -/
-lemma sitePermCovariance_β_of_tprod (σ : sites ≃ sites) (Λ : Finset sites) (a : Λ → B) :
-    (sitePermCovariance B σ).β Λ (PiMinTensorProduct.of (fun _ : Λ => B) (⨂ₜ[ℂ] x, a x)) =
+lemma sitePermAutomorphism_β_of_tprod (σ : sites ≃ sites) (Λ : Finset sites) (a : Λ → B) :
+    (sitePermAutomorphism B σ).β Λ (PiMinTensorProduct.of (fun _ : Λ => B) (⨂ₜ[ℂ] x, a x)) =
       PiMinTensorProduct.of (fun _ : Λ.map σ.toEmbedding => B)
-        (⨂ₜ[ℂ] y, a ((sitePermEquiv σ Λ).symm y)) :=
+        (⨂ₜ[ℂ] y, a ((Equiv.restrictFinsetMap σ Λ).symm y)) :=
   (PiMinTensorProduct.reindex_of _ _).trans
     (congrArg _ (PiTensorProduct.reindexStarAlgEquiv_tprod _ a))
 

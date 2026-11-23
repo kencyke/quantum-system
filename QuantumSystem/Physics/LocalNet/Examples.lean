@@ -13,7 +13,7 @@ public import QuantumSystem.Physics.LocalNet.PiMinTensorProduct
 # Examples of nets
 
 The local-net interfaces are inhabited here by the quantum spin system: spins with `n` levels on
-the sites of a lattice, the local algebra of a finite region `Λ` being `⨂_{x ∈ Λ} B(ℂⁿ)`
+the sites of a lattice, the local algebra of a finite region `Λ` being `⨂_{x ∈ Λ} 𝓑(ℂⁿ)`
 (`GradedLocalNet.Examples.quantumSpinSystem`, the net of minimal tensor products `GradedLocalNet.piMinTensorProduct`).
 The graded locality of nets of von Neumann algebras is inhabited by a net that is graded-local
 but not local, that of two Majorana modes.
@@ -27,9 +27,9 @@ but not local, that of two Majorana modes.
 * **The split property on finite regions.** The quantum spin system has the split property in its
   universal representation, under any proper containment
   (`GradedLocalNet.Examples.quantumSpinSystem_splitProperty`), and a single site of the chain splits from
-  the half-chain to its right (`GradedLocalNet.Examples.quantumSpinChain_isSplitPair_singleton_Ici`). Both
+  the half-chain to its right (`GradedLocalNet.Examples.quantumSpinSystem_isSplitPair_singleton_Ici`). Both
   hold because the algebra of a finite region is a finite-dimensional factor
-  (`GradedLocalNet.splitProperty_of_finiteDimensional`); they say nothing about pairs of infinite regions.
+  (`CStarNet.splitProperty_of_finiteDimensional`); they say nothing about pairs of infinite regions.
 * **Translations.** `GradedLocalNet.Examples.translation v` shifts the sites of the chain by `v`, moving the
   regions (`GradedLocalNet.Examples.translation_σ_singleton`) and their algebras along.
 * **An on-site `U(1)` symmetry.** `GradedLocalNet.Examples.spinChainRotation` is the circle acting on every
@@ -44,22 +44,28 @@ but not local, that of two Majorana modes.
   (`VonNeumannNet.Examples.not_isLocal_majoranaNet`): `c₀` and `c₁` anticommute. Its local
   algebras form a graded-local net of C⋆-algebras with a non-trivial parity
   (`VonNeumannNet.Examples.majoranaGradedLocalNet`,
-  `VonNeumannNet.Examples.not_isLocal_majoranaGradedLocalNet`).
+  `VonNeumannNet.Examples.not_isTriviallyGraded_majoranaGradedLocalNet`).
+
+* **A local net without the split property.** `VonNeumannNet.Examples.multiplicationNet` assigns
+  to every region of the integer chain the same abelian multiplication algebra; it is local, and
+  under the metric proper containment of width `1` it does not have the split property
+  (`VonNeumannNet.Examples.not_splitProperty_multiplicationNet`).
 
 ## What is not inhabited here
 
-No net here refutes `VonNeumannNet.SplitProperty`, and no state here inhabits or refutes
-`GradedLocalNet.HasHalfChainSplit`: on finite regions the quantum spin system splits in every unital
-representation, and the half-chain split property of a state on the spin chain needs a
-representation of the quasi-local algebra on an infinite tensor product, which is not built. The
-refuter `VonNeumannAlgebra.not_isSplitInclusion_multiplicationAlgebra_count` is at the level of a
-single inclusion.
+No state here inhabits or refutes `GradedLocalNet.HasHalfChainSplit`: the half-chain split property
+of a state on the spin chain needs a representation of the quasi-local algebra on an infinite
+tensor product, which is not built. Nor is any net of C⋆-algebras shown here to lack the split
+property in a representation: the refuting net above is a net of von Neumann algebras.
 -/
 
 @[expose] public section
 
 open scoped CausalOrthogonality ProperContainment VonNeumannAlgebra TensorProduct
   PiMinTensorProduct
+
+/-- The bounded operators on `ℂ^k`, the algebra of a single `k`-level spin. -/
+local notation "B(ℂ^" k ")" => EuclideanSpace ℂ (Fin k) →L[ℂ] EuclideanSpace ℂ (Fin k)
 
 namespace GradedLocalNet.Examples
 
@@ -70,20 +76,20 @@ lemma cthickening_one_singleton_zero : Metric.cthickening 1 ({0} : Set ℤ) = Se
   rw [Metric.cthickening_singleton _ zero_le_one, Int.closedBall_eq_Icc]
   norm_num
 
-/-- **A site is properly contained in a region surrounding it**: under the metric proper
+/-- **The site `0` is properly contained in the region surrounding it**: under the metric proper
 containment of width `1`, `{0} ⋐ {-2, -1, 0, 1, 2}`, the thickening `{-1, 0, 1}` being a strict
 subset. So `⋐` relates a genuine pair of finite regions. -/
-theorem properlyContained_singleton :
-    letI := ProperContainment.ofCThickeningFinset ℤ ⟨1, one_pos⟩
+lemma properlyContained_singleton :
+    letI := ProperContainment.ofCThickeningFinset ℤ 1
     ({0} : Finset ℤ) ⋐ {-2, -1, 0, 1, 2} := by
   change Metric.cthickening 1 ((({0} : Finset ℤ)) : Set ℤ) < ((({-2, -1, 0, 1, 2} : Finset ℤ)) : Set ℤ)
   rw [Finset.coe_singleton, cthickening_one_singleton_zero, ← Finset.coe_Icc, Finset.coe_ssubset]
   decide
 
-/-- **Touching regions are not properly contained**: `{0} ⋐ {0, 1}` fails, since the thickening of
+/-- **The touching pair `{0}`, `{0, 1}` is not properly contained**: `{0} ⋐ {0, 1}` fails, since the thickening of
 `{0}` contains the neighbour `-1`. -/
-theorem not_properlyContained_touching :
-    letI := ProperContainment.ofCThickeningFinset ℤ ⟨1, one_pos⟩
+lemma not_properlyContained_touching :
+    letI := ProperContainment.ofCThickeningFinset ℤ 1
     ¬ ({0} : Finset ℤ) ⋐ {0, 1} := fun h => by
   have h' : Metric.cthickening 1 ((({0} : Finset ℤ)) : Set ℤ) < ((({0, 1} : Finset ℤ)) : Set ℤ) := h
   rw [Finset.coe_singleton, cthickening_one_singleton_zero] at h'
@@ -110,8 +116,8 @@ lemma cthickening_one_Iic : Metric.cthickening 1 (Set.Iic (0 : ℤ)) = Set.Iic 1
 
 /-- **A half-chain is properly contained in a larger half-chain**: under the metric proper
 containment of width `1`, `(-∞, 0] ⋐ (-∞, 2]`, the site `1` being the buffer and `2` the collar. -/
-theorem Iic_properlyContained_Iic_two :
-    letI := ProperContainment.ofCThickening ℤ ⟨1, one_pos⟩
+lemma Iic_properlyContained_Iic_two :
+    letI := ProperContainment.ofCThickening ℤ 1
     Set.Iic (0 : ℤ) ⋐ Set.Iic 2 := by
   change Metric.cthickening 1 (Set.Iic (0 : ℤ)) < Set.Iic 2
   rw [cthickening_one_Iic]
@@ -119,8 +125,8 @@ theorem Iic_properlyContained_Iic_two :
 
 /-- **Touching half-chains are not properly contained**: `(-∞, 0] ⋐ (-∞, 1]` fails, the
 `1`-thickening of `(-∞, 0]` already filling `(-∞, 1]`. -/
-theorem not_Iic_properlyContained_Iic_one :
-    letI := ProperContainment.ofCThickening ℤ ⟨1, one_pos⟩
+lemma not_Iic_properlyContained_Iic_one :
+    letI := ProperContainment.ofCThickening ℤ 1
     ¬ Set.Iic (0 : ℤ) ⋐ Set.Iic 1 := by
   change ¬ Metric.cthickening 1 (Set.Iic (0 : ℤ)) < Set.Iic 1
   rw [cthickening_one_Iic]
@@ -131,29 +137,30 @@ theorem not_Iic_properlyContained_Iic_one :
 variable (sites : Type*) [DecidableEq sites] (n : ℕ)
 
 /-- The **quantum spin system** of `n`-level spins on `sites`: the net of minimal tensor products whose local
-algebra of a finite region `Λ` is `⨂_{x ∈ Λ} B(ℂⁿ)`, the isotony embeddings being `z ↦ z ⊗ 1`. -/
+algebra of a finite region `Λ` is `⨂_{x ∈ Λ} 𝓑(ℂⁿ)`, the isotony embeddings being `z ↦ z ⊗ 1`. -/
 noncomputable abbrev quantumSpinSystem : GradedLocalNet (Finset sites) :=
-  piMinTensorProduct sites fun _ => EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n)
+  piMinTensorProduct sites fun _ => B(ℂ^n)
 
-/-- **The quantum spin system has the split property** in its universal representation (the
-Gelfand–Naimark representation of the quasi-local algebra, faithful and unital), under any proper
+/-- **The quantum spin system has the split property** in the Gelfand–Naimark representation of
+its quasi-local algebra (the direct sum of the GNS representations of its pure states, faithful and
+unital), under any proper
 containment: the algebra of a finite region is a finite-dimensional factor
-(`GradedLocalNet.splitProperty_of_finiteDimensional`). The property is automatic on finite regions; its
+(`CStarNet.splitProperty_of_finiteDimensional`). The property is automatic on finite regions; its
 content for a lattice is on infinite ones. -/
-theorem quantumSpinSystem_splitProperty [NeZero n] [ProperContainment (Finset sites)] :
+lemma quantumSpinSystem_splitProperty [NeZero n] [ProperContainment (Finset sites)] :
     (quantumSpinSystem sites n).SplitProperty (CStarRep.gelfandNaimark _) :=
-  splitProperty_of_finiteDimensional _ _ (CStarRep.gelfandNaimark_π_one _)
+  CStarNet.splitProperty_of_finiteDimensional _ _ (CStarRep.gelfandNaimark_π_one _)
 
 /-- **A site of the spin chain splits from the half-chain to its right**, in every unital
 representation: `{0}` and `[1, ∞)` are a split pair, the algebra of `{0}` being a type I factor
 (`CStarNet.isTypeIFactor_localVonNeumannAlgebra`). The pair is adjacent, with no gap; one of its
 regions is finite. -/
-theorem quantumSpinChain_isSplitPair_singleton_Ici [NeZero n]
+lemma quantumSpinSystem_isSplitPair_singleton_Ici [NeZero n]
     (R : CStarRep (quantumSpinSystem ℤ n).quasiLocalCStarAlgebra) (hR : R.π 1 = 1) :
     ((quantumSpinSystem ℤ n).vonNeumannNetSet R).IsSplitPair ((({0} : Finset ℤ)) : Set ℤ)
       (Set.Ici 1) := by
   refine VonNeumannNet.isSplitPair_of_isTypeIFactor ?_ ?_
-  · rw [vonNeumannNetSet_algebra_coe]
+  · rw [CStarNet.vonNeumannNetSet_algebra_coe]
     exact CStarNet.isTypeIFactor_localVonNeumannAlgebra _ R hR _
   · change Disjoint _ _
     rw [Finset.coe_singleton, Set.disjoint_singleton_left]
@@ -161,10 +168,10 @@ theorem quantumSpinChain_isSplitPair_singleton_Ici [NeZero n]
 
 /-! ### Translations of the spin chain -/
 
-/-- The **translation** of the spin chain by `v`: the covariance of the shift `x ↦ x + v` of the
-sites (`GradedLocalNet.sitePermCovariance`), moving every region and its algebra along. -/
-noncomputable def translation (v : ℤ) : (quantumSpinSystem ℤ n).Covariance :=
-  sitePermCovariance _ (Equiv.addRight v)
+/-- The **translation** of the spin chain by `v`: the automorphism of the shift `x ↦ x + v` of the
+sites (`GradedLocalNet.sitePermAutomorphism`), moving every region and its algebra along. -/
+noncomputable def translation (v : ℤ) : (quantumSpinSystem ℤ n).Automorphism :=
+  sitePermAutomorphism _ (Equiv.addRight v)
 
 /-- The translation by `v` moves a region `Λ` to `Λ + v`. -/
 lemma translation_σ (v : ℤ) (Λ : Finset ℤ) :
@@ -172,21 +179,21 @@ lemma translation_σ (v : ℤ) (Λ : Finset ℤ) :
   rfl
 
 /-- **The translation moves the regions**: it sends the site `x` to `x + v`. -/
-theorem translation_σ_singleton (v x : ℤ) : (translation n v).σ {x} = {x + v} := by
+lemma translation_σ_singleton (v x : ℤ) : (translation n v).σ {x} = {x + v} := by
   rw [translation_σ]
   simp
 
 /-- The translation carries an elementary tensor `⨂ aₓ` over `Λ` to `⨂ a_{y - v}` over `Λ + v`. -/
 lemma translation_β_of_tprod (v : ℤ) (Λ : Finset ℤ)
-    (a : Λ → EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n)) :
+    (a : Λ → B(ℂ^n)) :
     (translation n v).β Λ (PiMinTensorProduct.of _ (⨂ₜ[ℂ] x, a x)) =
-      PiMinTensorProduct.of _ (⨂ₜ[ℂ] y, a ((sitePermEquiv (Equiv.addRight v) Λ).symm y)) :=
-  sitePermCovariance_β_of_tprod _ Λ a
+      PiMinTensorProduct.of _ (⨂ₜ[ℂ] y, a ((Equiv.restrictFinsetMap (Equiv.addRight v) Λ).symm y)) :=
+  sitePermAutomorphism_β_of_tprod _ Λ a
 
 /-! ### An on-site `U(1)` symmetry of the spin chain -/
 
 /-- The operator `diag(1, z, …, z^{n-1})` on `ℂⁿ`. -/
-noncomputable def phaseOp (z : ℂ) : EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n) :=
+noncomputable def phaseOp (z : ℂ) : B(ℂ^n) :=
   Matrix.toEuclideanCLM (n := Fin n) (𝕜 := ℂ) (Matrix.diagonal fun k : Fin n => z ^ (k : ℕ))
 
 /-- `phaseOp z * phaseOp w = phaseOp (z * w)`. -/
@@ -207,7 +214,7 @@ lemma phaseOp_one : phaseOp n 1 = 1 := by
 /-- `z ↦ phaseOp z` is continuous. -/
 lemma continuous_phaseOp : Continuous (phaseOp n) :=
   (LinearMap.continuous_of_finiteDimensional (Matrix.toEuclideanCLM (n := Fin n) (𝕜 := ℂ) :
-    Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n))).comp
+    Matrix (Fin n) (Fin n) ℂ →ₗ[ℂ] B(ℂ^n))).comp
     (Continuous.matrix_diagonal (continuous_pi fun k => continuous_pow (k : ℕ)))
 
 /-- For `z` on the circle, `phaseOp z` is unitary. -/
@@ -217,19 +224,19 @@ lemma phaseOp_mem_unitary (z : Circle) : phaseOp n z ∈ unitary _ := by
   rw [Unitary.mem_iff, star_phaseOp, phaseOp_mul, phaseOp_mul, h, mul_comm, h, phaseOp_one]
   exact ⟨rfl, rfl⟩
 
-/-- `z ↦ phaseOp z`, as a homomorphism of the circle into the unitaries of `B(ℂⁿ)`. -/
+/-- `z ↦ phaseOp z`, as a homomorphism of the circle into the unitaries of `𝓑(ℂⁿ)`. -/
 noncomputable def phaseUnitary :
-    Circle →* unitary (EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n)) where
+    Circle →* unitary (B(ℂ^n)) where
   toFun z := ⟨phaseOp n z, phaseOp_mem_unitary n z⟩
   map_one' := Subtype.ext ((congrArg (phaseOp n) Circle.coe_one).trans (phaseOp_one n))
   map_mul' z w :=
     Subtype.ext ((congrArg (phaseOp n) (Circle.coe_mul z w)).trans (phaseOp_mul n z w).symm)
 
-/-- **The `U(1)` rotations of a spin**: the circle acting on `B(ℂⁿ)` by
+/-- **The `U(1)` rotations of a spin**: the circle acting on `𝓑(ℂⁿ)` by
 `x ↦ phaseOp z * x * (phaseOp z)⋆`, a C⋆-dynamical system. -/
 noncomputable def rotation :
-    Circle →ₜ* ((EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n)) ≃⋆ₐ[ℂ]
-      (EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n))) :=
+    Circle →ₜ* ((B(ℂ^n)) ≃⋆ₐ[ℂ]
+      (B(ℂ^n))) :=
   ⟨(Unitary.conjStarAlgAut ℂ _).comp (phaseUnitary n),
     StarAlgEquiv.continuous_iff.mpr fun a => by
       change Continuous fun z : Circle => phaseOp n z * a * star (phaseOp n z)
@@ -239,7 +246,7 @@ noncomputable def rotation :
         ((continuous_phaseOp n).comp (continuous_star.comp hz))⟩
 
 /-- `rotation z x = phaseOp z * x * phaseOp z̄`. -/
-lemma rotation_apply (z : Circle) (x : EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n)) :
+lemma rotation_apply (z : Circle) (x : B(ℂ^n)) :
     rotation n z x = phaseOp n z * x * phaseOp n (star (z : ℂ)) := by
   change phaseOp n z * x * star (phaseOp n z) = _
   rw [star_phaseOp]
@@ -250,10 +257,10 @@ whose group is not discrete. -/
 noncomputable def spinChainRotation [NeZero n] :
     Circle →ₜ* ((quantumSpinSystem ℤ n).quasiLocalCStarAlgebra ≃⋆ₐ[ℂ]
       (quantumSpinSystem ℤ n).quasiLocalCStarAlgebra) :=
-  onSiteDynamicalSystem ℤ (constOnSite ℤ (rotation n))
+  onSiteDynamicalSystem ℤ (ContinuousMonoidHom.constOnSite ℤ (rotation n))
 
 /-- The matrix unit `|i⟩⟨j|` on `ℂⁿ`. -/
-noncomputable def matrixUnit (i j : Fin n) : EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n) :=
+noncomputable def matrixUnit (i j : Fin n) : B(ℂ^n) :=
   Matrix.toEuclideanCLM (n := Fin n) (𝕜 := ℂ) (Matrix.single i j 1)
 
 /-- **The rotation by `z` multiplies `|i⟩⟨j|` by `z^i z̄^j`.** -/
@@ -268,7 +275,7 @@ lemma rotation_matrixUnit (z : Circle) (i j : Fin n) :
 
 /-- The matrix unit `|i⟩⟨j|` at the site `0`, as a local observable of the region `{0}`. -/
 noncomputable def matrixUnitAtZero (i j : Fin n) :
-    ⨂ₘᵢₙ _ : ({0} : Finset ℤ), EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n) :=
+    ⨂ₘᵢₙ _ : ({0} : Finset ℤ), B(ℂ^n) :=
   PiMinTensorProduct.of _ (⨂ₜ[ℂ] _ : ({0} : Finset ℤ), matrixUnit n i j)
 
 /-- A matrix unit at the site `0` is not zero. -/
@@ -276,7 +283,7 @@ lemma matrixUnitAtZero_ne_zero (i j : Fin n) : matrixUnitAtZero n i j ≠ 0 := f
   have : Subsingleton ({0} : Finset ℤ) := ⟨fun a b => Subtype.ext
     ((Finset.mem_singleton.mp a.2).trans (Finset.mem_singleton.mp b.2).symm)⟩
   have h2 := congrArg (PiMinTensorProduct.subsingletonEquiv
-    (fun _ : ({0} : Finset ℤ) => EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n))
+    (fun _ : ({0} : Finset ℤ) => B(ℂ^n))
     ⟨0, Finset.mem_singleton_self 0⟩) h
   rw [matrixUnitAtZero, PiMinTensorProduct.subsingletonEquiv_of,
     PiTensorProduct.subsingletonStarAlgEquiv_tprod, map_zero, matrixUnit] at h2
@@ -285,7 +292,7 @@ lemma matrixUnitAtZero_ne_zero (i j : Fin n) : matrixUnitAtZero n i j ≠ 0 := f
 
 /-- **The rotation by `-1` reverses the matrix unit `|0⟩⟨1|` at the site `0`**, for `n ≥ 2`: it
 multiplies it by `(-1)⁰ (-1)¹ = -1`. -/
-theorem spinChainRotation_neg_one_matrixUnitAtZero [NeZero n] (h : 1 < n) :
+lemma spinChainRotation_neg_one_matrixUnitAtZero [NeZero n] (h : 1 < n) :
     spinChainRotation n (-1)
         ((quantumSpinSystem ℤ n).ιLocalCStar {0} (matrixUnitAtZero n 0 ⟨1, h⟩)) =
       (quantumSpinSystem ℤ n).ιLocalCStar {0} (-matrixUnitAtZero n 0 ⟨1, h⟩) := by
@@ -297,10 +304,10 @@ theorem spinChainRotation_neg_one_matrixUnitAtZero [NeZero n] (h : 1 < n) :
   have : Subsingleton ({0} : Finset ℤ) := ⟨fun a b => Subtype.ext
     ((Finset.mem_singleton.mp a.2).trans (Finset.mem_singleton.mp b.2).symm)⟩
   have h3 : PiMinTensorProduct.of (fun _ : ({0} : Finset ℤ) =>
-        EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n))
-        (⨂ₜ[ℂ] x, constOnSite ℤ (rotation n) (-1) x (matrixUnit n 0 ⟨1, h⟩)) =
+        B(ℂ^n))
+        (⨂ₜ[ℂ] x, ContinuousMonoidHom.constOnSite ℤ (rotation n) (-1) x (matrixUnit n 0 ⟨1, h⟩)) =
       -PiMinTensorProduct.of (fun _ : ({0} : Finset ℤ) =>
-        EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n))
+        B(ℂ^n))
         (⨂ₜ[ℂ] _ : ({0} : Finset ℤ), matrixUnit n 0 ⟨1, h⟩) := by
     refine EquivLike.injective
       (PiMinTensorProduct.subsingletonEquiv _ ⟨0, Finset.mem_singleton_self 0⟩) ?_
@@ -309,29 +316,60 @@ theorem spinChainRotation_neg_one_matrixUnitAtZero [NeZero n] (h : 1 < n) :
       PiTensorProduct.subsingletonStarAlgEquiv_tprod]
     exact hr
   unfold spinChainRotation matrixUnitAtZero
-  rw [onSiteDynamicalSystem_ιLocalCStar_of_tprod (constOnSite ℤ (rotation n)) (-1) {0}
+  rw [onSiteDynamicalSystem_ιLocalCStar_of_tprod (ContinuousMonoidHom.constOnSite ℤ (rotation n)) (-1) {0}
     fun _ => matrixUnit n 0 ⟨1, h⟩]
   rw [h3]
 
 /-- **The on-site `U(1)` symmetry acts non-trivially** for `n ≥ 2`: the rotation by `-1` moves the
 matrix unit `|0⟩⟨1|` at the site `0`, which it reverses. -/
-theorem spinChainRotation_neg_one_ne [NeZero n] (h : 1 < n) :
+lemma spinChainRotation_neg_one_ne [NeZero n] (h : 1 < n) :
     spinChainRotation n (-1)
         ((quantumSpinSystem ℤ n).ιLocalCStar {0} (matrixUnitAtZero n 0 ⟨1, h⟩)) ≠
       (quantumSpinSystem ℤ n).ιLocalCStar {0} (matrixUnitAtZero n 0 ⟨1, h⟩) := by
   rw [spinChainRotation_neg_one_matrixUnitAtZero n h]
   refine ((quantumSpinSystem ℤ n).ιLocalCStar_injective {0}).ne fun h' => ?_
   have := HasUniqueDiv.of_isTorsionFree ℂ
-    (⨂ₘᵢₙ _ : ({0} : Finset ℤ), EuclideanSpace ℂ (Fin n) →L[ℂ] EuclideanSpace ℂ (Fin n))
+    (⨂ₘᵢₙ _ : ({0} : Finset ℤ), B(ℂ^n))
   exact matrixUnitAtZero_ne_zero n 0 ⟨1, h⟩ (neg_eq_self.mp h')
 
 end GradedLocalNet.Examples
 
-/-! ### Two Majorana modes -/
-
 namespace VonNeumannNet.Examples
 
 open scoped CausalOrthogonality
+
+/-! ### A local net without the split property -/
+
+section Multiplication
+
+open MeasureTheory
+
+/-- The **constant net of an abelian algebra** on the regions of the integer chain: every region
+carries the multiplication algebra of the counting measure on two points, acting on `ℓ²(Fin 2)`. -/
+noncomputable def multiplicationNet :
+    VonNeumannNet (Set ℤ) (Lp ℂ 2 (Measure.count : Measure (Fin 2))) where
+  algebra _ := VonNeumannAlgebra.multiplicationAlgebra Measure.count
+  algebra_mono := monotone_const
+
+/-- The constant multiplication net is local: its algebra is abelian
+(`VonNeumannAlgebra.multiplicationAlgebra_le_commutant`). -/
+instance : multiplicationNet.IsLocal :=
+  ⟨fun _ _ _ => VonNeumannAlgebra.multiplicationAlgebra_le_commutant (μ := Measure.count)⟩
+
+/-- **A local net without the split property**: under the metric proper containment of width `1`,
+`(-∞, 0] ⋐ (-∞, 2]` (`GradedLocalNet.Examples.Iic_properlyContained_Iic_two`), but the inclusion of
+the abelian algebra in itself is not split, the algebra not being a factor
+(`VonNeumannAlgebra.not_isSplitInclusion_multiplicationAlgebra_count`). So the split property is
+genuinely model-dependent input. -/
+lemma not_splitProperty_multiplicationNet :
+    letI := ProperContainment.ofCThickening ℤ 1
+    ¬ multiplicationNet.SplitProperty := fun h =>
+  VonNeumannAlgebra.not_isSplitInclusion_multiplicationAlgebra_count
+    (h GradedLocalNet.Examples.Iic_properlyContained_Iic_two)
+
+end Multiplication
+
+/-! ### Two Majorana modes -/
 
 /-- The Pauli matrix `σ_x`. -/
 def pauliXMat : Matrix (Fin 2) (Fin 2) ℂ := !![0, 1; 1, 0]
@@ -344,7 +382,7 @@ def pauliZMat : Matrix (Fin 2) (Fin 2) ℂ := !![1, 0; 0, -1]
 
 /-- The **Majorana operators** `c₀ = σ_x` and `c₁ = σ_y` on `ℂ²`: selfadjoint unitaries that
     anticommute. -/
-noncomputable def majorana : Fin 2 → (EuclideanSpace ℂ (Fin 2) →L[ℂ] EuclideanSpace ℂ (Fin 2)) :=
+noncomputable def majorana : Fin 2 → (B(ℂ^2)) :=
   ![Matrix.toEuclideanCLM (n := Fin 2) (𝕜 := ℂ) pauliXMat,
     Matrix.toEuclideanCLM (n := Fin 2) (𝕜 := ℂ) pauliYMat]
 
@@ -374,7 +412,7 @@ lemma majorana_zero_mul_one_ne : majorana 0 * majorana 1 ≠ majorana 1 * majora
   norm_num
 
 /-- The Pauli matrix `σ_z`, as an operator on `ℂ²`. -/
-noncomputable def pauliZ : EuclideanSpace ℂ (Fin 2) →L[ℂ] EuclideanSpace ℂ (Fin 2) :=
+noncomputable def pauliZ : B(ℂ^2) :=
   Matrix.toEuclideanCLM (n := Fin 2) (𝕜 := ℂ) pauliZMat
 
 /-- `σ_z` is selfadjoint. -/
@@ -423,7 +461,7 @@ noncomputable def majoranaGrading : majoranaNet.Grading where
 /-- **The Majorana net is graded-local**: the Majorana operators of disjoint regions are distinct,
     odd and anticommuting, so they twisted-commute
     (`VonNeumannNet.Grading.isGradedLocal_of_generated`). -/
-theorem isGradedLocal_majoranaGrading : majoranaGrading.IsGradedLocal := by
+lemma isGradedLocal_majoranaGrading : majoranaGrading.IsGradedLocal := by
   refine majoranaGrading.isGradedLocal_of_generated (fun Λ => majorana '' Λ) (fun _ => rfl) ?_
   rintro Λ₁ Λ₂ hd _ ⟨i, hi, rfl⟩ _ ⟨j, hj, rfl⟩
   have hij : i ≠ j := fun h => Finset.disjoint_left.1 hd hi (h ▸ hj)
@@ -436,7 +474,7 @@ theorem isGradedLocal_majoranaGrading : majoranaGrading.IsGradedLocal := by
 
 /-- **The Majorana net is not local**: the Majorana operators of the disjoint regions `{0}` and
     `{1}` do not commute. -/
-theorem not_isLocal_majoranaNet : ¬ majoranaNet.IsLocal := fun _ => by
+lemma not_isLocal_majoranaNet : ¬ majoranaNet.IsLocal := fun _ => by
   have hd : ({0} : Finset (Fin 2)) ⟂ {1} := Finset.disjoint_singleton.2 (by decide)
   have h0 : majorana 0 ∈ majoranaNet.algebra {0} :=
     VonNeumannAlgebra.mem_generated_of_mem ⟨0, by simp, rfl⟩
@@ -455,11 +493,11 @@ noncomputable def majoranaGradedLocalNet : GradedLocalNet (Finset (Fin 2)) where
 
 /-- **The Majorana net of C⋆-algebras is not local**: its parity is not trivial, the Majorana
     operator of the site `0` being odd. -/
-theorem not_isLocal_majoranaGradedLocalNet : ¬ majoranaGradedLocalNet.IsLocal := fun h => by
+lemma not_isTriviallyGraded_majoranaGradedLocalNet : ¬ majoranaGradedLocalNet.IsTriviallyGraded := fun h => by
   have h0 : majorana 0 ∈ majoranaNet.algebra {0} :=
     VonNeumannAlgebra.mem_generated_of_mem ⟨0, by simp, rfl⟩
   have hp := congrArg
-    (fun z : majoranaNet.algebra {0} => (z : EuclideanSpace ℂ (Fin 2) →L[ℂ] EuclideanSpace ℂ (Fin 2)))
+    (fun z : majoranaNet.algebra {0} => (z : B(ℂ^2)))
     (h.parity_apply (O := {0}) (⟨majorana 0, h0⟩ : majoranaNet.algebra {0}))
   have h2 : -majorana 0 = majorana 0 := (pauliZ_mul_majorana_mul_pauliZ 0).symm.trans hp
   rw [neg_eq_iff_add_eq_zero, ← two_smul ℂ, smul_eq_zero] at h2

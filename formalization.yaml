@@ -121,6 +121,17 @@ sources:
         Section 2.4, representation: {page: '10', date: '2026-11-23', version: arXiv:0705.3609v2}
         Section 2.4, graded representation: {page: '10', date: '2026-11-23', version:
             arXiv:0705.3609v2}
+  - title: From vertex operator algebras to conformal nets and back
+    authors: [Sebastiano Carpi, Yasuyuki Kawahigashi, Roberto Longo, Mihály Weiner]
+    id: arXiv:1503.01260
+    type: article
+    relationship: background
+    note: Mem. Amer. Math. Soc. 254 (2018), no. 1213. Locators and pages are those of arXiv v4.
+    checked:
+      url: https://arxiv.org/pdf/1503.01260v4
+      locators:
+        §3.3, (41): {page: '21', date: '2026-11-23', version: arXiv:1503.01260v4}
+        §3.4: {page: 22–24, date: '2026-11-23', version: arXiv:1503.01260v4}
 automation:
   methods:
     - {method: agent, framework: Claude Code}

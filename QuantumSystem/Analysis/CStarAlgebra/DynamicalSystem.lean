@@ -36,7 +36,7 @@ Examples:
   C⋆-dynamical system for a compact `X`; its fixed points are the `G`-invariant functions, the
   constants for a transitive action (`ContinuousMap.fixedPoints_smulStarAlgAut_of_isPretransitive`);
 * a symmetry group of a faithful local net acting continuously on its quasi-local algebra
-  (`GradedLocalNet.Covariance.quasiLocalCStarDynamicalSystem`).
+  (`GradedLocalNet.Automorphism.quasiLocalCStarDynamicalSystem`).
 
 `G` need not be a topological group for the statements below: none of them uses the continuity of the
 multiplication of `G`, and only `ContinuousMap.smulStarAlgAut` uses that of its inversion.

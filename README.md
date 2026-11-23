@@ -135,6 +135,12 @@ Candidates, which no theorem of Phase II is stated in:
   (Gerstenhaber), and H³ holding the obstructions to extending them; its bounded version for
   Banach algebras, amenability and virtual diagonals, in the bidual of the projective tensor
   product; for C⋆-algebras, amenability is nuclearity (Connes, Haagerup) (M1, M2).
+- Subnets of nets of von Neumann algebras: the subnet relation `𝓡₀(O) ⊆ 𝓡(O)` compatible with
+  isotony and covariance, the fixed-point subnet of a compact group of internal symmetries and the
+  coset subnet, as for the Möbius covariant nets of Carpi–Kawahigashi–Longo–Weiner
+  (arXiv:1503.01260, §3.4); with them the internal symmetries of a net of von Neumann algebras,
+  and the graded-local fixed-point subnet of a symmetry commuting with the parity whose fixed
+  points need not be even (M3).
 - The Lefschetz–Hopf fixed-point theorem and Hopf's structure theorem for the real cohomology of
   connected H-spaces of finite type, the topological input to the stability theorem for
   ε-C⋆-algebras (Kitaev, arXiv:2405.02434) (M2).
