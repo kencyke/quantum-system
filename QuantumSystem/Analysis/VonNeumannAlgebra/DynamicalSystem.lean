@@ -24,7 +24,8 @@ as it is the point-norm topology on `M ≃⋆ₐ[ℂ] M`; `α g` acts on `x ∈ 
 continuous additive character `α : ContinuousAddChar V (M.sigmaWeak ≃⋆ₐ[ℂ] M.sigmaWeak)`, the
 continuous homomorphism `α.toContinuousMonoidHom` from `Multiplicative V`. As for C⋆-dynamical
 systems, no separate name is given to the type of `α`: Mathlib's `ContinuousMonoidHom` is the object.
-The fixed-point algebra `M^α` is `StarAlgEquiv.fixedPoints α.toMonoidHom`, and the points fixed by a dense subset of `G` are fixed by
+The fixed-point algebra `M^α` is `StarAlgEquiv.fixedPoints α.toMonoidHom`, and the points fixed by a
+dense subset of `G` are fixed by
 `G` (`StarAlgEquiv.mem_fixedPoints_iff_of_dense`, `M.sigmaWeak` being Hausdorff). `G` need not be a
 topological group for the statements below: none of them uses a compatibility of the topology of `G`
 with its multiplication.
