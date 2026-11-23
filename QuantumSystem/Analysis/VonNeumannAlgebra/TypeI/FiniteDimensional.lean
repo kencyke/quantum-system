@@ -52,10 +52,14 @@ image is WOT-closed (`isWOTClosed_of_finiteDimensional`), so it is the generated
 algebra; `φ` is injective, `A` being simple; and `A` is a full matrix algebra
 (`CStarAlgebra.exists_starAlgEquiv_cstarMatrix_of_isCentral`), so `φ(A)″ ≃⋆ₐ B(ℂⁿ)`. -/
 theorem isTypeIFactor_generated_range {A : Type*} [CStarAlgebra A] [FiniteDimensional ℂ A]
-    [Nontrivial A] [Algebra.IsCentral ℂ A] (φ : A →⋆ₐ[ℂ] (H →L[ℂ] H)) :
+    [Algebra.IsCentral ℂ A] (φ : A →⋆ₐ[ℂ] (H →L[ℂ] H)) :
     IsTypeIFactor (generated (Set.range φ)) := by
   rcases subsingleton_or_nontrivial H with _ | _
   · exact isTypeIFactor_of_subsingleton _
+  -- `φ 1 = 1 ≠ 0` on a nonzero `H`, so `A` is nontrivial.
+  have : Nontrivial A := by
+    refine not_subsingleton_iff_nontrivial.1 fun _ => one_ne_zero (α := H →L[ℂ] H) ?_
+    rw [← map_one φ, Subsingleton.elim (1 : A) 0, map_zero]
   have := CStarAlgebra.isSimpleRing_of_isCentral_of_finiteDimensional A
   have hφ : Function.Injective φ := RingHom.injective (φ : A →+* (H →L[ℂ] H))
   have : FiniteDimensional ℂ φ.range :=
